@@ -6923,8 +6923,11 @@ Public Module agm2
                     End If
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+
                     For Each tmpName As String In tmpStr
+
                         stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+
                         If RoleDefinitions.containsName(tmpName.Trim) Then
                             tmpNameUID = CStr(RoleDefinitions.getRoledef(tmpName.Trim).UID)
                             If specificsWithIDs = "" Then
@@ -8695,6 +8698,33 @@ Public Module agm2
                                             ' jetzt das union-Projekt erstellen ; 
                                             Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
+                                            Try
+                                                ' Test, ob das Budget auch ausreicht
+                                                ' wenn nein, einfach Warning ausgeben 
+                                                Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                                                If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                                    outputCollection.Add(outPutLine)
+
+                                                    Dim logtxt(2) As String
+                                                    logtxt(0) = "Budget-Überschreitung"
+                                                    logtxt(1) = "Programmlinie"
+                                                    logtxt(2) = unionProj.name
+                                                    Dim values(2) As Double
+                                                    values(0) = unionProj.Erloes
+                                                    values(1) = tmpGesamtCost
+                                                    If values(0) > 0 Then
+                                                        values(2) = tmpGesamtCost / unionProj.Erloes
+                                                    Else
+                                                        values(2) = 9999999999
+                                                    End If
+                                                    Call logfileSchreiben(logtxt, values)
+                                                End If
+
+                                            Catch ex As Exception
+
+                                            End Try
+
                                             ' Status gleich auf 1: beauftragt setzen 
                                             unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
@@ -8940,6 +8970,33 @@ Public Module agm2
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
                                                                  zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, False)
 
+                            Try
+                                ' Test, ob das Budget auch ausreicht
+                                ' wenn nein, einfach Warning ausgeben 
+                                Dim tmpGesamtCost As Double = hproj.getGesamtKostenBedarf.Sum
+                                If hproj.Erloes - tmpGesamtCost < 0 Then
+                                    outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                    outputCollection.Add(outPutLine)
+
+                                    Dim logtxt(2) As String
+                                    logtxt(0) = "Budget-Überschreitung"
+                                    logtxt(1) = "Projekt"
+                                    logtxt(2) = pName
+                                    Dim values(2) As Double
+                                    values(0) = hproj.Erloes
+                                    values(1) = tmpGesamtCost
+                                    If values(0) > 0 Then
+                                        values(2) = tmpGesamtCost / hproj.Erloes
+                                    Else
+                                        values(2) = 9999999999
+                                    End If
+                                    Call logfileSchreiben(logtxt, values)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
                             ' Test tk 
                             Try
                                 ReDim logmsg(0)
@@ -9050,6 +9107,33 @@ Public Module agm2
 
                         ' jetzt das union-Projekt erstellen 
                         Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+
+                        Try
+                            ' Test, ob das Budget auch ausreicht
+                            ' wenn nein, einfach Warning ausgeben 
+                            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                            If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                outputCollection.Add(outPutLine)
+
+                                Dim logtxt(2) As String
+                                logtxt(0) = "Budget-Überschreitung"
+                                logtxt(1) = "Programmlinie"
+                                logtxt(2) = unionProj.name
+                                Dim values(2) As Double
+                                values(0) = unionProj.Erloes
+                                values(1) = tmpGesamtCost
+                                If values(0) > 0 Then
+                                    values(2) = tmpGesamtCost / unionProj.Erloes
+                                Else
+                                    values(2) = 9999999999
+                                End If
+                                Call logfileSchreiben(logtxt, values)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
                         unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
@@ -9210,11 +9294,11 @@ Public Module agm2
         Dim colPName As Integer = 1
         Dim colVName As Integer = 2
         Dim colKdNr As Integer = 3
-        'Dim colType As Integer = 4
-        Dim colPhaseName As Integer = 4
-        Dim colRoleName As Integer = 5
-        Dim colSumPT As Double = 6
-        Dim colSumTe As Double = 7
+        Dim colVerantwortlich As Integer = 4
+        Dim colPhaseName As Integer = 5
+        Dim colRoleName As Integer = 6
+        Dim colSumPT As Double = 7
+        Dim colSumTe As Double = 8
 
         ' für logfile 
         Dim tmpanz As Long = 0
@@ -9222,11 +9306,12 @@ Public Module agm2
         ' bestimme die maximale Anzahl Zeilen
         'Dim lastRow As Integer = 0
 
-        With dataRange
-            firstRow = CType(.Rows.Item(2), Excel.Range).Row
-            lastRow = CType(.Rows.Item(.Rows.Count), Excel.Range).Row
-            lastColumn = CType(.Columns.Item(.Columns.Count), Excel.Range).Column
-        End With
+
+        firstRow = CType(dataRange.Rows.Item(2), Excel.Range).Row
+        'lastRow = CType(dataRange, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+        lastRow = CType(currentWS.Cells(dataRange.Rows.Count, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+        lastColumn = CType(dataRange.Columns.Item(dataRange.Columns.Count), Excel.Range).Column
+
 
 
         ' überprüfe bzw. stelle sicher, dass die Datei sortiert nach Pname, VariantName, PhaseName, RoleName ist
@@ -9291,21 +9376,22 @@ Public Module agm2
 
 
             If IsNothing(hproj) Then
+                Dim logtxt(1) As String
+                logtxt(0) = "Projekt existiert nicht ... "
+
                 If currentKdNummer = "" Then
-                    logmessage = "Projekt " & currentPName & " existiert nicht ..."
+                    logtxt(1) = currentPName
                 Else
-                    logmessage = "Projekt " & currentPName & "; " & currentKdNummer & " existiert nicht ..."
+                    logtxt(1) = currentPName & "; " & currentKdNummer
                 End If
+
+                logmessage = logtxt(0) & logtxt(1)
                 outputCollection.Add(logmessage)
 
-                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                Call logfileSchreiben(logtxt)
 
                 ' jetzt noch im Input File markieren 
                 CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                If Not IsNothing(CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Comment) Then
-                    CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).ClearComments()
-                End If
-                CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).AddComment(logmessage)
 
             Else
                 If hproj.hasActualValues Then
@@ -9316,15 +9402,32 @@ Public Module agm2
                     If hproj.name = currentPName Then
                         ' es wurde über den Namen gefunden 
                         If hproj.kundenNummer <> currentKdNummer And (hproj.kundenNummer <> "" And currentKdNummer <> "") Then
+
                             logmessage = "Projekt über Name gefunden, aber Projekt-Nummern passen nicht zueinander; Datei: " & currentKdNummer & "; DB: " & hproj.kundenNummer
                             outputCollection.Add(logmessage)
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                            Dim logtxt(3) As String
+                            logtxt(0) = "Projekt über Name gefunden, aber Projekt-Nummern passen nicht zueinander"
+                            logtxt(1) = hproj.name
+                            logtxt(2) = currentKdNummer
+                            logtxt(3) = "DB: " & hproj.kundenNummer
+
+                            Call logfileSchreiben(logtxt)
+
+
                         End If
                     ElseIf hproj.kundenNummer = currentKdNummer Then
                         If hproj.name <> currentPName Then
-                            logmessage = "Projekt über Projekt-Nummer, aber Projekt-Namen passen nicht zueinander; Datei: " & currentPName & "; DB: " & hproj.name
+                            logmessage = "Projekt über Projekt-Nummer gefunden, aber Projekt-Namen passen nicht zueinander" & currentPName & "; DB: " & hproj.name
                             outputCollection.Add(logmessage)
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                            Dim logtxt(3) As String
+                            logtxt(0) = "Projekt über Projekt-Nummer gefunden, aber Projekt-Namen passen nicht zueinander"
+                            logtxt(1) = currentKdNummer
+                            logtxt(2) = currentPName
+                            logtxt(3) = "DB: " & hproj.name
+
+                            Call logfileSchreiben(logtxt)
                         End If
 
                     End If
@@ -9356,6 +9459,13 @@ Public Module agm2
 
                         Dim currentCell As Excel.Range = CType(currentWS.Cells(iz, colRoleName), Excel.Range)
                         Dim roleNameID As String = getRCNameIDfromExcelCell(currentCell)
+                        Dim chckRoleName As String = ""
+
+                        Try
+                            chckRoleName = CStr(currentCell.Value)
+                        Catch ex As Exception
+
+                        End Try
 
                         currentCell = CType(currentWS.Cells(iz, colPhaseName), Excel.Range)
                         Dim phaseNameID As String = getPhaseNameIDfromExcelCell(currentCell)
@@ -9439,14 +9549,22 @@ Public Module agm2
 
                                 outputCollection.Add(logmessage)
 
-                                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                                Dim logtxt(2) As String
+                                logtxt(0) = "Phase-Name existiert nicht: "
+                                logtxt(1) = hproj.name
+                                logtxt(2) = phaseName
+
+                                Call logfileSchreiben(logtxt)
+
 
                                 ' jetzt noch im Input File markieren 
                                 CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                                If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
-                                    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
-                                End If
-                                CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
+                                ' tk 16.2.19 hier dürfen keine Kommentare geschrieben werden ! 
+                                ' beim nächsten Mal auslesen versucht er das als PhaseID zu interpretieren ! 
+                                'If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                                '    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
+                                'End If
+                                'CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
                             End If
 
 
@@ -9454,29 +9572,41 @@ Public Module agm2
                         Else
                             ' nichts tun
                             Dim errCol As Integer
-
+                            Dim logtxt(2) As String
                             If Not phNameIDs.Contains(phaseNameID) Then
                                 atleastOneError = True
                                 Dim phaseName As String = CStr(CType(currentWS.Cells(iz, colPhaseName), Excel.Range).Value)
                                 logmessage = "Phase-Name existiert nicht: " & phaseName
+
+                                logtxt(0) = "Phase-Name existiert nicht: "
+                                logtxt(1) = currentPName
+                                logtxt(2) = phaseName
+
                                 errCol = colPhaseName
                             ElseIf Not RoleDefinitions.containsNameID(roleNameID) Then
                                 atleastOneError = True
                                 Dim roleName As String = CStr(CType(currentWS.Cells(iz, colRoleName), Excel.Range).Value)
                                 logmessage = "Rollen-Name existiert nicht: " & roleName
+
+                                logtxt(0) = "Rollen-Name existiert nicht: "
+                                logtxt(1) = currentPName
+                                logtxt(2) = roleName
+
                                 errCol = colRoleName
                             End If
 
                             outputCollection.Add(logmessage)
 
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                            Call logfileSchreiben(logtxt)
 
                             ' jetzt noch im Input File markieren 
                             CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                            If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
-                                CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
-                            End If
-                            CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
+                            ' tk 16.2.19 hier dürfen keine Kommentare geschrieben werden ! 
+                            ' beim nächsten Mal auslesen versucht er das als PhaseID zu interpretieren ! 
+                            'If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                            '    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
+                            'End If
+                            'CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
 
                         End If
 
@@ -11077,6 +11207,185 @@ Public Module agm2
 
     End Sub
 
+    ''' <summary>
+    ''' liest die externen Verträge gemäß Allianz Struktur 
+    ''' </summary>
+    ''' <param name="meldungen"></param>
+    Public Sub readMonthlyExternKapasEV(ByRef meldungen As Collection)
+
+        Dim kapaFolder As String
+
+
+        Dim ok As Boolean = True
+
+        Dim spalte As Integer = 2
+        Dim blattname As String = "Werte in Euro"
+        Dim currentWS As Excel.Worksheet = Nothing
+
+        Dim errMsg As String = ""
+        Dim anzFehler As Integer = 0
+
+        Dim aktzeile As Integer = 1
+        Dim saveNeeded As Boolean = False
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        kapaFolder = awinPath & projektRessOrdner
+
+        Try
+            Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
+
+            For i = 0 To listOfImportfiles.Count - 1
+
+                Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+
+                If Not IsNothing(dateiName) Then
+
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") Then
+
+                        errMsg = "Reading external Capacities " & dateiName
+                        Call logfileSchreiben(errMsg, "", anzFehler)
+
+                        Try
+                            appInstance.Workbooks.Open(dateiName)
+                            ok = True
+
+                            Try
+
+                                currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                                Dim colRessource As Integer = 8
+                                Dim colBeginn As Integer = 9
+                                Dim colEnde As Integer = 10
+                                Dim colVV As Integer = 15
+
+                                Dim lastRow As Integer = CType(currentWS.Cells(16000, "H"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                                ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+
+                                aktzeile = 3
+                                Do While aktzeile <= lastRow
+
+                                    Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
+
+                                    If Not IsNothing(subRoleName) Then
+                                        subRoleName = subRoleName.Trim
+                                        If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                            Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                            ' nur weiter machen, wenn es keine SummenRolle ist ... und es ausserdem einen Tagessatz gibt ..
+                                            ' weil andernfalls Dividion durch Null passieren würde 
+                                            If Not subRole.isCombinedRole And subRole.tagessatzIntern > 0 Then
+
+                                                ' lese das Vertragsvolumen
+                                                Try
+                                                    Dim vertragsVolumen As Double = 0.0
+                                                    If Not IsNothing(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value) Then
+                                                        vertragsVolumen = CDbl(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value)
+                                                    End If
+
+                                                    Dim startDate As Date = CDate(CType(currentWS.Cells(aktzeile, colBeginn), Excel.Range).Value)
+                                                    Dim endeDate As Date = CDate(CType(currentWS.Cells(aktzeile, colEnde), Excel.Range).Value)
+
+                                                    If vertragsVolumen >= 0 Then
+                                                        Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
+                                                        Dim vorgabeArray(0) As Double
+                                                        vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
+                                                        Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
+
+                                                        Dim startCol As Integer = getColumnOfDate(startDate)
+                                                        For ix As Integer = 0 To volumenArray.Length - 1
+                                                            If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
+                                                                subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                            End If
+                                                        Next
+
+                                                    End If
+                                                Catch ex As Exception
+
+                                                End Try
+
+
+                                            Else
+                                                If subRole.isCombinedRole Then
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                    meldungen.Add(errMsg)
+                                                ElseIf subRole.tagessatzIntern <= 0 Then
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
+                                                    meldungen.Add(errMsg)
+                                                End If
+
+                                                Call logfileSchreiben(errMsg, "", anzFehler)
+                                            End If
+                                        Else
+                                            If subRoleName.Length > 0 Then
+                                                errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                meldungen.Add(errMsg)
+                                                Call logfileSchreiben(errMsg, "", anzFehler)
+                                            End If
+                                        End If
+
+                                    End If
+
+                                    aktzeile = aktzeile + 1
+                                    ' jetzt spalte wieder auf 2 setzen 
+                                    spalte = 2
+                                Loop
+
+                            Catch ex2 As Exception
+                                errMsg = "File " & dateiName & ": Fehler / Error  ... " & vbLf & ex2.Message
+                                meldungen.Add(errMsg)
+                                Call logfileSchreiben(errMsg, "", anzFehler)
+
+                                If Not IsNothing(currentWS) Then
+                                    CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    saveNeeded = True
+                                End If
+
+                            End Try
+
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
+                        Catch ex As Exception
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
+                        End Try
+
+                    End If
+
+                End If
+
+
+            Next i
+
+        Catch ex As Exception
+
+        End Try
+
+
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = True
+        End If
+
+        enableOnUpdate = True
+
+
+    End Sub
 
 
     ''' <summary>
@@ -11258,7 +11567,7 @@ Public Module agm2
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub readUrlOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection)
+    Friend Sub readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection)
 
         Dim err As New clsErrorCodeMsg
 
@@ -11266,6 +11575,7 @@ Public Module agm2
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim msgtxt As String = ""
+        Dim anzFehler As Integer = 0
         Dim fehler As Boolean = False
 
         Dim kapaWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
@@ -11396,6 +11706,8 @@ Public Module agm2
                                 End If
                                 'Call MsgBox(msgtxt)
 
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+
                                 If formerEE Then
                                     appInstance.EnableEvents = True
                                 End If
@@ -11413,8 +11725,11 @@ Public Module agm2
                                 If Not oPCollection.Contains(msgtxt) Then
                                     oPCollection.Add(msgtxt, msgtxt)
                                 End If
+
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                 'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
-                                Throw New ArgumentException(msgtxt)
+                                ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
+                                'Throw New ArgumentException(msgtxt)
                             Else
 
                                 For iZ = 5 To lastZeile
@@ -11445,26 +11760,38 @@ Public Module agm2
 
                                                             If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
 
-                                                                If CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) >= 0 And
-                                                                       CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) <= 24 Then
-                                                                    anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                                Else
-                                                                    If awinSettings.englishLanguage Then
-                                                                        msgtxt = "Error reading the amount of working hours of " & hrole.name & " ..."
+                                                                If IsNumeric(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                                                                    Dim angabeInStd As Double = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, Double)
+
+                                                                    If angabeInStd >= 0 And angabeInStd <= 24 Then
+                                                                        anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                                                     Else
-                                                                        msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " ..."
+                                                                        If awinSettings.englishLanguage Then
+                                                                            msgtxt = "Error reading the amount of working hours for " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                        Else
+                                                                            msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                        End If
+                                                                        If Not oPCollection.Contains(msgtxt) Then
+                                                                            oPCollection.Add(msgtxt, msgtxt)
+                                                                        End If
+                                                                        'Call MsgBox(msgtxt)
+                                                                        fehler = True
+                                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                                     End If
-                                                                    If Not oPCollection.Contains(msgtxt) Then
-                                                                        oPCollection.Add(msgtxt, msgtxt)
-                                                                    End If
-                                                                    'Call MsgBox(msgtxt)
-                                                                    fehler = True
-                                                                    Throw New ArgumentException(msgtxt)
+                                                                Else
+                                                                    ' Feld ist weiss, oder hat keine Farbe, keine Zahl: also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                 End If
 
 
+
                                                             Else
-                                                                ' Dim colorInddown As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalDown).ColorIndex
+
+                                                                ' hier wird die Telair Variante gemacht 
+                                                                ' das einfachste wäre eigentlich  
+                                                                'anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+
                                                                 Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
 
                                                                 ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
@@ -11473,6 +11800,8 @@ Public Module agm2
                                                                     anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                 Else
                                                                     ' freier Tag für Teilzeitbeschäftigte
+                                                                    msgtxt = "Tag zählt nicht: Zeile " & iZ & ", Spalte " & sp
+                                                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                                 End If
 
                                                             End If
@@ -11487,7 +11816,7 @@ Public Module agm2
                                                         If Not oPCollection.Contains(msgtxt) Then
                                                             oPCollection.Add(msgtxt, msgtxt)
                                                         End If
-                                                        Throw New ArgumentException(msgtxt)
+                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                     End If
 
                                                 Next
@@ -11512,6 +11841,7 @@ Public Module agm2
                                             End If
                                             'Call MsgBox(msgtxt)
                                             fehler = True
+                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                         End If
                                     Else
 
@@ -11523,7 +11853,7 @@ Public Module agm2
                                         If Not oPCollection.Contains(msgtxt) Then
                                             oPCollection.Add(msgtxt, msgtxt)
                                         End If
-                                        'Call MsgBox(msgtxt)
+                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                     End If
 
                                 Next iZ
@@ -11540,7 +11870,7 @@ Public Module agm2
                                 If Not oPCollection.Contains(msgtxt) Then
                                     oPCollection.Add(msgtxt, msgtxt)
                                 End If
-                                Call MsgBox(msgtxt)
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                             End If
 
                         End If
@@ -11549,20 +11879,20 @@ Public Module agm2
 
 
                 Catch ex2 As Exception
-                    If fehler Then
-                        'Call MsgBox(msgtxt)
+                    'If fehler Then
+                    '    'Call MsgBox(msgtxt)
 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now, err)
+                    '    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now, err)
 
-                        msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
-                        If awinSettings.englishLanguage Then
-                            msgtxt = "Therefore read the capacity of every Role from the DB  ..."
-                        End If
-                        If Not oPCollection.Contains(msgtxt) Then
-                            oPCollection.Add(msgtxt, msgtxt)
-                        End If
-                        Call MsgBox(msgtxt)
-                    End If
+                    '    msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
+                    '    If awinSettings.englishLanguage Then
+                    '        msgtxt = "Therefore read the capacity of every Role from the DB  ..."
+                    '    End If
+                    '    If Not oPCollection.Contains(msgtxt) Then
+                    '        oPCollection.Add(msgtxt, msgtxt)
+                    '    End If
+                    '    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                    'End If
                 End Try
 
                 'kapaWB.Close(SaveChanges:=False)
@@ -16594,42 +16924,44 @@ Public Module agm2
                 Dim currentOrga As New clsOrganisation
 
                 If Not awinSettings.readCostRolesFromDB Then
-                    Dim outputCollection As New Collection
 
-                    ' Auslesen der Rollen Definitionen 
-                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
+                    ' tlk 15.2.19 Orga soll nur noch aus Import Orga geholt werden .. 
+                    'Dim outputCollection As New Collection
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("readRoleDefinitions")
-                    End If
+                    '' Auslesen der Rollen Definitionen 
+                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
 
-                    ' Auslesen der Kosten Definitionen 
-                    Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
+                    'If awinSettings.visboDebug Then
+                    '    Call MsgBox("readRoleDefinitions")
+                    'End If
+
+                    '' Auslesen der Kosten Definitionen 
+                    'Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
 
 
-                    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
+                    '' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
 
-                    If RoleDefinitions.Count > 0 Then
-                        ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                        ' jetzt kommt der Validation-Check 
+                    'If RoleDefinitions.Count > 0 Then
+                    '    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    '    ' jetzt kommt der Validation-Check 
 
-                        Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
-                        Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
+                    '    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
+                    '    Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
 
-                        If outputCollection.Count > 0 Then
-                            Call showOutPut(outputCollection, "Organisations-Definition", "")
-                        End If
+                    '    If outputCollection.Count > 0 Then
+                    '        Call showOutPut(outputCollection, "Organisations-Definition", "")
+                    '    End If
 
-                    End If
+                    'End If
 
-                    ' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
-                    RoleDefinitions.buildTopNodes()
-                    With currentOrga
-                        .validFrom = StartofCalendar
-                        .allRoles = RoleDefinitions
-                        .allCosts = CostDefinitions
-                    End With
+                    '' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
+                    'RoleDefinitions.buildTopNodes()
+                    'With currentOrga
+                    '    .validFrom = StartofCalendar
+                    '    .allRoles = RoleDefinitions
+                    '    .allCosts = CostDefinitions
+                    'End With
 
                 Else
 
@@ -16655,34 +16987,48 @@ Public Module agm2
 
                 End If
 
-                If Not IsNothing(currentOrga) Then
+                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                ' 
+                If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
 
-                    validOrganisations.addOrga(currentOrga)
+                    If currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                    End If
+
 
                     ' Auslesen der Orga, die vor der currentOrga gültig war
                     ' also mit validFrom aus currentOrga lesen - 1 Tag
 
-                    Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
-                    Dim beforeOrga As clsOrganisation =
-                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
+                    'If Not IsNothing(beforeOrga) Then
 
-                    If Not IsNothing(beforeOrga) Then
-                        validOrganisations.addOrga(beforeOrga)
-                    End If
+                    '    If beforeOrga.count > 0 Then
+                    '        validOrganisations.addOrga(beforeOrga)
+                    '    End If
+
+                    'End If
 
 
                     ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
                     ' also mit validFrom aus currentOrga lesen +  1 Tag
 
-                    Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
 
-                    Dim nextOrga As clsOrganisation =
-                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
+                    ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
+                    'Dim nextOrga As clsOrganisation =
+                    'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
 
-                    If Not IsNothing(nextOrga) Then
-                        validOrganisations.addOrga(nextOrga)
-                    End If
+
+                    'If Not IsNothing(nextOrga) Then
+
+                    '    If nextOrga.count > 0 Then
+                    '        validOrganisations.addOrga(nextOrga)
+                    '    End If
+
+                    'End If
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
@@ -16708,11 +17054,34 @@ Public Module agm2
                         customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
                         If IsNothing(customFieldDefinitions) Then
-                            'Call MsgBox(err.errorMsg)
+                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
+                        ElseIf customFieldDefinitions.count = 0 Then
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
                         End If
                     Catch ex As Exception
 
                     End Try
+
+                End If
+
+                ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
+                If awinSettings.allianzI2DelRoles <> "" And awinSettings.readCostRolesFromDB Then
+                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+                    Dim tmpstr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+                    If idArray.Length <> tmpstr.Length Then
+                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.allianzI2DelRoles
+                        Call MsgBox(errMsg)
+                        Throw New ArgumentException(errMsg)
+                    End If
 
                 End If
 
@@ -16837,38 +17206,39 @@ Public Module agm2
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
+                    ' tk 12.2.19 im awinsettypen sollen die Kapas überhaupt nicht mehr gelesen werden ... 
+                    ' das Ganze soll nur noch über Menupunkt Import-Kapazitäten passieren ...
+                    'Dim meldungen As New Collection
+                    'If Not awinSettings.readCostRolesFromDB Then
 
-                    Dim meldungen As New Collection
-                    If Not awinSettings.readCostRolesFromDB Then
+                    '    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                    '    Call readRessourcenDetails(meldungen)
 
-                        ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                        Call readRessourcenDetails(meldungen)
+                    '    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
+                    '    Call readRessourcenDetails2(meldungen)
 
-                        ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                        Call readRessourcenDetails2(meldungen)
+                    '    If meldungen.Count > 0 Then
+                    '        Call showOutPut(meldungen, "Errors Reading Capacities", "")
+                    '        Call logfileSchreiben(meldungen)
+                    '    End If
 
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Errors Reading Capacities", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
+                    '    '    RoleDefinitions.buildTopNodes()
 
-                        '    RoleDefinitions.buildTopNodes()
+                    '    'Else
 
-                        'Else
+                    '    '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
 
-                        '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
+                    '    '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                    '    '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                        '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                        '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                    '    '    RoleDefinitions.buildTopNodes()
 
-                        '    RoleDefinitions.buildTopNodes()
+                    '    '    If awinSettings.visboDebug Then
+                    '    '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                    '    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
+                    '    '    End If
 
-                        '    If awinSettings.visboDebug Then
-                        '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
-                        '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                        '    End If
-
-                    End If
+                    'End If
 
                     '
                     ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
@@ -16900,7 +17270,7 @@ Public Module agm2
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
 
-                    If Not noDB Then
+                    If Not noDB And awinSettings.readCostRolesFromDB Then
 
                         ' ur: 31.08.2017: Initialisierung
                         beforeFilterConstellation = Nothing
@@ -16916,15 +17286,28 @@ Public Module agm2
 
                     End If
 
-                    meldungen = New Collection
+                    Dim meldungen As Collection = New Collection
 
                     ' jetzt werden die Rollen besetzt 
-                    Call setUserRoles(meldungen)
+                    If awinSettings.readCostRolesFromDB Then
+                        Call setUserRoles(meldungen)
 
-                    If meldungen.Count > 0 Then
-                        Call showOutPut(meldungen, "Error: setUserRoles", "")
-                        Call logfileSchreiben(meldungen)
+                        If meldungen.Count > 0 Then
+                            Call showOutPut(meldungen, "Error: setUserRoles", "")
+                            Call logfileSchreiben(meldungen)
+                        End If
+                    Else
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
                     End If
+
 
                     ' Logfile wird geschlossen
                     Call logfileSchliessen()
@@ -17990,11 +18373,12 @@ Public Module agm2
 
 
             Dim err As New clsErrorCodeMsg
+            Dim ts As Date = CDate("1.1.1900")
             Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
             Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
                                                                                            CStr(settingTypes(ptSettingTypes.customfields)),
                                                                                            customFieldsName,
-                                                                                           Nothing,
+                                                                                           ts,
                                                                                            err)
             If Not result Then
                 Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)
@@ -18166,7 +18550,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet, ByRef rollendefinitionen As clsRollen, ByRef meldungen As Collection,
+    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet, ByRef neueRollendefinitionen As clsRollen, ByRef meldungen As Collection,
                                     Optional ByVal readingGroups As Boolean = False)
 
         '
@@ -18218,16 +18602,20 @@ Public Module agm2
                 ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
                 ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
                 ' ausserdem wird gleich mal gecheckt ob die erste Rolle indent = 0 hat und sonstige Indent-Level vorkommen
+                ' ausserdem wird hier gecheckt, ob jeder NAme auch nur genau einmal vorkommt 
 
                 Dim anzWithID As Integer = 0
                 Dim anzWithoutID As Integer = 0
                 Dim IDCollection As New Collection
                 Dim groupDefinitionIsOk As Boolean = True
+                Dim uniqueNames As New Collection
 
                 For i = 2 To anzZeilen - 1
 
                     Try
-                        Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        Dim tmpOrgaName As String = getStringFromExcelCell(CType(rolesRange.Cells(i, 1), Excel.Range))
+
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
@@ -18247,15 +18635,15 @@ Public Module agm2
                         Dim isWithoutID As Boolean = True
 
                         If CStr(c.Value) <> "" Then
-                            If Not IsNothing(tmpValue) Then
-                                If tmpValue.Trim <> "" Then
-                                    If IsNumeric(tmpValue.Trim) Then
-                                        If CInt(tmpValue.Trim) > 0 Then
-                                            If Not IDCollection.Contains(tmpValue.Trim) Then
-                                                IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
+                            If Not IsNothing(tmpIDValue) Then
+                                If tmpIDValue.Trim <> "" Then
+                                    If IsNumeric(tmpIDValue.Trim) Then
+                                        If CInt(tmpIDValue.Trim) > 0 Then
+                                            If Not IDCollection.Contains(tmpIDValue.Trim) Then
+                                                IDCollection.Add(tmpIDValue.Trim, tmpIDValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                errMsg = "roles with identical IDs are not allowed: " & tmpValue.Trim
+                                                errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
                                                 meldungen.Add(errMsg)
                                                 CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
@@ -18273,12 +18661,52 @@ Public Module agm2
                             End If
                         End If
 
+                        ' jetzt auf identisch vorkommende Namen checken ... aber nur im Modus not readingGroups
+                        If Not readingGroups Then
+                            If tmpOrgaName = "" Then
+                                errMsg = "roles with empty string are not allowed "
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                            Else
+                                If Not uniqueNames.Contains(tmpOrgaName) Then
+                                    uniqueNames.Add(tmpOrgaName, tmpOrgaName)
+                                Else
+                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    meldungen.Add(errMsg)
+                                    CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                End If
+                            End If
+                        Else
+                            ' readingGroups
+                            If tmpIDValue <> "" Then
+                                If Not uniqueNames.Contains(tmpOrgaName) Then
+                                    uniqueNames.Add(tmpOrgaName, tmpOrgaName)
+                                    If neueRollendefinitionen.containsName(tmpOrgaName) Then
+                                        errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                        meldungen.Add(errMsg)
+                                        CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    End If
+                                Else
+                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    meldungen.Add(errMsg)
+                                    CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                End If
+                            Else
+                                If neueRollendefinitionen.containsNameID(tmpIDValue) Then
+                                    errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    meldungen.Add(errMsg)
+                                    CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                End If
+                            End If
+                        End If
+
+
                         ' jetzt checken 
                         If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
                             Dim roleName As String = CStr(c.Value.trim)
 
-                            If Not rollendefinitionen.containsName(roleName) Then
+                            If Not neueRollendefinitionen.containsName(roleName) Then
                                 errMsg = "Team-Role " & roleName & " does not exist ..."
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
@@ -18365,12 +18793,12 @@ Public Module agm2
                                 End With
 
                                 ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                                If readingGroups And rollendefinitionen.containsName(hrole.name) Then
+                                If readingGroups And neueRollendefinitionen.containsName(hrole.name) Then
                                     ' nichts tun, alles gut : 
                                 Else
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                    If Not rollendefinitionen.containsName(hrole.name) Then
-                                        rollendefinitionen.Add(hrole)
+                                    If Not neueRollendefinitionen.containsName(hrole.name) Then
+                                        neueRollendefinitionen.Add(hrole)
                                     End If
 
                                 End If
@@ -18425,8 +18853,8 @@ Public Module agm2
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
                                     ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
-                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     If curLevel = maxIndent And readingGroups Then
@@ -18475,8 +18903,8 @@ Public Module agm2
 
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
-                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     ' hier kann er eigentlich nie hinkommen ...
@@ -18774,6 +19202,7 @@ Public Module agm2
 
                 Try
                     awinSettings.allianzI2DelRoles = CStr(.Range("allianzI2DelRoles").Value).Trim
+
                 Catch ex As Exception
                     awinSettings.allianzI2DelRoles = ""
                 End Try
@@ -18985,12 +19414,13 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub readRessourcenDetails2(ByRef meldungen As Collection)
+    Public Sub readInterneAnwesenheitslisten(ByRef meldungen As Collection)
 
         Dim kapaFileName As String
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
+        Dim anzFehler As Integer = 0
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -19014,13 +19444,18 @@ Public Module agm2
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
-                Call readUrlOfRole(tmpDatei, meldungen)
+                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                Call readAvailabilityOfRole(tmpDatei, meldungen)
             Next
 
         Else
             Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
                          & "Es wurde daher jetzt keine berücksichtigt"
-            meldungen.Add(errMsg)
+
+            ' das sollte nicht dazu führen, dass nichts gemacht wird 
+            'meldungen.Add(errMsg)
+
+            Call logfileSchreiben(errMsg, "", anzFehler)
         End If
 
     End Sub

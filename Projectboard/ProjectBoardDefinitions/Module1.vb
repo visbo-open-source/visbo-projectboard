@@ -1216,13 +1216,16 @@ Public Module Module1
                     If selectedProjekte.Count > 0 Then
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-                            If kvp.Value.projectType = ptPRPFType.project Then
+                            If kvp.Value.projectType = ptPRPFType.project Or
+                                myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+
                                 If Not tmpCollection.Contains(kvp.Key) Then
                                     ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
                                     If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
                                         tmpCollection.Add(kvp.Key, kvp.Key)
                                     End If
                                 End If
+
                             End If
 
 
@@ -1232,12 +1235,15 @@ Public Module Module1
                         ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                            If kvp.Value.marker = True And kvp.Value.projectType = ptPRPFType.project Then
+                            If kvp.Value.marker = True And (kvp.Value.projectType = ptPRPFType.project Or
+                                                            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Then
+
                                 If Not tmpCollection.Contains(kvp.Key) Then
                                     ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
                                     If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
                                         tmpCollection.Add(kvp.Key, kvp.Key)
                                     End If
+
                                 End If
                             End If
 
@@ -1246,16 +1252,23 @@ Public Module Module1
                     End If
 
                     If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
-                        ' es dürfen keine Summary Projekte enthalten sein ...
-                        If ShowProjekte.containsAnySummaryProject Then
-                            If awinSettings.englishLanguage Then
-                                Call MsgBox("no summary projects allowed in this context ... please select projects only. ")
-                            Else
-                                Call MsgBox("Summary Projekte nicht zugelassen ... bitte nur einfache Projekte auswählen.")
-                            End If
-                        Else
+
+                        ' Portfolio Manager darf Summary Projekte bearbeiten
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                             ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
                             tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
+                        Else
+                            ' es dürfen keine Summary Projekte enthalten sein ...
+                            If ShowProjekte.containsAnySummaryProject Then
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("no summary projects allowed in this context ... please select projects only. ")
+                                Else
+                                    Call MsgBox("Summary Projekte nicht zugelassen ... bitte nur einfache Projekte auswählen.")
+                                End If
+                            Else
+                                ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
+                                tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
+                            End If
                         End If
 
                     End If
@@ -1525,9 +1538,13 @@ Public Module Module1
         If Not IsNothing(hproj) Then
             ' wenn customUserRole = Portfolio 
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
-                    tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                If Not IsNothing(idArray) Then
+                    If idArray.Length >= 1 Then
+                        tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+                    End If
                 End If
+
             End If
         End If
 
@@ -1537,7 +1554,7 @@ Public Module Module1
 
     ''' <summary>
     ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
-    ''' in diesem Fall kann ind er Hierarchie nicht weiter runtergegangen werden
+    ''' in diesem Fall kann in der Hierarchie nicht weiter runtergegangen werden
     ''' </summary>
     ''' <param name="role"></param>
     ''' <returns></returns>
@@ -1545,9 +1562,11 @@ Public Module Module1
         Dim tmpResult As Boolean = False
 
         If Not IsNothing(role) Then
+
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 ' nur dann muss mehr geprüft werden 
-                tmpResult = myCustomUserRole.getAggregationRoleIDs.Contains(role.UID)
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                tmpResult = idArray.Contains(role.UID)
             End If
         End If
 
@@ -3697,6 +3716,200 @@ Public Module Module1
 
         calcXCoordToSpalte = tmpValue
 
+
+    End Function
+
+    ''' <summary>
+    ''' verteilt die Summe der 
+    ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
+    ''' <param name="oldXwerte"></param>
+    ''' <param name="corrFakt"></param>
+    ''' <returns></returns>
+    Public Function calcVerteilungAufMonate(ByVal startdate As Date, ByVal endedate As Date,
+                                            ByVal oldXwerte() As Double, ByVal corrFakt As Double) As Double()
+        Dim k As Integer
+        Dim newXwerte() As Double
+        Dim gesBedarf As Double
+        Dim Rest As Integer
+        Dim hDatum As Date
+        Dim anzDaysthisMonth As Double
+        Dim newLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        Dim gesBedarfReal As Double = 0.0
+        Dim dauerinDays As Long = DateDiff(DateInterval.Day, startdate, endedate) + 1
+
+        ReDim newXwerte(newLength - 1)
+
+        ' Vorbereitung für Summen Berechnung nur bei Forecast
+        'Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
+        'Dim actualDataColumn As Integer = -1
+
+        'If hasActualData Then
+        '    actualDataColumn = getColumnOfDate(Me.parentProject.actualDataUntil)
+        'End If
+
+        ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
+        ' andernfalls ist eh schon alles richtig 
+        If oldXwerte.Sum > 0 Then
+
+            Try
+
+                gesBedarfReal = oldXwerte.Sum * corrFakt
+                gesBedarf = System.Math.Round(gesBedarfReal)
+
+
+                If newLength = oldXwerte.Length Then
+
+                    'Bedarfe-Verteilung bleibt wie gehabt ... allerdings unter Berücksichtigung corrFakt
+
+
+                    For i = 0 To newLength - 1
+                        newXwerte(i) = oldXwerte(i) * corrFakt
+                    Next
+
+                    ' jetzt ggf die Reste verteilen 
+                    Rest = CInt(gesBedarf - newXwerte.Sum)
+
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
+
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
+
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
+                            End If
+
+                        End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
+
+                    End While
+
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
+                    End If
+
+
+                Else
+
+                    Dim tmpSum As Double = 0
+                    For k = 0 To newXwerte.Length - 1
+
+                        If k = 0 Then
+                            ' damit ist 00:00 des Startdates gemeint 
+                            hDatum = startdate
+
+                            anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                            'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                            'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                        ElseIf k = newXwerte.Length - 1 Then
+                            ' damit hDatum das End-Datum um 23.00 Uhr
+
+                            anzDaysthisMonth = endedate.Day
+                            'hDatum = endedate.AddHours(23)
+                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                        Else
+                            hDatum = startdate
+                            anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                            'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                        End If
+
+                        newXwerte(k) = System.Math.Round(anzDaysthisMonth / (dauerinDays * corrFakt) * gesBedarf)
+                        tmpSum = tmpSum + anzDaysthisMonth
+                    Next k
+
+                    ' Kontrolle für Test ... aChck muss immer Null sein !
+                    'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+                    ' Rest wird auf alle newXwerte verteilt
+
+                    Rest = CInt(gesBedarf - newXwerte.Sum)
+
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
+                            End If
+                        End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
+
+                    End While
+
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
+                    End If
+
+                End If
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' alles auf Null setzen 
+            For ix = 0 To newLength - 1
+                newXwerte(ix) = 0
+            Next
+        End If
+
+        calcVerteilungAufMonate = newXwerte
 
     End Function
 

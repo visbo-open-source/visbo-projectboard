@@ -11,17 +11,14 @@ Public Class clsCustomUserRole
     Private _specifics As String
     ' gibt im Falle Portfolio Manager an, welche Rollen ggf aggregiert werden sollen 
     'Private _portfolioAggregationRoles() As String
-    Private _portfolioAggregationRoleIDs() As Integer
-    ' wird benötigt, um bestimmen zu können, welche projectboard Funktionalität erlaubt / nicht erlaubt ist 
+
     Private _nonAllowance() As String
 
     Public Sub New()
         _userName = ""
         _userID = ""
         _customUserRole = ptCustomUserRoles.Alles
-        _specifics = Nothing
-        '_portfolioAggregationRoles = {""}
-        _portfolioAggregationRoleIDs = {1}
+        _specifics = ""
         _nonAllowance = {""}
     End Sub
 
@@ -38,7 +35,7 @@ Public Class clsCustomUserRole
 
             Case ptCustomUserRoles.OrgaAdmin
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M",
-                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G1B14", "PT4G2M",
+                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M",
                                  "PTneu", "PTedit", "PTview",
                                  "PTfilter", "PTsort", "PT0G1s9",
                                  "PTOPTB1", "PTreport",
@@ -98,7 +95,7 @@ Public Class clsCustomUserRole
 
                 If _customUserRole = ptCustomUserRoles.RessourceManager Then
                     Dim prntTeamID As Integer = -1
-                    Dim parentRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(_specifics, prntTeamID).UID
+                    Dim parentRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(specifics, prntTeamID).UID
                     isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID)
 
                     ' mit dem Folgenden wird sichergestellt, dass ein Ressourcen-Manager , z.B KB1, auch eine Person von KB1 in seiner Eigenschaft als Team-Member sehen kann  
@@ -109,9 +106,10 @@ Public Class clsCustomUserRole
 
 
                 ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    isAllowed = _portfolioAggregationRoleIDs.Contains(roleID)
+                    Dim idArray() As Integer = getAggregationRoleIDs()
+                    isAllowed = idArray.Contains(roleID)
                     If Not isAllowed Then
-                        isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, _portfolioAggregationRoleIDs)
+                        isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
                     End If
 
                 End If
@@ -143,9 +141,9 @@ Public Class clsCustomUserRole
             Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
             Dim encryptedUserRole As String = ""
             If _customUserRole = ptCustomUserRoles.RessourceManager Then
-                encryptedUserRole = visboCrypto.EncryptData(CInt(_customUserRole).ToString & "#" & _specifics)
+                encryptedUserRole = visboCrypto.EncryptData(CInt(customUserRole).ToString & "#" & specifics)
             Else
-                encryptedUserRole = visboCrypto.EncryptData(CInt(_customUserRole).ToString & "#" & "XYZ")
+                encryptedUserRole = visboCrypto.EncryptData(CInt(customUserRole).ToString & "#" & "XYZ")
             End If
 
             encrypt = encryptedUserRole
@@ -161,9 +159,9 @@ Public Class clsCustomUserRole
         Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
         Dim decryptedText As String = visboCrypto.DecryptData(encryptedText)
         Dim tmpstr() As String = decryptedText.Split(New Char() {CChar("#")})
-        _customUserRole = CType(tmpstr(0), ptCustomUserRoles)
-        If _customUserRole = ptCustomUserRoles.RessourceManager Then
-            _specifics = CStr(tmpstr(1))
+        customUserRole = CType(tmpstr(0), ptCustomUserRoles)
+        If customUserRole = ptCustomUserRoles.RessourceManager Then
+            specifics = CStr(tmpstr(1))
         End If
 
 
@@ -196,19 +194,11 @@ Public Class clsCustomUserRole
             customUserRole = _customUserRole
         End Get
         Set(value As ptCustomUserRoles)
-
             If Not IsNothing(value) Then
-                If [Enum].IsDefined(GetType(ptCustomUserRoles), value) Then
-                    _customUserRole = value
-
-                    ' Sonderbehandlung , wenn Portfolio Manager
-                    If Not IsNothing(_specifics) And _customUserRole = ptCustomUserRoles.PortfolioManager Then
-                        Call setAggregationRoles(_specifics)
-                    End If
-
-                End If
+                _customUserRole = value
+            Else
+                _customUserRole = ptCustomUserRoles.OrgaAdmin
             End If
-
         End Set
     End Property
 
@@ -218,14 +208,7 @@ Public Class clsCustomUserRole
         End Get
         Set(value As String)
             If Not IsNothing(value) Then
-
                 _specifics = value
-
-                ' Sonderbehandlung: wenn es sich um einen Portfolio Manager handelt 
-                If _customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    Call setAggregationRoles(_specifics)
-                End If
-
             Else
                 _specifics = ""
             End If
@@ -233,66 +216,34 @@ Public Class clsCustomUserRole
         End Set
     End Property
 
-    '''' <summary>
-    '''' gibt die Namen der AggregationRoleNames in einem String-Array zurück
-    '''' hat nur Bedeutung wenn userRole = portfolioMgr
-    '''' </summary>
-    '''' <returns></returns>
-    'Public ReadOnly Property getAggregationRoleNames As String()
-    '    Get
-    '        getAggregationRoleNames = _portfolioAggregationRoles
-    '    End Get
-    'End Property
 
     ''' <summary>
     ''' gibt die Namen der AggregationRoleIDs in einem Integer-Array zurück
-    ''' hat nur Bedeutung wenn userRole = portfolioMgr
+    ''' Voraussetzung: specifics enthält nur valide IDs
     ''' </summary>
     ''' <returns></returns>
-    Public ReadOnly Property getAggregationRoleIDs As Integer()
-        Get
-            getAggregationRoleIDs = _portfolioAggregationRoleIDs
-        End Get
-    End Property
+    Public Function getAggregationRoleIDs() As Integer()
+        Dim result() As Integer = {1}
 
-    Private Sub setAggregationRoles(ByVal aggregationRoleStr As String)
+        If specifics <> "" And _customUserRole = ptCustomUserRoles.PortfolioManager Then
 
-        Dim tmpStr() As String = aggregationRoleStr.Split(New Char() {CChar(";")})
-        Dim tmpCollection As New Collection
-        Dim teamID As Integer = -1
-        Dim roleUID As String
-
-        For Each tmpName As String In tmpStr
-
-            ' kann eine Uid.string sein, uid;teamID-String oder aber ein rollen-Name 
-            If RoleDefinitions.containsNameID(tmpName.Trim) Then
-                roleUID = RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID.ToString
-                tmpCollection.Add(roleUID)
+            Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+            Dim i As Integer = 0
+            If tmpStr.Length > 0 Then
+                ReDim result(tmpStr.Length - 1)
+                For Each tmpName As String In tmpStr
+                    result(i) = CInt(tmpName)
+                    i = i + 1
+                Next
             End If
 
-
-        Next
-
-        If tmpCollection.Count > 0 Then
-
-            'ReDim _portfolioAggregationRoles(tmpCollection.Count - 1)
-            ReDim _portfolioAggregationRoleIDs(tmpCollection.Count - 1)
-
-            Dim i As Integer = 0
-            ' in tmpCollection sind jetzt ausschließlich RoleNameIDs enthalten
-            For Each tmpNameID As String In tmpCollection
-                'Dim tmpRoleDef As clsRollenDefinition = RoleDefinitions.getRoledef(tmpNameID)
-                '_portfolioAggregationRoles(i) = tmpRoleDef.name
-                '_portfolioAggregationRoleIDs(i) = tmpRoleDef.UID
-                _portfolioAggregationRoleIDs(i) = CInt(tmpNameID)
-                i = i + 1
-            Next
-        Else
-            '_portfolioAggregationRoles = {""}
-            _portfolioAggregationRoleIDs = {1}
         End If
 
-    End Sub
+        getAggregationRoleIDs = result
+
+    End Function
+
+
 
 
 

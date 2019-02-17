@@ -3021,6 +3021,12 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Function berechneBedarfeNew(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
                                ByVal corrFakt As Double) As Double()
+
+        ' wenn sich der bewährt: übernehmen ..
+        'berechneBedarfeNew = calcVerteilungAufMonate(startdate, endedate, oldXwerte, corrFakt)
+
+        ' tk 11.2.19
+        ' alles folgende sollte, wenn sich Module1.calcVerteilungAufMonate(..) bewährt hat durch obigen Befehl ersetzt werden 
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -3076,10 +3082,10 @@ Public Class clsPhase
                             End If
 
                         End If
-                            k = k - 1
-                            If k < 0 Then
-                                k = newXwerte.Length - 1
-                            End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
 
                     End While
 

@@ -45,7 +45,25 @@
             addToSession.Text = "add to session"
             OKButton.Text = "OK"
             Abbrechen.Text = "Cancel"
-            loadAsSummary.Text = "load summary project"
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                If awinSettings.loadPFV Then
+                    loadAsSummary.Text = "load and show summary project"
+                Else
+                    loadAsSummary.Text = "calculate and show summary project"
+                End If
+            Else
+                loadAsSummary.Text = "calculate and show summary project"
+            End If
+        Else
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                If awinSettings.loadPFV Then
+                    loadAsSummary.Text = "Summary Projekt laden und anzeigen"
+                Else
+                    loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
+                End If
+            Else
+                loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
+            End If
         End If
 
     End Sub

@@ -1931,9 +1931,16 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim setting As Object = Nothing
+        Dim oldsetting As Object = Nothing
         Dim newsetting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
+        Dim timestamp As String = ""
+
+        If ts > Date.MinValue Then
+            ts = ts.ToUniversalTime.Date.AddDays(1)
+            'ts = ts.ToUniversalTime
+        End If
 
         Try
 
@@ -1962,9 +1969,10 @@ Public Class Request
 
                 Case settingTypes(ptSettingTypes.organisation)
                     setting = New List(Of clsVCSettingOrganisation)
-                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    setting = GETOneVCsetting(aktVCid, type, name, ts, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
                     If anzSetting > 0 Then
+                        oldsetting = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)
                         settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                     Else
                         settingID = ""
@@ -1972,13 +1980,11 @@ Public Class Request
 
             End Select
 
-            Dim timestamp As String = ""
             If ts > Date.MinValue Then
-                timestamp = DateTimeToISODate(ts.ToUniversalTime())
+                timestamp = DateTimeToISODate(ts)
             Else
-                timestamp = DateTime.Now.ToUniversalTime()
+                timestamp = DateTimeToISODate(Date.Now.ToUniversalTime())
             End If
-
 
             Select Case type
 
@@ -2041,16 +2047,23 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' customroles '
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = timestamp
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = listofOrgaWeb.validFrom.Date
                     CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
 
                     If anzSetting = 1 Then
-                        newsetting._id = settingID
+
                         ' Update der customroles - Setting
-                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom = listofOrgaWeb.validFrom Then
+                            newsetting._id = settingID
+                            result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                        Else
+                            ' Create der customroles - Setting
+                            result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                        End If
+
                     Else
                         ' Create der customroles - Setting
                         result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
@@ -2075,7 +2088,7 @@ Public Class Request
 
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
+            'Throw New ArgumentException(ex.Message & err.errorMsg)
         End Try
 
         storeVCsettingsToDB = result
@@ -2115,12 +2128,12 @@ Public Class Request
                 End If
 
             Else
-                result = Nothing
+
             End If
 
 
         Catch ex As Exception
-
+            Call MsgBox(err.errorMsg)
         End Try
         retrieveCustomUserRoles = result
     End Function
@@ -2151,26 +2164,48 @@ Public Class Request
 
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
-            anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
 
-            If anzSetting > 0 Then
+            If Not IsNothing(setting) Then
 
-                settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
-                webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
-                webOrganisation.copyTo(result)
+                anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
 
-                ' bestimmen der _topLevelNodeIDs
-                result.allRoles.buildTopNodes()
+                If anzSetting > 0 Then
+                    If anzSetting = 1 Then
 
-            Else
-                If err.errorCode = 403 Then
-                    Call MsgBox(err.errorMsg)
+                        settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                        webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+
+                    Else
+                        ' die Organisation suchen, die am nächsten an validFrom liegt
+                        Dim latestOrga As New clsVCSettingOrganisation
+                        Dim orgaSettingsListe As List(Of clsVCSettingOrganisation) = CType(setting, List(Of clsVCSettingOrganisation))
+
+                        For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
+                            If orgaSetting.timestamp > latestOrga.timestamp Then
+                                latestOrga = orgaSetting
+                            End If
+
+                        Next
+                        webOrganisation = latestOrga.value
+
+                    End If
+
+                    webOrganisation.copyTo(result)
+
+                    ' bestimmen der _topLevelNodeIDs
+                    result.allRoles.buildTopNodes()
+
+                Else
+                    If err.errorCode = 403 Then
+                        Call MsgBox(err.errorMsg)
+                    End If
+                    settingID = ""
+
                 End If
-                settingID = ""
-                result = Nothing
+            Else
+                Call MsgBox(err.errorMsg)
+
             End If
-
-
 
         Catch ex As Exception
 
@@ -2202,21 +2237,25 @@ Public Class Request
 
             setting = New List(Of clsVCSettingCustomfields)
             setting = GETOneVCsetting(aktVCid, type, name, ts, "", err, False)
-            anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
 
-            If anzSetting > 0 Then
+            If Not IsNothing(setting) Then
 
-                settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
-                webCustomFields = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0).value
-                webCustomFields.copyTo(result)
+                anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
 
-            Else
-                If err.errorCode = 403 Then
-                    Call MsgBox(err.errorMsg)
+                If anzSetting > 0 Then
+
+                    settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
+                    webCustomFields = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0).value
+                    webCustomFields.copyTo(result)
+
+                Else
+                    If err.errorCode = 403 Then
+                        Call MsgBox(err.errorMsg)
+                    End If
+                    settingID = ""
                 End If
-                settingID = ""
-            End If
 
+            End If
 
 
         Catch ex As Exception
@@ -2362,6 +2401,7 @@ Public Class Request
                                 ' es gibt keinen ProxyServer
                                 awinSettings.proxyURL = ""
                             End If
+
                         End If
 
 
@@ -4112,7 +4152,7 @@ Public Class Request
         Dim webVCsetting As Object = Nothing
 
         Try
-            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime)
+            Dim timestamp As String = DateTimeToISODate(ts)
 
             Select Case type
                 Case settingTypes(ptSettingTypes.customroles)
@@ -4226,7 +4266,7 @@ Public Class Request
     ''' <returns></returns>
     Private Function POSTOneVCsetting(ByVal vcid As String, ByVal type As String, ByVal setting As Object, ByRef err As clsErrorCodeMsg) As Boolean
 
-        Dim result As Boolean
+        Dim result As Boolean = False
         Dim errmsg As String = ""
         Dim errcode As Integer
         Dim webVCsetting As Object = Nothing
@@ -4298,7 +4338,7 @@ Public Class Request
             err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
+            'Throw New ArgumentException(ex.Message)
         End Try
 
         POSTOneVCsetting = result
@@ -4391,7 +4431,7 @@ Public Class Request
             err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
+            'Throw New ArgumentException(ex.Message)
         End Try
 
         PUTOneVCsetting = result

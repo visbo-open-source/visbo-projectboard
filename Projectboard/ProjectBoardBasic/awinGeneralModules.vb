@@ -129,7 +129,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="todoListe"></param>
     ''' <returns></returns>
-    Public Function substitutePortfolioByProjects(ByVal todoListe As Collection,
+    Public Function substituteListeByPVNameIDs(ByVal todoListe As Collection,
                                                   Optional ByVal noNeedtoBeInShowProjekte As Boolean = False) As Collection
 
         Dim err As New clsErrorCodeMsg
@@ -143,11 +143,13 @@ Public Module awinGeneralModules
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
 
                 If Not IsNothing(hproj) Then
-                    If Not hproj.projectType Then
+
+                    If hproj.projectType = ptPRPFType.project Or myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                         key = calcProjektKey(hproj)
                         If Not tmpCollection.Contains(key) Then
                             tmpCollection.Add(key, key)
                         End If
+
                     Else
                         ' muss ersetzt werden 
                         Try
@@ -189,7 +191,7 @@ Public Module awinGeneralModules
                                         ' es handelt sich um ein Summary Projekt, dann muss weiter ersetzt werden 
                                         Dim tmpTodoList As New Collection
                                         tmpTodoList.Add(kvp.Key, kvp.Key)
-                                        Dim teilErgebnis As Collection = substitutePortfolioByProjects(tmpTodoList, True)
+                                        Dim teilErgebnis As Collection = substituteListeByPVNameIDs(tmpTodoList, True)
 
                                         For Each pvname As String In teilErgebnis
                                             If Not tmpCollection.Contains(pvname) Then
@@ -213,7 +215,7 @@ Public Module awinGeneralModules
 
         Next
 
-        substitutePortfolioByProjects = tmpCollection
+        substituteListeByPVNameIDs = tmpCollection
     End Function
 
 
@@ -2126,13 +2128,18 @@ Public Module awinGeneralModules
 
                             '
                             ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                            ' wenn es sich um einen Portfolio Manager handelt: der Vergleich muss mit der letzten Vorgabe stattfinden, weill nur das kann der Portfolio Manager ja auch speichern ... 
 
                             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now, err) Then
+                                Dim lookForVariantName As String = impProjekt.variantName
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And lookForVariantName = "" Then
+                                    lookForVariantName = ptVariantFixNames.pfv.ToString
+                                End If
+                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, lookForVariantName, Date.Now, err) Then
 
                                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now, err)
+                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, lookForVariantName, Date.Now, err)
 
                                     If IsNothing(vglProj) Then
                                         ' kann eigentlich nicht sein 
@@ -3569,10 +3576,10 @@ Public Module awinGeneralModules
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                         If awinSettings.englishLanguage Then
-                            outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                            outputLine = "Portfolio / Summary Project saved: " & sproj.name & ", " & sproj.variantName
                             outPutCollection.Add(outputLine)
                         Else
-                            outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                            outputLine = "Portfolio / Summary Projekt gespeichert: " & sproj.name & ", " & sproj.variantName
                             outPutCollection.Add(outputLine)
                         End If
 

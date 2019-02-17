@@ -3570,6 +3570,10 @@ Public Class frmProjPortfolioAdmin
             If Not browserAlleProjekte.Count = 0 Then
                 browserAlleProjekte.Clear(False)
             End If
+
+            If awinSettings.loadPFV Then
+                variantName = ptVariantFixNames.pfv.ToString
+            End If
             browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True, err)
             ' das darf hier nicht auf false gesetzt werden .... 
             'quickList = False

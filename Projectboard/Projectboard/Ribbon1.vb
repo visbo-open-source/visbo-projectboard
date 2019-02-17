@@ -3348,23 +3348,34 @@ Imports System.Web
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
-                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
                         Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
 
                     ElseIf meModus = ptModus.massEditTermine Then
-                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
                         Call writeOnlineMassEditTermine(projektTodoliste)
 
                     ElseIf meModus = ptModus.massEditAttribute Then
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pNames
                         Call buildCacheProjekte(todoListe, namesArePvNames:=False)
-                        Call writeOnlineMassEditAttribute(todoListe)
+
+                        Call writeOnlineMassEditAttribute(projektTodoliste)
                     Else
                         Exit Sub
                     End If
@@ -3522,12 +3533,17 @@ Imports System.Web
 
         ' check ob auch keine Summary Projects selektiert sind ...
         Dim nameCollection As New Collection
-        If Not noSummaryProjectsareSelected(nameCollection) Then
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            ' ist erlaubt 
+
+        ElseIf Not noSummaryProjectsareSelected(nameCollection) Then
+
             Exit Sub
-        Else
-            Call massEditRcTeAt(ptModus.massEditRessCost)
+
         End If
 
+        Call massEditRcTeAt(ptModus.massEditRessCost)
 
 
     End Sub
@@ -6069,6 +6085,7 @@ Imports System.Web
 
         'Call projektTafelInit()
 
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -6079,41 +6096,76 @@ Imports System.Web
         Dim outputCollection As New Collection
 
         Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
-        RoleDefinitions = changedOrga.allRoles
-        CostDefinitions = changedOrga.allCosts
 
-        ' Einlesen der Kapas
-        Call readMonthlyExternKapas(outputCollection)
-        Call readRessourcenDetails2(outputCollection)
+        If Not IsNothing(changedOrga) Then
+
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                ' Einlesen der Kapas
+                If awinSettings.allianzI2DelRoles.Length > 0 Then
+                    ' Allianz Externe Verträge
+                    Call readMonthlyExternKapasEV(outputCollection)
+                Else
+                    ' VISBO Externe Kapazitäts-Dateien 
+                    Call readMonthlyExternKapas(outputCollection)
+                End If
+
+                Call readInterneAnwesenheitslisten(outputCollection)
 
 
-        changedOrga.allRoles = RoleDefinitions
+                changedOrga.allRoles = RoleDefinitions
 
-        If outputCollection.Count = 0 Then
-            ' keine Fehler aufgetreten ... 
-            ' jetzt wird die Orga als Setting weggespeichert ... 
-            Dim err As New clsErrorCodeMsg
-            Dim result As Boolean = False
-            ' ute -> überprüfen bzw. fertigstellen ... 
-            Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
-            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                                                                            CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                            orgaName,
-                                                                            changedOrga.validFrom,
-                                                                            err)
+                If outputCollection.Count = 0 Then
+                    ' keine Fehler aufgetreten ... 
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    ' ute -> überprüfen bzw. fertigstellen ... 
+                    Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
+                                                                                orgaName,
+                                                                                changedOrga.validFrom,
+                                                                                err)
 
-            If result = True Then
-                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                    If result = True Then
+                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                    Else
+                        Call MsgBox("Error when writing Organisation to Database")
+                        Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                    End If
+
+
+                Else
+                    Call showOutPut(outputCollection, "Importing Capacities", "")
+                    Call logfileSchreiben(outputCollection)
+                End If
             Else
-                Call MsgBox("Error when writing Organisation to Database")
-                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+                End If
+            End If
+
+        Else
+
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
             End If
 
 
-        Else
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
             Call showOutPut(outputCollection, "Importing Capacities", "")
             Call logfileSchreiben(outputCollection)
+
         End If
 
         ' Schließen des LogFiles
@@ -6121,6 +6173,10 @@ Imports System.Web
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
+
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+            .Activate()
+        End With
         appInstance.ScreenUpdating = True
 
     End Sub

@@ -38,8 +38,9 @@ Public Class frmChooseCustomUserRole
                         If .customUserRole = ptCustomUserRoles.PortfolioManager Then
                             dgv_customUserRoles.Rows(i - 1).Cells(1).Value = ""
                         ElseIf .customUserRole = ptCustomUserRoles.RessourceManager Then
-                            Dim tmpteamID As Integer = -1
-                            dgv_customUserRoles.Rows(i - 1).Cells(1).Value = RoleDefinitions.getRoleDefByIDKennung(.specifics, tmpteamID).name
+                            Dim tmpTeamID As Integer = -1
+                            dgv_customUserRoles.Rows(i - 1).Cells(1).Value = RoleDefinitions.getRoleDefByIDKennung(.specifics, tmpTeamID).name
+
                         Else
                             dgv_customUserRoles.Rows(i - 1).Cells(1).Value = ""
                         End If
