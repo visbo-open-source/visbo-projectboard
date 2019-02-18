@@ -54,6 +54,7 @@ Public Class frmStoreReportProfil
         Dim profilName As String = ""
 
         dirName = awinPath & ReportProfileOrdner
+        Dim leer As Boolean = currentReportProfil.isEmpty
 
         Call defineFrmButtonVisibility()
 

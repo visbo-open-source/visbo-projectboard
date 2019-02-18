@@ -4176,39 +4176,58 @@ Imports System.Web
                 sortType = ptSortCriteria.alphabet
             End If
 
-            Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy("Sort Result")
+            If Not IsNothing(currentSessionConstellation) Then
+                If currentSessionConstellation.Liste.Count <> 0 Then
 
-            If currentSortConstellation.sortCriteria <> sortType Then
-                appInstance.ScreenUpdating = False
-                Try
-                    ' nur dann muss was gemacht werden ...  
-                    currentSortConstellation.sortCriteria = sortType
+                    Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy("Sort Result")
 
-                    Dim tmpConstellation As New clsConstellations
-                    tmpConstellation.Add(currentSortConstellation)
+                    If currentSortConstellation.sortCriteria <> sortType Then
+                        appInstance.ScreenUpdating = False
+                        Try
+                            ' nur dann muss was gemacht werden ...  
+                            currentSortConstellation.sortCriteria = sortType
 
-                    ' es in der Session Liste verfügbar machen
-                    If projectConstellations.Contains(currentSortConstellation.constellationName) Then
-                        projectConstellations.Remove(currentSortConstellation.constellationName)
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentSortConstellation)
+
+                            ' es in der Session Liste verfügbar machen
+                            If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                                projectConstellations.Remove(currentSortConstellation.constellationName)
+                            End If
+
+                            projectConstellations.Add(currentSortConstellation)
+
+                            Call showConstellations(constellationsToShow:=tmpConstellation,
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                            ''If sortType = ptSortCriteria.customListe Then
+                            ''    Call awinNeuZeichnenDiagramme(2)
+                            ''Else
+                            ''    ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
+                            ''End If
+                        Catch ex As Exception
+
+                        End Try
+
+                        appInstance.ScreenUpdating = True
+
                     End If
 
-                    projectConstellations.Add(currentSortConstellation)
-
-                    Call showConstellations(constellationsToShow:=tmpConstellation,
-                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
-
-                    ''If sortType = ptSortCriteria.customListe Then
-                    ''    Call awinNeuZeichnenDiagramme(2)
-                    ''Else
-                    ''    ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
-                    ''End If
-                Catch ex As Exception
-
-                End Try
-
-                appInstance.ScreenUpdating = True
-
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("please load projects/portfolios first ...")
+                    Else
+                        Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                    End If
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("please load projects/portfolios first ...")
+                Else
+                    Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+                End If
             End If
+
         Catch ex As Exception
             If appInstance.ScreenUpdating = False Then
                 appInstance.ScreenUpdating = True
@@ -12017,9 +12036,15 @@ Imports System.Web
         appInstance.EnableEvents = True
 
         Dim profilNameForm As New frmStoreReportProfil
-        Dim returnvalue As DialogResult
-        returnvalue = profilNameForm.ShowDialog
 
+        If Not IsNothing(currentReportProfil) Then
+
+            If currentReportProfil.PPTTemplate <> "" Then
+                Dim returnvalue As DialogResult
+                returnvalue = profilNameForm.ShowDialog
+            End If
+
+        End If
         enableOnUpdate = True
     End Sub
 

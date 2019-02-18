@@ -316,21 +316,38 @@ Public Module PBBModules
                         End If
 
                     End If
+
                 Else
 
-                    ' erst am Ende alle Diagramme neu machen ...
-                    Dim tmpConstellations As New clsConstellations
-                    tmpConstellations.Add(beforeFilterConstellation)
+                    If beforeFilterConstellation.Liste.Count = 0 Then
 
-                    '' es in der Session Liste verfügbar machen
-                    'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
-                    '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
-                    'End If
+                        If awinSettings.visboDebug Then
 
-                    'projectConstellations.Add(beforeFilterConstellation)
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("There is no active filter!")
+                            Else
+                                Call MsgBox("Es ist kein Filter gesetzt!")
+                            End If
 
-                    Call showConstellations(constellationsToShow:=tmpConstellations, _
+                        End If
+
+                    Else
+
+                        ' erst am Ende alle Diagramme neu machen ...
+                        Dim tmpConstellations As New clsConstellations
+                        tmpConstellations.Add(beforeFilterConstellation)
+
+                        '' es in der Session Liste verfügbar machen
+                        'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
+                        '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
+                        'End If
+
+                        'projectConstellations.Add(beforeFilterConstellation)
+
+                        Call showConstellations(constellationsToShow:=tmpConstellations,
                                             clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                    End If
 
                 End If
 
@@ -728,7 +745,11 @@ Public Module PBBModules
 
             End If
         Else
-            Call MsgBox("Es sind keine Projekte sichtbar!  ")
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfolios first ...")
+            Else
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+            End If
         End If
 
         ' darf nicht zurückgenommen werden, weil manche Fenster nicht modal angezeigt werden, d.h bevor irgendeine Aktion passiert 
