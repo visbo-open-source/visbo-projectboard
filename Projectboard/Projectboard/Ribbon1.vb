@@ -5708,7 +5708,7 @@ Imports System.Web
                     Dim err As New clsErrorCodeMsg
                     Dim result As Boolean = False
                     ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & importedOrga.validFrom.ToString
+                    Dim orgaName As String = ptSettingTypes.organisation.ToString
                     result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
                                                                                     CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                     orgaName,
@@ -6143,7 +6143,7 @@ Imports System.Web
                     Dim err As New clsErrorCodeMsg
                     Dim result As Boolean = False
                     ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
+                    Dim orgaName As String = ptSettingTypes.organisation.ToString
                     result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
                                                                                 CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                 orgaName,
