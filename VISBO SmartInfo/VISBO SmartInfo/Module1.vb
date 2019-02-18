@@ -473,9 +473,12 @@ Module Module1
                     Dim currentOrga As New clsOrganisation
                     currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                    RoleDefinitions = currentOrga.allRoles
-                    CostDefinitions = currentOrga.allCosts
+                    If Not IsNothing(currentOrga) Then
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        RoleDefinitions = currentOrga.allRoles
+                        CostDefinitions = currentOrga.allCosts
+                    End If
+
 
                     ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
                     ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)

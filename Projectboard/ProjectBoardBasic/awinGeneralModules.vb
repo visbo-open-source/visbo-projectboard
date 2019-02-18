@@ -3157,45 +3157,47 @@ Public Module awinGeneralModules
                     curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
                 End If
 
-                ' der Summayr-Projekt Key ist nicht unbedingt gleich de kvp.key 
-                Dim srKey As String = calcProjektKey(curSummaryProj)
+                If Not IsNothing(curSummaryProj) Then
 
-                If showSummaryProject Then
-                    ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
-                    If AlleProjekte.Containskey(srKey) Then
-                        AlleProjekte.Remove(srKey, True)
+                    ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
+                    Dim srKey As String = calcProjektKey(curSummaryProj)
+
+                    If showSummaryProject Then
+                        ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
+                        If AlleProjekte.Containskey(srKey) Then
+                            AlleProjekte.Remove(srKey, True)
+                        End If
+
+                        Try
+                            AlleProjekte.Add(curSummaryProj, updateCurrentConstellation:=True, checkOnConflicts:=True)
+                            Dim cItem As New clsConstellationItem
+                            With cItem
+                                .projectName = kvp.Value.constellationName
+                                .variantName = curSummaryProj.variantName
+                                .projectTyp = CType(curSummaryProj.projectType, ptPRPFType).ToString
+                                .zeile = zaehler
+                                .show = True
+                            End With
+                            zaehler = zaehler + 1
+                            activeSummaryConstellation.add(cItem, sKey:=zaehler)
+                        Catch ex As Exception
+
+                        End Try
+                    Else
+                        '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                        '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                        If AlleProjektSummaries.Containskey(srKey) Then
+                            AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
+                        End If
+
+                        Try
+                            AlleProjektSummaries.Add(curSummaryProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                        Catch ex As Exception
+
+                        End Try
                     End If
 
-                    Try
-                        AlleProjekte.Add(curSummaryProj, updateCurrentConstellation:=True, checkOnConflicts:=True)
-                        Dim cItem As New clsConstellationItem
-                        With cItem
-                            .projectName = kvp.Value.constellationName
-                            .variantName = curSummaryProj.variantName
-                            .projectTyp = CType(curSummaryProj.projectType, ptPRPFType).ToString
-                            .zeile = zaehler
-                            .show = True
-                        End With
-                        zaehler = zaehler + 1
-                        activeSummaryConstellation.add(cItem, sKey:=zaehler)
-                    Catch ex As Exception
-
-                    End Try
-                Else
-                    '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
-                    '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
-                    If AlleProjektSummaries.Containskey(srKey) Then
-                        AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
-                    End If
-
-                    Try
-                        AlleProjektSummaries.Add(curSummaryProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
-                    Catch ex As Exception
-
-                    End Try
                 End If
-
-
             Next
 
             If showSummaryProject Then
