@@ -21,7 +21,49 @@ Public Class frmReportProfil
     Friend listofProfils As New SortedList(Of String, clsReportAll)
 
 
-  
+    Private Sub defineFrmButtonVisibility()
+
+        If Me.calledFrom = "MS Project" Then
+
+            ' für BHTC-Report wird diese Auswahlmöglichkeit derzeit nicht benötigt
+            Me.rdbEPreports.Enabled = False
+            Me.rdbEPreports.Visible = False
+            Me.rdbMPreports.Enabled = False
+            Me.rdbMPreports.Visible = False
+            Me.changeProfil.Visible = True
+            Me.changeProfil.Enabled = True
+            Me.zeitLabel.Visible = True
+            Me.vonDate.Visible = True
+            Me.bisDate.Visible = True
+            Me.statusLabel.Visible = True
+        Else
+            Me.rdbEPreports.Enabled = True
+            Me.rdbEPreports.Visible = True
+            Me.rdbMPreports.Enabled = True
+            Me.rdbMPreports.Visible = True
+            Me.changeProfil.Visible = False
+            Me.changeProfil.Enabled = False
+
+            Me.zeitLabel.Visible = False
+            Me.vonDate.Visible = False
+            Me.bisDate.Visible = False
+            Me.statusLabel.Visible = False
+        End If
+
+        If awinSettings.englishLanguage Then
+            ' auf Englisch darstellen 
+            Me.Text = "Select a Report Profile to create a report"
+            rdbEPreports.Text = "Singleproject Reports"
+            rdbMPreports.Text = "Multiproject Reports"
+            ReportErstellen.Text = "Create Report"
+            changeProfil.Text = "Modify Report Profile"
+            zeitLabel.Text = "Timespan:"
+        End If
+
+
+
+    End Sub
+
 
     Private Sub frmReportProfil_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
@@ -39,34 +81,17 @@ Public Class frmReportProfil
       
     End Sub
 
-    Private Sub languageSettings()
 
-        If awinSettings.englishLanguage Then
-            ' auf Englisch darstellen 
-            Me.Text = "Select a Report Profile to create a report"
-            rdbEPreports.Text = "Singleproject Reports"
-            rdbMPreports.Text = "Multiproject Reports"
-            ReportErstellen.Text = "Create Report"
-            changeProfil.Text = "Modify Report Profile"
-            zeitLabel.Text = "Timespan:"
-        End If
-
-    End Sub
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Call languageSettings()
+        Call defineFrmButtonVisibility()
 
         zeitraum_definiert = (showRangeLeft > 0 And showRangeRight > showRangeLeft)
 
 
         If Me.calledFrom = "MS Project" Then
 
-            ' für BHTC-Report wird diese Auswahlmöglichkeit derzeit nicht benötigt
-            Me.rdbEPreports.Enabled = False
-            Me.rdbEPreports.Visible = False
-            Me.rdbMPreports.Enabled = False
-            Me.rdbMPreports.Visible = False
 
             Try
 
@@ -164,9 +189,11 @@ Public Class frmReportProfil
 
 
                 Else
-                    Dim msgTxt As String = "Fehler: es existiert kein ReportProfil"
+                    Dim msgTxt As String = ""
                     If awinSettings.englishLanguage Then
                         msgTxt = "Error: no Report Profile existing!"
+                    Else
+                        msgTxt = "Fehler: es existiert kein ReportProfil"
                     End If
                     Throw New ArgumentException(msgTxt)
 
@@ -182,7 +209,8 @@ Public Class frmReportProfil
 
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
 
-        
+
+
             Try
                 If currentReportProfil.name = "Last" Then
                     ' Profil von letztem Report unter Name "Last" speichern
@@ -320,19 +348,23 @@ Public Class frmReportProfil
 
 
                 Else
-                    Dim errTxt As String = " Es existiert noch kein Report-Profil! "
+                    Dim errTxt As String
                     If awinSettings.englishLanguage Then
                         errTxt = "no Report Profile existing!"
+                    Else
+                        errTxt = " Es existiert noch kein Report-Profil! "
                     End If
                     Throw New ArgumentException(errTxt)
 
                 End If
 
-                Me.zeitLabel.Visible = False
-                Me.vonDate.Visible = False
-                Me.bisDate.Visible = False
-                Me.changeProfil.Visible = True
-                Me.statusLabel.Visible = False
+                'Me.zeitLabel.Visible = False
+                'Me.vonDate.Visible = False
+                'Me.bisDate.Visible = False
+                '' ur: 18.02.2019: für Allianz entfernt, da keine Phasen und Meilensteine ausgewählt werden, höchsten Rollen
+                ''Me.changeProfil.Visible = True
+                'Me.changeProfil.Visible = False
+                'Me.statusLabel.Visible = False
 
             Catch ex As Exception
                 'Call MsgBox(ex.Message)
@@ -1150,11 +1182,11 @@ Public Class frmReportProfil
                 End Try
 
 
-                Me.zeitLabel.Visible = False
-                Me.vonDate.Visible = False
-                Me.bisDate.Visible = False
-                Me.changeProfil.Visible = True
-                Me.statusLabel.Visible = False
+                'Me.zeitLabel.Visible = False
+                'Me.vonDate.Visible = False
+                'Me.bisDate.Visible = False
+                'Me.changeProfil.Visible = True
+                'Me.statusLabel.Visible = False
             End If
 
         End If
@@ -1195,11 +1227,11 @@ Public Class frmReportProfil
                 End Try
 
 
-                Me.zeitLabel.Visible = False
-                Me.vonDate.Visible = False
-                Me.bisDate.Visible = False
-                Me.changeProfil.Visible = True
-                Me.statusLabel.Visible = False
+                'Me.zeitLabel.Visible = False
+                'Me.vonDate.Visible = False
+                'Me.bisDate.Visible = False
+                'Me.changeProfil.Visible = True
+                'Me.statusLabel.Visible = False
 
             End If
         Else

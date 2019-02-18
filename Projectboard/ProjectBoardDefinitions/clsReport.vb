@@ -56,22 +56,22 @@ Public Class clsReport
 
     ''' <summary>
     ''' prüft ob irgendein Report gesetzt ist 
+    ''' es muss mindestens ein PPT-Template gewählt sein
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property isEmpty As Boolean
         Get
-            Dim sum As Integer = reportPhase.Count + reportMilestone.Count + _
-                                 reportRolle.Count + reportCost.Count + _
-                                 reportTyp.Count + reportBU.Count
+            Dim result As Boolean = False
 
-            If sum = 0 Then
-                isEmpty = True
+            If reportPPTTemplate = "" Then
+                result = True
             Else
-                isEmpty = False
+                result = False
             End If
 
+            isEmpty = result
         End Get
     End Property
 
