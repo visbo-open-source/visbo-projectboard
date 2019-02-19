@@ -6889,7 +6889,8 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="hproj">das selektierte Projekt</param>
     ''' <remarks></remarks>
-    Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean)
+    Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean,
+                                  Optional ByVal calledFromMassEdit As Boolean = False)
 
 
         Dim err As New clsErrorCodeMsg
