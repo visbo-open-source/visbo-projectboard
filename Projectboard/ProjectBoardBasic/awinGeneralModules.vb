@@ -428,9 +428,148 @@ Public Module awinGeneralModules
         Dim tmpRange As Excel.Range
         Dim tempWSName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
 
+        'Dim tmpStart As Date
+        Try
+
+            Call prepareCalendar(wsName3)
+
+            With wsName3
+
+                ' ur: 19.02.2019: wird nun mit "Call prepareCalendar(wsName3)" erledigt
+
+                'Dim rng As Excel.Range
+                ''Dim colDate As date
+                'If awinSettings.zeitEinheit = "PM" Then
+                '    ' die Kalender-Leiste schreiben 
+                '    CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar
+                '    CType(.Cells(1, 2), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(1)
+                '    rng = .Range(.Cells(1, 1), .Cells(1, 2))
+                '    '' Deutsches Format:
+                '    'rng.NumberFormat = "[$-407]mmm yy;@"
+                '    ' Englische Format:
+                '    rng.NumberFormat = "[$-409]mmm yy;@"
+
+                '    Dim destinationRange As Excel.Range = .Range(.Cells(1, 1), .Cells(1, 720))
+                '    With destinationRange
+                '        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                '        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                '        '' Deutsches Format: 
+                '        'rng.NumberFormat = "[$-407]mmm yy;@"
+                '        ' Englische Format:
+                '        .NumberFormat = "[$-409]mmm yy;@"
+                '        .WrapText = False
+                '        .Orientation = 90
+                '        .AddIndent = False
+                '        .IndentLevel = 0
+                '        ' Änderung tk 14.11 - sonst können ja die Spaltenbreiten ud Höhen nicht explizit gesetzt werden 
+                '        ' das ist vor allem auf der Zeichenfläche notwendig, weil sonst die Berechnung und Positionierung der Grafik Elemente nicht mehr stimmt 
+                '        .ShrinkToFit = True
+                '        .ReadingOrder = Excel.Constants.xlContext
+                '        .MergeCells = False
+                '        .Interior.Color = noshowtimezone_color
+                '        .Font.Color = calendarFontColor
+                '    End With
+
+                '    rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+                'ElseIf awinSettings.zeitEinheit = "PW" Then
+                '    For i As Integer = 1 To 210
+                '        CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddDays((i - 1) * 7)
+                '    Next
+                'ElseIf awinSettings.zeitEinheit = "PT" Then
+                '    Dim workOnSat As Boolean = False
+                '    Dim workOnSun As Boolean = False
+
+
+                '    If Weekday(StartofCalendar, FirstDayOfWeek.Monday) > 3 Then
+                '        tmpStart = StartofCalendar.AddDays(8 - Weekday(StartofCalendar, FirstDayOfWeek.Monday))
+                '    Else
+                '        tmpStart = StartofCalendar.AddDays(Weekday(StartofCalendar, FirstDayOfWeek.Monday) - 8)
+                '    End If
+                '    '
+                '    ' jetzt ist tmpstart auf Montag ... 
+                '    Dim tmpDay As Date
+                '    Dim i As Integer = 1
+
+                '    For w As Integer = 1 To 30
+                '        For d As Integer = 0 To 4
+                '            ' das sind Montag bis Freitag
+                '            tmpDay = tmpStart.AddDays(d)
+                '            If Not feierTage.Contains(tmpDay) Then
+                '                CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                '                i = i + 1
+                '            End If
+                '        Next
+                '        tmpDay = tmpStart.AddDays(5)
+                '        If workOnSat Then
+                '            CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                '            i = i + 1
+                '        End If
+                '        tmpDay = tmpStart.AddDays(6)
+                '        If workOnSun Then
+                '            CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                '            i = i + 1
+                '        End If
+                '        tmpStart = tmpStart.AddDays(7)
+                '    Next
+
+
+                'End If
+
+
+                ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
+
+                Dim maxRows As Integer = .Rows.Count
+                Dim maxColumns As Integer = .Columns.Count
+
+                tmpRange = CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range)
+                CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+                CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
+                CType(.Columns, Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
+
+                With CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "####0"
+                    .WrapText = False
+                    .Orientation = 0
+                    .AddIndent = False
+                    ' Änderung tk 14.11 - sonst können ja die Spaltenbreiten ud Höhen nicht explizit gesetzt werden 
+                    ' das ist vor allem auf der Zeichenfläche notwendig, weil sonst die Berechnung und Positionierung der Grafik Elemente nicht mehr stimmt 
+                    .ShrinkToFit = True
+                    .ReadingOrder = Excel.Constants.xlContext
+                    .MergeCells = False
+                End With
+
+                boxWidth = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Width)
+                boxHeight = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Height)
+
+                topOfMagicBoard = CDbl(CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Height) + 0.1 * boxHeight
+                screen_correct = 0.1 * 19.3 / boxWidth
+
+
+                Dim laenge As Integer
+                laenge = showRangeRight - showRangeLeft
+
+                If laenge > 0 And showRangeLeft > 0 Then
+
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Interior.Color = showtimezone_color
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Font.Color = calendarFontColor
+
+                End If
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Public Sub prepareCalendar(ByVal wsname As Microsoft.Office.Interop.Excel.Worksheet)
+
         Dim tmpStart As Date
         Try
-            With wsName3
+            With wsname
                 Dim rng As Excel.Range
                 'Dim colDate As date
                 If awinSettings.zeitEinheit = "PM" Then
@@ -509,55 +648,15 @@ Public Module awinGeneralModules
 
 
                 End If
-
-
-                ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
-
-                Dim maxRows As Integer = .Rows.Count
-                Dim maxColumns As Integer = .Columns.Count
-
-                tmpRange = CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range)
-                CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-                CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
-                CType(.Columns, Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
-
-                With CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range)
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    .NumberFormat = "####0"
-                    .WrapText = False
-                    .Orientation = 0
-                    .AddIndent = False
-                    ' Änderung tk 14.11 - sonst können ja die Spaltenbreiten ud Höhen nicht explizit gesetzt werden 
-                    ' das ist vor allem auf der Zeichenfläche notwendig, weil sonst die Berechnung und Positionierung der Grafik Elemente nicht mehr stimmt 
-                    .ShrinkToFit = True
-                    .ReadingOrder = Excel.Constants.xlContext
-                    .MergeCells = False
-                End With
-
-                boxWidth = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Width)
-                boxHeight = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Height)
-
-                topOfMagicBoard = CDbl(CType(.Cells(1, 1), Global.Microsoft.Office.Interop.Excel.Range).Height) + 0.1 * boxHeight
-                screen_correct = 0.1 * 19.3 / boxWidth
-
-
-                Dim laenge As Integer
-                laenge = showRangeRight - showRangeLeft
-
-                If laenge > 0 And showRangeLeft > 0 Then
-
-                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Interior.Color = showtimezone_color
-                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Font.Color = calendarFontColor
-
-                End If
-
             End With
         Catch ex As Exception
 
         End Try
 
+
     End Sub
+
+
 
     ''' <summary>
     ''' liest die Konstellationen und Abhängigkeiten in der Datenbank 

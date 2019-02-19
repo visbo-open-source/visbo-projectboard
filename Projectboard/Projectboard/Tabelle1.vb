@@ -84,7 +84,16 @@ Public Class Tabelle1
         appInstance.EnableEvents = False
 
         Try
-            Target.Clear()
+            If Target.Row = 1 Then
+
+                Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)),
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+                Call prepareCalendar(wsName3)
+
+            Else
+                Target.Clear()
+            End If
+
         Catch ex As Exception
 
         End Try
