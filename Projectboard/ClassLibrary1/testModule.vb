@@ -5608,7 +5608,7 @@ Public Module testModule
                                 hheight = chartHeight  ' height of all charts
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True, pptSize)
 
                                 reportObj = obj
 
@@ -5624,7 +5624,6 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = boxName
                                     End If
 
-                                    .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
                                 ''reportObj.Copy()
@@ -5675,7 +5674,7 @@ Public Module testModule
                                 hheight = chartHeight  ' height of all charts
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True, pptSize)
 
                                 reportObj = obj
 
@@ -5691,7 +5690,6 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = boxName
                                     End If
 
-                                    .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
                                 ''reportObj.Copy()
@@ -5734,7 +5732,7 @@ Public Module testModule
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
                                 ' Diagramm-Typen 8 ist Milestone Categories
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(8), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(8), True, pptSize)
 
                                 reportObj = obj
 
@@ -5753,7 +5751,6 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = boxName
                                     End If
 
-                                    .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
                                 ''reportObj.Copy()
@@ -5796,7 +5793,7 @@ Public Module testModule
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
                                 ' Diagramm-Typen 7 ist Phase Categories
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(7), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(7), True, pptSize)
 
                                 reportObj = obj
 
@@ -5815,7 +5812,6 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = boxName
                                     End If
 
-                                    .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
                                 ''reportObj.Copy()
@@ -5882,13 +5878,13 @@ Public Module testModule
                                 hheight = chartHeight  ' height of all charts
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
 
                                 reportObj = obj
                                 ' jetzt wird die Größe der Überschrift neu bestimmt ...
-                                With reportObj
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
+                                'With reportObj
+                                '    .Chart.ChartTitle.Font.Size = pptSize
+                                'End With
 
                                 ''reportObj.Copy()
                                 ''newShapeRange = pptSlide.Shapes.Paste
@@ -5936,13 +5932,13 @@ Public Module testModule
                                 hheight = chartHeight  ' height of all charts
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
 
                                 reportObj = obj
                                 ' jetzt wird die Größe der Überschrift neu bestimmt ...
-                                With reportObj
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
+                                'With reportObj
+                                '    '.Chart.ChartTitle.Font.Size = pptSize
+                                'End With
 
                                 ''reportObj.Copy()
                                 ''newShapeRange = pptSlide.Shapes.Paste
@@ -5989,13 +5985,14 @@ Public Module testModule
                                 hheight = chartHeight  ' height of all charts
                                 hwidth = chartWidth   ' width of all charts
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True)
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
 
                                 reportObj = obj
 
-                                With reportObj
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
+                                ' wird in createprc.. gemacht ... andernfalls wird eine ggf rote Markierung im Title überschreiben ... 
+                                'With reportObj
+                                '    .Chart.ChartTitle.Font.Size = pptSize
+                                'End With
 
                                 ''reportObj.Copy()
                                 ''newShapeRange = pptSlide.Shapes.Paste

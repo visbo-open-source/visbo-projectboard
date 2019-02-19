@@ -9805,7 +9805,7 @@ Imports System.Web
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
                 Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
-                                                                     chTop, chLeft, chWidth, chHeight, False)
+                                                                     chTop, chLeft, chWidth, chHeight, False, True)
             End If
 
             ' dann das PRCCollectionChart ...
@@ -9816,7 +9816,7 @@ Imports System.Web
             Dim myCollection As New Collection
             myCollection.Add(rcName)
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
-                                                                   chWidth, chHeight, False, prcTyp, True)
+                                                                   chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
 
             ' jetzt das Portfolio Chart Budget anzeigen ... 
             Dim obj As Excel.ChartObject = Nothing

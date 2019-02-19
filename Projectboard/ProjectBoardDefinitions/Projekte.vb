@@ -11196,9 +11196,10 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                                    ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
-                                                    ByVal calledFromReporting As Boolean)
+    Public Sub createProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                                    ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
+                                                    ByVal calledFromReporting As Boolean,
+                                                    Optional ByVal calledbyMassEdit As Boolean = False)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -11229,7 +11230,7 @@ Public Module Projekte
         Dim found As Boolean = False
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            If calledfromReporting Then
+            If calledFromReporting Then
                 currentSheetName = arrWsNames(ptTables.repCharts)
             Else
                 currentSheetName = arrWsNames(ptTables.mptPrCharts)
@@ -11380,7 +11381,7 @@ Public Module Projekte
 
                 Dim newChtObj As Excel.ChartObject
 
-                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),  _
+                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(currentSheetName),
                     Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
 
                 Dim newChart As Microsoft.Office.Interop.Excel.Chart = newChtObj.Chart
@@ -11526,7 +11527,7 @@ Public Module Projekte
 
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
 
@@ -12041,7 +12042,7 @@ Public Module Projekte
 
 
     End Sub
-    
+
 
     ''' <summary>
     ''' aktualisiert das Projekt Ergebnis Chart 
@@ -12051,8 +12052,9 @@ Public Module Projekte
     ''' <param name="auswahl"></param>
     ''' <param name="changeScale"></param>
     ''' <remarks></remarks>
-    Public Sub updateProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
-                                                        ByVal auswahl As Integer, ByVal changeScale As Boolean)
+    Public Sub updateProjektErgebnisCharakteristik2(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject,
+                                                        ByVal auswahl As Integer, ByVal changeScale As Boolean,
+                                                    Optional ByVal calledFromMassEdit As Boolean = False)
 
 
         Dim diagramTitle As String
@@ -12350,7 +12352,7 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
                 ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle

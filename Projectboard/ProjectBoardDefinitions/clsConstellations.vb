@@ -62,7 +62,11 @@
             Dim tmpResult As Double = 0.0
             For Each pfKvP As KeyValuePair(Of String, Boolean) In _listOfLoadedSessionPortfolios
 
-                Dim key As String = calcProjektKey(pfKvP.Key, ptVariantFixNames.pfv.ToString)
+                Dim variantName As String = ""
+                If awinSettings.loadPFV Then
+                    variantName = ptVariantFixNames.pfv.ToString
+                End If
+                Dim key As String = calcProjektKey(pfKvP.Key, variantName)
                 Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                 ' wenn ein Portfolio nicht über Platzhalter geladen wird, dann werden die Summary Projekte in AlleProjektSummaries platziert ..
