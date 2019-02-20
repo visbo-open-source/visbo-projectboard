@@ -8623,10 +8623,10 @@ Public Module agm2
 
                     ' lese den Projekt-Namen
                     Try
-                        pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value)
+                        pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value).Trim
                         ok = True
                     Catch ex As Exception
-                        pName = "?"
+                        pName = Nothing
                     End Try
 
 
