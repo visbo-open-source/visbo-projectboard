@@ -132,7 +132,7 @@ Public Class ThisWorkbook
             End If
 
             ' Refresh von Projekte im Cache  in Minuten
-            cacheUpdateDelay = 10
+            cacheUpdateDelay = 30
 
             'appInstance.EnableEvents = False
             Call awinsetTypen("ProjectBoard")
