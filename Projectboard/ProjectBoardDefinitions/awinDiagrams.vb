@@ -127,12 +127,14 @@ Public Module awinDiagrams
     ''' <param name="isCockpitChart"></param>
     ''' <param name="prcTyp"></param>
     ''' <remarks>myCollection am 23.5 per byval übergeben, damit im Falle der Rollen myCollection ausgeweitet werden kann ...</remarks>
-    Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
-                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean)
+    Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
+                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean, Optional ByVal givenTitleSize As Double = 12.0)
 
         Dim von As Integer, bis As Integer
 
         Dim anzDiagrams As Integer, i As Integer, m As Integer, r As Integer
+
+
 
         'Dim korr_abstand As Double
         Dim minwert As Double, maxwert As Double
@@ -177,7 +179,7 @@ Public Module awinDiagrams
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
-       
+
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -558,7 +560,8 @@ Public Module awinDiagrams
                         If isPersCost Then
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                 '.name = prcName & " intern "
-                                .Name = prcName & repMessages.getmsg(115)
+                                '.Name = prcName & repMessages.getmsg(115)
+                                .Name = repMessages.getmsg(115)
                                 .Interior.Color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
@@ -580,15 +583,20 @@ Public Module awinDiagrams
                         Else
                             Dim legendName As String = ""
                             ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
-                            If repMessages.getmsg(275) <> "" Then
-                                legendName = prcName & " " & repMessages.getmsg(275)
+                            If awinSettings.englishLanguage Then
+                                legendName = "Sum over all projects"
                             Else
-                                If awinSettings.englishLanguage Then
-                                    legendName = "Sum over all projects"
-                                Else
-                                    legendName = "Summe über alle Projekte"
-                                End If
+                                legendName = "Summe über alle Projekte"
                             End If
+                            'If repMessages.getmsg(275) <> "" Then
+                            '    legendName = prcName & " " & repMessages.getmsg(275)
+                            'Else
+                            '    If awinSettings.englishLanguage Then
+                            '        legendName = "Sum over all projects"
+                            '    Else
+                            '        legendName = "Summe über alle Projekte"
+                            '    End If
+                            'End If
 
 
                             If prcTyp = DiagrammTypen(5) Then
@@ -859,25 +867,31 @@ Public Module awinDiagrams
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                     End If
 
-                    .ChartTitle.Text = diagramTitle & titleSumme
+
+
                     ' lastSC muss  bestimmt werden 
                     lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    If calledfromReporting Then
+                        newChtObj.Chart.ChartTitle.Font.Size = givenTitleSize
+                    Else
+                        newChtObj.Chart.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    End If
+
 
                     If isCockpitChart Then
 
-                        .ChartTitle.Font.Size = awinSettings.CPfontsizeTitle
-                        .HasLegend = False
+                        newChtObj.Chart.ChartTitle.Font.Size = awinSettings.CPfontsizeTitle
+                        newChtObj.Chart.HasLegend = False
 
                     Else
 
                         'ElseIf lastSC > 1 Then
 
-                        .HasLegend = True
+                        newChtObj.Chart.HasLegend = True
 
-                        .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                        .Legend.Font.Size = awinSettings.fontsizeLegend
+                        newChtObj.Chart.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+                        newChtObj.Chart.Legend.Font.Size = awinSettings.fontsizeLegend
                         'Else
                         '    .HasLegend = False
                     End If
@@ -961,6 +975,43 @@ Public Module awinDiagrams
 
                 End If
 
+                ' bestimmen des Chart-Titles 
+
+                Dim startRed As Integer = -1
+                Dim lengthRed As Integer = -1
+
+                If prcTyp = DiagrammTypen(1) Then
+                    ' Rolle 
+                    Dim scInfo As New clsSmartPPTChartInfo
+                    With scInfo
+
+                        .q2 = prcName
+                        .elementTyp = ptElementTypen.roles
+                        .einheit = PTEinheiten.personentage
+                        .chartTyp = PTChartTypen.Balken
+                        .vergleichsTyp = PTVergleichsTyp.letzter
+                        .vergleichsArt = PTVergleichsArt.beauftragung
+                    End With
+
+                    Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRed, lengthRed)
+
+                    ' ---- hier dann final den Titel setzen 
+
+                    newChtObj.Chart.HasTitle = True
+                    newChtObj.Chart.ChartTitle.Text = newDiagramTitle
+
+                    newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
+
+                    If startRed > 0 And lengthRed > 0 Then
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRed, lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                    End If
+
+
+
+                Else
+                    newChtObj.Chart.ChartTitle.Text = diagramTitle & titleSumme
+                End If
 
 
             End If
@@ -1436,7 +1487,8 @@ Public Module awinDiagrams
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                         '.name = prcName & " intern "
-                        .Name = prcName & repMessages.getmsg(115)
+                        '.Name = prcName & repMessages.getmsg(115)
+                        .Name = repMessages.getmsg(115)
                         .Interior.Color = objektFarbe
                         .Values = datenreihe
                         .XValues = Xdatenreihe
@@ -1720,8 +1772,40 @@ Public Module awinDiagrams
                 titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
             End If
 
+            Dim startRed As Integer = -1
+            Dim lengthRed As Integer = -1
+            If prcTyp = DiagrammTypen(1) And Not awinSettings.showValuesOfSelected Then
+                ' Rolle 
+                Dim scInfo As New clsSmartPPTChartInfo
+                With scInfo
+                    .q2 = prcName
+                    .elementTyp = ptElementTypen.roles
+                    .einheit = PTEinheiten.personentage
+                    .chartTyp = PTChartTypen.Balken
+                    .vergleichsTyp = PTVergleichsTyp.letzter
+                    .vergleichsArt = PTVergleichsArt.beauftragung
+                End With
+                Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRed, lengthRed)
 
-            .ChartTitle.Text = diagramTitle & titleSumme
+                ' ---- hier dann final den Titel setzen 
+
+                .HasTitle = True
+                .ChartTitle.Text = newDiagramTitle
+
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
+
+                If startRed > 0 And lengthRed > 0 Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+                            lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                End If
+
+
+
+            Else
+                .ChartTitle.Text = diagramTitle & titleSumme
+            End If
+
             ' lastSC muss  bestimmt werden 
             lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
@@ -6796,7 +6880,7 @@ Public Module awinDiagrams
         Dim leadingAddOn As String = ""
         Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
 
-        Dim vProjDoesExist = (Not IsNothing(scInfo.vglProj))
+        Dim vProjDoesExist = ((Not IsNothing(scInfo.vglProj)) Or (vsum > 0))
 
         Dim qualifier2 As String = scInfo.q2
 
