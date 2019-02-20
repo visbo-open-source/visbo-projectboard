@@ -1167,7 +1167,7 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
-                        Call aktualisiereCharts(visboZustaende.lastProject, True)
+                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -1946,7 +1946,7 @@ Public Class Tabelle2
                 selectedProjekte.Clear(False)
                 selectedProjekte.Add(.lastProject, False)
 
-                Call aktualisiereCharts(.lastProject, True)
+                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True)
 
                 If Not IsNothing(rcName) Then
 

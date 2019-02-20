@@ -7685,44 +7685,6 @@ Public Module Module1
     End Function
 
 
-    ''' <summary>
-    ''' bestimmt die Überschrift ...
-    ''' </summary>
-    ''' <param name="outPutInPT"></param>
-    ''' <param name="chartTyp"></param>
-    ''' <param name="pmrcName"></param>
-    ''' <param name="actualSum"></param>
-    ''' <param name="approvedSum"></param>
-    ''' <returns></returns>
-    Public Function bestimmeChartTitle(ByVal outPutInPT As Boolean, ByVal chartTyp As Integer, ByVal pmrcName As String, ByVal actualSum As Double, ByVal approvedSum As Double) As String
-        Dim tmpTitle As String = ""
-        Dim unitBezeichnung As String = ""
-
-        If awinSettings.englishLanguage Then
-            If outPutInPT Then
-                unitBezeichnung = "PD"
-            Else
-                unitBezeichnung = "T€"
-            End If
-        Else
-            If outPutInPT Then
-                unitBezeichnung = "PT"
-            Else
-                unitBezeichnung = "T€"
-            End If
-        End If
-
-        Select Case chartTyp
-            Case 0
-            Case 1
-            Case 2
-            Case Else
-
-        End Select
-
-
-        bestimmeChartTitle = tmpTitle
-    End Function
 
     Public Function bestimmeChartYValues(ByVal curProj As clsProjekt, ByVal chartTyp As Integer, ByVal pmrcName As String, ByVal von As Integer, ByVal bis As Integer) As Double()
         bestimmeChartYValues = Nothing

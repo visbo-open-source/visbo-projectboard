@@ -420,6 +420,7 @@ Module Module1
         Dim err As New clsErrorCodeMsg
 
         Dim tmpResult As Boolean = False
+        Dim meldungen As New Collection
 
         ' sind die Zugangsdaten mit den aktuellen identisch ?
         ' wenn nein, dann wird noDBaccess auf false gesetzt 
@@ -449,13 +450,14 @@ Module Module1
                 allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
                 ' Behandeln der myUserRole 
-                Dim meldungen As New Collection
+
 
                 ' jetzt wird die für die Slide passende Rolle gesucht 
-                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"))
+                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
 
                 If meldungen.Count > 0 Then
-                    Call showOutPut(meldungen, "Error: Keine Berechtigung", "")
+                    Call MsgBox(meldungen.Item(1))
+                    'Call showOutPut(meldungen, "Error: Keine Berechtigung", "")
                 Else
 
                     ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
@@ -506,8 +508,10 @@ Module Module1
 
         Else
             ' jetzt wird die für die Slide passende Rolle gesucht 
-            myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"))
+            myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
             If IsNothing(myCustomUserRole) Then
+
+                msg = "Error: Keine Berechtigung"
                 tmpResult = False
             Else
                 tmpResult = True
@@ -526,7 +530,8 @@ Module Module1
     ''' <param name="myUserName"></param>
     ''' <param name="encryptedUserRoleString"></param>
     ''' <returns></returns>
-    Public Function getAppropriateUserRole(ByVal myUserName As String, ByVal encryptedUserRoleString As String) As clsCustomUserRole
+    Public Function getAppropriateUserRole(ByVal myUserName As String, ByVal encryptedUserRoleString As String,
+                                           ByRef meldungen As Collection) As clsCustomUserRole
         Dim result As clsCustomUserRole = Nothing
 
         Dim err As New clsErrorCodeMsg
@@ -576,6 +581,16 @@ Module Module1
             Else
                 result = Nothing
             End If
+        End If
+
+        If IsNothing(result) Then
+            Dim msg As String = ""
+            If awinSettings.englishLanguage Then
+                msg = "Sorry, you don't have the required user role"
+            Else
+                msg = "Leider haben Sie nicht die geforderte Berechtigung"
+            End If
+            meldungen.Add(msg)
         End If
 
         getAppropriateUserRole = result
@@ -9146,6 +9161,7 @@ Module Module1
 
                         Else
                             ' hier ggf auf invisible setzen, wenn erforderlich 
+                            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
                         End If
 
 
@@ -9169,7 +9185,8 @@ Module Module1
                             Call pptAPP_AufbauSmartSlideLists(currentSlide)
 
                         Else
-                            ' hier ggf auf invisible setzen, wenn erforderlich 
+                            ' hier ggf auf invisible setzen, wenn erforderlich
+                            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
                         End If
 
                     End If
