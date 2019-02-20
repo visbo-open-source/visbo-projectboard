@@ -17355,13 +17355,14 @@ Public Module agm2
 
         Catch ex As Exception
             Dim msg As String = ""
-            If Not ex.Message.StartsWith("LOGIN cancelled") Then
-                ' wird an der aufrufenden Stelle gemacht 
-                'Call MsgBox("Fehler in awinsettypen " & special & vbLf & ex.Message)
-                msg = "Fehler in awinsettypen " & special & vbLf & ex.Message
-            Else
+
+            If ex.Message.StartsWith("LOGIN cancelled") Or ex.Message.Contains("User") Then
                 msg = ex.Message
+            Else
+                ' wird an der aufrufenden Stelle gemacht 
+                msg = "Fehler in awinsettypen " & special & vbLf & ex.Message
             End If
+
             Throw New ArgumentException(msg)
         End Try
 
@@ -17416,22 +17417,25 @@ Public Module agm2
                     myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
 
                 Else
-                    myCustomUserRole = New clsCustomUserRole
-                    With myCustomUserRole
-
-                        If awinSettings.readCostRolesFromDB Then
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                        Else
-                            .customUserRole = ptCustomUserRoles.ProjektLeitung
-                        End If
-
-                        .specifics = ""
-                        .userName = dbUsername
-                    End With
+                    ' noch keine Rollen dem User zugewiesen
+                    myCustomUserRole = Nothing
                 End If
 
-                ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                Call myCustomUserRole.setNonAllowances()
+                If Not IsNothing(myCustomUserRole) Then
+                    ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                    Call myCustomUserRole.setNonAllowances()
+                Else
+                    Dim message As String
+                    If awinSettings.englishLanguage Then
+                        message = "User hasn't got any role" & vbLf & "Please contact your administrator"
+                        meldungen.Add("User hasn't got any role")
+                    Else
+                        message = "Dem aktuellen User wurde noch keine Rolle zugewiesen" & vbLf & "Bitte kontaktieren Sie ihren Administrator"
+                        meldungen.Add("Dem User wurde noch keine Rolle zugewiesen")
+                    End If
+                    Throw New ArgumentException(message)
+                End If
+
             End If
 
         Else
