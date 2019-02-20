@@ -9899,7 +9899,7 @@ Imports System.Web
                 .prPF = ptPRPFType.project
                 .elementTyp = ptElementTypen.roles
                 .chartTyp = PTChartTypen.Balken
-                .detailID = PTprdk.KostenBalken
+                .detailID = PTprdk.KostenBalken2
             End With
 
             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
@@ -9911,6 +9911,7 @@ Imports System.Web
                 scInfo.vglProj = lproj
                 scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                 scInfo.q2 = ""
+                scInfo.detailID = PTprdk.KostenBalken2
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
@@ -9933,6 +9934,7 @@ Imports System.Web
                 scInfo.vglProj = lproj
                 scInfo.vergleichsTyp = PTVergleichsTyp.erster
                 scInfo.q2 = ""
+                scInfo.detailID = PTprdk.KostenBalken
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
