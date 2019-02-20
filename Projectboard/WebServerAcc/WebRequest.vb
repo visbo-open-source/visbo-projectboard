@@ -1160,7 +1160,7 @@ Public Class Request
 
         If aktUser.email = userName Then
 
-            stored = stored.ToUniversalTime
+            stored = stored.ToUniversalTime.AddSeconds(1)
 
             Try
                 Dim vpid As String = ""
