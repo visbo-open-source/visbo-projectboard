@@ -2117,6 +2117,8 @@ Public Module awinGeneralModules
             pName.Contains("#") Or
             pName.Contains("(") Or
             pName.Contains(")") Or
+            pName.Contains("[") Or
+            pName.Contains("]") Or
             pName.Contains(vbCr) Or
             pName.Contains(vbLf) Then
             ergebnis = False
@@ -2149,6 +2151,12 @@ Public Module awinGeneralModules
         End If
         If pName.Contains(")") Then
             pName = pName.Replace(")", "-")
+        End If
+        If pName.Contains("[") Then
+            pName = pName.Replace("[", "-")
+        End If
+        If pName.Contains("]") Then
+            pName = pName.Replace("]", "-")
         End If
         If pName.Contains(vbCr) Then
             pName = pName.Replace(vbCr, " ")

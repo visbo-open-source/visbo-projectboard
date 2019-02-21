@@ -9242,6 +9242,33 @@ Public Module agm2
     End Function
 
     ''' <summary>
+    ''' wenn in der Spalte ein #ABP oder eine sonstige Allianz Gruppe vermerkt ist, dann zurückgeben 
+    ''' </summary>
+    ''' <param name="excelCell"></param>
+    ''' <returns></returns>
+    Private Function getAllianzTeamNameFromCell(ByVal excelCell As Excel.Range) As String
+        Dim tmpResult As String = ""
+
+        If Not IsNothing(excelCell) Then
+            Dim cellValue As String = CStr(excelCell.Value).Trim
+            If cellValue.StartsWith("#") Then
+
+                Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
+                    tmpResult = tmpStr1(0).Trim
+                ElseIf RoleDefinitions.containsName(tmpStr2(0).Trim) Then
+                    tmpResult = tmpStr2(0).Trim
+                End If
+
+            End If
+        End If
+
+
+        getAllianzTeamNameFromCell = tmpResult
+    End Function
+
+    ''' <summary>
     ''' importiert die Offline Ressourcen Dateien 
     ''' </summary>
     ''' <param name="wb"></param>
@@ -10050,6 +10077,7 @@ Public Module agm2
     Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
+        Dim potentialReferatsListe() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -10192,7 +10220,7 @@ Public Module agm2
                 Dim colResource As Integer = CType(.Range("G1"), Excel.Range).Column
                 Dim colProjectNr As Integer = CType(.Range("C1"), Excel.Range).Column
                 Dim colPname As Integer = CType(.Range("D1"), Excel.Range).Column
-
+                Dim colActivity As Integer = CType(.Range("E1"), Excel.Range).Column
                 Dim colYear As Integer = CType(.Range("H1"), Excel.Range).Column
                 Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
                 Dim colEuroActuals As Integer = CType(.Range("L1"), Excel.Range).Column
@@ -10212,21 +10240,53 @@ Public Module agm2
                     Try
                         ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
-                        If Not IsNothing(tmpReferat) Then
+                        Dim roleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
+                        Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colResource), Excel.Range))
+                        Dim roleNameID As String = ""
+                        Dim weitermachen As Boolean = False
+
+                        If RoleDefinitions.containsNameID(roleName) Then
+
+                            Dim parentReferat As String = RoleDefinitions.chooseParentFromList(roleName, potentialReferatsListe)
+
+                            If parentReferat.Length > 0 Then
+                                ' Beste Alternative 
+                                weitermachen = True
+                                If Not referatsCollection.Contains(parentReferat) Then
+                                    referatsCollection.Add(parentReferat, parentReferat)
+                                End If
+                                roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
+                            Else
+                                ' Parent Referat nicht gefunden - eigentlich seltsam ... immerhin hat er die Rolle in der Roledefinitions gefunden 
+                                If RoleDefinitions.containsName(tmpReferat) Then
+                                    ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
+                                    If tmpReferat = "D-BITSV-KB" Then
+                                        tmpReferat = "D-BITSV-KB0"
+                                        '' jetzt auch AMIS in ReferatsCollection aufnehmen ..
+                                        'If Not referatsCollection.Contains("AMIS") Then
+                                        '    referatsCollection.Add("AMIS", "AMIS")
+                                        'End If
+                                    End If
+                                    If Not referatsCollection.Contains(tmpReferat) Then
+                                        referatsCollection.Add(tmpReferat, tmpReferat)
+                                    End If
+                                End If
+                            End If
+                        Else
+                            ' jetzt wird gesucht, ob es ein Team gibt 
+
+                            ' Parent Referat nicht gefunden - eigentlich seltsam ... immerhin hat er die Rolle in der Roledefinitions gefunden 
                             If RoleDefinitions.containsName(tmpReferat) Then
                                 ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
-                                If tmpReferat = "D-BOSV-KB" Then
-                                    tmpReferat = "D-BOSV-KB0"
-                                    ' jetzt auch AMIS in ReferatsCollection aufnehmen ..
-                                    If Not referatsCollection.Contains("AMIS") Then
-                                        referatsCollection.Add("AMIS", "AMIS")
-                                    End If
+                                If tmpReferat = "D-BITSV-KB" Then
+                                    tmpReferat = "D-BITSV-KB0"
                                 End If
                                 If Not referatsCollection.Contains(tmpReferat) Then
                                     referatsCollection.Add(tmpReferat, tmpReferat)
                                 End If
                             End If
                         End If
+
 
                         Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                         Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
@@ -11242,7 +11302,8 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        kapaFolder = awinPath & projektRessOrdner
+        'kapaFolder = awinPath & projektRessOrdner
+        kapaFolder = importOrdnerNames(PTImpExp.Kapas)
 
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
@@ -16611,23 +16672,27 @@ Public Module agm2
             importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
             importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
             importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-            importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
-            importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
-            importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+            importOrdnerNames(PTImpExp.batchlists) = awinPath & "Import\Batch Projektlisten"
+            importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\Modulare Szenarien"
+            importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\AddOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
-            importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\massEdit"
-            importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\massEdit"
+            importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\MassEdit"
+            importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
-            importOrdnerNames(PTImpExp.Orga) = awinPath & "requirements"
-            importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "requirements"
-            importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
+            importOrdnerNames(PTImpExp.Orga) = awinPath & "Import\Organisation"
+            'importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "requirements"
+            importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
+            'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
+            importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
+            importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities
+"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
             exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-            exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
-            exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-            exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\massEdit"
+            exportOrdnerNames(PTImpExp.batchlists) = awinPath & "Export\Scenario Definitions"
+            exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\Modulare Szenarien"
+            exportOrdnerNames(PTImpExp.massenEdit) = awinPath & "Export\MassEdit"
             exportOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Export\Scenario Definitions"
 
             If special = "ProjectBoard" Then
@@ -16742,7 +16807,7 @@ Public Module agm2
 
                 Call setWindowParameters()
 
-                Call logfileOpen(clear:=True)
+                Call logfileOpen()
 
                 Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
@@ -18754,7 +18819,7 @@ Public Module agm2
                             tmpStr = CType(c.Value, String)
                             If isValidRoleName(tmpStr, errMsg) Then
                                 If readingGroups Then
-                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
                                 Else
                                     przSatz = 1.0
                                 End If
@@ -18847,7 +18912,8 @@ Public Module agm2
                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
                             If readingGroups Then
-                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 4), 1.0, 0.0, 1.0)
+                                ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
+                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                             Else
                                 przSatz = 1.0
                             End If
@@ -18865,7 +18931,14 @@ Public Module agm2
                                         If Not parentRole.isTeam Then
                                             parentRole.isTeam = True
                                         End If
-                                        subRole.addTeam(parentRole.UID, przSatz)
+                                        If subRole.getSubRoleCount > 0 Then
+                                            ' Fehler ! 
+                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                            meldungen.Add(errMsg)
+                                        Else
+                                            subRole.addTeam(parentRole.UID, przSatz)
+                                        End If
+
                                     End If
 
                                     ' 29.6.18 auch hier den Parent weiterschalten 
@@ -18883,7 +18956,7 @@ Public Module agm2
                                     curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                     curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                     If readingGroups Then
-                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 4), 1.0, 0.0, 1.0)
+                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                     Else
                                         przSatz = 1.0
                                     End If
@@ -18916,7 +18989,15 @@ Public Module agm2
                                         If Not parentRole.isTeam Then
                                             parentRole.isTeam = True
                                         End If
-                                        subRole.addTeam(parentRole.UID, przSatz)
+
+                                        If subRole.getSubRoleCount > 0 Then
+                                            ' Fehler ! 
+                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                            meldungen.Add(errMsg)
+                                        Else
+                                            subRole.addTeam(parentRole.UID, przSatz)
+                                        End If
+
                                     End If
 
                                 Else
@@ -19439,8 +19520,11 @@ Public Module agm2
         kapaFileName = "Urlaubsplaner*.xlsx"
 
         ' Dateien mit WildCards lesen
-        listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
+        listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
                      FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+        'listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
+        '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
         ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
         ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")

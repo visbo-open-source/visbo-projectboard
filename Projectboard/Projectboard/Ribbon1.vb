@@ -4934,7 +4934,8 @@ Imports System.Web
             End If
         Else
             ' Aktion durchführen ...
-            getInventurImport.menueAswhl = PTImpExp.simpleScen
+            'getInventurImport.menueAswhl = PTImpExp.simpleScen
+            getInventurImport.menueAswhl = PTImpExp.batchlists
             returnValue = getInventurImport.ShowDialog
 
             If returnValue = DialogResult.OK Then
@@ -5643,8 +5644,10 @@ Imports System.Web
     Public Sub PTImportOrga(Control As IRibbonControl)
 
         Dim selectedWB As String = ""
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "organisation*.xls*")
+        'Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        Dim dirname As String = importOrdnerNames(PTImpExp.Orga)
+
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*rganisation*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
@@ -5674,6 +5677,8 @@ Imports System.Web
                 selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
+        Else
+            Call MsgBox("keine Organisations-Dateien gefunden ..." & vbLf & "Folder: " & dirname & vbLf & "Dateien müssen folgender Namensgebung genügen *rganisation*.xls*")
         End If
 
         If weiterMachen Then
@@ -5791,7 +5796,7 @@ Imports System.Web
                 weiterMachen = True
             End If
         Else
-            Call MsgBox("keine Offline-Daten vorhanden ...")
+            Call MsgBox("keine Offline-Daten vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Name muss folgender Namensgebung entsprechen: *ffline*.xls*")
             weiterMachen = False
         End If
 
@@ -5882,7 +5887,7 @@ Imports System.Web
 
         Dim selectedWB As String = ""
 
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.simpleScen))
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
@@ -5912,7 +5917,7 @@ Imports System.Web
                 weiterMachen = True
             End If
         Else
-            Call MsgBox("keine Istdaten vorhaben ...")
+            Call MsgBox("keine Istdaten vorhaben ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss folgender Namensgebung entsprechen:  Istdaten*.xls*")
         End If
 
         If weiterMachen Then
@@ -5999,7 +6004,10 @@ Imports System.Web
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
         Dim selectedWB As String = ""
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        'Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+
+        Dim dirname As String = importOrdnerNames(PTImpExp.customUserRoles)
+
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*roles*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
@@ -6030,6 +6038,8 @@ Imports System.Web
                 selectedWB = CStr(getUserRoleFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
+        Else
+            Call MsgBox("keine Dateien vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss diesen Teilstring enthalten: '" & "roles'")
         End If
 
         If weiterMachen Then

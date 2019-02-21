@@ -24,8 +24,8 @@ Public Class frmSelectRPlanImport
         ElseIf menueAswhl = PTImpExp.rplanrxf Then
             dirname = importOrdnerNames(PTImpExp.rplanrxf)
             Me.Text = "RPLAN RXF Dateien auswählen"
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirname = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.batchlists Then
+            dirname = importOrdnerNames(PTImpExp.batchlists)
             Me.Text = "Szenario Dateien auswählen"
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirname = importOrdnerNames(PTImpExp.modulScen)
@@ -95,8 +95,8 @@ Public Class frmSelectRPlanImport
             dirName = importOrdnerNames(PTImpExp.rplan)
         ElseIf menueAswhl = PTImpExp.rplanrxf Then
             dirName = importOrdnerNames(PTImpExp.rplanrxf)
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirName = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.batchlists Then
+            dirName = importOrdnerNames(PTImpExp.batchlists)
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirName = importOrdnerNames(PTImpExp.modulScen)
         ElseIf menueAswhl = PTImpExp.addElements Then
