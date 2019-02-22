@@ -1616,7 +1616,8 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition = Nothing
 
         For Each rvkvp As KeyValuePair(Of String, Double()) In roleValues
-            hrole = RoleDefinitions.getRoledef(rvkvp.Key)
+            Dim teamID As Integer = -1
+            hrole = RoleDefinitions.getRoleDefByIDKennung(rvkvp.Key, teamID)
             If Not IsNothing(hrole) Then
                 tmpResult = tmpResult + rvkvp.Value.Sum * hrole.tagessatzIntern
             End If
@@ -2117,6 +2118,8 @@ Public Module awinGeneralModules
             pName.Contains("#") Or
             pName.Contains("(") Or
             pName.Contains(")") Or
+            pName.Contains("[") Or
+            pName.Contains("]") Or
             pName.Contains(vbCr) Or
             pName.Contains(vbLf) Then
             ergebnis = False
@@ -2149,6 +2152,12 @@ Public Module awinGeneralModules
         End If
         If pName.Contains(")") Then
             pName = pName.Replace(")", "-")
+        End If
+        If pName.Contains("[") Then
+            pName = pName.Replace("[", "-")
+        End If
+        If pName.Contains("]") Then
+            pName = pName.Replace("]", "-")
         End If
         If pName.Contains(vbCr) Then
             pName = pName.Replace(vbCr, " ")

@@ -248,7 +248,7 @@ Public Class clsawinSettings
 
     ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
     ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
-    Public Property allianzI2DelRoles As String = ""
+    Public Property allianzIstDatenReferate As String = ""
 
     Public Property visboServer As Boolean
 
@@ -274,7 +274,7 @@ Public Class clsawinSettings
     Sub New()
 
         ReDim _importSettings(17)
-        _allianzI2DelRoles = ""
+        _allianzIstDatenReferate = ""
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue
