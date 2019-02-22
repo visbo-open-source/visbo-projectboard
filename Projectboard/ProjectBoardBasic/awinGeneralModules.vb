@@ -1616,7 +1616,8 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition = Nothing
 
         For Each rvkvp As KeyValuePair(Of String, Double()) In roleValues
-            hrole = RoleDefinitions.getRoledef(rvkvp.Key)
+            Dim teamID As Integer = -1
+            hrole = RoleDefinitions.getRoleDefByIDKennung(rvkvp.Key, teamID)
             If Not IsNothing(hrole) Then
                 tmpResult = tmpResult + rvkvp.Value.Sum * hrole.tagessatzIntern
             End If

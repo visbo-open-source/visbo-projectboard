@@ -378,7 +378,7 @@ Public Class clsRollen
             Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
             For Each tmpName As String In tmpStr
                 tmpName = tmpName.Trim
-                If RoleDefinitions.containsName(tmpName) Then
+                If RoleDefinitions.containsNameID(tmpName) Then
                     realAnzahl = realAnzahl + 1
                 End If
             Next
@@ -388,8 +388,9 @@ Public Class clsRollen
                 Dim ix As Integer = 0
                 For Each tmpName As String In tmpStr
                     tmpName = tmpName.Trim
-                    If RoleDefinitions.containsName(tmpName) Then
-                        tmpResult(ix) = RoleDefinitions.getRoledef(tmpName).UID
+                    If RoleDefinitions.containsNameID(tmpName) Then
+                        Dim teamID As Integer
+                        tmpResult(ix) = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).UID
                         ix = ix + 1
                     End If
                 Next
@@ -437,6 +438,8 @@ Public Class clsRollen
         Dim teamID As Integer = -1
 
         Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+
         If summaryRoleIDs.Contains(roleID) Then
             tmpResult = RoleDefinitions.getRoleDefByID(roleID).name
 
@@ -492,6 +495,8 @@ Public Class clsRollen
         Dim teamID As Integer = -1
 
         Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+
         If roleID = summaryRoleID Then
             tmpResult = True
 

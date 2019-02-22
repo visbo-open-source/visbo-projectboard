@@ -9254,15 +9254,28 @@ Public Module agm2
             If cellValue.StartsWith("#") Then
 
                 Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
-                Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
-                    tmpResult = tmpStr1(0).Trim
-                ElseIf RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                    tmpResult = tmpStr2(0).Trim
-                End If
 
+                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
+
+                    If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                        tmpResult = tmpStr1(0).Trim
+                    End If
+
+                Else
+                    Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                    If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
+                        tmpResult = tmpStr2(0).Trim
+                    Else
+                        Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
+                        If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
+                            tmpResult = tmpstr3(0).Trim
+                        End If
+                    End If
+
+                End If
             End If
         End If
+
 
 
         getAllianzTeamNameFromCell = tmpResult
@@ -9296,7 +9309,7 @@ Public Module agm2
         Dim newProj As clsProjekt = Nothing
         Dim projektKundenNummer As String = ""
 
-        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
 
 
         ' welche Rollen sollen gelöscht werden; die werden dann danach gesetzt, ob es sich um einen Ressource-Manager handelt, 
@@ -9770,7 +9783,7 @@ Public Module agm2
         Dim deleteRoles As New Collection
 
         ' jetzt werden die aufgebaut ...
-        If awinSettings.allianzI2DelRoles = "" Then
+        If awinSettings.allianzIstDatenReferate = "" Then
 
             deleteRoles.Add("D-BOSV-KB0")
             deleteRoles.Add("D-BOSV-KB1")
@@ -9779,7 +9792,7 @@ Public Module agm2
             deleteRoles.Add("Grp-BOSV-KB")
 
         Else
-            Dim tmpStr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+            Dim tmpStr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
             For Each tmpRCName As String In tmpStr
                 If RoleDefinitions.containsName(tmpRCName.Trim) Then
                     deleteRoles.Add(tmpRCName.Trim)
@@ -10077,7 +10090,8 @@ Public Module agm2
     Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
-        Dim potentialReferatsListe() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+        ' alle Einträge zu dieser Referatsliste werden gelöscht 
+        Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -10102,6 +10116,19 @@ Public Module agm2
 
         ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
         Dim referatsCollection As New Collection
+
+        For Each itemID As Integer In istDatenReferatsliste
+
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+
+            If Not IsNothing(tmpRole) Then
+                If Not referatsCollection.Contains(tmpRole.name) Then
+                    referatsCollection.Add(tmpRole.name, tmpRole.name)
+                End If
+            End If
+
+        Next
+
 
 
 
@@ -10240,198 +10267,214 @@ Public Module agm2
                     Try
                         ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
-                        Dim roleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
-                        Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colResource), Excel.Range))
+                        Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
+                        Dim roleName As String = fullRoleName
+                        Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
                         Dim roleNameID As String = ""
+                        Dim parentReferat As String = ""
                         Dim weitermachen As Boolean = False
 
+                        ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
+                        ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
                         If RoleDefinitions.containsNameID(roleName) Then
 
-                            Dim parentReferat As String = RoleDefinitions.chooseParentFromList(roleName, potentialReferatsListe)
+                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
                                 weitermachen = True
-                                If Not referatsCollection.Contains(parentReferat) Then
-                                    referatsCollection.Add(parentReferat, parentReferat)
-                                End If
                                 roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
                             Else
-                                ' Parent Referat nicht gefunden - eigentlich seltsam ... immerhin hat er die Rolle in der Roledefinitions gefunden 
-                                If RoleDefinitions.containsName(tmpReferat) Then
-                                    ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
-                                    If tmpReferat = "D-BITSV-KB" Then
-                                        tmpReferat = "D-BITSV-KB0"
-                                        '' jetzt auch AMIS in ReferatsCollection aufnehmen ..
-                                        'If Not referatsCollection.Contains("AMIS") Then
-                                        '    referatsCollection.Add("AMIS", "AMIS")
-                                        'End If
-                                    End If
-                                    If Not referatsCollection.Contains(tmpReferat) Then
-                                        referatsCollection.Add(tmpReferat, tmpReferat)
-                                    End If
-                                End If
+                                ' Parent Referat nicht gefunden - 
+                                ' Fehlermeldung ... 
+                                weitermachen = False
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+
+                                outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
+                                outputCollection.Add(outPutLine)
+
+                                ReDim logArray(1)
+                                logArray(0) = "Rolle hat kein Ist-Daten Referat "
+                                logArray(1) = roleName
+
+                                Call logfileSchreiben(logArray)
+
                             End If
                         Else
-                            ' jetzt wird gesucht, ob es ein Team gibt 
+                            ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
+                            If teamName.Length > 0 Then
+                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
 
-                            ' Parent Referat nicht gefunden - eigentlich seltsam ... immerhin hat er die Rolle in der Roledefinitions gefunden 
-                            If RoleDefinitions.containsName(tmpReferat) Then
-                                ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
+                                If parentReferat.Length > 0 Then
+                                    ' 2. Beste Alternative 
+                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
+                                    weitermachen = True
+                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
+                                    roleName = teamName
+                                    teamName = ""
+
+                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
+                                Else
+                                    ' es muss als letzte Bastion das Referat genommen werden ... 
+                                    If tmpReferat = "D-BITSV-KB" Then
+                                        tmpReferat = "D-BITSV-KB0"
+                                    End If
+
+                                    parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
+
+                                    If parentReferat.Length > 0 Then
+                                        ' 3. Beste Alternative 
+                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
+
+                                        weitermachen = True
+                                        ' IN Folge sollen die Werte dem Team zugeordnet werden 
+                                        roleName = parentReferat
+                                        teamName = ""
+
+                                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
+                                    Else
+                                        ' Fehlermeldung 
+                                        ' 
+                                        weitermachen = False
+                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+                                        outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
+                                        outputCollection.Add(outPutLine)
+
+                                        ReDim logArray(1)
+                                        logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
+                                        logArray(1) = roleName
+
+                                        Call logfileSchreiben(logArray)
+
+
+                                    End If
+
+
+                                End If
+                            Else
+                                ' es muss als letzte Alternative das Referat genommen werden ... 
                                 If tmpReferat = "D-BITSV-KB" Then
                                     tmpReferat = "D-BITSV-KB0"
                                 End If
-                                If Not referatsCollection.Contains(tmpReferat) Then
-                                    referatsCollection.Add(tmpReferat, tmpReferat)
+                                parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
+
+                                If parentReferat.Length > 0 Then
+                                    ' 3. Beste Alternative 
+                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
+                                    weitermachen = True
+                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
+                                    roleName = parentReferat
+                                    teamName = ""
+
+                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
+                                Else
+                                    ' Fehlermeldung 
+                                    ' 
+                                    weitermachen = False
+                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+                                    outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
+                                    outputCollection.Add(outPutLine)
+
+                                    ReDim logArray(1)
+                                    logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
+                                    logArray(1) = roleName
+
+                                    Call logfileSchreiben(logArray)
+
+
                                 End If
-                            End If
-                        End If
-
-
-                        Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
-                        Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
-
-                        Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
-
-                        Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
-                        Dim isExtern As Boolean = False
-
-                        Try
-                            Dim tstExtern As String = CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value)
-                            isExtern = (tstExtern = "Extern")
-                        Catch ex1 As Exception
-                            isExtern = False
-                        End Try
-
-                        Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
-                        Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
-                        Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
-
-                        Dim shallContinue As Boolean = False
-                        Dim oldProj As clsProjekt = Nothing
-
-                        If Not handledNames.ContainsKey(tmpPName) Then
-
-                            ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
-                            If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable, createUnknown) Then
-                                shallContinue = True
-                                handledNames.Add(tmpPName, pName)
-
-                            Else
-                                outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
-                                outputCollection.Add(outPutLine)
-
-                                ReDim logArray(4)
-                                logArray(0) = "unbekannte PNr / Projekt "
-                                logArray(1) = tmpPNr
-                                logArray(2) = pName
-                                logArray(3) = ""
-                                logArray(4) = ""
-                                Call logfileSchreiben(logArray)
-
-                                shallContinue = False
-                                handledNames.Add(tmpPName, "")
 
                             End If
 
-                        Else
-                            shallContinue = (handledNames.Item(tmpPName).Length > 0)
                         End If
 
-                        If Not readAll Then
-                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0
-                        Else
-                            ' readAll:
-                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= lastValidMonth And curZuwPTValue >= 0
-                        End If
+                        If weitermachen Then
 
-                        If shallContinue Then
-                            'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
-                            ' nur dann handelt es sich um ein zuordenbares Projekt ... 
-                            ' nur dann geht es um gültige Werte
+                            Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                            Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
 
-                            ' jetzt wird eine sortedlist of sortedlist aufgebaut
-                            ' Projekte, dann Rollen mit Values 
-                            ' 
-                            pName = handledNames.Item(tmpPName)
-                            Dim pvkey As String = calcProjektKey(pName, "")
-                            oldProj = cacheProjekte.getProject(pvkey)
+                            Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
 
-                            If Not IsNothing(oldProj) Then
+                            Dim isExtern As Boolean = False
 
-                                Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
+                            Try
+                                Dim tstExtern As String = CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value)
+                                isExtern = (tstExtern = "Extern")
+                            Catch ex1 As Exception
+                                isExtern = False
+                            End Try
 
-                                ' tk 7.8.18, um zu verhindern, dass Rollen mehrfach gezählt werden, wenn sie in der Config Datei / Ist-Daten  Datei zu unterschiedlichen Referaten gehören ...   
-                                ' sicherstellen, dass roleName auch existiert ..
-                                If roleName <> "" Then
-                                    If Not RoleDefinitions.hasAnyChildParentRelationsship(roleName, referatsCollection) Then
-                                        ' in diesem Fall muss die Eltern-Rolle der RoleName noch aufgenommen werden ..
-                                        Dim tmpparentRole As String = ""
-                                        Try
-                                            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                            Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                            Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
 
-                                            tmpparentRole = RoleDefinitions.getParentRoleOf(roleUID).name
-                                            If Not referatsCollection.Contains(tmpparentRole) Then
-                                                referatsCollection.Add(tmpparentRole, tmpparentRole)
-                                            End If
-                                        Catch ex As Exception
+                            Dim shallContinue As Boolean = False
+                            Dim oldProj As clsProjekt = Nothing
 
-                                        End Try
+                            If Not handledNames.ContainsKey(tmpPName) Then
 
-                                        ReDim logArray(4)
-                                        logArray(0) = "Rolle hat anderes Referat wie in Konfiguration"
-                                        logArray(1) = ""
-                                        logArray(2) = tmpReferat
-                                        logArray(3) = fullRoleName
-                                        logArray(4) = tmpparentRole
-                                        Call logfileSchreiben(logArray)
-
-                                    End If
-                                End If
-
-
-
-                                If roleName = "" And tmpReferat <> "" Then
-                                    ' dann ersetzen durch 
-                                    roleName = tmpReferat
-
-                                    If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
-                                        unKnownRoleNames.Add(fullRoleName, True)
-                                        'outPutLine = "unbekannt: " & fullRoleName
-                                        'outputCollection.Add(outPutLine)
-                                        logmessage = "unbekannte Rolle wird ersetzt durch Referat " & fullRoleName & " -> " & tmpReferat
-                                        outputCollection.Add(logmessage)
-
-                                        ReDim logArray(4)
-                                        logArray(0) = "unbekannte Rolle wird ersetzt durch Referat"
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        logArray(4) = tmpReferat
-                                        Call logfileSchreiben(logArray)
-                                    End If
-                                End If
-
-                                If roleName = "" Then
-
-                                    If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
-                                        unKnownRoleNames.Add(fullRoleName, True)
-                                        'outPutLine = "unbekannt: " & fullRoleName
-                                        'outputCollection.Add(outPutLine)
-                                        logmessage = "unbekannte Rolle ohne Referat: " & fullRoleName
-                                        outputCollection.Add(logmessage)
-
-                                        ReDim logArray(4)
-                                        logArray(0) = "unbekannte Rolle ohne Referat"
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        logArray(4) = "?"
-                                        Call logfileSchreiben(logArray)
-                                    End If
-
+                                ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
+                                If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable, createUnknown) Then
+                                    shallContinue = True
+                                    handledNames.Add(tmpPName, pName)
 
                                 Else
+                                    outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
+                                    outputCollection.Add(outPutLine)
+
+                                    CType(.Cells(zeile, colPname), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                    CType(.Cells(zeile, colProjectNr), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+                                    ReDim logArray(4)
+                                    logArray(0) = "unbekannte PNr / Projekt "
+                                    logArray(1) = tmpPNr
+                                    logArray(2) = pName
+                                    logArray(3) = ""
+                                    logArray(4) = ""
+                                    Call logfileSchreiben(logArray)
+
+                                    shallContinue = False
+                                    handledNames.Add(tmpPName, "")
+
+                                End If
+
+                            Else
+                                shallContinue = (handledNames.Item(tmpPName).Length > 0)
+                            End If
+
+                            If Not readAll Then
+                                shallContinue = shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue > 0
+                            Else
+                                ' readAll:
+                                shallContinue = shallContinue And curMonat >= 1 And curMonat <= lastValidMonth And curZuwPTValue > 0
+                            End If
+
+                            If shallContinue Then
+                                'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
+                                ' nur dann handelt es sich um ein zuordenbares Projekt ... 
+                                ' nur dann geht es um gültige Werte
+
+                                ' jetzt wird eine sortedlist of sortedlist aufgebaut
+                                ' Projekte, dann Rollen mit Values 
+                                ' 
+                                pName = handledNames.Item(tmpPName)
+                                Dim pvkey As String = calcProjektKey(pName, "")
+                                oldProj = cacheProjekte.getProject(pvkey)
+
+                                If Not IsNothing(oldProj) Then
+
                                     ' Aufbauen des Eintrags
                                     Dim roleValues As New SortedList(Of String, Double())
                                     Dim tmpValues() As Double
@@ -10439,8 +10482,8 @@ Public Module agm2
                                     'ReDim tmpValues(monat - 1)
                                     ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
                                     ReDim tmpValues(lastValidMonth - 1)
-
-                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                                    Dim teamID As Integer = -1
+                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
                                     If Not IsNothing(hrole) Then
                                         Dim tagessatz As Double = hrole.tagessatzIntern
@@ -10466,15 +10509,15 @@ Public Module agm2
                                             End If
 
 
-                                            roleValues.Add(roleName, tmpValues)
+                                            roleValues.Add(roleNameID, tmpValues)
                                             validProjectNames.Add(pName, roleValues)
 
                                         Else
                                             roleValues = validProjectNames.Item(pName)
-                                            If roleValues.ContainsKey(roleName) Then
+                                            If roleValues.ContainsKey(roleNameID) Then
                                                 ' rolle ist bereits enthalten 
                                                 ' also summieren 
-                                                tmpValues = roleValues.Item(roleName)
+                                                tmpValues = roleValues.Item(roleNameID)
                                                 If readAll Then
                                                     ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
                                                     If curMonat <= monat Then
@@ -10502,7 +10545,7 @@ Public Module agm2
                                                     tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
                                                 End If
 
-                                                roleValues.Add(roleName, tmpValues)
+                                                roleValues.Add(roleNameID, tmpValues)
                                             End If
 
                                         End If
@@ -10521,22 +10564,25 @@ Public Module agm2
 
 
 
+
+
+
+                                Else
+                                    ' darf/kann eigentlich nicht sein ...
+                                    logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
+                                    outputCollection.Add(logmessage)
+
+                                    ReDim logArray(1)
+                                    logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
+                                    logArray(1) = pvkey
+                                    Call logfileSchreiben(logArray)
                                 End If
 
-
-
-                            Else
-                                ' darf/kann eigentlich nicht sein ...
-                                logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
-                                outputCollection.Add(logmessage)
-
-                                ReDim logArray(1)
-                                logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
-                                logArray(1) = pvkey
-                                Call logfileSchreiben(logArray)
                             End If
 
+
                         End If
+
 
 
                     Catch ex As Exception
@@ -10564,14 +10610,15 @@ Public Module agm2
                     For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
                         ' jetzt schreiben 
-                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(rVKvP.Key)
+                        Dim teamID As Integer = -1
+                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
                         Dim curTagessatz As Double = hrole.tagessatzIntern
 
                         ReDim logArray(3)
                         logArray(0) = "Importiert wurde: "
                         logArray(1) = ""
                         logArray(2) = vPKvP.Key
-                        logArray(3) = rVKvP.Key
+                        logArray(3) = rVKvP.Key & ": " & hrole.name
 
 
                         ReDim logDblArray(rVKvP.Value.Length - 1)
@@ -17139,11 +17186,11 @@ Public Module agm2
                 End If
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
-                If awinSettings.allianzI2DelRoles <> "" And awinSettings.readCostRolesFromDB Then
-                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
-                    Dim tmpstr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+                If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
+                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
+                    Dim tmpstr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
                     If idArray.Length <> tmpstr.Length Then
-                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.allianzI2DelRoles
+                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.allianzIstDatenReferate
                         Call MsgBox(errMsg)
                         Throw New ArgumentException(errMsg)
                     End If
@@ -19286,10 +19333,10 @@ Public Module agm2
                 End Try
 
                 Try
-                    awinSettings.allianzI2DelRoles = CStr(.Range("allianzI2DelRoles").Value).Trim
+                    awinSettings.allianzIstDatenReferate = CStr(.Range("AllianzIstdaten").Value).Trim
 
                 Catch ex As Exception
-                    awinSettings.allianzI2DelRoles = ""
+                    awinSettings.allianzIstDatenReferate = ""
                 End Try
 
                 Try

@@ -6134,7 +6134,7 @@ Imports System.Web
                 CostDefinitions = changedOrga.allCosts
 
                 ' Einlesen der Kapas
-                If awinSettings.allianzI2DelRoles.Length > 0 Then
+                If awinSettings.allianzIstDatenReferate.Length > 0 Then
                     ' Allianz Externe Verträge
                     Call readMonthlyExternKapasEV(outputCollection)
                 Else
