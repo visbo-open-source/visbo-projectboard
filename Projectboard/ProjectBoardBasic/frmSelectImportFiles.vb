@@ -138,8 +138,8 @@ Public Class frmSelectImportFiles
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
 
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirName = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.batchlists Then
+            dirName = importOrdnerNames(PTImpExp.batchlists)
             If awinSettings.englishLanguage Then
                 Me.Text = "select a portfolio file"
             Else
@@ -198,7 +198,8 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.Orga Then
 
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            dirName = importOrdnerNames(PTImpExp.Orga)
             If awinSettings.englishLanguage Then
                 Me.Text = "select organisation definition file"
             Else
@@ -210,7 +211,8 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.customUserRoles Then
 
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            dirName = importOrdnerNames(PTImpExp.customUserRoles)
             If awinSettings.englishLanguage Then
                 Me.Text = "select user roles definition file"
             Else
@@ -222,7 +224,8 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.Kapas Then
 
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            dirName = importOrdnerNames(PTImpExp.Kapas)
             If awinSettings.englishLanguage Then
                 Me.Text = "select capacity file"
             Else
@@ -234,7 +237,8 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.actualData Then
 
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            dirName = importOrdnerNames(PTImpExp.actualData)
             If awinSettings.englishLanguage Then
                 Me.Text = "select actual Data file"
             Else
@@ -262,7 +266,7 @@ Public Class frmSelectImportFiles
 
     Private Sub ListImportFiles_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListImportFiles.SelectedIndexChanged
 
-     
+
     End Sub
 
     Private Sub alleButton_Click(sender As Object, e As EventArgs) Handles alleButton.Click
@@ -282,8 +286,8 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.rplanrxf Then
             dirName = importOrdnerNames(PTImpExp.rplanrxf)
 
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirName = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.batchlists Then
+            dirName = importOrdnerNames(PTImpExp.batchlists)
 
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirName = importOrdnerNames(PTImpExp.modulScen)
@@ -298,13 +302,16 @@ Public Class frmSelectImportFiles
             dirName = importOrdnerNames(PTImpExp.scenariodefs)
 
         ElseIf menueAswhl = PTImpExp.Orga Or menueAswhl = PTImpExp.customUserRoles Then
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            dirName = importOrdnerNames(PTImpExp.customUserRoles)
 
         ElseIf menueAswhl = PTImpExp.Kapas Then
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            dirName = importOrdnerNames(PTImpExp.Kapas)
 
         ElseIf menueAswhl = PTImpExp.actualData Then
-            dirName = importOrdnerNames(PTImpExp.scenariodefs)
+            'dirName = importOrdnerNames(PTImpExp.scenariodefs)
+            dirName = importOrdnerNames(PTImpExp.actualData)
 
         ElseIf menueAswhl = PTImpExp.offlineData Then
             dirName = importOrdnerNames(PTImpExp.offlineData)
@@ -343,58 +350,25 @@ Public Class frmSelectImportFiles
         Dim element As String = ""
         Dim dirName As String = ""
 
-        If menueAswhl = PTImpExp.visbo Then
-            dirName = importOrdnerNames(PTImpExp.visbo)
+        Try
+            dirName = importOrdnerNames(menueAswhl)
 
-        ElseIf menueAswhl = PTImpExp.rplan Then
-            dirName = importOrdnerNames(PTImpExp.rplan)
+            For i = 1 To Me.ListImportFiles.SelectedItems.Count
+                element = Me.ListImportFiles.SelectedItems.Item(i - 1)
+                element = My.Computer.FileSystem.CombinePath(dirName, element)
 
-        ElseIf menueAswhl = PTImpExp.msproject Then
-            dirName = importOrdnerNames(PTImpExp.msproject)
+                If selImportFiles.Contains(element) Then
+                    ' nichts tun 
+                Else
+                    selImportFiles.Add(element)
+                End If
 
-        ElseIf menueAswhl = PTImpExp.rplanrxf Then
-            dirName = importOrdnerNames(PTImpExp.rplanrxf)
-
-        ElseIf menueAswhl = PTImpExp.simpleScen Then
-            dirName = importOrdnerNames(PTImpExp.simpleScen)
-
-        ElseIf menueAswhl = PTImpExp.modulScen Then
-            dirName = importOrdnerNames(PTImpExp.modulScen)
-
-        ElseIf menueAswhl = PTImpExp.addElements Then
-            dirName = importOrdnerNames(PTImpExp.addElements)
-
-        ElseIf menueAswhl = PTImpExp.massenEdit Then
-            dirName = importOrdnerNames(PTImpExp.massenEdit)
-
-        ElseIf menueAswhl = PTImpExp.scenariodefs Then
-            dirName = importOrdnerNames(PTImpExp.scenariodefs)
-
-        ElseIf menueAswhl = PTImpExp.Orga Or menueAswhl = PTImpExp.customUserRoles Then
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
-
-        ElseIf menueAswhl = PTImpExp.Kapas Then
-            dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
-
-        ElseIf menueAswhl = PTImpExp.actualData Then
-            dirName = importOrdnerNames(PTImpExp.scenariodefs)
-
-        ElseIf menueAswhl = PTImpExp.offlineData Then
-            dirName = importOrdnerNames(PTImpExp.offlineData)
-        End If
+            Next
+        Catch ex As Exception
+            selImportFiles.Clear()
+        End Try
 
 
-        For i = 1 To Me.ListImportFiles.SelectedItems.Count
-            element = Me.ListImportFiles.SelectedItems.Item(i - 1)
-            element = My.Computer.FileSystem.CombinePath(dirName, element)
-
-            If selImportFiles.Contains(element) Then
-                ' nichts tun 
-            Else
-                selImportFiles.Add(element)
-            End If
-
-        Next
 
         If selImportFiles.Count < 1 Then
             'Call MsgBox("Es wurde keine Datei ausgewählt")
