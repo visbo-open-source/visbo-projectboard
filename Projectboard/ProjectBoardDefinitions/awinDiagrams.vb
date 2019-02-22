@@ -6872,7 +6872,8 @@ Public Module awinDiagrams
     ''' <param name="lengthRed">gibt an , wieviele Zeichen rot eingefärbt werden müssen</param>
     ''' <returns></returns>
     Public Function bestimmeChartDiagramTitle(ByVal scInfo As clsSmartPPTChartInfo, ByVal tsum As Double, vsum As Double,
-                                              ByRef startRed As Integer, ByRef lengthRed As Integer) As String
+                                              ByRef startRed As Integer, ByRef lengthRed As Integer,
+                                              Optional ByVal calledFromMassEdit As Boolean = False) As String
 
         Dim tmpResult As String = ""
         Dim bezeichner As String = ""
@@ -6926,10 +6927,11 @@ Public Module awinDiagrams
             Case ptElementTypen.costs
                 If qualifier2 = "" Then
                     qualifier2 = repmsg(2)
-                    If scInfo.einheit = PTEinheiten.personentage Then
-                        qualifier2 = repmsg(3)
+                Else
+                    If CostDefinitions.containsName(qualifier2) Then
+                        ' alles paletti
                     Else
-                        qualifier2 = repmsg(1)
+                        qualifier2 = repmsg(2)
                     End If
                 End If
 
@@ -6941,17 +6943,29 @@ Public Module awinDiagrams
                 tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString
         End Select
 
-        qualifier2 = leadingAddOn & qualifier2
+        If tmpResult = "" Then
+            ' dann ist noch alles in Ordnung 
+            qualifier2 = leadingAddOn & qualifier2
 
-        startRed = 0
-        lengthRed = 0
+            startRed = 0
+            lengthRed = 0
 
-        If vProjDoesExist And tsum > vsum Then
-            startRed = qualifier2.Length + 3
-            lengthRed = tsum.ToString("##,##0.").Length
+            If vProjDoesExist And tsum > vsum Then
+                startRed = qualifier2.Length + 3
+                lengthRed = tsum.ToString("##,##0.").Length
+            End If
+
+            tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+
+            If calledFromMassEdit Then
+                Dim modifiedTitle As String = "Soll-Ist-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                Dim offset As Integer = modifiedTitle.Length - tmpResult.Length
+                startRed = startRed + offset
+                tmpResult = modifiedTitle
+            End If
         End If
 
-        bestimmeChartDiagramTitle = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+        bestimmeChartDiagramTitle = tmpResult
 
     End Function
 

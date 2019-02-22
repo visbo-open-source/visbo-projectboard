@@ -14607,7 +14607,7 @@ Public Module agm2
                     If Not IsNothing(formProjectInfo1) Then
                         Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                     End If
-                    Call aktualisiereCharts(visboZustaende.lastProject, True)
+                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
 
                 Catch ex As Exception
