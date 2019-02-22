@@ -848,7 +848,7 @@ Public Module Module1
         visbo = 0
         rplan = 1
         msproject = 2
-        simpleScen = 3
+        batchlists = 3
         modulScen = 4
         massenEdit = 5
         addElements = 6
@@ -6390,6 +6390,7 @@ Public Module Module1
                 CType(.Cells(1, 1), Excel.Range).Value = text
                 CType(.Cells(1, 2), Excel.Range).Value = addOn
                 CType(.Cells(1, 3), Excel.Range).Value = Date.Now
+                CType(.Cells(1, 3), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
             anzFehler = anzFehler + 1
 
@@ -6484,41 +6485,51 @@ Public Module Module1
     ''' öffnet das LogFile
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub logfileOpen(ByVal Optional clear As Boolean = False)
+    Public Sub logfileOpen()
 
-        appInstance.ScreenUpdating = False
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        If appInstance.ScreenUpdating Then
+            appInstance.ScreenUpdating = False
+        End If
+
 
         ' aktives Workbook merken im Variable actualWB
         Dim actualWB As String = appInstance.ActiveWorkbook.Name
 
-        If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
-            Try
-                xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
-                myLogfile = appInstance.ActiveWorkbook.Name
-            Catch ex As Exception
+        Dim logfileOrdner As String = "logfiles"
+        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+        Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
+        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
 
-                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf &
-                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-                'Call logfileSchreiben(logMessage, " ")
-                Throw New ArgumentException(logmessage)
+        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            My.Computer.FileSystem.CreateDirectory(logfilePath)
+        End If
 
-            End Try
-
-        Else
+        Try
             ' Logfile neu anlegen 
             xlsLogfile = appInstance.Workbooks.Add
+            ' schreibt Sheet Namen in logfile ...  
             Call logfileInit()
-            xlsLogfile.SaveAs(awinPath & logFileName)
+
+            xlsLogfile.SaveAs(logfileNamePath)
             myLogfile = xlsLogfile.Name
 
-        End If
+        Catch ex As Exception
+            logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
+                                            "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Adminsitrator"
+            appInstance.ScreenUpdating = True
+            Throw New ArgumentException(logmessage)
+        End Try
 
-        If clear Then
-            CType(xlsLogfile.ActiveSheet, Excel.Worksheet).UsedRange.Clear()
-        End If
+
 
         ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
         appInstance.Workbooks(actualWB).Activate()
+
+        If appInstance.ScreenUpdating <> formerSU Then
+            appInstance.ScreenUpdating = formerSU
+        End If
+
 
     End Sub
 
@@ -7685,44 +7696,6 @@ Public Module Module1
     End Function
 
 
-    ''' <summary>
-    ''' bestimmt die Überschrift ...
-    ''' </summary>
-    ''' <param name="outPutInPT"></param>
-    ''' <param name="chartTyp"></param>
-    ''' <param name="pmrcName"></param>
-    ''' <param name="actualSum"></param>
-    ''' <param name="approvedSum"></param>
-    ''' <returns></returns>
-    Public Function bestimmeChartTitle(ByVal outPutInPT As Boolean, ByVal chartTyp As Integer, ByVal pmrcName As String, ByVal actualSum As Double, ByVal approvedSum As Double) As String
-        Dim tmpTitle As String = ""
-        Dim unitBezeichnung As String = ""
-
-        If awinSettings.englishLanguage Then
-            If outPutInPT Then
-                unitBezeichnung = "PD"
-            Else
-                unitBezeichnung = "T€"
-            End If
-        Else
-            If outPutInPT Then
-                unitBezeichnung = "PT"
-            Else
-                unitBezeichnung = "T€"
-            End If
-        End If
-
-        Select Case chartTyp
-            Case 0
-            Case 1
-            Case 2
-            Case Else
-
-        End Select
-
-
-        bestimmeChartTitle = tmpTitle
-    End Function
 
     Public Function bestimmeChartYValues(ByVal curProj As clsProjekt, ByVal chartTyp As Integer, ByVal pmrcName As String, ByVal von As Integer, ByVal bis As Integer) As Double()
         bestimmeChartYValues = Nothing

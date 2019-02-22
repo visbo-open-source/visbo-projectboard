@@ -1616,7 +1616,8 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition = Nothing
 
         For Each rvkvp As KeyValuePair(Of String, Double()) In roleValues
-            hrole = RoleDefinitions.getRoledef(rvkvp.Key)
+            Dim teamID As Integer = -1
+            hrole = RoleDefinitions.getRoleDefByIDKennung(rvkvp.Key, teamID)
             If Not IsNothing(hrole) Then
                 tmpResult = tmpResult + rvkvp.Value.Sum * hrole.tagessatzIntern
             End If
@@ -2117,6 +2118,8 @@ Public Module awinGeneralModules
             pName.Contains("#") Or
             pName.Contains("(") Or
             pName.Contains(")") Or
+            pName.Contains("[") Or
+            pName.Contains("]") Or
             pName.Contains(vbCr) Or
             pName.Contains(vbLf) Then
             ergebnis = False
@@ -2149,6 +2152,12 @@ Public Module awinGeneralModules
         End If
         If pName.Contains(")") Then
             pName = pName.Replace(")", "-")
+        End If
+        If pName.Contains("[") Then
+            pName = pName.Replace("[", "-")
+        End If
+        If pName.Contains("]") Then
+            pName = pName.Replace("]", "-")
         End If
         If pName.Contains(vbCr) Then
             pName = pName.Replace(vbCr, " ")
@@ -7046,6 +7055,53 @@ Public Module awinGeneralModules
                                 Dim roleCostName As String = ""
                                 Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, chartPname, roleCostName)
 
+                                Dim scInfo As New clsSmartPPTChartInfo
+                                With scInfo
+                                    .hproj = hproj
+                                    .detailID = typID
+                                    .q2 = roleCostName
+                                    .vergleichsArt = PTVergleichsArt.beauftragung
+                                    .vergleichsTyp = PTVergleichsTyp.letzter
+
+                                    If typID = PTprdk.KostenBalken Or typID = PTprdk.KostenBalken2 Or
+                                            typID = PTprdk.KostenPie Then
+
+                                        If typID = PTprdk.KostenBalken Then
+                                            .vergleichsTyp = PTVergleichsTyp.erster
+                                        End If
+
+                                        If auswahl = 1 And roleCostName = "" Then
+                                            .elementTyp = ptElementTypen.costs
+
+                                        ElseIf auswahl = 2 And roleCostName = "" Then
+                                            .elementTyp = ptElementTypen.rolesAndCost
+
+                                        End If
+
+                                        .einheit = PTEinheiten.euro
+
+
+                                    ElseIf typID = PTprdk.PersonalBalken Or typID = PTprdk.PersonalBalken2 Or
+                                            typID = PTprdk.PersonalPie Then
+
+                                        If typID = PTprdk.PersonalBalken Then
+                                            .vergleichsTyp = PTVergleichsTyp.erster
+                                        End If
+
+                                        .elementTyp = ptElementTypen.roles
+
+                                        If auswahl = 1 Then
+                                            .einheit = PTEinheiten.personentage
+                                        Else
+                                            .einheit = PTEinheiten.euro
+                                        End If
+
+
+                                    ElseIf typID = PTprdk.Ergebnis Then
+                                        .elementTyp = ptElementTypen.ergebnis
+                                    End If
+                                End With
+
                                 If replaceProj Or (chartPname.Trim = vglName) Then
                                     Select Case typID
 
@@ -7072,9 +7128,13 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+                                            scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                                            scInfo.vglProj = vglProj
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.KostenBalken2
                                             Dim vglProj As clsProjekt = Nothing
@@ -7085,10 +7145,13 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+                                            scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                                            scInfo.vglProj = vglProj
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
-
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
@@ -7100,9 +7163,13 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+                                            scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                                            scInfo.vglProj = vglProj
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.PersonalBalken2
                                             Dim vglProj As clsProjekt = Nothing
@@ -7113,9 +7180,13 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+                                            scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                                            scInfo.vglProj = vglProj
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.PersonalPie
 
@@ -7124,27 +7195,6 @@ Public Module awinGeneralModules
                                             Call updateRessPieOfProject(hproj, chtobj, auswahl)
 
 
-                                        Case PTprdk.KostenBalken
-
-                                            Dim vglProj As clsProjekt = Nothing
-                                            Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
-                                            Catch ex As Exception
-                                                vglProj = Nothing
-                                            End Try
-
-                                            Call updateCostBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
-
-                                        Case PTprdk.KostenBalken2
-
-                                            Dim vglProj As clsProjekt = Nothing
-                                            Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
-                                            Catch ex As Exception
-                                                vglProj = Nothing
-                                            End Try
-
-                                            Call updateCostBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
 
                                         Case PTprdk.KostenPie
 
@@ -7166,7 +7216,7 @@ Public Module awinGeneralModules
 
                                         Case PTprdk.Ergebnis
                                             ' Update Ergebnis Diagramm
-                                            Call updateProjektErgebnisCharakteristik2(hproj, chtobj, auswahl, replaceProj)
+                                            Call updateProjektErgebnisCharakteristik2(hproj, chtobj, auswahl, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.SollIstGesamtkosten
 

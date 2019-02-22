@@ -4934,7 +4934,8 @@ Imports System.Web
             End If
         Else
             ' Aktion durchführen ...
-            getInventurImport.menueAswhl = PTImpExp.simpleScen
+            'getInventurImport.menueAswhl = PTImpExp.simpleScen
+            getInventurImport.menueAswhl = PTImpExp.batchlists
             returnValue = getInventurImport.ShowDialog
 
             If returnValue = DialogResult.OK Then
@@ -5643,8 +5644,10 @@ Imports System.Web
     Public Sub PTImportOrga(Control As IRibbonControl)
 
         Dim selectedWB As String = ""
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "organisation*.xls*")
+        'Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        Dim dirname As String = importOrdnerNames(PTImpExp.Orga)
+
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*rganisation*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
@@ -5674,6 +5677,8 @@ Imports System.Web
                 selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
+        Else
+            Call MsgBox("keine Organisations-Dateien gefunden ..." & vbLf & "Folder: " & dirname & vbLf & "Dateien müssen folgender Namensgebung genügen *rganisation*.xls*")
         End If
 
         If weiterMachen Then
@@ -5791,7 +5796,7 @@ Imports System.Web
                 weiterMachen = True
             End If
         Else
-            Call MsgBox("keine Offline-Daten vorhanden ...")
+            Call MsgBox("keine Offline-Daten vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Name muss folgender Namensgebung entsprechen: *ffline*.xls*")
             weiterMachen = False
         End If
 
@@ -5882,7 +5887,7 @@ Imports System.Web
 
         Dim selectedWB As String = ""
 
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.simpleScen))
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
@@ -5912,7 +5917,7 @@ Imports System.Web
                 weiterMachen = True
             End If
         Else
-            Call MsgBox("keine Istdaten vorhaben ...")
+            Call MsgBox("keine Istdaten vorhaben ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss folgender Namensgebung entsprechen:  Istdaten*.xls*")
         End If
 
         If weiterMachen Then
@@ -5999,7 +6004,10 @@ Imports System.Web
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
         Dim selectedWB As String = ""
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        'Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+
+        Dim dirname As String = importOrdnerNames(PTImpExp.customUserRoles)
+
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*roles*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
@@ -6030,6 +6038,8 @@ Imports System.Web
                 selectedWB = CStr(getUserRoleFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
+        Else
+            Call MsgBox("keine Dateien vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss diesen Teilstring enthalten: '" & "roles'")
         End If
 
         If weiterMachen Then
@@ -6124,7 +6134,7 @@ Imports System.Web
                 CostDefinitions = changedOrga.allCosts
 
                 ' Einlesen der Kapas
-                If awinSettings.allianzI2DelRoles.Length > 0 Then
+                If awinSettings.allianzIstDatenReferate.Length > 0 Then
                     ' Allianz Externe Verträge
                     Call readMonthlyExternKapasEV(outputCollection)
                 Else
@@ -7702,40 +7712,78 @@ Imports System.Web
                                                          top, left, width, height, False)
 
 
+                Dim scInfo As New clsSmartPPTChartInfo
+                With scInfo
+                    .hproj = hproj
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                        .q2 = myCustomUserRole.specifics
+                    Else
+                        .q2 = ""
+                    End If
+
+                    .vergleichsArt = PTVergleichsArt.beauftragung
+                    .prPF = ptPRPFType.project
+                    .chartTyp = PTChartTypen.Balken
+                    .einheit = PTEinheiten.euro
+                    .elementTyp = ptElementTypen.roles
+                End With
+
                 Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
                 Dim compareTyp As Integer
                 Try
 
                     If compareWithLast Then
+                        scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                        scInfo.detailID = PTprdk.PersonalBalken2
                         vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                         compareTyp = PTprdk.PersonalBalken2
                     Else
+                        scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                        scInfo.detailID = PTprdk.PersonalBalken
+
                         vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                         compareTyp = PTprdk.PersonalBalken
                     End If
 
-
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
+
+
+                scInfo.vglProj = vglProjekt
+
                 ' Rollen-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
-                auswahl = 1 ' zeige Personalbedarfe
-                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
+                auswahl = 2 ' zeige Personalbedarfe, aber in T€
+                Call createRessBalkenOfProject(scInfo, auswahl, repObj, top, left, height, width, False, calledFromMassEdit:=False)
 
                 ' Kosten-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
+                scInfo.elementTyp = ptElementTypen.costs
+                scInfo.q2 = ""
                 If compareWithLast Then
-                    compareTyp = PTprdk.KostenBalken2
+                    scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                    scInfo.detailID = PTprdk.KostenBalken2
+
                 Else
-                    compareTyp = PTprdk.KostenBalken
+                    scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                    scInfo.detailID = PTprdk.KostenBalken
+
+
                 End If
-                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, compareTyp)
+
+                'If compareWithLast Then
+                '    compareTyp = PTprdk.KostenBalken2
+                'Else
+                '    compareTyp = PTprdk.KostenBalken
+                'End If
+                'Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, compareTyp)
+                Call createRessBalkenOfProject(scInfo, auswahl, repObj, top, left, height, width, False, calledFromMassEdit:=False)
 
                 ' Strategie / Risiko / Marge
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
@@ -7831,30 +7879,52 @@ Imports System.Web
                     End Try
 
                     Try
-                        Dim compareLast As Boolean = awinSettings.meCompareWithLastVersion
-                        Dim compareTyp As Integer
-                        Try
-                            ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
-                            Dim vorgabenVariantName As String = ptVariantFixNames.pfv.ToString
 
-                            If compareLast Then
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabenVariantName, Date.Now, err)
-                                compareTyp = PTprdk.PersonalBalken2
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+
+                        Dim scInfo As New clsSmartPPTChartInfo
+                        With scInfo
+                            .hproj = hproj
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                .q2 = myCustomUserRole.specifics
                             Else
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabenVariantName, err)
-                                compareTyp = PTprdk.PersonalBalken
+                                .q2 = ""
                             End If
 
+                            .vergleichsArt = PTVergleichsArt.beauftragung
+                            .prPF = ptPRPFType.project
+                            .chartTyp = PTChartTypen.Balken
+                            .einheit = PTEinheiten.euro
+                            .elementTyp = ptElementTypen.roles
+                        End With
+
+                        Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
+                        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+                        Try
+
+                            If compareWithLast Then
+                                scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                                scInfo.detailID = PTprdk.PersonalBalken2
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+
+                            Else
+                                scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                                scInfo.detailID = PTprdk.PersonalBalken
+
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+
+                            End If
 
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
-                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
-                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
+                        scInfo.vglProj = vglProjekt
 
+                        'Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
+                        Call createRessBalkenOfProject(scInfo, auswahl, repObj, top, left, height, width, False)
                         ' jetzt wird das Pie-Diagramm gezeichnet 
                         'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
@@ -9831,17 +9901,34 @@ Imports System.Web
             Dim qualifier2 As String = ""
             Dim teamID As Integer = -1
 
+            Dim scInfo As New clsSmartPPTChartInfo
+            With scInfo
+                .hproj = hproj
+                .vergleichsArt = PTVergleichsArt.beauftragung
+                .einheit = PTEinheiten.euro
+                .prPF = ptPRPFType.project
+                .elementTyp = ptElementTypen.roles
+                .chartTyp = PTChartTypen.Balken
+                .detailID = PTprdk.KostenBalken2
+            End With
+
             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
             If awinSettings.meCompareWithLastVersion Then
+
                 lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                 comparisonTyp = PTprdk.KostenBalken2
+
+                scInfo.vglProj = lproj
+                scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                scInfo.q2 = ""
+                scInfo.detailID = PTprdk.KostenBalken2
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken2
-                            qualifier2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+                            scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
 
                         End If
                     End If
@@ -9854,12 +9941,17 @@ Imports System.Web
                 lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                 comparisonTyp = PTprdk.KostenBalken
 
+                scInfo.vglProj = lproj
+                scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                scInfo.q2 = ""
+                scInfo.detailID = PTprdk.KostenBalken
+
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken
-                            qualifier2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+                            scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
 
                         End If
                     End If
@@ -9873,21 +9965,22 @@ Imports System.Web
 
 
             Try
-                If qualifier2 = "" Then
-                    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
-                Else
-                    Call createRessBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, True,
-                                               roleName:=qualifier2,
-                                               vglTyp:=comparisonTyp)
-                End If
+
+                Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
+                                                   calledFromMassEdit:=True)
+
+                ' alt, am 20.2. durch obiges ersetzt 
+                'If scInfo.q2 = "" Then
+                '    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
+                'Else
+                '    Call createRessBalkenOfProject(scInfo, 2, reportObj, chTop, chLeft, chHeight, chWidth, True,
+                '                                   calledFromMassEdit:=True)
+                'End If
 
 
             Catch ex As Exception
 
             End Try
-
-            ' bisher ...
-            'Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
 
         Else
