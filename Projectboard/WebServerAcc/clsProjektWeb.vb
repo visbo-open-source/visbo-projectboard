@@ -298,6 +298,11 @@ Public Class clsProjektWeb
 
             If Not IsNothing(Me.customStringFields) Then
                 For Each hvar As clsStringString In Me.customStringFields
+                    ' ur: 22.02.19: im copyfrom wird dieses Leerzeichen eingefügt, da sonst nicht gespeichert wird.
+                    ' hier muss das wieder herausgefiltert werden.
+                    If hvar.strvalue = " " Then
+                        hvar.strvalue = ""
+                    End If
                     projekt.customStringFields.Add(CInt(hvar.strkey), hvar.strvalue)
                 Next
             End If
