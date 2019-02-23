@@ -3251,24 +3251,35 @@ Public Module awinGeneralModules
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
-                ' hier wird das Summary Projekt erst mal geholt , um das vorgegebene Budget zu ermitteln
-                Dim curSummaryProj As clsProjekt = Nothing
+                ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
+                Dim curSummaryProjVorgabe As clsProjekt = Nothing
+                Dim curSummaryProjToUse As clsProjekt = Nothing
 
-                If awinSettings.loadPFV Then
-                    ' laden von Datenbank, nur wenn es nicht existiert, dann erstellen ...
-                    curSummaryProj = getProjektFromSessionOrDB(kvp.Value.constellationName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
-                    If IsNothing(curSummaryProj) Then
-                        ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
-                        curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
-                    End If
-                Else
-                    curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                Dim vorgabeBudget As Double = -1
+                ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
+
+                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
+                If Not IsNothing(curSummaryProjVorgabe) Then
+                    vorgabeBudget = curSummaryProjVorgabe.Erloes
                 End If
 
-                If Not IsNothing(curSummaryProj) Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                    ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
+
+                    If IsNothing(curSummaryProjVorgabe) Then
+                        ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
+                        curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                    End If
+                    curSummaryProjToUse = curSummaryProjVorgabe
+                Else
+                    curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
+                End If
+
+
+                If Not IsNothing(curSummaryProjToUse) Then
 
                     ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
-                    Dim srKey As String = calcProjektKey(curSummaryProj)
+                    Dim srKey As String = calcProjektKey(curSummaryProjToUse)
 
                     If showSummaryProject Then
                         ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
@@ -3277,12 +3288,12 @@ Public Module awinGeneralModules
                         End If
 
                         Try
-                            AlleProjekte.Add(curSummaryProj, updateCurrentConstellation:=True, checkOnConflicts:=True)
+                            AlleProjekte.Add(curSummaryProjToUse, updateCurrentConstellation:=True, checkOnConflicts:=True)
                             Dim cItem As New clsConstellationItem
                             With cItem
                                 .projectName = kvp.Value.constellationName
-                                .variantName = curSummaryProj.variantName
-                                .projectTyp = CType(curSummaryProj.projectType, ptPRPFType).ToString
+                                .variantName = curSummaryProjToUse.variantName
+                                .projectTyp = CType(curSummaryProjToUse.projectType, ptPRPFType).ToString
                                 .zeile = zaehler
                                 .show = True
                             End With
@@ -3299,7 +3310,7 @@ Public Module awinGeneralModules
                         End If
 
                         Try
-                            AlleProjektSummaries.Add(curSummaryProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                            AlleProjektSummaries.Add(curSummaryProjToUse, updateCurrentConstellation:=False, checkOnConflicts:=False)
                         Catch ex As Exception
 
                         End Try
@@ -3650,7 +3661,7 @@ Public Module awinGeneralModules
 
 
 
-        ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
+        ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
             Dim budget As Double = -1.0
             Dim calculateAndStoreSummaryProjekt As Boolean = False
@@ -3667,7 +3678,8 @@ Public Module awinGeneralModules
             If calculateAndStoreSummaryProjekt Then
 
                 If Not IsNothing(oldSummaryP) Then
-                    budget = oldSummaryP.budgetWerte.Sum
+                    'budget = oldSummaryP.budgetWerte.Sum
+                    budget = oldSummaryP.Erloes
                 Else
                     budget = currentConstellation.getBudgetOfShownProjects
                 End If
