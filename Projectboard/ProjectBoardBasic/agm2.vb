@@ -8797,12 +8797,18 @@ Public Module agm2
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
                                             If relPrz.Sum < 0.99 Then
-                                                outPutLine = pName & " .Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             Else
-                                                outPutLine = pName & " .Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & "Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             End If
 
                                             outputCollection.Add(outPutLine)
+
+                                            Dim logtxt(1) As String
+                                            logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                            logtxt(1) = pName
+
+                                            Call logfileSchreiben(logtxt)
 
                                             ReDim relPrz(anzReleases - 1)
                                         End If
@@ -8999,8 +9005,9 @@ Public Module agm2
 
                             ' Test tk 
                             Try
-                                ReDim logmsg(0)
-                                logmsg(0) = pName
+                                ReDim logmsg(1)
+                                logmsg(0) = "Importiert: "
+                                logmsg(1) = pName
 
                                 For ix As Integer = 1 To realRoleNamesToConsider.Count
 
