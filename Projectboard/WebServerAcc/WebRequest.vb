@@ -693,6 +693,7 @@ Public Class Request
                         If VRScache.VPsN.ContainsKey(oldName) Then
 
                             vp = VRScache.VPsN(oldName)
+                            vp.name = newName
 
                             vpList = PUTOneVP(vpid, vp, err)
                             ' rename war korrekt, wenn in vplist ein und zwar nur ein VisboProject zurückgegeben wurde.
@@ -3364,9 +3365,9 @@ Public Class Request
                 Dim variantlist As SortedList(Of Date, clsProjektWebLong) = VRScache.VPvs(vpid).Item(variantName).tsLong
 
                 Dim found As Boolean = False
-                Dim i As Integer = 0
+                Dim i As Integer = variantlist.Count - 1
 
-                While i <= variantlist.Count - 1
+                While Not found And i >= 0
                     Dim ts As Date = variantlist.ElementAt(i).Key
                     Dim longproj As clsProjektWebLong = variantlist.ElementAt(i).Value
 
@@ -3375,14 +3376,14 @@ Public Class Request
                         If ts <= storedAtorBefore Then
 
                             result.Add(longproj)
-
+                            found = True
                         Else
                             ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
                         End If
                     Else
                         result.Add(longproj)
                     End If
-                    i = i + 1
+                    i = i - 1
                 End While
             Else
 

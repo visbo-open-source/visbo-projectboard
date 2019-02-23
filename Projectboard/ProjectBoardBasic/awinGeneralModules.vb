@@ -2253,8 +2253,9 @@ Public Module awinGeneralModules
                                         ' kann eigentlich nicht sein 
                                         ok = False
                                     Else
+                                        'ur: 22.02.19 : das vglProj wird nur zum Vergleich benötigt
                                         ' jetzt in AlleProjekte eintragen ... 
-                                        AlleProjekte.Add(vglProj)
+                                        ' AlleProjekte.Add(vglProj)
 
                                     End If
                                 Else
