@@ -222,11 +222,9 @@ Public Class clsCache
 
                 If _VPvs.ContainsKey(vpid) Then
 
-                    'If _VPvs(vpid).ContainsKey(vName) Then
+                    If _VPvs(vpid).Count > 0 Then
 
-                    'If _VPsId.Item(vpid).vpvCount = _VPvs(vpid).Item(vName).tsShort.Count Then
-
-                    If vpvid <> "" Then
+                        If vpvid <> "" Then
 
                             For vNamelist As Integer = 0 To _VPvs(vpid).Count - 1
                                 Dim hvname As String = _VPvs(vpid).ElementAt(vNamelist).Value.vname
@@ -254,7 +252,7 @@ Public Class clsCache
 
                                         timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
                                         If _VPvs(vpid)(vName).tsShort.Count > 0 And
-                                                timeDiff <= updateDelay Then
+                                            timeDiff <= updateDelay Then
 
                                             nothingToDo = True
 
@@ -265,7 +263,7 @@ Public Class clsCache
 
                                         timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
                                         If _VPvs(vpid)(vName).tsLong.Count > 0 And
-                                               timeDiff <= updateDelay Then
+                                           timeDiff <= updateDelay Then
 
                                             nothingToDo = True
 
@@ -291,37 +289,37 @@ Public Class clsCache
 
                                     If _VPvs(vpid).ContainsKey(vName) Then
 
-                                    If Not longVersion Then
+                                        If Not longVersion Then
 
-                                        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
+                                            timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
 
-                                        If (_VPvs(vpid)(vName).tsShort.Count > 0) And
+                                            If (_VPvs(vpid)(vName).tsShort.Count > 0) And
                                             (_VPvs(vpid)(vName).tsShort.Count >= _VPvs(vpid)(vName).tsLong.Count) And
                                             timeDiff <= updateDelay Then
 
-                                            nothingToDo = True
-                                        Else
-                                            nothingToDo = False
-
-                                        End If
-                                    Else
-
-                                        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-
-                                        If (_VPvs(vpid)(vName).tsLong.Count > 0) And
-                                            (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).tsShort.Count) And
-                                            timeDiff <= updateDelay Then
-
-                                            If refDate <= Date.MinValue Then
-                                                ' kein refDate angegeben
                                                 nothingToDo = True
                                             Else
                                                 nothingToDo = False
-                                            End If
 
+                                            End If
                                         Else
 
-                                            nothingToDo = False
+                                            timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
+
+                                            If (_VPvs(vpid)(vName).tsLong.Count > 0) And
+                                            (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).tsShort.Count) And
+                                            timeDiff <= updateDelay Then
+
+                                                If refDate <= Date.MinValue Then
+                                                    ' kein refDate angegeben
+                                                    nothingToDo = True
+                                                Else
+                                                    nothingToDo = False
+                                                End If
+
+                                            Else
+
+                                                nothingToDo = False
 
                                             End If
                                         End If
@@ -337,8 +335,8 @@ Public Class clsCache
                                                 If Not longVersion Then
                                                     timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vpvar.variantName).timeCShort, Date.Now.ToUniversalTime)
                                                     If (_VPvs(vpid)(vpvar.variantName).tsShort.Count > 0) And
-                                                            (_VPvs(vpid)(vpvar.variantName).tsShort.Count >= _VPvs(vpid)(vpvar.variantName).tsLong.Count) And
-                                                             timeDiff <= updateDelay Then
+                                                        (_VPvs(vpid)(vpvar.variantName).tsShort.Count >= _VPvs(vpid)(vpvar.variantName).tsLong.Count) And
+                                                         timeDiff <= updateDelay Then
 
                                                     Else
 
@@ -350,8 +348,8 @@ Public Class clsCache
 
                                                     timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
                                                     If (_VPvs(vpid)(vpvar.variantName).tsLong.Count > 0) And
-                                                            (_VPvs(vpid)(vpvar.variantName).tsLong.Count = _VPvs(vpid)(vpvar.variantName).tsShort.Count) And
-                                                            timeDiff <= updateDelay Then
+                                                        (_VPvs(vpid)(vpvar.variantName).tsLong.Count = _VPvs(vpid)(vpvar.variantName).tsShort.Count) And
+                                                        timeDiff <= updateDelay Then
 
                                                         nothingToDo = nothingToDo And True
                                                     Else
@@ -379,6 +377,10 @@ Public Class clsCache
                         End If   ' end if von if vps_id
 
 
+                    Else
+                        nothingToDo = nothingToDo And False
+
+                    End If  ' end if von if _vpvs(vpid).count > 0
 
 
                 Else
@@ -394,100 +396,105 @@ Public Class clsCache
                     For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In _VPvs
 
                         vpid = kvp.Key
-                        Dim vp As clsVP = _VPsId(vpid)
 
-                        If vName <> noVariantName Then
+                        If _VPvs(vpid).Count > 0 Then
 
-                            If _VPvs(vpid).ContainsKey(vName) Then
+                            Dim vp As clsVP = _VPsId(vpid)
 
-                                If Not longVersion Then
-                                    timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
-                                    If (_VPvs(vpid)(vName).tsShort.Count > 0) And
-                                    (_VPvs(vpid)(vName).tsShort.Count >= _VPvs(vpid)(vName).tsLong.Count) And
-                                    timeDiff <= updateDelay Then
+                            If vName <> noVariantName Then
 
-                                        ok = True
+                                If _VPvs(vpid).ContainsKey(vName) Then
+
+                                    If Not longVersion Then
+                                        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
+                                        If (_VPvs(vpid)(vName).tsShort.Count > 0) And
+                                            (_VPvs(vpid)(vName).tsShort.Count >= _VPvs(vpid)(vName).tsLong.Count) And
+                                            timeDiff <= updateDelay Then
+
+                                            ok = True
+                                        Else
+
+                                            ok = False
+
+
+                                        End If
                                     Else
+                                        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
+                                        If (_VPvs(vpid)(vName).tsLong.Count > 0) And
+                                            (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).tsShort.Count) And
+                                            timeDiff <= updateDelay Then
 
-                                        ok = False
-
-
+                                            ok = True
+                                        Else
+                                            ok = False
+                                        End If
                                     End If
                                 Else
-                                    timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-                                    If (_VPvs(vpid)(vName).tsLong.Count > 0) And
-                                    (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).tsShort.Count) And
-                                    timeDiff <= updateDelay Then
-
-                                        ok = True
-                                    Else
-
-                                        ok = False
-
-                                    End If
+                                    ok = False
                                 End If
-                            Else
-                                ok = false
-                            End If
 
-                        Else   ' vname = noVariantname, alle Varianten sind relevant
+                            Else   ' vname = noVariantname, alle Varianten sind relevant
 
 
-                            For Each vpvar As clsVPvariant In vp.Variant
-                                Try
-                                    If _VPvs(vpid).ContainsKey(vpvar.variantName) Then
+                                For Each vpvar As clsVPvariant In vp.Variant
+                                    Try
+                                        If _VPvs(vpid).ContainsKey(vpvar.variantName) Then
 
-                                        If Not longVersion Then
-                                            timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vpvar.variantName).timeCShort, Date.Now.ToUniversalTime)
-                                            If (_VPvs(vpid)(vpvar.variantName).tsShort.Count > 0) And
+                                            If Not longVersion Then
+                                                timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vpvar.variantName).timeCShort, Date.Now.ToUniversalTime)
+                                                If (_VPvs(vpid)(vpvar.variantName).tsShort.Count > 0) And
                                                 (_VPvs(vpid)(vpvar.variantName).tsShort.Count >= _VPvs(vpid)(vpvar.variantName).tsLong.Count) And
                                                  timeDiff <= updateDelay Then
 
-                                                ok = ok And True
+                                                    ok = ok And True
+                                                Else
+
+                                                    ok = False
+                                                    Exit For
+
+                                                End If
                                             Else
 
-                                                ok = False
-                                                Exit For
-
-                                            End If
-                                        Else
-
-                                            timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-                                            If (_VPvs(vpid)(vpvar.variantName).tsLong.Count > 0) And
+                                                timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
+                                                If (_VPvs(vpid)(vpvar.variantName).tsLong.Count > 0) And
                                                 (_VPvs(vpid)(vpvar.variantName).tsLong.Count = _VPvs(vpid)(vpvar.variantName).tsShort.Count) And
                                                 timeDiff <= updateDelay Then
 
-                                                ok = ok And True
-                                            Else
+                                                    ok = ok And True
+                                                Else
 
-                                                ok = False
-                                                Exit For
+                                                    ok = False
+                                                    Exit For
+                                                End If
                                             End If
+
+                                        Else
+                                            ok = False
+                                            Exit For
+
                                         End If
+                                    Catch ex As Exception
 
-                                    Else
-                                        ok = False
-                                        Exit For
+                                    End Try
 
-                                    End If
-                                Catch ex As Exception
+                                Next
 
-                                End Try
+                            End If ' end if von vName <> noVariantName
 
-                            Next
+                        Else
 
+                            ok = False
 
-
-
-                        End If ' end if von vName <> noVariantName
-
-
+                        End If
 
                         If ok = False Then
+
                             Exit For
+
                         End If
 
                     Next
+
                 Else
                     ok = False
                 End If
