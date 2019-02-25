@@ -137,6 +137,14 @@ Public Class Request
                     Else
                         Call MsgBox("User hat keinen Zugriff zu diesem VisboCenter!" & vbLf & " Bitte kontaktieren Sie ihren Administrator")
                     End If
+                Else
+                    ' alle vps dieses aktVCid lesen und im Cache speichern
+                    Try
+                        Dim err1 As New clsErrorCodeMsg
+                        VRScache.VPsN = GETallVP(aktVCid, err1, ptPRPFType.all)
+                    Catch ex As Exception
+
+                    End Try
 
                 End If
 
@@ -620,7 +628,12 @@ Public Class Request
         Try
             Dim hproj As New clsProjekt
             Dim vpid As String = ""
-            Dim vp As clsVP = GETvpid(projectname, err)
+            'ur:24.02.19: 
+            'Dim vp As clsVP = GETvpid(projectname, err)
+
+            ' projectname aus allen vps heraussuchen
+            Dim vp As clsVP = GETvpid(projectname, err, ptPRPFType.all)
+
             vpid = vp._id
 
             If vpid <> "" Then
@@ -693,6 +706,7 @@ Public Class Request
                         If VRScache.VPsN.ContainsKey(oldName) Then
 
                             vp = VRScache.VPsN(oldName)
+                            vp.name = newName
 
                             vpList = PUTOneVP(vpid, vp, err)
                             ' rename war korrekt, wenn in vplist ein und zwar nur ein VisboProject zurückgegeben wurde.
@@ -2721,7 +2735,7 @@ Public Class Request
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (vpid = "" And anzLoop < 2)
+            While (vpid = "" And anzLoop < 3)
 
                 If VRScache.VPsN.Count > 0 Then
                     ' Id zu angegebenen Projekt herausfinden
@@ -2730,7 +2744,13 @@ Public Class Request
                         vpid = vp._id
                         aktvp = vp
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid, err, vpType)
+                        If anzLoop < 1 Then
+                            VRScache.VPsN = GETallVP(aktVCid, err, vpType)
+                        Else
+                            VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+
+                        End If
+
                     End If
                 Else
                     VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
@@ -3011,6 +3031,15 @@ Public Class Request
 
                         For Each vp In webVPantwort.vp
                             result.Add(vp.name, vp)
+
+                            ' VPs nach Id sortiert gecacht
+                            If Not VRScache.VPsId.ContainsKey(vp._id) Then
+                                VRScache.VPsId.Add(vp._id, vp)
+                            Else
+                                VRScache.VPsId.Remove(vp._id)
+                                VRScache.VPsId.Add(vp._id, vp)
+                            End If
+
                         Next
 
 
@@ -3364,9 +3393,9 @@ Public Class Request
                 Dim variantlist As SortedList(Of Date, clsProjektWebLong) = VRScache.VPvs(vpid).Item(variantName).tsLong
 
                 Dim found As Boolean = False
-                Dim i As Integer = 0
+                Dim i As Integer = variantlist.Count - 1
 
-                While i <= variantlist.Count - 1
+                While Not found And i >= 0
                     Dim ts As Date = variantlist.ElementAt(i).Key
                     Dim longproj As clsProjektWebLong = variantlist.ElementAt(i).Value
 
@@ -3375,14 +3404,14 @@ Public Class Request
                         If ts <= storedAtorBefore Then
 
                             result.Add(longproj)
-
+                            found = True
                         Else
                             ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
                         End If
                     Else
                         result.Add(longproj)
                     End If
-                    i = i + 1
+                    i = i - 1
                 End While
             Else
 
@@ -3519,13 +3548,13 @@ Public Class Request
                         End If
 
                         ' es wird die Long-Version einer VisboProjectVersion angefordert
-                        serverUriString = serverUriString & "&longList"
+                        serverUriString = serverUriString & "&longList=1"
 
                     Else
 
 
                         ' Long-Version  angefordert
-                        serverUriString = serverUriString & "&longList"
+                        serverUriString = serverUriString & "&longList=1"
 
 
                     End If

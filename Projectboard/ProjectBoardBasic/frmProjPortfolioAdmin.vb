@@ -575,8 +575,9 @@ Public Class frmProjPortfolioAdmin
         ' neuer Ansatz
         If Not quickList Then
             If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
-
-                currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
+                ' tk 23.2.19 - wenn eine Constellation geladen wird und als Summary angezeigt werden soll, dann war hier bisher die Liste de rProjekte des Portfolios drin ..!? 
+                'currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
+                currentBrowserConstellation = currentSessionConstellation.copy()
 
             ElseIf AlleProjekte.Count > 0 Then
 
@@ -2815,7 +2816,8 @@ Public Class frmProjPortfolioAdmin
                         Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
                         If Not IsNothing(oldSummaryP) Then
-                            budget = oldSummaryP.budgetWerte.Sum
+                            'budget = oldSummaryP.budgetWerte.Sum
+                            budget = oldSummaryP.Erloes
                         Else
                             budget = toStoreConstellation.getBudgetOfShownProjects
                         End If

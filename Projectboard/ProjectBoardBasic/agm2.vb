@@ -6904,15 +6904,15 @@ Public Module agm2
         Dim stillOk As Boolean = True
         Dim specificsWithIDs As String = ""
         Dim tmpNameUID As String = ""
+        Dim teamID As Integer = -1
 
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
                 If roleType = ptCustomUserRoles.RessourceManager Then
-                    If RoleDefinitions.containsName(specifics) Then
+                    If RoleDefinitions.containsNameID(specifics) Then
                         ' alles ok
                         stillOk = True
-                        Dim teamID As Integer = -1
-                        specificsWithIDs = CStr(RoleDefinitions.getRoledef(specifics).UID)
+                        specificsWithIDs = CStr(RoleDefinitions.getRoleDefByIDKennung(specifics, teamID).UID)
                     Else
                         stillOk = False
                     End If
@@ -6921,10 +6921,10 @@ Public Module agm2
 
                     For Each tmpName As String In tmpStr
 
-                        stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+                        stillOk = stillOk And RoleDefinitions.containsNameID(tmpName.Trim)
 
-                        If RoleDefinitions.containsName(tmpName.Trim) Then
-                            tmpNameUID = CStr(RoleDefinitions.getRoledef(tmpName.Trim).UID)
+                        If RoleDefinitions.containsNameID(tmpName.Trim) Then
+                            tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
                             If specificsWithIDs = "" Then
                                 specificsWithIDs = tmpNameUID
                             Else
