@@ -60,17 +60,18 @@ Partial Class frmProjPortfolioAdmin
         'TreeViewProjekte
         '
         Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TreeViewProjekte.Location = New System.Drawing.Point(22, 32)
-        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
+        Me.TreeViewProjekte.Location = New System.Drawing.Point(29, 39)
+        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
-        Me.TreeViewProjekte.Size = New System.Drawing.Size(296, 310)
+        Me.TreeViewProjekte.Size = New System.Drawing.Size(393, 381)
         Me.TreeViewProjekte.TabIndex = 1
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(76, 440)
+        Me.OKButton.Location = New System.Drawing.Point(101, 542)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(188, 23)
+        Me.OKButton.Size = New System.Drawing.Size(251, 28)
         Me.OKButton.TabIndex = 6
         Me.OKButton.Text = "Button1"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -79,18 +80,20 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.lblStandvom.AutoSize = True
         Me.lblStandvom.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblStandvom.Location = New System.Drawing.Point(50, 10)
+        Me.lblStandvom.Location = New System.Drawing.Point(67, 12)
+        Me.lblStandvom.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblStandvom.Name = "lblStandvom"
-        Me.lblStandvom.Size = New System.Drawing.Size(61, 13)
+        Me.lblStandvom.Size = New System.Drawing.Size(79, 17)
         Me.lblStandvom.TabIndex = 36
         Me.lblStandvom.Text = "Stand vom:"
         '
         'dropboxScenarioNames
         '
         Me.dropboxScenarioNames.FormattingEnabled = True
-        Me.dropboxScenarioNames.Location = New System.Drawing.Point(22, 395)
+        Me.dropboxScenarioNames.Location = New System.Drawing.Point(29, 486)
+        Me.dropboxScenarioNames.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.dropboxScenarioNames.Name = "dropboxScenarioNames"
-        Me.dropboxScenarioNames.Size = New System.Drawing.Size(298, 21)
+        Me.dropboxScenarioNames.Size = New System.Drawing.Size(396, 24)
         Me.dropboxScenarioNames.TabIndex = 56
         '
         'ToolTipStand
@@ -99,19 +102,21 @@ Partial Class frmProjPortfolioAdmin
         'lblVersionen1
         '
         Me.lblVersionen1.AutoSize = True
-        Me.lblVersionen1.Location = New System.Drawing.Point(22, 378)
+        Me.lblVersionen1.Location = New System.Drawing.Point(29, 465)
+        Me.lblVersionen1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblVersionen1.Name = "lblVersionen1"
-        Me.lblVersionen1.Size = New System.Drawing.Size(105, 13)
+        Me.lblVersionen1.Size = New System.Drawing.Size(141, 17)
         Me.lblVersionen1.TabIndex = 66
         Me.lblVersionen1.Text = "alles löschen, ausser"
         Me.lblVersionen1.Visible = False
         '
         'versionsToKeep
         '
-        Me.versionsToKeep.Location = New System.Drawing.Point(132, 375)
+        Me.versionsToKeep.Location = New System.Drawing.Point(176, 462)
+        Me.versionsToKeep.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.versionsToKeep.Minimum = New Decimal(New Integer() {2, 0, 0, 0})
         Me.versionsToKeep.Name = "versionsToKeep"
-        Me.versionsToKeep.Size = New System.Drawing.Size(43, 20)
+        Me.versionsToKeep.Size = New System.Drawing.Size(57, 22)
         Me.versionsToKeep.TabIndex = 67
         Me.versionsToKeep.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         Me.versionsToKeep.Value = New Decimal(New Integer() {3, 0, 0, 0})
@@ -120,9 +125,10 @@ Partial Class frmProjPortfolioAdmin
         'lblVersionen2
         '
         Me.lblVersionen2.AutoSize = True
-        Me.lblVersionen2.Location = New System.Drawing.Point(180, 378)
+        Me.lblVersionen2.Location = New System.Drawing.Point(240, 465)
+        Me.lblVersionen2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblVersionen2.Name = "lblVersionen2"
-        Me.lblVersionen2.Size = New System.Drawing.Size(140, 13)
+        Me.lblVersionen2.Size = New System.Drawing.Size(187, 17)
         Me.lblVersionen2.TabIndex = 68
         Me.lblVersionen2.Text = "unterschiedlichen Versionen"
         Me.lblVersionen2.Visible = False
@@ -131,9 +137,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.backToInit.BackColor = System.Drawing.SystemColors.Control
         Me.backToInit.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_delete
-        Me.backToInit.Location = New System.Drawing.Point(215, 347)
+        Me.backToInit.Location = New System.Drawing.Point(287, 427)
+        Me.backToInit.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.backToInit.Name = "backToInit"
-        Me.backToInit.Size = New System.Drawing.Size(16, 16)
+        Me.backToInit.Size = New System.Drawing.Size(21, 20)
         Me.backToInit.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.backToInit.TabIndex = 65
         Me.backToInit.TabStop = False
@@ -142,9 +149,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.onlyInactive.BackColor = System.Drawing.SystemColors.Control
         Me.onlyInactive.Image = Global.ProjectBoardBasic.My.Resources.Resources.nur_ungecheckte_Projekte
-        Me.onlyInactive.Location = New System.Drawing.Point(193, 347)
+        Me.onlyInactive.Location = New System.Drawing.Point(257, 427)
+        Me.onlyInactive.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.onlyInactive.Name = "onlyInactive"
-        Me.onlyInactive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyInactive.Size = New System.Drawing.Size(21, 20)
         Me.onlyInactive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.onlyInactive.TabIndex = 64
         Me.onlyInactive.TabStop = False
@@ -153,9 +161,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.onlyActive.BackColor = System.Drawing.SystemColors.Control
         Me.onlyActive.Image = Global.ProjectBoardBasic.My.Resources.Resources.nur_gecheckte_Projekte
-        Me.onlyActive.Location = New System.Drawing.Point(171, 347)
+        Me.onlyActive.Location = New System.Drawing.Point(228, 427)
+        Me.onlyActive.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.onlyActive.Name = "onlyActive"
-        Me.onlyActive.Size = New System.Drawing.Size(16, 16)
+        Me.onlyActive.Size = New System.Drawing.Size(21, 20)
         Me.onlyActive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.onlyActive.TabIndex = 63
         Me.onlyActive.TabStop = False
@@ -164,9 +173,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.deleteFilterIcon.Enabled = False
-        Me.deleteFilterIcon.Location = New System.Drawing.Point(140, 347)
+        Me.deleteFilterIcon.Location = New System.Drawing.Point(187, 427)
+        Me.deleteFilterIcon.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.deleteFilterIcon.Name = "deleteFilterIcon"
-        Me.deleteFilterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.deleteFilterIcon.Size = New System.Drawing.Size(21, 20)
         Me.deleteFilterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.deleteFilterIcon.TabIndex = 59
         Me.deleteFilterIcon.TabStop = False
@@ -175,9 +185,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.filterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.filterIcon.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_add
-        Me.filterIcon.Location = New System.Drawing.Point(118, 347)
+        Me.filterIcon.Location = New System.Drawing.Point(157, 427)
+        Me.filterIcon.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.filterIcon.Name = "filterIcon"
-        Me.filterIcon.Size = New System.Drawing.Size(16, 16)
+        Me.filterIcon.Size = New System.Drawing.Size(21, 20)
         Me.filterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.filterIcon.TabIndex = 57
         Me.filterIcon.TabStop = False
@@ -188,9 +199,10 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(23, 348)
+        Me.SelectionSet.Location = New System.Drawing.Point(31, 428)
+        Me.SelectionSet.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.SelectionSet.Name = "SelectionSet"
-        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.Size = New System.Drawing.Size(21, 20)
         Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionSet.TabIndex = 55
         Me.SelectionSet.TabStop = False
@@ -200,9 +212,10 @@ Partial Class frmProjPortfolioAdmin
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Cursor = System.Windows.Forms.Cursors.Default
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(68, 348)
+        Me.collapseCompletely.Location = New System.Drawing.Point(91, 428)
+        Me.collapseCompletely.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.Size = New System.Drawing.Size(21, 20)
         Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.collapseCompletely.TabIndex = 54
         Me.collapseCompletely.TabStop = False
@@ -211,9 +224,10 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(90, 348)
+        Me.expandCompletely.Location = New System.Drawing.Point(120, 428)
+        Me.expandCompletely.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.Size = New System.Drawing.Size(21, 20)
         Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.expandCompletely.TabIndex = 53
         Me.expandCompletely.TabStop = False
@@ -223,9 +237,10 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(42, 348)
+        Me.SelectionReset.Location = New System.Drawing.Point(56, 428)
+        Me.SelectionReset.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.Size = New System.Drawing.Size(21, 20)
         Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionReset.TabIndex = 52
         Me.SelectionReset.TabStop = False
@@ -233,36 +248,39 @@ Partial Class frmProjPortfolioAdmin
         'storeToDBasWell
         '
         Me.storeToDBasWell.AutoSize = True
-        Me.storeToDBasWell.Location = New System.Drawing.Point(241, 422)
+        Me.storeToDBasWell.Location = New System.Drawing.Point(321, 519)
+        Me.storeToDBasWell.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.storeToDBasWell.Name = "storeToDBasWell"
-        Me.storeToDBasWell.Size = New System.Drawing.Size(79, 17)
+        Me.storeToDBasWell.Size = New System.Drawing.Size(101, 21)
         Me.storeToDBasWell.TabIndex = 70
         Me.storeToDBasWell.Text = "store to DB"
         Me.storeToDBasWell.UseVisualStyleBackColor = True
         '
         'requiredDate
         '
-        Me.requiredDate.Location = New System.Drawing.Point(117, 7)
+        Me.requiredDate.Location = New System.Drawing.Point(156, 9)
+        Me.requiredDate.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.requiredDate.Name = "requiredDate"
         Me.requiredDate.ShowCheckBox = True
-        Me.requiredDate.Size = New System.Drawing.Size(200, 20)
+        Me.requiredDate.Size = New System.Drawing.Size(265, 22)
         Me.requiredDate.TabIndex = 71
         '
         'chkbxPermanent
         '
         Me.chkbxPermanent.AutoSize = True
-        Me.chkbxPermanent.Location = New System.Drawing.Point(250, 348)
+        Me.chkbxPermanent.Location = New System.Drawing.Point(333, 428)
+        Me.chkbxPermanent.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.chkbxPermanent.Name = "chkbxPermanent"
-        Me.chkbxPermanent.Size = New System.Drawing.Size(76, 17)
+        Me.chkbxPermanent.Size = New System.Drawing.Size(98, 21)
         Me.chkbxPermanent.TabIndex = 72
         Me.chkbxPermanent.Text = "permanent"
         Me.chkbxPermanent.UseVisualStyleBackColor = True
         '
         'frmProjPortfolioAdmin
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(343, 473)
+        Me.ClientSize = New System.Drawing.Size(457, 582)
         Me.Controls.Add(Me.chkbxPermanent)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.storeToDBasWell)
@@ -284,6 +302,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.portfolioBrowserHelp.SetHelpString(Me, """das ist die Hilfe""")
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmProjPortfolioAdmin"
         Me.portfolioBrowserHelp.SetShowHelp(Me, True)
         Me.Text = "Portfolio"
