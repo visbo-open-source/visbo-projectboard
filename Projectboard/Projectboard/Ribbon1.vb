@@ -2838,22 +2838,55 @@ Imports System.Web
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Laden von DB "
+
                 Else
                     tmpLabel = "Load from Database"
                 End If
 
             Case "PT5G1B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s..."
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If awinSettings.loadPFV Then
+                            tmpLabel = "Portfolio/s (Vorgaben)"
+                        Else
+                            tmpLabel = "Portfolio/s (aktuelle Planung)"
+                        End If
+                    Else
+                        tmpLabel = "Portfolio/s..."
+                    End If
                 Else
-                    tmpLabel = "Portfolio/s..."
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If awinSettings.loadPFV Then
+                            tmpLabel = "Portfolio/s (Allowances)"
+                        Else
+                            tmpLabel = "Portfolio/s (current planning)"
+                        End If
+                    Else
+                        tmpLabel = "Portfolio/s..."
+                    End If
                 End If
 
             Case "PT5G1B3" ' Project/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt/e..."
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If awinSettings.loadPFV Then
+                            tmpLabel = "Projekte (Vorgaben)"
+                        Else
+                            tmpLabel = "Projekte (aktuelle Planung)"
+                        End If
+                    Else
+                        tmpLabel = "Projekte"
+                    End If
                 Else
-                    tmpLabel = "Project/s..."
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If awinSettings.loadPFV Then
+                            tmpLabel = "Projects (Allowances)"
+                        Else
+                            tmpLabel = "Projekte (current planning) "
+                        End If
+                    Else
+                        tmpLabel = "Projects"
+                    End If
                 End If
 
             Case "PT5G2" ' Speichern
@@ -2871,11 +2904,11 @@ Imports System.Web
                 End If
 
             Case "Pt5G2B3" ' Projekt/e
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                        tmpLabel = "Vorgabe(n"
+                        tmpLabel = "Projekte (Vorgaben)"
                     Else
-                        tmpLabel = "Approval(s"
+                        tmpLabel = "Projects (Allowances)"
                     End If
                 Else
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2888,9 +2921,9 @@ Imports System.Web
 
             Case "Pt5G2B4" ' Alles speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Alles speichern (Projekte & Programme)"
+                    tmpLabel = "Alles als Vorgabe speichern (Projekte & Portfolios)"
                 Else
-                    tmpLabel = "Store Everything (projects & programs)"
+                    tmpLabel = "Store everything as allowance (projects & portfolios)"
                 End If
 
             Case "PT5G3" ' Löschen
@@ -2923,9 +2956,19 @@ Imports System.Web
 
             Case "Pt5G3B3" ' Projekte/Varianten/TimeStamps auswählen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen..."
+                    If awinSettings.loadPFV Then
+                        tmpLabel = "Vorgaben/Varianten/TimeStamps"
+                    Else
+                        tmpLabel = "Projekte/Varianten/TimeStamps"
+                    End If
+
                 Else
-                    tmpLabel = "Select Projects/Variants/TimeStamps..."
+                    If awinSettings.loadPFV Then
+                        tmpLabel = "Allowances/Variants/TimeStamps"
+                    Else
+                        tmpLabel = "Projects/Variants/TimeStamps"
+                    End If
+
                 End If
 
             Case "Pt5G3B4" ' X Versionen behalten
