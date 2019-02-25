@@ -14292,8 +14292,13 @@ Public Module testModule
         Dim childMilestoneIDs As New Collection
 
         If Not considerAll Then
-            childPhaseIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedPhaseIDs)
-            childMilestoneIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedMilestoneIDs)
+            If swimlaneNameID = rootPhaseName Then
+                childMilestoneIDs = hproj.getPhaseByID(rootPhaseName).getMilestoneIDs
+            Else
+                childPhaseIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedPhaseIDs)
+                childMilestoneIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedMilestoneIDs)
+            End If
+
         End If
 
 

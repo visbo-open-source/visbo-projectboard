@@ -2211,27 +2211,39 @@
                     Dim anzMilestonesInRootPhase As Integer = Me.hierarchy.getChildIDsOf(rootPhaseName, True).Count
                     If anzMilestonesInRootPhase > 0 Then
                         fullSwlBreadCrumb = Me.getBcElemName(rootPhaseName)
-                        If considerAll Then
-                            anzSwimlanes = anzSwimlanes + 1
-                            If index = anzSwimlanes Then
-                                ' das ist jetzt die Phase 
-                                tmpPhase = Me.getPhaseByID(rootPhaseName)
-                            End If
-                        Else
-                            fullSwlBreadCrumb = Me.getBcElemName(rootPhaseName)
-                            ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
-                            Dim found As Boolean = False
-                            Do While Not found And index <= sptr
-                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
-                                    found = True
-                                Else
-                                    index = index + 1
-                                End If
-                            Loop
-                            If found Then
-                                anzSwimlanes = anzSwimlanes + 1
-                            End If
+
+                        anzSwimlanes = anzSwimlanes + 1
+                        If index = anzSwimlanes Then
+                            ' das ist jetzt die Phase 
+                            tmpPhase = Me.getPhaseByID(rootPhaseName)
                         End If
+
+                        'If considerAll Then
+                        '    anzSwimlanes = anzSwimlanes + 1
+                        '    If index = anzSwimlanes Then
+                        '        ' das ist jetzt die Phase 
+                        '        tmpPhase = Me.getPhaseByID(rootPhaseName)
+                        '    End If
+                        'Else
+                        '    fullSwlBreadCrumb = Me.getBcElemName(rootPhaseName)
+                        '    ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                        '    Dim found As Boolean = False
+                        '    Do While Not found And index <= sptr
+                        '        If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                        '            found = True
+                        '        Else
+                        '            index = index + 1
+                        '        End If
+                        '    Loop
+                        '    If found Then
+                        '        anzSwimlanes = anzSwimlanes + 1
+                        '        If index = anzSwimlanes Then
+                        '            ' das ist jetzt die Phase 
+                        '            tmpPhase = Me.getPhaseByID(rootPhaseName)
+
+                        '        End If
+                        '    End If
+                        'End If
                     End If
 
                     ' das jetzt nur machen, wenn tmpPhase noch immer Nothing ist ... 

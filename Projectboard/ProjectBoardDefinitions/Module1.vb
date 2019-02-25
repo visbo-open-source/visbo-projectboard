@@ -298,6 +298,8 @@ Public Module Module1
         RessourceManager = 2
         ProjektLeitung = 3
         Alles = 4
+        InternalViewer = 5
+        ExternalViewer = 6
     End Enum
 
     ''' <summary>
