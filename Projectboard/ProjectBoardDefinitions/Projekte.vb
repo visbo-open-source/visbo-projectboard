@@ -9654,10 +9654,10 @@ Public Module Projekte
         Dim found As Boolean = False
 
         Dim pieColors() As Integer = {Excel.XlRgbColor.rgbAqua,
-                                      Excel.XlRgbColor.rgbBeige,
-                                      Excel.XlRgbColor.rgbFuchsia,
-                                      Excel.XlRgbColor.rgbLavender,
-                                      Excel.XlRgbColor.rgbMaroon}
+                                      Excel.XlRgbColor.rgbAliceBlue,
+                                      Excel.XlRgbColor.rgbAzure,
+                                      Excel.XlRgbColor.rgbBlue,
+                                      Excel.XlRgbColor.rgbNavyBlue}
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             If calledfromReporting Then
@@ -9956,10 +9956,10 @@ Public Module Projekte
         Dim ErgebnisListeR As Collection
 
         Dim pieColors() As Integer = {Excel.XlRgbColor.rgbAqua,
-                                      Excel.XlRgbColor.rgbBeige,
-                                      Excel.XlRgbColor.rgbFuchsia,
-                                      Excel.XlRgbColor.rgbLavender,
-                                      Excel.XlRgbColor.rgbMaroon}
+                                      Excel.XlRgbColor.rgbAliceBlue,
+                                      Excel.XlRgbColor.rgbAzure,
+                                      Excel.XlRgbColor.rgbBlue,
+                                      Excel.XlRgbColor.rgbNavyBlue}
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents

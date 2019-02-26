@@ -6358,6 +6358,8 @@ Public Module awinDiagrams
         'Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
         '                                                           Width:=width, Height:=height)
         ' 
+        Dim tmpWB As Excel.Workbook = CType(newPPTChart.Chart.ChartData.Workbook, Excel.Workbook)
+
 
         ' jetzt kommt das Löschen der alten SeriesCollections . . 
         With newPPTChart.Chart
@@ -6518,6 +6520,8 @@ Public Module awinDiagrams
 
         newPPTChart.Chart.Refresh()
 
+        ' jetzt das Excel wieder schliessen 
+        tmpWB.Close(SaveChanges:=False)
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
 
