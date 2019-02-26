@@ -2613,11 +2613,10 @@ Imports System.Web
 
             Case "PT2G2B2" ' Portfolio/s anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s anzeigen..."
+                    tmpLabel = "Portfolio/s aus Session anzeigen..."
                 Else
-                    tmpLabel = "Show Portfolio/s..."
+                    tmpLabel = "Show Session Portfolio/s..."
                 End If
-
 
             Case "PT2G2B4" ' Editieren Portfolio
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then

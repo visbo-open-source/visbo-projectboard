@@ -70,7 +70,6 @@
                 <button id="Pt5G3B4" getLabel ="bestimmeLabel"  onAction="PT5DeleteProjectsInDBExceptF1" supertip ="es werden immer der erste und der letzte sowie X-2 weitere Versionen behalten; alle anderen werden gelöscht "/>
               </menu>-->
             </menu>
-          <!--</splitButton>-->
          </group>
         <!--label="IMPORT/EXPORT"-->
         <group id="PTIpExp">
@@ -186,6 +185,10 @@
             <!--label="einzelne Projekte und Varianten"-->
             <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
+          <separator id="PT2G1s2"/>
+          <!--label="Portfolio/s aus Session anzeigen und laden"-->
+          <button id="PT2G2B2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
+          <!--</splitButton>-->
           <!--<button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />-->
         </group>
         <!--</group>-->
@@ -254,9 +257,6 @@
           <button id="PT2G1B6" imageMso="OutlineExpand" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
           <!--label="Rollup View"-->
           <button id="PT2G1B7" imageMso="OutlineCollapse" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
-          <separator id="PT2G1s2"/>
-          <!--label="Portfolio/s anzeigen"-->
-          <button id="PT2G2B2" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
           <separator id="PT2G1s3"/>
           <!--label="Zeichen-Elemente löschen"-->
           <menu id="PT2G3M2" getLabel ="bestimmeLabel" imageMso="Delete" size="large">
