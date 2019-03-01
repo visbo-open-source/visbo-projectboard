@@ -298,6 +298,8 @@ Public Module Module1
         RessourceManager = 2
         ProjektLeitung = 3
         Alles = 4
+        InternalViewer = 5
+        ExternalViewer = 6
     End Enum
 
     ''' <summary>
@@ -4963,6 +4965,7 @@ Public Module Module1
 
 
                 End With
+
                 ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
                 If bigType = ptReportBigTypes.tables Then
                     ' sonst keine weiteren Dinge ... das wird in der eigenen Methode addSmartPPTTableInfo gemacht 
@@ -5015,7 +5018,12 @@ Public Module Module1
         ElseIf detailID = ptReportComponents.prSymRisks Then
             ' aktuell gibt es im Datenmodell noch keine Risiken
             tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
-            tmpText = ""
+
+            If Not IsNothing(hproj.getCustomSField("Risiko")) Then
+                tmpText = tmpText & hproj.getCustomSField("Risiko")
+            Else
+                tmpText = tmpText & "--"
+            End If
 
         ElseIf detailID = ptReportComponents.prSymDescription Then
 
@@ -5164,7 +5172,19 @@ Public Module Module1
             Dim allNames As Collection = hproj.getRoleNames
 
             Dim responsible As String = hproj.leadPerson
-            tmpText = tmpText & "Project-Lead: " & responsible & vbLf
+            tmpText = tmpText & "Project-Lead: " & responsible & vbLf & vbLf
+
+            Dim allResponsible As Collection = hproj.getResponsibleNames
+            If allResponsible.Count > 0 Then
+                tmpText = tmpText & "Team:" & vbLf
+                For Each tmpName As String In allResponsible
+                    tmpText = tmpText & tmpName & vbLf
+                Next
+            End If
+
+            If allResponsible.Count > 0 Then
+                tmpText = tmpText & vbLf
+            End If
 
             For Each tmpName As String In allNames
                 tmpText = tmpText & tmpName & vbLf

@@ -2122,6 +2122,7 @@ Public Module agm2
                         End If
 
 
+
                         hproj.AddPhase(cphase)
 
                         Try
@@ -2582,7 +2583,7 @@ Public Module agm2
                                         cphase.percentDone = percentDone
 
                                         ' ampel eintragen 
-                                        If ampel > 0 And ampel <= 3 Then
+                                        If ampel >= 0 And ampel <= 3 Then
                                             cphase.ampelStatus = ampel
                                         End If
 
@@ -2590,6 +2591,9 @@ Public Module agm2
                                         If ampelExplanation <> "" Then
                                             cphase.ampelErlaeuterung = ampelExplanation
                                         End If
+
+                                        ' Deliverable eintragen 
+
 
                                         If docURL <> "" Then
                                             cphase.DocURL = docURL
@@ -6019,12 +6023,12 @@ Public Module agm2
                                             With cphase
                                                 .percentDone = percentDone
                                                 .verantwortlich = responsible
-                                                .DocURL = docURL
+
                                                 If Not IsNothing(cBewertung) Then
                                                     .addBewertung(cBewertung)
                                                 End If
 
-                                                ' ur: 09.11.2017
+                                                ' tk 29.5.16
                                                 ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
                                                 Try
                                                     If deliverables.Trim.Length > 0 Then
@@ -6038,6 +6042,9 @@ Public Module agm2
                                                 Catch ex As Exception
 
                                                 End Try
+
+                                                .DocURL = docURL
+
                                             End With
 
 
@@ -6306,28 +6313,7 @@ Public Module agm2
                                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
                 wsRessourcen = Nothing
-                ' '' '' '' ------------------------------------------------------------------------------------------------------
-                ' '' '' '' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
-                ' '' '' '' ------------------------------------------------------------------------------------------------------
-                '' '' ''Try
-                '' '' ''    Dim cphase As New clsPhase(hproj)
 
-                '' '' ''    ' ProjektPhase wird erzeugt
-                '' '' ''    cphase = New clsPhase(parent:=hproj)
-                '' '' ''    cphase.nameID = rootPhaseName
-
-                '' '' ''    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-                '' '' ''    With cphase
-                '' '' ''        .nameID = rootPhaseName
-                '' '' ''        Dim startOffset As Integer = 0
-                '' '' ''        .changeStartandDauer(startOffset, ProjektdauerIndays)
-                '' '' ''    End With
-                '' '' ''    ' ProjektPhase wird hinzugefügt
-                '' '' ''    hproj.AddPhase(cphase)
-
-                '' '' ''Catch ex1 As Exception
-                '' '' ''    Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
-                '' '' ''End Try
 
             End Try
 
@@ -6857,7 +6843,19 @@ Public Module agm2
                     Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen: " & ex.Message, hproj.name, anzFehler)
                     Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
                 End Try
+            Else
+                ' hier Variante 2 versuchen, Tabelle mit Ressourcenbedarfe einlesen 
+                Try
+                    wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcenbedarfe"),
+                                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+                    Dim outputCollection As New Collection
+                    Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
+                Catch ex As Exception
+                    wsRessourcen = Nothing
+
+
+                End Try
             End If
 
             ' ------------------------------------------------------------------
@@ -9288,9 +9286,170 @@ Public Module agm2
         getAllianzTeamNameFromCell = tmpResult
     End Function
 
-    Public Sub readVisboRessourcenSheet(ByVal ws As Excel.Worksheet, ByVal colPhase As Integer, colRessource As String, colValue As Double,
-                                          ByRef outputcollection As Collection)
+    ''' <summary>
+    ''' gemacht um eine Tabelle mit Ressourcen Angaben einzulesen ...
+    ''' muss noch fertiggestellt werden 
+    ''' </summary>
+    ''' <param name="ws"></param>
+    ''' <param name="outputcollection"></param>
+    ''' <param name="hproj"></param>
+    Public Sub readVisboRessourcenSheet(ByVal ws As Excel.Worksheet, ByRef outputcollection As Collection, ByRef hproj As clsProjekt)
 
+        Dim firstRowOfProject As Integer = 2
+        Dim lastRowOfProject As Integer = CType(ws.Cells(40000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+
+        Dim colTaskName As Integer = 1
+        Dim colRolName As Integer = 2
+        Dim colValue As Integer = 3
+        Dim colEinheit As Integer = 4
+
+        Dim anzPhases As Integer = hproj.CountPhases
+
+        ' enthält die eingeplanten PT für die einzelnen Releases  
+        Dim phValues() As Double
+        ' enthält die Phasen Namen
+        Dim phNameIDs() As String
+
+        ReDim phValues(anzPhases - 1)
+        ReDim phNameIDs(anzPhases - 1)
+
+        For ip As Integer = 1 To hproj.CountPhases
+            Dim cPhase As clsPhase = hproj.getPhase(ip)
+            phNameIDs(ip - 1) = cPhase.nameID
+        Next
+
+        ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
+        Dim rolePhaseValues As New SortedList(Of String, Double())
+
+        ' wenn wenigstens ein Fehler beim Projekt auftritt , dann wird es nicht eingetragen 
+        Dim atleastOneError As Boolean = False
+
+
+
+        For iz As Integer = firstRowOfProject To lastRowOfProject
+
+            Try
+
+                Dim roleName As String = CStr(CType(ws.Cells(iz, colRolName), Excel.Range).Value).Trim
+                Dim roleNameID As String = ""
+                Dim phaseName As String = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+                Dim phaseNameID As String = ""
+                Dim lastPhNameID As String = ""
+                Dim tmpValue As String = CType(ws.Cells(iz, colValue), Excel.Range).Value
+                If tmpValue.Contains(".") Then
+                    tmpValue = tmpValue.Replace(".", ",")
+                End If
+
+                Dim value As Double = CDbl(tmpValue) / 8 ' weil Angabe in Stunden ... 
+                Dim lfdNr As Integer = 1
+                Dim cphase As clsPhase = hproj.getPhase(phaseName)
+
+                If Not IsNothing(cphase) Then
+
+                    Call setRolePhaseValues(roleName, lfdNr, phaseName, value, hproj, phNameIDs, rolePhaseValues)
+                    ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
+
+                Else
+                    ' einfach nix machen und ignorieren 
+                    CType(ws.Cells(iz, colTaskName), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                End If
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        ' prüfen, ob auch kein Fehler beim Import aufgetreten ist ... 
+        If Not atleastOneError Then
+
+            ' jetzt alle Rollen / Phasen Werte hinzufügen 
+
+            hproj = hproj.merge(rolePhaseValues, phNameIDs, True)
+
+            ' tk test 
+            For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                Dim teilErgebnis As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
+                If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
+                    logmessage = "TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+                    outputcollection.Add(logmessage)
+                End If
+
+            Next
+
+        End If ' if not atleastOneError ...
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' berechnet rekursiv den Monatsbedarf
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <param name="phaseName"></param>
+    ''' <param name="value"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="phNameIDs"></param>
+    ''' <param name="rolePhaseValues"></param>
+    Private Sub setRolePhaseValues(ByVal roleName As String, ByVal lfdNr As Integer, ByVal phaseName As String, ByVal value As Double,
+                                   ByVal hproj As clsProjekt, ByVal phNameIDs As String(), ByRef rolePhaseValues As SortedList(Of String, Double()))
+
+        Dim anzPhases As Integer = hproj.CountPhases
+        Dim cphase As clsPhase = hproj.getPhase(phaseName, lfdNr:=lfdNr)
+        Dim phValues() As Double
+
+        ' es ist sichergestellt, dass cphase existiert 
+
+        ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
+        If RoleDefinitions.containsName(roleName) Then
+
+            Dim phaseNameID As String = cphase.nameID
+            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleName, "")
+            ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
+
+            If (roleNameID.Length > 0) And (phaseNameID.Length > 0) Then
+
+                ' bestimme jetzt anhand phaseNameID den Index in der Integer
+                Dim found As Boolean = False
+                Dim ix As Integer = -1 ' wqird zu Beginn der Schleife erhöht, deshalb beginnen mit -1
+
+                Do While Not found And ix <= phNameIDs.Length - 1
+                    ix = ix + 1
+                    found = phaseNameID = phNameIDs(ix)
+                Loop
+
+                If found Then
+                    If rolePhaseValues.ContainsKey(roleNameID) Then
+
+                        phValues = rolePhaseValues.Item(roleNameID)
+
+                        If phValues(ix) > 0 Then
+                            cphase = hproj.getPhase(phaseName, lfdNr:=lfdNr + 1)
+                            If IsNothing(cphase) Then
+                                phValues(ix) = phValues(ix) + value
+                            Else
+                                Call setRolePhaseValues(roleName, lfdNr + 1, phaseName, value,
+                                                             hproj, phNameIDs, rolePhaseValues)
+                            End If
+                        Else
+                            phValues(ix) = value
+                        End If
+
+                    Else
+                        ReDim phValues(anzPhases - 1)
+                        phValues(ix) = value
+                        rolePhaseValues.Add(roleNameID, phValues)
+                    End If
+                End If
+
+            End If
+
+        End If
 
     End Sub
 

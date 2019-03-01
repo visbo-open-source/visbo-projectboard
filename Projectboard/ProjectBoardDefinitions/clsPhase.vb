@@ -2411,6 +2411,29 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt eine Collection all der Meilensteine in der Phase zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getMilestoneIDs() As Collection
+        Get
+            Dim tmpResult As New Collection
+            For i As Integer = 1 To countMilestones
+                Dim msID As String = getMilestone(i).nameID
+                If Not tmpResult.Contains(msID) Then
+                    tmpResult.Add(msID, msID)
+                End If
+            Next
+            getMilestoneIDs = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt den ix-ten Meilenstein in der Phase zurück; ix muss zwischen 1 .. und count liegen
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
 
         Get
