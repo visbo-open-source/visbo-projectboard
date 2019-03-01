@@ -2429,6 +2429,11 @@ Public Class clsPhase
     End Property
 
 
+    ''' <summary>
+    ''' gibt den ix-ten Meilenstein in der Phase zurück; ix muss zwischen 1 .. und count liegen
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
 
         Get

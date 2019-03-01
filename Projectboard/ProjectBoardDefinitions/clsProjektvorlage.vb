@@ -3077,6 +3077,68 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt eine Liste an Responsible People zurück; ist einfach eine unvalidierte Sammlung von Verantwortlichkeiten ; leere Liste wenn es niemanden gibt 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getResponsiblePeople() As Collection
+        Get
+            Dim phase As clsPhase
+            Dim responsiblePeople As New Collection
+
+            Dim p As Integer
+
+            Dim currentPerson As String = ""
+
+            'Dim ende As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+
+                    phase = AllPhases.Item(p)
+                    currentPerson = ""
+                    If Not IsNothing(phase.verantwortlich) Then
+                        currentPerson = phase.verantwortlich.Trim
+
+                        If currentPerson.Length > 0 Then
+
+                            If Not responsiblePeople.Contains(currentPerson) Then
+                                responsiblePeople.Add(currentPerson, currentPerson)
+                            End If
+
+                        End If
+                    End If
+
+                    With phase
+
+                        For m As Integer = 1 To .countMilestones
+                            Dim ms As clsMeilenstein = .getMilestone(m)
+                            If Not IsNothing(ms.verantwortlich) Then
+                                currentPerson = ms.verantwortlich.Trim
+
+                                If currentPerson.Length > 0 Then
+
+                                    If Not responsiblePeople.Contains(currentPerson) Then
+                                        responsiblePeople.Add(currentPerson, currentPerson)
+                                    End If
+
+                                End If
+                            End If
+                        Next m
+
+                    End With
+
+                Next p
+
+            End If
+
+
+            getResponsiblePeople = responsiblePeople
+        End Get
+    End Property
+
     '
     ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '

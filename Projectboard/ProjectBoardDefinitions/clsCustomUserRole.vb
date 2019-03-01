@@ -50,7 +50,7 @@ Public Class clsCustomUserRole
 
             Case ptCustomUserRoles.ProjektLeitung
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1",
-                                 "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PTeinst", "PThelp",
+                                 "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PThelp",
                                  "PTWebServer"}
 
 
@@ -113,6 +113,8 @@ Public Class clsCustomUserRole
                         isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
                     End If
 
+                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    isAllowed = True
                 End If
             End If
         End If

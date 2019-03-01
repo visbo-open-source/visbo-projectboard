@@ -1177,8 +1177,8 @@ Public Module testModule
                                 Try
 
                                     Dim minCal As Boolean = False
-                                    If qualifier.Length > 0 Then
-                                        minCal = (qualifier.Trim = "minCal")
+                                    If qualifier2.Length > 0 Then
+                                        minCal = (qualifier2.Trim = "minCal")
                                     End If
 
                                     Call zeichneSwimlane2Sicht(pptAppfromX, pptCurrentPresentation, pptSlide,
@@ -1205,8 +1205,8 @@ Public Module testModule
                                 Try
 
                                     Dim minCal As Boolean = False
-                                    If qualifier.Length > 0 Then
-                                        minCal = (qualifier.Trim = "minCal")
+                                    If qualifier2.Length > 0 Then
+                                        minCal = (qualifier2.Trim = "minCal")
                                     End If
 
 
@@ -3233,7 +3233,7 @@ Public Module testModule
                                     boxName = repMessages.getmsg(223)
                                 End If
 
-                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult)
+                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
                                 '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand

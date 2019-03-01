@@ -6023,12 +6023,12 @@ Public Module agm2
                                             With cphase
                                                 .percentDone = percentDone
                                                 .verantwortlich = responsible
-                                                .DocURL = docURL
+
                                                 If Not IsNothing(cBewertung) Then
                                                     .addBewertung(cBewertung)
                                                 End If
 
-                                                ' ur: 09.11.2017
+                                                ' tk 29.5.16
                                                 ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
                                                 Try
                                                     If deliverables.Trim.Length > 0 Then
@@ -6042,6 +6042,9 @@ Public Module agm2
                                                 Catch ex As Exception
 
                                                 End Try
+
+                                                .DocURL = docURL
+
                                             End With
 
 
