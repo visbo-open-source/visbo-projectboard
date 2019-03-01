@@ -25,7 +25,7 @@ Public Class frmSelectImportFiles
         Dim fileNameWildCards() As String = {"*.xls", "*.xlsx"}
         Try
             Select Case menueAswhl
-                Case PTImpExp.rplan
+                Case PTImpExp.rplanrxf
                     fileNameWildCards = {"*.rxf"}
                 Case PTImpExp.msproject
                     fileNameWildCards = {"*.mpp"}
@@ -107,9 +107,9 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.rplan Then
             dirName = importOrdnerNames(PTImpExp.rplan)
             If awinSettings.englishLanguage Then
-                Me.Text = "select RPLAN Excel files"
+                Me.Text = "select Excel files"
             Else
-                Me.Text = "RPLAN Excel Dateien auswählen"
+                Me.Text = "Excel Dateien auswählen"
             End If
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended

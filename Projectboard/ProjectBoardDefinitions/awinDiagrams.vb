@@ -6813,9 +6813,19 @@ Public Module awinDiagrams
 
             actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
             ' die Prognose Daten bereinigen
-            For ix As Integer = 0 To actualdataIndex
-                prognoseDatenReihe(ix) = 0
-            Next
+            ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
+
+
+            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+                For ix As Integer = 0 To actualdataIndex - 1
+                    prognoseDatenReihe(ix) = 0
+                Next
+            Else
+                For ix As Integer = 0 To actualdataIndex
+                    prognoseDatenReihe(ix) = 0
+                Next
+            End If
+
 
             For ix = actualdataIndex + 1 To plen - 1
                 istDatenReihe(ix) = 0

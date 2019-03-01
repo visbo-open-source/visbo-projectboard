@@ -12342,7 +12342,8 @@ Public Module Projekte
                     If Not IsNothing(hproj) Then
                         Dim qualifier2 As String = pptShape.Tags.Item("Q2")
                         'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
-                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                        'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
                     End If
 
                 Case ptReportComponents.prDescription

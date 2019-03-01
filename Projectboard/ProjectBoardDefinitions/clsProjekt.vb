@@ -5296,8 +5296,13 @@ Public Class clsProjekt
             Dim childMilestoneIDs As New Collection
 
             If Not considerAll Then
-                childPhaseIDs = Me.schnittmengeChilds(swimlaneID, selectedPhaseIDs)
-                childMilestoneIDs = Me.schnittmengeChilds(swimlaneID, selectedMilestoneIDs)
+                If swimlaneID = rootPhaseName Then
+                    childMilestoneIDs = Me.getPhaseByID(rootPhaseName).getMilestoneIDs
+                Else
+                    childPhaseIDs = Me.schnittmengeChilds(swimlaneID, selectedPhaseIDs)
+                    childMilestoneIDs = Me.schnittmengeChilds(swimlaneID, selectedMilestoneIDs)
+                End If
+
             End If
 
             Dim zeilenOffset As Integer = 1
