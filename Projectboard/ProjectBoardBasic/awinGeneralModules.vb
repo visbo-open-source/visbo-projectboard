@@ -3418,6 +3418,7 @@ Public Module awinGeneralModules
         ' in der Datenbank gespeichert sind, abgespeichert werden ... 
         ' bzw all die Projekte, die referenziert und sich verändert haben ... 
 
+
         If storeProjectsAsWell Then
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
 
@@ -3635,11 +3636,10 @@ Public Module awinGeneralModules
 
 
 
-
-
         ' jetzt wird das Portfolio weggeschrieben 
         Try
-            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation, err) Then
+            Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
+            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
                 ' alles in Ordnung, Speichern hat geklappt ... 
             Else
                 If awinSettings.englishLanguage Then
@@ -3664,6 +3664,7 @@ Public Module awinGeneralModules
 
         ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
+            ' das Summary Project muss auf Basis der geladenen Projekte erstellt werden 
             Dim budget As Double = -1.0
             Dim calculateAndStoreSummaryProjekt As Boolean = False
             Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
@@ -3709,7 +3710,7 @@ Public Module awinGeneralModules
                         anzahlNeue = anzahlNeue + 1
 
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                            writeProtections.upsert(wpItem)
+                        writeProtections.upsert(wpItem)
 
 
                     Else
@@ -3785,7 +3786,7 @@ Public Module awinGeneralModules
                             anzahlChanged = anzahlChanged + 1
 
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                                writeProtections.upsert(wpItem)
+                            writeProtections.upsert(wpItem)
 
                         Else
                             If awinSettings.visboServer Then

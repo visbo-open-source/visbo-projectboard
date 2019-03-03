@@ -832,7 +832,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property copy(Optional ByVal cName As String = "") As clsConstellation
+    Public ReadOnly Property copy(Optional ByVal cName As String = "", Optional ByVal prepareForDB As Boolean = False) As clsConstellation
         Get
             Dim copyResult As New clsConstellation
 
@@ -847,7 +847,7 @@
 
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    Dim copiedItem As clsConstellationItem = kvp.Value.copy
+                    Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
                     .add(cItem:=copiedItem, noUpdateSortlist:=True)
                 Next
 
