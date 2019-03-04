@@ -6919,7 +6919,7 @@ Public Module agm2
                     Else
                         stillOk = False
                     End If
-                ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
                     For Each tmpName As String In tmpStr
