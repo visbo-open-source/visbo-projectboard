@@ -150,6 +150,7 @@ Public Class Tabelle2
             Application.ScreenUpdating = True
         End If
 
+        Dim a As Boolean = appInstance.ScreenUpdating
 
 
     End Sub
@@ -426,7 +427,6 @@ Public Class Tabelle2
 
                             ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
                             ' die noch keine Ist-Daten enthalten
-
 
 
 
@@ -1167,7 +1167,7 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
-                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
+                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -1946,7 +1946,7 @@ Public Class Tabelle2
                 selectedProjekte.Clear(False)
                 selectedProjekte.Add(.lastProject, False)
 
-                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True)
+                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
                 If Not IsNothing(rcName) Then
 

@@ -14905,7 +14905,7 @@ Public Module agm2
                     If Not IsNothing(formProjectInfo1) Then
                         Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                     End If
-                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
+                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
 
                 Catch ex As Exception
@@ -15003,7 +15003,8 @@ Public Module agm2
                 ' Beginn WriteMECellWithRoleNameID
 
                 Dim teamName As String = ""
-                Dim currentCell As Excel.Range = CType(.Cells(zeile, 5), Excel.Range)
+                ' tk 4.3.19 es muss newzeile sein, statt zeile 
+                Dim currentCell As Excel.Range = CType(.Cells(newZeile, 5), Excel.Range)
                 ' erst mal alle Kommentare löschen 
                 currentCell.ClearComments()
 
@@ -15197,7 +15198,16 @@ Public Module agm2
         Dim maxRCLengthVorkommen As Integer = 0
 
         Dim trTeamID As Integer = -1
-        Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+        Dim restrictedTopRole As clsRollenDefinition = Nothing
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+        End If
+
+        ' Test-Zwecke 4.3.19
+        'Dim tstSU As Boolean = appInstance.ScreenUpdating
+        'Dim tstEE As Boolean = appInstance.EnableEvents
+
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -15290,6 +15300,8 @@ Public Module agm2
                     CType(.Cells(1, 6), Excel.Range).Value = "Summe" & vbLf & "[PT]"
 
                 End If
+
+                ' 
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
                 Call massEditZeile1Appearance(ptTables.meRC)
@@ -15776,7 +15788,6 @@ Public Module agm2
         Catch ex As Exception
             appInstance.EnableEvents = True
         End Try
-
 
 
 

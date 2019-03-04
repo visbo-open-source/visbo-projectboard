@@ -7012,8 +7012,13 @@ Public Module awinGeneralModules
     ''' <param name="hproj">das selektierte Projekt</param>
     ''' <remarks></remarks>
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean,
-                                  Optional ByVal calledFromMassEdit As Boolean = False)
+                                  Optional ByVal calledFromMassEdit As Boolean = False,
+                                  Optional ByVal currentRoleName As String = "")
 
+        ' Validieren ...
+        If IsNothing(currentRoleName) Then
+            currentRoleName = ""
+        End If
 
         Dim err As New clsErrorCodeMsg
 
@@ -7073,7 +7078,20 @@ Public Module awinGeneralModules
                                 With scInfo
                                     .hproj = hproj
                                     .detailID = typID
-                                    .q2 = roleCostName
+
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
+                                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                                        If Not IsNothing(potentialParents) Then
+                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents)
+                                            If tmpParentName <> "" Then
+                                                scInfo.q2 = tmpParentName
+                                            End If
+                                        End If
+                                    Else
+                                        .q2 = roleCostName
+                                    End If
+
+
                                     .vergleichsArt = PTVergleichsArt.beauftragung
                                     .vergleichsTyp = PTVergleichsTyp.letzter
 
