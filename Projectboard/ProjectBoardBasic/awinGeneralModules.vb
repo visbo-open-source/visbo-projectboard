@@ -4652,7 +4652,7 @@ Public Module awinGeneralModules
     ''' baut aus der Datenbank die Projekt-Varianten Liste auf, die zu dem gegeb. Zeitpunkt bereits in der Datenbank existiert haben 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Function buildPvNamesList(ByVal storedAtOrBefore As Date) As SortedList(Of String, String)
+    Friend Function buildPvNamesList(ByVal storedAtOrBefore As Date, Optional ByVal fromReST As Boolean = False) As SortedList(Of String, String)
 
         Dim err As New clsErrorCodeMsg
 
@@ -4666,7 +4666,7 @@ Public Module awinGeneralModules
         End If
 
 
-        buildPvNamesList = CType(databaseAcc, DBAccLayer.Request).retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore, err)
+        buildPvNamesList = CType(databaseAcc, DBAccLayer.Request).retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore, err, )
 
     End Function
 
