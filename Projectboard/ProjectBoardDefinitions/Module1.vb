@@ -7782,6 +7782,120 @@ Public Module Module1
 
     End Function
 
+    ''' <summary>
+    ''' schreibt in die angegebene MassenEdit Excel-Zelle den Phase-Name als String, 
+    ''' die Phase-NameID , wenn nötig als unsichtbaren Kommentar  
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="phaseNameID"></param>
+    Public Sub writeMEcellWithPhaseNameID(ByRef currentCell As Excel.Range,
+                                          ByVal indentlevel As Integer,
+                                          ByVal phaseName As String,
+                                          ByVal phaseNameID As String)
+        ' Phasen-Name 
+        currentCell.Value = phaseName
+        '    Den Indent schreiben 
+        currentCell.IndentLevel = indentlevel
+        '    Kommentare alle löschen 
+        currentCell.ClearComments()
+
+        ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermitelt werden kann 
+        If calcHryElemKey(phaseName, False) <> phaseNameID Then
+            currentCell.AddComment(Text:=phaseNameID)
+            currentCell.Comment.Visible = False
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt den Projekt-NAmen, evtl inkl MArkierung dass geschützt und dem Hinweis, wer es geschützt hat
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="isProtectedbyOthers"></param>
+    ''' <param name="protectiontext"></param>
+    Public Sub writeMEcellWithProjectName(ByRef currentCell As Excel.Range,
+                                          ByVal pName As String,
+                                          ByVal isProtectedbyOthers As Boolean,
+                                          ByVal protectiontext As String)
+
+        currentCell.Value = pName
+
+        If isProtectedbyOthers Then
+
+            If isProtectedbyOthers Then
+                currentCell.Font.Color = awinSettings.protectedByOtherColor
+            End If
+
+            ' Kommentare löschen
+            currentCell.ClearComments()
+
+            currentCell.AddComment(Text:=protectiontext)
+            currentCell.Comment.Visible = True
+
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt in die angegebene MassenEdit Excel-Zelle den Rollen-Namen als String und trägt ggf einen Kommentar mit dem Team-NAmen ein.  
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="roleNameID"></param>
+    Public Sub writeMECellWithRoleNameID(ByRef currentCell As Excel.Range,
+                                         ByVal isLocked As Boolean,
+                                         ByVal rcName As String,
+                                         ByVal roleNameID As String,
+                                         ByVal isRole As Boolean)
+
+
+        Dim teamID As Integer = -1
+        Dim teamName As String = ""
+
+        ' erst mal alle Kommentare löschen 
+        currentCell.ClearComments()
+
+        If isRole Then
+            If rcName = roleNameID Or roleNameID = "" Then
+                ' nichts weiter tun ... rcName wird als Value geschrieben
+
+            ElseIf roleNameID.Length > 0 Then
+
+                If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)) Then
+                    Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+
+                    If Not IsNothing(teamRole) Then
+                        teamName = teamRole.name
+                    End If
+                End If
+
+            End If
+
+        Else
+            ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
+
+        End If
+
+        ' Jetzt wird die Zelle geschrieben 
+
+        With currentCell
+            .Value = rcName
+            .Locked = isLocked
+            Try
+                If Not IsNothing(.Validation) Then
+                    .Validation.Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            If teamName.Length > 0 Then
+                Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
+            End If
+
+        End With
+
+    End Sub
 
 
 End Module

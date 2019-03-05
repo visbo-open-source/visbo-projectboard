@@ -15197,18 +15197,6 @@ Public Module agm2
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
 
-        Dim trTeamID As Integer = -1
-        Dim restrictedTopRole As clsRollenDefinition = Nothing
-
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-            restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
-        End If
-
-        ' Test-Zwecke 4.3.19
-        'Dim tstSU As Boolean = appInstance.ScreenUpdating
-        'Dim tstEE As Boolean = appInstance.EnableEvents
-
-
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -15300,8 +15288,6 @@ Public Module agm2
                     CType(.Cells(1, 6), Excel.Range).Value = "Summe" & vbLf & "[PT]"
 
                 End If
-
-                ' 
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
                 Call massEditZeile1Appearance(ptTables.meRC)
@@ -15423,11 +15409,6 @@ Public Module agm2
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
-                        Dim phaseHasActualData As Boolean = False
-                        If projectWithActualData Then
-                            phaseHasActualData = getColumnOfDate(hproj.actualDataUntil) >= getColumnOfDate(cphase.getStartDate)
-                        End If
-
 
                         Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
 
@@ -15457,13 +15438,14 @@ Public Module agm2
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
                                         If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                                            Dim trTeamID As Integer = -1
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
 
                                             If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
                                                 validRole = True
                                             Else
                                                 validRole = False
                                             End If
-
                                         End If
                                     End If
                                 End If
@@ -15473,10 +15455,9 @@ Public Module agm2
                                     Dim xValues() As Double = role.Xwerte
 
                                     ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
-                                    ' das macht es aber evtl extrem langsam ..
-                                    'Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
+                                    Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
 
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not phaseHasActualData)
+                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
@@ -15485,7 +15466,7 @@ Public Module agm2
 
                                     Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, roleNameID, True,
                                                                             protectionText, von, bis,
-                                                                            actualDataRelColumn, phaseHasActualData, summeEditierenErlaubt,
+                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
                                     If ok Then
@@ -15523,18 +15504,18 @@ Public Module agm2
 
                             For c = 1 To cphase.countCosts
 
-                                'Dim hasActualData As Boolean = False
+                                Dim hasActualData As Boolean = False
                                 Dim cost As clsKostenart = cphase.getCost(c)
                                 Dim costName As String = cost.name
                                 Dim xValues() As Double = cost.Xwerte
 
                                 ' neu 12.12.18 
                                 ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Kostenart schon actualdata hat ...
-                                'hasActualData = hproj.getPhaseRCActualValues(phaseNameID, costName, False, True).Sum > 0
+                                hasActualData = hproj.getPhaseRCActualValues(phaseNameID, costName, False, True).Sum > 0
 
                                 ' ist Summe Editieren erlaubt ? 
                                 If projectWithActualData Then
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not phaseHasActualData)
+                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
                                 End If
 
 
@@ -15545,7 +15526,7 @@ Public Module agm2
 
                                 Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
                                                                             protectionText, von, bis,
-                                                                            actualDataRelColumn, phaseHasActualData, summeEditierenErlaubt,
+                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
                                 If ok Then
@@ -15791,6 +15772,7 @@ Public Module agm2
 
 
 
+
     End Sub
 
     ''' <summary>
@@ -15841,101 +15823,18 @@ Public Module agm2
                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
 
                 ' Name schreiben
-                'Call writeMEcellWithProjectName(CType(.Cells(zeile, 2), Excel.Range), hproj.name, isProtectedbyOthers, protectiontext)
-                ' statt der Methode: 
-                Dim currentCell As Excel.Range = CType(.Cells(zeile, 2), Excel.Range)
-                currentCell.Value = hproj.name
-
-                If isProtectedbyOthers Then
-
-                    If isProtectedbyOthers Then
-                        currentCell.Font.Color = awinSettings.protectedByOtherColor
-                    End If
-
-                    ' Kommentare löschen
-                    currentCell.ClearComments()
-
-                    currentCell.AddComment(Text:=protectiontext)
-                    currentCell.Comment.Visible = True
-
-                End If
-                ' Ende writeMECellWithProjectName
-
+                Call writeMEcellWithProjectName(CType(.Cells(zeile, 2), Excel.Range), hproj.name, isProtectedbyOthers, protectiontext)
 
                 ' den Varianten-Namen schreiben
                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
 
                 ' Phase und ggf PhaseNameID schreiben
-                'Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevel, cphase.name, cphase.nameID)
-                ' Phasen-Name 
-                currentCell = CType(.Cells(zeile, 4), Excel.Range)
-                currentCell.Value = cphase.name
-                '    Den Indent schreiben 
-                currentCell.IndentLevel = indentLevel
-                '    Kommentare alle löschen 
-                currentCell.ClearComments()
+                Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevel, cphase.name, cphase.nameID)
 
-                ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermitelt werden kann 
-                If calcHryElemKey(cphase.name, False) <> cphase.nameID Then
-                    currentCell.AddComment(Text:=cphase.nameID)
-                    currentCell.Comment.Visible = False
-                End If
-
-                ' Ende writeMEcellWithPhaseNAmeID
 
                 ' Rolle oder Kostenart schreiben 
                 Dim isLocked As Boolean = (isProtectedbyOthers Or hasActualdata)
-                'Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole)
-                ' --------------------------------------
-                ' Beginn WriteMECellWithRoleNameID
-                Dim teamID As Integer = -1
-                Dim teamName As String = ""
-                currentCell = CType(.Cells(zeile, 5), Excel.Range)
-                ' erst mal alle Kommentare löschen 
-                currentCell.ClearComments()
-
-                If isRole Then
-                    If rcName = rcNameID Or rcNameID = "" Then
-                        ' nichts weiter tun ... rcName wird als Value geschrieben
-
-                    ElseIf rcNameID.Length > 0 Then
-
-                        If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)) Then
-                            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
-
-                            If Not IsNothing(teamRole) Then
-                                teamName = teamRole.name
-                            End If
-                        End If
-
-                    End If
-
-                Else
-                    ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
-
-                End If
-
-                ' Jetzt wird die Zelle geschrieben 
-
-                With currentCell
-                    .Value = rcName
-                    .Locked = isLocked
-                    ' eigentlich hier nicht mehr notwendig - es gibt hier keine Validation
-                    'Try
-                    '    If Not IsNothing(.Validation) Then
-                    '        .Validation.Delete()
-                    '    End If
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    If teamName.Length > 0 Then
-                        Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
-                    End If
-
-                End With
-                ' 
-                ' Ende WriteMECellWithRoleNameID ----------------------------------
+                Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole)
 
 
                 ' das Format der Zeile mit der Summe
@@ -15962,7 +15861,7 @@ Public Module agm2
                                 .ClearComments()
 
                             Catch ex As Exception
-                                Dim a As Integer
+
                             End Try
                         End If
 
@@ -16021,6 +15920,7 @@ Public Module agm2
         massEditWrite1Zeile = writeResult
 
     End Function
+
 
     ''' <summary>
     ''' bestimmt das Erscheinungsbild der ersten Zeile in einem Mass-Edit Fenster Ressourcen, Termine, Attribute
