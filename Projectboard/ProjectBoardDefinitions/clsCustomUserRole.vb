@@ -44,7 +44,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
                 '                 "PTview", "PTfilter", "PTWebServer"}
-                _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G2M-1", "PT4G1M0B2", "PTfilter",
+                _nonAllowance = {"PT4G1M1-1", "PT4G1M0B2", "PTfilter",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTview", "PTWebServer", "PThelp"}
 
