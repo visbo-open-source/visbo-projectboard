@@ -718,7 +718,8 @@ Public Class Request
     Public Function retrieveProjectVariantNamesFromDB(ByVal zeitraumStart As DateTime,
                                                           ByVal zeitraumEnde As DateTime,
                                                           ByVal storedAtOrBefore As DateTime,
-                                                          ByRef err As clsErrorCodeMsg) _
+                                                          ByRef err As clsErrorCodeMsg,
+                                                          Optional ByVal fromReST As Boolean = False) _
                                                           As SortedList(Of String, String)
 
         Dim result As New SortedList(Of String, String)
@@ -728,7 +729,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err, fromReST)
 
                     If result.Count <= 0 Then
 
@@ -740,7 +741,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err, fromReST)
                                 End If
 
                             Case Else ' all others

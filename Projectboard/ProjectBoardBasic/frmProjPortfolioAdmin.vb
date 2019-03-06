@@ -649,7 +649,13 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
             ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
-            pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
+
+            If aKtionskennung = PTTvActions.delFromDB Then
+                pvNamesListRaw = buildPvNamesList(storedAtOrBefore, True)
+            Else
+                pvNamesListRaw = buildPvNamesList(storedAtOrBefore, False)
+            End If
+
             pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
             quickList = True
 
