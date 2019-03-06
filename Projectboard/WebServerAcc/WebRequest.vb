@@ -394,7 +394,13 @@ Public Class Request
 
                 Dim hresultFirst As New List(Of clsProjektWebShort)
 
-                hresultFirst = GETallVPvShort(vpid:=vpid, err:=err, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
+                hresultFirst = GETallVPvShort(vpid:=vpid, err:=err,
+                                              vpvid:="",
+                                              status:="", refNext:=True,
+                                              variantName:=variantName,
+                                              storedAtorBefore:=Nothing,
+                                              fromReST:=False)
+
 
                 Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
@@ -404,7 +410,11 @@ Public Class Request
                 If err.errorCode = 200 Then
                     Dim hresultLast As New List(Of clsProjektWebShort)
 
-                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
+                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err,
+                                                 status:="", refNext:=False,
+                                                 variantName:=variantName,
+                                                 storedAtorBefore:=Date.Now.ToUniversalTime,
+                                                 fromReST:=False)
 
                     If hresultLast.Count >= 0 Then
                         ergebnisCollection.Add(hresultLast.Item(0).timestamp.ToLocalTime)
