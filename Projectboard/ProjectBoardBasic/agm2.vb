@@ -6919,7 +6919,7 @@ Public Module agm2
                     Else
                         stillOk = False
                     End If
-                ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
                     For Each tmpName As String In tmpStr
@@ -14905,7 +14905,7 @@ Public Module agm2
                     If Not IsNothing(formProjectInfo1) Then
                         Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                     End If
-                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
+                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
 
                 Catch ex As Exception
@@ -14987,17 +14987,71 @@ Public Module agm2
                 ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
                 Dim rcName As String = rcNameID
                 Dim islocked As Boolean = False
+                Dim teamID As Integer = -1
 
                 If isRole And rcNameID <> "" Then
                     ' der rcname muss erst noch bestimmt werden 
-                    Dim teamID As Integer = -1
+                    'Dim teamID As Integer = -1
                     Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
                     If roleID > 0 Then
                         rcName = RoleDefinitions.getRoleDefByID(roleID).name
                     End If
                 End If
+                ' ---------------------------------------------------------------------
+                'Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
+                ' --------------------------------------
+                ' Beginn WriteMECellWithRoleNameID
 
-                Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
+                Dim teamName As String = ""
+                ' tk 4.3.19 es muss newzeile sein, statt zeile 
+                Dim currentCell As Excel.Range = CType(.Cells(newZeile, 5), Excel.Range)
+                ' erst mal alle Kommentare löschen 
+                currentCell.ClearComments()
+
+                If isRole Then
+                    If rcName = rcNameID Or rcNameID = "" Then
+                        ' nichts weiter tun ... rcName wird als Value geschrieben
+
+                    ElseIf rcNameID.Length > 0 Then
+
+                        If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)) Then
+                            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+
+                            If Not IsNothing(teamRole) Then
+                                teamName = teamRole.name
+                            End If
+                        End If
+
+                    End If
+
+                Else
+                    ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
+
+                End If
+
+                ' Jetzt wird die Zelle geschrieben 
+
+                With currentCell
+                    .Value = rcName
+                    .Locked = islocked
+                    ' eigentlich hier nicht mehr notwendig - es gibt hier keine Validation
+                    'Try
+                    '    If Not IsNothing(.Validation) Then
+                    '        .Validation.Delete()
+                    '    End If
+                    'Catch ex As Exception
+
+                    'End Try
+
+                    If teamName.Length > 0 Then
+                        Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
+                    End If
+
+                End With
+                ' 
+                ' Ende WriteMECellWithRoleNameID -----------------------------------
+                ' ------------------------------------------------------------------
+
 
                 For c As Integer = columnStartData - 1 To columnEndData
                     With CType(.Cells(newZeile, c), Excel.Range)
@@ -15866,6 +15920,7 @@ Public Module agm2
         massEditWrite1Zeile = writeResult
 
     End Function
+
 
     ''' <summary>
     ''' bestimmt das Erscheinungsbild der ersten Zeile in einem Mass-Edit Fenster Ressourcen, Termine, Attribute

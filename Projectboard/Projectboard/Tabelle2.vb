@@ -150,6 +150,7 @@ Public Class Tabelle2
             Application.ScreenUpdating = True
         End If
 
+        Dim a As Boolean = appInstance.ScreenUpdating
 
 
     End Sub
@@ -426,7 +427,6 @@ Public Class Tabelle2
 
                             ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
                             ' die noch keine Ist-Daten enthalten
-
 
 
 
@@ -1167,7 +1167,7 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                         End If
-                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
+                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -1843,6 +1843,7 @@ Public Class Tabelle2
         Dim pname As String = ""
         Dim rcName As String = ""
         Dim oldRCName As String = ""
+        Dim changeBecauseProjektleitung As Boolean = False
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
@@ -1855,6 +1856,9 @@ Public Class Tabelle2
             If visboZustaende.oldRow > 0 Then
                 oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
             End If
+
+            changeBecauseProjektleitung = rcName <> oldRCName And
+                                                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
             ' alte Row merken 
             visboZustaende.oldRow = Target.Row
@@ -1941,26 +1945,29 @@ Public Class Tabelle2
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
             Dim alreadyDone As Boolean = False
-            If pNameChanged Then
+            If pNameChanged Or changeBecauseProjektleitung Then
 
-                selectedProjekte.Clear(False)
-                selectedProjekte.Add(.lastProject, False)
+                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
-                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True)
+                If pNameChanged Then
+                    selectedProjekte.Clear(False)
+                    selectedProjekte.Add(.lastProject, False)
 
-                If Not IsNothing(rcName) Then
+                    If Not IsNothing(rcName) Then
 
-                    If rcName <> "" Then
-                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-                        alreadyDone = True
+                        If rcName <> "" Then
+                            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+                            alreadyDone = True
+                        End If
+                    End If
+
+
+                    If Not IsNothing(formProjectInfo1) Then
+                        Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                        ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
                     End If
                 End If
 
-
-                If Not IsNothing(formProjectInfo1) Then
-                    Call updateProjectInfo1(.lastProject, .lastProjectDB)
-                    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
-                End If
             End If
 
 

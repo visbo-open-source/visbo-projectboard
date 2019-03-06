@@ -148,7 +148,8 @@ Public Class frmCreateNewVariant
 
         If Not IsNothing(vName) Then
             If vName.Trim.Length > 0 Then
-                tmpResult = Not [Enum].GetNames(GetType(ptVisboImportTypen)).Contains(vName.Trim)
+                ' tk 2.3.19 Die Überprüfung muss auf ptVariantFixNames gehen 
+                tmpResult = Not [Enum].GetNames(GetType(ptVariantFixNames)).Contains(vName.Trim)
             End If
         End If
 

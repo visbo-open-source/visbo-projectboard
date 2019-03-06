@@ -67,17 +67,17 @@
 
                 Dim oldRoles As clsRollen = oldOrga.allRoles
                 Dim anzRoles As Integer = oldRoles.Count
-                Dim moveKapas As Boolean = False
+                'Dim moveKapas As Boolean = False
                 ' ist jede Rollen-ID im alten auch im Neuen ? 
                 For ixr As Integer = 1 To anzRoles
-                    moveKapas = False
+                    'moveKapas = False
                     Dim oldRoleDefinition As clsRollenDefinition = oldRoles.getRoledef(ixr)
                     Dim newRoleDefinition As clsRollenDefinition = _allRoles.getRoleDefByID(oldRoleDefinition.UID)
                     If Not IsNothing(newRoleDefinition) Then
                         ' schon mal ok , die beiden haben hier gleiche UID , weil die newRoleDef mit der ID der oldRoleDef geholt wird
                         If newRoleDefinition.name = oldRoleDefinition.name Then
                             ' ok 
-                            moveKapas = True
+                            'moveKapas = True
                         Else
                             ' nur ok, wenn der neue Name nicht im alten vorkommt und gleichzeitig der alte nicht woanders im neuen 
                             stillOK = Not oldRoles.containsName(newRoleDefinition.name) And
@@ -93,7 +93,7 @@
                                 outputCollection.Add(errmsg)
 
                             Else
-                                moveKapas = True
+                                'moveKapas = True
                             End If
                         End If
                     Else
@@ -103,9 +103,10 @@
                     End If
 
                     ' jetzt werden die Kapas der alten Rollendefinition übernommen ..
-                    If moveKapas Then
-                        newRoleDefinition.kapazitaet = oldRoleDefinition.kapazitaet
-                    End If
+                    ' das ist ein völliger Schmarr'n , das darf nicht gemacht werden; andernfalls hat man keine Chance, jemals die Default-Werte zu ändern ... 
+                    'If moveKapas Then
+                    '    newRoleDefinition.kapazitaet = oldRoleDefinition.kapazitaet
+                    'End If
                 Next
 
 
