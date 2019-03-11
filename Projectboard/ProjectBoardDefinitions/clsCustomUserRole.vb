@@ -50,7 +50,7 @@ Public Class clsCustomUserRole
 
             Case ptCustomUserRoles.ProjektLeitung
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1",
-                                 "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PThelp",
+                                 "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PT2G1M1B4", "PTfilter", "PTsort", "PThelp",
                                  "PTWebServer"}
 
 

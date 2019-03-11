@@ -6185,13 +6185,15 @@ Imports System.Web
                 CostDefinitions = changedOrga.allCosts
 
                 ' Einlesen der Kapas
-                If awinSettings.allianzIstDatenReferate.Length > 0 Then
-                    ' Allianz Externe Verträge
-                    Call readMonthlyExternKapasEV(outputCollection)
-                Else
-                    ' VISBO Externe Kapazitäts-Dateien 
-                    Call readMonthlyExternKapas(outputCollection)
-                End If
+                ' immer die Externen Datei lesen .. wesentlich besser und einfacher strukturiert ...
+                'If awinSettings.allianzIstDatenReferate.Length > 0 Then
+                '    ' Allianz Externe Verträge
+                '    Call readMonthlyExternKapasEV(outputCollection)
+                'Else
+                '    ' VISBO Externe Kapazitäts-Dateien 
+                '    Call readMonthlyExternKapas(outputCollection)
+                'End If
+                Call readMonthlyExternKapasEV(outputCollection)
 
                 Call readInterneAnwesenheitslisten(outputCollection)
 
