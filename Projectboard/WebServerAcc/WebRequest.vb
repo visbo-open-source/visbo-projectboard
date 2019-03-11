@@ -338,7 +338,9 @@ Public Class Request
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebShort)
-                allVPv = GETallVPvShort(vpid, err, , variantName)
+                allVPv = GETallVPvShort(vpid:=vpid, err:=err,
+                                        status:="", refNext:=False, variantName:=variantName,
+                                        storedAtorBefore:=Nothing, fromReST:=False)
 
                 ' alle vorhandenen Timestamps zu einem pvName in die ErgebnisCollection sammeln
                 Dim sl As New SortedList(Of Date, Date)
@@ -392,7 +394,13 @@ Public Class Request
 
                 Dim hresultFirst As New List(Of clsProjektWebShort)
 
-                hresultFirst = GETallVPvShort(vpid:=vpid, err:=err, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
+                hresultFirst = GETallVPvShort(vpid:=vpid, err:=err,
+                                              vpvid:="",
+                                              status:="", refNext:=True,
+                                              variantName:=variantName,
+                                              storedAtorBefore:=Nothing,
+                                              fromReST:=False)
+
 
                 Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
@@ -402,7 +410,11 @@ Public Class Request
                 If err.errorCode = 200 Then
                     Dim hresultLast As New List(Of clsProjektWebShort)
 
-                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
+                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err,
+                                                 status:="", refNext:=False,
+                                                 variantName:=variantName,
+                                                 storedAtorBefore:=Date.Now.ToUniversalTime,
+                                                 fromReST:=False)
 
                     If hresultLast.Count >= 0 Then
                         ergebnisCollection.Add(hresultLast.Item(0).timestamp.ToLocalTime)
@@ -982,7 +994,8 @@ Public Class Request
     Public Function retrieveProjectVariantNamesFromDB(ByVal zeitraumStart As DateTime,
                                                           ByVal zeitraumEnde As DateTime,
                                                           ByVal storedAtOrBefore As DateTime,
-                                                          ByRef err As clsErrorCodeMsg) _
+                                                          ByRef err As clsErrorCodeMsg,
+                                                          Optional ByVal fromReST As Boolean = False) _
                                                           As SortedList(Of String, String)
 
         Dim result As New SortedList(Of String, String)
@@ -1004,7 +1017,12 @@ Public Class Request
 
             ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
             Dim vpvListe As New List(Of clsProjektWebShort)
-            vpvListe = GETallVPvShort("", err, "", "", False, , storedAtOrBefore)
+            vpvListe = GETallVPvShort(vpid:="", err:=err,
+                                      vpvid:="",
+                                      status:="", refNext:=False,
+                                      variantName:=noVariantName,
+                                      storedAtorBefore:=storedAtOrBefore,
+                                      fromReST:=True)
 
             For Each vpv As clsProjektWebShort In vpvListe
                 Dim vpType As Integer = GETvpType(vpv.vpid, err)
@@ -1186,7 +1204,12 @@ Public Class Request
                 If vpid <> "" Then
                     ' gewünschte Variante vom Server anfordern
                     Dim allVPv As New List(Of clsProjektWebShort)
-                    allVPv = GETallVPvShort(vpid, err, , "", False, variantName, stored)
+                    allVPv = GETallVPvShort(vpid:=vpid, err:=err,
+                                            vpvid:="",
+                                            status:="", refNext:=False,
+                                            variantName:=variantName,
+                                            storedAtorBefore:=stored,
+                                            fromReST:=False)
                     If allVPv.Count >= 0 Then
                         If allVPv.Count = 1 Then
                             result = DELETEOneVPv(allVPv.Item(0)._id, err)
@@ -1743,7 +1766,12 @@ Public Class Request
                 If kvp.Value.lock.Count > 0 Then
 
                     ' holt zu der vpid die Varianten aus vpv Collection
-                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now.ToUniversalTime)
+                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(vpid:=kvp.Value._id, err:=err,
+                                                                                      vpvid:="",
+                                                                                      status:="", refNext:=False,
+                                                                                      variantName:=noVariantName,
+                                                                                      storedAtorBefore:=Date.Now.ToUniversalTime,
+                                                                                      fromReST:=False)
 
                     ' Lock löschen für jede Variante des Projektes mit vpid
                     For Each vTp As clsProjektWebShort In variantToProj
@@ -3134,22 +3162,28 @@ Public Class Request
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
                                    Optional ByVal variantName As String = noVariantName,
-                                   Optional ByVal storedAtorBefore As Date = Nothing) As List(Of clsProjektWebShort)
+                                   Optional ByVal storedAtorBefore As Date = Nothing,
+                                   Optional ByVal fromReST As Boolean = False) As List(Of clsProjektWebShort)
 
         Dim nothingToDo As Boolean = True
         Dim result As New List(Of clsProjektWebShort)
         Dim errmsg As String = ""
         Dim errcode As Integer = 200
 
-        If Not (refNext Or status <> "") Then
+        If Not fromReST Then
 
-            Try
-                ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
-                nothingToDo = VRScache.existsInCache(vpid, variantName, vpvid, False, storedAtorBefore)
-            Catch ex As Exception
-                Call MsgBox("Fehler in existsInCache - Short")
-            End Try
+            If Not (refNext Or status <> "") Then
 
+                Try
+                    ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
+                    nothingToDo = VRScache.existsInCache(vpid, variantName, vpvid, False, storedAtorBefore)
+                Catch ex As Exception
+                    Call MsgBox("Fehler in existsInCache - Short")
+                End Try
+
+            Else
+                nothingToDo = False
+            End If
         Else
             nothingToDo = False
         End If
@@ -4522,7 +4556,7 @@ Public Class Request
 
 
     ''' <summary>
-    ''' löscht den Lock eines Projektes/variante
+    ''' löscht das VP eines Projektes/variante
     ''' </summary>
     ''' <param name="vpid">vpid = "": es wird dass VisboProject vpid gelöscht. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>true: gelöscht
