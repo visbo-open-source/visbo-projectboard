@@ -63,6 +63,14 @@ Public Class Ribbon1
     Private Sub EinzelprojektReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EinzelprojektReport.Click
 
         Try
+            If Not awinsetTypen_Performed Then
+                '' ------------------------------
+                '' Hier muss awinsetTypen herein
+                '' ------------------------------
+                awinsetTypen_Performed = True
+            End If
+
+
             If fehlerBeimLoad Then
                 If awinSettings.englishLanguage Then
 
@@ -195,6 +203,13 @@ Public Class Ribbon1
 
     Private Sub DBspeichern_Click(sender As Object, e As RibbonControlEventArgs) Handles DBspeichern.Click
         Try
+            If Not awinsetTypen_Performed Then
+                '' ------------------------------
+                '' Hier muss awinsetTypen herein
+                '' ------------------------------
+                awinsetTypen_Performed = True
+            End If
+
 
 
             If fehlerBeimLoad Then

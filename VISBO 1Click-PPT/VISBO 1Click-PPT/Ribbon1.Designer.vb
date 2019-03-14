@@ -49,6 +49,7 @@
         Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.DBspeichern = Me.Factory.CreateRibbonButton
         Me.Einstellung = Me.Factory.CreateRibbonButton
+        Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
@@ -71,6 +72,7 @@
         Me.VISBO.Items.Add(Me.EinzelprojektReport)
         Me.VISBO.Items.Add(Me.Separator1)
         Me.VISBO.Items.Add(Me.DBspeichern)
+        Me.VISBO.Items.Add(Me.Separator2)
         Me.VISBO.Items.Add(Me.Einstellung)
         Me.VISBO.Label = "VISBO"
         Me.VISBO.Name = "VISBO"
@@ -105,6 +107,10 @@
         Me.Einstellung.ShowImage = True
         Me.Einstellung.Visible = False
         '
+        'Separator2
+        '
+        Me.Separator2.Name = "Separator2"
+        '
         'Ribbon1
         '
         Me.Name = "Ribbon1"
@@ -128,6 +134,7 @@
     Friend WithEvents Einstellung As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents DBspeichern As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Separator1 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
+    Friend WithEvents Separator2 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
 End Class
 
 Partial Class ThisRibbonCollection
