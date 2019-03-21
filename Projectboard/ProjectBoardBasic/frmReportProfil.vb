@@ -501,8 +501,11 @@ Public Class frmReportProfil
                             'Call PPTstarten()
                             Call BGworkerReportBHTC_new(reportProfil)
 
+                            Me.statusLabel.Text = "...finished"
+
                             'ur:21032019
                             'BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+
 
                         Else
                             Dim msgTxt As String = "ausgewähltes Report-Profil enthält Fehler !"
