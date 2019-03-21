@@ -499,8 +499,10 @@ Public Class frmReportProfil
                             Me.statusLabel.Text = "...started"
 
                             'Call PPTstarten()
+                            Call BGworkerReportBHTC_new(reportProfil)
 
-                            BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+                            'ur:21032019
+                            'BGworkerReportBHTC.RunWorkerAsync(reportProfil)
 
                         Else
                             Dim msgTxt As String = "ausgewähltes Report-Profil enthält Fehler !"
@@ -847,6 +849,100 @@ Public Class frmReportProfil
             Me.statusLabel.Text = ex.Message
             Me.statusLabel.Visible = True
         End Try
+    End Sub
+
+    Private Sub BGworkerReportBHTC_new(ByVal reportProfil As clsReportAll)
+
+
+
+        'Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
+        Dim worker As BackgroundWorker = nothing
+        ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
+        'Dim reportProfil As clsReportAll = CType(e.Argument, clsReportAll)
+        Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+        Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+
+
+        Dim selectedPhases As New Collection
+        Dim selectedMilestones As New Collection
+        Dim selectedRoles As New Collection
+        Dim selectedCosts As New Collection
+        Dim selectedBUs As New Collection
+        Dim selectedTypes As New Collection
+
+        selectedPhases = copySortedListtoColl(reportProfil.Phases)
+        selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+        selectedRoles = copySortedListtoColl(reportProfil.Roles)
+        selectedCosts = copySortedListtoColl(reportProfil.Costs)
+        selectedBUs = copySortedListtoColl(reportProfil.BUs)
+        selectedTypes = copySortedListtoColl(reportProfil.Typs)
+
+        ' für BHTC immer true
+        'reportProfil.ExtendedMode = True
+        '' für BHTC immer false
+        'reportProfil.Ampeln = False
+        'reportProfil.AllIfOne = False
+        'reportProfil.FullyContained = False
+        'reportProfil.SortedDauer = False
+        'reportProfil.ProjectLine = False
+        'reportProfil.UseOriginalNames = False
+
+        With awinSettings
+
+            ' tk Änderung 5.4. wird für Darstellung Projekt auf Multiprojekt-Tafel benötigt; hier nicht setzen 
+            '.drawProjectLine = True
+            .mppExtendedMode = reportProfil.ExtendedMode
+            .mppOnePage = reportProfil.OnePage
+            .mppShowAllIfOne = reportProfil.AllIfOne
+            .mppShowAmpel = reportProfil.Ampeln
+            .mppShowLegend = reportProfil.Legend
+            .mppShowMsDate = reportProfil.MSDate
+            .mppShowMsName = reportProfil.MSName
+            .mppShowPhDate = reportProfil.PhDate
+            .mppShowPhName = reportProfil.PhName
+            .mppShowProjectLine = reportProfil.ProjectLine
+            .mppSortiertDauer = reportProfil.SortedDauer
+            .mppVertikalesRaster = reportProfil.VLinien
+            .mppFullyContained = reportProfil.FullyContained
+            .mppShowHorizontals = reportProfil.ShowHorizontals
+            .mppUseAbbreviation = reportProfil.UseAbbreviation
+            .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppKwInMilestone = reportProfil.KwInMilestone
+        End With
+
+
+        ' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
+
+        showRangeLeft = getColumnOfDate(vonDate.Value)
+        showRangeRight = getColumnOfDate(bisDate.Value)
+
+        Try
+            Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+
+            If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                Dim projname As String = reportProfil.Projects.ElementAt(0).Value
+
+                Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
+
+
+                Call createPPTSlidesFromProject(hproj, vorlagendateiname,
+                                                selectedPhases, selectedMilestones,
+                                                selectedRoles, selectedCosts,
+                                                selectedBUs, selectedTypes, True,
+                                                True, zeilenhoehe, legendFontSize,
+                                                worker, Nothing)
+
+            Else
+
+
+            End If
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler: " & vbLf & ex.Message)
+        End Try
+
     End Sub
 
 
