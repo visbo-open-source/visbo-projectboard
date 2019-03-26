@@ -2320,7 +2320,7 @@ Public Module agm2
                                     Try
 
                                         origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
-                                        If duration > 1 Then
+                                        If Not isMilestone Then
                                             txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
                                             'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
                                             '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
@@ -2446,7 +2446,7 @@ Public Module agm2
                                 Dim elemID As String
 
                                 ' If duration > 1 Or itemDauer > 0 Then
-                                If duration > 1 Then
+                                If Not isMilestone Then
                                     ' es handelt sich um eine Phase 
 
 
@@ -2650,7 +2650,7 @@ Public Module agm2
                                     End If
 
 
-                                ElseIf duration = 1 Then
+                                Else
                                     ' hier kommt die Behandlung eines Meilensteins
 
 
@@ -4487,7 +4487,7 @@ Public Module agm2
                 If CDate(msproj.Start) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.Start)
                 End If
-
+                Dim guid As String = msproj.GetServerProjectGuid
                 If CDate(msproj.EarlyStart) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.EarlyStart)
                 End If
