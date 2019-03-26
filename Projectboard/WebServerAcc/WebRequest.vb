@@ -2386,7 +2386,18 @@ Public Class Request
 
         Dim credentialsErfragt As Boolean = False
 
+
+
+
         Try
+            ' ur: 20190326: wird für tls1.2 benötigt - sicherer und ist in nginX definiert
+            System.Net.ServicePointManager.Expect100Continue = True
+            System.Net.ServicePointManager.SecurityProtocol =
+            SecurityProtocolType.Tls Or
+            SecurityProtocolType.Tls11 Or
+            SecurityProtocolType.Tls12 Or
+            SecurityProtocolType.Ssl3
+
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
 
             If IsNothing(myProxy.Address) Then
