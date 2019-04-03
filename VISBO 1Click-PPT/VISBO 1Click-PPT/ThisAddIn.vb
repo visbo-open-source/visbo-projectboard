@@ -162,57 +162,60 @@ Public Class ThisAddIn
 
     Private Sub Application_ProjectBeforePublish(pj As Project, ByRef Cancel As Boolean) Handles Application.ProjectBeforePublish
         Try
-            If Not awinsetTypen_Performed Then
+            If Not IsNothing(pj) Then
+                If Not awinsetTypen_Performed Then
 
-                Try
-                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+                    Try
+                        pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
-                    awinSettings.databaseURL = My.Settings.mongoDBURL
-                    awinSettings.databaseName = My.Settings.mongoDBname
-                    awinSettings.globalPath = My.Settings.globalPath
-                    awinSettings.awinPath = My.Settings.awinPath
-                    awinSettings.visboTaskClass = My.Settings.TaskClass
-                    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-                    awinSettings.visboAmpel = My.Settings.VISBOAmpel
-                    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-                    awinSettings.visboresponsible = My.Settings.VISBOresponsible
-                    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-                    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                    awinSettings.visboDebug = My.Settings.VISBODebug
-                    awinSettings.visboMapping = My.Settings.VISBOMapping
-                    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-                    If awinSettings.rememberUserPwd Then
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
-                    End If
+                        awinSettings.databaseURL = My.Settings.mongoDBURL
+                        awinSettings.databaseName = My.Settings.mongoDBname
+                        awinSettings.globalPath = My.Settings.globalPath
+                        awinSettings.awinPath = My.Settings.awinPath
+                        awinSettings.visboTaskClass = My.Settings.TaskClass
+                        awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                        awinSettings.visboAmpel = My.Settings.VISBOAmpel
+                        awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+                        awinSettings.visboresponsible = My.Settings.VISBOresponsible
+                        awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+                        awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+                        awinSettings.visboDebug = My.Settings.VISBODebug
+                        awinSettings.visboMapping = My.Settings.VISBOMapping
+                        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+                        If awinSettings.rememberUserPwd Then
+                            awinSettings.userNamePWD = My.Settings.userNamePWD
+                        End If
 
-                    dbUsername = ""
-                    dbPasswort = ""
+                        dbUsername = ""
+                        dbPasswort = ""
 
-                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-                    Call awinsetTypen("BHTC")
+                        '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+                        Call awinsetTypen("BHTC")
 
-                    StartofCalendar = StartofCalendar.AddMonths(-12)
+                        StartofCalendar = StartofCalendar.AddMonths(-12)
 
 
-                Catch ex As Exception
+                    Catch ex As Exception
 
-                    Call MsgBox(ex.Message)
+                        Call MsgBox(ex.Message)
 
-                Finally
+                    Finally
 
-                End Try
-                awinsetTypen_Performed = True
+                    End Try
+                    awinsetTypen_Performed = True
+                End If
+            Else
+                fehlerBeimLoad = True
             End If
-
 
 
             If fehlerBeimLoad Then
                 If awinSettings.englishLanguage Then
 
-                    Call MsgBox("Report of one single project cannot be executed,  " & vbLf & " 'VISBO 1Click-PPT AddIn' couldn't be loaded correctly!")
+                    Call MsgBox("Project cannot be published!")
                 Else
 
-                    Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                    Call MsgBox("Projekt kann nicht veröffentlicht werden!")
                 End If
 
             Else
@@ -316,58 +319,62 @@ Public Class ThisAddIn
 
     Private Sub Application_ProjectBeforeSave(pj As Project, SaveAsUi As Boolean, ByRef Cancel As Boolean) Handles Application.ProjectBeforeSave
         Try
-            If Not awinsetTypen_Performed Then
-                Try
-                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+            If Not IsNothing(pj) Then
+                If Not awinsetTypen_Performed Then
+                    Try
+                        pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
-                    awinSettings.databaseURL = My.Settings.mongoDBURL
-                    awinSettings.databaseName = My.Settings.mongoDBname
-                    awinSettings.globalPath = My.Settings.globalPath
-                    awinSettings.awinPath = My.Settings.awinPath
-                    awinSettings.visboTaskClass = My.Settings.TaskClass
-                    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-                    awinSettings.visboAmpel = My.Settings.VISBOAmpel
-                    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-                    awinSettings.visboresponsible = My.Settings.VISBOresponsible
-                    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-                    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-                    awinSettings.visboDebug = My.Settings.VISBODebug
-                    awinSettings.visboMapping = My.Settings.VISBOMapping
-                    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-                    If awinSettings.rememberUserPwd Then
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
-                    End If
+                        awinSettings.databaseURL = My.Settings.mongoDBURL
+                        awinSettings.databaseName = My.Settings.mongoDBname
+                        awinSettings.globalPath = My.Settings.globalPath
+                        awinSettings.awinPath = My.Settings.awinPath
+                        awinSettings.visboTaskClass = My.Settings.TaskClass
+                        awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                        awinSettings.visboAmpel = My.Settings.VISBOAmpel
+                        awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+                        awinSettings.visboresponsible = My.Settings.VISBOresponsible
+                        awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+                        awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+                        awinSettings.visboDebug = My.Settings.VISBODebug
+                        awinSettings.visboMapping = My.Settings.VISBOMapping
+                        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+                        If awinSettings.rememberUserPwd Then
+                            awinSettings.userNamePWD = My.Settings.userNamePWD
+                        End If
 
-                    dbUsername = ""
-                    dbPasswort = ""
+                        dbUsername = ""
+                        dbPasswort = ""
 
-                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-                    Call awinsetTypen("BHTC")
+                        '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+                        Call awinsetTypen("BHTC")
 
-                    StartofCalendar = StartofCalendar.AddMonths(-12)
+                        StartofCalendar = StartofCalendar.AddMonths(-12)
 
 
-                Catch ex As Exception
+                    Catch ex As Exception
 
-                    Call MsgBox(ex.Message)
+                        Call MsgBox(ex.Message)
 
-                Finally
+                    Finally
 
-                End Try
-                awinsetTypen_Performed = True
+                    End Try
+                    awinsetTypen_Performed = True
+                End If
+            Else
+                fehlerBeimLoad = True
             End If
+
 
 
 
             If fehlerBeimLoad Then
                 If awinSettings.englishLanguage Then
 
-                    Call MsgBox("Report of one single project cannot be executed,  " & vbLf & " 'VISBO 1Click-PPT AddIn' couldn't be loaded correctly!")
+                    Call MsgBox("Project will not be saved!")
                 Else
 
-                    Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                    Call MsgBox("Projekt wird nicht gespeichert!")
                 End If
-
             Else
 
                 Dim reportAuswahl As New frmReportProfil

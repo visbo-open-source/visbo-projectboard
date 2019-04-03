@@ -64,6 +64,9 @@ Public Class Ribbon1
 
         Try
             If Not awinsetTypen_Performed Then
+
+                '' Set cursor as hourglass
+                Cursor.Current = Cursors.WaitCursor
                 Try
                     pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
@@ -239,9 +242,47 @@ Public Class Ribbon1
     Private Sub DBspeichern_Click(sender As Object, e As RibbonControlEventArgs) Handles DBspeichern.Click
         Try
             If Not awinsetTypen_Performed Then
-                '' ------------------------------
-                '' Hier muss awinsetTypen herein
-                '' ------------------------------
+                '' Set cursor as hourglass
+                Cursor.Current = Cursors.WaitCursor
+                Try
+                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+
+                    awinSettings.databaseURL = My.Settings.mongoDBURL
+                    awinSettings.databaseName = My.Settings.mongoDBname
+                    awinSettings.globalPath = My.Settings.globalPath
+                    awinSettings.awinPath = My.Settings.awinPath
+                    awinSettings.visboTaskClass = My.Settings.TaskClass
+                    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                    awinSettings.visboAmpel = My.Settings.VISBOAmpel
+                    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+                    awinSettings.visboresponsible = My.Settings.VISBOresponsible
+                    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+                    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+                    awinSettings.visboDebug = My.Settings.VISBODebug
+                    awinSettings.visboMapping = My.Settings.VISBOMapping
+                    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+                    If awinSettings.rememberUserPwd Then
+                        awinSettings.userNamePWD = My.Settings.userNamePWD
+                    End If
+
+                    dbUsername = ""
+                    dbPasswort = ""
+
+                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+                    Call awinsetTypen("BHTC")
+
+                    StartofCalendar = StartofCalendar.AddMonths(-12)
+
+
+                Catch ex As Exception
+
+                    Call MsgBox(ex.Message)
+
+                Finally
+
+                End Try
+
+                awinsetTypen_Performed = True
                 awinsetTypen_Performed = True
             End If
 
@@ -257,6 +298,8 @@ Public Class Ribbon1
                 End If
 
             Else
+                '' Set cursor as hourglass
+                Cursor.Current = Cursors.WaitCursor
 
                 Dim reportAuswahl As New frmReportProfil
                 Dim hierarchiefenster As New frmHierarchySelection
@@ -281,13 +324,12 @@ Public Class Ribbon1
                 ' Prüfen der Lizenzen
                 If lizenzen.validLicence(user, komponente) Then
 
-                    '' Set cursor as hourglass
-                    Cursor.Current = Cursors.WaitCursor
 
                     'Call MsgBox("EPReport_Click")
 
                     ' Laden des aktuell geladenen Projektes und des eventuell gemappten
                     Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
+
 
                     If Not IsNothing(hproj) Then
                         If hproj.name <> "" And Not IsNothing(hproj.name) Then
