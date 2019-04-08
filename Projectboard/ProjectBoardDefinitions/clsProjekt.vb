@@ -77,9 +77,13 @@ Public Class clsProjekt
         Set(value As Date)
             If Not IsNothing(value) Then
                 If value > StartofCalendar Then
-                    'stellt sicher dass es sich um dem letzten Tag, da aber um den Tagesbeginn handelt 
-                    'value = value.AddDays(-1 * (value.Day + 1)).AddMonths(1).Date
-                    _actualDataUntil = value
+                    ' Actual Data Until kann aber nicht größer werden als das Projektende ...
+                    If endeDate < value Then
+                        _actualDataUntil = endeDate
+                    Else
+                        _actualDataUntil = value
+                    End If
+
                 Else
                     _actualDataUntil = Date.MinValue
                 End If

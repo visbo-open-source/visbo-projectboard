@@ -375,26 +375,33 @@ Public Class clsRollen
             Dim tmpResult() As Integer = Nothing
             Dim realAnzahl As Integer = 0
 
-            Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
-            For Each tmpName As String In tmpStr
-                tmpName = tmpName.Trim
-                If RoleDefinitions.containsNameID(tmpName) Then
-                    realAnzahl = realAnzahl + 1
-                End If
-            Next
+            If IsNothing(aufzaehlung) Then
+                ' nichts tun
+            Else
+                If aufzaehlung.Length > 0 Then
+                    Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
+                    For Each tmpName As String In tmpStr
+                        tmpName = tmpName.Trim
+                        If RoleDefinitions.containsNameID(tmpName) Then
+                            realAnzahl = realAnzahl + 1
+                        End If
+                    Next
 
-            If realAnzahl > 0 Then
-                ReDim tmpResult(realAnzahl - 1)
-                Dim ix As Integer = 0
-                For Each tmpName As String In tmpStr
-                    tmpName = tmpName.Trim
-                    If RoleDefinitions.containsNameID(tmpName) Then
-                        Dim teamID As Integer
-                        tmpResult(ix) = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).UID
-                        ix = ix + 1
+                    If realAnzahl > 0 Then
+                        ReDim tmpResult(realAnzahl - 1)
+                        Dim ix As Integer = 0
+                        For Each tmpName As String In tmpStr
+                            tmpName = tmpName.Trim
+                            If RoleDefinitions.containsNameID(tmpName) Then
+                                Dim teamID As Integer
+                                tmpResult(ix) = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).UID
+                                ix = ix + 1
+                            End If
+                        Next
                     End If
-                Next
+                End If
             End If
+
 
             getIDArray = tmpResult
         End Get
@@ -432,6 +439,12 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Rolle zurück, die ein Eltern-/GroßElternteil der angegebenen Rolel ist 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="summaryRoleIDs"></param>
+    ''' <returns></returns>
     Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As String
         Dim tmpResult As String = ""
 
@@ -494,21 +507,24 @@ Public Class clsRollen
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
 
-        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
-        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+        If Not IsNothing(roleNameID) And Not IsNothing(summaryRoleID) Then
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+            roleNameID = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
 
-        If roleID = summaryRoleID Then
-            tmpResult = True
+            If roleID = summaryRoleID Then
+                tmpResult = True
 
-        Else
-            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
-            If Not IsNothing(sRole) Then
-                Dim alleChildIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all)
-                If alleChildIDs.Count > 0 Then
-                    tmpResult = alleChildIDs.ContainsKey(roleNameID)
+            Else
+                Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
+                If Not IsNothing(sRole) Then
+                    Dim alleChildIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all)
+                    If alleChildIDs.Count > 0 Then
+                        tmpResult = alleChildIDs.ContainsKey(roleNameID)
+                    End If
                 End If
             End If
         End If
+
 
         hasAnyChildParentRelationsship = tmpResult
     End Function

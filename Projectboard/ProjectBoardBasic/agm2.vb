@@ -4474,6 +4474,7 @@ Public Module agm2
 
                 End If
 
+
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
@@ -4568,693 +4569,689 @@ Public Module agm2
 
 
                     msTask = msproj.Tasks.Item(i)
+                    If Not IsNothing(msTask) Then
 
 
-                    ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
-                    ' oder: ob eine Task auf dem kritischen Pfad liegt
+                        ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
+                        ' oder: ob eine Task auf dem kritischen Pfad liegt
 
-                    ' Wenn sumTask = true, dann ist die aktuelle Task eine Summary-Task
-                    Dim sumTask As Boolean = CType(msTask.Summary, Boolean)
+                        ' Wenn sumTask = true, dann ist die aktuelle Task eine Summary-Task
+                        Dim sumTask As Boolean = CType(msTask.Summary, Boolean)
 
-                    ' Herausfinden der Hierarchiestufe
-                    Dim hstr() As String = Split(msTask.WBS, ".", -1)
-                    Dim tasklevel As Integer = hstr.Count
+                        ' Herausfinden der Hierarchiestufe
+                        Dim hstr() As String = Split(msTask.WBS, ".", -1)
+                        Dim tasklevel As Integer = hstr.Count
 
 
-                    ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
+                        ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
 
-                    If Not CType(msTask.Milestone, Boolean) _
+                        If Not CType(msTask.Milestone, Boolean) _
                         Or
                         (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
 
-                        ' Ergänzung tk für Demo BHTC 
-                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
-                        Dim origPhName As String = msTask.Name
-                        msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
-
-                        '' '' Budgets Kosten und Work der SammelTasks aufsummieren
-                        '' '' ur: 25.08.2017: Testweise
-                        ' ''Dim co As Double = 0
-                        ' ''Dim wo As Double = 0
-                        ' ''If CType(msTask.Summary, Boolean) Then
-
-                        ' ''    Dim hstrco() As String = Split(msTask.BudgetCost, msproj.CurrencySymbol)
-                        ' ''    If hstrco.Length > 1 Then
-                        ' ''        'Dim co As Double = Val(msTask.BudgetCost)
-                        ' ''        co = Val(hstrco(1))
-                        ' ''    End If
-
-                        ' ''    Dim hstrwo() As String = Split(msTask.BudgetWork, msproj.CurrencySymbol)
-                        ' ''    If hstrwo.Length > 1 Then
-                        ' ''        wo = Val(hstrwo(1))
-                        ' ''        'Dim wo As Double = Val(msTask.BudgetWork)
-                        ' ''    End If
-
-                        ' ''    hproj.Erloes = hproj.Erloes + co + wo
-
-                        ' ''End If
-
-                        ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
-                        If Not PhaseDefinitions.Contains(msTask.Name) Then
-                            Dim newPhaseDef As New clsPhasenDefinition
-                            newPhaseDef.name = msTask.Name
-                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
-                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
-                                newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
-                            Else
-                                newPhaseDef.shortName = msTask.Name
-                            End If
-                            ' Task Class, falls Customfield visbo_taskclass definiert ist
-                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
-                                newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
-                            Else
-                                newPhaseDef.darstellungsKlasse = ""
-                            End If
-                            cphase.appearance = newPhaseDef.darstellungsKlasse
-
-                            newPhaseDef.UID = PhaseDefinitions.Count + 1
-                            'PhaseDefinitions.Add(newPhaseDef)
-                            missingPhaseDefinitions.Add(newPhaseDef)
-                        Else
-                            cphase.appearance = PhaseDefinitions.getAppearance(msTask.Name)
-                        End If
-
-                        With cphase
-
-                            Dim phBewertung As New clsBewertung
-                            If Not istElemID(msTask.Name) Then
-
-                                .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
-                            End If
-
-                            If visboflag <> 0 Then          ' VISBO-Flag ist definiert
-
-                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
-
-                                ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                                'visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = pbYes)
-                                visboFlagListe.Add(.nameID, hflag)
-
-                            End If
-
-                            'percentDone, falls Customfiels visbo_percentDone definiert ist
-                            If visbo_percentDone <> 0 Then
-                                Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
-                                Dim hpercent() As String = Split(strPercentDone, "%", , )
-                                Dim vPercentDone As Double
-                                Try
-                                    vPercentDone = Convert.ToDouble(hpercent(0))
-
-                                Catch e As FormatException
-                                    vPercentDone = 0.0
-                                Catch e As OverflowException
-                                    Call MsgBox(hpercent(1) & " is outside the range of a Double.")
-                                End Try
-                                ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
-                                cphase.percentDone = vPercentDone / 100
-
-                            End If
+                            ' Ergänzung tk für Demo BHTC 
+                            ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                            Dim origPhName As String = msTask.Name
+                            msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
 
 
-                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
-                            Dim count As Integer = 0
-                            Dim hvDel() As String
-                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
-                                Dim vDeliverable As String = ""
-                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
-                                    vDeliverable = msTask.Notes
-                                    hvDel = Split(vDeliverable, vbCr, , )
-                                    count = hvDel.Length
+                            ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                            If Not PhaseDefinitions.Contains(msTask.Name) Then
+                                Dim newPhaseDef As New clsPhasenDefinition
+                                newPhaseDef.name = msTask.Name
+                                ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                                If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                    newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
                                 Else
-                                    vDeliverable = msTask.GetField(visbo_deliverables)
-                                    hvDel = Split(vDeliverable, ";", , )
-                                    count = hvDel.Length
+                                    newPhaseDef.shortName = msTask.Name
                                 End If
-                                For iDel As Integer = 0 To count - 1
-                                    If Not cphase.containsDeliverable(hvDel(iDel)) Then
+                                ' Task Class, falls Customfield visbo_taskclass definiert ist
+                                If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                                Else
+                                    newPhaseDef.darstellungsKlasse = ""
+                                End If
+                                cphase.appearance = newPhaseDef.darstellungsKlasse
 
-                                        Try
-                                            cphase.addDeliverable(hvDel(iDel).Trim)
-                                        Catch ex As Exception
+                                newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                'PhaseDefinitions.Add(newPhaseDef)
+                                missingPhaseDefinitions.Add(newPhaseDef)
+                            Else
+                                cphase.appearance = PhaseDefinitions.getAppearance(msTask.Name)
+                            End If
 
-                                        End Try
+                            With cphase
 
+                                Dim phBewertung As New clsBewertung
+
+                                'percentDone, falls Customfiels visbo_percentDone definiert ist
+                                If visbo_percentDone <> 0 Then
+                                    Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
+                                    Dim hpercent() As String = Split(strPercentDone, "%", , )
+                                    Dim vPercentDone As Double
+                                    Try
+                                        vPercentDone = Convert.ToDouble(hpercent(0))
+
+                                    Catch e As FormatException
+                                        vPercentDone = 0.0
+                                    Catch e As OverflowException
+                                        Call MsgBox(hpercent(1) & " is outside the range of a Double.")
+                                    End Try
+                                    ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
+                                    cphase.percentDone = vPercentDone / 100
+
+                                End If
+
+
+                                ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                                Dim count As Integer = 0
+                                Dim hvDel() As String
+                                If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                    Dim vDeliverable As String = ""
+                                    If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                        vDeliverable = msTask.Notes
+                                        hvDel = Split(vDeliverable, vbCr, , )
+                                        count = hvDel.Length
+                                    Else
+                                        vDeliverable = msTask.GetField(visbo_deliverables)
+                                        hvDel = Split(vDeliverable, ";", , )
+                                        count = hvDel.Length
                                     End If
-                                Next iDel
+                                    For iDel As Integer = 0 To count - 1
+                                        If Not cphase.containsDeliverable(hvDel(iDel)) Then
 
-                            End If
+                                            Try
+                                                cphase.addDeliverable(hvDel(iDel).Trim)
+                                            Catch ex As Exception
 
-                            ' Responsible, falls Customfield visbo_responsible definiert ist
-                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
-                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
-                                cphase.verantwortlich = vResponsible
-                            End If
+                                            End Try
 
+                                        End If
+                                    Next iDel
 
-                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
-                            If visbo_ampeltext <> 0 Then
-                                Dim vAmpelText As String = ""
-                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
-                                    vAmpelText = msTask.Notes
-                                Else
-                                    vAmpelText = msTask.GetField(visbo_ampeltext)
                                 End If
-                                phBewertung.description = vAmpelText
-                            End If
 
-                            If visbo_ampel <> 0 Then
+                                ' Responsible, falls Customfield visbo_responsible definiert ist
+                                If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                    Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                    cphase.verantwortlich = vResponsible
+                                End If
 
-                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
 
-                                Select Case visboAmpel
+                                ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                                If visbo_ampeltext <> 0 Then
+                                    Dim vAmpelText As String = ""
+                                    If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                        vAmpelText = msTask.Notes
+                                    Else
+                                        vAmpelText = msTask.GetField(visbo_ampeltext)
+                                    End If
+                                    phBewertung.description = vAmpelText
+                                End If
 
-                                    Case "none"
-                                        phBewertung.colorIndex = PTfarbe.none
-                                    Case "red"
-                                        phBewertung.colorIndex = PTfarbe.red
-                                    Case "green"
-                                        phBewertung.colorIndex = PTfarbe.green
-                                    Case "yellow"
-                                        phBewertung.colorIndex = PTfarbe.yellow
-                                    Case Else
-                                        phBewertung.colorIndex = PTfarbe.none
+                                If visbo_ampel <> 0 Then
+
+                                    Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                    Select Case visboAmpel
+
+                                        Case "none"
+                                            phBewertung.colorIndex = PTfarbe.none
+                                        Case "red"
+                                            phBewertung.colorIndex = PTfarbe.red
+                                        Case "green"
+                                            phBewertung.colorIndex = PTfarbe.green
+                                        Case "yellow"
+                                            phBewertung.colorIndex = PTfarbe.yellow
+                                        Case Else
+                                            phBewertung.colorIndex = PTfarbe.none
+
+                                    End Select
+
+                                Else
+                                    phBewertung.colorIndex = PTfarbe.none
+                                End If
+                                cphase.addBewertung(phBewertung)
+
+                                ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+                                Dim cphaseStartOffset As Long
+                                Dim dauerIndays As Long
+
+                                cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
+                                dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
+
+                                .changeStartandDauer(cphaseStartOffset, dauerIndays)
+                                .offset = 0
+
+                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+                                Dim phaseStartdate As Date = .getStartDate
+                                Dim phaseEnddate As Date = .getEndDate
+
+                                ' Verification Check
+                                If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, phaseStartdate.Date) <> 0 Then
+                                    outputline = "Task (Phase) : " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & phaseStartdate.ToShortDateString & "(VISBO)"
+                                    outputCollection.Add(outputline)
+                                    outputline = "Task (Phase) : " & msTask.Name & "endet: " & CDate(msTask.Finish).Date.ToShortDateString & "(MSProject) - " & phaseEnddate.ToShortDateString & "(VISBO)"
+                                    outputCollection.Add(outputline)
+                                End If
+
+
+                                Dim anzRessources As Integer = msTask.Resources.Count
+
+                                ' Resourcen je MSTask durchgehen
+                                Dim j As Integer = 0
+                                Dim ccost As clsKostenart = Nothing
+                                Dim crole As clsRolle = Nothing
+
+                                Dim ass As MSProject.Assignment
+                                Dim anzAssignments As Integer = msTask.Assignments.Count
+
+                                Dim perUnit As Double = 0.0
+                                Select Case msproj.DefaultWorkUnits
+                                    Case MSProject.PjUnit.pjDay
+                                        perUnit = 1
+                                    Case MSProject.PjUnit.pjHour
+                                        perUnit = 8
+                                    Case MSProject.PjUnit.pjMinute
+                                        perUnit = 60 * 8
+                                    Case MSProject.PjUnit.pjMonthUnit
+                                        perUnit = 1 / 30
+                                    Case MSProject.PjUnit.pjWeek
+                                        perUnit = 1 / 7
 
                                 End Select
 
-                            Else
-                                phBewertung.colorIndex = PTfarbe.none
-                            End If
-                            cphase.addBewertung(phBewertung)
-
-                            ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-                            Dim cphaseStartOffset As Long
-                            Dim dauerIndays As Long
-
-                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
-                            dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
-
-                            .changeStartandDauer(cphaseStartOffset, dauerIndays)
-                            .offset = 0
-
-                            ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
-                            Dim phaseStartdate As Date = .getStartDate
-                            Dim phaseEnddate As Date = .getEndDate
-
-                            ' Verification Check
-                            If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, phaseStartdate.Date) <> 0 Then
-                                outputline = "Task (Phase) : " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & phaseStartdate.ToShortDateString & "(VISBO)"
-                                outputCollection.Add(outputline)
-                                outputline = "Task (Phase) : " & msTask.Name & "endet: " & CDate(msTask.Finish).Date.ToShortDateString & "(MSProject) - " & phaseEnddate.ToShortDateString & "(VISBO)"
-                                outputCollection.Add(outputline)
-                            End If
+                                If msproj.CurrencyCode = "EUR" And msTask.Assignments.Count > 0 Then
 
 
-                            Dim anzRessources As Integer = msTask.Resources.Count
+                                    For Each ass In msTask.Assignments
 
-                            ' Resourcen je MSTask durchgehen
-                            Dim j As Integer = 0
-                            Dim ccost As clsKostenart = Nothing
-                            Dim crole As clsRolle = Nothing
+                                        Dim msRess As MSProject.Resource = ass.Resource
 
-
-
-                            Dim ass As MSProject.Assignment
-
-                            If msproj.CurrencyCode = "EUR" And msTask.Assignments.Count > 0 Then
-
-
-                                For Each ass In msTask.Assignments
-
-
-                                    Dim msRess As MSProject.Resource = ass.Resource
-
-                                    Select Case ass.Resource.Type
-                                        Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
+                                        Select Case ass.Resource.Type
+                                            Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
                                            MSProject.PjResourceTypes.pjResourceTypeCost
-                                            Try
+                                                Try
 
-                                                Dim k As Integer = 0
+                                                    Dim k As Integer = 0
 
-                                                If CostDefinitions.containsName(ass.ResourceName) Then
-                                                    k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                Else
-                                                    ' Kostenart existiert noch nicht
-                                                    ' wird hier neu aufgenommen
-                                                    Dim newCostDef As New clsKostenartDefinition
-                                                    newCostDef.name = ass.ResourceName
-                                                    newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
-                                                    newCostDef.UID = CostDefinitions.Count + 1
-                                                    If Not missingCostDefinitions.containsName(newCostDef.name) Then
-                                                        missingCostDefinitions.Add(newCostDef)
+                                                    If CostDefinitions.containsName(ass.ResourceName) Then
+                                                        k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                    Else
+                                                        ' Kostenart existiert noch nicht
+                                                        ' wird hier neu aufgenommen
+                                                        Dim newCostDef As New clsKostenartDefinition
+                                                        newCostDef.name = ass.ResourceName
+                                                        newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
+                                                        newCostDef.UID = CostDefinitions.Count + 1
+                                                        If Not missingCostDefinitions.containsName(newCostDef.name) Then
+                                                            missingCostDefinitions.Add(newCostDef)
+                                                        End If
+
+                                                        CostDefinitions.Add(newCostDef)
+
+                                                        ' Änderung tk: muss auf costdefinitions gesetzt werden 
+                                                        ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                                     End If
 
-                                                    CostDefinitions.Add(newCostDef)
+                                                    Dim work As Double = CType(ass.Work, Double)
+                                                    Dim cost As Double = CType(ass.Cost, Double)
 
-                                                    ' Änderung tk: muss auf costdefinitions gesetzt werden 
-                                                    ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                    k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                End If
+                                                    Dim startdate As Date = CDate(msTask.Start)
+                                                    Dim endedate As Date = CDate(msTask.Finish)
 
-                                                Dim work As Double = CType(ass.Work, Double)
-                                                Dim cost As Double = CType(ass.Cost, Double)
+                                                    Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                    Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                    Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                                Dim startdate As Date = CDate(msTask.Start)
-                                                Dim endedate As Date = CDate(msTask.Finish)
-
-                                                Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                                If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                    anzdays = 1
-                                                    anzmonth = 1
-                                                End If
-                                                If anzdays > 0 And anzmonth = 0 Then
-                                                    anzmonth = 1
-                                                End If
+                                                    If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                        anzdays = 1
+                                                        anzmonth = 1
+                                                    End If
+                                                    If anzdays > 0 And anzmonth = 0 Then
+                                                        anzmonth = 1
+                                                    End If
 
 
-                                                ReDim Xwerte(anzmonth - 1)
+                                                    ReDim Xwerte(anzmonth - 1)
 
-                                                Dim m As Integer
-                                                For m = 1 To anzmonth
+                                                    Dim m As Integer
+                                                    For m = 1 To anzmonth
 
-                                                    Try
-                                                        Xwerte(m - 1) = CType(cost / anzmonth, Double)
-                                                    Catch ex As Exception
-                                                        Xwerte(m - 1) = 0.0
-                                                    End Try
+                                                        Try
+                                                            Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                        Catch ex As Exception
+                                                            Xwerte(m - 1) = 0.0
+                                                        End Try
 
-                                                Next m
+                                                    Next m
 
-                                                ccost = New clsKostenart(anzmonth - 1)
+                                                    ccost = New clsKostenart(anzmonth - 1)
 
-                                                With ccost
-                                                    .KostenTyp = k
-                                                    .Xwerte = Xwerte
-                                                End With
+                                                    With ccost
+                                                        .KostenTyp = k
+                                                        .Xwerte = Xwerte
+                                                    End With
 
 
-                                                With cphase
-                                                    .AddCost(ccost)
-                                                End With
-                                            Catch ex As Exception
-                                                '
-                                                ' handelt es sich um die Kostenart Definition?
-                                                '
-                                            End Try
+                                                    With cphase
+                                                        .AddCost(ccost)
+                                                    End With
+                                                Catch ex As Exception
+                                                    '
+                                                    ' handelt es sich um die Kostenart Definition?
+                                                    '
+                                                End Try
                                             'Call MsgBox("Kosten = " & ass.ResourceName)
 
-                                        Case MSProject.PjResourceTypes.pjResourceTypeWork
+                                            Case MSProject.PjResourceTypes.pjResourceTypeWork
 
-                                            Try
-                                                Dim r As Integer = 0
+                                                Try
+                                                    Dim r As Integer = 0
 
 
-                                                If RoleDefinitions.containsName(ass.ResourceName) Then
-                                                    r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                Else
-                                                    ' Rolle existiert noch nicht
-                                                    ' wird hier neu aufgenommen
+                                                    If RoleDefinitions.containsName(ass.ResourceName) Then
+                                                        r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                    Else
+                                                        ' Rolle existiert noch nicht
+                                                        ' wird hier neu aufgenommen
 
-                                                    Dim newRoleDef As New clsRollenDefinition
-                                                    newRoleDef.name = ass.ResourceName
-                                                    newRoleDef.farbe = RGB(120, 120, 120)
-                                                    newRoleDef.defaultKapa = 200000
+                                                        Dim newRoleDef As New clsRollenDefinition
+                                                        newRoleDef.name = ass.ResourceName
+                                                        newRoleDef.farbe = RGB(120, 120, 120)
+                                                        newRoleDef.defaultKapa = 200000
 
-                                                    ' OvertimeRate in Tagessatz umrechnen
-                                                    Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
-                                                    hoverstr = Split(hoverstr(0), "€", -1)
-                                                    'newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
+                                                        ' OvertimeRate in Tagessatz umrechnen
+                                                        Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
+                                                        hoverstr = Split(hoverstr(0), "€", -1)
+                                                        'newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
 
-                                                    ' StandardRate in Tagessatz umrechnen
-                                                    Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
-                                                    hstdstr = Split(hstdstr(0), "€", -1)
-                                                    newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
+                                                        ' StandardRate in Tagessatz umrechnen
+                                                        Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
+                                                        hstdstr = Split(hstdstr(0), "€", -1)
+                                                        newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
-                                                    newRoleDef.UID = RoleDefinitions.Count + 1
-                                                    If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
-                                                        missingRoleDefinitions.Add(newRoleDef)
+                                                        newRoleDef.UID = RoleDefinitions.Count + 1
+                                                        If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
+                                                            missingRoleDefinitions.Add(newRoleDef)
+                                                        End If
+
+                                                        RoleDefinitions.Add(newRoleDef)
+
+
+                                                        ' Änderung tk: das muss von roledefinitions geholt werden ...
+                                                        ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+
                                                     End If
 
-                                                    RoleDefinitions.Add(newRoleDef)
 
 
-                                                    ' Änderung tk: das muss von roledefinitions geholt werden ...
-                                                    ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                    r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
-
-                                                End If
-
-
-
-                                                Dim work As Double = CType(ass.Work, Double)
-                                                'Dim duration As Double = CType(ass.Duration, Double)
-                                                Dim unit As Double = CType(ass.Units, Double)
-                                                Dim budgetWork As Double = CType(ass.BudgetWork, Double)
-
-                                                Dim startdate As Date = CDate(msTask.Start).Date
-                                                Dim endedate As Date = CDate(msTask.Finish).Date
-
-                                                ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
-                                                ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
-                                                ' die Berechnung Datediff ergibt aber nur 1 Monat '
-                                                'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                                'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                '    anzdays = 1
-                                                '    anzmonth = 1
-                                                'End If
-                                                'If anzdays > 0 And anzmonth = 0 Then
-                                                '    anzmonth = 1
-                                                'End If
+                                                    Dim work As Double = CType(ass.Work, Double)
+                                                    'Dim duration As Double = CType(ass.Duration, Double)
+                                                    Dim unit As Double = CType(ass.Units, Double)
+                                                    If ass.BudgetWork <> "" Then
+                                                        Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                    End If
 
 
-                                                'ReDim Xwerte(anzmonth - 1)
-                                                ' Ende Auskommentierung tk  
+                                                    Dim startdate As Date = CDate(msTask.Start).Date
+                                                    Dim endedate As Date = CDate(msTask.Finish).Date
 
-                                                ' tk Anpassung ...
-                                                Dim oldWerte(0) As Double
-                                                Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-                                                oldWerte(0) = work
-                                                ReDim Xwerte(anzmonth - 1)
-                                                Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+                                                    ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
+                                                    ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
+                                                    ' die Berechnung Datediff ergibt aber nur 1 Monat '
+                                                    'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                    'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                    'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-
-                                                For m As Integer = 1 To anzmonth
-                                                    Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
-                                                Next
-
-                                                ' Ende tk Anpassung
-
-
-                                                ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
-                                                'For m As Integer = 1 To anzmonth
-
-                                                '    Try
-                                                '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
-                                                '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
-
-                                                '    Catch ex As Exception
-                                                '        Xwerte(m - 1) = 0.0
-                                                '    End Try
-
-                                                'Next m
-
-                                                ' Check , um Unterschiede in der Summe herausfinden zu können
-                                                ' die waren immer 0 ... 
-                                                'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
-
-                                                crole = New clsRolle(anzmonth - 1)
-                                                With crole
-                                                    .uid = r
-                                                    .Xwerte = Xwerte
-                                                End With
-
-                                                With cphase
-                                                    .addRole(crole)
-                                                End With
-                                            Catch ex As Exception
-
-                                            End Try
-
-                                            'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
-                                    End Select
-                                Next ass
+                                                    'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                    '    anzdays = 1
+                                                    '    anzmonth = 1
+                                                    'End If
+                                                    'If anzdays > 0 And anzmonth = 0 Then
+                                                    '    anzmonth = 1
+                                                    'End If
 
 
-                            End If
+                                                    'ReDim Xwerte(anzmonth - 1)
+                                                    ' Ende Auskommentierung tk  
 
-                            ' Hierarchie-Aufbau
-                            Dim cphaseParent As Object = msTask.Parent
+                                                    ' tk Anpassung ...
+                                                    Dim oldWerte(0) As Double
+                                                    Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                                    oldWerte(0) = work
+                                                    ReDim Xwerte(anzmonth - 1)
+                                                    Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
 
-                            Dim hrchynode As New clsHierarchyNode
-                            hrchynode.elemName = cphase.name
+                                                    ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
+                                                    For m As Integer = 1 To anzmonth
+                                                        Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                                    Next
 
-                            If tasklevel = 0 Then
-                                hrchynode.parentNodeKey = ""
+                                                    ' Ende tk Anpassung
 
-                            ElseIf tasklevel = 1 Then
-                                hrchynode.parentNodeKey = rootPhaseName
 
-                            ElseIf tasklevel - lastlevel = 1 Then
-                                hrchynode.parentNodeKey = lastelemID
+                                                    ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
+                                                    'For m As Integer = 1 To anzmonth
 
-                            ElseIf tasklevel - lastlevel = 0 Then
-                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+                                                    '    Try
+                                                    '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
+                                                    '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
+
+                                                    '    Catch ex As Exception
+                                                    '        Xwerte(m - 1) = 0.0
+                                                    '    End Try
+
+                                                    'Next m
+
+                                                    ' Check , um Unterschiede in der Summe herausfinden zu können
+                                                    ' die waren immer 0 ... 
+                                                    'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
+
+                                                    crole = New clsRolle(anzmonth - 1)
+                                                    With crole
+                                                        .uid = r
+                                                        .Xwerte = Xwerte
+                                                    End With
+
+                                                    With cphase
+                                                        .addRole(crole)
+                                                    End With
+                                                Catch ex As Exception
+
+                                                End Try
+
+                                                'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
+                                        End Select
+                                    Next ass
+
+
+                                End If
+
+                                ' Hierarchie-Aufbau
+                                Dim cphaseParent As Object = msTask.Parent
+
+                                Dim hrchynode As New clsHierarchyNode
+                                hrchynode.elemName = cphase.name
+
+                                If tasklevel = 0 Then
+                                    hrchynode.parentNodeKey = ""
+
+                                ElseIf tasklevel = 1 Then
+                                    hrchynode.parentNodeKey = rootPhaseName
+
+                                ElseIf tasklevel - lastlevel = 1 Then
+                                    hrchynode.parentNodeKey = lastelemID
+
+                                ElseIf tasklevel - lastlevel = 0 Then
+                                    hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                                ElseIf lastlevel - tasklevel >= 1 Then
+                                    Dim hilfselemID As String = lastelemID
+                                    For l As Integer = 1 To lastlevel - tasklevel
+                                        hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                    Next l
+                                    hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                Else
+                                    Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                                End If
+
+                                ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                                Dim newStdName As String = ""
+                                If awinSettings.createUniqueSiblingNames Then
+                                    newStdName = hproj.hierarchy.findUniqueGeschwisterName(hrchynode.parentNodeKey, msTask.Name, False)
+                                Else
+                                    newStdName = msTask.Name
+                                End If
+
+                                cphase.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, False)
+
+                                hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
+
+                                ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
+                                hrchynode.indexOfElem = hproj.AllPhases.Count
+                                ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                                lasthrchyNode = hrchynode
+                                lastelemID = cphase.nameID
+                                lastphase = cphase
+                                lastlevel = tasklevel
+
+                                If visboflag <> 0 Then          ' VISBO-Flag ist definiert
+                                    Dim hflag As Boolean = readCustomflag(msTask, visboflag)
+                                    ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                    visboFlagListe.Add(cphase.nameID, hflag)
+
+                                End If
+                            End With
+
+
+                            Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+
+                        Else
+                            ' mstask ist ein Meilenstein und kein Summary-Meilenstein
+
+
+                            ' Ergänzung tk für Demo BHTC 
+                            ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                            Dim origMsName As String = msTask.Name
+                            msTask.Name = milestoneMappings.mapToStdName("", msTask.Name)
+                            '
+
+
+                            Dim hierarchy As String = msTask.WBS
+                            'Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+                            Dim msPhase As clsPhase = Nothing
+                            Dim parentID As String = rootPhaseName
+
+                            lastlevel = hproj.hierarchy.getIndentLevel(lastelemID)
+
+                            If lastlevel = -1 Then          ' lastelemID existiert in der hierarchy nicht, also wird Meilenstein der Rootphase zugeordnet
+                                parentID = rootPhaseName
+
+                            ElseIf tasklevel = lastlevel Then
+                                parentID = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                            ElseIf tasklevel > lastlevel Then
+                                parentID = lastelemID
+
+                            ElseIf tasklevel = 1 And tasklevel < lastlevel Then
+                                parentID = rootPhaseName
 
                             ElseIf lastlevel - tasklevel >= 1 Then
                                 Dim hilfselemID As String = lastelemID
                                 For l As Integer = 1 To lastlevel - tasklevel
                                     hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                 Next l
-                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                            Else
-                                Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                                parentID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+
                             End If
 
-                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
-                            Dim newStdName As String = ""
-                            If awinSettings.createUniqueSiblingNames Then
-                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(hrchynode.parentNodeKey, msTask.Name, False)
+                            msPhase = hproj.getPhaseByID(parentID)
+
+                            Dim cmilestone As New clsMeilenstein(msPhase)
+
+
+                            ' prüfen, ob MeilensteinDefinition bereits vorhanden
+                            If Not MilestoneDefinitions.Contains(msTask.Name) Then
+                                Dim msDef As New clsMeilensteinDefinition
+                                msDef.belongsTo = msPhase.name
+                                msDef.name = msTask.Name
+                                ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                                If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                    msDef.shortName = msTask.GetField(visbo_abbrev)
+                                Else
+                                    msDef.shortName = ""
+                                End If
+                                ' Task Class, falls Customfield visbo_taskclass definiert ist
+                                If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    msDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                                Else
+                                    msDef.darstellungsKlasse = ""
+                                End If
+                                cmilestone.appearance = msDef.darstellungsKlasse
+
+                                msDef.schwellWert = 0
+                                msDef.UID = MilestoneDefinitions.Count + 1
+                                'MilestoneDefinitions.Add(msDef)
+                                Try
+                                    missingMilestoneDefinitions.Add(msDef)
+                                Catch ex As Exception
+                                End Try
                             Else
-                                newStdName = msTask.Name
+                                cmilestone.appearance = MilestoneDefinitions.getAppearance(msTask.Name)
                             End If
 
-                            cphase.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, False)
-
-                            hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
-
-                            ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
-                            hrchynode.indexOfElem = hproj.AllPhases.Count
-                            ' merken von letzem Element (Knoten,Phase,Meilenstein)
-                            lasthrchyNode = hrchynode
-                            lastelemID = cphase.nameID
-                            lastphase = cphase
-                            lastlevel = tasklevel
-                        End With
-
-
-                        Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
-
-                    Else
-                        ' mstask ist ein Meilenstein und kein Summary-Meilenstein
-
-
-                        ' Ergänzung tk für Demo BHTC 
-                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
-                        Dim origMsName As String = msTask.Name
-                        msTask.Name = milestoneMappings.mapToStdName("", msTask.Name)
-                        '
-
-
-                        Dim hierarchy As String = msTask.WBS
-                        'Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
-                        Dim msPhase As clsPhase = Nothing
-                        Dim parentID As String = rootPhaseName
-
-                        lastlevel = hproj.hierarchy.getIndentLevel(lastelemID)
-
-                        If lastlevel = -1 Then          ' lastelemID existiert in der hierarchy nicht, also wird Meilenstein der Rootphase zugeordnet
-                            parentID = rootPhaseName
-
-                        ElseIf tasklevel = lastlevel Then
-                            parentID = hproj.hierarchy.getParentIDOfID(lastelemID)
-
-                        ElseIf tasklevel > lastlevel Then
-                            parentID = lastelemID
-
-                        ElseIf tasklevel = 1 And tasklevel < lastlevel Then
-                            parentID = rootPhaseName
-
-                        ElseIf lastlevel - tasklevel >= 1 Then
-                            Dim hilfselemID As String = lastelemID
-                            For l As Integer = 1 To lastlevel - tasklevel
-                                hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
-                            Next l
-                            parentID = hproj.hierarchy.getParentIDOfID(hilfselemID)
-
-                        End If
-
-                        msPhase = hproj.getPhaseByID(parentID)
-
-                        Dim cmilestone As New clsMeilenstein(msPhase)
-
-
-                        ' prüfen, ob MeilensteinDefinition bereits vorhanden
-                        If Not MilestoneDefinitions.Contains(msTask.Name) Then
-                            Dim msDef As New clsMeilensteinDefinition
-                            msDef.belongsTo = msPhase.name
-                            msDef.name = msTask.Name
-                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
-                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
-                                msDef.shortName = msTask.GetField(visbo_abbrev)
-                            Else
-                                msDef.shortName = ""
-                            End If
-                            ' Task Class, falls Customfield visbo_taskclass definiert ist
-                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
-                                msDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
-                            Else
-                                msDef.darstellungsKlasse = ""
-                            End If
-                            cmilestone.appearance = msDef.darstellungsKlasse
-
-                            msDef.schwellWert = 0
-                            msDef.UID = MilestoneDefinitions.Count + 1
-                            'MilestoneDefinitions.Add(msDef)
-                            Try
-                                missingMilestoneDefinitions.Add(msDef)
-                            Catch ex As Exception
-                            End Try
-                        Else
-                            cmilestone.appearance = MilestoneDefinitions.getAppearance(msTask.Name)
-                        End If
-
-                        ' MeilensteinDefinition vorhanden?
-                        If MilestoneDefinitions.Contains(msTask.Name) _
+                            ' MeilensteinDefinition vorhanden?
+                            If MilestoneDefinitions.Contains(msTask.Name) _
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
 
-                            Dim msBewertung As New clsBewertung
+                                Dim msBewertung As New clsBewertung
 
-                            cmilestone.setDate = CType(msTask.Start, Date)
+                                cmilestone.setDate = CType(msTask.Start, Date)
 
-                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
-                            Dim newStdName As String = ""
-                            If awinSettings.createUniqueSiblingNames Then
-                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(msPhase.nameID, msTask.Name, True)
-                            Else
-                                newStdName = msTask.Name
-                            End If
-
-                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
-                            Dim testDate As Date = cmilestone.getDate
-
-                            ' Check der Daten: wenn nicht identisch, dann Output bringen
-                            If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, cmilestone.getDate) <> 0 Then
-                                outputline = "Task(Milestone): " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & cmilestone.getDate.ToShortDateString & "(VISBO)"
-                                outputCollection.Add(outputline)
-                            End If
-
-                            'percentDone, falls Customfiels visbo_percentDone definiert ist
-                            If visbo_percentDone <> 0 Then
-                                Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
-                                Dim hpercent() As String = Split(strPercentDone, "%", , )
-                                Dim vPercentDone As Double
-                                Try
-                                    vPercentDone = Convert.ToDouble(hpercent(0))
-
-                                Catch e As FormatException
-                                    vPercentDone = 0.0
-                                Catch e As OverflowException
-                                    Call MsgBox(hpercent(1) & " is outside the range of a Double.")
-                                End Try
-                                ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
-                                cmilestone.percentDone = vPercentDone / 100
-
-                            End If
-
-                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
-                            Dim count As Integer = 0
-                            Dim hvDel() As String
-                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
-                                Dim vDeliverable As String = ""
-                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
-                                    vDeliverable = msTask.Notes
-                                    hvDel = Split(vDeliverable, vbCr, , )
-                                    count = hvDel.Length
+                                ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                                Dim newStdName As String = ""
+                                If awinSettings.createUniqueSiblingNames Then
+                                    newStdName = hproj.hierarchy.findUniqueGeschwisterName(msPhase.nameID, msTask.Name, True)
                                 Else
-                                    vDeliverable = msTask.GetField(visbo_deliverables)
-                                    hvDel = Split(vDeliverable, ";", , )
-                                    count = hvDel.Length
+                                    newStdName = msTask.Name
                                 End If
-                                For iDel As Integer = 0 To count - 1
-                                    If Not cmilestone.containsDeliverable(hvDel(iDel)) Then
 
-                                        Try
-                                            cmilestone.addDeliverable(hvDel(iDel).Trim)
-                                        Catch ex As Exception
+                                cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
+                                'If cmilestone.nameID.Contains("Internes Engineering Review") Then
+                                '    Call MsgBox("Internes Engineering Review in task " & msTask.Parent.ToString)
+                                'End If
+                                Dim testDate As Date = cmilestone.getDate
 
-                                        End Try
+                                ' Check der Daten: wenn nicht identisch, dann Output bringen
+                                If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, cmilestone.getDate) <> 0 Then
+                                    outputline = "Task(Milestone): " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & cmilestone.getDate.ToShortDateString & "(VISBO)"
+                                    outputCollection.Add(outputline)
+                                End If
 
+                                'percentDone, falls Customfiels visbo_percentDone definiert ist
+                                If visbo_percentDone <> 0 Then
+                                    Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
+                                    Dim hpercent() As String = Split(strPercentDone, "%", , )
+                                    Dim vPercentDone As Double
+                                    Try
+                                        vPercentDone = Convert.ToDouble(hpercent(0))
+
+                                    Catch e As FormatException
+                                        vPercentDone = 0.0
+                                    Catch e As OverflowException
+                                        Call MsgBox(hpercent(1) & " is outside the range of a Double.")
+                                    End Try
+                                    ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
+                                    cmilestone.percentDone = vPercentDone / 100
+
+                                End If
+
+                                ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                                Dim count As Integer = 0
+                                Dim hvDel() As String
+                                If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                    Dim vDeliverable As String = ""
+                                    If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                        vDeliverable = msTask.Notes
+                                        hvDel = Split(vDeliverable, vbCr, , )
+                                        count = hvDel.Length
+                                    Else
+                                        vDeliverable = msTask.GetField(visbo_deliverables)
+                                        hvDel = Split(vDeliverable, ";", , )
+                                        count = hvDel.Length
                                     End If
-                                Next iDel
+                                    For iDel As Integer = 0 To count - 1
+                                        If Not cmilestone.containsDeliverable(hvDel(iDel)) Then
 
-                            End If
+                                            Try
+                                                cmilestone.addDeliverable(hvDel(iDel).Trim)
+                                            Catch ex As Exception
 
-                            ' Responsible, falls Customfield visbo_responsible definiert ist
-                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
-                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
-                                cmilestone.verantwortlich = vResponsible
-                            End If
+                                            End Try
 
-                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
-                            If visbo_ampeltext <> 0 Then
-                                Dim vAmpelText As String = ""
-                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
-                                    vAmpelText = msTask.Notes
-                                Else
-                                    vAmpelText = msTask.GetField(visbo_ampeltext)
+                                        End If
+                                    Next iDel
+
                                 End If
-                                msBewertung.description = vAmpelText
-                            End If
 
-                            If visbo_ampel <> 0 Then
+                                ' Responsible, falls Customfield visbo_responsible definiert ist
+                                If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                    Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                    cmilestone.verantwortlich = vResponsible
+                                End If
 
-                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+                                ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                                If visbo_ampeltext <> 0 Then
+                                    Dim vAmpelText As String = ""
+                                    If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                        vAmpelText = msTask.Notes
+                                    Else
+                                        vAmpelText = msTask.GetField(visbo_ampeltext)
+                                    End If
+                                    msBewertung.description = vAmpelText
+                                End If
 
-                                Select Case visboAmpel
+                                If visbo_ampel <> 0 Then
 
-                                    Case "none"
-                                        msBewertung.colorIndex = PTfarbe.none
-                                    Case "red"
-                                        msBewertung.colorIndex = PTfarbe.red
-                                    Case "green"
-                                        msBewertung.colorIndex = PTfarbe.green
-                                    Case "yellow"
-                                        msBewertung.colorIndex = PTfarbe.yellow
-                                    Case Else
-                                        msBewertung.colorIndex = PTfarbe.none
+                                    Dim visboAmpel As String = msTask.GetField(visbo_ampel)
 
-                                End Select
+                                    Select Case visboAmpel
 
+                                        Case "none"
+                                            msBewertung.colorIndex = PTfarbe.none
+                                        Case "red"
+                                            msBewertung.colorIndex = PTfarbe.red
+                                        Case "green"
+                                            msBewertung.colorIndex = PTfarbe.green
+                                        Case "yellow"
+                                            msBewertung.colorIndex = PTfarbe.yellow
+                                        Case Else
+                                            msBewertung.colorIndex = PTfarbe.none
+
+                                    End Select
+
+                                Else
+                                    msBewertung.colorIndex = PTfarbe.none
+                                End If
+
+                                cmilestone.addBewertung(msBewertung)
+
+
+                                If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
+
+                                    Dim hflag As Boolean = readCustomflag(msTask, visboflag)
+                                    ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                    visboFlagListe.Add(cmilestone.nameID, hflag)
+                                End If
+
+                                Try
+                                    With msPhase
+                                        .addMilestone(cmilestone, origName:=origMsName)
+                                    End With
+                                Catch ex1 As Exception
+                                    Throw New Exception(ex1.Message)
+                                End Try
                             Else
-                                msBewertung.colorIndex = PTfarbe.none
+                                Throw New ArgumentException("Fehler: Meilenstein konnte nicht gefunden werden")
                             End If
-
-                            cmilestone.addBewertung(msBewertung)
-
-
-                            If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
-
-                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
-                                ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                                visboFlagListe.Add(cmilestone.nameID, hflag)
-                            End If
-
-                            Try
-                                With msPhase
-                                    .addMilestone(cmilestone, origName:=origMsName)
-                                End With
-                            Catch ex1 As Exception
-                                Throw New Exception(ex1.Message)
-                            End Try
-                        Else
-                            Throw New ArgumentException("Fehler: Meilenstein konnte nicht gefunden werden")
                         End If
+
+                        '' Testweise hier eingetragen
+
+                        Dim anzVorgaenger As Integer = msTask.PredecessorTasks.Count
+                        Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
+                        Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
+
+                        Dim startTask As Date = CType(msTask.Start, Date)
+                        Dim endeTask As Date = CType(msTask.Finish, Date)
+
+
+
+
                     End If
-
-                    '' Testweise hier eingetragen
-
-                    Dim anzVorgaenger As Integer = msTask.PredecessorTasks.Count
-                    Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
-                    Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
-
-                    Dim startTask As Date = CType(msTask.Start, Date)
-                    Dim endeTask As Date = CType(msTask.Finish, Date)
-
 
 
 
@@ -6919,7 +6916,7 @@ Public Module agm2
                     Else
                         stillOk = False
                     End If
-                ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
                     For Each tmpName As String In tmpStr
@@ -14905,7 +14902,7 @@ Public Module agm2
                     If Not IsNothing(formProjectInfo1) Then
                         Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
                     End If
-                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True)
+                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
 
                 Catch ex As Exception
@@ -14987,17 +14984,71 @@ Public Module agm2
                 ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
                 Dim rcName As String = rcNameID
                 Dim islocked As Boolean = False
+                Dim teamID As Integer = -1
 
                 If isRole And rcNameID <> "" Then
                     ' der rcname muss erst noch bestimmt werden 
-                    Dim teamID As Integer = -1
+                    'Dim teamID As Integer = -1
                     Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
                     If roleID > 0 Then
                         rcName = RoleDefinitions.getRoleDefByID(roleID).name
                     End If
                 End If
+                ' ---------------------------------------------------------------------
+                'Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
+                ' --------------------------------------
+                ' Beginn WriteMECellWithRoleNameID
 
-                Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
+                Dim teamName As String = ""
+                ' tk 4.3.19 es muss newzeile sein, statt zeile 
+                Dim currentCell As Excel.Range = CType(.Cells(newZeile, 5), Excel.Range)
+                ' erst mal alle Kommentare löschen 
+                currentCell.ClearComments()
+
+                If isRole Then
+                    If rcName = rcNameID Or rcNameID = "" Then
+                        ' nichts weiter tun ... rcName wird als Value geschrieben
+
+                    ElseIf rcNameID.Length > 0 Then
+
+                        If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)) Then
+                            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+
+                            If Not IsNothing(teamRole) Then
+                                teamName = teamRole.name
+                            End If
+                        End If
+
+                    End If
+
+                Else
+                    ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
+
+                End If
+
+                ' Jetzt wird die Zelle geschrieben 
+
+                With currentCell
+                    .Value = rcName
+                    .Locked = islocked
+                    ' eigentlich hier nicht mehr notwendig - es gibt hier keine Validation
+                    'Try
+                    '    If Not IsNothing(.Validation) Then
+                    '        .Validation.Delete()
+                    '    End If
+                    'Catch ex As Exception
+
+                    'End Try
+
+                    If teamName.Length > 0 Then
+                        Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
+                    End If
+
+                End With
+                ' 
+                ' Ende WriteMECellWithRoleNameID -----------------------------------
+                ' ------------------------------------------------------------------
+
 
                 For c As Integer = columnStartData - 1 To columnEndData
                     With CType(.Cells(newZeile, c), Excel.Range)
@@ -15866,6 +15917,7 @@ Public Module agm2
         massEditWrite1Zeile = writeResult
 
     End Function
+
 
     ''' <summary>
     ''' bestimmt das Erscheinungsbild der ersten Zeile in einem Mass-Edit Fenster Ressourcen, Termine, Attribute

@@ -3384,7 +3384,7 @@ Imports System.Web
                 'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
 
                 ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-                appInstance.ScreenUpdating = False
+                'appInstance.ScreenUpdating = False
 
                 Try
                     enableOnUpdate = False
@@ -3398,6 +3398,7 @@ Imports System.Web
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
                         Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
+
 
                     ElseIf meModus = ptModus.massEditTermine Then
                         ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
@@ -3423,6 +3424,8 @@ Imports System.Web
                     End If
 
                     appInstance.EnableEvents = True
+
+
 
                     Try
 
@@ -3452,7 +3455,6 @@ Imports System.Web
                     With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
                         .Activate()
                     End With
-
 
 
                     With projectboardWindows(PTwindows.massEdit)
@@ -3498,6 +3500,7 @@ Imports System.Web
                             .DisplayWorkbookTabs = False
                             .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
                             .WindowState = Excel.XlWindowState.xlMaximized
+                            .Activate()
                         Catch ex As Exception
                             Call MsgBox("Fehler in massEditRcTeAt")
                         End Try
@@ -3506,6 +3509,7 @@ Imports System.Web
                     End With
 
 
+                    ' tk 4.3.19 
                     ' jetzt das Multiprojekt Window ausblenden ...
                     projectboardWindows(PTwindows.mpt).Visible = False
 
@@ -3526,6 +3530,11 @@ Imports System.Web
 
                     End Try
 
+                    ' Ende Ausblenden 
+
+
+
+
 
 
                 Catch ex As Exception
@@ -3533,9 +3542,7 @@ Imports System.Web
                     If appInstance.EnableEvents = False Then
                         appInstance.EnableEvents = True
                     End If
-                    If appInstance.ScreenUpdating = False Then
-                        appInstance.ScreenUpdating = True
-                    End If
+
                 End Try
 
             Else
@@ -3565,9 +3572,11 @@ Imports System.Web
 
         End If
 
-        If appInstance.ScreenUpdating = False Then
-            appInstance.ScreenUpdating = True
-        End If
+
+        'appInstance.ScreenUpdating = True
+        'If appInstance.ScreenUpdating = False Then
+        '    appInstance.ScreenUpdating = True
+        'End If
 
 
     End Sub
@@ -9975,6 +9984,20 @@ Imports System.Web
                         End If
                     End If
 
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+                    If rcName <> "" Then
+                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                        If Not IsNothing(potentialParents) Then
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            If tmpParentName <> "" Then
+                                scInfo.q2 = tmpParentName
+                            End If
+                        End If
+
+
+                    End If
+
                 End If
 
 
@@ -9998,6 +10021,19 @@ Imports System.Web
                         End If
                     End If
 
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+                    If rcName <> "" Then
+                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                        If Not IsNothing(potentialParents) Then
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            If tmpParentName <> "" Then
+                                scInfo.q2 = tmpParentName
+                            End If
+                        End If
+
+
+                    End If
                 End If
 
             End If

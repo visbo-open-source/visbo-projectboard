@@ -3418,6 +3418,7 @@ Public Module awinGeneralModules
         ' in der Datenbank gespeichert sind, abgespeichert werden ... 
         ' bzw all die Projekte, die referenziert und sich verändert haben ... 
 
+
         If storeProjectsAsWell Then
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
 
@@ -3635,11 +3636,10 @@ Public Module awinGeneralModules
 
 
 
-
-
         ' jetzt wird das Portfolio weggeschrieben 
         Try
-            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation, err) Then
+            Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
+            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
                 ' alles in Ordnung, Speichern hat geklappt ... 
             Else
                 If awinSettings.englishLanguage Then
@@ -3664,6 +3664,7 @@ Public Module awinGeneralModules
 
         ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
+            ' das Summary Project muss auf Basis der geladenen Projekte erstellt werden 
             Dim budget As Double = -1.0
             Dim calculateAndStoreSummaryProjekt As Boolean = False
             Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
@@ -3709,7 +3710,7 @@ Public Module awinGeneralModules
                         anzahlNeue = anzahlNeue + 1
 
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                            writeProtections.upsert(wpItem)
+                        writeProtections.upsert(wpItem)
 
 
                     Else
@@ -3785,7 +3786,7 @@ Public Module awinGeneralModules
                             anzahlChanged = anzahlChanged + 1
 
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                                writeProtections.upsert(wpItem)
+                            writeProtections.upsert(wpItem)
 
                         Else
                             If awinSettings.visboServer Then
@@ -7011,8 +7012,13 @@ Public Module awinGeneralModules
     ''' <param name="hproj">das selektierte Projekt</param>
     ''' <remarks></remarks>
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean,
-                                  Optional ByVal calledFromMassEdit As Boolean = False)
+                                  Optional ByVal calledFromMassEdit As Boolean = False,
+                                  Optional ByVal currentRoleName As String = "")
 
+        ' Validieren ...
+        If IsNothing(currentRoleName) Then
+            currentRoleName = ""
+        End If
 
         Dim err As New clsErrorCodeMsg
 
@@ -7072,7 +7078,20 @@ Public Module awinGeneralModules
                                 With scInfo
                                     .hproj = hproj
                                     .detailID = typID
-                                    .q2 = roleCostName
+
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
+                                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                                        If Not IsNothing(potentialParents) Then
+                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents)
+                                            If tmpParentName <> "" Then
+                                                scInfo.q2 = tmpParentName
+                                            End If
+                                        End If
+                                    Else
+                                        .q2 = roleCostName
+                                    End If
+
+
                                     .vergleichsArt = PTVergleichsArt.beauftragung
                                     .vergleichsTyp = PTVergleichsTyp.letzter
 

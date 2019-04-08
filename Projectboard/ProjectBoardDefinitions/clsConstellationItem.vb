@@ -100,13 +100,19 @@ Public Class clsConstellationItem
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property copy() As clsConstellationItem
+    Public ReadOnly Property copy(ByVal Optional prepareForDB As Boolean = False) As clsConstellationItem
         Get
             Dim copyResult As New clsConstellationItem
 
             With copyResult
                 .projectName = Me.projectName
-                .variantName = Me.variantName
+                ' tk 2.3.19
+                If prepareForDB And Me.variantName = ptVariantFixNames.pfv.ToString Then
+                    .variantName = ""
+                Else
+                    .variantName = Me.variantName
+                End If
+
                 .show = Me.show
                 .projectTyp = Me.projectTyp
                 .reasonToInclude = Me.reasonToInclude
