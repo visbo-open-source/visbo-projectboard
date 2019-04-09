@@ -19,35 +19,15 @@
         Get
             Dim stillOK As Boolean = False
 
-            With vBewertung
-                If Me.colorIndex = .colorIndex And _
-                    Me.description = .description And _
-                    Me.bewerterName = .bewerterName Then
-                    stillOK = True
-                Else
-                    stillOK = False
-                End If
+            If Me.colorIndex = vBewertung.colorIndex And
+                    Me.description = vBewertung.description And
+                    Me.bewerterName = vBewertung.bewerterName Then
+                stillOK = True
+            Else
+                stillOK = False
+            End If
 
 
-                ' tk: 28.12.16 das Bewertungsdatum muss nicht identisch sein, weil sonst ein Import nie identisch zum Projekt 
-                ' in der Datenbank sein kann 
-                ''If stillOK Then
-                ''    If Not IsNothing(Me.datum) And Not IsNothing(.datum) Then
-                ''        If Me.datum = .datum Then
-                ''            stillOK = True
-                ''        Else
-                ''            stillOK = False
-                ''        End If
-                ''    ElseIf IsNothing(Me.datum) And IsNothing(.datum) Then
-                ''        stillOK = True
-                ''    Else
-                ''        stillOK = False
-                ''    End If
-                ''End If
-                
-            End With
-
-            
             isIdenticalTo = stillOK
         End Get
     End Property

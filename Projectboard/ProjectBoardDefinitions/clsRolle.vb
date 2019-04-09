@@ -50,16 +50,16 @@ Public Class clsRolle
         Get
             Dim stillOK As Boolean = False
 
-            With vRolle
 
-                If Me.uid = .uid And
-                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) And
-                    Me.teamID = .teamID Then
-                    stillOK = True
-                Else
-                    stillOK = False
-                End If
-            End With
+
+            If Me.uid = vRolle.uid And
+                    Not arraysAreDifferent(Me.Xwerte, vRolle.Xwerte) And
+                   Me.teamID = vRolle.teamID Then
+                stillOK = True
+            Else
+                stillOK = False
+            End If
+
             isIdenticalTo = stillOK
         End Get
     End Property
