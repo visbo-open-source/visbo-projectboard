@@ -54,16 +54,20 @@ Public Class clsPPTTimeMachine
                     Dim phistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
                     If Not IsNothing(phistory) Then
-                        Dim minTS As Date = phistory.First.timeStamp
-                        Dim maxTs As Date = phistory.Last.timeStamp
+                        If phistory.Count > 0 Then
 
-                        If _minmaxTimeStamps(0) > minTS Then
-                            _minmaxTimeStamps(0) = minTS
+                            Dim minTS As Date = phistory.First.timeStamp
+                            Dim maxTs As Date = phistory.Last.timeStamp
+
+                            If _minmaxTimeStamps(0) > minTS Then
+                                _minmaxTimeStamps(0) = minTS
+                            End If
+
+                            If _minmaxTimeStamps(1) < maxTs Then
+                                _minmaxTimeStamps(1) = maxTs
+                            End If
                         End If
 
-                        If _minmaxTimeStamps(1) < maxTs Then
-                            _minmaxTimeStamps(1) = maxTs
-                        End If
                     End If
                 End If
 

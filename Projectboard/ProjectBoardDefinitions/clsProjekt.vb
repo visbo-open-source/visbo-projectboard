@@ -2768,6 +2768,7 @@ Public Class clsProjekt
             .name = Me.name
             ' tk das muss der gleiche Timestamp sein ... nicht das heutige Datum ...
             .timeStamp = Me.timeStamp
+            .actualDataUntil = Me.actualDataUntil
             .shpUID = Me.shpUID
             .tfZeile = Me.tfZeile
             .variantName = variantName
