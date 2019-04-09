@@ -9653,11 +9653,14 @@ Public Module Projekte
 
         Dim found As Boolean = False
 
-        Dim pieColors() As Integer = {Excel.XlRgbColor.rgbAqua,
-                                      Excel.XlRgbColor.rgbAliceBlue,
-                                      Excel.XlRgbColor.rgbAzure,
-                                      Excel.XlRgbColor.rgbBlue,
-                                      Excel.XlRgbColor.rgbNavyBlue}
+        Dim tcs As core.ThemeColorScheme = appInstance.ActiveWorkbook.Theme.ThemeColorScheme
+
+
+        Dim pieColors() As Integer = {tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent1).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent2).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent3).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent4).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent5).RGB}
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             If calledfromReporting Then
@@ -9955,11 +9958,14 @@ Public Module Projekte
 
         Dim ErgebnisListeR As Collection
 
-        Dim pieColors() As Integer = {Excel.XlRgbColor.rgbAqua,
-                                      Excel.XlRgbColor.rgbAliceBlue,
-                                      Excel.XlRgbColor.rgbAzure,
-                                      Excel.XlRgbColor.rgbBlue,
-                                      Excel.XlRgbColor.rgbNavyBlue}
+        Dim tcs As core.ThemeColorScheme = appInstance.ActiveWorkbook.Theme.ThemeColorScheme
+
+
+        Dim pieColors() As Integer = {tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent1).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent2).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent3).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent4).RGB,
+                                      tcs.Colors(core.MsoThemeColorSchemeIndex.msoThemeAccent5).RGB}
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -15981,6 +15987,7 @@ Public Module Projekte
     End Function
     ''' <summary>
     ''' prüft ob zwei Arrays sowohl in der Länge als auch in den Werten absolut identisch sind
+    ''' absolute Identität ist nicht gefordert , es muss auf 0.000001% genau sein 
     ''' </summary>
     ''' <param name="values1"></param>
     ''' <param name="values2"></param>
@@ -15990,6 +15997,7 @@ Public Module Projekte
 
         Dim istIdentisch As Boolean = True
         Dim i As Integer
+        Dim toleranzSchwelle As Double = 0.000001
 
 
         Try
@@ -16004,7 +16012,13 @@ Public Module Projekte
                 i = 0
                 While i <= values1.Length - 1 And istIdentisch
                     If values1(i) <> values2(i) Then
-                        istIdentisch = False
+
+                        If System.Math.Abs(values1(i) - values2(i)) > toleranzSchwelle Then
+                            istIdentisch = False
+                        Else
+                            i = i + 1
+                        End If
+
                     Else
                         i = i + 1
                     End If
@@ -19375,6 +19389,8 @@ Public Module Projekte
                     projectShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top),
                                                                 CSng(left + width), CSng(top))
 
+                    projectShape.AlternativeText = CInt(PTshty.projektL).ToString
+
                 Else
                     projectShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle,
                         Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
@@ -20695,29 +20711,30 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub aktualisierePMSForms(ByVal hproj As clsProjekt)
 
-        Dim phaseNameID As String
-        Dim milestoneNameID As String
+        'Dim phaseNameID As String
+        'Dim milestoneNameID As String
 
-        If formPhase.Visible Then
-            phaseNameID = formPhase.phaseNameID
-            Call updatePhaseInformation(hproj, phaseNameID)
-        End If
+        ' tk 9.4.19 nicht mehr zeigen
+        'If formPhase.Visible Then
+        '    phaseNameID = formPhase.phaseNameID
+        '    Call updatePhaseInformation(hproj, phaseNameID)
+        'End If
 
-        If formMilestone.Visible Then
+        'If formMilestone.Visible Then
 
-            milestoneNameID = formMilestone.milestone.nameID
-            Call updateMilestoneInformation(hproj, milestoneNameID)
+        '    milestoneNameID = formMilestone.milestone.nameID
+        '    Call updateMilestoneInformation(hproj, milestoneNameID)
 
-        End If
+        'End If
 
 
 
-        If formStatus.Visible Then
+        'If formStatus.Visible Then
 
-            Call zeichneStatusSymbolInPlantafel(hproj, 0)
-            Call updateStatusInformation(hproj)
+        '    Call zeichneStatusSymbolInPlantafel(hproj, 0)
+        '    Call updateStatusInformation(hproj)
 
-        End If
+        'End If
 
 
 
@@ -21150,6 +21167,7 @@ Public Module Projekte
                     projectShape.AutoShapeType = core.MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
             Else
+
                 If IsNothing(CType(CType(projectShape, Excel.Shape).GroupItems, Excel.GroupShapes)) Then
                     myshape = projectShape
                 Else
@@ -25956,29 +25974,30 @@ Public Module Projekte
                 End If
             End If
 
-            With formStatus
+            ' tk 9.4.19 nicht zeigen 
+            'With formStatus
 
-                '.projectName.Text = hproj.name
-                .projectName.Text = hproj.getShapeText
+            '    '.projectName.Text = hproj.name
+            '    .projectName.Text = hproj.getShapeText
 
-                '
-                ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
-                Dim tmpstr() As String = description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-                Dim newString As String = ""
-                If tmpstr.Length > 0 Then
-                    .bewertungsText.Lines = tmpstr
-                Else
-                    .bewertungsText.Text = description
-                End If
+            '    '
+            '    ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+            '    Dim tmpstr() As String = description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            '    Dim newString As String = ""
+            '    If tmpstr.Length > 0 Then
+            '        .bewertungsText.Lines = tmpstr
+            '    Else
+            '        .bewertungsText.Text = description
+            '    End If
 
 
-                If .Visible Then
-                Else
-                    .Visible = True
-                    .Show()
-                End If
+            '    If .Visible Then
+            '    Else
+            '        .Visible = True
+            '        .Show()
+            '    End If
 
-            End With
+            'End With
 
         Catch ex As Exception
 
@@ -26159,52 +26178,52 @@ Public Module Projekte
 
         End If
 
+        ' tk 9.4.19 nicht mehr zeigen 
+        'With formMilestone
 
-        With formMilestone
+        '    .milestone = cMilestone
+        '    .curProject = hproj
 
-            .milestone = cMilestone
-            .curProject = hproj
+        '    .projectName.Text = hproj.getShapeText
+        '    .breadCrumb.Text = breadCrumb
 
-            .projectName.Text = hproj.getShapeText
-            .breadCrumb.Text = breadCrumb
+        '    .resultDate.Text = dateText
+        '    .resultName.Text = milestoneName
 
-            .resultDate.Text = dateText
-            .resultName.Text = milestoneName
+        '    '
+        '    ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
 
-            '
-            ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+        '    '' tk 29.5.16 das braucht man doch jetzt nicht mehr ..? 
+        '    ''Dim tmpstr() As String
+        '    ''If .rdbDeliverables.Checked Then
+        '    ''    tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+        '    ''Else
+        '    ''    tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+        '    ''End If
 
-            '' tk 29.5.16 das braucht man doch jetzt nicht mehr ..? 
-            ''Dim tmpstr() As String
-            ''If .rdbDeliverables.Checked Then
-            ''    tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-            ''Else
-            ''    tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-            ''End If
+        '    ''Dim newString As String = ""
+        '    ''If tmpstr.Length > 0 Then
+        '    ''    .bewertungsText.Lines = tmpstr
+        '    ''Else
+        '    Dim tmpstr() As String
 
-            ''Dim newString As String = ""
-            ''If tmpstr.Length > 0 Then
-            ''    .bewertungsText.Lines = tmpstr
-            ''Else
-            Dim tmpstr() As String
+        '    If .rdbDeliverables.Checked Then
+        '        tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+        '    Else
+        '        tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+        '    End If
 
-            If .rdbDeliverables.Checked Then
-                tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-            Else
-                tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-            End If
-
-            .bewertungsText.Lines = tmpstr
-            ''End If
+        '    .bewertungsText.Lines = tmpstr
+        '    ''End If
 
 
-            If .Visible Then
-            Else
-                .Visible = True
-                .Show()
-            End If
+        '    If .Visible Then
+        '    Else
+        '        .Visible = True
+        '        .Show()
+        '    End If
 
-        End With
+        'End With
 
 
     End Sub
@@ -26630,36 +26649,36 @@ Public Module Projekte
 
 
 
+        ' tk 9.4.19 nicht mehr zeigen 
+        'With formPhase
 
-        With formPhase
+        '    .phaseNameID = phaseNameID
+        '    .curProject = hproj
 
-            .phaseNameID = phaseNameID
-            .curProject = hproj
+        '    .projectName.Text = hproj.getShapeText
+        '    .breadCrumb.Text = breadCrumb
 
-            .projectName.Text = hproj.getShapeText
-            .breadCrumb.Text = breadCrumb
-
-            .phaseName.Text = phaseName
-
-
-            .phaseStart.Text = startdateText
-            .phaseStart.TextAlign = HorizontalAlignment.Left
-
-            .phaseEnde.Text = enddateText
-            .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-            .phaseDauer.Text = dauerText
-            .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-            If .Visible Then
-            Else
-                .Visible = True
-                .Show()
-            End If
+        '    .phaseName.Text = phaseName
 
 
+        '    .phaseStart.Text = startdateText
+        '    .phaseStart.TextAlign = HorizontalAlignment.Left
 
-        End With
+        '    .phaseEnde.Text = enddateText
+        '    .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+        '    .phaseDauer.Text = dauerText
+        '    .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+        '    If .Visible Then
+        '    Else
+        '        .Visible = True
+        '        .Show()
+        '    End If
+
+
+
+        'End With
 
 
     End Sub

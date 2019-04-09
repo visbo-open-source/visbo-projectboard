@@ -177,9 +177,10 @@ Public Module Module1
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
-    Public formMilestone As New frmMilestoneInformation
-    Public formStatus As New frmStatusInformation
-    Public formPhase As New frmPhaseInformation
+    ' tk 9.4.19 das soll nicht mehr gezeigt werden ... 
+    'Public formMilestone As New frmMilestoneInformation
+    'Public formStatus As New frmStatusInformation
+    'Public formPhase As New frmPhaseInformation
     Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
@@ -2794,22 +2795,26 @@ Public Module Module1
 
         Select Case auswahl
             Case 0
-                formMilestone.Visible = False
-                formStatus.Visible = False
-                formPhase.Visible = False
+                ' tk 9.4.19 nicht mehr zeigen 
+                'formMilestone.Visible = False
+                'formStatus.Visible = False
+                'formPhase.Visible = False
 
                 typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
                 typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
 
             Case 1
-                formMilestone.Visible = False
+                ' tk 9.4.19 nicht mehr zeigen
+                'formMilestone.Visible = False
                 typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
 
             Case 2
-                formStatus.Visible = False
+                ' tk 9.4.19 nicht mehr zeigen
+                'formStatus.Visible = False
 
             Case 3
-                formPhase.Visible = False
+                ' tk 9.4.19 nicht mehr zeigen
+                'formPhase.Visible = False
                 typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
 
             Case Else

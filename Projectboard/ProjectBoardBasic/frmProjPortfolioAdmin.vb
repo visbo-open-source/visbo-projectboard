@@ -1878,7 +1878,7 @@ Public Class frmProjPortfolioAdmin
                 toolTippText = getToolTippText(hproj, treeLevel, variantNames.Count)
 
                 ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
-                Call aktualisierePMSForms(hproj)
+                'Call aktualisierePMSForms(hproj)
                 Call aktualisiereCharts(hproj, True)
             End If
 
@@ -1896,7 +1896,7 @@ Public Class frmProjPortfolioAdmin
                     toolTippText = getToolTippText(hproj, treeLevel, 0)
 
                     ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
-                    Call aktualisierePMSForms(hproj)
+                    'Call aktualisierePMSForms(hproj)
                     Call aktualisiereCharts(hproj, True)
 
                 End If

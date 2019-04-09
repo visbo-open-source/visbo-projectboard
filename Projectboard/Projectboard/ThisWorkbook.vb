@@ -262,28 +262,34 @@ Public Class ThisWorkbook
 
                 If Not noDB Then
 
-
-                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
-                        returnValue = projektespeichern.ShowDialog
-
-                        If returnValue = DialogResult.Yes Then
-
-                            Call StoreAllProjectsinDB()
-
-                        ElseIf returnValue = DialogResult.Cancel Then
-
-                            cancelAbbruch = True
-                        End If
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        ' nicht fragen - das führt nur zu sehr unangenehmen Überraschungen 
 
                     Else
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("no projects to store ...")
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
+                            returnValue = projektespeichern.ShowDialog
+
+                            If returnValue = DialogResult.Yes Then
+
+                                Call StoreAllProjectsinDB()
+
+                            ElseIf returnValue = DialogResult.Cancel Then
+
+                                cancelAbbruch = True
+                            End If
+
                         Else
-                            Call MsgBox("keine Projekte zu speichern ...")
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("no projects to store ...")
+                            Else
+                                Call MsgBox("keine Projekte zu speichern ...")
+                            End If
+
+
                         End If
-
-
                     End If
+
+
                     ' ???ur: 05.12.2018???
                     'If Not cancelAbbruch Then
                     '    ' die temporären Schutz
