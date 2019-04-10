@@ -23,7 +23,7 @@
     <OldToolsVersion>4.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
+    <PublishUrl>c:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>3.5.1.2</ApplicationVersion>
