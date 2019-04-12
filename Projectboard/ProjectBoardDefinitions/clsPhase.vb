@@ -277,38 +277,35 @@ Public Class clsPhase
             Dim ix As Integer = 0
 
             Try
-                With vPhase
-                    ' administratives ...
-                    If Me.nameID = .nameID Then
+                ' administratives ...
+                If Me.nameID = vPhase.nameID Then
 
-                        If Me.dauerInDays = .dauerInDays And
-                            Me.startOffsetinDays = .startOffsetinDays Then
+                    If Me.dauerInDays = vPhase.dauerInDays And
+                            Me.startOffsetinDays = vPhase.startOffsetinDays Then
 
-                            If Me.countCosts = .countCosts And
-                                Me.countRoles = .countRoles And
-                                Me.countDeliverables = .countDeliverables And
-                                Me.countMilestones = .countMilestones And
-                                Me.DocURL = .DocURL And
-                                Me.DocUrlAppID = .DocUrlAppID And
-                                Me.percentDone = .percentDone Then
-                                'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
+                        If Me.countCosts = vPhase.countCosts And
+                                Me.countRoles = vPhase.countRoles And
+                                Me.countDeliverables = vPhase.countDeliverables And
+                                Me.countMilestones = vPhase.countMilestones And
+                                Me.DocURL = vPhase.DocURL And
+                                Me.DocUrlAppID = vPhase.DocUrlAppID And
+                                Me.percentDone = vPhase.percentDone Then
+                            'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
 
-                                If Me.ampelErlaeuterung = .ampelErlaeuterung And
-                                    Me.ampelStatus = .ampelStatus Then
+                            If Me.ampelErlaeuterung = vPhase.ampelErlaeuterung And
+                                    Me.ampelStatus = vPhase.ampelStatus Then
 
-                                    If Me.shortName = .shortName And
-                                        Me.originalName = .originalName And
-                                        Me.verantwortlich = .verantwortlich Then
+                                If Me.shortName = vPhase.shortName And
+                                        Me.originalName = vPhase.originalName And
+                                        Me.verantwortlich = vPhase.verantwortlich Then
 
-                                        If Me.appearance = .appearance And
-                                            Me.individualColor = .individualColor And
-                                            Me.earliestStart = .earliestStart And
-                                            Me.latestStart = .latestStart And
-                                            Me.offset = .offset Then
+                                    If Me.appearance = vPhase.appearance And
+                                            Me.individualColor = vPhase.individualColor And
+                                            Me.earliestStart = vPhase.earliestStart And
+                                            Me.latestStart = vPhase.latestStart And
+                                            Me.offset = vPhase.offset Then
 
-                                            stillOK = True
-
-                                        End If
+                                        stillOK = True
 
                                     End If
 
@@ -320,16 +317,18 @@ Public Class clsPhase
 
                     End If
 
-                    ' jetzt die Deliverables prüfen  
-                    Dim MeDelis As String = Me.getAllDeliverables("#")
-                    Dim vglDelis As String = .getAllDeliverables("#")
+                End If
+
+                ' jetzt die Deliverables prüfen  
+                Dim MeDelis As String = Me.getAllDeliverables("#")
+                    Dim vglDelis As String = vPhase.getAllDeliverables("#")
 
                     If MeDelis = vglDelis Then
                         ' prüfen auf Bewertungen ... 
                         ix = 1
                         Do While stillOK And ix <= Me.bewertungsCount
                             Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
-                            Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                            Dim vglBewertung As clsBewertung = vPhase.getBewertung(ix)
                             If MeBewertung.isIdenticalTo(vglBewertung) Then
                                 ix = ix + 1
                             Else
@@ -346,7 +345,7 @@ Public Class clsPhase
                         ix = 1
                         Do While stillOK And ix <= Me.countRoles
                             Dim MeRole As clsRolle = Me.getRole(ix)
-                            Dim vglRole As clsRolle = .getRole(ix)
+                            Dim vglRole As clsRolle = vPhase.getRole(ix)
                             If MeRole.isIdenticalTo(vglRole) Then
                                 ix = ix + 1
                             Else
@@ -359,7 +358,7 @@ Public Class clsPhase
                             ix = 1
                             Do While stillOK And ix <= Me.countCosts
                                 Dim MeCost As clsKostenart = Me.getCost(ix)
-                                Dim vglCost As clsKostenart = .getCost(ix)
+                                Dim vglCost As clsKostenart = vPhase.getCost(ix)
                                 If MeCost.isIdenticalTo(vglCost) Then
                                     ix = ix + 1
                                 Else
@@ -372,7 +371,7 @@ Public Class clsPhase
                                 ix = 1
                                 Do While stillOK And ix <= Me.bewertungsCount
                                     Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
-                                    Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                                    Dim vglBewertung As clsBewertung = vPhase.getBewertung(ix)
                                     If MeBewertung.isIdenticalTo(vglBewertung) Then
                                         ix = ix + 1
                                     Else
@@ -385,7 +384,7 @@ Public Class clsPhase
                                     ix = 1
                                     Do While stillOK And ix <= Me.countMilestones
                                         Dim MeMs As clsMeilenstein = Me.getMilestone(ix)
-                                        Dim vglMs As clsMeilenstein = .getMilestone(ix)
+                                        Dim vglMs As clsMeilenstein = vPhase.getMilestone(ix)
                                         If MeMs.isIdenticalTo(vglMs) Then
                                             ix = ix + 1
                                         Else
@@ -400,7 +399,7 @@ Public Class clsPhase
 
                     End If
 
-                End With
+
 
             Catch ex As Exception
                 stillOK = False

@@ -26,10 +26,10 @@
     <PublishUrl>C:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.6.0.2</ApplicationVersion>
+    <ApplicationVersion>3.6.0.4</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>7</UpdateInterval>
+    <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Projectboard</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>

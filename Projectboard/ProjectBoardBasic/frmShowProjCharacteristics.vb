@@ -81,7 +81,7 @@ Public Class frmShowProjCharacteristics
         ' Ende Änderung-Ergänzung 140717
 
 
-        Call aktualisierePMSForms(hproj)
+        'Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
@@ -545,7 +545,7 @@ Public Class frmShowProjCharacteristics
 
         End With
 
-        Call aktualisierePMSForms(hproj)
+        'Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
 
     End Sub

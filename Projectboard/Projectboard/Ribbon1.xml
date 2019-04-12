@@ -42,14 +42,14 @@
             <!--label="Speichern"-->
             <splitButton id="PT5G2split" size ="large">
               <!--<button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="ExportMoreMenu" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>-->
-              <button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="MindMapImportData" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
+              <button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="MindMapImportData" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, werden alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
               <menu id ="PT5G2M" >
                 <!--label="Portfolio/s"-->
                 <button id="Pt5G2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
                 <!--label="Projekt/e"-->
-                <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
+                <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, werden alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
                 <!--label="SaveAll-->
-                <button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="die Organisations-Struktur inkl. der Tagessätze und Defualt Kapazitäten wird gespeichert"/>
+                <button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolio-Definitionen werden gespeichert"/>
               </menu>
             </splitButton>
             <!--label="Löschen"-->
@@ -304,7 +304,8 @@
           <!--label="Projekt-Charts"-->
           <splitButton id="PT7G1M1split" size="large">
             <!--label="wichtigsten Projekt-Charts "-->
-            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="TomMostImportantProjectCharts" supertip="Anzeige der wichtigsten Projekt-Charts"/>
+            <!--<button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="TomMostImportantProjectCharts" supertip="Anzeige der wichtigsten Projekt-Charts"/>-->
+            <button id="PT7G1M1" getLabel ="bestimmeLabel" imageMso="ChartStylesGallery" onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
             <menu id ="PT7G1M1new" >
               <!--label="Personal Bedarfe"-->
               <button id="PT0G1M1B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B2Resources" supertip="Zu dem selektierten Projekt werden zwei Diagramme gezeichnet, die die monatl. Ressourcenbedarfe und die Gesamt-Summe zeigen"/>
@@ -317,25 +318,26 @@
               <menuSeparator id="PT7G1s3"/>
               <!--label="Strategie/Risiko/Marge"-->
               <button id="PT0G1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2M1B6SFIT" supertip ="Zu dem oder den selektierten Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
-              <menuSeparator id="PT7G1s4"/>
-              <!--label="Plan/Aktuell"-->
+              <!--<menuSeparator id="PT7G1s4"/>
+              --><!--label="Plan/Aktuell"--><!--
               <menu id="PT7G1M2" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-                <!--label="Personalkosten"-->
+                --><!--label="Personalkosten"--><!--
                 <button id="PT7G1M2B1" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M1B2SollIstPKosten" supertip ="Soll-Ist Vergleich der Personalkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-                <!--label="Sonstige Kosten"-->
+                --><!--label="Sonstige Kosten"--><!--
                 <button id="PT7G1M2B2" getLabel ="bestimmeLabel"  enabled ="true" onAction="Tom2G2M2M2B2SollIstAKosten" supertip ="Soll-Ist Vergleich der sonstigen Kosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-                <!--label="Gesamt Kosten"-->
+                --><!--label="Gesamt Kosten"--><!--
                 <button id="PT7G1M2B3" getLabel ="bestimmeLabel" enabled="true" onAction="Tom2G2M2M3B2SollIstGKosten" supertip ="Soll-Ist Vergleich der Gesamtkosten zwischen aktueller Stand und erster beauftragter Planungs-Stand"/>
-              </menu>
+              </menu>-->
             </menu>
           </splitButton>
           <!--label="Portfolio-Charts"-->
           <splitButton id="PT7G1M0split" size="large">
           <!--label="Capazity Utilization"-->
-          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>
+          <!--<button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="TomMostImportantPortfolioCharts" supertip="Anzeige der wichtigsten Portfolio Charts"/>-->
+          <button id="PT7G1M0" getLabel ="bestimmeLabel" imageMso="Chart3DPieChart"  onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
           <menu id="PT7G1M"  getVisible="chckVisibility" >
               <!--label="Ressource/Cost/Milestones/Phases"-->
-            <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
+            <button id="PTXG1B7" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Engpass Analyse über alle gezeigten Projekte im Zeitraum"/>
               <!--<menu id="PTXG1M2" getLabel ="bestimmeLabel" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
                 --><!--label="Auswahl über Namen"--><!--
                 <button id="PTXG1B6" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
@@ -441,9 +443,9 @@
           <!--label="Report Sprache"-->
           <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
-          <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+          <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
-          <button id="PTTestRoles" label="test roles"  onAction ="PTTestFunktion7" />
+          <button id="PTTestRoles" label="test roles"  onAction ="PTTestFunktion7" />-->
         </group>
       </tab>
       <!--label="Help"-->
@@ -452,12 +454,12 @@
         </group>
       </tab>
       <!--label="WEBServer-Funktionen"-->
-      <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
           <button id="_VCSetting" label="VCSettingTest" onAction ="PTWebVCSettingTest"/>
          </group>
-      </tab>
+      </tab>-->
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
