@@ -1180,6 +1180,55 @@ Public Class Request
     End Function
 
 
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                             ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
+
+        Dim result As SortedList(Of String, clsProjekt) = Nothing
+
+        Try
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = Nothing
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("retrieveProjectsOfOneConstellationFromDB: " & ex.Message)
+        End Try
+
+        retrieveProjectsOfOneConstellationFromDB = result
+
+    End Function
 
     ''' <summary>
     '''  Alle Portfolios(Constellations) aus der Datenbank holen
