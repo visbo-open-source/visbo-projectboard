@@ -1510,6 +1510,45 @@ Public Class Request
         setWriteProtection = result
     End Function
 
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                             ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
+
+        Dim result As New SortedList(Of String, clsProjekt)
+        Dim intermediate As New List(Of clsProjektWebLong)
+        Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim vpid As String = ""
+        Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
+        Dim vp As clsVP
+        Dim vpfid As String = ""
+        Dim hproj As New clsProjekt
+        Try
+            vp = GETvpid(portfolioName, err, vptype)
+            vpid = vp._id
+            listOfPortfolios = GETallVPf(vpid, Date.Now, err)
+            vpfid = listOfPortfolios.Last.Value._id
+            intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
+
+            For Each webproj In intermediate
+
+                hproj = New clsProjekt
+                Dim thisVP As clsVP = GETvpid(webproj.name, err)
+                webproj.copyto(hproj, thisVP)
+
+                Dim a As Integer = hproj.dauerInDays
+                Dim key As String = Projekte.calcProjektKey(hproj)
+                If Not result.ContainsKey(key) Then
+                    result.Add(key, hproj)
+                End If
+            Next
+
+        Catch ex As Exception
+
+        End Try
+
+
+        retrieveProjectsOfOneConstellationFromDB = result
+    End Function
 
 
     ''' <summary>
@@ -3718,6 +3757,105 @@ Public Class Request
         GETallVPf = result
 
     End Function
+
+
+
+    ''' <summary>
+    ''' holt eine VisboPortfolio-Version und die zugehörigen Projekte/ProjektVersionen 
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="vpfid"></param>
+    ''' 
+    ''' <param name="err"></param>
+    ''' <returns>Liste von allen VPVs in diesem Portfolio</returns>
+    Private Function GETallVPvOfOneVPf(ByVal vcid As String,
+                                       ByVal vpfid As String,
+                                       ByRef err As clsErrorCodeMsg,
+                                       Optional ByVal storedAtorBefore As Date = Nothing,
+                                       Optional ByVal longlist As Boolean = False) As List(Of clsProjektWebLong)
+
+        Dim result As New List(Of clsProjektWebLong)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+
+        Try
+            Dim typeRequest As String = "/vpv"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            serverUriString = serverUriString & "?"
+            serverUriString = serverUriString & "vcid=" & aktVCid
+
+            If vpfid <> "" Then
+
+                serverUriString = serverUriString & "&vpfid=" & vpfid
+
+                If storedAtorBefore > Date.MinValue Then
+                    Dim refDate As String = DateTimeToISODate(storedAtorBefore)
+                    serverUriString = serverUriString & "&refDate=" & refDate
+                End If
+
+                If longlist Then
+                    ' es wird die Long-Version einer VisboProjectVersion angefordert
+                    serverUriString = serverUriString & "&longList=1"
+
+                End If
+
+                Dim serverUri As New Uri(serverUriString)
+
+                Dim datastr As String = ""
+                Dim encoding As New System.Text.UTF8Encoding()
+                Dim data As Byte() = encoding.GetBytes(datastr)
+
+                Dim Antwort As String
+                Dim webVPvAntwort As clsWebLongVPv
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                    Antwort = ReadResponseContent(httpresp)
+                    ' speichern von Error-Code und -Message für error-Handling
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                    webVPvAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+                End Using
+
+                If errcode = 200 Then
+
+                    result = webVPvAntwort.vpv
+
+                    '' cache soll nur befüllt werden, wenn nicht explizit mit VisboProjectVersion-Id aufgerufen
+                    'If (vpfid = "") Then
+                    '    ' nur dann soll der Cache gefüllt werden, damit auch wirklich alle aktuellen Timestamps enthalten sind
+                    '    VRScache.createVPvLong(result, Date.Now.ToUniversalTime)
+                    'End If
+
+                Else
+
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("GETOneVPfandAllVPvs", errcode, errmsg & " : " & webVPvAntwort.message)
+
+                End If
+
+                err.errorCode = errcode
+                err.errorMsg = "GETOneVPfandAllVPvs" & " : " & errmsg & " : " & webVPvAntwort.message
+
+            Else
+                err.errorCode = 500
+                err.errorCode = "Internal Error: vpfId nicht angegeben"
+                '' Long-Version  angefordert
+                'serverUriString = serverUriString & "&longList=1"
+
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+
+        GETallVPvOfOneVPf = result
+
+    End Function
+
+
 
     ''' <summary>
     ''' löscht eine VisboProjectVersion
