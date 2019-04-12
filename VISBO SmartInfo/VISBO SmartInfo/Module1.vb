@@ -564,8 +564,15 @@ Module Module1
                         found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
                             CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics
 
-                    Else
-                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole
+                    ElseIf CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole Then
+                        found = True
+
+                    ElseIf pptUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or pptUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
+
                     End If
 
                     If found Then

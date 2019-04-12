@@ -1553,6 +1553,32 @@ Imports System.Web
                                 key = calcProjektKey(hproj.name, "")
                                 AlleProjekte.Remove(key)
 
+
+                                ' wenn es sich um einen Ressourcen-Manager handelt, dann muss das, was er geändert hat in die bisherige Basis Variante gemerged werden 
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+
+                                    Dim mergedProj As clsProjekt = Nothing
+                                    Dim summaryRoleIDs As New Collection
+                                    summaryRoleIDs.Add(myCustomUserRole.specifics)
+
+                                    Dim bisherigeBaseVariant As clsProjekt = getProjektFromSessionOrDB(hproj.name, "", AlleProjekte, Date.Now, hproj.kundenNummer)
+
+                                    If Not IsNothing(bisherigeBaseVariant) Then
+
+                                        ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
+                                        mergedProj = bisherigeBaseVariant.deleteAndMerge(summaryRoleIDs, Nothing, hproj)
+                                        If Not IsNothing(mergedProj) Then
+                                            hproj = mergedProj
+                                        End If
+
+                                    End If
+
+                                    ShowProjekte.Remove(hproj.name)
+                                    hproj.variantName = ""
+
+                                    ShowProjekte.Add(hproj)
+                                End If
+
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
@@ -1583,7 +1609,6 @@ Imports System.Web
                         Catch ex As Exception
                             Call MsgBox(ex.Message)
                         End Try
-
 
 
                     Else

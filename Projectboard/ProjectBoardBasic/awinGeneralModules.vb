@@ -3102,6 +3102,7 @@ Public Module awinGeneralModules
         Dim listOfProjectNames As SortedList(Of String, String) = activeConstellation.getProjectNames(considerShowAttribute:=True,
                                                                                        showAttribute:=True,
                                                                                        fullNameKeys:=True)
+
         If considerImportProjekte Then
             projektListe = ImportProjekte
         End If
@@ -3228,6 +3229,8 @@ Public Module awinGeneralModules
                                   ByVal storedAtOrBefore As Date,
                                   Optional ByVal showSummaryProject As Boolean = False)
 
+        Dim err As New clsErrorCodeMsg
+
         Try
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
             Dim sessionWasEmpty As Boolean = (AlleProjekte.Count = 0)
@@ -3251,6 +3254,10 @@ Public Module awinGeneralModules
             Dim zaehler As Integer = 1
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+
+                '' '???ur:8..4.2019: Portfolio-Projekte lesen'' es werden erst mal alle Projekte zu der Constellation kvp geholt
+                '' ''Dim projsOfCurConstellation As SortedList(Of String, clsProjekt) =
+                '' ''    CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Key, err, storedAtOrBefore)
 
                 ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
                 Dim curSummaryProjVorgabe As clsProjekt = Nothing
@@ -6714,6 +6721,7 @@ Public Module awinGeneralModules
 
                     Dim hproj As New clsProjekt
                     Dim constellations As New clsConstellations
+                    '' '????ur
                     constellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
                     If Not IsNothing(constellations) Then
 

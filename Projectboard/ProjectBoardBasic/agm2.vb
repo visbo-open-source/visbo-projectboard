@@ -9252,30 +9252,33 @@ Public Module agm2
         Dim tmpResult As String = ""
 
         If Not IsNothing(excelCell) Then
-            Dim cellValue As String = CStr(excelCell.Value).Trim
-            If cellValue.StartsWith("#") Then
+            If Not IsNothing(excelCell.Value) Then
+                Dim cellValue As String = CStr(excelCell.Value).Trim
+                If cellValue.StartsWith("#") Then
 
-                Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                    Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
 
-                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
+                    If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                    If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
-                        tmpResult = tmpStr1(0).Trim
-                    End If
-
-                Else
-                    Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                    If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                        tmpResult = tmpStr2(0).Trim
-                    Else
-                        Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
-                        If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-                            tmpResult = tmpstr3(0).Trim
+                        If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                            tmpResult = tmpStr1(0).Trim
                         End If
-                    End If
 
+                    Else
+                        Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                        If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
+                            tmpResult = tmpStr2(0).Trim
+                        Else
+                            Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
+                            If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
+                                tmpResult = tmpstr3(0).Trim
+                            End If
+                        End If
+
+                    End If
                 End If
             End If
+
         End If
 
 
@@ -15406,6 +15409,10 @@ Public Module agm2
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                        ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
+                        Dim hasActualData As Boolean = cphase.hasActualData
+                        summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
+
 
                         Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
 
@@ -15450,11 +15457,6 @@ Public Module agm2
 
                                 If validRole Then
                                     Dim xValues() As Double = role.Xwerte
-
-                                    ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
-                                    Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
-
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
@@ -15501,19 +15503,9 @@ Public Module agm2
 
                             For c = 1 To cphase.countCosts
 
-                                Dim hasActualData As Boolean = False
                                 Dim cost As clsKostenart = cphase.getCost(c)
                                 Dim costName As String = cost.name
                                 Dim xValues() As Double = cost.Xwerte
-
-                                ' neu 12.12.18 
-                                ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Kostenart schon actualdata hat ...
-                                hasActualData = hproj.getPhaseRCActualValues(phaseNameID, costName, False, True).Sum > 0
-
-                                ' ist Summe Editieren erlaubt ? 
-                                If projectWithActualData Then
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
-                                End If
 
 
                                 schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
@@ -15564,7 +15556,7 @@ Public Module agm2
 
                                 Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, "", "", False,
                                                                             protectionText, von, bis,
-                                                                            actualDataRelColumn, False, summeEditierenErlaubt,
+                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
                                 If ok Then
@@ -15830,7 +15822,7 @@ Public Module agm2
 
 
                 ' Rolle oder Kostenart schreiben 
-                Dim isLocked As Boolean = (isProtectedbyOthers Or hasActualdata)
+                Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
                 Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole)
 
 

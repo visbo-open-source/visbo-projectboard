@@ -101,45 +101,44 @@ Public Class clsMeilenstein
             Dim stillOK As Boolean = False
             Dim ix As Integer = 1
 
-            With vglMS
-                ' prüfen auf allgemeine Attribute ... 
-                If Me.nameID = .nameID And
-                    Me.shortName = .shortName And
-                    Me.originalName = .originalName And
-                    Me.appearance = .appearance And
-                    Me.verantwortlich = .verantwortlich And
-                    Me.offset = .offset And
-                    Me.countDeliverables = .countDeliverables And
-                    Me.bewertungsCount = .bewertungsCount And
-                    Me.DocURL = .DocURL And
-                    Me.DocUrlAppID = .DocUrlAppID And
-                    Me.percentDone = .percentDone Then
-                    stillOK = True
 
-                    ' prüfen auf Deliverables ... 
-                    Dim MeDelis As String = Me.getAllDeliverables("#")
-                    Dim vglDelis As String = .getAllDeliverables("#")
+            ' prüfen auf allgemeine Attribute ... 
+            If Me.nameID = vglMS.nameID And
+                    Me.shortName = vglMS.shortName And
+                    Me.originalName = vglMS.originalName And
+                    Me.appearance = vglMS.appearance And
+                    Me.verantwortlich = vglMS.verantwortlich And
+                    Me.offset = vglMS.offset And
+                    Me.countDeliverables = vglMS.countDeliverables And
+                    Me.bewertungsCount = vglMS.bewertungsCount And
+                    Me.DocURL = vglMS.DocURL And
+                    Me.DocUrlAppID = vglMS.DocUrlAppID And
+                    Me.percentDone = vglMS.percentDone Then
+                stillOK = True
 
-                    If MeDelis = vglDelis Then
-                        ' prüfen auf Bewertungen ... 
-                        ix = 1
-                        Do While stillOK And ix <= Me.bewertungsCount
-                            Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
-                            Dim vglBewertung As clsBewertung = .getBewertung(ix)
-                            If MeBewertung.isIdenticalTo(vglBewertung) Then
-                                ix = ix + 1
-                            Else
-                                stillOK = False
-                            End If
-                        Loop
+                ' prüfen auf Deliverables ... 
+                Dim MeDelis As String = Me.getAllDeliverables("#")
+                Dim vglDelis As String = vglMS.getAllDeliverables("#")
 
-                    End If
-
-
+                If MeDelis = vglDelis Then
+                    ' prüfen auf Bewertungen ... 
+                    ix = 1
+                    Do While stillOK And ix <= Me.bewertungsCount
+                        Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                        Dim vglBewertung As clsBewertung = vglMS.getBewertung(ix)
+                        If MeBewertung.isIdenticalTo(vglBewertung) Then
+                            ix = ix + 1
+                        Else
+                            stillOK = False
+                        End If
+                    Loop
 
                 End If
 
-            End With
+
+
+            End If
+
 
             isIdenticalTo = stillOK
 

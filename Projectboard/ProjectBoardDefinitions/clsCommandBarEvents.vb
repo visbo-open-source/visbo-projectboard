@@ -360,7 +360,7 @@ Public Class clsCommandBarEvents
                         If Not timeMachineIsOn Then
                             ' Änderung tk , Charts ollen jetzt nicht mehr mit Selektion geupdated werden , sondern 
                             ' nur mit Selektion aus Portfolio Browser
-                            Call aktualisierePMSForms(hproj)
+                            'Call aktualisierePMSForms(hproj)
                             'Call aktualisiereMinSetOFCharts(hproj, True)
                             ' aktualisiereCharts kann nicht mehr aufgerufen werden, weil nach ProjectBoardBasic verschoben ; benötigt MongoDB Access 
                             'Call aktualisiereCharts(hproj, True)
@@ -400,19 +400,20 @@ Public Class clsCommandBarEvents
 
                             End If
 
+                            ' tk 9.4.19 nicht mehr zeigen 
+                            'If formPhase Is Nothing Then
+                            '    formPhase = New frmPhaseInformation
+                            'End If
 
-                            If formPhase Is Nothing Then
-                                formPhase = New frmPhaseInformation
-                            End If
+                            'If Not formPhase.Visible Then
+                            '    If formPhase.IsDisposed Then
+                            '        formPhase = New frmPhaseInformation
+                            '    End If
+                            'End If
 
-                            If Not formPhase.Visible Then
-                                If formPhase.IsDisposed Then
-                                    formPhase = New frmPhaseInformation
-                                End If
-                            End If
-
-                            'Call updatePhaseInformation(shpelement)
-                            Call updatePhaseInformation(hproj, phaseNameID)
+                            ''Call updatePhaseInformation(shpelement)
+                            'Call updatePhaseInformation(hproj, phaseNameID)
+                            ' Ende tk 9.4.19
 
                         Else
                             Call MsgBox("bitte nur ein Element bzw. eine Phase selektieren ...")
@@ -455,17 +456,18 @@ Public Class clsCommandBarEvents
 
                             End If
 
-                            If formMilestone Is Nothing Then
-                                formMilestone = New frmMilestoneInformation
-                            End If
+                            ' tk 9.4.19 nicht mehr zeigen ..
+                            'If formMilestone Is Nothing Then
+                            '    formMilestone = New frmMilestoneInformation
+                            'End If
 
-                            If Not formMilestone.Visible Then
-                                If formMilestone.IsDisposed Then
-                                    formMilestone = New frmMilestoneInformation
-                                End If
-                            End If
+                            'If Not formMilestone.Visible Then
+                            '    If formMilestone.IsDisposed Then
+                            '        formMilestone = New frmMilestoneInformation
+                            '    End If
+                            'End If
 
-                            Call updateMilestoneInformation(hproj, milestoneNameID)
+                            'Call updateMilestoneInformation(hproj, milestoneNameID)
 
                         Else
 
@@ -487,17 +489,18 @@ Public Class clsCommandBarEvents
                             pname = extractName(shpelement.Name, PTshty.projektN)
                             hproj = ShowProjekte.getProject(pname)
 
-                            If formStatus Is Nothing Then
-                                formStatus = New frmStatusInformation
-                            End If
+                            ' tk 9.4.19 nicht mehr zeigen 
+                            'If formStatus Is Nothing Then
+                            '    formStatus = New frmStatusInformation
+                            'End If
 
-                            If (Not formStatus.Visible) Then
-                                If formStatus.IsDisposed Then
-                                    formStatus = New frmStatusInformation
-                                End If
-                            End If
+                            'If (Not formStatus.Visible) Then
+                            '    If formStatus.IsDisposed Then
+                            '        formStatus = New frmStatusInformation
+                            '    End If
+                            'End If
 
-                            Call updateStatusInformation(hproj)
+                            'Call updateStatusInformation(hproj)
 
                         Else
 

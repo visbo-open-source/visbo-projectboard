@@ -15,14 +15,13 @@
         Get
             Dim stillOK As Boolean = False
 
-            With vKostenart
-                If Me.KostenTyp = .KostenTyp And _
-                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) Then
-                    stillOK = True
-                Else
-                    stillOK = False
-                End If
-            End With
+            If Me.KostenTyp = vKostenart.KostenTyp And
+                   Not arraysAreDifferent(Me.Xwerte, vKostenart.Xwerte) Then
+                stillOK = True
+            Else
+                stillOK = False
+            End If
+
             isIdenticalTo = stillOK
         End Get
     End Property
