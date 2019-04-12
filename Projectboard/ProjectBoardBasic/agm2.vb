@@ -9252,30 +9252,33 @@ Public Module agm2
         Dim tmpResult As String = ""
 
         If Not IsNothing(excelCell) Then
-            Dim cellValue As String = CStr(excelCell.Value).Trim
-            If cellValue.StartsWith("#") Then
+            If Not IsNothing(excelCell.Value) Then
+                Dim cellValue As String = CStr(excelCell.Value).Trim
+                If cellValue.StartsWith("#") Then
 
-                Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                    Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
 
-                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
+                    If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                    If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
-                        tmpResult = tmpStr1(0).Trim
-                    End If
-
-                Else
-                    Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                    If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                        tmpResult = tmpStr2(0).Trim
-                    Else
-                        Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
-                        If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-                            tmpResult = tmpstr3(0).Trim
+                        If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                            tmpResult = tmpStr1(0).Trim
                         End If
-                    End If
 
+                    Else
+                        Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                        If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
+                            tmpResult = tmpStr2(0).Trim
+                        Else
+                            Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
+                            If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
+                                tmpResult = tmpstr3(0).Trim
+                            End If
+                        End If
+
+                    End If
                 End If
             End If
+
         End If
 
 
