@@ -445,6 +445,17 @@ Module Module1
                 Call MsgBox(msg)
             Else
 
+                ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
+                Try
+                    My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                    If My.Settings.rememberUserPWD Then
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                    End If
+                    My.Settings.Save()
+                Catch ex As Exception
+                    Call MsgBox(ex.StackTrace)
+                End Try
+
                 ' CustomUserRoles holen 
                 Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
                 allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
