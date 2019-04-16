@@ -30,8 +30,7 @@ Module Module1
 
     Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
-    ' Wasserzeichen für eingefrorene Slide
-    Friend waterSign As String = "\\KOYTEK-NAS\backup\Entwicklung\Icons\x_collection_png\16x16\plain\snowflake.png"
+
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 
@@ -444,6 +443,17 @@ Module Module1
                 End If
                 Call MsgBox(msg)
             Else
+
+                ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
+                Try
+                    My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                    If My.Settings.rememberUserPWD Then
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                    End If
+                    My.Settings.Save()
+                Catch ex As Exception
+                    Call MsgBox(ex.StackTrace)
+                End Try
 
                 ' CustomUserRoles holen 
                 Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)

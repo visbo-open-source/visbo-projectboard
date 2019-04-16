@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Office.Tools.Ribbon
+﻿Imports System.Drawing
+Imports Microsoft.Office.Tools.Ribbon
 Imports Microsoft.Office.Core
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
 Imports DBAccLayer
@@ -9,27 +10,29 @@ Public Class Ribbon1
 
 
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-        If englishLanguage Then
-            With Me
-                .Group2.Label = "Update"
-                .Group3.Label = "Time Machine"
-                .Group4.Label = "Actions"
-                .btnUpdate.Label = "Update"
-                .btnStart.Label = "First  "
-                .btnFastBack.Label = "Backward"
-                .btnDate.Label = "Date"
-                .btnShowChanges.Label = "Difference"
-                .btnFastForward.Label = "Forward"
-                .btnEnd2.Label = "Last"
-                .btnToggle.Label = "Toggle"
-                .activateInfo.Label = "Properties"
-                .activateSearch.Label = "Search"
-                .activateTab.Label = "Annotate"
-                .btnFreeze.Label = "Freeze/Defreeze"
-                .settingsTab.Label = "Settings"
-            End With
-        Else
-            With Me
+        Try
+
+            If englishLanguage Then
+                With Me
+                    .Group2.Label = "Update"
+                    .Group3.Label = "Time Machine"
+                    .Group4.Label = "Actions"
+                    .btnUpdate.Label = "Update"
+                    .btnStart.Label = "First  "
+                    .btnFastBack.Label = "Backward"
+                    .btnDate.Label = "Date"
+                    .btnShowChanges.Label = "Difference"
+                    .btnFastForward.Label = "Forward"
+                    .btnEnd2.Label = "Last"
+                    .btnToggle.Label = "Toggle"
+                    .activateInfo.Label = "Properties"
+                    .activateSearch.Label = "Search"
+                    .activateTab.Label = "Annotate"
+                    .btnFreeze.Label = "Freeze/Defreeze"
+                    .settingsTab.Label = "Settings"
+                End With
+            Else
+                With Me
                 .Group2.Label = "Aktualisieren"
                 .Group3.Label = "Time Machine"
                 .Group4.Label = "Aktionen"
@@ -45,13 +48,16 @@ Public Class Ribbon1
                 .activateSearch.Label = "Suche"
                 .activateTab.Label = "Beschriften"
                 .btnFreeze.Label = "Konservieren/Freigeben"
-                .settingsTab.Label = "Einstellungen"
-            End With
-        End If
+                    .settingsTab.Label = "Einstellungen"
+                End With
+            End If
 
-        ' password by default merken ...
-        awinSettings.rememberUserPwd = True
+            ' password by default merken ...
+            awinSettings.rememberUserPwd = True
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
+        End Try
     End Sub
 
 
@@ -60,15 +66,19 @@ Public Class Ribbon1
     Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
 
         Dim msg As String = ""
+        Try
 
-        ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
-        'Call stripOffAllSmartInfo()
+            ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
+            'Call stripOffAllSmartInfo()
 
-        Dim settingsfrm As New frmSettingsNew
-        With settingsfrm
-            Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
-        End With
+            Dim settingsfrm As New frmSettingsNew
+            With settingsfrm
+                Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
+            End With
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
+        End Try
 
     End Sub
 
@@ -77,20 +87,24 @@ Public Class Ribbon1
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
         Dim msg As String = ""
+        Try
 
-        'If userIsEntitled(msg) Then
+            'If userIsEntitled(msg) Then
 
-        ' wird das Formular aktuell angezeigt ? 
-        If IsNothing(infoFrm) And Not formIsShown Then
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
                 infoFrm = New frmInfo
                 formIsShown = True
                 infoFrm.Show()
             End If
 
-        'Else
-        '    Call MsgBox(msg)
-        'End If
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
+        Catch ex As Exception
+            'Call MsgBox(ex.StackTrace)
+        End Try
     End Sub
 
     ''' <summary>
@@ -107,42 +121,53 @@ Public Class Ribbon1
 
             With currentSlide
 
-            ' Slide - Markierung frozen wieder entfernen, auch das Wasserzeichen-Shape
-            If .Tags.Item("FROZEN").Length > 0 Then
+                ' Slide - Markierung frozen wieder entfernen, auch das Wasserzeichen-Shape
+                If .Tags.Item("FROZEN").Length > 0 Then
 
-                .Tags.Delete("FROZEN")
-                currentSlide.Shapes("FreezeShape").Delete()
+                    .Tags.Delete("FROZEN")
+                    currentSlide.Shapes("FreezeShape").Delete()
 
-            Else
+                Else
 
-                ' Slide als frozen markieren, d.h. beim Update aller Slides einer Präsi wird dieses Slide
-                ' nicht mit auf den neusten Stand gebracht
-                .Tags.Add("FROZEN", freeze.ToString)
+                    ' Slide als frozen markieren, d.h. beim Update aller Slides einer Präsi wird dieses Slide
+                    ' nicht mit auf den neusten Stand gebracht
+                    .Tags.Add("FROZEN", freeze.ToString)
 
-                Dim csWidth As Single = currentSlide.CustomLayout.Width
-                Dim csHeigth As Single = currentSlide.CustomLayout.Height
-                Dim freezeShape As PowerPoint.Shape
+                    Dim csWidth As Single = currentSlide.CustomLayout.Width
+                    Dim csHeigth As Single = currentSlide.CustomLayout.Height
+                    Dim freezeShape As PowerPoint.Shape
+
+                    'Symbol - snowflake aus Resources holen, in File auf Temp-Dir schreiben und von dort ins Shape holen
+                    Dim snowflake As Image = My.Resources.snowflake
+                    Dim fileSnowflake As String = Path.Combine(Path.GetTempPath(), "snowflake.png")
+                    snowflake.Save(fileSnowflake)
+
                     freezeShape = currentSlide.Shapes.AddShape(MsoAutoShapeType.msoShapeRectangle,
                                                           Left:=CSng(csWidth * 0.75),
                                                           Top:=8,
                                                           Width:=32,
                                                           Height:=32)
+
                     With freezeShape
                         .LockAspectRatio = MsoTriState.msoTrue
                         .Name = "FreezeShape"
                         .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-
                         .Fill.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                        .Fill.UserPicture(waterSign)
+                        .Fill.UserPicture(fileSnowflake)
                         .Fill.TextureTile = MsoTriState.msoFalse
                         .Fill.RotateWithObject = MsoTriState.msoTrue
                     End With
+
+                    ' File mit dem Symbol - snowflake wieder löschen
+                    File.Delete(fileSnowflake)
                 End If
             End With
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
+
     End Sub
 
 
@@ -156,8 +181,9 @@ Public Class Ribbon1
                     searchPane.Visible = True
                 End If
             End If
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
 
@@ -173,8 +199,9 @@ Public Class Ribbon1
                 propertiesPane.Visible = True
             End If
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
     End Sub
@@ -217,10 +244,10 @@ Public Class Ribbon1
 
                 changeFrm.neuAufbau()
             End If
+
         Catch ex As Exception
-
+            Call MsgBox(ex.StackTrace)
         End Try
-
     End Sub
 
 
@@ -239,8 +266,9 @@ Public Class Ribbon1
             Call updateAllSlides(ptNavigationButtons.update, tmpDate)
 
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
     End Sub
@@ -296,8 +324,9 @@ Public Class Ribbon1
             'End If
 
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
 
@@ -350,8 +379,9 @@ Public Class Ribbon1
             'If Not IsNothing(changeFrm) Then
             '    changeFrm.neuAufbau()
             'End If
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
     End Sub
@@ -402,8 +432,9 @@ Public Class Ribbon1
             'If Not IsNothing(changeFrm) Then
             '    changeFrm.neuAufbau()
             'End If
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
 
     End Sub
@@ -463,75 +494,81 @@ Public Class Ribbon1
             '    changeFrm.neuAufbau()
             'End If
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
     End Sub
 
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
         Dim msg As String = ""
 
+        Try
 
-        If userIsEntitled(msg, currentSlide) Then
-            Dim anzahlProjekte As Integer = smartSlideLists.countProjects
-            ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
-            If anzahlProjekte > 0 Then
+            If userIsEntitled(msg, currentSlide) Then
+                Dim anzahlProjekte As Integer = smartSlideLists.countProjects
+                ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
+                If anzahlProjekte > 0 Then
 
-                ' muss noch eingeloggt werden ? 
-                ' wird inzwischen in isUserIsEntitled gemacht ... 
-                'If noDBAccessInPPT Then
+                    ' muss noch eingeloggt werden ? 
+                    ' wird inzwischen in isUserIsEntitled gemacht ... 
+                    'If noDBAccessInPPT Then
 
-                '    noDBAccessInPPT = Not logInToMongoDB(True)
+                    '    noDBAccessInPPT = Not logInToMongoDB(True)
 
-                '    If noDBAccessInPPT Then
-                '        If englishLanguage Then
-                '            msg = "no database access ... "
-                '        Else
-                '            msg = "kein Datenbank Zugriff ... "
-                '        End If
-                '        Call MsgBox(msg)
-                '    Else
+                    '    If noDBAccessInPPT Then
+                    '        If englishLanguage Then
+                    '            msg = "no database access ... "
+                    '        Else
+                    '            msg = "kein Datenbank Zugriff ... "
+                    '        End If
+                    '        Call MsgBox(msg)
+                    '    Else
 
-                '        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                '        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                '        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                    '        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                    '        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                    '        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                '    End If
+                    '    End If
 
-                'End If
+                    'End If
 
-                If Not noDBAccessInPPT Then
+                    If Not noDBAccessInPPT Then
 
-                    ' die MArker, falls welche sichtbar sind , wegmachen ... 
-                    Call deleteMarkerShapes()
+                        ' die MArker, falls welche sichtbar sind , wegmachen ... 
+                        Call deleteMarkerShapes()
 
-                    ' aktuell nur für ein Projekt implementiert 
-                    If anzahlProjekte = 1 Then
-                        Dim tmpName As String = smartSlideLists.getPVName(1)
+                        ' aktuell nur für ein Projekt implementiert 
+                        If anzahlProjekte = 1 Then
+                            Dim tmpName As String = smartSlideLists.getPVName(1)
 
-                        ' jetzt wird das Formular Varianten  aufgerufen ...
-                        Dim variantFormular As New frmSelectVariant
-                        With variantFormular
-                            .pName = getPnameFromKey(tmpName)
-                            .vName = getVariantnameFromKey(tmpName)
-                        End With
+                            ' jetzt wird das Formular Varianten  aufgerufen ...
+                            Dim variantFormular As New frmSelectVariant
+                            With variantFormular
+                                .pName = getPnameFromKey(tmpName)
+                                .vName = getVariantnameFromKey(tmpName)
+                            End With
 
-                        Dim dgRes As Windows.Forms.DialogResult = variantFormular.ShowDialog
+                            Dim dgRes As Windows.Forms.DialogResult = variantFormular.ShowDialog
 
-                    Else
-                        Call MsgBox("method not yet implemented ...")
+                        Else
+                            Call MsgBox("method not yet implemented ...")
+
+                        End If
+
 
                     End If
 
-
+                Else
+                    Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
                 End If
-
             Else
-                Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
+                Call MsgBox(msg)
             End If
-        Else
-            Call MsgBox(msg)
-        End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
+        End Try
     End Sub
 
     Private Sub btnDate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnDate.Click
@@ -605,7 +642,7 @@ Public Class Ribbon1
             End If
 
         Catch ex As Exception
-
+            Call MsgBox(ex.StackTrace)
         End Try
     End Sub
 
@@ -653,8 +690,9 @@ Public Class Ribbon1
             '    changeFrm.neuAufbau()
             'End If
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Call MsgBox(ex.StackTrace)
         End Try
     End Sub
 End Class
