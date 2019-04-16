@@ -13,7 +13,7 @@ Public Class Tabelle4
 
     Private Sub Tabelle4_ActivateEvent() Handles Me.ActivateEvent
         ' in der Mass-Edit Termine sollen Header und Formular-Bar immer erhalten bleiben ...
-        'Application.DisplayFormulaBar = False
+        Application.DisplayFormulaBar = True
 
         'Dim filterRange As Excel.Range
         Dim formerEE As Boolean = Application.EnableEvents
@@ -35,7 +35,7 @@ Public Class Tabelle4
                 .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
                 .meColRC = 5
                 .meColSD = 6
-                .meColED = 13 + customFieldDefinitions.count
+                .meColED = 10 + customFieldDefinitions.count
                 .meColpName = 2
                 columnStartData = .meColSD
                 columnEndData = .meColED
@@ -139,6 +139,14 @@ Public Class Tabelle4
             Application.ScreenUpdating = True
         End If
 
+
+    End Sub
+
+    Private Sub Tabelle4_Deactivate() Handles Me.Deactivate
+
+        appInstance.ActiveWindow.SplitColumn = 0
+        appInstance.ActiveWindow.SplitRow = 0
+        appInstance.DisplayFormulaBar = False
 
     End Sub
 End Class
