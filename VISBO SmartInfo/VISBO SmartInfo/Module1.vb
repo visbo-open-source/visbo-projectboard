@@ -30,8 +30,7 @@ Module Module1
 
     Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
-    ' Wasserzeichen für eingefrorene Slide
-    Friend waterSign As String = "\\KOYTEK-NAS\backup\Entwicklung\Icons\x_collection_png\16x16\plain\snowflake.png"
+
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 

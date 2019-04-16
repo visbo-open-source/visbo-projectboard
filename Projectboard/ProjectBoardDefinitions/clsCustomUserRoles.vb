@@ -49,9 +49,14 @@
             Dim tmpCollection As New Collection
 
             For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In _customUserRoles
-                If kvp.Value.userName = userName Then
+
+                ' diese String-Vergleich soll immer für Security-Themes hergenommen werden. 
+                ' hier ist ignoreCase = true
+
+                If String.Compare(kvp.Value.userName, userName, True) = 0 Then
                     tmpCollection.Add(kvp.Value)
                 End If
+
             Next
 
             getCustomUserRoles = tmpCollection

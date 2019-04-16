@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Office.Tools.Ribbon
+﻿Imports System.Drawing
+Imports Microsoft.Office.Tools.Ribbon
 Imports Microsoft.Office.Core
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
 Imports DBAccLayer
@@ -120,36 +121,45 @@ Public Class Ribbon1
 
             With currentSlide
 
-            ' Slide - Markierung frozen wieder entfernen, auch das Wasserzeichen-Shape
-            If .Tags.Item("FROZEN").Length > 0 Then
+                ' Slide - Markierung frozen wieder entfernen, auch das Wasserzeichen-Shape
+                If .Tags.Item("FROZEN").Length > 0 Then
 
-                .Tags.Delete("FROZEN")
-                currentSlide.Shapes("FreezeShape").Delete()
+                    .Tags.Delete("FROZEN")
+                    currentSlide.Shapes("FreezeShape").Delete()
 
-            Else
+                Else
 
-                ' Slide als frozen markieren, d.h. beim Update aller Slides einer Präsi wird dieses Slide
-                ' nicht mit auf den neusten Stand gebracht
-                .Tags.Add("FROZEN", freeze.ToString)
+                    ' Slide als frozen markieren, d.h. beim Update aller Slides einer Präsi wird dieses Slide
+                    ' nicht mit auf den neusten Stand gebracht
+                    .Tags.Add("FROZEN", freeze.ToString)
 
-                Dim csWidth As Single = currentSlide.CustomLayout.Width
-                Dim csHeigth As Single = currentSlide.CustomLayout.Height
-                Dim freezeShape As PowerPoint.Shape
+                    Dim csWidth As Single = currentSlide.CustomLayout.Width
+                    Dim csHeigth As Single = currentSlide.CustomLayout.Height
+                    Dim freezeShape As PowerPoint.Shape
+
+                    'Symbol - snowflake aus Resources holen, in File auf Temp-Dir schreiben und von dort ins Shape holen
+                    Dim snowflake As Image = My.Resources.snowflake
+                    Dim fileSnowflake As String = Path.Combine(Path.GetTempPath(), "snowflake.png")
+                    snowflake.Save(fileSnowflake)
+
                     freezeShape = currentSlide.Shapes.AddShape(MsoAutoShapeType.msoShapeRectangle,
                                                           Left:=CSng(csWidth * 0.75),
                                                           Top:=8,
                                                           Width:=32,
                                                           Height:=32)
+
                     With freezeShape
                         .LockAspectRatio = MsoTriState.msoTrue
                         .Name = "FreezeShape"
                         .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-
                         .Fill.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                        .Fill.UserPicture(waterSign)
+                        .Fill.UserPicture(fileSnowflake)
                         .Fill.TextureTile = MsoTriState.msoFalse
                         .Fill.RotateWithObject = MsoTriState.msoTrue
                     End With
+
+                    ' File mit dem Symbol - snowflake wieder löschen
+                    File.Delete(fileSnowflake)
                 End If
             End With
 
