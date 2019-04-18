@@ -755,7 +755,11 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef mergedProj As clsProjekt, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt,
+                                     ByVal userName As String,
+                                     ByRef mergedProj As clsProjekt,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal attrToStore As Boolean = False) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -854,7 +858,17 @@ Public Class Request
 
                         aktvp.kundennummer = projekt.kundenNummer
                         Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+
                     Else
+
+                        If attrToStore Then
+
+                            If String.Compare(aktvp.kundennummer, projekt.kundenNummer) = 0 Then
+                                aktvp.kundennummer = projekt.kundenNummer
+                                Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                            End If
+
+                        End If
                         ' nothing to do
                     End If
 
