@@ -602,7 +602,11 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef mergedProj As clsProjekt, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt,
+                                     ByVal userName As String,
+                                     ByRef mergedProj As clsProjekt,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal attrToStore As Boolean = False) As Boolean
 
         Dim result As Boolean = False
         Try
@@ -615,7 +619,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
+                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err, attrToStore)
 
                     If result = False Then
 
@@ -627,7 +631,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err, attrToStore)
                                 End If
 
                             Case Else ' all others
