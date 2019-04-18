@@ -2455,6 +2455,13 @@ Imports System.Web
                     tmpLabel = "Modify Attributes"
                 End If
 
+            Case "PT2G1M2B8oa" ' Massen Edit Attributes
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ändern von Attributen"
+                Else
+                    tmpLabel = "Modify Attributes"
+                End If
+
             Case "PT4G2M3" ' Export to Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export Projekte in Excel"
@@ -2630,6 +2637,13 @@ Imports System.Web
                 End If
 
             Case "PT2G2" 'Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
+            Case "PT2G2oa" 'Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekte/Varianten"
                 Else
@@ -3599,11 +3613,11 @@ Imports System.Web
     ''' <param name="tableTyp">gibt an , ob es sich um Mass-Edit Ressourcen, Termine oder Attribute handelt </param>
     Private Sub performDeactivateActionsFor(ByVal tableTyp As Integer)
 
-        Dim anzahlMassColSpalten As Integer
+        'Dim anzahlMassColSpalten As Integer
         Dim mIX As Integer
 
         If tableTyp = ptTables.meRC Then
-            anzahlMassColSpalten = 5
+            'anzahlMassColSpalten = 5
             mIX = 0
 
             If Not IsNothing(formProjectInfo1) Then
@@ -3612,11 +3626,11 @@ Imports System.Web
 
         ElseIf tableTyp = ptTables.meTE Then
             mIX = 1
-            anzahlMassColSpalten = 11
+            'anzahlMassColSpalten = 11
 
         ElseIf tableTyp = ptTables.meAT Then
             mIX = 2
-            anzahlMassColSpalten = 11
+            'anzahlMassColSpalten = 15
 
         End If
 
@@ -3635,14 +3649,14 @@ Imports System.Web
         Try
 
             ' jetzt die Spalten Werte merken 
-            Try
-                massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-                For ik As Integer = 1 To anzahlMassColSpalten
-                    massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-                Next
-            Catch ex As Exception
+            'Try
+            '    massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
+            '    For ik As Integer = 1 To anzahlMassColSpalten
+            '        massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+            '    Next
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
 
             ' jetzt die Autofilter de-aktivieren ... 
@@ -3652,7 +3666,12 @@ Imports System.Web
 
             ' jetzt alles löschen 
             Try
-                meWS.UsedRange.Clear()
+                Dim mxZeile As Integer = meWS.UsedRange.Rows.Count
+                For i As Integer = 2 To mxZeile
+                    CType(meWS.Rows(i), Excel.Range).Delete()
+                Next
+                ' tk alt ...
+                'meWS.UsedRange.Clear()
             Catch ex As Exception
 
             End Try
@@ -3688,6 +3707,8 @@ Imports System.Web
             Dim tableTyp As Integer = ptTables.meRC
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 tableTyp = ptTables.meRC
+                Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+
             ElseIf visboZustaende.projectBoardMode = ptModus.massEditTermine Then
                 tableTyp = ptTables.meTE
             ElseIf visboZustaende.projectBoardMode = ptModus.massEditAttribute Then
@@ -3752,9 +3773,6 @@ Imports System.Web
             'appInstance.EnableEvents = False
             ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
             'enableOnUpdate = False
-
-
-            Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
 
 
             ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
