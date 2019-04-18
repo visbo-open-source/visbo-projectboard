@@ -22,7 +22,6 @@ Public Class clsListOfCostAndRoles
     Public ReadOnly Property phaseContainsRoleID(ByVal phaseNameID As String, ByVal roleUID As Integer, Optional ByVal teamID As Integer = -1) As Boolean
 
         Get
-            Dim tmpResult As Boolean = False
             Dim found As Boolean = False
 
             If _listOfRoles.ContainsKey(roleUID) Then
@@ -48,7 +47,7 @@ Public Class clsListOfCostAndRoles
                 End If
             End If
 
-            phaseContainsRoleID = tmpResult
+            phaseContainsRoleID = found
         End Get
     End Property
 
@@ -61,7 +60,6 @@ Public Class clsListOfCostAndRoles
     Public ReadOnly Property phaseContainsCost(ByVal phaseNameID As String, ByVal costUID As Integer) As Boolean
 
         Get
-            Dim tmpResult As Boolean = False
             Dim found As Boolean = False
 
             If _listOfCosts.ContainsKey(costUID) Then
@@ -76,7 +74,7 @@ Public Class clsListOfCostAndRoles
 
             End If
 
-            phaseContainsCost = tmpResult
+            phaseContainsCost = found
         End Get
 
     End Property

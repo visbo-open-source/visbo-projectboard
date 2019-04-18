@@ -3441,24 +3441,29 @@ Module Module1
         ' jetzt werden die Collections in dem Chart aufgebaut ...
         With CType(pptChart, PowerPoint.Chart)
 
+            Dim dontShowPlanung As Boolean = False
+            If scInfo.hproj.hasActualValues Then
+                dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
+            End If
 
-            ' Planung / Forecast
-            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+            If Not dontShowPlanung Then
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = prognoseDatenReihe
-                .XValues = Xdatenreihe
-                .ChartType = PlanChartType
+                    .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = prognoseDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = PlanChartType
 
-                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                    ' es handelt sich um eine Line
-                    .Format.Line.Weight = 4
-                    .Format.Line.ForeColor.RGB = visboFarbeBlau
-                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                End If
+                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                        ' es handelt sich um eine Line
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                    End If
 
-            End With
+                End With
+            End If
 
             ' Beauftragung bzw. Vergleichsdaten
             If Not IsNothing(scInfo.vglProj) Then

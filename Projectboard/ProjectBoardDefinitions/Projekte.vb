@@ -5671,24 +5671,35 @@ Public Module Projekte
 
             With newChtObj.Chart
 
-
                 ' Planung / Forecast
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-
-                    .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
-                    .Values = prognoseDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = PlanChartType
-
-                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                        ' es handelt sich um eine Line
-                        .Format.Line.Weight = 4
-                        .Format.Line.ForeColor.RGB = visboFarbeBlau
-                        .Format.Line.DashStyle = core.MsoLineDashStyle.msoLineSolid
+                ' nur zeigen, wenn hproj.actualdata
+                Dim dontShowPlanung As Boolean = False
+                If hproj.hasActualValues Then
+                    If getColumnOfDate(hproj.actualDataUntil) >= getColumnOfDate(hproj.endeDate) Then
+                        ' es kann keine Planwerte mehr geben , also nix zeichnen
+                        dontShowPlanung = True
                     End If
+                End If
 
-                End With
+                If Not dontShowPlanung Then
+                    With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
+
+                        .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                        .Values = prognoseDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = PlanChartType
+
+                        If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                            ' es handelt sich um eine Line
+                            .Format.Line.Weight = 4
+                            .Format.Line.ForeColor.RGB = visboFarbeBlau
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                        End If
+
+                    End With
+                End If
+
 
                 ' Beauftragung bzw. Vergleichsdaten
                 If Not IsNothing(scInfo.vglProj) Then
@@ -6801,22 +6812,34 @@ Public Module Projekte
             End Try
 
             ' Planung / Forecast
-            With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
-
-                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = prognoseDatenReihe
-                .XValues = Xdatenreihe
-                .ChartType = PlanChartType
-
-                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                    ' es handelt sich um eine Line
-                    .Format.Line.Weight = 4
-                    .Format.Line.ForeColor.RGB = visboFarbeBlau
-                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+            ' nur zeigen, wenn hproj.actualdata
+            Dim dontShowPlanung As Boolean = False
+            If hproj.hasActualValues Then
+                If getColumnOfDate(hproj.actualDataUntil) >= getColumnOfDate(hproj.endeDate) Then
+                    ' es kann keine Planwerte mehr geben , also nix zeichnen
+                    dontShowPlanung = True
                 End If
+            End If
 
-            End With
+            If Not dontShowPlanung Then
+                With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
+
+                    .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = prognoseDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = PlanChartType
+
+                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                        ' es handelt sich um eine Line
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                    End If
+
+                End With
+            End If
+
 
             ' Beauftragung bzw. Vergleichsdaten
             If Not IsNothing(scInfo.vglProj) Then
@@ -9653,6 +9676,9 @@ Public Module Projekte
 
         Dim found As Boolean = False
 
+        Dim usePieColors As Boolean = True
+
+
         Dim tcs As core.ThemeColorScheme = appInstance.ActiveWorkbook.Theme.ThemeColorScheme
 
 
@@ -9685,9 +9711,8 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
+        ErgebnisListeR = New Collection
         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-
-            ErgebnisListeR = New Collection
             Try
                 Dim teamID As Integer = -1
                 Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
@@ -9701,7 +9726,28 @@ Public Module Projekte
             End Try
 
 
+        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+            Try
+                Dim tmpRoleListe() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                If Not IsNothing(tmpRoleListe) Then
+                    For Each roleID As Integer In tmpRoleListe
+                        Dim tmpName As String = RoleDefinitions.getRoleDefByID(roleID).name
+                        If tmpName.Length > 0 Then
+                            ErgebnisListeR.Add(tmpName)
+                        End If
+                    Next
+                    usePieColors = False
+                End If
+            Catch ex As Exception
+
+            End Try
+
         Else
+            ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
+        End If
+
+        If ErgebnisListeR.Count = 0 Then
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
         End If
 
@@ -9868,20 +9914,23 @@ Public Module Projekte
                     For r = 1 To anzRollen
                         roleName = CStr(ErgebnisListeR.Item(r))
                         With .SeriesCollection(1).Points(r)
-                            Dim rest As Integer
-                            Dim ix As Integer = Math.DivRem(r, 5, rest)
-                            If rest > 0 Then
-                                .interior.color = pieColors(rest)
+
+                            If usePieColors Then
+                                Dim rest As Integer
+                                Dim ix As Integer = Math.DivRem(r, 5, rest)
+                                If rest > 0 Then
+                                    .interior.color = pieColors(rest)
+                                Else
+                                    .interior.color = pieColors(0)
+                                End If
                             Else
-                                .interior.color = pieColors(0)
+                                .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                             End If
-                            '.Interior.color = RoleDefinitions.getRoledef(roleName).farbe
 
                             If calledFromReporting Then
                                 .DataLabel.Font.Size = 10
                             End If
 
-                            '.DataLabel.Font.Size = awinSettings.fontsizeItems
                         End With
                     Next r
 
@@ -9958,6 +10007,8 @@ Public Module Projekte
 
         Dim ErgebnisListeR As Collection
 
+        Dim usePieColors As Boolean = True
+
         Dim tcs As core.ThemeColorScheme = appInstance.ActiveWorkbook.Theme.ThemeColorScheme
 
 
@@ -9984,9 +10035,8 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
+        ErgebnisListeR = New Collection
         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-
-            ErgebnisListeR = New Collection
             Try
                 Dim teamID As Integer = -1
                 Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
@@ -10000,7 +10050,28 @@ Public Module Projekte
             End Try
 
 
+        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+            Try
+                Dim tmpRoleListe() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                If Not IsNothing(tmpRoleListe) Then
+                    For Each roleID As Integer In tmpRoleListe
+                        Dim tmpName As String = RoleDefinitions.getRoleDefByID(roleID).name
+                        If tmpName.Length > 0 Then
+                            ErgebnisListeR.Add(tmpName)
+                        End If
+                    Next
+                    usePieColors = False
+                End If
+            Catch ex As Exception
+
+            End Try
+
         Else
+            ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
+        End If
+
+        If ErgebnisListeR.Count = 0 Then
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
         End If
 
@@ -10116,20 +10187,22 @@ Public Module Projekte
             For r = 1 To anzRollen
                 roleName = CStr(ErgebnisListeR.Item(r))
                 With .SeriesCollection(1).Points(r)
-                    Dim rest As Integer
-                    Dim ix As Integer = Math.DivRem(r, 5, rest)
-                    If rest > 0 Then
-                        .interior.color = pieColors(rest)
-                    Else
-                        .interior.color = pieColors(0)
-                    End If
-                    '.Interior.color = RoleDefinitions.getRoledef(roleName).farbe
 
-                    '.Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
-                    ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
-                    '.DataLabel.Font.Size = awinSettings.fontsizeItems
+                    If usePieColors Then
+                        Dim rest As Integer
+                        Dim ix As Integer = Math.DivRem(r, 5, rest)
+                        If rest > 0 Then
+                            .interior.color = pieColors(rest)
+                        Else
+                            .interior.color = pieColors(0)
+                        End If
+                    Else
+                        .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+                    End If
+
                 End With
             Next r
+
 
             ' Änderung: evtl wurde ja der Titel gelöscht 
             If .HasTitle Then

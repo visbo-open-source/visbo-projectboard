@@ -2738,6 +2738,20 @@ Public Class clsPhase
 
     End Property
 
+    ''' <summary>
+    ''' gibt true zurück, wenn die Phase  actualValues enthält, d.h wenn die Phase cor oder im Monat startet, bis wohin actulaValues gehen 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property hasActualData As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            If _parentProject.hasActualValues Then
+                tmpResult = getStartDate < _parentProject.actualDataUntil
+            End If
+            hasActualData = tmpResult
+        End Get
+    End Property
+
     Public ReadOnly Property parentProject() As clsProjekt
         Get
             parentProject = _parentProject

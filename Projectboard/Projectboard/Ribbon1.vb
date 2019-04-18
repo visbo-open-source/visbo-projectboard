@@ -2455,6 +2455,13 @@ Imports System.Web
                     tmpLabel = "Modify Attributes"
                 End If
 
+            Case "PT2G1M2B8oa" ' Massen Edit Attributes
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ändern von Attributen"
+                Else
+                    tmpLabel = "Modify Attributes"
+                End If
+
             Case "PT4G2M3" ' Export to Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export Projekte in Excel"
@@ -2630,6 +2637,13 @@ Imports System.Web
                 End If
 
             Case "PT2G2" 'Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
+            Case "PT2G2oa" 'Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekte/Varianten"
                 Else
@@ -3269,75 +3283,27 @@ Imports System.Web
                 Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
                     chckVisibility = False
 
+                Case "PTMEC" ' Charts und Info 
+                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                        chckVisibility = True
+                    Else
+                        chckVisibility = False
+                    End If
 
-                    '' ''Case "PTX" ' Multiprojekt-Info
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT0" ' Einzelprojekt-Info
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT7" ' Cockpit
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT1" ' Reports
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT6" ' Einstellungen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1M0" ' neues Projekt anlegen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1M1" ' Variante
-                    '' ''    chckVisibility = False
-                    '' ''    'Case "PT2G1M1B0" ' neue Variante anlegen
-                    '' ''    '    chckVisibility = False
-                    '' ''    'Case "PT2G1M1B1" '  Variante aktivieren
-                    '' ''    '    chckVisibility = False
-                    '' ''    'Case "PT2G1M1B2" ' Variante löschen    
-                    '' ''    '    chckVisibility = False
-                    '' ''    'Case "PT2G1M1B3" ' Variante übernehmen    
-                    '' ''    '    chckVisibility = False
-                    '' ''Case "PT2G1M2" ' Editieren   
-                    '' ''    chckVisibility = False
-                    '' ''    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
-                    '' ''    '    chckVisibility = False
-                    '' ''    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
-                    '' ''    '    chckVisibility = False
-                    '' ''Case "PT2G1B2" ' Fixieren
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B3" ' Fixierung aufheben
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1M2B6" ' Änderungen verwerfen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B4" ' Beschriften
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B5" ' alle Beschriftungen löschen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B6" ' Extended View
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B7" ' Extended View aufheben
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G2B5" ' Schutz setzen / aufheben 
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G2s3" ' Separator vor Schutz 
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1s4" ' Separator vor Extended View
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G3" ' Bearbeiten - Session
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT4" ' Datenmanagement
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT6G1" ' Einstellungen - Visualisierung
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT6G3" ' Lade- und Import-Vorgänge
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT2G1B8" ' umbenennen 
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT7G1M1" ' Projekt-Charts
-                    '' ''    chckVisibility = False
-                    '' ''Case "PT7G1M0" ' Portfolio-Charts
-                    '' ''    chckVisibility = False
+                Case "PTmassEdit" ' Charts und Info 
+                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                        chckVisibility = True
+                    Else
+                        chckVisibility = False
+                    End If
+
+                Case "PTMECsettings" ' Charts und Info 
+                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                        chckVisibility = True
+                    Else
+                        chckVisibility = False
+                    End If
+
                 Case Else
                     chckVisibility = True
             End Select
@@ -3647,11 +3613,11 @@ Imports System.Web
     ''' <param name="tableTyp">gibt an , ob es sich um Mass-Edit Ressourcen, Termine oder Attribute handelt </param>
     Private Sub performDeactivateActionsFor(ByVal tableTyp As Integer)
 
-        Dim anzahlMassColSpalten As Integer
+        'Dim anzahlMassColSpalten As Integer
         Dim mIX As Integer
 
         If tableTyp = ptTables.meRC Then
-            anzahlMassColSpalten = 5
+            'anzahlMassColSpalten = 5
             mIX = 0
 
             If Not IsNothing(formProjectInfo1) Then
@@ -3660,11 +3626,11 @@ Imports System.Web
 
         ElseIf tableTyp = ptTables.meTE Then
             mIX = 1
-            anzahlMassColSpalten = 11
+            'anzahlMassColSpalten = 11
 
         ElseIf tableTyp = ptTables.meAT Then
             mIX = 2
-            anzahlMassColSpalten = 11
+            'anzahlMassColSpalten = 15
 
         End If
 
@@ -3683,14 +3649,14 @@ Imports System.Web
         Try
 
             ' jetzt die Spalten Werte merken 
-            Try
-                massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-                For ik As Integer = 1 To anzahlMassColSpalten
-                    massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-                Next
-            Catch ex As Exception
+            'Try
+            '    massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
+            '    For ik As Integer = 1 To anzahlMassColSpalten
+            '        massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+            '    Next
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
 
             ' jetzt die Autofilter de-aktivieren ... 
@@ -3700,7 +3666,12 @@ Imports System.Web
 
             ' jetzt alles löschen 
             Try
-                meWS.UsedRange.Clear()
+                Dim mxZeile As Integer = meWS.UsedRange.Rows.Count
+                For i As Integer = 2 To mxZeile
+                    CType(meWS.Rows(i), Excel.Range).Delete()
+                Next
+                ' tk alt ...
+                'meWS.UsedRange.Clear()
             Catch ex As Exception
 
             End Try
@@ -3736,6 +3707,8 @@ Imports System.Web
             Dim tableTyp As Integer = ptTables.meRC
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 tableTyp = ptTables.meRC
+                Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+
             ElseIf visboZustaende.projectBoardMode = ptModus.massEditTermine Then
                 tableTyp = ptTables.meTE
             ElseIf visboZustaende.projectBoardMode = ptModus.massEditAttribute Then
@@ -3800,9 +3773,6 @@ Imports System.Web
             'appInstance.EnableEvents = False
             ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
             'enableOnUpdate = False
-
-
-            Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
 
 
             ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
@@ -6210,13 +6180,15 @@ Imports System.Web
                 CostDefinitions = changedOrga.allCosts
 
                 ' Einlesen der Kapas
-                If awinSettings.allianzIstDatenReferate.Length > 0 Then
-                    ' Allianz Externe Verträge
-                    Call readMonthlyExternKapasEV(outputCollection)
-                Else
-                    ' VISBO Externe Kapazitäts-Dateien 
-                    Call readMonthlyExternKapas(outputCollection)
-                End If
+                ' immer die Externen Datei lesen .. wesentlich besser und einfacher strukturiert ...
+                'If awinSettings.allianzIstDatenReferate.Length > 0 Then
+                '    ' Allianz Externe Verträge
+                '    Call readMonthlyExternKapasEV(outputCollection)
+                'Else
+                '    ' VISBO Externe Kapazitäts-Dateien 
+                '    Call readMonthlyExternKapas(outputCollection)
+                'End If
+                Call readMonthlyExternKapasEV(outputCollection)
 
                 Call readInterneAnwesenheitslisten(outputCollection)
 

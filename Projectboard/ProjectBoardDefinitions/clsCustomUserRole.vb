@@ -36,7 +36,9 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.OrgaAdmin
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M",
                                  "PT4G1M1-2", "PT4G1M1-3", "PT4G2M",
-                                 "PTneu", "PTedit", "PTview",
+                                 "PTneu", "PT2G2B2",
+                                 "PT2G2B4", "PTeditieren",
+                                 "PTview",
                                  "PTfilter", "PTsort", "PT0G1s9",
                                  "PTOPTB1", "PTreport",
                                  "PTeinst", "PThelp", "PTWebServer"}
@@ -44,19 +46,19 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
                 '                 "PTview", "PTfilter", "PTWebServer"}
-                _nonAllowance = {"PT4G1M1-1", "PT4G1M0B2", "PTfilter",
+                _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G1M0B2", "PTeditoa", "PTfilter",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTview", "PTWebServer", "PThelp"}
 
             Case ptCustomUserRoles.ProjektLeitung
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1",
-                                 "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PThelp",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1", "PTeditoa",
+                                 "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PTsort", "PThelp",
                                  "PTWebServer"}
 
 
             Case ptCustomUserRoles.RessourceManager
 
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
                                  "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
