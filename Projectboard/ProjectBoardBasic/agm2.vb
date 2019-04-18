@@ -17391,6 +17391,7 @@ Public Module agm2
 
 
                     If Not loginErfolgreich Then
+
                         ' Customization-File wird geschlossen
                         xlsCustomization.Close(SaveChanges:=False)
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)

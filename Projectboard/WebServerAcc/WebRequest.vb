@@ -28,9 +28,7 @@ Public Class Request
     Private version As System.Version
     Private visboContentType As String = "application/json"
 
-    Private visboUserAgent As String = " (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ")"
-
+    Private visboUserAgent As String = " (" & System.Environment.OSVersion.ToString & ";" & System.Environment.OSVersion.Platform.ToString & ")"
 
     Private aktVCid As String = ""
 
