@@ -109,7 +109,7 @@ Public Module Module1
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
-    Public dbCacheProjekte As New clsProjekteAlle
+    Public sessionCacheProjekte As New clsProjekteAlle
 
     ' die globale Variable für die Write Protections
     Public writeProtections As New clsWriteProtections

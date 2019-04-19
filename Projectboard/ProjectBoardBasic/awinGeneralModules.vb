@@ -66,7 +66,7 @@ Public Module awinGeneralModules
     End Enum
 
     ''' <summary>
-    ''' erstellt die CacheProjekte Liste , vorläufig erstmal die DBCache
+    ''' erstellt die CacheProjekte Liste , vorläufig erstmal aus der Session 
     ''' </summary>
     ''' <param name="todoListe">enthält die pvnames der Projekte</param>
     ''' <remarks></remarks>
@@ -90,17 +90,25 @@ Public Module awinGeneralModules
                     End If
                 End If
 
+                ' in CacheProjekte soll jetzt der aktuelle Stand der Session , nicht der Stand aus der Datenbank 
                 If Not IsNothing(hproj) Then
-                    If Not noDB Then
-                        ' wenn es in der DB existiert, dann im Cache aufbauen 
-
-                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now, err) Then
-                            ' für den Datenbank Cache aufbauen 
-                            Dim dbProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now, err)
-                            dbCacheProjekte.upsert(dbProj)
-                        End If
-                    End If
+                    Dim oldProj As clsProjekt = hproj.createVariant("$cache$", hproj.variantDescription)
+                    oldProj.variantName = hproj.variantName
+                    sessionCacheProjekte.upsert(oldProj)
                 End If
+
+                'tk 19.4.19 auskommentiert , weil 
+                'If Not IsNothing(hproj) Then
+                '    If Not noDB Then
+                '        wenn es In der DB existiert, dann im Cache aufbauen 
+
+                '        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now, err) Then
+                '            für den Datenbank Cache aufbauen 
+                '            Dim dbProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now, err)
+                '            dbCacheProjekte.upsert(dbProj)
+                '        End If
+                '    End If
+                'End If
 
             Catch ex As Exception
 

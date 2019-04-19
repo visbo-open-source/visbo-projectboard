@@ -23,7 +23,7 @@ Public Class clsVisboZustaende
     ' nimmt das letzte Projekt auf, zu dem zuletzt Informationen angezeigt/aktualisiert wurden ...
     Public Property lastProject As clsProjekt
     ' hat den letzten Stand in der Datenbank zu dem Projekt, das zuletzt angezeigt wurde 
-    Public Property lastProjectDB As clsProjekt
+    Public Property lastProjectSession As clsProjekt
 
     Public Property oldValue As String
         Get
@@ -169,7 +169,7 @@ Public Class clsVisboZustaende
         _oldValue = ""
         _oldRow = 0
         _lastProject = Nothing
-        _lastProjectDB = Nothing
+        _lastProjectSession = Nothing
         _auslastungsArray = Nothing
     End Sub
 End Class
