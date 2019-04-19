@@ -952,7 +952,7 @@ Imports System.Web
             If IsNothing(formProjectInfo1) And .projectBoardMode = ptModus.massEditRessCost Then
 
                 formProjectInfo1 = New frmProjectInfo1
-                Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+                Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
 
                 formProjectInfo1.Show()
             End If
@@ -3719,7 +3719,7 @@ Imports System.Web
 
             ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
             ' deren temp Schutz muss dann wieder aufgehoben werden ... 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In dbCacheProjekte.liste
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In sessionCacheProjekte.liste
 
                 If ShowProjekte.contains(kvp.Value.name) Then
                     Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
@@ -3755,7 +3755,7 @@ Imports System.Web
             Next
 
             ' zurücksetzen , aber nicht zurücksetzen der currentSessionConstellation
-            dbCacheProjekte.Clear(False)
+            sessionCacheProjekte.Clear(False)
 
             ' zurücksetzen der Selektierten Projekte, aber nicht zurücksetzen der currentSessionConstellation
             selectedProjekte.Clear(False)

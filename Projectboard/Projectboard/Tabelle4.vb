@@ -158,7 +158,7 @@ Public Class Tabelle4
                 ' es wurde bisher kein lastProject geladen 
                 If ShowProjekte.contains(pname) Then
                     .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
                     pNameChanged = True
                 End If
 
@@ -166,7 +166,7 @@ Public Class Tabelle4
                 ' muss neu geholt werden 
                 If ShowProjekte.contains(pname) Then
                     .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
                     pNameChanged = True
                 End If
             End If

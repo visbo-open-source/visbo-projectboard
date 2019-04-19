@@ -14903,7 +14903,7 @@ Public Module agm2
                 Try
 
                     If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+                        Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
                     End If
                     Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
@@ -17391,6 +17391,7 @@ Public Module agm2
 
 
                     If Not loginErfolgreich Then
+
                         ' Customization-File wird geschlossen
                         xlsCustomization.Close(SaveChanges:=False)
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)

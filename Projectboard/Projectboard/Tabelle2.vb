@@ -123,7 +123,7 @@ Public Class Tabelle2
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If ShowProjekte.contains(pName) Then
                         .lastProject = ShowProjekte.getProject(pName)
-                        .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
+                        .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
                     End If
 
                 End With
@@ -1165,7 +1165,7 @@ Public Class Tabelle2
 
                     If auslastungChanged Or summenChanged Or kostenChanged Then
                         If Not IsNothing(formProjectInfo1) Then
-                            Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+                            Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
                         End If
                         Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
@@ -1930,7 +1930,7 @@ Public Class Tabelle2
                 ' es wurde bisher kein lastProject geladen 
                 If ShowProjekte.contains(pname) Then
                     .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
                     pNameChanged = True
                 End If
 
@@ -1938,7 +1938,7 @@ Public Class Tabelle2
                 ' muss neu geholt werden 
                 If ShowProjekte.contains(pname) Then
                     .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
                     pNameChanged = True
                 End If
             End If
@@ -1963,7 +1963,7 @@ Public Class Tabelle2
 
 
                     If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(.lastProject, .lastProjectDB)
+                        Call updateProjectInfo1(.lastProject, .lastProjectSession)
                         ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
                     End If
                 End If

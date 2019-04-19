@@ -120,7 +120,7 @@ Public Class Tabelle3
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If ShowProjekte.contains(pName) Then
                         .lastProject = ShowProjekte.getProject(pName)
-                        .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
+                        .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
                     End If
 
                 End With
