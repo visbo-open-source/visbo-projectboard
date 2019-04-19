@@ -6275,7 +6275,16 @@ Public Module awinDiagrams
         Dim PlanChartType As Microsoft.Office.Core.XlChartType
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        Dim considerIstDaten As Boolean = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
+        Dim considerIstDaten As Boolean = False
+
+        ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
+        If sCInfo.prPF = ptPRPFType.portfolio Then
+            considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+        ElseIf sCInfo.prPF = ptPRPFType.project Then
+            considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
+        End If
+
+
 
         If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
             IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
@@ -6321,7 +6330,7 @@ Public Module awinDiagrams
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
 
-        Call bestimmePstartPlen(sCInfo.hproj, sCInfo.vglProj, pstart, plen)
+        Call bestimmePstartPlen(sCInfo, pstart, plen)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
@@ -6537,33 +6546,48 @@ Public Module awinDiagrams
 
     ''' <summary>
     ''' bestimmt die Werte von pStart und Plen in Abhgängigkeit von hproj und vglProj; 
-    ''' es wird dabei auch berücksichtigt, dass die unterschiedlich starten können und unterschiedlich lang sind
+    ''' im Falle Portfolio Chart ist das bestimmt durch showrangeleft udn showrangeRight 
+    ''' im Projekt wird auch berücksichtigt, dass die unterschiedlich starten können und unterschiedlich lang sind
     ''' Das Ergebnis ist ein Zeitraum, definiert durch pstart als Anfang und die Länge plen , der garantiert beide Projekte umfasst 
     ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="vglProj"></param>
+    ''' <param name="scInfo"></param>
     ''' <param name="pstart"></param>
     ''' <param name="plen"></param>
-    Public Sub bestimmePstartPlen(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, ByRef pstart As Integer, ByRef plen As Integer)
+    Public Sub bestimmePstartPlen(ByVal scInfo As clsSmartPPTChartInfo, ByRef pstart As Integer, ByRef plen As Integer)
 
-        Dim plenH As Integer, plenV As Integer
-        Dim pStartH As Integer, pStartV As Integer
+        Dim hproj As clsProjekt = Nothing
+        Dim vglProj As clsProjekt = Nothing
 
-        With hproj
-            plenH = .anzahlRasterElemente
-            pStartH = .Start
-        End With
+        If scInfo.prPF = ptPRPFType.project Then
 
-        If Not IsNothing(vglProj) Then
-            plenV = vglProj.anzahlRasterElemente
-            pStartV = vglProj.Start
+            hproj = scInfo.hproj
+            vglProj = scInfo.vglProj
 
-            pstart = Min(pStartH, pStartV)
-            plen = Max(pStartH + plenH, pStartV + plenV) - pstart
-        Else
-            plen = plenH
-            pstart = pStartH
+            Dim plenH As Integer, plenV As Integer
+            Dim pStartH As Integer, pStartV As Integer
+
+            With hproj
+                plenH = .anzahlRasterElemente
+                pStartH = .Start
+            End With
+
+            If Not IsNothing(vglProj) Then
+                plenV = vglProj.anzahlRasterElemente
+                pStartV = vglProj.Start
+
+                pstart = Min(pStartH, pStartV)
+                plen = Max(pStartH + plenH, pStartV + plenV) - pstart
+            Else
+                plen = plenH
+                pstart = pStartH
+            End If
+
+        ElseIf scInfo.prPF = ptPRPFType.portfolio Then
+            pstart = showRangeLeft
+            plen = showRangeRight - showRangeLeft + 1
         End If
+
+
 
     End Sub
 
@@ -6649,100 +6673,203 @@ Public Module awinDiagrams
 
             Case ptElementTypen.roles
 
+                If scInfo.prPF = ptPRPFType.project Then
+                    If scInfo.q2 = "" Then
+                        ' es ist alles gemeint ... 
+                        If myCustomUserRole.isAllowedToSee("") Then
 
-
-                If scInfo.q2 = "" Then
-                    ' es ist alles gemeint ... 
-                    If myCustomUserRole.isAllowedToSee("") Then
-
-                        tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
-
-                        If Not IsNothing(scInfo.vglProj) Then
-                            tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
-                        End If
-
-                    Else
-                        errMsg = "no rights to see all roles aggregated ... "
-                        Exit Sub
-                    End If
-
-
-                Else
-                    Dim teamID As Integer
-                    Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(scInfo.q2, teamID)
-
-                    If RoleDefinitions.containsUid(roleUID) Then
-
-                        ' egal, was übergeben wurde - jetzt hat man die roleNameID 
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-
-                        If myCustomUserRole.isAllowedToSee(roleNameID) Then
-
-                            tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                            tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
 
                             If Not IsNothing(scInfo.vglProj) Then
-                                tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                                tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
                             End If
 
                         Else
-                            errMsg = "no rights to see role: " & scInfo.q2Bezeichner
+                            errMsg = "no rights to see all roles aggregated ... "
                             Exit Sub
                         End If
 
+
                     Else
-                        errMsg = "unknown role / person: " & scInfo.q2Bezeichner
-                        Exit Sub
+                        Dim teamID As Integer
+                        Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(scInfo.q2, teamID)
+
+                        If RoleDefinitions.containsUid(roleUID) Then
+
+                            ' egal, was übergeben wurde - jetzt hat man die roleNameID 
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+
+                            If myCustomUserRole.isAllowedToSee(roleNameID) Then
+
+                                tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+
+                                If Not IsNothing(scInfo.vglProj) Then
+                                    tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
+                                End If
+
+                            Else
+                                errMsg = "no rights to see role: " & scInfo.q2Bezeichner
+                                Exit Sub
+                            End If
+
+                        Else
+                            errMsg = "unknown role / person: " & scInfo.q2Bezeichner
+                            Exit Sub
+                        End If
                     End If
+
+                Else
+                    ' Portfolio - Betrachtung 
+                    ' hier werden die gleichen Werte gesetzt wie in awinCreatePRCCollectionDiagram
+                    Dim prcName As String = scInfo.q2
+
+                    If prcName = "" Then
+                        prcName = CStr(RoleDefinitions.getTopLevelNodeIDs.First)
+                    End If
+
+                    Dim myCollection As New Collection
+                    myCollection.Add(prcName)
+
+                    Dim teamID As Integer = -1
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
+
+                    If tmpRole.isCombinedRole Then
+
+
+                        tmpTdatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                           considerAllSubRoles:=True,
+                                                                           type:=PTcbr.all,
+                                                                           excludedNames:=myCollection)
+
+
+                    Else
+                        tmpTdatenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                    End If
+
+                    ' jetzt muss noch die Vdaten-Reihe, also die Kapas bestimmt werden 
+                    tmpVdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+
                 End If
 
-                ' jetzt muss umkopiert werden 
+
 
 
 
             Case ptElementTypen.costs
 
-                If scInfo.q2 = "" Then
-                    ' es ist alles gemeint ...
-                    If myCustomUserRole.isAllowedToSee("") Then
-                        tmpTdatenreihe = scInfo.hproj.getGesamtAndereKosten
-                        If Not IsNothing(scInfo.vglProj) Then
-                            tmpVdatenreihe = scInfo.vglProj.getGesamtAndereKosten
-                        End If
-                    Else
-                        errMsg = "no rights to see all costs aggregated ... "
-                        Exit Sub
-                    End If
-
-                Else
-                    If CostDefinitions.containsName(scInfo.q2) Then
-
-                        Dim weitermachen As Boolean
-                        If (scInfo.q2 = "Personalkosten") Then
-                            If myCustomUserRole.isAllowedToSee("") Then
-                                weitermachen = True
-                            Else
-                                errMsg = "no rights to see all personell cost ... "
-                                Exit Sub
+                If scInfo.prPF = ptPRPFType.project Then
+                    If scInfo.q2 = "" Then
+                        ' es ist alles gemeint ...
+                        If myCustomUserRole.isAllowedToSee("") Then
+                            tmpTdatenreihe = scInfo.hproj.getGesamtAndereKosten
+                            If Not IsNothing(scInfo.vglProj) Then
+                                tmpVdatenreihe = scInfo.vglProj.getGesamtAndereKosten
                             End If
                         Else
-                            weitermachen = True
+                            errMsg = "no rights to see all costs aggregated ... "
+                            Exit Sub
                         End If
-
-
-                        If weitermachen Then
-                            tmpTdatenreihe = scInfo.hproj.getKostenBedarfNew(scInfo.q2)
-
-                            If Not IsNothing(scInfo.vglProj) Then
-                                tmpVdatenreihe = scInfo.vglProj.getKostenBedarfNew(scInfo.q2)
-                            End If
-                        End If
-
 
                     Else
-                        errMsg = "unknown cost definition: " & scInfo.q2
-                        Exit Sub
+                        If CostDefinitions.containsName(scInfo.q2) Then
+
+                            Dim weitermachen As Boolean
+                            If (scInfo.q2 = "Personalkosten") Then
+                                If myCustomUserRole.isAllowedToSee("") Then
+                                    weitermachen = True
+                                Else
+                                    errMsg = "no rights to see all personell cost ... "
+                                    Exit Sub
+                                End If
+                            Else
+                                weitermachen = True
+                            End If
+
+
+                            If weitermachen Then
+                                tmpTdatenreihe = scInfo.hproj.getKostenBedarfNew(scInfo.q2)
+
+                                If Not IsNothing(scInfo.vglProj) Then
+                                    tmpVdatenreihe = scInfo.vglProj.getKostenBedarfNew(scInfo.q2)
+                                End If
+                            End If
+
+
+                        Else
+                            errMsg = "unknown cost definition: " & scInfo.q2
+                            Exit Sub
+                        End If
+                    End If
+                Else
+                    ' Portfolio - Betrachtung 
+                    ' hier werden die gleichen Werte gesetzt wie in awinCreatePRCCollectionDiagram
+                    Dim prcName As String = scInfo.q2
+
+                    If prcName = "" Then
+                        prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name
+                    End If
+
+                    tmpTdatenreihe = ShowProjekte.getCostValuesInMonth(prcName)
+                End If
+
+            Case ptElementTypen.milestones
+                If scInfo.prPF = ptPRPFType.project Then
+                    errMsg = "not yet implemented: " & scInfo.elementTyp.ToString
+                    Exit Sub
+                Else
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+                    Dim breadcrumb As String = ""
+
+                    Dim msdatenreihe(,) As Double
+                    ReDim msdatenreihe(3, plen - 1)
+
+                    Dim prcName As String = ""
+                    If scInfo.q2 <> "" Then
+                        Call splitHryFullnameTo2(scInfo.q2, prcName, breadcrumb, type, pvName)
+
+
+                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvName)
+                        For i = 0 To plen - 1
+                            tmpTdatenreihe(i) = 0
+                            For c = 0 To 3
+                                tmpTdatenreihe(i) = tmpTdatenreihe(i) + msdatenreihe(c, i)
+                            Next
+                        Next
+
+
+                        Dim myCollection As New Collection
+                        myCollection.Add(prcName)
+                        tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+
                     End If
                 End If
+
+
+            Case ptElementTypen.phases
+
+                If scInfo.prPF = ptPRPFType.project Then
+                    errMsg = "not yet implemented: " & scInfo.elementTyp.ToString
+                    Exit Sub
+                Else
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+                    Dim breadcrumb As String = ""
+
+                    Dim prcName As String = ""
+                    If scInfo.q2 <> "" Then
+                        Call splitHryFullnameTo2(scInfo.q2, prcName, breadcrumb, type, pvName)
+
+
+                        tmpTdatenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
+
+                        Dim myCollection As New Collection
+                        myCollection.Add(prcName)
+                        tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+
+                    End If
+                End If
+
 
             Case ptElementTypen.rolesAndCost
 
@@ -6868,11 +6995,18 @@ Public Module awinDiagrams
             Case "B"
                 ' Beauftragung 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Approval"
+                    tmpResult = "Baseline"
                 Else
-                    tmpResult = "Beauftragung"
+                    tmpResult = "Baseline"
                 End If
 
+            Case "C"
+                ' Capacity  
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Capacity"
+                Else
+                    tmpResult = "Kapazität"
+                End If
             Case Else
 
                 tmpResult = kennz
@@ -6898,17 +7032,16 @@ Public Module awinDiagrams
         Dim bezeichner As String = ""
         Dim zaehlEinheit = " PT"
         Dim leadingAddOn As String = ""
-        Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
-
-        Dim vProjDoesExist = ((Not IsNothing(scInfo.vglProj)) Or (vsum > 0))
+        Dim vergleichslinieExists As Boolean = False
 
         Dim qualifier2 As String = scInfo.q2
+
+        Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
 
         If awinSettings.englishLanguage Then
             zaehlEinheit = " PD "
             repmsg = {"Total Cost", "Personnel Cost", "Other Cost", "Personnel Requirements"}
         End If
-
 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
             leadingAddOn = "kumul. "
@@ -6923,44 +7056,75 @@ Public Module awinDiagrams
             zaehlEinheit = " T€"
         End If
 
-        ' jetzt muss ggf der Qualifier2 noch ersetzt werden 
+        If scInfo.prPF = ptPRPFType.project Then
 
-        Select Case scInfo.elementTyp
-            Case ptElementTypen.roles
-                If qualifier2 = "" Then
-                    If scInfo.einheit = PTEinheiten.personentage Then
-                        qualifier2 = repmsg(3)
-                    Else
-                        qualifier2 = repmsg(1)
-                    End If
-                Else
-                    Dim tmpTeamID As Integer = -1
-                    Dim tmpRoleId As Integer = RoleDefinitions.parseRoleNameID(qualifier2, tmpTeamID)
-                    If tmpRoleId > 0 Then
-                        qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleId).name
-                    Else
-                        qualifier2 = " ??? "
-                    End If
-                End If
+            vergleichslinieExists = ((Not IsNothing(scInfo.vglProj)) Or (vsum > 0))
 
-            Case ptElementTypen.costs
-                If qualifier2 = "" Then
-                    qualifier2 = repmsg(2)
-                Else
-                    If CostDefinitions.containsName(qualifier2) Then
-                        ' alles paletti
+
+            ' jetzt muss ggf der Qualifier2 noch ersetzt werden 
+
+            Select Case scInfo.elementTyp
+                Case ptElementTypen.roles
+                    If qualifier2 = "" Then
+                        If scInfo.einheit = PTEinheiten.personentage Then
+                            qualifier2 = repmsg(3)
+                        Else
+                            qualifier2 = repmsg(1)
+                        End If
                     Else
+                        Dim tmpTeamID As Integer = -1
+                        Dim tmpRoleId As Integer = RoleDefinitions.parseRoleNameID(qualifier2, tmpTeamID)
+                        If tmpRoleId > 0 Then
+                            qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleId).name
+                        Else
+                            qualifier2 = " ??? "
+                        End If
+                    End If
+
+                Case ptElementTypen.costs
+                    If qualifier2 = "" Then
                         qualifier2 = repmsg(2)
+                    Else
+                        If CostDefinitions.containsName(qualifier2) Then
+                            ' alles paletti
+                        Else
+                            qualifier2 = repmsg(2)
+                        End If
                     End If
-                End If
 
-            Case ptElementTypen.rolesAndCost
-                ' hier ist es egal, was qualifier2 ist 
-                qualifier2 = repmsg(0)
+                Case ptElementTypen.rolesAndCost
+                    ' hier ist es egal, was qualifier2 ist 
+                    qualifier2 = repmsg(0)
 
-            Case Else
-                tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString
-        End Select
+                Case Else
+                    tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString
+            End Select
+
+
+
+        Else
+            ' Portfolio 
+            vergleichslinieExists = (scInfo.elementTyp = ptElementTypen.roles Or (vsum > 0))
+
+            Select Case scInfo.elementTyp
+                Case ptElementTypen.roles
+                    qualifier2 = bestimmeRollenDiagrammTitel(scInfo.q2)
+
+                Case ptElementTypen.costs
+                    qualifier2 = scInfo.q2
+
+                Case ptElementTypen.phases
+                    qualifier2 = splitHryFullnameTo1(scInfo.q2)
+
+                Case ptElementTypen.milestones
+                    qualifier2 = splitHryFullnameTo1(scInfo.q2)
+
+                Case Else
+                    qualifier2 = scInfo.q2
+            End Select
+
+
+        End If
 
         If tmpResult = "" Then
             ' dann ist noch alles in Ordnung 
@@ -6969,7 +7133,7 @@ Public Module awinDiagrams
             startRed = 0
             lengthRed = 0
 
-            If vProjDoesExist And tsum > vsum Then
+            If vergleichslinieExists And tsum > vsum Then
                 startRed = qualifier2.Length + 3
                 lengthRed = tsum.ToString("##,##0.").Length
             End If
