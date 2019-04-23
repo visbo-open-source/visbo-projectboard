@@ -1540,7 +1540,10 @@ Imports System.Web
 
                                 ' nur dann darf die Variante übernommen werden ... 
                                 If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
-                                    hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
+                                    ' tk 23.4.19 bis auf weiteres soll das ohne ChangeRequest auskommen 
+                                    ' muss noch überdacht werden 
+                                    'hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
+                                    hproj.Status = oldStatus
                                 Else
                                     hproj.Status = oldStatus
                                 End If

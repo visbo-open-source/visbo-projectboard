@@ -4778,12 +4778,20 @@ Public Module Module1
     ''' <param name="scInfo"></param>
     Public Sub addSmartPPTChartInfo(ByRef pptShape As PowerPoint.Shape, ByVal scinfo As clsSmartPPTChartInfo)
 
-        If IsNothing(scinfo.hproj) Then
-            Exit Sub
+        If scinfo.prPF = ptPRPFType.portfolio Then
+            ' alles klar ... 
+        Else
+            If IsNothing(scinfo.hproj) Then
+                Exit Sub
+            End If
         End If
 
-        Dim pName As String = scinfo.hproj.name
-        Dim vName As String = scinfo.hproj.variantName
+        ' tk 23.4.19 hier wird 
+        'Dim pName As String = scinfo.hproj.name
+        'Dim vName As String = scinfo.hproj.variantName
+        Dim pName As String = scinfo.pName
+        Dim vName As String = scinfo.vName
+
         Dim chtObjName As String = ""
 
         'Dim encryptedUR As String = encryptmyCustomUserRole
@@ -4837,7 +4845,8 @@ Public Module Module1
                         If .Tags.Item("PRPF").Length > 0 Then
                             .Tags.Delete("PRPF")
                         End If
-                        .Tags.Add("PRPF", CStr(scinfo.hproj.projectType))
+                        '.Tags.Add("PRPF", CStr(scinfo.hproj.projectType))
+                        .Tags.Add("PRPF", CStr(scinfo.prPF))
 
 
                         If Not IsNothing(pName) Then
@@ -4861,12 +4870,25 @@ Public Module Module1
                         .Tags.Add("Q1", CStr(CInt(scinfo.elementTyp)))
 
 
-
                         If .Tags.Item("Q2").Length > 0 Then
                             .Tags.Delete("Q2")
                         End If
                         .Tags.Add("Q2", scinfo.q2)
 
+
+                        If .Tags.Item("SRLD").Length > 0 Then
+                            .Tags.Delete("SRLD")
+                        End If
+
+
+                        If .Tags.Item("SRRD").Length > 0 Then
+                            .Tags.Delete("SRRD")
+                        End If
+
+                        If scinfo.zeitRaumLeft > Date.MinValue Then
+                            .Tags.Add("SRLD", CStr(scinfo.zeitRaumLeft))
+                            .Tags.Add("SRRD", CStr(scinfo.zeitRaumRight))
+                        End If
 
                         If .Tags.Item("BID").Length > 0 Then
                             .Tags.Delete("BID")

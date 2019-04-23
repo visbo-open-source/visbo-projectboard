@@ -15256,7 +15256,10 @@ Public Module Projekte
                                  oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
                                  oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
                                     oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
-                                hproj.Status = ProjektStatus(type)
+                                ' tk ChangeRequest soll es bis auf weiteres nicht mehr geben ... 
+                                ' das muss noch überdacht werden 
+                                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                'hproj.Status = ProjektStatus(type)
                             Else
                                 If awinSettings.englishLanguage Then
                                     errmsg = hproj.name & " : status change not possible"

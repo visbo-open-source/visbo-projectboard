@@ -1233,9 +1233,9 @@ Public Module awinGeneralModules
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
                         ' das heisst, das Projekt hat sich verändert 
                         hproj.marker = True
-                        If hproj.Status = ProjektStatus(PTProjektStati.beauftragt) Then
-                            hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
-                        End If
+                        'If hproj.Status = ProjektStatus(PTProjektStati.beauftragt) Then
+                        '    hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
+                        'End If
 
                         ' wenn das Projekt bereits von anderen geschützt ist, soll es als Variante angelegt werden 
                         ' andernfalls soll es von mir geschützt werden ; allerdings soll es nur dann einen temporärewn Schutz bekommen, 

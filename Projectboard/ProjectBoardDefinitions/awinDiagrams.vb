@@ -6261,6 +6261,8 @@ Public Module awinDiagrams
             titleFontSize = chartContainer.TextFrame2.TextRange.Font.Size
         End If
 
+
+
         ' Parameter Definitionen
         Dim top As Single = chartContainer.Top
         Dim left As Single = chartContainer.Left
@@ -6323,7 +6325,9 @@ Public Module awinDiagrams
 
         Dim found As Boolean = False
 
-        Dim pname As String = sCInfo.hproj.name
+        Dim pname As String = sCInfo.pName
+
+
 
         '
         ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
@@ -6345,6 +6349,9 @@ Public Module awinDiagrams
             End If
             Exit Sub
         End If
+
+        ' jetzt die Farbe bestimme
+        Dim balkenFarbe As Integer = bestimmeBalkenFarbe(sCInfo)
 
 
         Dim vProjDoesExist As Boolean = Not IsNothing(sCInfo.vglProj)
@@ -6387,15 +6394,27 @@ Public Module awinDiagrams
         With newPPTChart.Chart
 
             Dim dontShowPlanung As Boolean = False
-            If sCInfo.hproj.hasActualValues Then
-                dontShowPlanung = getColumnOfDate(sCInfo.hproj.actualDataUntil) >= getColumnOfDate(sCInfo.hproj.endeDate)
+
+            If sCInfo.prPF = ptPRPFType.portfolio Then
+                dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+            Else
+                    If sCInfo.hproj.hasActualValues Then
+                    dontShowPlanung = getColumnOfDate(sCInfo.hproj.actualDataUntil) >= getColumnOfDate(sCInfo.hproj.endeDate)
+                End If
             End If
+
 
             If Not dontShowPlanung Then
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                    .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
+                    If sCInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                        .Interior.Color = balkenFarbe
+                    Else
+                        .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                    End If
+
                     .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = PlanChartType
@@ -6411,37 +6430,61 @@ Public Module awinDiagrams
             End If
 
             ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(sCInfo.vglProj) Then
-
+            If sCInfo.prPF = ptPRPFType.portfolio Then
                 'series
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+
+                    .Name = bestimmeLegendNameIPB("C")
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
 
-                    .ChartType = vglChartType
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                        .ForeColor.RGB = visboFarbeRed
+                        .Weight = 4
+                    End With
 
-                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
 
                 End With
+            Else
+                If Not IsNothing(sCInfo.vglProj) Then
 
+                    'series
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+
+                        .ChartType = vglChartType
+
+                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                .ForeColor.RGB = visboFarbeOrange
+                                .Weight = 4
+                            End With
+                        Else
+                            ' ggf noch was definieren ..
+                        End If
+
+                    End With
+
+                End If
             End If
+
 
             ' jetzt kommt der Neu-Aufbau der Series-Collections
             If considerIstDaten Then
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
+                    If sCInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("IS")
+                    Else
+                        .Name = bestimmeLegendNameIPB("I")
+                    End If
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
                     .XValues = Xdatenreihe
@@ -6652,11 +6695,17 @@ Public Module awinDiagrams
         Dim tmpVdatenreihe() As Double
         ReDim tmpVdatenreihe(0)
 
-        Dim hprojOffset As Integer = scInfo.hproj.Start - pstart
+
+        Dim hprojOffset As Integer = 0
         Dim vprojOffset As Integer = 0
 
-        If Not IsNothing(scInfo.vglProj) Then
-            vprojOffset = scInfo.vglProj.Start - pstart
+        If scInfo.prPF = ptPRPFType.project Then
+
+            hprojOffset = scInfo.hproj.Start - pstart
+            If Not IsNothing(scInfo.vglProj) Then
+                vprojOffset = scInfo.vglProj.Start - pstart
+            End If
+
         End If
 
         For i As Integer = 1 To plen
@@ -6899,11 +6948,18 @@ Public Module awinDiagrams
             tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
         Next
 
-        If Not IsNothing(scInfo.vglProj) Then
+        If scInfo.prPF = ptPRPFType.portfolio Then
             For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
                 vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
             Next
+        Else
+            If Not IsNothing(scInfo.vglProj) Then
+                For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
+                    vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
+                Next
+            End If
         End If
+
 
         ' wenn kumuliert werden soll, dann wird es jetzt hier gemacht ... 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
@@ -6936,8 +6992,14 @@ Public Module awinDiagrams
         ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
         Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
 
-        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        Dim considerIstDaten As Boolean = False
         Dim actualdataIndex As Integer = -1
+
+        If scInfo.prPF = ptPRPFType.project Then
+            considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        Else
+            considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeLeft
+        End If
 
         If considerIstDaten Then
 
@@ -6984,12 +7046,28 @@ Public Module awinDiagrams
                     tmpResult = "Ist-Werte"
                 End If
 
+            Case "IS"
+                'Ist Werte 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Actuals (Sum of Portfolio)"
+                Else
+                    tmpResult = "Ist-Werte (Portfolio Summe)"
+                End If
+
             Case "P"
                 ' Planung 
                 If awinSettings.englishLanguage Then
                     tmpResult = "Forecast"
                 Else
                     tmpResult = "Planung"
+                End If
+
+            Case "PS"
+                ' Planung 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Forecast (Sum of Portfolio)"
+                Else
+                    tmpResult = "Planung (Portfolio Summe)"
                 End If
 
             Case "B"
@@ -7014,6 +7092,80 @@ Public Module awinDiagrams
         End Select
 
         bestimmeLegendNameIPB = tmpResult & " "
+    End Function
+
+    ''' <summary>
+    ''' bestimmt in Abhängigkeit von Typ und Angabe die Farbe des Balken  
+    ''' </summary>
+    ''' <param name="scInfo"></param>
+    ''' <returns></returns>
+    Public Function bestimmeBalkenFarbe(ByVal scInfo As clsSmartPPTChartInfo) As Integer
+        Dim balkenFarbe As Integer = visboFarbeBlau
+
+        Try
+            If scInfo.prPF = ptPRPFType.portfolio Then
+                Select Case scInfo.elementTyp
+
+                    Case ptElementTypen.roles
+                        If scInfo.q2 <> "" Then
+
+                            Dim teamID As Integer = -1
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(scInfo.q2, teamID)
+
+                            If Not IsNothing(tmpRole) Then
+                                balkenFarbe = CInt(tmpRole.farbe)
+                            End If
+
+                        End If
+
+
+                    Case ptElementTypen.costs
+                        If CostDefinitions.containsName(scInfo.q2) Then
+                            balkenFarbe = CInt(CostDefinitions.getCostdef(scInfo.q2).farbe)
+                        End If
+
+                    Case ptElementTypen.phases
+                        Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(scInfo.q2)
+                        If IsNothing(tmpPhaseDef) Then
+                            If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                                balkenFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                            Else
+                                balkenFarbe = CInt(awinSettings.AmpelNichtBewertet)
+                            End If
+
+                        Else
+                            balkenFarbe = CInt(tmpPhaseDef.farbe)
+                        End If
+
+                    Case ptElementTypen.milestones
+                        If scInfo.q2 <> "" Then
+                            Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(scInfo.q2)
+                            If IsNothing(tmpMilestoneDef) Then
+                                If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                                    balkenFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                Else
+                                    balkenFarbe = CInt(awinSettings.AmpelNichtBewertet)
+                                End If
+
+                            Else
+                                balkenFarbe = CInt(tmpMilestoneDef.farbe)
+                            End If
+                        End If
+
+
+
+                    Case Else ' in allen anderen Fällen 
+                        balkenFarbe = visboFarbeBlau
+                End Select
+            Else
+                ' es bleibt die VISBO-Farbe Blau
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        bestimmeBalkenFarbe = balkenFarbe
     End Function
 
     ''' <summary>

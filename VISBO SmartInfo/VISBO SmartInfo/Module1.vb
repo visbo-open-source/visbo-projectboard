@@ -2520,26 +2520,45 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            ' tk 23.4.19
+            Dim pvName As String = calcProjektKey(scInfo.pName, scInfo.vName)
+
             If scInfo.pName <> "" Then
 
-                Dim pvName As String = calcProjektKey(scInfo.pName, scInfo.vName)
+                Dim continueOperation As Boolean = False
+                If scInfo.prPF = ptPRPFType.portfolio Then
 
-                ' damit auch eine andere Variante gezeigt werden kann ... 
-                If showOtherVariant Then
-                    Dim tmpPName As String = getPnameFromKey(pvName)
-                    pvName = calcProjektKey(tmpPName, currentVariantname)
-                    scInfo.vName = currentVariantname
+                    ' lade das Portfolio 
+
+                    ' bringe alles in ShowProjekte 
+
+                    ' besetzte ggf den Zeitraum
+                    If scInfo.hasValidZeitraum Then
+                        showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                        showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                    End If
+
+
+                    continueOperation = Not IsNothing(ShowProjekte)
+                Else
+
+                    ' damit auch eine andere Variante gezeigt werden kann ... 
+                    If showOtherVariant Then
+                        Dim tmpPName As String = getPnameFromKey(pvName)
+                        pvName = calcProjektKey(tmpPName, currentVariantname)
+                        scInfo.vName = currentVariantname
+                    End If
+
+                    ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                    'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                    ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                    continueOperation = Not IsNothing(scInfo.hproj)
+
                 End If
 
-                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                If Not IsNothing(scInfo.hproj) Then
-
-
-
+                If continueOperation Then
                     Try
 
                         ' -----------------------------
@@ -2554,22 +2573,26 @@ Module Module1
                             If (scInfo.chartTyp = PTChartTypen.Balken) Or
                                 (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
 
-                                Try
 
-                                    If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                        'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                        scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
-                                    ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                        'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                        scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
-                                    End If
+                                If scInfo.prPF = ptPRPFType.project Then
+                                    Try
+
+                                        If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
+                                        ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                        End If
 
 
-                                Catch ex As Exception
+                                    Catch ex As Exception
 
-                                    scInfo.vglProj = Nothing
+                                        scInfo.vglProj = Nothing
 
-                                End Try
+                                    End Try
+                                End If
+
 
                                 ' Alternative 1a - pptApp.activate auskommentiert
                                 Call updateProjectChartInPPT(scInfo, pptShape)
@@ -2620,6 +2643,7 @@ Module Module1
                     End Try
 
                 End If
+
 
             End If
 
@@ -3347,7 +3371,15 @@ Module Module1
         Dim PlanChartType As Microsoft.Office.Core.XlChartType
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        Dim considerIstDaten As Boolean = False
+
+        ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
+        If scInfo.prPF = ptPRPFType.portfolio Then
+            considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+        ElseIf scInfo.prPF = ptPRPFType.project Then
+            considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        End If
+
 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
             IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
@@ -3390,7 +3422,7 @@ Module Module1
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
 
-        Call bestimmePstartPlen(scInfo.hproj, scInfo.vglProj, pstart, plen)
+        Call bestimmePstartPlen(scInfo, pstart, plen)
 
 
 
@@ -3447,20 +3479,36 @@ Module Module1
             End Try
         End With
 
+        ' jetzt die Farbe bestimme
+        Dim balkenFarbe As Integer = bestimmeBalkenFarbe(scInfo)
+
 
         ' jetzt werden die Collections in dem Chart aufgebaut ...
         With CType(pptChart, PowerPoint.Chart)
 
+
             Dim dontShowPlanung As Boolean = False
-            If scInfo.hproj.hasActualValues Then
-                dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
+
+            If scInfo.prPF = ptPRPFType.portfolio Then
+                dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+            Else
+                If scInfo.hproj.hasActualValues Then
+                    dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
+                End If
             End If
 
             If Not dontShowPlanung Then
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                    .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
+                    If scInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                        .Interior.Color = balkenFarbe
+                    Else
+                        .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                    End If
+
+
                     .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = PlanChartType
@@ -3476,37 +3524,61 @@ Module Module1
             End If
 
             ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(scInfo.vglProj) Then
-
+            If scInfo.prPF = ptPRPFType.portfolio Then
                 'series
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+
+                    .Name = bestimmeLegendNameIPB("C")
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
 
-                    .ChartType = vglChartType
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                        .ForeColor.RGB = visboFarbeRed
+                        .Weight = 4
+                    End With
 
-                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
 
                 End With
+            Else
+                If Not IsNothing(scInfo.vglProj) Then
 
+                    'series
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+
+                        .ChartType = vglChartType
+
+                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                .ForeColor.RGB = visboFarbeOrange
+                                .Weight = 4
+                            End With
+                        Else
+                            ' ggf noch was definieren ..
+                        End If
+
+                    End With
+
+                End If
             End If
+
 
             ' jetzt kommt der Neu-Aufbau der Series-Collections
             If considerIstDaten Then
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
+                    If scInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("IS")
+                    Else
+                        .Name = bestimmeLegendNameIPB("I")
+                    End If
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
                     .XValues = Xdatenreihe

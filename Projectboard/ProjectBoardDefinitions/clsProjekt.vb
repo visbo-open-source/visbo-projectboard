@@ -4623,6 +4623,13 @@ Public Class clsProjekt
                 value = ProjektStatus(4) Or
                 value = ProjektStatus(5) Or
                 value = ProjektStatus(6) Then
+
+                ' bis auf weiteres soll es keinen ChangeRequest mehr geben ..
+                ' muss erst noch weiter spezifiziert werden 
+                If value = ProjektStatus(PTProjektStati.ChangeRequest) Then
+                    value = ProjektStatus(PTProjektStati.beauftragt)
+                End If
+
                 _Status = value
             Else
                 Call MsgBox("Wert als Status nicht zugelassen: " & value)
