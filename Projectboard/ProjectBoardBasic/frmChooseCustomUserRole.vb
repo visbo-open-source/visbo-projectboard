@@ -4,7 +4,7 @@ Public Class frmChooseCustomUserRole
     Public selectedIndex As Integer = -1
     Public myUserRoles As Collection
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles btnOK.Click
+    Private Sub btnOK_Click(sender As Object, e As EventArgs) Handles btnOK.Click
         If Not IsNothing(dgv_customUserRoles.SelectedRows) Then
             If dgv_customUserRoles.SelectedRows.Count > 0 Then
                 selectedIndex = CInt(dgv_customUserRoles.SelectedRows.Item(0).Tag)
