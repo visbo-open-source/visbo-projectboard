@@ -5912,57 +5912,100 @@ Public Module testModule
 
                             End If
 
+
+
                         Case "Rolle"
 
-                            If boxName = kennzeichnung Then
-                                boxName = repMessages.getmsg(200)
-                            End If
 
-                            myCollection.Clear()
-                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, translateToRoleNames(selectedRoles))
+                            Try
+
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
 
 
-                            If myCollection.Count > 0 Then
+                                Dim smartChartInfo As New clsSmartPPTChartInfo
+                                With smartChartInfo
+                                    .einheit = PTEinheiten.personentage
+                                    .pName = currentConstellationName
+                                    .vName = ""
+                                    .prPF = ptPRPFType.portfolio
+                                    .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                    .bigType = ptReportBigTypes.charts
 
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                    .hproj = Nothing
+                                    .vglProj = Nothing
 
-                                htop = 100
-                                hleft = 100
-                                hheight = chartHeight  ' height of all charts
-                                hwidth = chartWidth   ' width of all charts
-                                obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
 
-                                reportObj = obj
-                                ' jetzt wird die Größe der Überschrift neu bestimmt ...
-                                'With reportObj
-                                '    '.Chart.ChartTitle.Font.Size = pptSize
-                                'End With
-
-                                ''reportObj.Copy()
-                                ''newShapeRange = pptSlide.Shapes.Paste
-                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
-
-                                With newShapeRange.Item(1)
-                                    .Top = CSng(top + 0.02 * height)
-                                    .Left = CSng(left + 0.02 * width)
-                                    .Width = CSng(width * 0.96)
-                                    .Height = CSng(height * 0.96)
                                 End With
 
-                                'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+                                Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                appInstance.ScreenUpdating = False
 
-                                Try
-                                    reportObj.Delete()
-                                Catch ex As Exception
+                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
 
-                                End Try
+                                appInstance.ScreenUpdating = formerSU
 
-                            Else
-                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
-                            End If
+                                boxName = ""
+                                notYetDone = False
+
+                            Catch ex As Exception
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End Try
+
+
+
+                        'Case "Rolle"
+
+                        '    If boxName = kennzeichnung Then
+                        '        boxName = repMessages.getmsg(200)
+                        '    End If
+
+                        '    myCollection.Clear()
+                        '    myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, translateToRoleNames(selectedRoles))
+
+
+                        '    If myCollection.Count > 0 Then
+
+                        '        pptSize = .TextFrame2.TextRange.Font.Size
+                        '        .TextFrame2.TextRange.Text = " "
+
+                        '        htop = 100
+                        '        hleft = 100
+                        '        hheight = chartHeight  ' height of all charts
+                        '        hwidth = chartWidth   ' width of all charts
+                        '        obj = Nothing
+                        '        Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
+
+                        '        reportObj = obj
+                        '        ' jetzt wird die Größe der Überschrift neu bestimmt ...
+                        '        'With reportObj
+                        '        '    '.Chart.ChartTitle.Font.Size = pptSize
+                        '        'End With
+
+                        '        ''reportObj.Copy()
+                        '        ''newShapeRange = pptSlide.Shapes.Paste
+                        '        newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                        '        With newShapeRange.Item(1)
+                        '            .Top = CSng(top + 0.02 * height)
+                        '            .Left = CSng(left + 0.02 * width)
+                        '            .Width = CSng(width * 0.96)
+                        '            .Height = CSng(height * 0.96)
+                        '        End With
+
+                        '        'Call awinDeleteChart(reportObj)
+                        '        ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                        '        Try
+                        '            reportObj.Delete()
+                        '        Catch ex As Exception
+
+                        '        End Try
+
+                        '    Else
+                        '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                        '    End If
 
 
 
