@@ -28,6 +28,9 @@ Public Class frmHierarchySelection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
 
+    ' ur: 23.04.2019: hryStufen wurde entfernt, da der Wert immer auf 50 festgelegt wurde.
+    Private hryStufenValue As Integer = 50
+
     Private Enum PTauswahlTyp
         phase = 0
         meilenstein = 1
@@ -52,7 +55,6 @@ Public Class frmHierarchySelection
     Private Sub defineFrmButtonVisibility()
 
         If awinSettings.englishLanguage Then
-            hryStufenLabel.Text = "nr of parents to be considered"
             chkbxOneChart.Text = "all in one chart"
             statusLabel.Text = ""
             einstellungen.Text = "Settings"
@@ -64,19 +66,6 @@ Public Class frmHierarchySelection
 
         With Me
 
-            ' Änderung tk: die Hierarchie soll, wie bisher nur bei BHTC nie sichtbar sein; 
-            ' der Default Value auf 50 
-            '' '' 
-            ' ''.hryStufenLabel.Visible = True
-            ' ''.hryStufen.Visible = True
-            ' ''.hryStufen.Value = 0
-
-            '  Änderung ur:
-            ' frmHierarchySelection gemischt mit frmnameSelection
-
-            .hryStufenLabel.Visible = False
-            .hryStufen.Visible = False
-            .hryStufen.Value = 50
 
             filterBox.Enabled = False
             filterBox.Visible = False
@@ -678,10 +667,6 @@ Public Class frmHierarchySelection
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .hryStufenLabel.Visible = False
-                .hryStufen.Value = 50
-                .hryStufen.Visible = False
-
                 ' Reports
                 .repVorlagenDropbox.Visible = True
                 .labelPPTVorlage.Visible = True
@@ -1077,7 +1062,7 @@ Public Class frmHierarchySelection
                         pvName = getPVnameFromNode(tmpNode)
                         If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
-                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufenValue))
                             Dim elemName As String = elemNameOfElemID(rootPhaseName)
                             Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
                             If Not selectedPhases.Contains(selElem) Then
@@ -1091,7 +1076,7 @@ Public Class frmHierarchySelection
                     If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
                         ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
                         Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
-                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
                         Dim elemName As String = elemNameOfElemID(tmpNode.Name)
                         If filterbyLevel0 Then
                             element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
@@ -1885,7 +1870,7 @@ Public Class frmHierarchySelection
                             childNode.Name = childNameID
 
 
-                            Dim tmpBreadcrumb As String = curHry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
+                            Dim tmpBreadcrumb As String = curHry.getBreadCrumb(childNameID, CInt(hryStufenValue))
                             Dim elemName As String = elemNameOfElemID(childNameID)
                             Dim ele As String = calcHryFullname(elemName, tmpBreadcrumb)
 
@@ -2526,7 +2511,7 @@ Public Class frmHierarchySelection
                     Dim cMilestone As clsMeilenstein = Nothing
                     Dim cPhase As clsPhase = Nothing
 
-                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufenValue))
                     Dim elemName As String = elemNameOfElemID(childNameID)
                     Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
                     Dim projElem As String = "[" & topNode.Name & "]" & element
@@ -2629,7 +2614,7 @@ Public Class frmHierarchySelection
                     '' RootPhasename in selectedPhases aufnehmen
                     If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
-                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufenValue))
                         Dim elemName As String = elemNameOfElemID(rootPhaseName)
                         Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
                         If Not selphases.Contains(selElem) Then
@@ -2643,7 +2628,7 @@ Public Class frmHierarchySelection
                 If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
                     ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
                     Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
-                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
                     Dim elemName As String = elemNameOfElemID(tmpNode.Name)
                     If filterbyLevel0 Then
                         element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
@@ -2705,7 +2690,7 @@ Public Class frmHierarchySelection
                         ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
 
                         Dim filterByLevel0 As Boolean = topNodeIsSelected(tmpNode)
-                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
                         Dim elemName As String = elemNameOfElemID(tmpNode.Name)
 
                         If filterByLevel0 Then
@@ -3130,7 +3115,7 @@ Public Class frmHierarchySelection
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
-    Private Sub expandCompletely_Click(sender As Object, e As EventArgs) Handles expandCompletely.Click
+    Private Sub expandCompletely_Click(sender As Object, e As EventArgs)
 
 
 
@@ -3272,7 +3257,7 @@ Public Class frmHierarchySelection
                         pvName = getPVnameFromNode(tmpNode)
                         If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
-                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufenValue))
                             Dim elemName As String = elemNameOfElemID(rootPhaseName)
                             Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
                             If Not selectedPhases.Contains(selElem) Then
@@ -3286,7 +3271,7 @@ Public Class frmHierarchySelection
                     If tmpNode.Checked And Not IsNothing(hry) And tmpNode.Level > 0 Then
                         ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
                         Dim filterbyLevel0 As Boolean = topNodeIsSelected(tmpNode)
-                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
                         Dim elemName As String = elemNameOfElemID(tmpNode.Name)
                         If filterbyLevel0 Then
                             element = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
@@ -3295,7 +3280,7 @@ Public Class frmHierarchySelection
                         End If
 
 
-                        'Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        'Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
                         'Dim elemName As String = elemNameOfElemID(tmpNode.Name)
                         'element = calcHryFullname(elemName, tmpBreadcrumb)
 
@@ -3441,7 +3426,7 @@ Public Class frmHierarchySelection
             ' ''        If tmpNode.Checked Then
             ' ''            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
 
-            ' ''            Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+            ' ''            Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
             ' ''            Dim elemName As String = elemNameOfElemID(tmpNode.Name)
             ' ''            element = calcHryFullname(elemName, tmpBreadcrumb)
 
@@ -5316,6 +5301,11 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
+
+    End Sub
+
+
     ' ''' <summary>
     ' ''' old _ deprecated
     ' ''' </summary>
@@ -5385,5 +5375,5 @@ Public Class frmHierarchySelection
     'End Sub
 
 
-   
+
 End Class
