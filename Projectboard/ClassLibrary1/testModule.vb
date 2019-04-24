@@ -5925,6 +5925,14 @@ Public Module testModule
 
                                 Dim smartChartInfo As New clsSmartPPTChartInfo
                                 With smartChartInfo
+
+                                    If showRangeLeft > 0 Then
+                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    End If
+                                    If showRangeRight > 0 Then
+                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                    End If
+
                                     .einheit = PTEinheiten.personentage
                                     .pName = currentConstellationName
                                     .vName = ""

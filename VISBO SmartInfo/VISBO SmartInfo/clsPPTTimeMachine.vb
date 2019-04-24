@@ -222,12 +222,17 @@ Public Class clsPPTTimeMachine
 
                     Dim pHistory As clsProjektHistorie = _projectTimeStamps.ElementAt(i).Value
                     Dim key As String = _projectTimeStamps.ElementAt(i).Key
+                    Dim pName As String = getPnameFromKey(key)
+                    Dim vName As String = getVariantnameFromKey(key)
 
                     If IsNothing(pHistory) Then
-                        Dim pName As String = getPnameFromKey(key)
-                        Dim vName As String = getVariantnameFromKey(key)
 
                         _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+
+                    ElseIf pHistory.Count = 0 Then
+
+                        _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+
                     End If
 
                 Next

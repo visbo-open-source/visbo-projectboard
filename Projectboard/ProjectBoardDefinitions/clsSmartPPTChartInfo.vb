@@ -185,7 +185,7 @@
                             q2 = .Tags.Item("Q2")
                         End If
 
-                        Dim tmpLD As Date = Date.MinValue
+                        Dim tmpLD As Date = StartofCalendar
                         If .Tags.Item("SRLD").Length > 0 Then
                             Try
                                 tmpLD = CDate(.Tags.Item("SRLD"))
@@ -195,7 +195,7 @@
 
                         End If
 
-                        Dim tmpRD As Date = Date.MinValue
+                        Dim tmpRD As Date = StartofCalendar
                         If .Tags.Item("SRRD").Length > 0 Then
                             Try
                                 tmpRD = CDate(.Tags.Item("SRRD"))
@@ -247,8 +247,8 @@
     Public Sub New()
         _pName = ""
         _vName = ""
-        _zeitRaumLeft = Date.MinValue
-        _zeitRaumRight = Date.MinValue
+        _zeitRaumLeft = StartofCalendar
+        _zeitRaumRight = StartofCalendar
         _prPF = ptPRPFType.project
         _hproj = Nothing
         _hproj2 = Nothing

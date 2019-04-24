@@ -2511,6 +2511,7 @@ Module Module1
                                     Optional ByVal showOtherVariant As Boolean = False)
 
         Dim chtObjName As String
+        Dim pvName As String = ""
 
         If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
             Dim pptChart As PowerPoint.Chart = pptShape.Chart
@@ -2520,27 +2521,48 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
-            ' tk 23.4.19
-            Dim pvName As String = calcProjektKey(scInfo.pName, scInfo.vName)
-
             If scInfo.pName <> "" Then
 
                 Dim continueOperation As Boolean = False
                 If scInfo.prPF = ptPRPFType.portfolio Then
 
-                    ' lade das Portfolio 
+                    If currentConstellationName = scInfo.pName Then
+                        ' nix tun
+                        continueOperation = True
+                    Else
 
-                    ' bringe alles in ShowProjekte 
 
-                    ' besetzte ggf den Zeitraum
-                    If scInfo.hasValidZeitraum Then
-                        showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                        showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                        Try
+                            currentConstellationName = scInfo.pName
+                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                            ' lade das Portfolio 
+                            Dim err As New clsErrorCodeMsg
+                            Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+
+                            ' bringe alles in ShowProjekte 
+                            For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                            Next
+
+                            ' besetzte ggf den Zeitraum
+                            If scInfo.hasValidZeitraum Then
+                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            End If
+
+
+                            continueOperation = Not IsNothing(ShowProjekte)
+                        Catch ex As Exception
+                            Call MsgBox("Chart kann nicht aktualisiert werden ..")
+                        End Try
                     End If
 
 
-                    continueOperation = Not IsNothing(ShowProjekte)
                 Else
+
+                    ' tk 23.4.19
+                    pvname = calcProjektKey(scInfo.pName, scInfo.vName)
 
                     ' damit auch eine andere Variante gezeigt werden kann ... 
                     If showOtherVariant Then
@@ -2568,7 +2590,6 @@ Module Module1
 
                         ' jetzt muss das chtobj aktualisiert werden ... 
                         Try
-                            Dim a As Integer = scInfo.hproj.dauerInDays
 
                             If (scInfo.chartTyp = PTChartTypen.Balken) Or
                                 (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
@@ -2576,6 +2597,7 @@ Module Module1
 
                                 If scInfo.prPF = ptPRPFType.project Then
                                     Try
+                                        Dim a As Integer = scInfo.hproj.dauerInDays
 
                                         If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
                                             'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
@@ -2746,7 +2768,7 @@ Module Module1
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
 
-        Call bestimmePstartPlen(scInfo.hproj, scInfo.vglProj, pstart, plen)
+        Call bestimmePstartPlen(scInfo, pstart, plen)
 
 
 
@@ -3110,7 +3132,7 @@ Module Module1
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
 
-        Call bestimmePstartPlen(scInfo.hproj, scInfo.vglProj, pstart, plen)
+        Call bestimmePstartPlen(scInfo, pstart, plen)
 
 
 
@@ -9235,7 +9257,7 @@ Module Module1
 
 
             Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
-                Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim formerSlide As PowerPoint.Slide = currentSlide
             'Dim saveCurrentTimeStamp As Date = currentTimestamp
 
             For i As Integer = 1 To pres.Slides.Count
@@ -9325,6 +9347,8 @@ Module Module1
             previousTimeStamp = currentTimestamp
             currentTimestamp = newdate
 
+            ' jetzt muss auch die currentConstellationName wieder zurück gesetzt werden 
+            currentConstellationName = ""
 
             Call moveAllShapes()
 
