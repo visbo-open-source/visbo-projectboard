@@ -2891,7 +2891,13 @@ Public Class Request
                                 anzLoop = 2 ' while-Schleife beenden
                             Else
                                 Try
-                                    pName = VRScache.VPsId(vpid).name
+                                    ' vermeiden, dass eine NullReference Exception geworfen wird ..
+                                    If VRScache.VPsId.ContainsKey(vpid) Then
+                                        pName = VRScache.VPsId(vpid).name
+                                    Else
+                                        pName = ""
+                                    End If
+
                                 Catch ex As Exception
                                     pName = ""
                                 End Try

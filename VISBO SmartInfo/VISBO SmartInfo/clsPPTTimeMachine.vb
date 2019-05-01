@@ -45,6 +45,8 @@ Public Class clsPPTTimeMachine
         _minmaxTimeStamps(0) = Date.Now
         _minmaxTimeStamps(1) = Date.MinValue
 
+        Dim defaultSettingNecessary As Boolean = True
+
         If smartSlideLists.countProjects > 0 Then
             ' es gibt Projekte , also anpassen 
 
@@ -66,6 +68,9 @@ Public Class clsPPTTimeMachine
                             If _minmaxTimeStamps(1) < maxTs Then
                                 _minmaxTimeStamps(1) = maxTs
                             End If
+
+                            defaultSettingNecessary = False
+
                         End If
 
                     End If
@@ -74,6 +79,11 @@ Public Class clsPPTTimeMachine
             Next
         Else
             ' es muss nichts weiter getan werden, minmax Werte sind bereits zurückgesetzt 
+        End If
+
+        If defaultSettingNecessary Then
+            _minmaxTimeStamps(0) = Date.Now.Date
+            _minmaxTimeStamps(1) = _minmaxTimeStamps(0).AddHours(23).AddMinutes(59)
         End If
 
 

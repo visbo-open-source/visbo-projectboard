@@ -9,6 +9,33 @@ Public Class clsConstellationItem
     Private _show As Boolean = False
     Private _zeile As Integer = 0
 
+    ''' <summary>
+    ''' prüft auf Identität 
+    ''' </summary>
+    ''' <param name="vglCI"></param>
+    ''' <returns></returns>
+    Public Function isIdentical(ByVal vglCI As clsConstellationItem) As Boolean
+        Dim istGleich As Boolean = False
+
+        If projectTyp = vglCI.projectTyp Then
+            If reasonToInclude = vglCI.reasonToInclude Then
+                If projectName = vglCI.projectName Then
+                    If variantName = vglCI.variantName Then
+                        If show = vglCI.show Then
+                            If DateDiff(DateInterval.Month, start, vglCI.start) = 0 Then
+                                If zeile = vglCI.zeile Then
+                                    istGleich = True
+                                End If
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        End If
+
+        isIdentical = istGleich
+    End Function
+
     Public Property reasonToInclude As String
         Get
             reasonToInclude = _reasonToInclude
@@ -26,7 +53,13 @@ Public Class clsConstellationItem
         End Get
         Set(value As String)
             If Not IsNothing(value) Then
-                _projectTyp = value
+                If value = ptPRPFType.project.ToString Or
+                        value = ptPRPFType.portfolio.ToString Then
+                    _projectTyp = value
+                Else
+                    _projectTyp = ptPRPFType.project.ToString
+                End If
+
             End If
         End Set
     End Property
