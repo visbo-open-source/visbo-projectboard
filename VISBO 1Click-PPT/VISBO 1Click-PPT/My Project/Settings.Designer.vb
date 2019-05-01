@@ -64,7 +64,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("MS Project VISBO AddIn")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -73,7 +73,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Task Class - local")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Task Class")>  _
     Public ReadOnly Property TaskClass() As String
         Get
             Return CType(Me("TaskClass"),String)
@@ -82,7 +82,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Alias")>  _
     Public ReadOnly Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
@@ -100,7 +100,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("10.28.10.38")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -127,7 +127,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Indikatoren")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Indicators")>  _
     Public ReadOnly Property VISBOAmpelText() As String
         Get
             Return CType(Me("VISBOAmpelText"),String)
@@ -145,7 +145,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Kontaktperson")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Contact")>  _
     Public ReadOnly Property VISBOresponsible() As String
         Get
             Return CType(Me("VISBOresponsible"),String)
@@ -154,7 +154,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("% Abgeschlossen")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Complete")>  _
     Public ReadOnly Property VISBOpercentDone() As String
         Get
             Return CType(Me("VISBOpercentDone"),String)
@@ -163,7 +163,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("TMS_View_local")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("TMS_View")>  _
     Public ReadOnly Property VISBOMapping() As String
         Get
             Return CType(Me("VISBOMapping"),String)
