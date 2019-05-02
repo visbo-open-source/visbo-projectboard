@@ -48,8 +48,8 @@
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
         Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.DBspeichern = Me.Factory.CreateRibbonButton
-        Me.Einstellung = Me.Factory.CreateRibbonButton
         Me.Separator2 = Me.Factory.CreateRibbonSeparator
+        Me.Einstellung = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
@@ -92,10 +92,15 @@
         'DBspeichern
         '
         Me.DBspeichern.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.DBspeichern.Enabled = False
         Me.DBspeichern.Image = CType(resources.GetObject("DBspeichern.Image"), System.Drawing.Image)
         Me.DBspeichern.Label = "Speichern in DB"
         Me.DBspeichern.Name = "DBspeichern"
         Me.DBspeichern.ShowImage = True
+        '
+        'Separator2
+        '
+        Me.Separator2.Name = "Separator2"
         '
         'Einstellung
         '
@@ -106,10 +111,6 @@
         Me.Einstellung.ScreenTip = "Einstellung"
         Me.Einstellung.ShowImage = True
         Me.Einstellung.Visible = False
-        '
-        'Separator2
-        '
-        Me.Separator2.Name = "Separator2"
         '
         'Ribbon1
         '

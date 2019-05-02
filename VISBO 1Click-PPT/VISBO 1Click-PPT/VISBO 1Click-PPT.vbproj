@@ -35,7 +35,7 @@
     <PublishUrl>C:\publish\VISBO 1ClickPPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.22</ApplicationVersion>
+    <ApplicationVersion>2.1.0.23</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
