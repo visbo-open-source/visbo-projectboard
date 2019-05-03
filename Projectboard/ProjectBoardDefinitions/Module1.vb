@@ -2132,227 +2132,228 @@ Public Module Module1
 
 
 
-    Sub awinRightClickinPortfolioAendern()
-        Dim myBar As CommandBar
-        Dim myitem As CommandBarButton
-        'Dim myitem As CommandBarControl
-        Dim i As Integer, endofsearch As Integer
-        Dim found As Boolean
-        Dim awinevent As clsEventsPfCharts
+    ' tk 3.5.19 de-aktiviert
+    'Sub awinRightClickinPortfolioAendern()
+    '    Dim myBar As CommandBar
+    '    Dim myitem As CommandBarButton
+    '    'Dim myitem As CommandBarControl
+    '    Dim i As Integer, endofsearch As Integer
+    '    Dim found As Boolean
+    '    Dim awinevent As clsEventsPfCharts
 
-        found = False
-        i = 1
+    '    found = False
+    '    i = 1
 
-        With appInstance.CommandBars
-            endofsearch = .Count
+    '    With appInstance.CommandBars
+    '        endofsearch = .Count
 
-            While i <= endofsearch And Not found
-                If .Item(i).Name = "awinRightClickinPortfolio" Then
-                    found = True
-                Else
-                    i = i + 1
-                End If
-            End While
-        End With
+    '        While i <= endofsearch And Not found
+    '            If .Item(i).Name = "awinRightClickinPortfolio" Then
+    '                found = True
+    '            Else
+    '                i = i + 1
+    '            End If
+    '        End While
+    '    End With
 
-        If found Then
-            Exit Sub
-        End If
+    '    If found Then
+    '        Exit Sub
+    '    End If
 
-        'CommandBars.Item.Name
-        myBar = appInstance.CommandBars.Add(Name:="awinRightClickinPortfolio", Position:=MsoBarPosition.msoBarPopup, Temporary:=True)
-
-
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Umbenennen"
-            .Tag = "Umbenennen"
-            '.OnAction = "awinRenameProject"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button3Events = myitem
-        awinevent = New clsEventsPfCharts
-        awinevent.PfChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
+    '    'CommandBars.Item.Name
+    '    myBar = appInstance.CommandBars.Add(Name:="awinRightClickinPortfolio", Position:=MsoBarPosition.msoBarPopup, Temporary:=True)
 
 
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Löschen"
-            .Tag = "Loesche aus Portfolio"
-            '.OnAction = "awinDeleteChartorProject"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button3Events = myitem
-        awinevent = New clsEventsPfCharts
-        awinevent.PfChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
-
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Show / Noshow"
-            .Tag = "Show / Noshow"
-            '.OnAction = "awinShowNoShowProject"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button3Events = myitem
-        awinevent = New clsEventsPfCharts
-        awinevent.PfChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
-
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Bearbeiten Projekt-Attribute"
-            .Tag = "Bearbeiten Projekt-Attribute"
-            '.OnAction = "awinEditDataProject"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button3Events = myitem
-        awinevent = New clsEventsPfCharts
-        awinevent.PfChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
-
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Beauftragen"
-            .Tag = "Beauftragen"
-            '.OnAction = "awinBeauftrageProject"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button3Events = myitem
-        awinevent = New clsEventsPfCharts
-        awinevent.PfChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
-
-    End Sub
-
-    ''' <summary>
-    ''' aktiviert die Right Clicks in den Charts 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Sub awinRightClickinPRCCharts()
-        Dim myBar As CommandBar
-        Dim myitem As CommandBarButton
-        Dim i As Integer, endofsearch As Integer
-        Dim found As Boolean
-        'Dim awinevent As clsAwinEvents
-        Dim awinevent As clsEventsPrcCharts
-
-        found = False
-        i = 1
-
-        With appInstance.CommandBars
-            endofsearch = .Count
-
-            While i <= endofsearch And Not found
-                If .Item(i).Name = "awinRightClickinPRCChart" Then
-                    found = True
-                Else
-                    i = i + 1
-                End If
-            End While
-        End With
-
-        If found Then
-            Exit Sub
-        End If
-
-        'CommandBars.Item.Name
-        myBar = appInstance.CommandBars.Add(Name:="awinRightClickinPRCChart", Position:=MsoBarPosition.msoBarPopup, Temporary:=True)
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Umbenennen"
+    '        .Tag = "Umbenennen"
+    '        '.OnAction = "awinRenameProject"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button3Events = myitem
+    '    awinevent = New clsEventsPfCharts
+    '    awinevent.PfChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
 
 
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Löschen"
-            .Tag = "Löschen"
-            '.OnAction = "awinDeleteChartorProject"
-        End With
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Löschen"
+    '        .Tag = "Loesche aus Portfolio"
+    '        '.OnAction = "awinDeleteChartorProject"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button3Events = myitem
+    '    awinevent = New clsEventsPfCharts
+    '    awinevent.PfChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
 
-        'awinevent = New clsAwinEvent
-        'awinevent.Button4Events = myitem
-        awinevent = New clsEventsPrcCharts
-        awinevent.PrcChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Show / Noshow"
+    '        .Tag = "Show / Noshow"
+    '        '.OnAction = "awinShowNoShowProject"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button3Events = myitem
+    '    awinevent = New clsEventsPfCharts
+    '    awinevent.PfChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
 
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "Röntgenblick ein/aus"
-            .Tag = "Bedarf anzeigen"
-            '.OnAction = "awinShowNeedsOfProjects"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button4Events = myitem
-        awinevent = New clsEventsPrcCharts
-        awinevent.PrcChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Bearbeiten Projekt-Attribute"
+    '        .Tag = "Bearbeiten Projekt-Attribute"
+    '        '.OnAction = "awinEditDataProject"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button3Events = myitem
+    '    awinevent = New clsEventsPfCharts
+    '    awinevent.PfChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
 
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "nach Freiheitsgraden optimieren"
-            .Tag = "Optimieren"
-            '.OnAction = "awinOptimizeStartOfProjects"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button4Events = myitem
-        awinevent = New clsEventsPrcCharts
-        awinevent.PrcChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Beauftragen"
+    '        .Tag = "Beauftragen"
+    '        '.OnAction = "awinBeauftrageProject"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button3Events = myitem
+    '    awinevent = New clsEventsPfCharts
+    '    awinevent.PfChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
 
-        ' ergänzt am 2.11.2014
-        ' Add a menu item
-        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
-        With myitem
-            .Caption = "nach Varianten optimieren"
-            .Tag = "Varianten optimieren"
-            '.OnAction = "awinOptimizeStartOfProjects"
-        End With
-        'awinevent = New clsAwinEvent
-        'awinevent.Button4Events = myitem
-        awinevent = New clsEventsPrcCharts
-        awinevent.PrcChartRightClick = myitem
-        awinButtonEvents.Add(awinevent)
+    'End Sub
 
-    End Sub
+    '''' <summary>
+    '''' aktiviert die Right Clicks in den Charts 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Sub awinRightClickinPRCCharts()
+    '    Dim myBar As CommandBar
+    '    Dim myitem As CommandBarButton
+    '    Dim i As Integer, endofsearch As Integer
+    '    Dim found As Boolean
+    '    'Dim awinevent As clsAwinEvents
+    '    Dim awinevent As clsEventsPrcCharts
 
-    Sub awinKontextReset()
+    '    found = False
+    '    i = 1
 
-        Try
-            appInstance.CommandBars("awinRightClickinPortfolio").Delete()
-        Catch ex As Exception
+    '    With appInstance.CommandBars
+    '        endofsearch = .Count
 
-        End Try
+    '        While i <= endofsearch And Not found
+    '            If .Item(i).Name = "awinRightClickinPRCChart" Then
+    '                found = True
+    '            Else
+    '                i = i + 1
+    '            End If
+    '        End While
+    '    End With
 
-        Try
-            appInstance.CommandBars("awinRightClickinPRCChart").Delete()
-        Catch ex As Exception
+    '    If found Then
+    '        Exit Sub
+    '    End If
 
-        End Try
-
-
-        ' die Short Cut Menues aus Excel wieder alle aktivieren ...
-        'Dim cbar As CommandBar
-
-        'For Each cbar In appInstance.CommandBars
-
-        '    cbar.Enabled = True
-        '    'Try
-        '    '    cbar.Reset()
-        '    'Catch ex As Exception
-
-        '    'End Try
-
-        'Next
+    '    'CommandBars.Item.Name
+    '    myBar = appInstance.CommandBars.Add(Name:="awinRightClickinPRCChart", Position:=MsoBarPosition.msoBarPopup, Temporary:=True)
 
 
-    End Sub
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Löschen"
+    '        .Tag = "Löschen"
+    '        '.OnAction = "awinDeleteChartorProject"
+    '    End With
+
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button4Events = myitem
+    '    awinevent = New clsEventsPrcCharts
+    '    awinevent.PrcChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
+
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "Röntgenblick ein/aus"
+    '        .Tag = "Bedarf anzeigen"
+    '        '.OnAction = "awinShowNeedsOfProjects"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button4Events = myitem
+    '    awinevent = New clsEventsPrcCharts
+    '    awinevent.PrcChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
+
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "nach Freiheitsgraden optimieren"
+    '        .Tag = "Optimieren"
+    '        '.OnAction = "awinOptimizeStartOfProjects"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button4Events = myitem
+    '    awinevent = New clsEventsPrcCharts
+    '    awinevent.PrcChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
+
+    '    ' ergänzt am 2.11.2014
+    '    ' Add a menu item
+    '    myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+    '    With myitem
+    '        .Caption = "nach Varianten optimieren"
+    '        .Tag = "Varianten optimieren"
+    '        '.OnAction = "awinOptimizeStartOfProjects"
+    '    End With
+    '    'awinevent = New clsAwinEvent
+    '    'awinevent.Button4Events = myitem
+    '    awinevent = New clsEventsPrcCharts
+    '    awinevent.PrcChartRightClick = myitem
+    '    awinButtonEvents.Add(awinevent)
+
+    'End Sub
+
+    'Sub awinKontextReset()
+
+    '    Try
+    '        appInstance.CommandBars("awinRightClickinPortfolio").Delete()
+    '    Catch ex As Exception
+
+    '    End Try
+
+    '    Try
+    '        appInstance.CommandBars("awinRightClickinPRCChart").Delete()
+    '    Catch ex As Exception
+
+    '    End Try
+
+
+    '    ' die Short Cut Menues aus Excel wieder alle aktivieren ...
+    '    'Dim cbar As CommandBar
+
+    '    'For Each cbar In appInstance.CommandBars
+
+    '    '    cbar.Enabled = True
+    '    '    'Try
+    '    '    '    cbar.Reset()
+    '    '    'Catch ex As Exception
+
+    '    '    'End Try
+
+    '    'Next
+
+
+    'End Sub
 
 
 

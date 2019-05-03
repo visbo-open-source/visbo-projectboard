@@ -251,12 +251,15 @@ Imports System.Web
 
         If returnValue = DialogResult.OK Then
 
+            Dim errMsg As New clsErrorCodeMsg
+            Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(errMsg)
+
             For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
 
                 Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
                 Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-                Call storeSingleConstellationToDB(outPutCollection, currentConstellation)
+                Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbConstellations)
 
             Next
 
@@ -3021,6 +3024,13 @@ Imports System.Web
 
 
             Case "PT2G2B5" ' Sperre setzen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Schreibschutz setzen/aufheben..."
+                Else
+                    tmpLabel = "Set/Unset Write-Protection..."
+                End If
+
+            Case "PT2G2B5oa" ' Sperre setzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Schreibschutz setzen/aufheben..."
                 Else

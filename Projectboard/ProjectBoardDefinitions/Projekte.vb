@@ -16163,19 +16163,19 @@ Public Module Projekte
                     ' sortedlist of String, string, Deliverables
                     alsoCompareValues = False
                 Case 1
-                    ' Custom String Fields
+                    ' String Values
                     If Not istVorlage Then
                         alsoCompareValues = True
                     End If
 
                 Case 2
-                    ' Custom Double Fields
+                    '  Double Values
                     If Not istVorlage Then
                         alsoCompareValues = True
                     End If
 
                 Case 3
-                    ' Custom Boolean 
+                    ' Boolean Values  
                     If Not istVorlage Then
                         alsoCompareValues = True
                     End If
@@ -16203,14 +16203,14 @@ Public Module Projekte
 
                     Try
                         If alsoCompareValues Then
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or
-                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Or
+                                CBool(slist1.ElementAt(i).Value <> slist2.ElementAt(i).Value) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
                             End If
                         Else
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
@@ -16297,14 +16297,14 @@ Public Module Projekte
 
                     Try
                         If alsoCompareValues Then
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or
-                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Or
+                                CBool(slist1.ElementAt(i).Value <> slist2.ElementAt(i).Value) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
                             End If
                         Else
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
@@ -16391,14 +16391,14 @@ Public Module Projekte
 
                     Try
                         If alsoCompareValues Then
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or
-                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Or
+                                CBool(slist1.ElementAt(i).Value <> slist2.ElementAt(i).Value) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
                             End If
                         Else
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
@@ -16485,14 +16485,14 @@ Public Module Projekte
 
                     Try
                         If alsoCompareValues Then
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Or
-                                CBool(slist1.ElementAt(0).Value <> slist2.ElementAt(0).Value) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Or
+                                CBool(slist1.ElementAt(i).Value <> slist2.ElementAt(i).Value) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1
                             End If
                         Else
-                            If CBool(slist1.ElementAt(0).Key <> slist2.ElementAt(0).Key) Then
+                            If CBool(slist1.ElementAt(i).Key <> slist2.ElementAt(i).Key) Then
                                 istIdentisch = False
                             Else
                                 i = i + 1

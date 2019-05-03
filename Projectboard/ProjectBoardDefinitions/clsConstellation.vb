@@ -32,6 +32,39 @@
     Private _constellationName As String = "Last"
 
     ''' <summary>
+    ''' prüft auf Identität
+    ''' </summary>
+    ''' <param name="vglC"></param>
+    ''' <returns></returns>
+    Public Function isIdentical(ByVal vglC As clsConstellation) As Boolean
+        Dim istgleich As Boolean = False
+
+        If constellationName = vglC.constellationName Then
+            If sortCriteria = vglC.sortCriteria Then
+                If Not sortedListsAreDifferent(sortListe, vglC.sortListe, 1, ) Then
+                    If count = vglC.count Then
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                            Dim vglItem As clsConstellationItem = vglC.getItem(kvp.Key)
+                            If Not IsNothing(vglItem) Then
+                                istgleich = kvp.Value.isIdentical(vglItem)
+                            Else
+                                istgleich = False
+                                Exit For
+                            End If
+
+                        Next
+                    End If
+                End If
+
+            End If
+        End If
+
+        isIdentical = istgleich
+
+    End Function
+
+    ''' <summary>
     ''' gibt eine sortierte Liste der eindeutigen Projekt-IDs zurück, das heisst wenn Summary PRojekte enthalten sind, werden die solange aufgelöst, bis nur noch Projekte enthalten sind 
     ''' 
     ''' </summary>
@@ -728,6 +761,25 @@
     End Property
 
     ''' <summary>
+    ''' aktuell darf eine Constellation nur dann in der DB gespeichert werden, wenn ein Projekt mit genau einer Variante vorkommt 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function isValidForDBStore() As Boolean
+        Dim tmpResult As Boolean = True
+
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            Dim pName As String = kvp.Value.projectName
+            Dim anzVariants As Integer = getVariantZahl(pName)
+            If anzVariants > 1 Then
+                tmpResult = False
+                Exit For
+            End If
+        Next
+
+        isValidForDBStore = tmpResult
+    End Function
+
+    ''' <summary>
     ''' provides the list of variant Names in alphabetical order 
     ''' if mitKlammer = true then items will enclosed by ()
     ''' </summary>
@@ -772,7 +824,11 @@
     Public ReadOnly Property getItem(key As String) As clsConstellationItem
 
         Get
-            getItem = _allItems(key)
+            If _allItems.ContainsKey(key) Then
+                getItem = _allItems(key)
+            Else
+                getItem = Nothing
+            End If
         End Get
 
     End Property
@@ -845,21 +901,30 @@
             With copyResult
                 .constellationName = cName
 
+                If prepareForDB Then
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
+                        .add(cItem:=copiedItem)
+                    Next
+                    .lastCustomList = Nothing
+                Else
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
+                        .add(cItem:=copiedItem, noUpdateSortlist:=True)
+                    Next
 
-                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
-                    .add(cItem:=copiedItem, noUpdateSortlist:=True)
-                Next
+                    ' jetzt sortliste und sorttype kopieren 
+                    .sortListe(_sortType) = _sortList
 
-                ' jetzt sortliste und sorttype kopieren 
-                .sortListe(_sortType) = _sortList
-
-                ' jetzt ggf die lastCustomList kopieren 
-                If Not IsNothing(_lastCustomList) Then
-                    If _lastCustomList.Count > 0 Then
-                        .lastCustomList = _lastCustomList
+                    ' jetzt ggf die lastCustomList kopieren 
+                    If Not IsNothing(_lastCustomList) Then
+                        If _lastCustomList.Count > 0 Then
+                            .lastCustomList = _lastCustomList
+                        End If
                     End If
                 End If
+
+
 
             End With
 

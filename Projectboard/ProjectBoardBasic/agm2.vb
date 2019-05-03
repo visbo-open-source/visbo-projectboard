@@ -8618,7 +8618,11 @@ Public Module agm2
 
                     ' lese den Projekt-Namen
                     Try
-                        pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value).Trim
+                        If Not IsNothing(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value) Then
+                            pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value).Trim
+                        Else
+                            pName = Nothing
+                        End If
                         ok = True
                     Catch ex As Exception
                         pName = Nothing
@@ -8662,6 +8666,8 @@ Public Module agm2
                                 itemType = 0
                             End Try
 
+                            ok = False
+
                             If projektvorhaben.Contains(itemType) Then
                                 ' ok weitermachen
                                 ok = True
@@ -8698,22 +8704,31 @@ Public Module agm2
                                                 ' wenn nein, einfach Warning ausgeben 
                                                 Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
                                                 If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                                    outputCollection.Add(outPutLine)
 
-                                                    Dim logtxt(2) As String
-                                                    logtxt(0) = "Budget-Überschreitung"
-                                                    logtxt(1) = "Programmlinie"
-                                                    logtxt(2) = unionProj.name
-                                                    Dim values(2) As Double
-                                                    values(0) = unionProj.Erloes
-                                                    values(1) = tmpGesamtCost
-                                                    If values(0) > 0 Then
-                                                        values(2) = tmpGesamtCost / unionProj.Erloes
-                                                    Else
-                                                        values(2) = 9999999999
+                                                    Dim goOn As Boolean = True
+                                                    If unionProj.Erloes > 0 Then
+                                                        goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
                                                     End If
-                                                    Call logfileSchreiben(logtxt, values)
+
+                                                    If goOn Then
+                                                        outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                                        outputCollection.Add(outPutLine)
+
+                                                        Dim logtxt(2) As String
+                                                        logtxt(0) = "Budget-Überschreitung"
+                                                        logtxt(1) = "Programmlinie"
+                                                        logtxt(2) = unionProj.name
+                                                        Dim values(2) As Double
+                                                        values(0) = unionProj.Erloes
+                                                        values(1) = tmpGesamtCost
+                                                        If values(0) > 0 Then
+                                                            values(2) = tmpGesamtCost / unionProj.Erloes
+                                                        Else
+                                                            values(2) = 9999999999
+                                                        End If
+                                                        Call logfileSchreiben(logtxt, values)
+                                                    End If
+
                                                 End If
 
                                             Catch ex As Exception
@@ -8776,9 +8791,10 @@ Public Module agm2
                                     ' lese , wieviel Prozent der Gesamtsumme jeweils auf die Release verteilt werden soll 
                                     For i As Integer = 0 To anzReleases - 1
                                         Try
-                                            relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
-                                            If IsNothing(relPrz(i)) Then
+                                            If IsNothing(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value) Then
                                                 relPrz(i) = 0.0
+                                            Else
+                                                relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
                                             End If
                                         Catch ex As Exception
                                             relPrz(i) = 0.0
@@ -8792,15 +8808,15 @@ Public Module agm2
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
                                             If relPrz.Sum < 0.99 Then
-                                                outPutLine = pName & "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & " Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             Else
-                                                outPutLine = pName & "Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & " Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             End If
 
                                             outputCollection.Add(outPutLine)
 
                                             Dim logtxt(1) As String
-                                            logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                            logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .. "
                                             logtxt(1) = pName
 
                                             Call logfileSchreiben(logtxt)
@@ -8976,22 +8992,31 @@ Public Module agm2
                                 ' wenn nein, einfach Warning ausgeben 
                                 Dim tmpGesamtCost As Double = hproj.getGesamtKostenBedarf.Sum
                                 If hproj.Erloes - tmpGesamtCost < 0 Then
-                                    outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                    outputCollection.Add(outPutLine)
 
-                                    Dim logtxt(2) As String
-                                    logtxt(0) = "Budget-Überschreitung"
-                                    logtxt(1) = "Projekt"
-                                    logtxt(2) = pName
-                                    Dim values(2) As Double
-                                    values(0) = hproj.Erloes
-                                    values(1) = tmpGesamtCost
-                                    If values(0) > 0 Then
-                                        values(2) = tmpGesamtCost / hproj.Erloes
-                                    Else
-                                        values(2) = 9999999999
+                                    Dim goOn As Boolean = True
+                                    If hproj.Erloes > 0 Then
+                                        goOn = (tmpGesamtCost - hproj.Erloes) / hproj.Erloes > 0.05
                                     End If
-                                    Call logfileSchreiben(logtxt, values)
+
+                                    If goOn Then
+                                        outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                        outputCollection.Add(outPutLine)
+
+                                        Dim logtxt(2) As String
+                                        logtxt(0) = "Budget-Überschreitung"
+                                        logtxt(1) = "Projekt"
+                                        logtxt(2) = pName
+                                        Dim values(2) As Double
+                                        values(0) = hproj.Erloes
+                                        values(1) = tmpGesamtCost
+                                        If values(0) > 0 Then
+                                            values(2) = tmpGesamtCost / hproj.Erloes
+                                        Else
+                                            values(2) = 9999999999
+                                        End If
+                                        Call logfileSchreiben(logtxt, values)
+                                    End If
+
                                 End If
 
                             Catch ex As Exception
@@ -9115,22 +9140,30 @@ Public Module agm2
                             ' wenn nein, einfach Warning ausgeben 
                             Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
                             If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                outputCollection.Add(outPutLine)
-
-                                Dim logtxt(2) As String
-                                logtxt(0) = "Budget-Überschreitung"
-                                logtxt(1) = "Programmlinie"
-                                logtxt(2) = unionProj.name
-                                Dim values(2) As Double
-                                values(0) = unionProj.Erloes
-                                values(1) = tmpGesamtCost
-                                If values(0) > 0 Then
-                                    values(2) = tmpGesamtCost / unionProj.Erloes
-                                Else
-                                    values(2) = 9999999999
+                                Dim goOn As Boolean = True
+                                If unionProj.Erloes > 0 Then
+                                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
                                 End If
-                                Call logfileSchreiben(logtxt, values)
+
+                                If goOn Then
+                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                    outputCollection.Add(outPutLine)
+
+                                    Dim logtxt(2) As String
+                                    logtxt(0) = "Budget-Überschreitung"
+                                    logtxt(1) = "Programmlinie"
+                                    logtxt(2) = unionProj.name
+                                    Dim values(2) As Double
+                                    values(0) = unionProj.Erloes
+                                    values(1) = tmpGesamtCost
+                                    If values(0) > 0 Then
+                                        values(2) = tmpGesamtCost / unionProj.Erloes
+                                    Else
+                                        values(2) = 9999999999
+                                    End If
+                                    Call logfileSchreiben(logtxt, values)
+                                End If
+
                             End If
 
                         Catch ex As Exception
@@ -17170,7 +17203,12 @@ Public Module agm2
 
                 For di As Integer = 0 To exportOrdnerNames.Length - 1
                     Try
-                        My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                        If Not IsNothing(exportOrdnerNames(di)) Then
+                            My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                        Else
+                            exportOrdnerNames(di) = "-"
+                        End If
+
                     Catch ex As Exception
 
                     End Try

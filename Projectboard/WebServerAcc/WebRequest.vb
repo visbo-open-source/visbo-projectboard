@@ -2891,7 +2891,13 @@ Public Class Request
                                 anzLoop = 2 ' while-Schleife beenden
                             Else
                                 Try
-                                    pName = VRScache.VPsId(vpid).name
+                                    ' vermeiden, dass eine NullReference Exception geworfen wird ..
+                                    If VRScache.VPsId.ContainsKey(vpid) Then
+                                        pName = VRScache.VPsId(vpid).name
+                                    Else
+                                        pName = ""
+                                    End If
+
                                 Catch ex As Exception
                                     pName = ""
                                 End Try
@@ -5425,14 +5431,21 @@ Public Class Request
                     hConstItem = New clsConstellationItem
                     hConstItem = clsVPfItem2clsConstItem(hvpfItem)
 
-                    Dim pvname As String = calcProjektKey(hConstItem.projectName, hConstItem.variantName)
-                    If Not .Liste.ContainsKey(pvname) Then
-                        result.Liste.Add(pvname, hConstItem)
+                    If hConstItem.projectName <> "" Then
+                        Dim pvname As String = calcProjektKey(hConstItem.projectName, hConstItem.variantName)
+                        If Not .Liste.ContainsKey(pvname) Then
+                            result.Liste.Add(pvname, hConstItem)
+                        End If
+                    Else
+                        ' Test Breakpunkt 
+                        Dim a As Integer = 2
                     End If
 
                 Next
+                ' hier wird die Sortliste aufgebaut ... 
                 .sortCriteria = vpf.sortType
-                Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+                ' tk die Sort-Liste ist im Befehl vorher bereits aufgebaut 
+                ' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
             End With
 
         Catch ex As Exception

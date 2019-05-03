@@ -3414,7 +3414,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub storeSingleConstellationToDB(ByRef outPutCollection As Collection,
                                             ByVal currentConstellation As clsConstellation,
-                                            Optional ByVal storeProjectsAsWell As Boolean = False)
+                                            ByVal dbConstellations As clsConstellations)
 
         Dim err As New clsErrorCodeMsg
 
@@ -3429,381 +3429,78 @@ Public Module awinGeneralModules
             DBtimeStamp = historicDate
         End If
 
-        ' jetzt müssen auch alle Projekte, die in der Constellation referenziert werden, aber noch nicht 
-        ' in der Datenbank gespeichert sind, abgespeichert werden ... 
-        ' bzw all die Projekte, die referenziert und sich verändert haben ... 
+        ' jetzt muss überprüft werden, ob auch alle Projekte bereits in der DB gespeichert sind ...  
+        Dim storeISAllowed As Boolean = True
 
-
-        If storeProjectsAsWell Then
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
-
-                Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
-
-                If Not IsNothing(hproj) Then
-
-                    ' prüfen auf Rolle 
-                    Call changeVariantNameAccordingUserRole(hproj)
-
-                    If hproj.projectType = ptPRPFType.portfolio Then
-                        ' dann muss erst diese Child-Constellation gespeichert werden ...
-                        Dim childConstellation As clsConstellation = projectConstellations.getConstellation(hproj.name)
-                        If Not IsNothing(childConstellation) Then
-                            Call storeSingleConstellationToDB(outPutCollection, childConstellation)
-                        End If
-                    End If
-
-                    ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
-                    If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now, err) Then
-                        ' speichern des Projektes
-
-                        Dim mProj As clsProjekt = Nothing           ' hier kommt das gemergte Projekt hinein
-
-                        hproj.timeStamp = DBtimeStamp
-
-
-                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err) Then
-
-
-                            If awinSettings.englishLanguage Then
-                                outputLine = "saved: " & hproj.name & ", " & hproj.variantName
-                                outPutCollection.Add(outputLine)
-                            Else
-                                outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
-                                outPutCollection.Add(outputLine)
-                            End If
-
-                            anzahlNeue = anzahlNeue + 1
-
-                            If Not IsNothing(mProj) Then
-
-                                'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
-                                Dim mProjKey As String = calcProjektKey(mProj.name, mProj.variantName)
-
-
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mProj.name, mProj.variantName, err)
-                                writeProtections.upsert(wpItem)
-
-                                Call replaceProjectVariant(mProj.name, mProj.variantName, False, True, mProj.tfZeile)
-
-
-                            Else
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                writeProtections.upsert(wpItem)
-                            End If
-
-                        Else
-                            If awinSettings.visboServer Then
-                                Select Case err.errorCode
-                                    Case 403  'No Permission to Create Visbo Project Version
-                                        If awinSettings.englishLanguage Then
-                                            outputLine = "!!  No permission to store : " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        Else
-                                            outputLine = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        End If
-
-                                    Case 409 ' VisboProjectVersion was already updated in between
-                                        If awinSettings.englishLanguage Then
-                                            outputLine = "!! Projekt was already updated in between : " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        Else
-                                            outputLine = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        End If
-
-                                    '' erneut das projekt holen und abändern
-                                    '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
-                                    'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
-
-                                    Case 423 ' Visbo Project (Portfolio) is locked by another user
-                                        If awinSettings.englishLanguage Then
-                                            outputLine = err.errorMsg & ": " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        Else
-                                            outputLine = "geschüztes Projekt : " & hproj.name & ", " & kvp.Value.variantName
-                                            outPutCollection.Add(outputLine)
-                                        End If
-
-                                End Select
-                            Else
-
-                                ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
-                                Else
-                                    outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
-                                End If
-                                outPutCollection.Add(outputLine)
-
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                writeProtections.upsert(wpItem)
-
-                            End If
-                        End If
-
-                    Else
-                        ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
-
-                        Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now, err)
-                        ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                        If Not hproj.isIdenticalTo(oldProj) Then
-
-                            Dim mproj As clsProjekt = Nothing    ' gemergedtes Projekt, oder nothing
-                            hproj.timeStamp = DBtimeStamp
-
-                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
-
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "saved: " & hproj.name & ", " & hproj.variantName
-                                    outPutCollection.Add(outputLine)
-                                Else
-                                    outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
-                                    outPutCollection.Add(outputLine)
-                                End If
-
-                                ' alles ok
-                                anzahlChanged = anzahlChanged + 1
-
-                                If Not IsNothing(mproj) Then
-
-                                    'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
-                                    Dim mProjKey As String = calcProjektKey(mproj.name, mproj.variantName)
-
-                                    'If AlleProjekte.Containskey(mProjKey) Then
-                                    '    AlleProjekte.Remove(mProjKey, False)
-                                    '    ShowProjekte.Remove(mproj.name)
-
-                                    '    AlleProjekte.Add(mproj, False)
-                                    '    ShowProjekte.Add(mproj)
-                                    'Else
-                                    '    AlleProjekte.Add(mproj, False)
-                                    '    ShowProjekte.Add(mproj)
-                                    'End If
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
-                                    writeProtections.upsert(wpItem)
-
-                                Else
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                    writeProtections.upsert(wpItem)
-                                End If
-                            Else
-
-                                If awinSettings.visboServer Then
-                                    Select Case err.errorCode
-                                        Case 403  'No Permission to Create Visbo Project Version
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
-
-                                        Case 409 ' VisboProjectVersion was already updated in between
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
-                                                '' erneut das projekt holen und abändern
-                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
-                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
-
-                                        Case 423 ' Visbo Project (Portfolio) is locked by another user
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
-
-                                    End Select
-                                Else
-
-                                    ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                                    If awinSettings.englishLanguage Then
-                                        outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
-                                    Else
-                                        outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
-                                    End If
-                                    outPutCollection.Add(outputLine)
-
-                                End If
-
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                writeProtections.upsert(wpItem)
-
-                            End If
-                        End If
-                    End If
-
-
-                End If
-
-
-            Next
-
-        End If
-
-
-
-        ' jetzt wird das Portfolio weggeschrieben 
-        Try
-            Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
-            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
-                ' alles in Ordnung, Speichern hat geklappt ... 
-            Else
-                If awinSettings.englishLanguage Then
-                    outputLine = "Error when writing scenario: " & currentConstellation.constellationName
-                Else
-                    outputLine = "Fehler beim Schreiben Szenario: " & currentConstellation.constellationName
-                End If
-                outPutCollection.Add(outputLine)
-
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
+            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, Date.Now, err) Then
+                storeISAllowed = False
+                Exit For
             End If
-        Catch ex As Exception
+        Next
+
+        If Not storeISAllowed Then
             If awinSettings.englishLanguage Then
-                outputLine = "Error when writing scenario" & vbLf & ex.Message
+                outputLine = "Portfolio contains Projects which aren't existing in DB! Please save projects first!"
+                outPutCollection.Add(outputLine)
             Else
-                outputLine = "Fehler beim Schreiben Szenario" & vbLf & ex.Message
+                outputLine = "Portfolio enthält Projekte, die noch nicht in der Datenbank enthalten sind. Bitte zuerst Projekte speichern!"
+                outPutCollection.Add(outputLine)
             End If
-            outPutCollection.Add(outputLine)
-            Exit Sub
-        End Try
+        Else
+            ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
+            Try
+                ' das Summary Project muss auf Basis der geladenen Projekte erstellt werden 
+                Dim budget As Double = -1.0
+                Dim calculateAndStoreSummaryProjekt As Boolean = False
+                Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
+
+                Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
+
+                Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+
+                ' das Portfolio Projekt
+                calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
 
 
+                If calculateAndStoreSummaryProjekt Then
 
-        ' jetzt muss ggf das Summary Projekt zur Constellation erzeugt und gespeichert werden
-        Try
-            ' das Summary Project muss auf Basis der geladenen Projekte erstellt werden 
-            Dim budget As Double = -1.0
-            Dim calculateAndStoreSummaryProjekt As Boolean = False
-            Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
-
-            Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
-
-            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
-
-            ' das Portfolio Projekt
-            calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-
-
-            If calculateAndStoreSummaryProjekt Then
-
-                If Not IsNothing(oldSummaryP) Then
-                    'budget = oldSummaryP.budgetWerte.Sum
-                    budget = oldSummaryP.Erloes
-                Else
-                    budget = currentConstellation.getBudgetOfShownProjects
-                End If
-
-                Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
-                sproj.variantName = tmpVariantName
-
-                Dim isIdentical As Boolean = False
-
-
-                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
-                    ' speichern des Projektes 
-
-                    sproj.timeStamp = DBtimeStamp
-
-                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
-
-                        If awinSettings.englishLanguage Then
-                            outputLine = "Portfolio / Summary Project saved: " & sproj.name & ", " & sproj.variantName
-                            outPutCollection.Add(outputLine)
-                        Else
-                            outputLine = "Portfolio / Summary Projekt gespeichert: " & sproj.name & ", " & sproj.variantName
-                            outPutCollection.Add(outputLine)
-                        End If
-
-                        anzahlNeue = anzahlNeue + 1
-
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                        writeProtections.upsert(wpItem)
-
-
+                    If Not IsNothing(oldSummaryP) Then
+                        'budget = oldSummaryP.budgetWerte.Sum
+                        budget = oldSummaryP.Erloes
                     Else
-                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                        If awinSettings.visboServer Then
-                            Select Case err.errorCode
-                                Case 403  'No Permission to Create Visbo Project Version
-                                    If awinSettings.englishLanguage Then
-                                        outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    Else
-                                        outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    End If
-
-                                Case 409 ' VisboProjectVersion was already updated in between
-                                    If awinSettings.englishLanguage Then
-                                        outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    Else
-                                        outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    End If
-                                '' erneut das projekt holen und abändern
-                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
-                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
-
-                                Case 423 ' Visbo Project (Portfolio) is locked by another user
-                                    If awinSettings.englishLanguage Then
-                                        outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    Else
-                                        outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
-                                        outPutCollection.Add(outputLine)
-                                    End If
-
-                            End Select
-                        Else
-
-                            ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                            If awinSettings.englishLanguage Then
-                                outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
-                            Else
-                                outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
-                            End If
-                            outPutCollection.Add(outputLine)
-
-                        End If
-
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                        writeProtections.upsert(wpItem)
-
+                        budget = currentConstellation.getBudgetOfShownProjects
                     End If
-                Else
-                    ' das Portfolio Projekt wird gespeichert , wenn es Unterschiede gibt 
-                    Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now, err)
-                    ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                    If Not sproj.isIdenticalTo(oldProj) Then
+
+                    Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
+                    sproj.variantName = tmpVariantName
+
+                    Dim isIdentical As Boolean = False
+
+
+                    If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
+                        ' speichern des Projektes 
 
                         sproj.timeStamp = DBtimeStamp
 
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                             If awinSettings.englishLanguage Then
-                                outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                                outputLine = "Portfolio / Summary Project saved: " & sproj.name & ", " & sproj.variantName
                                 outPutCollection.Add(outputLine)
                             Else
-                                outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                                outputLine = "Portfolio / Summary Projekt gespeichert: " & sproj.name & ", " & sproj.variantName
                                 outPutCollection.Add(outputLine)
                             End If
 
-                            ' alles ok
-                            anzahlChanged = anzahlChanged + 1
+                            anzahlNeue = anzahlNeue + 1
 
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
                             writeProtections.upsert(wpItem)
 
+
                         Else
+                            ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
                             If awinSettings.visboServer Then
                                 Select Case err.errorCode
                                     Case 403  'No Permission to Create Visbo Project Version
@@ -3823,9 +3520,9 @@ Public Module awinGeneralModules
                                             outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
                                             outPutCollection.Add(outputLine)
                                         End If
-                                                '' erneut das projekt holen und abändern
-                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
-                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+                                '' erneut das projekt holen und abändern
+                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
 
                                     Case 423 ' Visbo Project (Portfolio) is locked by another user
                                         If awinSettings.englishLanguage Then
@@ -3853,82 +3550,201 @@ Public Module awinGeneralModules
                             writeProtections.upsert(wpItem)
 
                         End If
+                    Else
+                        ' das Portfolio Projekt wird gespeichert , wenn es Unterschiede gibt 
+                        Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now, err)
+                        ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
+                        If Not sproj.isIdenticalTo(oldProj) Then
+
+                            sproj.timeStamp = DBtimeStamp
+
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
+
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                Else
+                                    outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                End If
+
+                                ' alles ok
+                                anzahlChanged = anzahlChanged + 1
+
+                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
+                                writeProtections.upsert(wpItem)
+
+                            Else
+                                If awinSettings.visboServer Then
+                                    Select Case err.errorCode
+                                        Case 403  'No Permission to Create Visbo Project Version
+                                            If awinSettings.englishLanguage Then
+                                                outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            Else
+                                                outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            End If
+
+                                        Case 409 ' VisboProjectVersion was already updated in between
+                                            If awinSettings.englishLanguage Then
+                                                outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            Else
+                                                outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            End If
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                                        Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                            If awinSettings.englishLanguage Then
+                                                outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            Else
+                                                outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
+                                                outPutCollection.Add(outputLine)
+                                            End If
+
+                                    End Select
+                                Else
+
+                                    ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                                    Else
+                                        outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                                    End If
+                                    outPutCollection.Add(outputLine)
+
+                                End If
+
+                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
+                                writeProtections.upsert(wpItem)
+
+                            End If
+                        End If
                     End If
+
+                    ''If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
+                    ''    Call MsgBox("speichern Summary Projekt mit Fehler ...")
+                    ''Else
+                    ''    Dim a As Integer = outPutCollection.Count
+                    ''End If
+                    If Not IsNothing(mSProj) Then
+                        ' mergte Summary wurde in die Liste aufgenommen
+                        Dim skey As String = calcProjektKey(mSProj.name, mSProj.variantName)
+                        If AlleProjektSummaries.Containskey(skey) Then
+                            AlleProjektSummaries.Remove(skey, False)
+                        End If
+
+                        If Not AlleProjektSummaries.Containskey(skey) Then
+                            AlleProjektSummaries.Add(mSProj, False)
+                        End If
+                    Else
+                        ' ungemergtes Summary-Projekt wird in die Liste aufgenommen
+                        Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                        If AlleProjektSummaries.Containskey(skey) Then
+                            AlleProjektSummaries.Remove(skey, False)
+                        End If
+
+                        If Not AlleProjektSummaries.Containskey(skey) Then
+                            AlleProjektSummaries.Add(sproj, False)
+                        End If
+                    End If
+
+
                 End If
 
-                ''If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
-                ''    Call MsgBox("speichern Summary Projekt mit Fehler ...")
-                ''Else
-                ''    Dim a As Integer = outPutCollection.Count
-                ''End If
-                If Not IsNothing(mSProj) Then
-                    ' mergte Summary wurde in die Liste aufgenommen
-                    Dim skey As String = calcProjektKey(mSProj.name, mSProj.variantName)
-                    If AlleProjektSummaries.Containskey(skey) Then
-                        AlleProjektSummaries.Remove(skey, False)
+
+            Catch ex As Exception
+
+            End Try
+
+
+            ' jetzt wird das Portfolio weggeschrieben 
+            Try
+                Dim storeRequired As Boolean = True
+                ' hier wird die Constellation aus der DB geholt , wenn Sie nicht schon geholt wurde ...
+                If IsNothing(dbConstellations) Then
+                    storeRequired = True
+                Else
+                    If dbConstellations.Count = 0 Then
+                        storeRequired = True
+                    Else
+                        If dbConstellations.Contains(currentConstellation.constellationName) Then
+                            Dim dbConstellation As clsConstellation = dbConstellations.getConstellation(currentConstellation.constellationName)
+                            storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                        End If
                     End If
 
-                    If Not AlleProjektSummaries.Containskey(skey) Then
-                        AlleProjektSummaries.Add(mSProj, False)
+                End If
+                
+
+                ' hier wird geprüft, ob die sich überhaupt verändert hat  
+                If storeRequired Then
+
+                    ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
+                    If currentConstellation.isValidForDBStore Then
+                        Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
+
+                        If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
+                            ' alles in Ordnung, Speichern hat geklappt ... 
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputLine = "Error when writing scenario: " & currentConstellation.constellationName
+                            Else
+                                outputLine = "Fehler beim Schreiben Szenario: " & currentConstellation.constellationName
+                            End If
+                            outPutCollection.Add(outputLine)
+
+                        End If
                     End If
                 Else
-                    ' ungemergtes Summary-Projekt wird in die Liste aufgenommen
-                    Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                    If AlleProjektSummaries.Containskey(skey) Then
-                        AlleProjektSummaries.Remove(skey, False)
+                    If awinSettings.englishLanguage Then
+                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName
+                        outPutCollection.Add(outputLine)
+                    Else
+                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName
+                        outPutCollection.Add(outputLine)
                     End If
 
-                    If Not AlleProjektSummaries.Containskey(skey) Then
-                        AlleProjektSummaries.Add(sproj, False)
-                    End If
+                End If
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    outputLine = "Error when writing scenario" & vbLf & ex.Message
+                Else
+                    outputLine = "Fehler beim Schreiben Szenario" & vbLf & ex.Message
+                End If
+                outPutCollection.Add(outputLine)
+                Exit Sub
+            End Try
+
+
+
+            Dim tsMessage As String = ""
+            If anzahlNeue + anzahlChanged > 0 Then
+                If awinSettings.englishLanguage Then
+                    tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+                Else
+                    tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
                 End If
 
-
             End If
 
-
-        Catch ex As Exception
-
-        End Try
-
-
-        Dim tsMessage As String = ""
-        If anzahlNeue + anzahlChanged > 0 Then
             If awinSettings.englishLanguage Then
-                tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+
             Else
-                tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
             End If
+
+            outPutCollection.Add(outputLine)
 
         End If
 
-        If awinSettings.englishLanguage Then
-            If storeProjectsAsWell Then
-                outputLine = "Saved ... " & vbLf &
-                "Portfolio: " & currentConstellation.constellationName & vbLf & vbLf &
-                "Number new projects/project-variants: " & anzahlNeue.ToString & vbLf &
-                "Number changed projects/project-variants: " & anzahlChanged.ToString & vbLf &
-                tsMessage
-            Else
-                outputLine = "Saved ... " & vbLf &
-                "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
-            End If
 
-        Else
-            If storeProjectsAsWell Then
-                outputLine = "Gespeichert ... " & vbLf &
-                "Portfolio: " & currentConstellation.constellationName & vbLf & vbLf &
-                "Anzahl neue Projekte und Projekt-Varianten: " & anzahlNeue.ToString & vbLf &
-                "Anzahl geänderte Projekte / Projekt-Varianten: " & anzahlChanged.ToString & vbLf &
-                tsMessage
-            Else
-                outputLine = "Gespeichert ... " & vbLf &
-                "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
-            End If
-
-        End If
-
-        outPutCollection.Add(outputLine)
 
     End Sub
 
@@ -7705,74 +7521,28 @@ Public Module awinGeneralModules
 
                 If everythingElse Then
                     ' jetzt werden alle definierten Constellations weggeschrieben
+                    Dim errMsg As New clsErrorCodeMsg
+                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(errMsg)
+
                     For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
                         If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
                             Try
-                                If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(kvp.Value, err) Then
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "Portfolio stored : " & kvp.Key
-                                        outPutCollection.Add(outputline)
-                                    Else
-                                        outputline = "Portfolio gespeichert : " & kvp.Key
-                                        outPutCollection.Add(outputline)
-                                    End If
-                                Else
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "!! Error when writing portfolio " & kvp.Key
-                                        outPutCollection.Add(outputline)
-                                    Else
-                                        outputline = "!! Fehler in Schreiben Portfolio " & kvp.Key
-                                        outPutCollection.Add(outputline)
-                                    End If
 
-                                End If
+                                Call storeSingleConstellationToDB(outPutCollection, kvp.Value, dbConstellations)
+
                             Catch ex As Exception
+
                                 If awinSettings.englishLanguage Then
                                     outputline = "Error when writing portfolio " & kvp.Key
                                 Else
                                     outputline = "Fehler in Schreiben Portfolio " & kvp.Key
                                 End If
-                                Throw New ArgumentException(outputline)
-                                'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-                                'Exit Sub
+
                             End Try
                         End If
 
-
                     Next
-
-
-                    ' jetzt werden alle Abhängigkeiten weggeschrieben  
-                    ' tk 21.1.19 wird bis auf weiteres nicht mehr gemacht 
-
-                    ''For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
-
-                    ''    Try
-                    ''        If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
-                    ''            ' nichts schreiben ...
-                    ''        Else
-                    ''            If awinSettings.englishLanguage Then
-                    ''                outputline = "!! Error when writing dependency " & kvp.Key
-                    ''                outPutCollection.Add(outputline)
-                    ''            Else
-                    ''                outputline = "!! Fehler in Schreiben Dependency " & kvp.Key
-                    ''                outPutCollection.Add(outputline)
-                    ''            End If
-
-                    ''        End If
-                    ''    Catch ex As Exception
-                    ''        If awinSettings.englishLanguage Then
-                    ''            outputline = "Error when writing dependency " & kvp.Key
-                    ''        Else
-                    ''            outputline = "Fehler in Schreiben Dependency " & kvp.Key
-                    ''        End If
-                    ''        Throw New ArgumentException(outputline)
-                    ''    End Try
-
-
-                    ''Next
-
 
                 End If
 
@@ -7783,75 +7553,105 @@ Public Module awinGeneralModules
                 outputline = "  "
                 outPutCollection.Add(outputline)
 
-                If everythingElse Then
-
-                    If anzahlStores > 0 Then
-                        If anzahlStores = 1 Then
-                            If awinSettings.englishLanguage Then
-                                outputline = "ok, portfolios stored!" & vbLf & vbLf &
-                                        "1 project/project-variant stored " & vbLf &
+                If anzahlStores > 0 Then
+                    If anzahlStores = 1 Then
+                        If awinSettings.englishLanguage Then
+                            outputline = "1 project/project-variant stored: " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            Else
-                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
-                                        "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            End If
-
                         Else
-                            If awinSettings.englishLanguage Then
-                                outputline = "ok, portfolios stored!" & vbLf & vbLf &
-                                        anzahlStores & " projects/project-variants stored" & vbLf &
+                            outputline = "1 Projekt/Projekt-Variante gespeichert " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            Else
-                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
-                                        "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            End If
-
                         End If
+
                     Else
                         If awinSettings.englishLanguage Then
-                            outputline = "ok, portfolios stored!" & vbLf &
-                                "no projects stored ( no changes / no permission ) "
+                            outputline = anzahlStores & " projects/project-variants stored: " &
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                         Else
-                            outputline = "ok, Portfolios gespeichert!" & vbLf &
-                                "keine Projekte gespeichert ( keine Änderungen / keine Erlaubnis )"
+                            outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " &
+                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                         End If
 
                     End If
-
-
                 Else
-
-                    If anzahlStores > 0 Then
-                        If anzahlStores = 1 Then
-                            If awinSettings.englishLanguage Then
-                                outputline = "1 project/project-variant stored: " &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            Else
-                                outputline = "1 Projekt/Projekt-Variante gespeichert " &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            End If
-
-                        Else
-                            If awinSettings.englishLanguage Then
-                                outputline = anzahlStores & " projects/project-variants stored: " &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            Else
-                                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " &
-                                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
-                            End If
-
-                        End If
+                    If awinSettings.englishLanguage Then
+                        outputline = "no projects stored ( no changes / no permission ) "
                     Else
-                        If awinSettings.englishLanguage Then
-                            outputline = "no projects stored ( no changes / no permission ) "
-                        Else
-                            outputline = "keine Projekte gespeichert ( keine Änderungen / keine Erlaubnis )"
-                        End If
-
+                        outputline = "keine Projekte gespeichert ( keine Änderungen / keine Erlaubnis )"
                     End If
+
                 End If
+
+                ' tk 1.5.19 wird nicht mehr benötigt ...
+                'If everythingElse Then
+
+                '    If anzahlStores > 0 Then
+                '        If anzahlStores = 1 Then
+                '            If awinSettings.englishLanguage Then
+                '                outputline = "ok, portfolios stored!" & vbLf & vbLf &
+                '                        "1 project/project-variant stored " & vbLf &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            Else
+                '                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
+                '                        "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            End If
+
+                '        Else
+                '            If awinSettings.englishLanguage Then
+                '                outputline = "ok, portfolios stored!" & vbLf & vbLf &
+                '                        anzahlStores & " projects/project-variants stored" & vbLf &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            Else
+                '                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
+                '                        "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            End If
+
+                '        End If
+                '    Else
+                '        If awinSettings.englishLanguage Then
+                '            outputline = "ok, portfolios stored!" & vbLf &
+                '                "no projects stored ( no changes / no permission ) "
+                '        Else
+                '            outputline = "ok, Portfolios gespeichert!" & vbLf &
+                '                "keine Projekte gespeichert ( keine Änderungen / keine Erlaubnis )"
+                '        End If
+
+                '    End If
+
+
+                'Else
+
+                '    If anzahlStores > 0 Then
+                '        If anzahlStores = 1 Then
+                '            If awinSettings.englishLanguage Then
+                '                outputline = "1 project/project-variant stored: " &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            Else
+                '                outputline = "1 Projekt/Projekt-Variante gespeichert " &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            End If
+
+                '        Else
+                '            If awinSettings.englishLanguage Then
+                '                outputline = anzahlStores & " projects/project-variants stored: " &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            Else
+                '                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " &
+                '                        zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
+                '            End If
+
+                '        End If
+                '    Else
+                '        If awinSettings.englishLanguage Then
+                '            outputline = "no projects stored ( no changes / no permission ) "
+                '        Else
+                '            outputline = "keine Projekte gespeichert ( keine Änderungen / keine Erlaubnis )"
+                '        End If
+
+                '    End If
+                'End If
 
                 outPutCollection.Add(outputline)
 

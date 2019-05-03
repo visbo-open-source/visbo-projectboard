@@ -2781,7 +2781,10 @@ Public Class frmProjPortfolioAdmin
                 Dim txtMsg1 As String = ""
                 Dim txtMsg2 As String = ""
                 If storeToDBasWell.Checked Then
-                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation)
+                    Dim errMsg As New clsErrorCodeMsg
+                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(errMsg)
+
+                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, dbConstellations)
 
                     ' jetzt ggf die Outputs anzeigen 
 
