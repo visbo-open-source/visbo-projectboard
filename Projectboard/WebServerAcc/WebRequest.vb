@@ -5425,10 +5425,18 @@ Public Class Request
                     hConstItem = New clsConstellationItem
                     hConstItem = clsVPfItem2clsConstItem(hvpfItem)
 
-                    Dim pvname As String = calcProjektKey(hConstItem.projectName, hConstItem.variantName)
-                    If Not .Liste.ContainsKey(pvname) Then
-                        result.Liste.Add(pvname, hConstItem)
+                    If hConstItem.projectName <> "" Then
+                        Dim pvname As String = calcProjektKey(hConstItem.projectName, hConstItem.variantName)
+                        If Not .Liste.ContainsKey(pvname) Then
+                            result.Liste.Add(pvname, hConstItem)
+                        End If
+                    Else
+                        ' der Fall kommt nur dann vor, wenn ein Portfolio mehrere Portfolios enthält, was nicht mehr sein darf
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Portfolio: " & vpf.name & vbCrLf & "ProjektID: " & hvpfItem.vpid)
+                        End If
                     End If
+
 
                 Next
                 .sortCriteria = vpf.sortType
