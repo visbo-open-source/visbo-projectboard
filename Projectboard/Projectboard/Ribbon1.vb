@@ -3030,6 +3030,13 @@ Imports System.Web
                     tmpLabel = "Set/Unset Write-Protection..."
                 End If
 
+            Case "PT2G2B5oa" ' Sperre setzen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Schreibschutz setzen/aufheben..."
+                Else
+                    tmpLabel = "Set/Unset Write-Protection..."
+                End If
+
             Case "PTedit"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Bearbeiten"
