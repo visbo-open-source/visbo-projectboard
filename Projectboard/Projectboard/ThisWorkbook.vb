@@ -336,7 +336,7 @@ Public Class ThisWorkbook
         End If
 
         If Not cancelAbbruch Then
-            Call awinKontextReset()
+            'Call awinKontextReset()
             ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
             'appInstance.EnableEvents = False
 

@@ -196,26 +196,22 @@
       <!--label="Edit"-->
       <tab id="PTedit" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <!--label="Editieren"-->
-        <group id="PTeditieren">
+        <group id="PTeditieren" getVisible="chckVisibility">
           <!--label="Portfolio"-->
           <button id="PT2G2B4" imageMso="EditFileGallery" size="large" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Portfolio dargestellte/nicht dargestellt Projekte der Session können ausgeblendet/eingeblendet werden und ein neues Portfolio kann definiert werden."/>
-          <splitButton id="PT2G2split" size ="large">
+          <splitButton getVisible ="chckVisibility" id="PT2G2split" size ="large">
             <!--label="Modify Ressourcen und Kosten"-->
             <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
             <menu id="PT2G2M" getVisible="chckVisibility">
               <!--label="Modify Ressourcen und Kosten"-->
               <button id="PT2G1M2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
-              <!--label="Modify Dates of Phases & Milestones"-->
-              <button id="PT2G1M2B2" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled ="false" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Attributes"-->
-              <button id="PT2G1M2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>
-              <button id="PT2G1M2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
-              <menuSeparator id="separator1" />
-              <!--label=" Projekt Umbenennen"-->
-              <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
-              <!--label=" Variante Umbenennen"-->
-              <button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>
-              <menuSeparator id="separator2" />
+              <button id="PT2G1M2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ampel, Ampel-Erläuterung und aktuelle Risiko Einschätzung editiert werden"/>
+              <!--label="Modify Dates of Phases & Milestones"-->
+              <button id="PT2G1M2B2" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled ="false" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>              
+              <!--<button id="PT2G1M2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>-->
+              <!--<menuSeparator id="separator1" />-->
+              <menuSeparator id="separator2"  />
               <!--label="Schutz setzen / aufheben"-->
               <button id="PT2G2B5" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
               <menuSeparator id="separator3" />
@@ -230,7 +226,26 @@
               <menuSeparator id="separator5" />
               <!--label="Variante zum Standard machen"-->
               <button id="PT2G1M1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
-              <menuSeparator id="separator6" />
+            </menu>
+          </splitButton>
+        </group>
+        <group id="PTeditoa" getVisible="chckVisibility">
+          <!-- nur für Orga-Admin-->
+          <splitButton id="PT2G2splitoa" size ="large">
+            <!--label="Modify Ressourcen und Kosten"-->
+            <button id="PT2G2oa" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
+            <menu id="PT2G2Moa" getVisible="chckVisibility">
+              <!--label=" Projekt Umbenennen"-->
+              <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
+              <menuSeparator id="separatoroa0"  />
+              <!--label="Schutz setzen / aufheben"-->
+              <button id="PT2G2B5oa" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
+              <!--label=" Variante Umbenennen"-->
+              <!--<button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>-->
+              <menuSeparator id="separatoroa1"  />
+              <!--label="Modify Attributes"-->
+              <button id="PT2G1M2B8oa" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Business Unit, Budget, strateg. Fit und Risiko Kennzahl editiert werden"/>
+              <menuSeparator id="separatoroa2"  />
               <!--label="den Status eines Projektes ändern"-->
               <button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
             </menu>

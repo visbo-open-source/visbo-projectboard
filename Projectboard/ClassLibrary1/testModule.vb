@@ -5912,57 +5912,108 @@ Public Module testModule
 
                             End If
 
+
+
                         Case "Rolle"
 
-                            If boxName = kennzeichnung Then
-                                boxName = repMessages.getmsg(200)
-                            End If
 
-                            myCollection.Clear()
-                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, translateToRoleNames(selectedRoles))
+                            Try
+
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
 
 
-                            If myCollection.Count > 0 Then
+                                Dim smartChartInfo As New clsSmartPPTChartInfo
+                                With smartChartInfo
 
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                    If showRangeLeft > 0 Then
+                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    End If
+                                    If showRangeRight > 0 Then
+                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                    End If
 
-                                htop = 100
-                                hleft = 100
-                                hheight = chartHeight  ' height of all charts
-                                hwidth = chartWidth   ' width of all charts
-                                obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
+                                    .einheit = PTEinheiten.personentage
+                                    .pName = currentConstellationName
+                                    .vName = ""
+                                    .prPF = ptPRPFType.portfolio
+                                    .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                    .bigType = ptReportBigTypes.charts
 
-                                reportObj = obj
-                                ' jetzt wird die Größe der Überschrift neu bestimmt ...
-                                'With reportObj
-                                '    '.Chart.ChartTitle.Font.Size = pptSize
-                                'End With
+                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                    .hproj = Nothing
+                                    .vglProj = Nothing
 
-                                ''reportObj.Copy()
-                                ''newShapeRange = pptSlide.Shapes.Paste
-                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
 
-                                With newShapeRange.Item(1)
-                                    .Top = CSng(top + 0.02 * height)
-                                    .Left = CSng(left + 0.02 * width)
-                                    .Width = CSng(width * 0.96)
-                                    .Height = CSng(height * 0.96)
                                 End With
 
-                                'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+                                Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                appInstance.ScreenUpdating = False
 
-                                Try
-                                    reportObj.Delete()
-                                Catch ex As Exception
+                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
 
-                                End Try
+                                appInstance.ScreenUpdating = formerSU
 
-                            Else
-                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
-                            End If
+                                boxName = ""
+                                notYetDone = False
+
+                            Catch ex As Exception
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End Try
+
+
+
+                        'Case "Rolle"
+
+                        '    If boxName = kennzeichnung Then
+                        '        boxName = repMessages.getmsg(200)
+                        '    End If
+
+                        '    myCollection.Clear()
+                        '    myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, translateToRoleNames(selectedRoles))
+
+
+                        '    If myCollection.Count > 0 Then
+
+                        '        pptSize = .TextFrame2.TextRange.Font.Size
+                        '        .TextFrame2.TextRange.Text = " "
+
+                        '        htop = 100
+                        '        hleft = 100
+                        '        hheight = chartHeight  ' height of all charts
+                        '        hwidth = chartWidth   ' width of all charts
+                        '        obj = Nothing
+                        '        Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
+
+                        '        reportObj = obj
+                        '        ' jetzt wird die Größe der Überschrift neu bestimmt ...
+                        '        'With reportObj
+                        '        '    '.Chart.ChartTitle.Font.Size = pptSize
+                        '        'End With
+
+                        '        ''reportObj.Copy()
+                        '        ''newShapeRange = pptSlide.Shapes.Paste
+                        '        newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                        '        With newShapeRange.Item(1)
+                        '            .Top = CSng(top + 0.02 * height)
+                        '            .Left = CSng(left + 0.02 * width)
+                        '            .Width = CSng(width * 0.96)
+                        '            .Height = CSng(height * 0.96)
+                        '        End With
+
+                        '        'Call awinDeleteChart(reportObj)
+                        '        ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                        '        Try
+                        '            reportObj.Delete()
+                        '        Catch ex As Exception
+
+                        '        End Try
+
+                        '    Else
+                        '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                        '    End If
 
 
 
@@ -14249,9 +14300,12 @@ Public Module testModule
                                  ByVal considerZeitraum As Boolean, ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer,
                                  ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection,
                                  ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
-                                 ByVal kontrolleAnzZeilen As Integer)
+                                 ByVal kontrolleAnzZeilen As Integer,
+                                 ByVal segmentID As String)
 
 
+        ' wenn swimlaneID = segmentID, dann handelt es sich um den Modus Swimlane2 Report
+        ' und aktuell soll eine 
 
 
         ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
@@ -14301,7 +14355,16 @@ Public Module testModule
 
         End If
 
-
+        ' wenn jetzt nur die evtl vorhandenen Meilensteine eines segments gezeichnet werden sollen 
+        If segmentID = swimlaneNameID Then
+            childPhaseIDs.Clear()
+            considerAll = False
+            extended = False
+            childMilestoneIDs = hproj.getPhaseByID(segmentID).getMilestoneIDs
+            If childMilestoneIDs.Count = 0 Then
+                Exit Sub
+            End If
+        End If
 
         ' ###########################################################
         ' zeichnen des Swimlane-Namens
@@ -14317,7 +14380,13 @@ Public Module testModule
         With copiedShape.Item(1)
             .Top = CSng(curYPosition) + rds.YprojectName
             .Left = rds.projectListLeft
-            .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+            ' wenn segmentID = swimlaneID dann ist der Segment NAme bereits geschrieben
+            If segmentID = swimlaneNameID Then
+                .TextFrame2.TextRange.Text = ""
+            Else
+                .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+            End If
+
             '.Name = .Name & .Id
             Try
                 .Name = swlShapeName & PTpptAnnotationType.text
@@ -14600,7 +14669,7 @@ Public Module testModule
                                                                                             selectedMilestoneIDs,
                                                                                             extended,
                                                                                             considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                            considerAll)
+                                                                                            considerAll, segmentID)
 
                                     Dim bestStart As Integer = minBestStart
                                     ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
@@ -19983,7 +20052,7 @@ Public Module testModule
 
         ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
         ' ob ganz allgemein nach Swimlanes gesucht wird ... 
-        Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
+        Dim isSwimlanes2 As Boolean = (kennzeichnung = "Swimlanes2")
 
         Dim rds As New clsPPTShapes
         Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
@@ -20028,7 +20097,7 @@ Public Module testModule
             ' wieviele Swimlanes zu zeichnen sind; ab dem 2. Projekt kann man sich nicht mehr auf pptFirsttime abstützen ! 
             ' wenn ein Projekt erstmalig hier reinkommt, ist swimlanestodo = 0, pptFirsttime kann true oder false sein   
             If swimLanesToDo = 0 Then
-                swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
+                swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isSwimlanes2)
             End If
 
             If pptFirstTime Then
@@ -20154,12 +20223,18 @@ Public Module testModule
 
                     For i = 1 To swimLanesToDo
 
-                        cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isBHTCSchema)
+                        cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isSwimlanes2)
 
+                        Dim segmentID As String = ""
+                        If isSwimlanes2 Then
+                            If hproj.isSegment(cphase.nameID) Then
+                                segmentID = cphase.nameID
+                            End If
+                        End If
                         Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                 considerAll)
+                                                                                 considerAll, segmentID)
 
                         anzZeilen = anzZeilen + swimLaneZeilen
                     Next
@@ -20177,11 +20252,11 @@ Public Module testModule
                 Dim neededSpace As Double
 
 
-                If isBHTCSchema Then
+                If isSwimlanes2 Then
                     ' jetzt müssen noch die Segment Höhen  berechnet werden 
 
                     neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isBHTCSchema) * rds.segmentHoehe
+                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isSwimlanes2) * rds.segmentHoehe
                 Else
 
                     neededSpace = anzZeilen * rds.zeilenHoehe
@@ -20475,17 +20550,25 @@ Public Module testModule
             Dim toggleRow As Boolean = False
 
             Dim curSwimlaneIndex As Integer = swimLanesDone + 1
-            curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
-            prevSwl = hproj.getSwimlane(curSwimlaneIndex - 1, considerAll, breadcrumbArray, isBHTCSchema)
+            curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
+            prevSwl = hproj.getSwimlane(curSwimlaneIndex - 1, considerAll, breadcrumbArray, isSwimlanes2)
 
+
+            Dim curSegmentID As String = ""
 
             If Not IsNothing(curSwl) Then
-
-
+                ' wird weiter unten auch noch gebraucht 
                 Dim segmentChanged As Boolean = False
-                Dim curSegmentID As String = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
-                If isBHTCSchema Then
+                If isSwimlanes2 Then
+
+                    If hproj.isSegment(curSwl.nameID) Then
+                        curSegmentID = curSwl.nameID
+                    Else
+                        curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                    End If
+
+
                     If Not IsNothing(prevSwl) Then
                         segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
                                             hproj.hierarchy.getParentIDOfID(curSwl.nameID)
@@ -20504,7 +20587,7 @@ Public Module testModule
                 Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                 considerAll)
+                                                                                 considerAll, curSegmentID)
 
                 Do While (curSwimlaneIndex <= swimLanesToDo) And
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
@@ -20547,36 +20630,50 @@ Public Module testModule
                                                   considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                   selectedPhaseIDs, selectedMilestoneIDs,
                                                   selectedRoles, selectedCosts,
-                                                  swimLaneZeilen)
+                                                  swimLaneZeilen, curSegmentID)
+
+                    ' merken, ob die letzte gezeichnete Swimlane eigentlich die Meilensteine des Segments waren ...
+                    Dim lastSwimlaneWasSegment As Boolean = isSwimlanes2 And (curSwl.nameID = curSegmentID)
 
 
                     prevSwl = curSwl
 
                     curSwimlaneIndex = curSwimlaneIndex + 1
-                    curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
+                    curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
 
                     If Not IsNothing(curSwl) Then
 
-                        If isBHTCSchema Then
-                            segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
-                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                        Dim segmentID As String = ""
+                        If isSwimlanes2 Then
+                            segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
+                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID) And Not lastSwimlaneWasSegment) Or
+                                        (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
 
+                            If hproj.isSegment(curSwl.nameID) Then
+                                segmentID = curSwl.nameID
+                            End If
                         End If
+
 
                         swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                 considerAll)
+                                                                                 considerAll, segmentID)
 
-                        If isBHTCSchema Then
+                        If isSwimlanes2 Then
                             If segmentChanged And
                                 (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
-                                curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                If hproj.isSegment(curSwl.nameID) Then
+                                    curSegmentID = curSwl.nameID
+                                Else
+                                    curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                End If
+
                                 Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                                segmentChanged = False
+                                    segmentChanged = False
+                                End If
                             End If
-                        End If
 
                     Else
                         segmentChanged = False

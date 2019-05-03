@@ -52,6 +52,26 @@ Public Class clsProjekte
     End Sub
 
     ''' <summary>
+    ''' liefert das kleinste auftretende actualDatauntil zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property actualDataUntil() As Date
+        Get
+            Dim tmpResult As Date = Date.Now
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                If kvp.Value.actualDataUntil < tmpResult Then
+                    tmpResult = kvp.Value.actualDataUntil
+                End If
+
+            Next
+
+            actualDataUntil = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt true zurück wenn irgendein Summary Projekt in der Liste enthalten ist 
     ''' </summary>
     ''' <returns></returns>

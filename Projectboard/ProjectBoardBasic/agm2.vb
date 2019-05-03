@@ -2320,7 +2320,7 @@ Public Module agm2
                                     Try
 
                                         origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
-                                        If duration > 1 Then
+                                        If Not isMilestone Then
                                             txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
                                             'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
                                             '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
@@ -2446,7 +2446,7 @@ Public Module agm2
                                 Dim elemID As String
 
                                 ' If duration > 1 Or itemDauer > 0 Then
-                                If duration > 1 Then
+                                If Not isMilestone Then
                                     ' es handelt sich um eine Phase 
 
 
@@ -2650,7 +2650,7 @@ Public Module agm2
                                     End If
 
 
-                                ElseIf duration = 1 Then
+                                Else
                                     ' hier kommt die Behandlung eines Meilensteins
 
 
@@ -4487,7 +4487,7 @@ Public Module agm2
                 If CDate(msproj.Start) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.Start)
                 End If
-
+                Dim guid As String = msproj.GetServerProjectGuid
                 If CDate(msproj.EarlyStart) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.EarlyStart)
                 End If
@@ -8618,7 +8618,11 @@ Public Module agm2
 
                     ' lese den Projekt-Namen
                     Try
-                        pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value).Trim
+                        If Not IsNothing(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value) Then
+                            pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value).Trim
+                        Else
+                            pName = Nothing
+                        End If
                         ok = True
                     Catch ex As Exception
                         pName = Nothing
@@ -8662,6 +8666,8 @@ Public Module agm2
                                 itemType = 0
                             End Try
 
+                            ok = False
+
                             If projektvorhaben.Contains(itemType) Then
                                 ' ok weitermachen
                                 ok = True
@@ -8698,22 +8704,31 @@ Public Module agm2
                                                 ' wenn nein, einfach Warning ausgeben 
                                                 Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
                                                 If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                                    outputCollection.Add(outPutLine)
 
-                                                    Dim logtxt(2) As String
-                                                    logtxt(0) = "Budget-Überschreitung"
-                                                    logtxt(1) = "Programmlinie"
-                                                    logtxt(2) = unionProj.name
-                                                    Dim values(2) As Double
-                                                    values(0) = unionProj.Erloes
-                                                    values(1) = tmpGesamtCost
-                                                    If values(0) > 0 Then
-                                                        values(2) = tmpGesamtCost / unionProj.Erloes
-                                                    Else
-                                                        values(2) = 9999999999
+                                                    Dim goOn As Boolean = True
+                                                    If unionProj.Erloes > 0 Then
+                                                        goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
                                                     End If
-                                                    Call logfileSchreiben(logtxt, values)
+
+                                                    If goOn Then
+                                                        outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                                        outputCollection.Add(outPutLine)
+
+                                                        Dim logtxt(2) As String
+                                                        logtxt(0) = "Budget-Überschreitung"
+                                                        logtxt(1) = "Programmlinie"
+                                                        logtxt(2) = unionProj.name
+                                                        Dim values(2) As Double
+                                                        values(0) = unionProj.Erloes
+                                                        values(1) = tmpGesamtCost
+                                                        If values(0) > 0 Then
+                                                            values(2) = tmpGesamtCost / unionProj.Erloes
+                                                        Else
+                                                            values(2) = 9999999999
+                                                        End If
+                                                        Call logfileSchreiben(logtxt, values)
+                                                    End If
+
                                                 End If
 
                                             Catch ex As Exception
@@ -8776,9 +8791,10 @@ Public Module agm2
                                     ' lese , wieviel Prozent der Gesamtsumme jeweils auf die Release verteilt werden soll 
                                     For i As Integer = 0 To anzReleases - 1
                                         Try
-                                            relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
-                                            If IsNothing(relPrz(i)) Then
+                                            If IsNothing(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value) Then
                                                 relPrz(i) = 0.0
+                                            Else
+                                                relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
                                             End If
                                         Catch ex As Exception
                                             relPrz(i) = 0.0
@@ -8792,15 +8808,15 @@ Public Module agm2
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
                                             If relPrz.Sum < 0.99 Then
-                                                outPutLine = pName & "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & " Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             Else
-                                                outPutLine = pName & "Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                                outPutLine = pName & " Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
                                             End If
 
                                             outputCollection.Add(outPutLine)
 
                                             Dim logtxt(1) As String
-                                            logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                            logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .. "
                                             logtxt(1) = pName
 
                                             Call logfileSchreiben(logtxt)
@@ -8976,22 +8992,31 @@ Public Module agm2
                                 ' wenn nein, einfach Warning ausgeben 
                                 Dim tmpGesamtCost As Double = hproj.getGesamtKostenBedarf.Sum
                                 If hproj.Erloes - tmpGesamtCost < 0 Then
-                                    outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                    outputCollection.Add(outPutLine)
 
-                                    Dim logtxt(2) As String
-                                    logtxt(0) = "Budget-Überschreitung"
-                                    logtxt(1) = "Projekt"
-                                    logtxt(2) = pName
-                                    Dim values(2) As Double
-                                    values(0) = hproj.Erloes
-                                    values(1) = tmpGesamtCost
-                                    If values(0) > 0 Then
-                                        values(2) = tmpGesamtCost / hproj.Erloes
-                                    Else
-                                        values(2) = 9999999999
+                                    Dim goOn As Boolean = True
+                                    If hproj.Erloes > 0 Then
+                                        goOn = (tmpGesamtCost - hproj.Erloes) / hproj.Erloes > 0.05
                                     End If
-                                    Call logfileSchreiben(logtxt, values)
+
+                                    If goOn Then
+                                        outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                        outputCollection.Add(outPutLine)
+
+                                        Dim logtxt(2) As String
+                                        logtxt(0) = "Budget-Überschreitung"
+                                        logtxt(1) = "Projekt"
+                                        logtxt(2) = pName
+                                        Dim values(2) As Double
+                                        values(0) = hproj.Erloes
+                                        values(1) = tmpGesamtCost
+                                        If values(0) > 0 Then
+                                            values(2) = tmpGesamtCost / hproj.Erloes
+                                        Else
+                                            values(2) = 9999999999
+                                        End If
+                                        Call logfileSchreiben(logtxt, values)
+                                    End If
+
                                 End If
 
                             Catch ex As Exception
@@ -9115,22 +9140,30 @@ Public Module agm2
                             ' wenn nein, einfach Warning ausgeben 
                             Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
                             If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                outputCollection.Add(outPutLine)
-
-                                Dim logtxt(2) As String
-                                logtxt(0) = "Budget-Überschreitung"
-                                logtxt(1) = "Programmlinie"
-                                logtxt(2) = unionProj.name
-                                Dim values(2) As Double
-                                values(0) = unionProj.Erloes
-                                values(1) = tmpGesamtCost
-                                If values(0) > 0 Then
-                                    values(2) = tmpGesamtCost / unionProj.Erloes
-                                Else
-                                    values(2) = 9999999999
+                                Dim goOn As Boolean = True
+                                If unionProj.Erloes > 0 Then
+                                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
                                 End If
-                                Call logfileSchreiben(logtxt, values)
+
+                                If goOn Then
+                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                    outputCollection.Add(outPutLine)
+
+                                    Dim logtxt(2) As String
+                                    logtxt(0) = "Budget-Überschreitung"
+                                    logtxt(1) = "Programmlinie"
+                                    logtxt(2) = unionProj.name
+                                    Dim values(2) As Double
+                                    values(0) = unionProj.Erloes
+                                    values(1) = tmpGesamtCost
+                                    If values(0) > 0 Then
+                                        values(2) = tmpGesamtCost / unionProj.Erloes
+                                    Else
+                                        values(2) = 9999999999
+                                    End If
+                                    Call logfileSchreiben(logtxt, values)
+                                End If
+
                             End If
 
                         Catch ex As Exception
@@ -9252,30 +9285,33 @@ Public Module agm2
         Dim tmpResult As String = ""
 
         If Not IsNothing(excelCell) Then
-            Dim cellValue As String = CStr(excelCell.Value).Trim
-            If cellValue.StartsWith("#") Then
+            If Not IsNothing(excelCell.Value) Then
+                Dim cellValue As String = CStr(excelCell.Value).Trim
+                If cellValue.StartsWith("#") Then
 
-                Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                    Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
 
-                If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
+                    If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                    If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
-                        tmpResult = tmpStr1(0).Trim
-                    End If
-
-                Else
-                    Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                    If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                        tmpResult = tmpStr2(0).Trim
-                    Else
-                        Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
-                        If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-                            tmpResult = tmpstr3(0).Trim
+                        If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                            tmpResult = tmpStr1(0).Trim
                         End If
-                    End If
 
+                    Else
+                        Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                        If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
+                            tmpResult = tmpStr2(0).Trim
+                        Else
+                            Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
+                            If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
+                                tmpResult = tmpstr3(0).Trim
+                            End If
+                        End If
+
+                    End If
                 End If
             End If
+
         End If
 
 
@@ -14900,7 +14936,7 @@ Public Module agm2
                 Try
 
                     If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectDB)
+                        Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
                     End If
                     Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
@@ -15368,11 +15404,19 @@ Public Module agm2
                     Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    If awinSettings.visboServer Then
-                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                    ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                        If awinSettings.visboServer Then
+                            isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                        Else
+                            isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        End If
                     Else
+                        ' er kann es nur ändern, wenn er es für sich schützen kann 
                         isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
                     End If
+
 
 
                     If isProtectedbyOthers Then
@@ -15405,6 +15449,10 @@ Public Module agm2
                         Dim phaseNameID As String = cphase.nameID
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
+
+                        ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
+                        Dim hasActualData As Boolean = cphase.hasActualData
+                        summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
                         Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
@@ -15451,11 +15499,6 @@ Public Module agm2
                                 If validRole Then
                                     Dim xValues() As Double = role.Xwerte
 
-                                    ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
-                                    Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
-
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
-
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
 
@@ -15501,19 +15544,9 @@ Public Module agm2
 
                             For c = 1 To cphase.countCosts
 
-                                Dim hasActualData As Boolean = False
                                 Dim cost As clsKostenart = cphase.getCost(c)
                                 Dim costName As String = cost.name
                                 Dim xValues() As Double = cost.Xwerte
-
-                                ' neu 12.12.18 
-                                ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Kostenart schon actualdata hat ...
-                                hasActualData = hproj.getPhaseRCActualValues(phaseNameID, costName, False, True).Sum > 0
-
-                                ' ist Summe Editieren erlaubt ? 
-                                If projectWithActualData Then
-                                    summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
-                                End If
 
 
                                 schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
@@ -15564,7 +15597,7 @@ Public Module agm2
 
                                 Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, "", "", False,
                                                                             protectionText, von, bis,
-                                                                            actualDataRelColumn, False, summeEditierenErlaubt,
+                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
                                 If ok Then
@@ -15830,7 +15863,7 @@ Public Module agm2
 
 
                 ' Rolle oder Kostenart schreiben 
-                Dim isLocked As Boolean = (isProtectedbyOthers Or hasActualdata)
+                Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
                 Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole)
 
 
@@ -15938,6 +15971,20 @@ Public Module agm2
         End With
 
     End Sub
+
+    Private Function didZeile1AppearanceAlready(ByVal tableTyp As Integer) As Boolean
+        Dim currentWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
+        Dim ersteZeile As Excel.Range = CType(currentWS.Rows(1), Excel.Range)
+
+        Dim tmpResult As Boolean = False
+        Try
+            tmpResult = (ersteZeile.Interior.Color = visboFarbeOrange)
+        Catch ex As Exception
+            tmpResult = False
+        End Try
+        didZeile1AppearanceAlready = tmpResult
+
+    End Function
     ''' <summary>
     ''' 
     ''' </summary>
@@ -16325,6 +16372,7 @@ Public Module agm2
     Public Sub writeOnlineMassEditAttribute(ByVal todoListe As Collection)
 
         Dim err As New clsErrorCodeMsg
+        Dim formatsWereAlreadySet As Boolean = False
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -16347,7 +16395,7 @@ Public Module agm2
             Dim currentWB As Excel.Workbook
             Dim startDateColumn As Integer = 5
 
-            Dim anzahlSpalten As Integer = 13 + customFieldDefinitions.count
+            Dim anzahlSpalten As Integer = 10 + customFieldDefinitions.count
 
             ' hier muss jetzt das entsprechende File aufgemacht werden ...
             ' das File 
@@ -16366,11 +16414,11 @@ Public Module agm2
                 End Try
 
                 ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
-                Try
-                    currentWS.UsedRange.Clear()
-                Catch ex As Exception
+                'Try
+                '    currentWS.UsedRange.Clear()
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
 
             Catch ex As Exception
@@ -16392,68 +16440,108 @@ Public Module agm2
                     .Unprotect(Password:="x")
                 End If
 
+                ' prüfen , ob zum Ersten Mal in dieser session in diesem Sheet 
+                formatsWereAlreadySet = didZeile1AppearanceAlready(ptTables.meAT)
+                If Not formatsWereAlreadySet Then
 
-                If awinSettings.englishLanguage Then
-                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-                    CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
-                    CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
-                    CType(.Cells(1, 4), Excel.Range).Value = "Start"
-                    CType(.Cells(1, 5), Excel.Range).Value = "End"
-                    CType(.Cells(1, 6), Excel.Range).Value = "Goals"
-                    CType(.Cells(1, 7), Excel.Range).Value = "Description Variant"
-                    CType(.Cells(1, 8), Excel.Range).Value = "Responsible"
-                    CType(.Cells(1, 9), Excel.Range).Value = "Traffic-Light"
-                    CType(.Cells(1, 10), Excel.Range).Value = "Explanation"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Strategic Fit"
-                    CType(.Cells(1, 12), Excel.Range).Value = "Risk"
-                    CType(.Cells(1, 13), Excel.Range).Value = "Risk Description"
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                        If awinSettings.englishLanguage Then
+                            CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
+                            CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                            CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                            CType(.Cells(1, 4), Excel.Range).Value = "Description Variant"
+                            CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
+                            CType(.Cells(1, 6), Excel.Range).Value = "Goals"
+                            CType(.Cells(1, 7), Excel.Range).Value = "Budget" & vbLf & "[T€]"
+                            CType(.Cells(1, 8), Excel.Range).Value = "Responsible"
+                            ' die macht der PL
+                            'CType(.Cells(1, 9), Excel.Range).Value = ""
+                            'CType(.Cells(1, 10), Excel.Range).Value = "Explanation"
+                            CType(.Cells(1, 9), Excel.Range).Value = "Strat.Fit"
+                            CType(.Cells(1, 10), Excel.Range).Value = "Risk"
+                            ' die macht der PL
+                            'CType(.Cells(1, 13), Excel.Range).Value = "Risk Description"
 
 
-                Else
-                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-                    CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
-                    CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
-                    CType(.Cells(1, 4), Excel.Range).Value = "Start"
-                    CType(.Cells(1, 5), Excel.Range).Value = "Ende"
-                    CType(.Cells(1, 6), Excel.Range).Value = "Ziele"
-                    CType(.Cells(1, 7), Excel.Range).Value = "Beschreibung (Variante)"
-                    CType(.Cells(1, 8), Excel.Range).Value = "Verantwortlich"
-                    CType(.Cells(1, 9), Excel.Range).Value = "Projekt-Ampel"
-                    CType(.Cells(1, 10), Excel.Range).Value = "Erläuterung"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Strategischer Fit"
-                    CType(.Cells(1, 12), Excel.Range).Value = "Risiko"
-                    CType(.Cells(1, 13), Excel.Range).Value = "Risiko-Beschreibung"
+                        Else
+                            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
+                            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                            CType(.Cells(1, 4), Excel.Range).Value = "Beschreibung Variante"
+                            CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
+                            CType(.Cells(1, 6), Excel.Range).Value = "Ziele"
+                            CType(.Cells(1, 7), Excel.Range).Value = "Budget" & vbLf & "[T€]"
 
+                            CType(.Cells(1, 8), Excel.Range).Value = "Verantwortlich"
+                            ' die macht der PL
+                            'CType(.Cells(1, 9), Excel.Range).Value = ""
+                            'CType(.Cells(1, 10), Excel.Range).Value = "Ampel-Erläuterung"
+                            CType(.Cells(1, 9), Excel.Range).Value = "Strategie"
+                            CType(.Cells(1, 10), Excel.Range).Value = "Risiko"
+                            ' die macht der PL
+                            'CType(.Cells(1, 13), Excel.Range).Value = "Risiko Beschreibung"
+
+
+                        End If
+
+                        ' jetzt noch die CustomFields
+                        For i As Integer = 1 To customFieldDefinitions.count
+
+                            Dim cfType As Integer = customFieldDefinitions.getDef(i).type
+                            Dim tmpName As String = customFieldDefinitions.getDef(i).name
+
+                            Try
+                                CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
+
+                                'If cfType = 0 Then
+                                '    ' String
+                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
+                                'ElseIf cfType = 1 Then
+                                '    ' Double
+                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
+                                'ElseIf cfType = 2 Then
+                                '    ' boolean 
+                                '    CType(.Cells(1, 10 + i), Excel.Range).Value = tmpName
+                                'End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        Next
+
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                        If awinSettings.englishLanguage Then
+                            CType(.Cells(1, 1), Excel.Range).Value = "Project-Number"
+                            CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                            CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                            CType(.Cells(1, 4), Excel.Range).Value = ""
+                            CType(.Cells(1, 5), Excel.Range).Value = "Explanation"
+                            CType(.Cells(1, 6), Excel.Range).Value = "Risk Description"
+                        Else
+                            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
+                            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                            CType(.Cells(1, 4), Excel.Range).Value = ""
+                            CType(.Cells(1, 5), Excel.Range).Value = "Ampel-Erläuterung"
+                            CType(.Cells(1, 6), Excel.Range).Value = "Risiko Beschreibung"
+                        End If
+
+
+
+                    Else
+                        ' nicht erlaubt 
+                        appInstance.EnableEvents = True
+                        Exit Sub
+                    End If
+
+
+                    ' das Erscheinungsbild der Zeile 1 bestimmen  
+                    Call massEditZeile1Appearance(ptTables.meAT)
 
                 End If
 
-                ' jetzt noch die CustomFields
-                For i As Integer = 1 To customFieldDefinitions.count
-
-                    Dim cfType As Integer = customFieldDefinitions.getDef(i).type
-                    Dim tmpName As String = customFieldDefinitions.getDef(i).name
-
-                    Try
-                        If cfType = 0 Then
-                            ' String
-                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (S)"
-                        ElseIf cfType = 1 Then
-                            ' Double
-                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (D)"
-                        ElseIf cfType = 2 Then
-                            ' boolean 
-                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (B)"
-                        End If
-
-                    Catch ex As Exception
-
-                    End Try
-
-                Next
-
-
-                ' das Erscheinungsbild der Zeile 1 bestimmen  
-                Call massEditZeile1Appearance(ptTables.meAT)
 
 
             End With
@@ -16461,7 +16549,7 @@ Public Module agm2
 
             zeile = 2
 
-
+            Dim someVariantTextOccurred As Boolean = False
             For Each pvName As String In todoListe
 
                 Dim hproj As clsProjekt = Nothing
@@ -16477,11 +16565,8 @@ Public Module agm2
                     Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    If awinSettings.visboServer Then
-                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                    Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                    End If
+                    ' hier muss es geschützt werden ...
+                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
 
                     If isProtectedbyOthers Then
@@ -16497,41 +16582,82 @@ Public Module agm2
 
                     ' jetzt wird für jedes Projekt genau eine Zeile geschrieben 
                     With CType(currentWS, Excel.Worksheet)
-                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
+                        CType(.Cells(zeile, 1), Excel.Range).NumberFormat = "@"
+
                         CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.startDate.ToShortDateString
-                        CType(.Cells(zeile, 5), Excel.Range).Value = hproj.endeDate.ToShortDateString
-                        CType(.Cells(zeile, 6), Excel.Range).Value = hproj.description
-                        CType(.Cells(zeile, 7), Excel.Range).Value = hproj.variantDescription
-                        CType(.Cells(zeile, 8), Excel.Range).Value = hproj.leadPerson
-                        CType(.Cells(zeile, 9), Excel.Range).Value = hproj.ampelStatus
-                        CType(.Cells(zeile, 10), Excel.Range).Value = hproj.ampelErlaeuterung
-                        CType(.Cells(zeile, 11), Excel.Range).Value = hproj.StrategicFit
-                        CType(.Cells(zeile, 12), Excel.Range).Value = hproj.Risiko
-                        CType(.Cells(zeile, 13), Excel.Range).Value = ""
 
-                        For i As Integer = 1 To customFieldDefinitions.count
-                            Dim cfType As Integer = customFieldDefinitions.getDef(i).type
-                            Dim uid As Integer = customFieldDefinitions.getDef(i).uid
+                        If hproj.variantName <> "" Then
+                            CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                            someVariantTextOccurred = True
+                        End If
 
-                            Try
-                                If cfType = 0 Then
-                                    ' String
-                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CStr(hproj.getCustomSField(uid))
-                                ElseIf cfType = 1 Then
-                                    ' Double
-                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CDbl(hproj.getCustomDField(uid))
-                                ElseIf cfType = 2 Then
-                                    ' boolean 
-                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CBool(hproj.getCustomBField(uid))
-                                End If
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
 
-                            Catch ex As Exception
+                            If hproj.variantDescription <> "" Then
+                                CType(.Cells(zeile, 4), Excel.Range).Value = hproj.variantDescription
+                                someVariantTextOccurred = True
+                            End If
 
-                            End Try
+                            CType(.Cells(zeile, 5), Excel.Range).Value = hproj.businessUnit
+                            CType(.Cells(zeile, 6), Excel.Range).Value = hproj.description
 
-                        Next
+                            CType(.Cells(zeile, 7), Excel.Range).Value = hproj.Erloes
+                            CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "#,##0.00"
+
+                            CType(.Cells(zeile, 8), Excel.Range).Value = hproj.leadPerson
+                            ' das ist beim PL
+                            'CType(.Cells(zeile, 9), Excel.Range).Value = hproj.ampelStatus
+                            'CType(.Cells(zeile, 10), Excel.Range).Value = hproj.ampelErlaeuterung
+                            CType(.Cells(zeile, 9), Excel.Range).Value = hproj.StrategicFit
+                            CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.##"
+
+                            CType(.Cells(zeile, 10), Excel.Range).Value = hproj.Risiko
+                            CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.##"
+                            ' das macht der PL
+                            'CType(.Cells(zeile, 13), Excel.Range).Value = ""
+
+                            For i As Integer = 1 To customFieldDefinitions.count
+                                Dim cfType As Integer = customFieldDefinitions.getDef(i).type
+                                Dim uid As Integer = customFieldDefinitions.getDef(i).uid
+
+                                Try
+                                    If cfType = 0 Then
+                                        ' String
+                                        CType(.Cells(zeile, 10 + i), Excel.Range).Value = CStr(hproj.getCustomSField(uid))
+                                    ElseIf cfType = 1 Then
+                                        ' Double
+                                        CType(.Cells(zeile, 10 + i), Excel.Range).Value = CDbl(hproj.getCustomDField(uid))
+                                    ElseIf cfType = 2 Then
+                                        ' boolean 
+                                        CType(.Cells(zeile, 10 + i), Excel.Range).Value = CBool(hproj.getCustomBField(uid))
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            Next
+
+                        Else
+                            CType(.Cells(zeile, 4), Excel.Range).Value = hproj.ampelStatus
+
+                            Select Case hproj.ampelStatus
+                                Case 0
+                                    CType(.Cells(zeile, 4), Excel.Range).Interior.Color = visboFarbeNone
+                                Case 1
+                                    CType(.Cells(zeile, 4), Excel.Range).Interior.Color = visboFarbeGreen
+                                Case 2
+                                    CType(.Cells(zeile, 4), Excel.Range).Interior.Color = visboFarbeYellow
+                                Case 3
+                                    CType(.Cells(zeile, 4), Excel.Range).Interior.Color = visboFarbeRed
+                            End Select
+
+                            CType(.Cells(zeile, 5), Excel.Range).Value = hproj.ampelErlaeuterung
+                            CType(.Cells(zeile, 6), Excel.Range).Value = hproj.getCustomSField("Risiko")
+                        End If
+
+
                     End With
 
 
@@ -16561,12 +16687,24 @@ Public Module agm2
                         Dim editArea As Excel.Range = Nothing
 
                         With currentWS
-                            protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 5)), Excel.Range)
-                            editArea = CType(.Range(.Cells(zeile, 6), .Cells(zeile, anzahlSpalten)), Excel.Range)
+
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                                editArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, anzahlSpalten)), Excel.Range)
+                                protectArea = CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Excel.Range)
+                                editArea.Locked = False
+                                protectArea.Locked = True
+                            Else
+                                'protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 3)), Excel.Range)
+                                protectArea = CType(.Rows(zeile), Excel.Range)
+                                editArea = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 6)), Excel.Range)
+                                protectArea.Locked = True
+                                editArea.Locked = False
+                            End If
+
                         End With
 
-                        protectArea.Locked = True
-                        editArea.Locked = False
+
+
                     End If
 
                     ' Zeile eins weiter ... 
@@ -16579,25 +16717,25 @@ Public Module agm2
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
-            Dim infoDataBlock As Excel.Range
+
             With CType(currentWS, Excel.Worksheet)
 
                 infoBlock = CType(.Range(.Columns(1), .Columns(anzahlSpalten)), Excel.Range)
-                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzahlSpalten)), Excel.Range)
-                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                'infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                'infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
-                If massColFontValues(1, 0) > 4 Then
+                If formatsWereAlreadySet Then
+                    'If massColFontValues(2, 0) > 4 Then
                     ' diese Werte übernehmen 
-                    infoDataBlock.Font.Size = CInt(massColFontValues(2, 0))
-                    For ik As Integer = 1 To anzahlSpalten
-                        If massColFontValues(1, ik) > 0 Then
-                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
-                        End If
 
-                    Next
+                    'For ik As Integer = 1 To anzahlSpalten
+                    '    If massColFontValues(1, ik) > 0 Then
+                    '        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
+                    '    End If
+
+                    'Next
 
 
                 Else
@@ -16614,82 +16752,117 @@ Public Module agm2
                     ' Description
 
                     Try
-                        With CType(infoDataBlock.Columns(1), Excel.Range)
-                            .ColumnWidth = 13
+                        ' Projekt Nummer
+                        With CType(infoBlock.Columns(1), Excel.Range)
+                            .ColumnWidth = 20
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         End With
 
                         '' Projekt-Name
-                        With CType(infoDataBlock.Columns(2), Excel.Range)
-                            .ColumnWidth = 15
+                        With CType(infoBlock.Columns(2), Excel.Range)
+                            .WrapText = False
+                            .AutoFit()
+                            '.ColumnWidth = 30
                         End With
 
                         '' Varianten-Name
-                        With CType(infoDataBlock.Columns(3), Excel.Range)
-                            .ColumnWidth = 5
+                        With CType(infoBlock.Columns(3), Excel.Range)
+                            .WrapText = False
+                            .AutoFit()
                         End With
 
-                        '' Start
-                        With CType(infoDataBlock.Columns(4), Excel.Range)
-                            .ColumnWidth = 10
-                        End With
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
 
-                        '' Ende
-                        With CType(infoDataBlock.Columns(5), Excel.Range)
-                            .ColumnWidth = 10
-                        End With
-
-                        '' Description
-                        With CType(infoDataBlock.Columns(6), Excel.Range)
-                            .WrapText = True
-                            .ColumnWidth = 20
-                        End With
-
-                        '' Variant Description
-                        With CType(infoDataBlock.Columns(7), Excel.Range)
-                            .WrapText = True
-                            .ColumnWidth = 20
-                        End With
-
-                        '' Verantwortlich 
-                        With CType(infoDataBlock.Columns(8), Excel.Range)
-                            .ColumnWidth = 10
-                        End With
-
-                        '' Ampel-Farbe
-                        With CType(infoDataBlock.Columns(9), Excel.Range)
-                            .ColumnWidth = 2
-                        End With
-
-                        '' Ampel-Erläuterung
-                        With CType(infoDataBlock.Columns(10), Excel.Range)
-                            .ColumnWidth = 20
-                            .WrapText = True
-                        End With
-
-                        ' Strategic Fit 
-                        With CType(infoDataBlock.Columns(11), Excel.Range)
-                            .ColumnWidth = 14
-                            .HorizontalAlignment = HorizontalAlignment.Center
-                        End With
-
-                        ' Risiko  
-                        With CType(infoDataBlock.Columns(12), Excel.Range)
-                            .ColumnWidth = 42
-                            .HorizontalAlignment = HorizontalAlignment.Center
-                        End With
-
-                        ' Risiko-Beschreibung  
-                        With CType(infoDataBlock.Columns(13), Excel.Range)
-                            .ColumnWidth = 20
-                        End With
-
-                        For i As Integer = 1 To customFieldDefinitions.count
-
-                            With CType(infoDataBlock.Columns(13 + i), Excel.Range)
-                                .ColumnWidth = 12
+                            '' Variant Description
+                            With CType(infoBlock.Columns(4), Excel.Range)
+                                .WrapText = True
+                                .ColumnWidth = 25
                             End With
 
-                        Next
+                            ' BusinessUnit
+                            With CType(infoBlock.Columns(5), Excel.Range)
+                                .WrapText = False
+                                .AutoFit()
+                                '.ColumnWidth = 10
+                            End With
+
+                            '' Goals
+                            With CType(infoBlock.Columns(6), Excel.Range)
+                                .WrapText = True
+                                .ColumnWidth = 45
+                            End With
+
+                            '' Budget
+                            With CType(infoBlock.Columns(7), Excel.Range)
+                                .WrapText = False
+                                .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                .ColumnWidth = 15
+                            End With
+
+
+                            '' Verantwortlich 
+                            With CType(infoBlock.Columns(8), Excel.Range)
+                                .WrapText = False
+                                .AutoFit()
+                                '.ColumnWidth = 15
+                            End With
+
+                            '' Ampel-Farbe
+                            'With CType(infoBlock.Columns(9), Excel.Range)
+                            '    .ColumnWidth = 2
+                            'End With
+
+                            '' Ampel-Erläuterung
+                            'With CType(infoBlock.Columns(10), Excel.Range)
+                            '    .ColumnWidth = 25
+                            '    .WrapText = True
+                            'End With
+
+                            ' Strategic Fit 
+                            With CType(infoBlock.Columns(9), Excel.Range)
+                                .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                                .ColumnWidth = 10
+                                '.HorizontalAlignment = HorizontalAlignment.Center
+                            End With
+
+                            ' Risiko  
+                            With CType(infoBlock.Columns(10), Excel.Range)
+                                .ColumnWidth = 10
+                                .HorizontalAlignment = HorizontalAlignment.Right
+                            End With
+
+
+                            For i As Integer = 1 To customFieldDefinitions.count
+
+                                With CType(infoBlock.Columns(10 + i), Excel.Range)
+                                    .WrapText = False
+                                    .AutoFit()
+                                    '.ColumnWidth = 12
+                                End With
+
+                            Next
+
+                        Else
+                            '' Ampel
+                            With CType(infoBlock.Columns(4), Excel.Range)
+                                .WrapText = False
+                                .ColumnWidth = 2
+                            End With
+
+                            ' Ampel-Erläuterung
+                            With CType(infoBlock.Columns(5), Excel.Range)
+                                .WrapText = True
+                                .ColumnWidth = 90
+                            End With
+
+                            '' Risiko 
+                            With CType(infoBlock.Columns(6), Excel.Range)
+                                .WrapText = True
+                                .ColumnWidth = 90
+                            End With
+                        End If
+
+
 
                     Catch ex As Exception
 
@@ -16698,26 +16871,59 @@ Public Module agm2
 
                 End If
 
-                ' jetzt noch die Spalte 9 bedingt formatieren .. 
-                Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 9), .Cells(zeile, 9)), Excel.Range)
-                With trafficLightRange
-                    .Interior.Color = visboFarbeNone
+                If Not someVariantTextOccurred Then
+                    With CType(infoBlock.Columns(3), Excel.Range)
+                        .EntireColumn.Hidden = True
+                    End With
 
-                    Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        With CType(infoBlock.Columns(4), Excel.Range)
+                            .EntireColumn.Hidden = True
+                        End With
+                    End If
 
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+                Else
+                    With CType(infoBlock.Columns(3), Excel.Range)
+                        .EntireColumn.Hidden = False
+                    End With
 
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        With CType(infoBlock.Columns(4), Excel.Range)
+                            .EntireColumn.Hidden = False
+                        End With
+                    End If
 
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+                End If
 
-                End With
+                '' jetzt noch die Spalte 4 die Ampel bedingt formatieren .. 
+                '' nur bei Projektleiter relevant ...
+                'If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                '    Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 4), .Cells(zeile - 1, 4)), Excel.Range)
+                '    With trafficLightRange
+                '        .Interior.Color = visboFarbeNone
+
+                '        Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
+                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                '    End With
+                'End If
+
+
+                ' jetzt noch die Zeile alle in der Höhe automat. anpassen ..
+                For iz As Integer = 2 To todoListe.Count + 1
+                    CType(.Rows(iz), Excel.Range).AutoFit()
+                Next
 
             End With
 
@@ -16997,7 +17203,12 @@ Public Module agm2
 
                 For di As Integer = 0 To exportOrdnerNames.Length - 1
                     Try
-                        My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                        If Not IsNothing(exportOrdnerNames(di)) Then
+                            My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(di))
+                        Else
+                            exportOrdnerNames(di) = "-"
+                        End If
+
                     Catch ex As Exception
 
                     End Try

@@ -72,6 +72,55 @@
         End Set
     End Property
 
+    Private _zeitRaumLeft As Date
+    Public Property zeitRaumLeft As Date
+        Get
+            If Not IsNothing(_zeitRaumLeft) Then
+                zeitRaumLeft = _zeitRaumLeft
+            Else
+                zeitRaumLeft = Date.MinValue
+            End If
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                If value >= StartofCalendar Then
+                    _zeitRaumLeft = value
+                Else
+                    _zeitRaumLeft = StartofCalendar
+                End If
+            End If
+
+        End Set
+    End Property
+
+    Private _zeitRaumRight As Date
+    Public Property zeitRaumRight As Date
+        Get
+            If Not IsNothing(_zeitRaumLeft) Then
+                zeitRaumRight = _zeitRaumRight
+            Else
+                zeitRaumRight = Date.MinValue
+            End If
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                If value >= StartofCalendar Then
+                    _zeitRaumRight = value
+                Else
+                    _zeitRaumRight = StartofCalendar
+                End If
+            End If
+
+        End Set
+    End Property
+
+    Public ReadOnly Property hasValidZeitraum() As Boolean
+        Get
+            hasValidZeitraum = ((getColumnOfDate(_zeitRaumRight) > getColumnOfDate(_zeitRaumLeft)) And (_zeitRaumLeft >= StartofCalendar))
+        End Get
+    End Property
+
+
     Public ReadOnly Property q2Bezeichner As String
         Get
             Dim tmpResult As String = ""
@@ -136,6 +185,30 @@
                             q2 = .Tags.Item("Q2")
                         End If
 
+                        Dim tmpLD As Date = StartofCalendar
+                        If .Tags.Item("SRLD").Length > 0 Then
+                            Try
+                                tmpLD = CDate(.Tags.Item("SRLD"))
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                        Dim tmpRD As Date = StartofCalendar
+                        If .Tags.Item("SRRD").Length > 0 Then
+                            Try
+                                tmpRD = CDate(.Tags.Item("SRRD"))
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                        If ((getColumnOfDate(tmpRD) > getColumnOfDate(tmpLD)) And (tmpLD > StartofCalendar)) Then
+                            zeitRaumLeft = tmpLD
+                            zeitRaumRight = tmpRD
+                        End If
 
                         If .Tags.Item("BID").Length > 0 Then
                             bigType = CType(.Tags.Item("BID"), ptReportBigTypes)
@@ -174,6 +247,8 @@
     Public Sub New()
         _pName = ""
         _vName = ""
+        _zeitRaumLeft = StartofCalendar
+        _zeitRaumRight = StartofCalendar
         _prPF = ptPRPFType.project
         _hproj = Nothing
         _hproj2 = Nothing

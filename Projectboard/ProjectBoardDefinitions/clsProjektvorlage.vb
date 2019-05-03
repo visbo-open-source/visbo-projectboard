@@ -1794,16 +1794,44 @@
     End Function
 
     ''' <summary>
+    ''' gibt zurück, ob es sich um ein Segment handelt; nur relevant bei swimlane2 Typus; andernfalls ist ein Segment = swimlane 
+    ''' </summary>
+    ''' <param name="elemNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property isSegment(ByVal elemNameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+            Dim found As Boolean = False
+            Dim ix As Integer = 1
+
+            Do While ix <= ChildCollection.Count And Not found
+
+                If CStr(ChildCollection.Item(ix)) = elemNameID Then
+                    tmpResult = True
+                    found = True
+                Else
+                    ix = ix + 1
+                End If
+
+            Loop
+
+            isSegment = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt true zurück, wenn es sich um eine Phase der Gliederungsebene 1 handelt, also Kind-Phase der rootphase ist
     ''' gibt false sonst zurück
     ''' wenn BHTC Schema = true, dann muss es ein Kind der ersten oder zweiten Hierarchie Ebene handeln   
     ''' </summary>
     ''' <param name="elemName">Name der Phase</param>
-    ''' <param name="isBHTCSchema"></param>
+    ''' <param name="isSwimlane2"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isBHTCSchema As Boolean = False) As Boolean
+    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isSwimlane2 As Boolean = False) As Boolean
         Get
             Dim tmpResult As Boolean = False
             Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
@@ -1821,7 +1849,7 @@
                 ' muss auch true zurück geben, wenn es sich um die rootPhase handelt und Meilensteine drin vorkommen 
 
 
-                If isBHTCSchema Then
+                If isSwimlane2 Then
                     ' noch nicht implementiert 
                     Dim found As Boolean = False
                     Dim ix As Integer = 1
@@ -1965,14 +1993,14 @@
     ''' </summary>
     ''' <param name="considerAll">sollen alle Swimlanes betrachtet werden</param>
     ''' <param name="breadCrumbArray">enthält eine Liste der vollständigen Breadcrumbs aller gewählten Elemente </param>
-    ''' <param name="isBhtcSchema">gibt an, ob die Swimlanes dadurch bestimmt sind, dass sie auf der 2. Ebene sind oder ob alles als Swimlane behandelt wird, was erst bei der 2.Stufe (wie bei BHTC) 
+    ''' <param name="isSwimlane2">gibt an, ob die Swimlanes dadurch bestimmt sind, dass sie auf der 2. Ebene sind oder ob alles als Swimlane behandelt wird, was erst bei der 2.Stufe (wie bei BHTC) 
     ''' in einer ersten Implementierung wird Level2 betrachtet</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSwimLanesCount(ByVal considerAll As Boolean, _
-                                               ByVal breadCrumbArray() As String, _
-                                               ByVal isBhtcSchema As Boolean) As Integer
+    Public ReadOnly Property getSwimLanesCount(ByVal considerAll As Boolean,
+                                               ByVal breadCrumbArray() As String,
+                                               ByVal isSwimlane2 As Boolean) As Integer
         Get
             Dim anzSwimlanes As Integer = 0
             Dim parentNameID As String = rootPhaseName
@@ -1987,7 +2015,7 @@
                 sptr = breadCrumbArray.Length - 1
             End If
 
-            If Not isBhtcSchema Then
+            If Not isSwimlane2 Then
 
                 ' gibt es Meilensteine in der Rootphase? 
                 Dim anzMilestonesInRootPhase As Integer = Me.hierarchy.getChildIDsOf(rootPhaseName, True).Count
@@ -2055,8 +2083,35 @@
                     Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
 
                     For Each obj As Object In segmentCollection
-                        Dim sgementNameID As String = CStr(obj)
-                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+
+                        Dim segmentNameID As String = CStr(obj)
+
+                        ' gibt es Meilensteine in dem betrachteten Segment? 
+                        Dim anzMilestonesInSegmentPhase As Integer = Me.hierarchy.getChildIDsOf(segmentNameID, True).Count
+                        If anzMilestonesInSegmentPhase > 0 Then
+                            fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+                            If considerAll Then
+                                anzSwimlanes = anzSwimlanes + 1
+                            Else
+                                fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+                                ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                                Dim found As Boolean = False
+                                Dim index = 0
+                                Do While Not found And index <= sptr
+                                    If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                        found = True
+                                    Else
+                                        index = index + 1
+                                    End If
+                                Loop
+                                If found Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                End If
+                            End If
+                        End If
+
+
+                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
 
                         For Each childObj As Object In ChildCollection
                             Dim swimlaneID As String = CStr(childObj)
@@ -2302,7 +2357,24 @@
                         Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
 
                         For Each obj As Object In segmentCollection
+
                             Dim segmentNameID As String = CStr(obj)
+                            tmpPhase = Nothing
+
+                            ' gibt es Meilensteine in der SegmentPhase? 
+                            Dim anzMilestonesInSegmentPhase As Integer = Me.hierarchy.getChildIDsOf(segmentNameID, True).Count
+                            If anzMilestonesInSegmentPhase > 0 Then
+                                fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+
+                                anzSwimlanes = anzSwimlanes + 1
+                                If index = anzSwimlanes Then
+                                    ' das ist jetzt die Phase 
+                                    tmpPhase = Me.getPhaseByID(segmentNameID)
+                                    Exit For
+                                End If
+                            End If
+
+
                             Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
 
                             For Each childObj As Object In ChildCollection

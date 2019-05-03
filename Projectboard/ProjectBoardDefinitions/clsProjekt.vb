@@ -4623,6 +4623,13 @@ Public Class clsProjekt
                 value = ProjektStatus(4) Or
                 value = ProjektStatus(5) Or
                 value = ProjektStatus(6) Then
+
+                ' bis auf weiteres soll es keinen ChangeRequest mehr geben ..
+                ' muss erst noch weiter spezifiziert werden 
+                If value = ProjektStatus(PTProjektStati.ChangeRequest) Then
+                    value = ProjektStatus(PTProjektStati.beauftragt)
+                End If
+
                 _Status = value
             Else
                 Call MsgBox("Wert als Status nicht zugelassen: " & value)
@@ -5241,7 +5248,7 @@ Public Class clsProjekt
     ''' <summary>
     ''' gibt die Anzahl Zeilen zurück, die die Swimlane phaseID im aktuellen Projekt im "Extended Drawing Mode" benötigt 
     ''' Aktuell ist es so, dass nur Phasen Zeilenvorschub triggern, Meilensteine werden in der obersten Phase oder in der Phase gezeichnet, 
-    ''' die ihr Großvater, Ur-Großvater, etc ist 
+    ''' die ihr Großvater, Ur-Großvater, etc ist     ''' 
     ''' </summary>
     ''' <param name="selectedPhaseIDs">die Liste mit den PhaseIDs, die gezeichnet werden sollen</param>
     ''' <param name="selectedMilestoneIDs">die Liste mit den MilestoneIDs, die gezeichnet werden sollen</param>
@@ -5252,207 +5259,214 @@ Public Class clsProjekt
     ''' <param name="considerAll"></param>
     ''' <value></value>
     ''' <returns></returns>
-    ''' <remarks></remarks>
+    ''' <remarks>segment-id hat nur dann einen Wert anders als "", wenn es sich um den Swimlane2 Modus handelt; wenn segmentID = swimlaneID , dann sollen die 
+    ''' Meilensteine des segments gezeichnet werden ujnd die brauchen nur eine Zeile ... ; genauso, wenn der Modus extended = false ist 
+    ''' </remarks>
     Public ReadOnly Property calcNeededLinesSwl(ByVal swimlaneID As String,
                                                 ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection,
                                                 ByVal extended As Boolean, ByVal considerTimespace As Boolean,
                                                 ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer,
-                                                ByVal considerAll As Boolean) As Integer
+                                                ByVal considerAll As Boolean,
+                                                ByVal segmentID As String) As Integer
         Get
-
 
             Dim tmpValue As Integer
 
-
-            ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
-            ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
-            ' unmittelbar nach der Eltern-Phase kommen ;
-            ' generell können Kind-Elemente, egal ob Meilensteine oder Phasen nur in den PhasenNummern start .. ende vorkommen
-
-            Dim startNr As Integer = 0
-            Dim endNr As Integer = 0
-
-
-            ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
-            ' in endNr ist die Phasen-Nummer des letzten Kindes 
-            Call Me.calcStartEndChildNrs(swimlaneID, startNr, endNr)
-
-            ' zum Bestimmen der optimierten Zeilenanzahl 
-            ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
-            Dim dimension As Integer = endNr - startNr
-            Dim lastEndDates(dimension) As Date
-            ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
-            ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
-            Dim listOfPhases(dimension) As Collection
-
-            For i As Integer = 0 To dimension
-                lastEndDates(i) = StartofCalendar.AddDays(-1)
-                listOfPhases(i) = New Collection
-            Next
-
-            Dim maxOffsetZeile As Integer = 1
-            Dim curOffsetZeile As Integer = 1
-
-            ' jetzt wird bestimmt, wieviele der selectedPhaseIDs, selectedMilestoneIDs denn überhaupt (Kindes-)Kinder der betrachteten Swimlane sind 
-            ' es ist nicht notwendig, das bei considerAll zu machen 
-
-            Dim childPhaseIDs As New Collection
-            Dim childMilestoneIDs As New Collection
-
-            If Not considerAll Then
-                If swimlaneID = rootPhaseName Then
-                    childMilestoneIDs = Me.getPhaseByID(rootPhaseName).getMilestoneIDs
-                Else
-                    childPhaseIDs = Me.schnittmengeChilds(swimlaneID, selectedPhaseIDs)
-                    childMilestoneIDs = Me.schnittmengeChilds(swimlaneID, selectedMilestoneIDs)
-                End If
-
-            End If
-
-            Dim zeilenOffset As Integer = 1
-
-            If Not extended Then
-                ' es wird grundsätzlich nur eine Zeile benötigt 
+            If Not extended Or swimlaneID = segmentID Then
                 tmpValue = 1
-
-            ElseIf childPhaseIDs.Count <= 1 And Not considerAll Then
-                ' es wird nur eine Zeile benötigt 
-                tmpValue = 1
-
-            ElseIf swimlaneID = rootPhaseName Then
-                ' für die Darstellung der Meilensteine einer Swimlane wird nur eine Zeile benötigt  
-                tmpValue = 1
-
             Else
-                ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
-                ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
-                Dim bestStartAtLevel As New SortedList(Of Integer, Integer)
-                Dim currentLevel As Integer = -1
-                Dim previousLevel As Integer = -1
-                Dim minBestStart As Integer = 0
-
-                For i = startNr + 1 To endNr
-                    Try
-                        Dim cPhase As clsPhase = Me.getPhase(i)
-                        Dim relevant As Boolean = False
-                        If Not IsNothing(cPhase) Then
-                            If considerAll Then
-                                relevant = True
-                            Else
-                                If childPhaseIDs.Contains(cPhase.nameID) Then
-                                    relevant = True
-                                Else
-                                    relevant = False
-                                End If
-                            End If
-
-                            If relevant Then           ' cphase ist eine der selektierten Phasen
-
-                                If Not considerTimespace _
-                                    Or
-                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde,
-                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
 
-                                    currentLevel = Me.hierarchy.getIndentLevel(cPhase.nameID)
-                                    ' wenn es sich um ein Element handelt, das in der Hierarchie höher als das vorhergehende war , dann wird das die neue Start-Zeile 
-                                    If currentLevel < previousLevel Then
-                                        If bestStartAtLevel.ContainsKey(currentLevel) Then
-                                            minBestStart = bestStartAtLevel(currentLevel) - 1
-                                            If minBestStart < 0 Then
-                                                minBestStart = 0
-                                            End If
-                                        End If
-                                    End If
+                ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
+                ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
+                ' unmittelbar nach der Eltern-Phase kommen ;
+                ' generell können Kind-Elemente, egal ob Meilensteine oder Phasen nur in den PhasenNummern start .. ende vorkommen
 
-                                    Dim requiredZeilen As Integer = Me.calcNeededLinesSwl(cPhase.nameID,
-                                                                                           selectedPhaseIDs,
-                                                                                           selectedMilestoneIDs,
-                                                                                           extended,
-                                                                                           considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                           considerAll)
-
-                                    Dim bestStart As Integer = minBestStart
-                                    ' Dim bestStart As Integer = 0
-                                    ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
-                                    ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
-
-                                    ' tk 15.5.18
-                                    ''Dim parentFound As Boolean = False
-                                    ''Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
-                                    ''Dim ix As Integer = maxOffsetZeile
-
-                                    ''While ix > 0 And Not parentFound
-
-                                    ''    If listOfPhases(ix - 1).Count > 0 Then
-                                    ''        Dim kx As Integer = 1
-                                    ''        While kx <= listOfPhases(ix - 1).Count And Not parentFound
-                                    ''            Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
-                                    ''            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
-                                    ''                parentFound = True
-                                    ''            Else
-                                    ''                kx = kx + 1
-                                    ''            End If
-                                    ''        End While
-
-                                    ''        If Not parentFound Then
-                                    ''            ix = ix - 1
-                                    ''        End If
-
-                                    ''    Else
-                                    ''        ix = ix - 1
-                                    ''    End If
-                                    ''End While
-
-                                    ''If parentFound Then
-                                    ''    bestStart = ix
-                                    ''Else
-                                    ''    bestStart = 0
-                                    ''End If
-
-                                    With cPhase
-
-                                        'zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
-                                        zeilenOffset = findeBesteZeile(lastEndDates, minBestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
-                                        ' wenn das aktuelle Element in der Hierarchie höher steht als das zuvor behandelte , dann wird die jetzt ermittelte Zeile als Start verwendet 
-                                        If currentLevel < previousLevel Then
-                                            minBestStart = zeilenOffset
-                                        End If
-
-                                        maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+                Dim startNr As Integer = 0
+                Dim endNr As Integer = 0
 
 
-                                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
-                                        If Not listOfPhases(zeilenOffset - 1).Contains(cPhase.nameID) Then
-                                            listOfPhases(zeilenOffset - 1).Add(cPhase.nameID, cPhase.nameID)
-                                        End If
+                ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
+                ' in endNr ist die Phasen-Nummer des letzten Kindes 
+                Call Me.calcStartEndChildNrs(swimlaneID, startNr, endNr)
 
-                                        If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
-                                            lastEndDates(zeilenOffset - 1) = .getEndDate
-                                        End If
+                ' zum Bestimmen der optimierten Zeilenanzahl 
+                ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
+                Dim dimension As Integer = endNr - startNr
+                Dim lastEndDates(dimension) As Date
+                ' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
+                ' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
+                Dim listOfPhases(dimension) As Collection
 
-
-                                        'End If
-
-                                    End With
-
-
-
-                                Else
-                                    ' Phase ist nicht im Zeitraum, also kein Zeilenoffset notwendig, kein lastEndDate notwendig 
-                                End If
-                            End If
-
-
-                        End If
-                    Catch ex As Exception
-
-                    End Try
-
+                For i As Integer = 0 To dimension
+                    lastEndDates(i) = StartofCalendar.AddDays(-1)
+                    listOfPhases(i) = New Collection
                 Next
 
-                tmpValue = maxOffsetZeile
+                Dim maxOffsetZeile As Integer = 1
+                Dim curOffsetZeile As Integer = 1
 
+                ' jetzt wird bestimmt, wieviele der selectedPhaseIDs, selectedMilestoneIDs denn überhaupt (Kindes-)Kinder der betrachteten Swimlane sind 
+                ' es ist nicht notwendig, das bei considerAll zu machen 
+
+                Dim childPhaseIDs As New Collection
+                Dim childMilestoneIDs As New Collection
+
+                If Not considerAll Then
+                    If swimlaneID = rootPhaseName Then
+                        childMilestoneIDs = Me.getPhaseByID(rootPhaseName).getMilestoneIDs
+                    Else
+                        childPhaseIDs = Me.schnittmengeChilds(swimlaneID, selectedPhaseIDs)
+                        childMilestoneIDs = Me.schnittmengeChilds(swimlaneID, selectedMilestoneIDs)
+                    End If
+
+                End If
+
+                Dim zeilenOffset As Integer = 1
+
+                If Not extended Then
+                    ' es wird grundsätzlich nur eine Zeile benötigt 
+                    tmpValue = 1
+
+                ElseIf childPhaseIDs.Count <= 1 And Not considerAll Then
+                    ' es wird nur eine Zeile benötigt 
+                    tmpValue = 1
+
+                ElseIf swimlaneID = rootPhaseName Then
+                    ' für die Darstellung der Meilensteine einer Swimlane wird nur eine Zeile benötigt  
+                    tmpValue = 1
+
+                Else
+                    ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
+                    ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
+                    Dim bestStartAtLevel As New SortedList(Of Integer, Integer)
+                    Dim currentLevel As Integer = -1
+                    Dim previousLevel As Integer = -1
+                    Dim minBestStart As Integer = 0
+
+                    For i = startNr + 1 To endNr
+                        Try
+                            Dim cPhase As clsPhase = Me.getPhase(i)
+                            Dim relevant As Boolean = False
+                            If Not IsNothing(cPhase) Then
+                                If considerAll Then
+                                    relevant = True
+                                Else
+                                    If childPhaseIDs.Contains(cPhase.nameID) Then
+                                        relevant = True
+                                    Else
+                                        relevant = False
+                                    End If
+                                End If
+
+                                If relevant Then           ' cphase ist eine der selektierten Phasen
+
+                                    If Not considerTimespace _
+                                        Or
+                                        (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde,
+                                                                                    zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+
+                                        currentLevel = Me.hierarchy.getIndentLevel(cPhase.nameID)
+                                        ' wenn es sich um ein Element handelt, das in der Hierarchie höher als das vorhergehende war , dann wird das die neue Start-Zeile 
+                                        If currentLevel < previousLevel Then
+                                            If bestStartAtLevel.ContainsKey(currentLevel) Then
+                                                minBestStart = bestStartAtLevel(currentLevel) - 1
+                                                If minBestStart < 0 Then
+                                                    minBestStart = 0
+                                                End If
+                                            End If
+                                        End If
+
+                                        Dim requiredZeilen As Integer = Me.calcNeededLinesSwl(cPhase.nameID,
+                                                                                               selectedPhaseIDs,
+                                                                                               selectedMilestoneIDs,
+                                                                                               extended,
+                                                                                               considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR,
+                                                                                               considerAll, "")
+
+                                        Dim bestStart As Integer = minBestStart
+                                        ' Dim bestStart As Integer = 0
+                                        ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                                        ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+
+                                        ' tk 15.5.18
+                                        ''Dim parentFound As Boolean = False
+                                        ''Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                                        ''Dim ix As Integer = maxOffsetZeile
+
+                                        ''While ix > 0 And Not parentFound
+
+                                        ''    If listOfPhases(ix - 1).Count > 0 Then
+                                        ''        Dim kx As Integer = 1
+                                        ''        While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                        ''            Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
+                                        ''            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                        ''                parentFound = True
+                                        ''            Else
+                                        ''                kx = kx + 1
+                                        ''            End If
+                                        ''        End While
+
+                                        ''        If Not parentFound Then
+                                        ''            ix = ix - 1
+                                        ''        End If
+
+                                        ''    Else
+                                        ''        ix = ix - 1
+                                        ''    End If
+                                        ''End While
+
+                                        ''If parentFound Then
+                                        ''    bestStart = ix
+                                        ''Else
+                                        ''    bestStart = 0
+                                        ''End If
+
+                                        With cPhase
+
+                                            'zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                            zeilenOffset = findeBesteZeile(lastEndDates, minBestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                            ' wenn das aktuelle Element in der Hierarchie höher steht als das zuvor behandelte , dann wird die jetzt ermittelte Zeile als Start verwendet 
+                                            If currentLevel < previousLevel Then
+                                                minBestStart = zeilenOffset
+                                            End If
+
+                                            maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+
+
+                                            ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                                            If Not listOfPhases(zeilenOffset - 1).Contains(cPhase.nameID) Then
+                                                listOfPhases(zeilenOffset - 1).Add(cPhase.nameID, cPhase.nameID)
+                                            End If
+
+                                            If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
+                                                lastEndDates(zeilenOffset - 1) = .getEndDate
+                                            End If
+
+
+                                            'End If
+
+                                        End With
+
+
+
+                                    Else
+                                        ' Phase ist nicht im Zeitraum, also kein Zeilenoffset notwendig, kein lastEndDate notwendig 
+                                    End If
+                                End If
+
+
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                    Next
+
+                    tmpValue = maxOffsetZeile
+
+                End If
             End If
 
             calcNeededLinesSwl = tmpValue
