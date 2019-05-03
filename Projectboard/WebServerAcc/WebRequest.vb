@@ -1537,7 +1537,7 @@ Public Class Request
         Try
             vp = GETvpid(portfolioName, err, vptype)
             vpid = vp._id
-            listOfPortfolios = GETallVPf(vpid, Date.Now, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
 
@@ -3729,6 +3729,12 @@ Public Class Request
 
             ' URL zusammensetzen
             serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
+
+            If timestamp > Date.MinValue Then
+                Dim refDate As String = DateTimeToISODate(timestamp)
+                serverUriString = serverUriString & "?refDate=" & refDate
+            End If
+
             Dim serverUri As New Uri(serverUriString)
 
             Dim datastr As String = ""
