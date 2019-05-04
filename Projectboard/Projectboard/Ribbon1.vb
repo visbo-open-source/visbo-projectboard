@@ -6231,7 +6231,7 @@ Imports System.Web
 
 
                 Else
-                    Call showOutPut(outputCollection, "Importing Capacities", "")
+                    Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
                     Call logfileSchreiben(outputCollection)
                 End If
             Else

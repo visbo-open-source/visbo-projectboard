@@ -49,6 +49,16 @@ Public Class clsOrganisations
             _validOrganisations.Remove(key)
         End If
 
+        Try
+            ' jetzt wird in der Orga die virtuelle Orga-/Team Struktur aufgebaut
+            ' die ist dafür notwendig, dass die entsprechende Orga-Einheit den Personal-aufwand ausweist, der durch Multi-Orga-Teams entsteht. 
+            ' Die Orga-Einheit, in der der Team Aufwand ausgewiesen wird, ist die jüngste (Groß-)Elternteil der allen Team-Mitgliedern gemeinsam ist. 
+            Call orga.allRoles.buildOrgaTeamChilds()
+        Catch ex As Exception
+            Call MsgBox("Fehler in Organisations Strukur: Zuordnung Teams als virtuelle Kinder fehlgeschlagen!" & vbLf & "Bitte kontaktieren Sie ihren System-Admin")
+        End Try
+
+
         ' jetzt kann fehlerfrei eingetragen werden 
         _validOrganisations.Add(key, orga)
 
