@@ -1537,7 +1537,7 @@ Public Class Request
         Try
             vp = GETvpid(portfolioName, err, vptype)
             vpid = vp._id
-            listOfPortfolios = GETallVPf(vpid, Date.Now, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
 
@@ -2091,7 +2091,7 @@ Public Class Request
                     newsetting = New clsVCSettingCustomroles
                     CType(newsetting, clsVCSettingCustomroles).name = type         ' customroles '
                     CType(newsetting, clsVCSettingCustomroles).timestamp = timestamp
-                    CType(newsetting, clsVCSettingCustomroles).userId = aktUser._id
+                    CType(newsetting, clsVCSettingCustomroles).userId = ""
                     CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
                     CType(newsetting, clsVCSettingCustomroles).type = type
                     CType(newsetting, clsVCSettingCustomroles).value = listofCURsWeb
@@ -2116,7 +2116,7 @@ Public Class Request
                     newsetting = New clsVCSettingCustomfields
                     CType(newsetting, clsVCSettingCustomfields).name = name         ' customfields-Date.now '
                     CType(newsetting, clsVCSettingCustomfields).timestamp = timestamp
-                    CType(newsetting, clsVCSettingCustomfields).userId = aktUser._id
+                    CType(newsetting, clsVCSettingCustomfields).userId = ""
                     CType(newsetting, clsVCSettingCustomfields).vcid = aktVCid
                     CType(newsetting, clsVCSettingCustomfields).type = type
                     CType(newsetting, clsVCSettingCustomfields).value = listofCustomFields
@@ -2142,24 +2142,24 @@ Public Class Request
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
                     Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
                     CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
-                    CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
+                    CType(newsetting, clsVCSettingOrganisation).userId = ""
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
 
                     If anzSetting = 1 Then
 
-                        ' Update der customroles - Setting
+                        ' Update der Organisation - Setting
                         If CType(oldsetting, clsVCSettingOrganisation).value.validFrom = listofOrgaWeb.validFrom Then
                             newsetting._id = settingID
                             result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                         Else
-                            ' Create der customroles - Setting
+                            ' Create der Organisation - Setting
                             result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                         End If
 
                     Else
-                        ' Create der customroles - Setting
+                        ' Create der Organisation - Setting
                         result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                     End If
             End Select
@@ -3729,6 +3729,12 @@ Public Class Request
 
             ' URL zusammensetzen
             serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
+
+            If timestamp > Date.MinValue Then
+                Dim refDate As String = DateTimeToISODate(timestamp)
+                serverUriString = serverUriString & "?refDate=" & refDate
+            End If
+
             Dim serverUri As New Uri(serverUriString)
 
             Dim datastr As String = ""
@@ -5437,9 +5443,12 @@ Public Class Request
                             result.Liste.Add(pvname, hConstItem)
                         End If
                     Else
-                        ' Test Breakpunkt 
-                        Dim a As Integer = 2
+                        ' der Fall kommt nur dann vor, wenn ein Portfolio mehrere Portfolios enthält, was nicht mehr sein darf
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Portfolio: " & vpf.name & vbCrLf & "ProjektID: " & hvpfItem.vpid)
+                        End If
                     End If
+
 
                 Next
                 ' hier wird die Sortliste aufgebaut ... 
