@@ -7541,336 +7541,337 @@ Public Module agm2
 
     End Function
 
+    ' tk wurde am 5.5. auskommentiert - kann ggf wieder reingenommen werden
+    ' wird nur aktuell nicht mehr gebraucht 
+    '''' <summary>
+    '''' liest alle in der Massen-Edit referenzierten Projekte ein und ersetzt die Werte dafür  
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub importiereMassenEdit()
 
-    ''' <summary>
-    ''' liest alle in der Massen-Edit referenzierten Projekte ein und ersetzt die Werte dafür  
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub importiereMassenEdit()
+    '    Dim err As New clsErrorCodeMsg
 
-        Dim err As New clsErrorCodeMsg
+    '    Dim projectName As String = ""
+    '    Dim variantName As String = ""
 
-        Dim projectName As String = ""
-        Dim variantName As String = ""
+    '    Dim phaseName As String = ""
+    '    Dim phaseNameID As String = ""
+    '    Dim rcName As String = ""
 
-        Dim phaseName As String = ""
-        Dim phaseNameID As String = ""
-        Dim rcName As String = ""
+    '    Dim isRole As Boolean = False
+    '    Dim isCost As Boolean = False
 
-        Dim isRole As Boolean = False
-        Dim isCost As Boolean = False
+    '    Dim zeile As Integer = 2
+    '    Dim spalte As Integer = 1
+    '    Dim lastRow As Integer
 
-        Dim zeile As Integer = 2
-        Dim spalte As Integer = 1
-        Dim lastRow As Integer
+    '    Dim startColumnData As Integer
+    '    Dim endColumnData As Integer
 
-        Dim startColumnData As Integer
-        Dim endColumnData As Integer
+    '    Dim tmpValues() As Double = Nothing
 
-        Dim tmpValues() As Double = Nothing
+    '    Dim von As Integer, bis As Integer
+    '    Dim vonDate As Date, bisDate As Date
+    '    Dim ok As Boolean = False
+    '    Dim hproj As clsProjekt = Nothing
+    '    Dim vproj As clsProjekt = Nothing
 
-        Dim von As Integer, bis As Integer
-        Dim vonDate As Date, bisDate As Date
-        Dim ok As Boolean = False
-        Dim hproj As clsProjekt = Nothing
-        Dim vproj As clsProjekt = Nothing
+    '    Try
+    '        Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"),
+    '                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        Try
-            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"),
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+    '        With activeWSListe
 
-            With activeWSListe
+    '            startColumnData = CType(.Range("StartData"), Excel.Range).Column
+    '            endColumnData = CType(.Range("EndData"), Excel.Range).Column
 
-                startColumnData = CType(.Range("StartData"), Excel.Range).Column
-                endColumnData = CType(.Range("EndData"), Excel.Range).Column
+    '            vonDate = CType(CType(.Range("StartData"), Excel.Range).Value, Date)
+    '            bisDate = CType(CType(.Range("EndData"), Excel.Range).Value, Date)
+
+    '            von = getColumnOfDate(vonDate)
+    '            bis = getColumnOfDate(bisDate)
+
+    '            ' jetzt die TimeZone markieren , ohne die sonstigen Konsequenzen .. 
+    '            ' überlegen, ob hier nicht awinchangeTimeSpan aufgerufen werden sollte ...
 
-                vonDate = CType(CType(.Range("StartData"), Excel.Range).Value, Date)
-                bisDate = CType(CType(.Range("EndData"), Excel.Range).Value, Date)
+    '            Call awinShowtimezone(von, bis, True)
+    '            showRangeLeft = von
+    '            showRangeRight = bis
 
-                von = getColumnOfDate(vonDate)
-                bis = getColumnOfDate(bisDate)
+    '            lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
-                ' jetzt die TimeZone markieren , ohne die sonstigen Konsequenzen .. 
-                ' überlegen, ob hier nicht awinchangeTimeSpan aufgerufen werden sollte ...
+    '            ' jetzt Zeile für Zeile auslesen 
+    '            While zeile <= lastRow
 
-                Call awinShowtimezone(von, bis, True)
-                showRangeLeft = von
-                showRangeRight = bis
+    '                Dim valuesDidChange As Boolean = False
 
-                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+    '                Try
 
-                ' jetzt Zeile für Zeile auslesen 
-                While zeile <= lastRow
+    '                Catch ex As Exception
+    '                    ' dann ist irgendwo was schief gegangen ... 
 
-                    Dim valuesDidChange As Boolean = False
+    '                End Try
 
-                    Try
+    '                ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
+    '                CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+    '                Dim namesOK As Boolean = True
 
-                    Catch ex As Exception
-                        ' dann ist irgendwo was schief gegangen ... 
+    '                Try
+    '                    projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+    '                Catch ex As Exception
+    '                    projectName = ""
+    '                    namesOK = False
+    '                End Try
 
-                    End Try
+    '                Try
+    '                    variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+    '                Catch ex As Exception
+    '                    variantName = ""
+    '                End Try
 
-                    ' die Farben in der Zeile zurücksetzen , aber nicht in den Datenbereichen, weil sonst die Info zu den Phasen weg ist 
-                    CType(.Range(.Cells(zeile, 1), .Cells(zeile, startColumnData - 1)), Excel.Range).Interior.ColorIndex = XlColorIndex.xlColorIndexNone
-                    Dim namesOK As Boolean = True
+    '                Try
+    '                    phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+    '                Catch ex As Exception
+    '                    phaseName = ""
+    '                    namesOK = False
+    '                End Try
 
-                    Try
-                        projectName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                    Catch ex As Exception
-                        projectName = ""
-                        namesOK = False
-                    End Try
 
-                    Try
-                        variantName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                    Catch ex As Exception
-                        variantName = ""
-                    End Try
+    '                Try
+    '                    Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
+    '                    If Not IsNothing(cellComment) Then
+    '                        phaseNameID = cellComment.Text
+    '                    Else
+    '                        phaseNameID = calcHryElemKey(phaseName, False)
+    '                    End If
+    '                Catch ex As Exception
+    '                    phaseNameID = calcHryElemKey(phaseName, False)
+    '                End Try
+
+    '                Try
+    '                    rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+    '                Catch ex As Exception
+    '                    rcName = ""
+    '                    namesOK = False
+    '                End Try
+
+    '                If namesOK Then
 
-                    Try
-                        phaseName = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
-                    Catch ex As Exception
-                        phaseName = ""
-                        namesOK = False
-                    End Try
+    '                    ok = False
+
+    '                    Dim pKey As String = calcProjektKey(projectName, variantName)
+    '                    If AlleProjekte.Containskey(pKey) Then
+    '                        hproj = AlleProjekte.getProject(pKey)
+    '                        ok = True
+    '                    Else
+    '                        ' in der Datenbank nachsehen und laden ... 
+    '                        If Not noDB Then
+
+    '                            '
+    '                            ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+
+    '                            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+    '                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now, err) Then
+
+    '                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+    '                                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now, err)
+    '                                    ' jetzt in AlleProjekte eintragen ... 
+    '                                    If Not IsNothing(hproj) Then
+    '                                        AlleProjekte.Add(hproj)
+    '                                        ok = True
+    '                                    End If
+
+    '                                Else
+    '                                    ' nicht in Session, nicht in Datenbank: nicht ok !
+    '                                    ok = False
+    '                                End If
+    '                            Else
+    '                                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Massen-Edit ..")
+    '                            End If
+
+
+    '                        Else
+    '                            ' nicht in Session, keine Datenbank aktiv: nicht ok !
+    '                            ok = False
+
+    '                        End If
+
+
+    '                    End If
+
+    '                    If ok Then
+
+    '                        If Not ImportProjekte.Containskey(pKey) Then
+    '                            ImportProjekte.Add(hproj, False)
+    '                        End If
+
+    '                        ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
+    '                        ' hier ist das hproj gelesen 
+    '                        ' jetzt prüfen, ob es die Phase gibt 
+    '                        Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+    '                        If Not IsNothing(cphase) Then
+    '                            ' es gibt die Phase
+
+    '                            If RoleDefinitions.containsName(rcName) Then
+    '                                isRole = True
+    '                                isCost = False
+
+    '                            ElseIf CostDefinitions.containsName(rcName) Then
+    '                                isCost = True
+    '                                isRole = False
+    '                            Else
+    '                                isCost = False
+    '                                isRole = False
+    '                            End If
+
+    '                            ' jetzt werden die Werte ausgelesen ... 
+    '                            ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
+    '                            ' wenn auch tmpValues.sum > 0 
+    '                            ReDim tmpValues(bis - von)
+    '                            Dim i As Integer
+
+    '                            For i = 0 To bis - von
+
+    '                                Try
+    '                                    tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+    '                                    If tmpValues(i) < 0 Then
+    '                                        tmpValues(i) = 0
+    '                                        CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+    '                                    End If
+    '                                Catch ex As Exception
+    '                                    CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+    '                                End Try
+
+    '                            Next
+
+
+    '                            ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
+    '                            If isRole Or isCost Then
+
+
+    '                                If tmpValues.Sum > 0 Then
+
+    '                                    Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+    '                                    Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate),
+    '                                                               ixZeitraum, ix, anzLoops)
+
+    '                                    If anzLoops > 0 Then
+    '                                        ' es gibt eine Überdeckung
+    '                                        If isRole Then
+    '                                            Dim tmpRole As clsRolle = cphase.getRole(rcName)
+    '                                            ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+    '                                            Dim didntExist As Boolean = False
+
+    '                                            If IsNothing(tmpRole) Then
+    '                                                didntExist = True
+    '                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
+    '                                                tmpRole = New clsRolle(dimension)
+
+    '                                                With tmpRole
+    '                                                    .uid = RoleDefinitions.getRoledef(rcName).UID
+    '                                                End With
+    '                                            End If
 
+    '                                            Dim xWerte() As Double = tmpRole.Xwerte
 
-                    Try
-                        Dim cellComment As Excel.Comment = CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Comment
-                        If Not IsNothing(cellComment) Then
-                            phaseNameID = cellComment.Text
-                        Else
-                            phaseNameID = calcHryElemKey(phaseName, False)
-                        End If
-                    Catch ex As Exception
-                        phaseNameID = calcHryElemKey(phaseName, False)
-                    End Try
-
-                    Try
-                        rcName = CStr(CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    Catch ex As Exception
-                        rcName = ""
-                        namesOK = False
-                    End Try
+    '                                            ' jetzt werden die Werte überschrieben ...
+    '                                            For al As Integer = 1 To anzLoops
+    '                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+    '                                                    valuesDidChange = True
+    '                                                End If
+    '                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+    '                                            Next
 
-                    If namesOK Then
+    '                                            If didntExist Then
+    '                                                cphase.addRole(tmpRole)
+    '                                            End If
 
-                        ok = False
+    '                                        ElseIf isCost Then
+    '                                            Dim tmpCost As clsKostenart = cphase.getCost(rcName)
+    '                                            ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
+    '                                            Dim didntExist As Boolean = False
 
-                        Dim pKey As String = calcProjektKey(projectName, variantName)
-                        If AlleProjekte.Containskey(pKey) Then
-                            hproj = AlleProjekte.getProject(pKey)
-                            ok = True
-                        Else
-                            ' in der Datenbank nachsehen und laden ... 
-                            If Not noDB Then
-
-                                '
-                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-
-                                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now, err) Then
-
-                                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now, err)
-                                        ' jetzt in AlleProjekte eintragen ... 
-                                        If Not IsNothing(hproj) Then
-                                            AlleProjekte.Add(hproj)
-                                            ok = True
-                                        End If
-
-                                    Else
-                                        ' nicht in Session, nicht in Datenbank: nicht ok !
-                                        ok = False
-                                    End If
-                                Else
-                                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Massen-Edit ..")
-                                End If
-
-
-                            Else
-                                ' nicht in Session, keine Datenbank aktiv: nicht ok !
-                                ok = False
-
-                            End If
-
-
-                        End If
-
-                        If ok Then
-
-                            If Not ImportProjekte.Containskey(pKey) Then
-                                ImportProjekte.Add(hproj, False)
-                            End If
-
-                            ' hier kommt die eigentliche Behandlung , andernfalls Zeile rot einfärben ... 
-                            ' hier ist das hproj gelesen 
-                            ' jetzt prüfen, ob es die Phase gibt 
-                            Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-                            If Not IsNothing(cphase) Then
-                                ' es gibt die Phase
-
-                                If RoleDefinitions.containsName(rcName) Then
-                                    isRole = True
-                                    isCost = False
-
-                                ElseIf CostDefinitions.containsName(rcName) Then
-                                    isCost = True
-                                    isRole = False
-                                Else
-                                    isCost = False
-                                    isRole = False
-                                End If
-
-                                ' jetzt werden die Werte ausgelesen ... 
-                                ' die müssen an der Stelle ausgelesen werden, weil eine fehlende Rolle/kostenart nur angemeckert werden soll, 
-                                ' wenn auch tmpValues.sum > 0 
-                                ReDim tmpValues(bis - von)
-                                Dim i As Integer
-
-                                For i = 0 To bis - von
-
-                                    Try
-                                        tmpValues(i) = CDbl(CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                        If tmpValues(i) < 0 Then
-                                            tmpValues(i) = 0
-                                            CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                        End If
-                                    Catch ex As Exception
-                                        CType(.Cells(zeile, startColumnData + 2 * i), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                    End Try
-
-                                Next
-
-
-                                ' nur weitermachen, wenn es entweder eine gültige Rolle oder gültige Kostenart ist 
-                                If isRole Or isCost Then
-
-
-                                    If tmpValues.Sum > 0 Then
-
-                                        Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-                                        Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate),
-                                                                   ixZeitraum, ix, anzLoops)
-
-                                        If anzLoops > 0 Then
-                                            ' es gibt eine Überdeckung
-                                            If isRole Then
-                                                Dim tmpRole As clsRolle = cphase.getRole(rcName)
-                                                ' wenn die Rolle in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                                Dim didntExist As Boolean = False
-
-                                                If IsNothing(tmpRole) Then
-                                                    didntExist = True
-                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                    tmpRole = New clsRolle(dimension)
-
-                                                    With tmpRole
-                                                        .uid = RoleDefinitions.getRoledef(rcName).UID
-                                                    End With
-                                                End If
+    '                                            If IsNothing(tmpCost) Then
+    '                                                didntExist = True
+    '                                                Dim dimension As Integer = cphase.relEnde - cphase.relStart
+    '                                                tmpCost = New clsKostenart(dimension)
 
-                                                Dim xWerte() As Double = tmpRole.Xwerte
+    '                                                With tmpCost
+    '                                                    .KostenTyp = CostDefinitions.getCostdef(rcName).UID
+    '                                                End With
+    '                                            End If
 
-                                                ' jetzt werden die Werte überschrieben ...
-                                                For al As Integer = 1 To anzLoops
-                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
-                                                        valuesDidChange = True
-                                                    End If
-                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                                Next
+    '                                            Dim xWerte() As Double = tmpCost.Xwerte
 
-                                                If didntExist Then
-                                                    cphase.addRole(tmpRole)
-                                                End If
+    '                                            ' jetzt werden die Werte überschrieben ...
+    '                                            For al As Integer = 1 To anzLoops
+    '                                                If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
+    '                                                    valuesDidChange = True
+    '                                                End If
+    '                                                xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
+    '                                            Next
 
-                                            ElseIf isCost Then
-                                                Dim tmpCost As clsKostenart = cphase.getCost(rcName)
-                                                ' wenn die Kostenart in diesem Projekt noch nicht da war, dann wird eine neue Instanz angelegt 
-                                                Dim didntExist As Boolean = False
+    '                                            If didntExist Then
+    '                                                cphase.AddCost(tmpCost)
+    '                                            End If
 
-                                                If IsNothing(tmpCost) Then
-                                                    didntExist = True
-                                                    Dim dimension As Integer = cphase.relEnde - cphase.relStart
-                                                    tmpCost = New clsKostenart(dimension)
+    '                                        End If
 
-                                                    With tmpCost
-                                                        .KostenTyp = CostDefinitions.getCostdef(rcName).UID
-                                                    End With
-                                                End If
+    '                                    End If
+    '                                Else
+    '                                    ' Löschen der Rolle bzw. Kostenart aus dieser Phase
+    '                                    valuesDidChange = True
+    '                                    If isRole Then
+    '                                        Call cphase.removeRoleByName(rcName)
+    '                                    ElseIf isCost Then
+    '                                        Call cphase.removeCostByName(rcName)
+    '                                    End If
+    '                                End If
 
-                                                Dim xWerte() As Double = tmpCost.Xwerte
 
-                                                ' jetzt werden die Werte überschrieben ...
-                                                For al As Integer = 1 To anzLoops
-                                                    If xWerte(ix + al - 1) <> tmpValues(ixZeitraum + al - 1) Then
-                                                        valuesDidChange = True
-                                                    End If
-                                                    xWerte(ix + al - 1) = tmpValues(ixZeitraum + al - 1)
-                                                Next
+    '                            Else
+    '                                ' es gibt die Rolle / Kostenart nicht 
+    '                                If tmpValues.Sum > 0 Then
+    '                                    CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+    '                                Else
+    '                                    ' keine Aktion notwendig 
+    '                                End If
 
-                                                If didntExist Then
-                                                    cphase.AddCost(tmpCost)
-                                                End If
+    '                            End If
 
-                                            End If
+    '                        Else
+    '                            ' es gibt die Phase nicht 
+    '                            CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+    '                        End If
+    '                    Else
+    '                        ' Projekt- Variante existiert nicht !
+    '                        CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
+    '                    End If
 
-                                        End If
-                                    Else
-                                        ' Löschen der Rolle bzw. Kostenart aus dieser Phase
-                                        valuesDidChange = True
-                                        If isRole Then
-                                            Call cphase.removeRoleByName(rcName)
-                                        ElseIf isCost Then
-                                            Call cphase.removeCostByName(rcName)
-                                        End If
-                                    End If
+    '                End If
 
 
-                                Else
-                                    ' es gibt die Rolle / Kostenart nicht 
-                                    If tmpValues.Sum > 0 Then
-                                        CType(.Cells(zeile, 5), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                    Else
-                                        ' keine Aktion notwendig 
-                                    End If
 
-                                End If
+    '                If valuesDidChange Then
+    '                    hproj.marker = True
+    '                End If
 
-                            Else
-                                ' es gibt die Phase nicht 
-                                CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                            End If
-                        Else
-                            ' Projekt- Variante existiert nicht !
-                            CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelRot
-                        End If
+    '                zeile = zeile + 1
 
-                    End If
+    '            End While
 
 
+    '        End With
 
-                    If valuesDidChange Then
-                        hproj.marker = True
-                    End If
 
-                    zeile = zeile + 1
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler beim Import der Massen-Edit Datei" & vbLf & ex.Message)
+    '    End Try
 
-                End While
 
 
-            End With
-
-
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Import der Massen-Edit Datei" & vbLf & ex.Message)
-        End Try
-
-
-
-    End Sub
+    'End Sub
     ''' <summary>
     ''' erzeugt eine Szenario Definition
     ''' 
@@ -10889,30 +10890,35 @@ Public Module agm2
                         'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
                         Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
 
+                        Dim abweichungGesamt As Double = 0.0
                         If gesamtNachher <> checkNachher Then
-                            Dim abc As Integer = 0
+                            abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
                         End If
 
+                        Dim abweichungIst As Double = 0.0
                         If checkIstValue <> newIstValue Then
-                            Dim abc As Integer = 0
+                            abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
                         End If
 
-                        ReDim logArray(3)
-                        logArray(0) = "Import Istdaten old/new/diff/check1/check2"
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
-                        logArray(3) = ""
+                        If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                            ReDim logArray(3)
+                            logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
 
-                        ReDim logDblArray(4)
-                        logDblArray(0) = oldPlanValue
-                        logDblArray(1) = newIstValue
-                        logDblArray(2) = oldPlanValue - newIstValue
-                        logDblArray(3) = checkIstValue
-                        logDblArray(4) = gesamtNachher - checkNachher
+                            ReDim logDblArray(4)
+                            logDblArray(0) = oldPlanValue
+                            logDblArray(1) = newIstValue
+                            logDblArray(2) = oldPlanValue - newIstValue
+                            logDblArray(3) = checkIstValue
+                            logDblArray(4) = gesamtNachher - checkNachher
 
-                        Call logfileSchreiben(logArray, logDblArray)
+                            Call logfileSchreiben(logArray, logDblArray)
 
-                        ' die Differenz aus Soll und Ist zwischen Beautragung / Actual sowie Last / Actual in T€ wird gemerkt und dem Projekt als Attribut mitgegeben  
+                        End If
+
+
 
                         With newProj
                             .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)

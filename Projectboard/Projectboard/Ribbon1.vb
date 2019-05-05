@@ -4905,8 +4905,9 @@ Imports System.Web
                     ' alle Import Projekte erstmal löschen
                     ImportProjekte.Clear(False)
 
-
-                    Call importiereMassenEdit()
+                    ' tk importiereMassenEdit wurde auskommentiert - muss ggf gesucht und dann wieder einkommentiert werden ... 
+                    'Call importiereMassenEdit()
+                    Call MsgBox("aktuell aus dem Funktionsumfang rausgenommen ...")
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                     Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, noComparison:=True)

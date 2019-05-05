@@ -1543,27 +1543,40 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' gibt die Rollen Instanz der Phase zurück, die den Namen roleName hat und die 
+    ''' gibt die Rollen Instanz der Rolle zurück, die den Namen roleName hat; wenn teamID = Nothing, dann egal in welchem Team
+    ''' wenn teamID angegeben ist, dann nur die Rolle in der Eigenschaft als Team-MEmber
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = -1) As clsRolle
+    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = Nothing) As clsRolle
 
         Get
             Dim returnValue As clsRolle = Nothing
             Dim ix As Integer = 0
             Dim found As Boolean = False
 
-            While Not found And ix <= _allRoles.Count - 1
-                If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
-                    found = True
-                    returnValue = _allRoles.Item(ix)
-                Else
-                    ix = ix + 1
-                End If
-            End While
+            If IsNothing(teamID) Then
+                ' teamID ist bei der suche nicht relevant
+                While Not found And ix <= _allRoles.Count - 1
+                    If _allRoles.Item(ix).name = roleName Then
+                        found = True
+                        returnValue = _allRoles.Item(ix)
+                    Else
+                        ix = ix + 1
+                    End If
+                End While
+            Else
+                While Not found And ix <= _allRoles.Count - 1
+                    If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
+                        found = True
+                        returnValue = _allRoles.Item(ix)
+                    Else
+                        ix = ix + 1
+                    End If
+                End While
+            End If
 
             getRole = returnValue
 
