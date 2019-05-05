@@ -3115,7 +3115,7 @@ Public Class frmHierarchySelection
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
-    Private Sub expandCompletely_Click(sender As Object, e As EventArgs)
+    Private Sub expandCompletely_Click(sender As Object, e As EventArgs) Handles expandCompletely.Click
 
 
 
@@ -5304,6 +5304,7 @@ Public Class frmHierarchySelection
     Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
 
     End Sub
+
 
 
     ' ''' <summary>
