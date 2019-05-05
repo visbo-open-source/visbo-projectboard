@@ -10353,8 +10353,6 @@ Public Module agm2
         Next
 
 
-
-
         Dim lastValidMonth As Integer = monat
         If readAll Then
             lastValidMonth = 12

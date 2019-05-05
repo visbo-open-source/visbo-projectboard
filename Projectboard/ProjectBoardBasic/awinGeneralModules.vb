@@ -2201,7 +2201,7 @@ Public Module awinGeneralModules
 
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
-        Dim ok As Boolean
+
         Dim takeIntoAccount As Boolean = True
 
         Dim importDate As Date = Date.Now
@@ -2240,6 +2240,9 @@ Public Module awinGeneralModules
                     Else
                         ' nicht in der Session, aber ist es in der Datenbank ?  
 
+                        ' also erst mal eintragen ... 
+                        AlleProjekte.Add(impProjekt)
+
                         If Not noDB Then
 
                             '
@@ -2252,6 +2255,7 @@ Public Module awinGeneralModules
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And lookForVariantName = "" Then
                                     lookForVariantName = ptVariantFixNames.pfv.ToString
                                 End If
+
                                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, lookForVariantName, Date.Now, err) Then
 
                                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
@@ -2259,16 +2263,18 @@ Public Module awinGeneralModules
 
                                     If IsNothing(vglProj) Then
                                         ' kann eigentlich nicht sein 
-                                        ok = False
+                                        Call MsgBox("Inkonsistenz Exist Abfrage - Retrieve-Abfrage: Fehler Code 099" & vbLf &
+                                                    "Methode verarbeiteImportProjekte")
                                     Else
                                         'ur: 22.02.19 : das vglProj wird nur zum Vergleich benötigt
                                         ' jetzt in AlleProjekte eintragen ... 
                                         ' AlleProjekte.Add(vglProj)
 
                                     End If
+
                                 Else
-                                    ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(impProjekt)
+                                    ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
+                                    'AlleProjekte.Add(impProjekt)
                                 End If
                             Else
                                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
@@ -2276,8 +2282,7 @@ Public Module awinGeneralModules
 
 
                         Else
-                            ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                            AlleProjekte.Add(impProjekt)
+                            ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
 
                         End If
 

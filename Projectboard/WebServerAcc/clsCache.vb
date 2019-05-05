@@ -281,7 +281,8 @@ Public Class clsCache
 
                                 ' nachsehen, ob im Cache für Projekt vpid alle Variante und Timestamps gespeichert sind, 
                                 ' wenn ja, dann result-liste aufbauen
-
+                                ' tk 5.5. soll / kann hier eine if _VPsID.containskey(vpid) rein ,
+                                ' wieso kann das überhaupt sein, wo doch VPvs.(vpid).count > 0 ? 
                                 Dim vp As clsVP = _VPsId(vpid)
 
                                 ' VisboProjekt Standard, keine Variante (Variante = "")

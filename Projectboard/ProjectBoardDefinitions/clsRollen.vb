@@ -8,11 +8,16 @@ Public Class clsRollen
 
 
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
+
     ' ist eine sortierte Liste von Namen der Rollen und ihrer zugehörigen ID 
     ' wird benötigt, um das Ganze zu beschelunigen
     Private _allNames As SortedList(Of String, Integer)
 
     Private _topLevelNodeIDs As List(Of Integer)
+
+    ' tk 4.5.19 eingeführt, um Teams den sie umfassenden Organisations-Einheiten zuordnen zu können
+    ' im key ist die ID der Organisationseinheit, in der Liste sind die IDs der Teams, die virtuell zu dieser Orga-Einheit gehören 
+    Private _orgaTeamChilds As SortedList(Of Integer, List(Of Integer))
 
     Public Sub Add(roledef As clsRollenDefinition)
 
@@ -30,6 +35,92 @@ Public Class clsRollen
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' erstellt die virtuellen Zuordnungen von Teams zu ihren Organisations-Einheiten
+    ''' die virtuelle Organisations- oder Eltern-Einheit ist die, die alle Team Member als Eltern umfasst
+    ''' </summary>
+    Public Sub buildOrgaTeamChilds()
+        Dim alleTeams As SortedList(Of Integer, Double) = getAllTeamIDs
+
+        _orgaTeamChilds = New SortedList(Of Integer, List(Of Integer))
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In alleTeams
+            Dim commonParent As clsRollenDefinition = getContainingRoleOfTeamMembers(kvp.Key)
+
+            If Not IsNothing(commonParent) Then
+                If _orgaTeamChilds.ContainsKey(commonParent.UID) Then
+
+                    If Not _orgaTeamChilds.Item(commonParent.UID).Contains(kvp.Key) Then
+                        _orgaTeamChilds.Item(commonParent.UID).Add(kvp.Key)
+                    End If
+
+                Else
+                    Dim otc As New List(Of Integer)
+                    otc.Add(kvp.Key)
+                    _orgaTeamChilds.Add(commonParent.UID, otc)
+                End If
+            End If
+
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt zu einer Organisations-Einheit die virtuellen Childs zurück, das sind alle Gruppen, deren Team-Mitglieder
+    ''' diese Organisations-Einheit als kleinsten gemeinsamen Parent haben 
+    ''' wenn auch angegeben, werden alle virtuellen Kinder / Enkel zurückgebracht 
+    ''' gibt nothing zurück, wenn es keine gibt ..
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getVirtualChildIDs(ByVal roleID As Integer, Optional ByVal inclSubRoles As Boolean = True) As Integer()
+        Get
+            Dim virtualChilds() As Integer = Nothing
+            Dim ergebnisListe As New List(Of Integer)
+            Try
+
+                If Not _allRollen.Item(roleID).isTeam Then
+                    If _allRollen.Item(roleID).isCombinedRole Then
+
+                        If inclSubRoles Then
+                            Dim roleName As String = getRoleDefByID(roleID).name
+                            Dim subRoleIDs As SortedList(Of Integer, Double) = getSubRoleIDsOf(roleName)
+
+                            For Each kvp As KeyValuePair(Of Integer, Double) In subRoleIDs
+
+                                If _orgaTeamChilds.ContainsKey(kvp.Key) Then
+
+                                    Dim teilErgebnis As List(Of Integer) = _orgaTeamChilds.Item(kvp.Key)
+                                    For Each srID As Integer In teilErgebnis
+                                        If Not ergebnisListe.Contains(srID) Then
+                                            ergebnisListe.Add(srID)
+                                        End If
+                                    Next
+                                End If
+
+                            Next
+
+                            virtualChilds = ergebnisListe.ToArray
+
+                        Else
+                            If _orgaTeamChilds.ContainsKey(roleID) Then
+                                virtualChilds = _orgaTeamChilds.Item(roleID).ToArray
+                            End If
+                        End If
+
+                    End If
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+            getVirtualChildIDs = virtualChilds
+
+        End Get
+    End Property
 
     Public ReadOnly Property liste() As SortedList(Of Integer, clsRollenDefinition)
         Get
@@ -62,6 +153,7 @@ Public Class clsRollen
         Get
             Dim tmpValue As Double = 1.0
             Dim tmpResult As New SortedList(Of Integer, Double)
+
             For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
                 If kvp.Value.isTeam Then
                     If Not tmpResult.ContainsKey(kvp.Key) Then
@@ -74,6 +166,145 @@ Public Class clsRollen
 
         End Get
     End Property
+
+
+    ''' <summary>
+    ''' gibt die Rolle zurück, die alle Team-Members enthält 
+    ''' </summary>
+    ''' <param name="teamID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getContainingRoleOfTeamMembers(ByVal teamID As Integer) As clsRollenDefinition
+        Get
+            Dim tmpContainingRole As clsRollenDefinition = Nothing
+
+            Try
+                ' es muss keine ExcludedNAmes angegeben werden, weil sich das nur auf IDs bezieht, die nicht due ursprängliche ID selber sind ..
+                Dim allTeamMembers As SortedList(Of String, Double) = getSubRoleNameIDsOf(CStr(teamID))
+
+                For Each kvp As KeyValuePair(Of String, Double) In allTeamMembers
+                    Dim dummyteamID As Integer = -1
+                    Dim roleID As Integer = getRoleDefByIDKennung(kvp.Key, dummyteamID).UID
+
+                    ' nur untersuchen, wenn es nicht die Rolle selber ist
+                    If roleID <> teamID Then
+                        If IsNothing(tmpContainingRole) Then
+                            tmpContainingRole = Me.getParentRoleOf(roleID)
+                        Else
+                            tmpContainingRole = getCommonParent(tmpContainingRole, Me.getParentRoleOf(roleID))
+                        End If
+                    End If
+
+                Next
+            Catch ex As Exception
+
+            End Try
+
+
+            getContainingRoleOfTeamMembers = tmpContainingRole
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt zu zwei Rollen die (Groß-)Eltern-Rolle zurück, die beide Rollen enthält 
+    ''' </summary>
+    ''' <param name="role1"></param>
+    ''' <param name="role2"></param>
+    ''' <returns></returns>
+    Private Function getCommonParent(ByVal role1 As clsRollenDefinition, ByVal role2 As clsRollenDefinition) As clsRollenDefinition
+        Dim tmpRole As clsRollenDefinition = Nothing
+
+        Try
+            If IsNothing(role1) Then
+                tmpRole = role2
+            ElseIf IsNothing(role2) Then
+                tmpRole = role1
+            Else
+                ' beide sind ungleich Nothing
+                If role1.UID = role2.UID Then
+                    tmpRole = role1
+                Else
+                    ' beide sind ungleich Nothing und nicht identisch
+                    Dim parentArray1() As Integer = getParentArray(role1)
+                    Dim parentArray2() As Integer = getParentArray(role2)
+
+                    Dim pA1() As Integer = Nothing
+                    Dim pA2() As Integer = Nothing
+
+                    ' jetzt wird mit aufsteigendem Index nach einem gemeinsamen Eltern-Teil gesucht 
+                    If parentArray1.Count <= parentArray2.Count Then
+                        pA1 = parentArray1
+                        pA2 = parentArray2
+                    Else
+                        pA1 = parentArray2
+                        pA2 = parentArray1
+                    End If
+
+                    ' jetzt ist pA1 der kleinere, höchstenns gleiche Array 
+                    Dim ix1 As Integer = 0
+                    Dim ix2 As Integer = 0
+
+                    Dim found As Boolean = False
+                    Do While ix1 <= pA1.Count - 1 And Not found
+                        ix2 = 0
+                        found = (pA1(ix1) = pA2(ix2))
+
+                        Do While ix2 <= pA2.Count - 1 And Not found
+                            found = (pA1(ix1) = pA2(ix2))
+                            If Not found Then
+                                ix2 = ix2 + 1
+                            End If
+                        Loop
+
+                        If Not found Then
+                            ix1 = ix1 + 1
+                        End If
+                    Loop
+
+                    If found Then
+                        tmpRole = getRoleDefByID(pA1(ix1))
+                    Else
+                        tmpRole = Nothing
+                    End If
+
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        getCommonParent = tmpRole
+
+    End Function
+
+    ''' <summary>
+    ''' gibt die Eltern-/Groß-Eltern-ID bis zum höchsten Knoten zurück
+    ''' Vorbedingung: Role darf nicht Nothing sein 
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <returns></returns>
+    Private Function getParentArray(ByVal role As clsRollenDefinition) As Integer()
+
+        Dim tmpList As New List(Of Integer)
+
+        If Not IsNothing(role) Then
+            tmpList.Add(role.UID)
+
+            Dim parentRole As clsRollenDefinition = getParentRoleOf(role.UID)
+            Do While Not IsNothing(parentRole)
+                tmpList.Add(parentRole.UID)
+                parentRole = getParentRoleOf(parentRole.UID)
+            Loop
+
+            ' jetzt muss die Liste in einen Array gewandelt werdne
+            getParentArray = tmpList.ToArray
+        Else
+            getParentArray = Nothing
+        End If
+
+
+    End Function
 
     ''' <summary>
     ''' gibt den Standard TopNode Name zurück, das ist der erste vorkommende Top Node 
@@ -1335,6 +1566,9 @@ Public Class clsRollen
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
         _allNames = New SortedList(Of String, Integer)
         _topLevelNodeIDs = New List(Of Integer)
+
+        ' wird erst in buildOrgaTeamChilds initialisiert und aufgebaut 
+        _orgaTeamChilds = Nothing
 
     End Sub
 
