@@ -1901,18 +1901,34 @@ Public Class clsProjekte
             ReDim roleValues(zeitraum)
 
 
-            'Dim toDoListe As New SortedList(Of Integer, Double)
             Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
-            ' wenn considerAllSubroles  = true , dann muss 
+            ' wenn considerAllSubroles  = true , dann werden die Kinder und Kindeskinder berücksichtigt ...  
 
             If considerAllSubRoles Then
                 'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
                 lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
+
+                ' tk 4.5. das folgende ist notwendig, um z.Bsp bei der Summe von einer Abteilung auch alle 
+                ' Team Ressourcenbedarfe zu berücksichtigen, deren Mitglieder alle in der Abteilung liegen
+                ' 
+                ' virtuelle Kinder sind Teams, deren Team-Mitglieder alle in der Rolle bzw. in einer der Kind-Rollen enthalten sind 
+
+                Dim virtualChildIds() As Integer = RoleDefinitions.getVirtualChildIDs(roleID, inclSubRoles:=True)
+                If Not IsNothing(virtualChildIds) Then
+                    If virtualChildIds.Count > 0 Then
+                        For kx As Integer = 0 To virtualChildIds.Count - 1
+                            Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(virtualChildIds(kx), -1)
+                            If Not lookingForRoleNameIDs.ContainsKey(tmpKey) Then
+                                lookingForRoleNameIDs.Add(tmpKey, 1.0)
+                            End If
+                        Next
+                    End If
+                End If
+
             Else
                 Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, teamID)
                 lookingForRoleNameIDs.Add(tmpNameID, 1.0)
             End If
-
 
 
             anzProjekte = _allProjects.Count

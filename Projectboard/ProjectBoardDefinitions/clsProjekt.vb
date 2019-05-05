@@ -468,6 +468,22 @@ Public Class clsProjekt
     ' 
 
     ''' <summary>
+    ''' prüft, ob zwei Projekte die identische Kunden-Nummer haben 
+    ''' </summary>
+    ''' <param name="vProj"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property hasIdenticalKdNr(ByVal vProj As clsProjekt) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+
+            If Not IsNothing(vProj) Then
+                tmpResult = (Me.kundenNummer = vProj.kundenNummer)
+            End If
+
+            hasIdenticalKdNr = tmpResult
+        End Get
+    End Property
+    ''' <summary>
     ''' prüft, ob ein Projekt in allen Belangen genau identisch mit einem anderen Projekt ist
     ''' wird benutzt, um zu prüfen, ob gespeichert werden soll oder nicht ... 
     ''' </summary>
@@ -482,6 +498,11 @@ Public Class clsProjekt
             Try
                 If Not IsNothing(vProj) Then
 
+                    If Me.name = vProj.name Then
+                        If Me.kundenNummer <> vProj.kundenNummer Then
+
+                        End If
+                    End If
 
                     If Me.name = vProj.name And
                            Me.variantName = vProj.variantName And
@@ -533,35 +554,50 @@ Public Class clsProjekt
                     ' jetzt die Phasen prüfen, dann die Meilensteine 
                     If stillOK And Me.CountPhases = vProj.CountPhases Then
 
-                            Dim pNr As Integer = 1
-                            Do While stillOK And pNr <= Me.CountPhases
-                                Dim cPhase As clsPhase = Me.getPhase(pNr)
-                                Dim vPhase As clsPhase = vProj.getPhase(pNr)
-                                If cPhase.isIdenticalTo(vPhase) Then
-                                    ' alles ok 
-                                    pNr = pNr + 1
-                                Else
-                                    stillOK = False
-                                End If
-                            Loop
+                        Dim pNr As Integer = 1
+                        Do While stillOK And pNr <= Me.CountPhases
+                            Dim cPhase As clsPhase = Me.getPhase(pNr)
+                            Dim vPhase As clsPhase = vProj.getPhase(pNr)
+                            If cPhase.isIdenticalTo(vPhase) Then
+                                ' alles ok 
+                                pNr = pNr + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
 
-                        Else
-                            stillOK = False
-                        End If
+                    Else
+                        stillOK = False
+                    End If
 
-                        ' jetzt die Custom Fields prüfen 
-                        If stillOK And
+                    ' jetzt die Custom Fields prüfen 
+                    If stillOK And
                             Me.customBoolFields.Count = vProj.customBoolFields.Count And
                             Me.customDblFields.Count = vProj.customDblFields.Count And
                             Me.customStringFields.Count = vProj.customStringFields.Count Then
-                            ' alle sind gleich , detaillierte Überprüfung lohnt 
+                        ' alle sind gleich , detaillierte Überprüfung lohnt 
 
 
-                            ' String CustomFields
-                            Dim ix As Integer = 0
-                            Do While stillOK And ix <= Me.customStringFields.Count - 1
-                                Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
-                                Dim cFVgl As KeyValuePair(Of Integer, String) = vProj.customStringFields.ElementAt(ix)
+                        ' String CustomFields
+                        Dim ix As Integer = 0
+                        Do While stillOK And ix <= Me.customStringFields.Count - 1
+                            Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
+                            Dim cFVgl As KeyValuePair(Of Integer, String) = vProj.customStringFields.ElementAt(ix)
+
+                            If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+
+                        If stillOK Then
+                            ' prüfe Double Custom Fields
+                            ix = 0
+                            Do While stillOK And ix <= Me.customDblFields.Count - 1
+                                Dim cFMe As KeyValuePair(Of Integer, Double) = Me.customDblFields.ElementAt(ix)
+                                Dim cFVgl As KeyValuePair(Of Integer, Double) = vProj.customDblFields.ElementAt(ix)
 
                                 If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
                                     ix = ix + 1
@@ -570,13 +606,12 @@ Public Class clsProjekt
                                 End If
                             Loop
 
-
                             If stillOK Then
-                                ' prüfe Double Custom Fields
+                                ' prüfe Bool Custom fields
                                 ix = 0
-                                Do While stillOK And ix <= Me.customDblFields.Count - 1
-                                    Dim cFMe As KeyValuePair(Of Integer, Double) = Me.customDblFields.ElementAt(ix)
-                                    Dim cFVgl As KeyValuePair(Of Integer, Double) = vProj.customDblFields.ElementAt(ix)
+                                Do While stillOK And ix <= Me.customBoolFields.Count - 1
+                                    Dim cFMe As KeyValuePair(Of Integer, Boolean) = Me.customBoolFields.ElementAt(ix)
+                                    Dim cFVgl As KeyValuePair(Of Integer, Boolean) = vProj.customBoolFields.ElementAt(ix)
 
                                     If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
                                         ix = ix + 1
@@ -584,31 +619,17 @@ Public Class clsProjekt
                                         stillOK = False
                                     End If
                                 Loop
-
-                                If stillOK Then
-                                    ' prüfe Bool Custom fields
-                                    ix = 0
-                                    Do While stillOK And ix <= Me.customBoolFields.Count - 1
-                                        Dim cFMe As KeyValuePair(Of Integer, Boolean) = Me.customBoolFields.ElementAt(ix)
-                                        Dim cFVgl As KeyValuePair(Of Integer, Boolean) = vProj.customBoolFields.ElementAt(ix)
-
-                                        If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
-                                            ix = ix + 1
-                                        Else
-                                            stillOK = False
-                                        End If
-                                    Loop
-                                End If
                             End If
-
-
-                        Else
-                            stillOK = False
                         End If
 
 
+                    Else
+                        stillOK = False
+                    End If
 
-                        Else    ' vproj = nothing
+
+
+                Else    ' vproj = nothing
                     stillOK = False
                 End If
 
@@ -3355,14 +3376,14 @@ Public Class clsProjekt
     ''' <returns></returns>
     Public Function getSetRoleCostUntil(ByVal roleCostCollection As Collection, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
 
-        Dim usedRoles As Collection = Me.getRoleNames
+        Dim usedRoleNameIDs As Collection = Me.getRoleNameIDs
         Dim usedCosts As Collection = Me.getCostNames
 
         Dim actualValue As Double = 0.0
 
-        For Each roleName As String In usedRoles
-            If isRelevantForNulling(roleName, roleCostCollection) Then
-                actualValue = actualValue + Me.getSetRoleValuesUntil(roleName, relMonthCol, resetValuesToNull)
+        For Each roleNameID As String In usedRoleNameIDs
+            If isRelevantForNulling(roleNameID, roleCostCollection) Then
+                actualValue = actualValue + Me.getSetRoleValuesUntil(roleNameID, relMonthCol, resetValuesToNull)
             End If
         Next
 
@@ -3370,25 +3391,40 @@ Public Class clsProjekt
 
     End Function
 
+    ''' <summary>
+    ''' roleCostName kann eine ID sein 
+    ''' </summary>
+    ''' <param name="roleCostName"></param>
+    ''' <param name="roleCostCollection"></param>
+    ''' <returns></returns>
     Private Function isRelevantForNulling(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
         Dim tmpResult As Boolean = False
 
-        Dim isRole As Boolean = (RoleDefinitions.containsName(roleCostName))
+        Try
 
-        Dim isCost As Boolean = False
+            Dim isCost As Boolean = False
+            Dim teamID As Integer = -1
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleCostName, teamID)
+            Dim isRole As Boolean = Not IsNothing(tmpRole)
 
-        If Not isRole Then
-            isCost = (CostDefinitions.containsName(roleCostName))
-        End If
-
-        If isRole Then
-            If RoleDefinitions.hasAnyChildParentRelationsship(roleCostName, roleCostCollection) Then
-                tmpResult = True
+            If Not isRole Then
+                isCost = (CostDefinitions.containsName(roleCostName))
             End If
-        Else
-            ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
-            tmpResult = roleCostCollection.Contains(roleCostName)
-        End If
+
+            If isRole Then
+                Dim roleName As String = tmpRole.name
+
+                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCostCollection) Then
+                    tmpResult = True
+                End If
+            Else
+                ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
+                tmpResult = roleCostCollection.Contains(roleCostName)
+            End If
+        Catch ex As Exception
+
+        End Try
+
 
         isRelevantForNulling = tmpResult
     End Function
@@ -3520,19 +3556,20 @@ Public Class clsProjekt
     ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
-    ''' <param name="roleName"></param>
+    ''' <param name="roleNameID"></param>
     ''' <param name="relMonthCol"></param>
     ''' <returns></returns>
-    Public Function getSetRoleValuesUntil(ByVal roleName As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+    Public Function getSetRoleValuesUntil(ByVal roleNameID As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
 
         Dim tmpValue As Double = 0.0
-        Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+        Dim teamID As Integer = -1
+        Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
         If Not IsNothing(currentRoleDef) Then
-            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
-            Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+            Dim roleUID As Integer = currentRoleDef.UID
+            Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
+            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
 
             For Each phNameID As String In listOfPhases
 
@@ -3542,7 +3579,8 @@ Public Class clsProjekt
 
                         If .relStart <= relMonthCol Then
                             ' jetzt die Werte auslesen und ggf. auf Null setzen 
-                            Dim cRole As clsRolle = .getRole(roleName)
+                            'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
+                            Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
 
                             If Not IsNothing(cRole) Then
                                 Dim oldSum As Double = 0.0

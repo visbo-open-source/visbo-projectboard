@@ -2201,7 +2201,7 @@ Public Module awinGeneralModules
 
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
-        Dim ok As Boolean
+
         Dim takeIntoAccount As Boolean = True
 
         Dim importDate As Date = Date.Now
@@ -2240,6 +2240,9 @@ Public Module awinGeneralModules
                     Else
                         ' nicht in der Session, aber ist es in der Datenbank ?  
 
+                        ' also erst mal eintragen ... 
+                        AlleProjekte.Add(impProjekt)
+
                         If Not noDB Then
 
                             '
@@ -2252,6 +2255,7 @@ Public Module awinGeneralModules
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And lookForVariantName = "" Then
                                     lookForVariantName = ptVariantFixNames.pfv.ToString
                                 End If
+
                                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, lookForVariantName, Date.Now, err) Then
 
                                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
@@ -2259,16 +2263,18 @@ Public Module awinGeneralModules
 
                                     If IsNothing(vglProj) Then
                                         ' kann eigentlich nicht sein 
-                                        ok = False
+                                        Call MsgBox("Inkonsistenz Exist Abfrage - Retrieve-Abfrage: Fehler Code 099" & vbLf &
+                                                    "Methode verarbeiteImportProjekte")
                                     Else
                                         'ur: 22.02.19 : das vglProj wird nur zum Vergleich benötigt
                                         ' jetzt in AlleProjekte eintragen ... 
                                         ' AlleProjekte.Add(vglProj)
 
                                     End If
+
                                 Else
-                                    ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(impProjekt)
+                                    ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
+                                    'AlleProjekte.Add(impProjekt)
                                 End If
                             Else
                                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
@@ -2276,8 +2282,7 @@ Public Module awinGeneralModules
 
 
                         Else
-                            ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                            AlleProjekte.Add(impProjekt)
+                            ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
 
                         End If
 
@@ -3475,14 +3480,13 @@ Public Module awinGeneralModules
                     Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
                     sproj.variantName = tmpVariantName
 
-                    Dim isIdentical As Boolean = False
-
 
                     If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
                         ' speichern des Projektes 
 
                         sproj.timeStamp = DBtimeStamp
 
+                        ' hier wird kein attrToStore Angabe benötigt, weil das Projekt ja noch gar nicht existiert hat ... 
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                             If awinSettings.englishLanguage Then
@@ -3554,77 +3558,85 @@ Public Module awinGeneralModules
                         ' das Portfolio Projekt wird gespeichert , wenn es Unterschiede gibt 
                         Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now, err)
                         ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
-                        If Not sproj.isIdenticalTo(oldProj) Then
 
-                            sproj.timeStamp = DBtimeStamp
+                        If Not IsNothing(oldProj) Then
+                            If Not sproj.isIdenticalTo(oldProj) Then
 
-                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
+                                sproj.timeStamp = DBtimeStamp
 
-                                If awinSettings.englishLanguage Then
-                                    outputLine = "saved: " & sproj.name & ", " & sproj.variantName
-                                    outPutCollection.Add(outputLine)
+                                Dim kdNrToStore As Boolean = Not sproj.hasIdenticalKdNr(oldProj)
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err, attrToStore:=kdNrToStore) Then
+
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                                    ' alles ok
+                                    anzahlChanged = anzahlChanged + 1
+
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
+                                    writeProtections.upsert(wpItem)
+
                                 Else
-                                    outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
-                                    outPutCollection.Add(outputLine)
-                                End If
+                                    If awinSettings.visboServer Then
+                                        Select Case err.errorCode
+                                            Case 403  'No Permission to Create Visbo Project Version
+                                                If awinSettings.englishLanguage Then
+                                                    outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                Else
+                                                    outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                End If
 
-                                ' alles ok
-                                anzahlChanged = anzahlChanged + 1
-
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                                writeProtections.upsert(wpItem)
-
-                            Else
-                                If awinSettings.visboServer Then
-                                    Select Case err.errorCode
-                                        Case 403  'No Permission to Create Visbo Project Version
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
-
-                                        Case 409 ' VisboProjectVersion was already updated in between
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
+                                            Case 409 ' VisboProjectVersion was already updated in between
+                                                If awinSettings.englishLanguage Then
+                                                    outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                Else
+                                                    outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                End If
                                                 '' erneut das projekt holen und abändern
                                                 '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
                                                 'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
 
-                                        Case 423 ' Visbo Project (Portfolio) is locked by another user
-                                            If awinSettings.englishLanguage Then
-                                                outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            Else
-                                                outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
-                                                outPutCollection.Add(outputLine)
-                                            End If
+                                            Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                                If awinSettings.englishLanguage Then
+                                                    outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                Else
+                                                    outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
+                                                    outPutCollection.Add(outputLine)
+                                                End If
 
-                                    End Select
-                                Else
-
-                                    ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                                    If awinSettings.englishLanguage Then
-                                        outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                                        End Select
                                     Else
-                                        outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+
+                                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                                        If awinSettings.englishLanguage Then
+                                            outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                                        Else
+                                            outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                                        End If
+                                        outPutCollection.Add(outputLine)
+
                                     End If
-                                    outPutCollection.Add(outputLine)
+
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
+                                    writeProtections.upsert(wpItem)
 
                                 End If
-
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                                writeProtections.upsert(wpItem)
-
                             End If
+                        Else
+                            Call MsgBox("Fehler bei Datenbank Lesen (storeSingleConstellationToDB): Projekt existiert , kann aber nicht gelsen werden: " & vbLf &
+                                        sproj.name)
                         End If
+
                     End If
 
                     ''If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
@@ -5925,155 +5937,156 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
-    ''' </summary>
-    ''' <param name="pname"></param>
-    ''' <param name="von"></param>
-    ''' <param name="bis"></param>
-    ''' <param name="roleCostNames"></param>
-    ''' <remarks></remarks>
-    Public Sub updateMassEditSummenValues(ByVal pname As String, ByVal phaseNameID As String,
-                                              ByVal von As Integer, ByVal bis As Integer,
-                                              ByVal roleCostNames As Collection)
+    ' tk 5.5. wird nicht mehr benötigt 
+    '''' <summary>
+    '''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  
+    '''' </summary>
+    '''' <param name="pname"></param>
+    '''' <param name="von"></param>
+    '''' <param name="bis"></param>
+    '''' <param name="roleCostNames"></param>
+    '''' <remarks></remarks>
+    'Public Sub updateMassEditSummenValues(ByVal pname As String, ByVal phaseNameID As String,
+    '                                          ByVal von As Integer, ByVal bis As Integer,
+    '                                          ByVal roleCostNames As Collection)
 
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
+    '    Dim formerEE As Boolean = appInstance.EnableEvents
+    '    appInstance.EnableEvents = False
 
-        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
-            ' nur dann befindet sich das Programm im MassEdit Sheet 
+    '    If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+    '        ' nur dann befindet sich das Programm im MassEdit Sheet 
 
-            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
-            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+    '        'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+    '        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+    '        .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
-            If IsNothing(roleCostNames) Then
-                ' nichts tun 
-            ElseIf roleCostNames.Count = 0 Then
-                ' nichts tun 
-            Else
-                ' Update Lauf der Summen 
-                Dim columnSummen As Integer = visboZustaende.meColRC + 1
-                Dim columnRC As Integer = visboZustaende.meColRC
+    '        If IsNothing(roleCostNames) Then
+    '            ' nichts tun 
+    '        ElseIf roleCostNames.Count = 0 Then
+    '            ' nichts tun 
+    '        Else
+    '            ' Update Lauf der Summen 
+    '            Dim columnSummen As Integer = visboZustaende.meColRC + 1
+    '            Dim columnRC As Integer = visboZustaende.meColRC
 
-                ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
-                For zeile As Integer = 2 To visboZustaende.meMaxZeile
+    '            ' jetzt muss einfach jede Zeile im Mass-Edit Sheet durchgegangen werden 
+    '            For zeile As Integer = 2 To visboZustaende.meMaxZeile
 
-                    Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
-                    Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                    Dim curphaseNameID As String = calcHryElemKey(curphaseName, False)
-                    Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                    If Not IsNothing(curComment) Then
-                        curphaseNameID = curComment.Text
-                    End If
+    '                Dim curpName As String = CStr(meWS.Cells(zeile, 2).value)
+    '                Dim curphaseName As String = CStr(meWS.Cells(zeile, 4).value)
+    '                Dim curphaseNameID As String = calcHryElemKey(curphaseName, False)
+    '                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+    '                If Not IsNothing(curComment) Then
+    '                    curphaseNameID = curComment.Text
+    '                End If
 
-                    ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
-                    If curpName = pname And ((curphaseNameID = phaseNameID) Or (curphaseNameID = rootPhaseName)) Then
+    '                ' es soll auf jeden Fall auch die Rootphase geupdated werden ..., da ja die evtl auch als secondbest geändert wurde ...
+    '                If curpName = pname And ((curphaseNameID = phaseNameID) Or (curphaseNameID = rootPhaseName)) Then
 
-                        Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
+    '                    Dim curRCName As String = CStr(meWS.Cells(zeile, columnRC).value)
 
-                        If Not IsNothing(curRCName) Then
-                            If curRCName.Trim.Length > 0 Then
-                                If roleCostNames.Contains(curRCName) Then
-                                    Dim tmpSum As Double = 0.0
-                                    ' jetzt muss die Summe aktualisiert werden 
-                                    Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-                                    If Not IsNothing(hproj) Then
-                                        Dim cphase As clsPhase = hproj.getPhaseByID(curphaseNameID)
+    '                    If Not IsNothing(curRCName) Then
+    '                        If curRCName.Trim.Length > 0 Then
+    '                            If roleCostNames.Contains(curRCName) Then
+    '                                Dim tmpSum As Double = 0.0
+    '                                ' jetzt muss die Summe aktualisiert werden 
+    '                                Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+    '                                If Not IsNothing(hproj) Then
+    '                                    Dim cphase As clsPhase = hproj.getPhaseByID(curphaseNameID)
 
-                                        If Not IsNothing(cphase) Then
+    '                                    If Not IsNothing(cphase) Then
 
-                                            Dim xWerte() As Double
-                                            Dim ixZeitraum As Integer
-                                            Dim ix As Integer
-                                            Dim anzLoops As Integer
+    '                                        Dim xWerte() As Double
+    '                                        Dim ixZeitraum As Integer
+    '                                        Dim ix As Integer
+    '                                        Dim anzLoops As Integer
 
-                                            ' diese MEthode definiert, wo der Zeitraum sich mit den Werte überlappt ... 
-                                            ' Anzloops sind die Anzahl Überlappungen 
-                                            Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate),
-                                                               ixZeitraum, ix, anzLoops)
+    '                                        ' diese MEthode definiert, wo der Zeitraum sich mit den Werte überlappt ... 
+    '                                        ' Anzloops sind die Anzahl Überlappungen 
+    '                                        Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate),
+    '                                                           ixZeitraum, ix, anzLoops)
 
-                                            If RoleDefinitions.containsName(curRCName) Then
+    '                                        If RoleDefinitions.containsName(curRCName) Then
 
-                                                Dim tmpRole As clsRolle = cphase.getRole(curRCName)
+    '                                            Dim tmpRole As clsRolle = cphase.getRole(curRCName)
 
-                                                If Not IsNothing(tmpRole) Then
-                                                    xWerte = tmpRole.Xwerte
+    '                                            If Not IsNothing(tmpRole) Then
+    '                                                xWerte = tmpRole.Xwerte
 
-                                                    ' jetzt werden die Werte summiert ...
-                                                    Try
-                                                        For al As Integer = 1 To anzLoops
-                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
-                                                        Next
-                                                    Catch ex As Exception
-                                                        Call MsgBox("Fehler bei Summenbildung ...")
-                                                        tmpSum = 0
-                                                    End Try
-
-
-                                                Else
-                                                    ' Summe löschen
-                                                End If
-
-                                            ElseIf CostDefinitions.containsName(curRCName) Then
-
-                                                Dim tmpCost As clsKostenart = cphase.getCost(curRCName)
-
-                                                If Not IsNothing(tmpCost) Then
-                                                    xWerte = tmpCost.Xwerte
-
-                                                    ' jetzt werden die Werte summiert ...
-                                                    Try
-                                                        For al As Integer = 1 To anzLoops
-                                                            tmpSum = tmpSum + xWerte(ix + al - 1)
-                                                        Next
-                                                    Catch ex As Exception
-                                                        Call MsgBox("Fehler bei Summenbildung ...")
-                                                        tmpSum = 0
-                                                    End Try
-
-                                                Else
-                                                    ' Summe löschen
-                                                End If
-                                            Else
-                                                ' Summe löschen 
-                                            End If
-
-                                        Else
-                                            ' Summe löschen  
-                                        End If
-                                    Else
-                                        ' Summe löschen 
-                                    End If
-
-                                    ' jetzt den Wert in die Zelle schreiben
-                                    If tmpSum > 0 Then
-                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum
-                                        '.ToString("#,##0")
-                                    Else
-                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
-                                    End If
-
-                                End If
-                            End If
-                        End If
-
-                    End If
-
-                Next
-
-            End If
+    '                                                ' jetzt werden die Werte summiert ...
+    '                                                Try
+    '                                                    For al As Integer = 1 To anzLoops
+    '                                                        tmpSum = tmpSum + xWerte(ix + al - 1)
+    '                                                    Next
+    '                                                Catch ex As Exception
+    '                                                    Call MsgBox("Fehler bei Summenbildung ...")
+    '                                                    tmpSum = 0
+    '                                                End Try
 
 
-        Else
-            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
-        End If
+    '                                            Else
+    '                                                ' Summe löschen
+    '                                            End If
 
-        appInstance.EnableEvents = formerEE
+    '                                        ElseIf CostDefinitions.containsName(curRCName) Then
+
+    '                                            Dim tmpCost As clsKostenart = cphase.getCost(curRCName)
+
+    '                                            If Not IsNothing(tmpCost) Then
+    '                                                xWerte = tmpCost.Xwerte
+
+    '                                                ' jetzt werden die Werte summiert ...
+    '                                                Try
+    '                                                    For al As Integer = 1 To anzLoops
+    '                                                        tmpSum = tmpSum + xWerte(ix + al - 1)
+    '                                                    Next
+    '                                                Catch ex As Exception
+    '                                                    Call MsgBox("Fehler bei Summenbildung ...")
+    '                                                    tmpSum = 0
+    '                                                End Try
+
+    '                                            Else
+    '                                                ' Summe löschen
+    '                                            End If
+    '                                        Else
+    '                                            ' Summe löschen 
+    '                                        End If
+
+    '                                    Else
+    '                                        ' Summe löschen  
+    '                                    End If
+    '                                Else
+    '                                    ' Summe löschen 
+    '                                End If
+
+    '                                ' jetzt den Wert in die Zelle schreiben
+    '                                If tmpSum > 0 Then
+    '                                    CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum
+    '                                    '.ToString("#,##0")
+    '                                Else
+    '                                    CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
+    '                                End If
+
+    '                            End If
+    '                        End If
+    '                    End If
+
+    '                End If
+
+    '            Next
+
+    '        End If
 
 
-    End Sub
+    '    Else
+    '        Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+    '    End If
+
+    '    appInstance.EnableEvents = formerEE
+
+
+    'End Sub
 
     ''' <summary>
     ''' aktualisiert für das angegebene Projekt die Validation Strings aller leeren / empty RoleCost Felder gemäß dem übergebenen 
@@ -7163,13 +7176,16 @@ Public Module awinGeneralModules
                 Call changeVariantNameAccordingUserRole(hproj)
 
 
-                Dim storeNeeded As Boolean
+                Dim storeNeeded As Boolean = False
+                Dim kdNrToStore As Boolean = False
+
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                     ' prüfen, ob es Unterschied gibt 
                     Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                        kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
                     Else
                         ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                         storeNeeded = True
@@ -7180,7 +7196,7 @@ Public Module awinGeneralModules
 
                 If storeNeeded Then
 
-
+                    ' nimmt das ggf zu mergende Projekt auf
                     Dim mProj As clsProjekt = Nothing
 
                     '' erst hier muss der Wert für hproj.timeStamp = heute gesetzt werden
@@ -7192,7 +7208,7 @@ Public Module awinGeneralModules
                     '    hproj.timeStamp = jetzt
                     'End If
 
-                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=kdNrToStore) Then
 
                         If awinSettings.englishLanguage Then
 
@@ -7365,13 +7381,15 @@ Public Module awinGeneralModules
                                 hproj.timeStamp = jetzt
                             End If
 
-                            Dim storeNeeded As Boolean
+                            Dim storeNeeded As Boolean = False
+                            Dim kdNrToStore As Boolean = False
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
                                 Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                                    kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -7392,7 +7410,7 @@ Public Module awinGeneralModules
                                 '    hproj.timeStamp = jetzt
                                 'End If
 
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved : " & hproj.name & ", " & hproj.variantName
@@ -7785,13 +7803,15 @@ Public Module awinGeneralModules
                                 hproj.timeStamp = jetzt
                             End If
 
-                            Dim storeNeeded As Boolean
+                            Dim storeNeeded As Boolean = False
+                            Dim kdNrToStore As Boolean = False
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
                                 Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                                    kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -7813,7 +7833,7 @@ Public Module awinGeneralModules
                                 '    hproj.timeStamp = jetzt
                                 'End If
 
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved : " & hproj.name & ", " & hproj.variantName

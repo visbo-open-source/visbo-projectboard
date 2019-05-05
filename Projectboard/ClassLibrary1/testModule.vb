@@ -724,8 +724,16 @@ Public Module testModule
                             tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         Else
-                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                            kennzeichnung = tmpStr(0).Trim
+
+                            Dim dummyStr As String = .TextFrame2.TextRange.Text
+                            If Not IsNothing(dummyStr) Then
+                                tmpStr = dummyStr.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                                kennzeichnung = tmpStr(0).Trim
+                            Else
+                                kennzeichnung = "nicht identifizierbar"
+                            End If
+
+
                         End If
 
 
