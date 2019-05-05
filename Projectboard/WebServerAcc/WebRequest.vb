@@ -1095,7 +1095,7 @@ Public Class Request
                 ' im Cache nicht gefunden, also nochmals alle VP des aktVCid holen und nachsehen.
                 If result.Count <= 0 Then
 
-                    VRScache.VPsId = GETallVP(aktVCid, err, ptPRPFType.all)
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
 
                 End If
 
