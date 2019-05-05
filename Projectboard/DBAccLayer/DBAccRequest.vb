@@ -504,6 +504,7 @@ Public Class Request
                     If IsNothing(result) Then
 
                         Select Case err.errorCode
+                            ' tk 5.5. kann das hier überhaupt mit success rauskommen ? 
                             Case 200 ' success
 
                             Case 401 ' Token is expired

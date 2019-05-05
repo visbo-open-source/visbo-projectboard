@@ -56,7 +56,7 @@ Public Module Module1
 
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
-    Public myLogfile As String
+    Public myLogfile As String = ""
 
     ' gibt an, in welchem Modus sich aktuell die Projekt-Tafe befindet 
     Public currentProjektTafelModus As Integer
@@ -6553,6 +6553,15 @@ Public Module Module1
             My.Computer.FileSystem.CreateDirectory(logfilePath)
         End If
 
+        ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
+        Try
+            If myLogfile <> "" Then
+                Call logfileSchliessen()
+            End If
+        Catch ex As Exception
+
+        End Try
+
         Try
             ' Logfile neu anlegen 
             xlsLogfile = appInstance.Workbooks.Add
@@ -6564,7 +6573,7 @@ Public Module Module1
 
         Catch ex As Exception
             logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
-                                            "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Adminsitrator"
+                                            "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
             appInstance.ScreenUpdating = True
             Throw New ArgumentException(logmessage)
         End Try
@@ -6590,13 +6599,19 @@ Public Module Module1
     Public Sub logfileSchliessen()
 
         appInstance.EnableEvents = False
+
         Try
 
-            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+            If myLogfile <> "" Then
+                appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+                myLogfile = ""
+            End If
+
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Schließen des Logfiles")
         End Try
+
         appInstance.EnableEvents = True
     End Sub
 
