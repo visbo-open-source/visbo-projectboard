@@ -5926,37 +5926,42 @@ Public Module testModule
                                 ' Text im ShapeContainer / Platzhalter zurücksetzen 
                                 .TextFrame2.TextRange.Text = ""
 
+                                If qualifier <> "" Then
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+                                    With smartChartInfo
 
-                                Dim smartChartInfo As New clsSmartPPTChartInfo
-                                With smartChartInfo
+                                        If showRangeLeft > 0 Then
+                                            .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                        End If
+                                        If showRangeRight > 0 Then
+                                            .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                        End If
 
-                                    If showRangeLeft > 0 Then
-                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                        .einheit = PTEinheiten.personentage
+                                        .pName = currentConstellationName
+                                        .vName = ""
+                                        .prPF = ptPRPFType.portfolio
+                                        .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                        .bigType = ptReportBigTypes.charts
+
+                                        ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                        .hproj = Nothing
+                                        .vglProj = Nothing
+
+
+                                    End With
+
+                                    If smartChartInfo.q2 <> "" Then
+                                        Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                        appInstance.ScreenUpdating = False
+
+                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                        appInstance.ScreenUpdating = formerSU
                                     End If
-                                    If showRangeRight > 0 Then
-                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
-                                    End If
 
-                                    .einheit = PTEinheiten.personentage
-                                    .pName = currentConstellationName
-                                    .vName = ""
-                                    .prPF = ptPRPFType.portfolio
-                                    .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
-                                    .bigType = ptReportBigTypes.charts
+                                End If
 
-                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
-                                    .hproj = Nothing
-                                    .vglProj = Nothing
-
-
-                                End With
-
-                                Dim formerSU As Boolean = appInstance.ScreenUpdating
-                                appInstance.ScreenUpdating = False
-
-                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
-
-                                appInstance.ScreenUpdating = formerSU
 
                                 boxName = ""
                                 notYetDone = False

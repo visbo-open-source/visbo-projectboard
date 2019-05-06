@@ -169,7 +169,7 @@ Public Class clsRollen
 
 
     ''' <summary>
-    ''' gibt die Rolle zurück, die alle Team-Members enthält 
+    ''' gibt die Rolle aus der hierarchischen Organisation zurück, die alle Team-Members der teamID  enthält 
     ''' </summary>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
@@ -325,6 +325,7 @@ Public Class clsRollen
     End Property
     ''' <summary>
     ''' gibt die Toplevel NodeIds zurück ...
+    ''' für den Portfolio Manager werden alle ausser des Top Levels für Teams zurückgegeben 
     ''' Level 0 ist die erste Ebene, Level 1 die zweite. Weitere werden aktuell nicht unterstützt 
     ''' </summary>
     ''' <value></value>
@@ -334,6 +335,12 @@ Public Class clsRollen
         Get
             Dim returnResult As New List(Of Integer)
             If Level = 0 Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    Dim topTeamID As Integer = -1
+                Else
+
+                End If
+
                 returnResult = _topLevelNodeIDs
             ElseIf Level = 1 Then
                 For Each roleID As Integer In _topLevelNodeIDs
@@ -550,6 +557,36 @@ Public Class clsRollen
             Loop
 
             isParentOfTeams = teamFound
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn die angegebene roleUID Eltern-Teil von allen Teams ist 
+    ''' wird für den Aufbau / den Ausschluss des obersten Team-Knotens beim Portfolio Manager benötigt 
+    ''' </summary>
+    ''' <param name="roleUID"></param>
+    ''' <returns></returns>
+    Private ReadOnly Property isParentOfAllTeams(ByVal roleUID As Integer) As Boolean
+        Get
+            Dim allTeamIDs As SortedList(Of Integer, Double) = getAllTeamIDs
+            Dim tmpResult As Boolean = False
+            Dim firstTime As Boolean = True
+
+            For Each kvp As KeyValuePair(Of Integer, Double) In allTeamIDs
+
+                If firstTime Then
+                    firstTime = False
+                    tmpResult = True
+                End If
+
+                tmpResult = tmpResult And hasAnyChildParentRelationsship(kvp.Key, roleUID)
+                If tmpResult = False Then
+                    Exit For ' es reicht, wenn eines nicht dazu gehört ... 
+                End If
+
+            Next
+
+            isParentOfAllTeams = tmpResult
         End Get
     End Property
 
@@ -1625,7 +1662,10 @@ Public Class clsRollen
         Dim currentRole As clsRollenDefinition
         Dim hparent As New clsRollenDefinition
 
-        'For i = 1 To _allRollen.Count
+        ' zurücksetzen ... wenn der Portfolio Manager die Gruppen nicht angezeigt bekommen soll 
+        If _topLevelNodeIDs.Count > 0 Then
+            _topLevelNodeIDs = New List(Of Integer)
+        End If
 
         While (i <= _allRollen.Count)
 
@@ -1636,7 +1676,14 @@ Public Class clsRollen
             If IsNothing(parentRole) Then
                 If Not Me._topLevelNodeIDs.Contains(currentRole.UID) Then
                     ' aufnehmen als Top Level Node ...
-                    Me._topLevelNodeIDs.Add(currentRole.UID)
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If Not isParentOfAllTeams(currentRole.UID) Then
+                            Me._topLevelNodeIDs.Add(currentRole.UID)
+                        End If
+                    Else
+                        Me._topLevelNodeIDs.Add(currentRole.UID)
+                    End If
+
                 End If
             End If
 

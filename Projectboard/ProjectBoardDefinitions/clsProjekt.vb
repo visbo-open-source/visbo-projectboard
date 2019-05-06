@@ -2896,8 +2896,12 @@ Public Class clsProjekt
 
                     If curRole.uid <> summaryRoleIDs(ix - 1) Then
                         ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 erstetzt wird 
-                        If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1)) Then
+                        If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
+
+                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(curRole.uid, summaryRoleIDs(ix - 1)) Then
+                            found = True
+
                         Else
                             ix = ix + 1
                         End If

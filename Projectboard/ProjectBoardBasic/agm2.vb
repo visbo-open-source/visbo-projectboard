@@ -13505,10 +13505,12 @@ Public Module agm2
                             If roleNameIDCollection.Count = 0 Then
                                 relevant = True
                             Else
-                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
-                                    relevant = True
-                                End If
+
+                                relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                'Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
+                                '    relevant = True
+                                'End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
@@ -15382,6 +15384,12 @@ Public Module agm2
             Dim editRange As Excel.Range
 
 
+            Dim trTeamID As Integer = -1
+            Dim restrictedTopRole As clsRollenDefinition = Nothing
+
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+            End If
 
             For Each pvName As String In todoListe
 
@@ -15483,18 +15491,21 @@ Public Module agm2
 
                                 Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                 Dim validRole As Boolean = True
+                                Dim isVirtualChild As Boolean = False
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
                                         If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
-                                            Dim trTeamID As Integer = -1
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID, includingVirtualChilds:=True) Then
-                                                validRole = True
-                                            Else
-                                                validRole = False
+                                            ' tk 6.5.19
+                                            validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+
+                                            If validRole Then
+                                                If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                                    isVirtualChild = True
+                                                End If
                                             End If
+
                                         End If
                                     End If
                                 End If
@@ -15506,10 +15517,20 @@ Public Module agm2
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
 
-                                    'ReDim zeilenWerte(bis - von)
+                                    ' ggf Schreibschutz setzen für die Zeile setzen
+                                    Dim lockZeile As Boolean = False
+                                    Dim lockText As String = ""
+                                    If isProtectedbyOthers Then
+                                        lockZeile = True
+                                        lockText = protectionText
+                                    ElseIf isVirtualChild Then
+                                        ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
+                                        lockZeile = True
+                                        lockText = ""
+                                    End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, roleNameID, True,
-                                                                            protectionText, von, bis,
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                            lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
@@ -17856,9 +17877,10 @@ Public Module agm2
 
                     End If
 
+                    ' das kann nicht unmiitelbar nach Login gemacht werden 
                     Dim meldungen As Collection = New Collection
 
-                    ' jetzt werden die Rollen besetzt 
+                    '' jetzt werden die Rollen besetzt 
                     If awinSettings.readCostRolesFromDB Then
                         Call setUserRoles(meldungen)
 
@@ -17876,6 +17898,11 @@ Public Module agm2
                         End With
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole
                         Call myCustomUserRole.setNonAllowances()
+                    End If
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
+                        Call RoleDefinitions.buildTopNodes()
                     End If
 
 
