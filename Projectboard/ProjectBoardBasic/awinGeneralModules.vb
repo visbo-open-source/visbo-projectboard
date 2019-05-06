@@ -3367,6 +3367,13 @@ Public Module awinGeneralModules
                             currentSessionConstellation.sortCriteria = kvp.Value.sortCriteria
                         Else
                             currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                            kvp.Value.sortCriteria = ptSortCriteria.customTF
+                        End If
+                    Else
+
+                        If kvp.Value.sortCriteria < 0 Then
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                            kvp.Value.sortCriteria = ptSortCriteria.customTF
                         End If
 
                     End If

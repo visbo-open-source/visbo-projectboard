@@ -369,68 +369,88 @@ Imports System.Web
 
                 ' Plausibilitätsprüfung: darf das geladen werden 
                 Try
-                    Dim ok As Boolean = False
-                    If (Not AlleProjekte.containsAnySummaryProject _
-                        And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
-                        And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
-                        ' alles in Ordnung 
-                        ok = True
-                    Else
-                        If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
-                            ok = True
+                    ' Check ...
+                    Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                    ' tmpname ist nicht mehr in der Session geladen
+                    If IsNothing(checkconst) Then
+                        ' hole Portfolio (tmpname) aus den dbConstellations-liste
+                        checkconst = dbConstellations.getConstellation(tmpName)
+                        If Not IsNothing(checkconst) Then
+                            ' tmpname in die Session-Liste wieder aufnehmen
+                            projectConstellations.Add(checkconst)
+                        Else
+                            Call MsgBox("Portfolio nicht mehr vorhanden!")
                         End If
+
                     End If
 
-                    If ok Then
-                        ' aufnehmen ...
-                        Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+                    If Not IsNothing(projectConstellations.getConstellation(tmpName)) Then
 
-                        If Not IsNothing(constellation) Then
-                            If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                constellationsToDo.Add(constellation)
-                            End If
+                        Dim ok As Boolean = False
+                        If (Not AlleProjekte.containsAnySummaryProject _
+                            And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                            And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
+                            ' alles in Ordnung 
+                            ok = True
                         Else
-                            constellation = dbConstellations.getConstellation(tmpName)
+                            If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                                ok = True
+                            End If
+                        End If
+
+                        If ok Then
+                            ' aufnehmen ...
+                            Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
                             If Not IsNothing(constellation) Then
                                 If Not constellationsToDo.Contains(constellation.constellationName) Then
                                     constellationsToDo.Add(constellation)
                                 End If
-                                projectConstellations.Add(constellation)
+                            Else
+                                constellation = dbConstellations.getConstellation(tmpName)
+                                If Not IsNothing(constellation) Then
+                                    If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                        constellationsToDo.Add(constellation)
+                                    End If
+                                    projectConstellations.Add(constellation)
+                                End If
+
                             End If
 
+                            ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
+                            'If constellation.containsAnySummaryProject Then
+                            '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
+                            '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
+                            '        If Not IsNothing(tmpProj) Then
+                            '            If Not AlleProjekte.Containskey(spKvP.Key) Then
+                            '                AlleProjekte.Add(tmpProj, )
+                            '            End If
+                            '        End If
+                            '        If spKvP.Value.variantName = portfolioVName Then
+                            '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
+                            '        End If
+                            '    Next
+                            'Else
+                            '    If Not IsNothing(constellation) Then
+                            '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                            '    End If
+                            'End If
+
+                            ' war vorher ..
+                            If Not IsNothing(constellation) Then
+                                projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                            End If
+
+
+
+                        Else
+                            ' Meldung, und dann nicht aufnehmen 
+                            Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                         "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
                         End If
-
-                        ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
-                        'If constellation.containsAnySummaryProject Then
-                        '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
-                        '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
-                        '        If Not IsNothing(tmpProj) Then
-                        '            If Not AlleProjekte.Containskey(spKvP.Key) Then
-                        '                AlleProjekte.Add(tmpProj, )
-                        '            End If
-                        '        End If
-                        '        If spKvP.Value.variantName = portfolioVName Then
-                        '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
-                        '        End If
-                        '    Next
-                        'Else
-                        '    If Not IsNothing(constellation) Then
-                        '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
-                        '    End If
-                        'End If
-
-                        ' war vorher ..
-                        If Not IsNothing(constellation) Then
-                            projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
-                        End If
-
-
-
-                    Else
-                        ' Meldung, un dann nicht aufnehmen 
-                        Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
-                                     "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
                     End If
+
                 Catch ex As Exception
                     Dim tstmsg As String = ex.Message
                 End Try

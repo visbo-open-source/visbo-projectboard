@@ -508,6 +508,68 @@
                 End If
 
             Next
+
+        Else
+            _sortType = ptSortCriteria.customTF
+            ' neu 
+            Dim newSortList As New SortedList(Of String, String)
+            Dim noShowList As New SortedList(Of String, clsConstellationItem)
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
+                If kvp.Value.show = True Then
+                    Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
+                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+                    While newSortList.ContainsKey(sortkey)
+                        sortkey = calcSortKeyCustomTF1(sortkey)
+                    End While
+
+                    ' jetzt ist er eindeutig 
+                    newSortList.Add(sortkey, kvp.Value.projectName)
+                Else
+                    ' erstmal in die NoShow Liste packen 
+                    noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
+                End If
+
+            Next
+
+            ' jetzt müssen alle NoShow-Items behandelt werden ..
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
+                If newSortList.ContainsValue(kvp.Value.projectName) Then
+                    ' ist schon enthalten, also cItem.zeile anpassen 
+                    Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
+                        (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
+                Else
+                    ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
+                    ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
+                    Dim noShowZeile As Integer
+                    If kvp.Value.zeile >= 2 Then
+                        noShowZeile = kvp.Value.zeile
+                    Else
+                        If newSortList.Count > 0 Then
+                            noShowZeile = getTFzeilefromSortKeyCustomTF _
+                                                   (newSortList.Last.Key) + 1
+                        Else
+                            noShowZeile = 2
+                        End If
+                    End If
+
+                    Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
+                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+                    While newSortList.ContainsKey(tmpKey)
+                        tmpKey = calcSortKeyCustomTF1(tmpKey)
+                    End While
+
+                    ' jetzt ist er eindeutig 
+                    newSortList.Add(tmpKey, kvp.Value.projectName)
+                    Me.getItem(kvp.Key).zeile = noShowZeile
+
+                End If
+            Next
+
+            ' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
+            Me.sortListe(ptSortCriteria.customTF) = newSortList
+
         End If
 
     End Sub
@@ -901,14 +963,18 @@
             With copyResult
                 .constellationName = cName
 
-                If prepareForDB Then
-                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
-                        .add(cItem:=copiedItem)
-                    Next
-                    .lastCustomList = Nothing
-                Else
-                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                'If prepareForDB Then
+                '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                '        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
+                '        .add(cItem:=copiedItem)
+                '    Next
+
+                '    ' jetzt sortliste und sorttype kopieren 
+                '    .sortListe(_sortType) = _sortList
+
+                '    .lastCustomList = Nothing
+                'Else
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                         Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
                         .add(cItem:=copiedItem, noUpdateSortlist:=True)
                     Next
@@ -922,7 +988,7 @@
                             .lastCustomList = _lastCustomList
                         End If
                     End If
-                End If
+                'End If
 
 
 
