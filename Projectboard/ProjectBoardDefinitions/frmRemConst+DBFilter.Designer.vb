@@ -23,59 +23,83 @@ Partial Class frmRemoveConstellation
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmRemoveConstellation))
-        Me.ListBox1 = New System.Windows.Forms.ListBox()
-        Me.OKButton = New System.Windows.Forms.Button()
+        Me.Panel1 = New System.Windows.Forms.Panel()
         Me.Abbrechen = New System.Windows.Forms.Button()
+        Me.OKButton = New System.Windows.Forms.Button()
+        Me.ListBox1 = New System.Windows.Forms.ListBox()
+        Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
-        'ListBox1
+        'Panel1
         '
-        Me.ListBox1.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.HorizontalScrollbar = True
-        Me.ListBox1.ItemHeight = 16
-        Me.ListBox1.Location = New System.Drawing.Point(27, 18)
-        Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(340, 180)
-        Me.ListBox1.Sorted = True
-        Me.ListBox1.TabIndex = 1
-        '
-        'OKButton
-        '
-        Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(70, 222)
-        Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(80, 22)
-        Me.OKButton.TabIndex = 2
-        Me.OKButton.Text = "OK"
-        Me.OKButton.UseVisualStyleBackColor = True
+        Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.Abbrechen)
+        Me.Panel1.Controls.Add(Me.OKButton)
+        Me.Panel1.Controls.Add(Me.ListBox1)
+        Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(493, 331)
+        Me.Panel1.TabIndex = 0
         '
         'Abbrechen
         '
+        Me.Abbrechen.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Abbrechen.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.Abbrechen.Location = New System.Drawing.Point(218, 222)
+        Me.Abbrechen.Location = New System.Drawing.Point(272, 279)
+        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4)
         Me.Abbrechen.Name = "Abbrechen"
-        Me.Abbrechen.Size = New System.Drawing.Size(80, 22)
-        Me.Abbrechen.TabIndex = 3
+        Me.Abbrechen.Size = New System.Drawing.Size(100, 28)
+        Me.Abbrechen.TabIndex = 6
         Me.Abbrechen.Text = "Abbrechen"
         Me.Abbrechen.UseVisualStyleBackColor = True
         '
+        'OKButton
+        '
+        Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
+        Me.OKButton.Location = New System.Drawing.Point(88, 279)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Name = "OKButton"
+        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.TabIndex = 5
+        Me.OKButton.Text = "OK"
+        Me.OKButton.UseVisualStyleBackColor = True
+        '
+        'ListBox1
+        '
+        Me.ListBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.ListBox1.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ListBox1.FormattingEnabled = True
+        Me.ListBox1.HorizontalScrollbar = True
+        Me.ListBox1.ItemHeight = 19
+        Me.ListBox1.Location = New System.Drawing.Point(13, 13)
+        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
+        Me.ListBox1.Name = "ListBox1"
+        Me.ListBox1.Size = New System.Drawing.Size(466, 251)
+        Me.ListBox1.Sorted = True
+        Me.ListBox1.TabIndex = 4
+        '
         'frmRemoveConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(394, 262)
-        Me.Controls.Add(Me.Abbrechen)
-        Me.Controls.Add(Me.OKButton)
-        Me.Controls.Add(Me.ListBox1)
+        Me.ClientSize = New System.Drawing.Size(492, 328)
+        Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmRemoveConstellation"
         Me.Text = "Portfolio löschen"
+        Me.Panel1.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
-    Public WithEvents ListBox1 As System.Windows.Forms.ListBox
-    Public WithEvents OKButton As System.Windows.Forms.Button
-    Public WithEvents Abbrechen As System.Windows.Forms.Button
+
+    Friend WithEvents Panel1 As Windows.Forms.Panel
+    Public WithEvents Abbrechen As Windows.Forms.Button
+    Public WithEvents OKButton As Windows.Forms.Button
+    Public WithEvents ListBox1 As Windows.Forms.ListBox
 End Class
