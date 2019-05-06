@@ -2813,7 +2813,8 @@
 
                     Else
                         existingRoleNameIds = getRoleNameIDs
-                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+                        ' hier müssen jetzt die virtuellen Kinder noch ergänzt werden ... 
+                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all, includingVirtualChilds:=True)
 
                         matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 

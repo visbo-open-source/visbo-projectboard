@@ -10311,7 +10311,7 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+    Public Sub ImportAllianzIstdaten(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
@@ -13506,7 +13506,7 @@ Public Module agm2
                                 relevant = True
                             Else
                                 Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
                                     relevant = True
                                 End If
                             End If
@@ -15490,7 +15490,7 @@ Public Module agm2
                                             Dim trTeamID As Integer = -1
                                             Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID, includingVirtualChilds:=True) Then
                                                 validRole = True
                                             Else
                                                 validRole = False
