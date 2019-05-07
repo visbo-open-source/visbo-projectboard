@@ -5102,6 +5102,8 @@ Imports System.Web
                             'sessionConstellationP enthält alle Projekte aus dem Import 
                             Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
+
+                            ' tk 8.5.19 das soll jetzt nicht mehr gemacht werden - immer alle Projekte zeigen, die importiert wurden und sich verändert haben 
                             If isAllianzImport1 Then
                                 sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
                             End If
@@ -5134,36 +5136,46 @@ Imports System.Web
                             End If
 
 
-                            If isAllianzImport1 Then
-                                If sessionConstellationS.count > 0 Then
-
-                                    If projectConstellations.Contains(scenarioNameS) Then
-                                        projectConstellations.Remove(scenarioNameS)
-                                    End If
-
-                                    projectConstellations.Add(sessionConstellationS)
-                                    ' jetzt auf Projekt-Tafel anzeigen 
-
-                                    Call loadSessionConstellation(scenarioNameS, False, True)
-
-                                Else
-                                    Call MsgBox("keine Programmlinien importiert ...")
-                                End If
-                            Else
-                                If sessionConstellationP.count > 0 Then
-
-                                    If projectConstellations.Contains(scenarioNameP) Then
-                                        projectConstellations.Remove(scenarioNameP)
-                                    End If
-
-                                    projectConstellations.Add(sessionConstellationP)
-                                    ' jetzt auf Projekt-Tafel anzeigen 
-                                    Call loadSessionConstellation(scenarioNameP, False, True)
-
-                                Else
-                                    Call MsgBox("keine Projekte importiert ...")
-                                End If
+                            ' auch im Fall Allianz sollen die Projekte gezeigt werden - nicht die Summary-Projekte 
+                            If projectConstellations.Contains(scenarioNameP) Then
+                                projectConstellations.Remove(scenarioNameP)
                             End If
+
+                            projectConstellations.Add(sessionConstellationP)
+                            ' jetzt auf Projekt-Tafel anzeigen 
+                            Call loadSessionConstellation(scenarioNameP, False, True)
+
+                            '' tk 8.5.19 auskommentiert 
+                            'If isAllianzImport1 Then
+                            '    If sessionConstellationS.count > 0 Then
+
+                            '        If projectConstellations.Contains(scenarioNameS) Then
+                            '            projectConstellations.Remove(scenarioNameS)
+                            '        End If
+
+                            '        projectConstellations.Add(sessionConstellationS)
+                            '        ' jetzt auf Projekt-Tafel anzeigen 
+
+                            '        Call loadSessionConstellation(scenarioNameS, False, True)
+
+                            '    Else
+                            '        Call MsgBox("keine Programmlinien importiert ...")
+                            '    End If
+                            'Else
+                            '    If sessionConstellationP.count > 0 Then
+
+                            '        If projectConstellations.Contains(scenarioNameP) Then
+                            '            projectConstellations.Remove(scenarioNameP)
+                            '        End If
+
+                            '        projectConstellations.Add(sessionConstellationP)
+                            '        ' jetzt auf Projekt-Tafel anzeigen 
+                            '        Call loadSessionConstellation(scenarioNameP, False, True)
+
+                            '    Else
+                            '        Call MsgBox("keine Projekte importiert ...")
+                            '    End If
+                            'End If
 
 
 

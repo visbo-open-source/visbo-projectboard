@@ -863,7 +863,7 @@ Public Class Request
 
                         If attrToStore Then
 
-                            If String.Compare(aktvp.kundennummer, projekt.kundenNummer) = 0 Then
+                            If String.Compare(aktvp.kundennummer, projekt.kundenNummer) <> 0 Then
                                 aktvp.kundennummer = projekt.kundenNummer
                                 Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                             End If

@@ -2202,145 +2202,229 @@ Public Module awinGeneralModules
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
 
+        Dim outPutCollection As New Collection
+        Dim outputLine As String = ""
+
+
+        Dim logmsg() As String = Nothing
+
         Dim takeIntoAccount As Boolean = True
 
         Dim importDate As Date = Date.Now
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
-            Dim impProjekt As clsProjekt = kvp.Value
+            Try
+                Dim impProjekt As clsProjekt = kvp.Value
 
-            If considerSummaryProjects Then
-                takeIntoAccount = (impProjekt.projectType = ptPRPFType.portfolio)
-            Else
-                takeIntoAccount = Not (impProjekt.projectType = ptPRPFType.portfolio)
-            End If
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And impProjekt.variantName = "" Then
+                    impProjekt.variantName = ptVariantFixNames.pfv.ToString
+                End If
 
-            If takeIntoAccount Then
-
-                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummaries verschieben ...
-                impProjekt.timeStamp = importDate
-
-                Dim importKey As String = calcProjektKey(impProjekt)
-
-                vglProj = Nothing
-
-                If noComparison Then
-                    ' nicht vergleichen, einfach in AlleProjekte rein machen 
-                    If AlleProjekte.Containskey(importKey) Then
-                        AlleProjekte.Remove(importKey)
-                    End If
-                    AlleProjekte.Add(impProjekt)
+                If considerSummaryProjects Then
+                    takeIntoAccount = (impProjekt.projectType = ptPRPFType.portfolio)
                 Else
-                    ' jetzt muss ggf verglichen werden 
-                    If AlleProjekte.Containskey(importKey) Then
+                    takeIntoAccount = Not (impProjekt.projectType = ptPRPFType.portfolio)
+                End If
 
-                        vglProj = AlleProjekte.getProject(importKey)
+                If takeIntoAccount Then
 
-                    Else
-                        ' nicht in der Session, aber ist es in der Datenbank ?  
+                    ' jetzt das Import Datum setzen und dann in PortfolioProjektSummaries verschieben ...
+                    impProjekt.timeStamp = importDate
 
-                        ' also erst mal eintragen ... 
+                    Dim importKey As String = calcProjektKey(impProjekt)
+
+                    vglProj = Nothing
+
+                    If noComparison Then
+                        ' nicht vergleichen, einfach in AlleProjekte rein machen 
+                        If AlleProjekte.Containskey(importKey) Then
+                            AlleProjekte.Remove(importKey)
+                        End If
                         AlleProjekte.Add(impProjekt)
+                    Else
+                        ' jetzt muss ggf verglichen werden 
+                        If AlleProjekte.Containskey(importKey) Then
 
-                        If Not noDB Then
-
-                            '
-                            ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                            ' wenn es sich um einen Portfolio Manager handelt: der Vergleich muss mit der letzten Vorgabe stattfinden, weill nur das kann der Portfolio Manager ja auch speichern ... 
-
-                            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                                Dim lookForVariantName As String = impProjekt.variantName
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And lookForVariantName = "" Then
-                                    lookForVariantName = ptVariantFixNames.pfv.ToString
-                                End If
-
-                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, lookForVariantName, Date.Now, err) Then
-
-                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, lookForVariantName, Date.Now, err)
-
-                                    If IsNothing(vglProj) Then
-                                        ' kann eigentlich nicht sein 
-                                        Call MsgBox("Inkonsistenz Exist Abfrage - Retrieve-Abfrage: Fehler Code 099" & vbLf &
-                                                    "Methode verarbeiteImportProjekte")
-                                    Else
-                                        'ur: 22.02.19 : das vglProj wird nur zum Vergleich benötigt
-                                        ' jetzt in AlleProjekte eintragen ... 
-                                        ' AlleProjekte.Add(vglProj)
-
-                                    End If
-
-                                Else
-                                    ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
-                                    'AlleProjekte.Add(impProjekt)
-                                End If
-                            Else
-                                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
-                            End If
-
+                            vglProj = AlleProjekte.getProject(importKey)
 
                         Else
-                            ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
+                            ' nicht in der Session, aber ist es in der Datenbank ?  
 
-                        End If
+                            If Not noDB Then
+
+                                '
+                                ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                                ' wenn es sich um einen Portfolio Manager handelt: der Vergleich muss mit der letzten Vorgabe stattfinden, weill nur das kann der Portfolio Manager ja auch speichern ... 
+
+                                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
 
-                    End If
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now, err) Then
 
-                    ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf markieren, wenn unterschiedlich  anlegen ...
-                    If Not IsNothing(vglProj) Then
+                                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now, err)
 
-                        If Not impProjekt.isIdenticalTo(vglProj) Then
-                            ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
-                            impProjekt.marker = True
+                                        If IsNothing(vglProj) Then
+                                            ' kann eigentlich nicht sein 
+                                            ReDim logmsg(3)
+                                            logmsg(0) = "Projekt existiert scheinbar - lässt sich aber nicht aus DB laden ... "
+                                            logmsg(1) = impProjekt.name
+                                            logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
+                                            logmsg(3) = "kein Import ! "
+                                            Call logfileSchreiben(logmsg)
+                                        Else
+                                            ' jetzt in AlleProjekte eintragen ... 
+                                            AlleProjekte.Add(impProjekt)
 
-                            'impProjekt.variantName = cName
-                            importKey = calcProjektKey(impProjekt)
+                                        End If
 
-                            ' wenn die Variante bereits in der Session existiert ..
-                            ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                            If AlleProjekte.Containskey(importKey) Then
-                                AlleProjekte.Remove(importKey)
+
+                                    ElseIf impProjekt.kundenNummer <> "" Then
+                                        ' versuche es darüber zu finden 
+                                        Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(impProjekt.kundenNummer, err)
+
+                                        If nameCollection.Count = 0 Then
+                                            ' es existiert nicht , also eintragen ... 
+                                            AlleProjekte.Add(impProjekt)
+
+                                        ElseIf nameCollection.Count = 1 Then
+                                            ' es existiert angeblich genau einmal 
+                                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(nameCollection.Item(1), impProjekt.variantName, Date.Now, err)
+
+                                            If Not IsNothing(vglProj) Then
+
+                                                Dim newName As String = impProjekt.name
+
+                                                impProjekt.name = vglProj.name
+                                                AlleProjekte.Add(impProjekt)
+
+                                                ReDim logmsg(3)
+                                                logmsg(0) = "Projekt existiert unter anderem Namen in VISBO Datenbank - bitte umbenennen!"
+                                                logmsg(1) = impProjekt.kundenNummer
+                                                logmsg(2) = "VISBO DB - Name: " & vglProj.name
+                                                logmsg(3) = "neuer Name: " & newName
+                                                Call logfileSchreiben(logmsg)
+                                            Else
+                                                ' kann eigentlich nicht sein 
+                                                ReDim logmsg(3)
+                                                logmsg(0) = "Projekt existiert scheinbar - lässt sich aber nicht aus DB laden ... "
+                                                logmsg(1) = nameCollection.Item(1)
+                                                logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
+                                                logmsg(3) = "kein Import ! "
+                                                Call logfileSchreiben(logmsg)
+
+                                            End If
+
+                                        ElseIf nameCollection.Count > 1 Then
+
+                                            Dim anz As Integer = nameCollection.Count
+                                            ReDim logmsg(anz + 2)
+                                            logmsg(0) = "Projekt-Nummer existiert mehrfach; bitte bereinigen - Projekt wurde nicht importiert"
+                                            logmsg(1) = impProjekt.kundenNummer
+                                            logmsg(2) = impProjekt.name
+
+                                            For ia As Integer = 1 To anz
+                                                logmsg(ia + 2) = nameCollection.Item(ia)
+                                            Next
+
+                                            Call logfileSchreiben(logmsg)
+
+                                        End If
+
+                                    Else
+                                        ' kann nicht gefunden werden, Kunden-Nummer ist "" 
+                                        ' jetzt in AlleProjekte eintragen ... 
+                                        AlleProjekte.Add(impProjekt)
+
+                                    End If
+                                Else
+                                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                                End If
+
+
+                            Else
+                                ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
+                                ' jetzt in AlleProjekte eintragen ... 
+                                AlleProjekte.Add(impProjekt)
                             End If
 
-                            ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
-                            AlleProjekte.Add(impProjekt)
+
+                        End If
+
+                        ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf markieren, wenn unterschiedlich  anlegen ...
+                        If Not IsNothing(vglProj) Then
+
+                            If Not impProjekt.isIdenticalTo(vglProj) Then
+                                ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
+                                impProjekt.marker = True
+
+                                If impProjekt.kundenNummer <> vglProj.kundenNummer Then
+
+                                    ReDim logmsg(3)
+                                    logmsg(0) = "Projekt-Nummer hat sich geändert: "
+                                    logmsg(1) = impProjekt.name
+                                    logmsg(2) = " von " & vglProj.kundenNummer
+                                    logmsg(3) = " zu " & impProjekt.kundenNummer
+
+                                    outputLine = impProjekt.name & " :" & " von " & vglProj.kundenNummer & " zu " & impProjekt.kundenNummer
+                                    outPutCollection.Add(outputLine)
+
+                                End If
+
+                                'impProjekt.variantName = cName
+                                importKey = calcProjektKey(impProjekt)
+
+                                ' wenn die Variante bereits in der Session existiert ..
+                                ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                                If AlleProjekte.Containskey(importKey) Then
+                                    AlleProjekte.Remove(importKey)
+                                End If
+
+                                ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                                AlleProjekte.Add(impProjekt)
+                            End If
+
                         End If
 
                     End If
 
-                End If
+                    ' wenn jetzt automatisch setzen des ActualdataDate gemacht werden soll
+                    If awinSettings.autoSetActualDataDate Then
+                        impProjekt.actualDataUntil = importDate.AddMonths(-1)
+                    End If
 
-                ' wenn jetzt automatisch setzen des ActualdataDate gemacht werden soll
-                If awinSettings.autoSetActualDataDate Then
-                    impProjekt.actualDataUntil = importDate.AddMonths(-1)
-                End If
+                    ' Aufnehmen in Constellation
+                    Dim newCItem As New clsConstellationItem
+                    newCItem.projectName = impProjekt.name
+                    newCItem.variantName = impProjekt.variantName
 
-                ' Aufnehmen in Constellation
-                Dim newCItem As New clsConstellationItem
-                newCItem.projectName = impProjekt.name
-                newCItem.variantName = impProjekt.variantName
+                    If newC.containsProject(impProjekt.name) Then
+                        newCItem.show = False
+                    Else
+                        newCItem.show = True
+                    End If
 
-                If newC.containsProject(impProjekt.name) Then
-                    newCItem.show = False
+                    newCItem.start = impProjekt.startDate
+                    newCItem.zeile = lfdZeilenNr
+                    newCItem.projectTyp = CType(impProjekt.projectType, ptPRPFType).ToString
+                    'newCItem.zeile = lfdZeilenNr
+                    newC.add(newCItem, sKey:=lfdZeilenNr)
+
+                    lfdZeilenNr = lfdZeilenNr + 1
                 Else
-                    newCItem.show = True
+                    ' nichts tun ...
                 End If
 
-                newCItem.start = impProjekt.startDate
-                newCItem.zeile = lfdZeilenNr
-                newCItem.projectTyp = CType(impProjekt.projectType, ptPRPFType).ToString
-                'newCItem.zeile = lfdZeilenNr
-                newC.add(newCItem, sKey:=lfdZeilenNr)
-
-                lfdZeilenNr = lfdZeilenNr + 1
-            Else
-                ' nichts tun ...
-            End If
+            Catch ex As Exception
+                Dim a As Integer = 0
+            End Try
 
         Next
+
+        If outPutCollection.Count > 0 Then
+            Call showOutPut(outPutCollection, "es sind Änderungen in der Projekt-Nummer aufgetreten", "siehe Logfile")
+        End If
 
         verarbeiteImportProjekte = newC
 
@@ -7390,9 +7474,11 @@ Public Module awinGeneralModules
 
                             Dim storeNeeded As Boolean = False
                             Dim kdNrToStore As Boolean = False
+                            Dim standInDB As clsProjekt = Nothing
+
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+                                standInDB = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -7407,6 +7493,10 @@ Public Module awinGeneralModules
 
                             If storeNeeded Then
 
+                                If kdNrToStore And standInDB.kundenNummer <> "" Then
+                                    outputline = "Kunden-Nummer wurde geändert: von " & standInDB.kundenNummer & " zu " & hproj.kundenNummer
+                                    outPutCollection.Add(outputline)
+                                End If
                                 Dim mproj As clsProjekt = Nothing
 
                                 'ur: 14.2..2019: wieder zurückgeändert
