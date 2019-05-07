@@ -6396,9 +6396,12 @@ Public Module awinDiagrams
             Dim dontShowPlanung As Boolean = False
 
             If sCInfo.prPF = ptPRPFType.portfolio Then
-                dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+                If ShowProjekte.actualDataUntil >= StartofCalendar Then
+                    dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+                End If
+
             Else
-                    If sCInfo.hproj.hasActualValues Then
+                If sCInfo.hproj.hasActualValues Then
                     dontShowPlanung = getColumnOfDate(sCInfo.hproj.actualDataUntil) >= getColumnOfDate(sCInfo.hproj.endeDate)
                 End If
             End If
@@ -6442,7 +6445,7 @@ Public Module awinDiagrams
                     With .Format.Line
                         .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
                         .ForeColor.RGB = visboFarbeRed
-                        .Weight = 4
+                        .Weight = 2
                     End With
 
 
@@ -6996,16 +6999,27 @@ Public Module awinDiagrams
         Dim actualdataIndex As Integer = -1
 
         If scInfo.prPF = ptPRPFType.project Then
+
             considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+
         Else
-            considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeLeft
+            ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception
+            If ShowProjekte.actualDataUntil >= StartofCalendar Then
+                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeLeft
+            End If
+
         End If
 
         If considerIstDaten Then
 
             Call tdatenreihe.CopyTo(istDatenReihe, 0)
 
-            actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+            If scInfo.prPF = ptPRPFType.project Then
+                actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+            Else
+                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - showRangeLeft
+            End If
+
             ' die Prognose Daten bereinigen
             ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
 

@@ -2813,7 +2813,8 @@
 
                     Else
                         existingRoleNameIds = getRoleNameIDs
-                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+                        ' hier müssen jetzt die virtuellen Kinder noch ergänzt werden ... 
+                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all, includingVirtualChilds:=True)
 
                         matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 
@@ -4446,48 +4447,48 @@
 
     End Property
 
-    '
-    ' übergibt in getSummeRessourcen den Ressourcen Bedarf in Mann-Monaten  die Werte der Kostenart <roleId>
-    '
-    Public ReadOnly Property getSummeRessourcen() As Double
+    ''
+    '' übergibt in getSummeRessourcen den Ressourcen Bedarf in Mann-Monaten  die Werte der Kostenart <roleId>
+    ''
+    'Public ReadOnly Property getSummeRessourcen() As Double
 
-        Get
-            Dim roleValues() As Double
-            Dim ErgebnisListe As New Collection
-            Dim roleSum As Double
-            Dim anzRollen As Integer
-            Dim i As Integer, r As Integer
-            Dim roleName As String
+    '    Get
+    '        Dim roleValues() As Double
+    '        Dim ErgebnisListe As New Collection
+    '        Dim roleSum As Double
+    '        Dim anzRollen As Integer
+    '        Dim i As Integer, r As Integer
+    '        Dim roleName As String
 
 
-            If _Dauer > 0 Then
+    '        If _Dauer > 0 Then
 
-                ReDim roleValues(_Dauer - 1)
+    '            ReDim roleValues(_Dauer - 1)
 
-                roleSum = 0
+    '            roleSum = 0
 
-                ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getRoleNames
-                anzRollen = ErgebnisListe.Count
+    '            ' Jetzt werden die einzelnen Rollen aufsummiert
+    '            ErgebnisListe = Me.getRoleNames
+    '            anzRollen = ErgebnisListe.Count
 
-                For r = 1 To anzRollen
-                    roleName = CStr(ErgebnisListe.Item(r))
-                    roleValues = Me.getRessourcenBedarf(roleName)
-                    For i = 0 To _Dauer - 1
-                        roleSum = roleSum + roleValues(i)
-                        roleValues(i) = 0
-                    Next i
-                Next r
+    '            For r = 1 To anzRollen
+    '                roleName = CStr(ErgebnisListe.Item(r))
+    '                roleValues = Me.getRessourcenBedarf(roleName)
+    '                For i = 0 To _Dauer - 1
+    '                    roleSum = roleSum + roleValues(i)
+    '                    roleValues(i) = 0
+    '                Next i
+    '            Next r
 
-                getSummeRessourcen = roleSum
+    '            getSummeRessourcen = roleSum
 
-            Else
-                getSummeRessourcen = 0
-            End If
+    '        Else
+    '            getSummeRessourcen = 0
+    '        End If
 
-        End Get
+    '    End Get
 
-    End Property
+    'End Property
 
 
     ''' <summary>

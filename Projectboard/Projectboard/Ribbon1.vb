@@ -5078,7 +5078,7 @@ Imports System.Web
                                     Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
                                     Dim outputCollection As New Collection
-                                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                                    Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                                 End If
 
@@ -6029,7 +6029,7 @@ Imports System.Web
                     Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
 
-                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                    Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                 End If
 

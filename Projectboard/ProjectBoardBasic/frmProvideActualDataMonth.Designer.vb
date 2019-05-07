@@ -72,7 +72,7 @@ Partial Class frmProvideActualDataMonth
         Me.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.okBtn.Location = New System.Drawing.Point(18, 131)
         Me.okBtn.Name = "okBtn"
-        Me.okBtn.Size = New System.Drawing.Size(75, 23)
+        Me.okBtn.Size = New System.Drawing.Size(95, 23)
         Me.okBtn.TabIndex = 4
         Me.okBtn.Text = "Import Daten"
         Me.okBtn.UseVisualStyleBackColor = True
@@ -80,9 +80,9 @@ Partial Class frmProvideActualDataMonth
         'cancelBtn
         '
         Me.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.cancelBtn.Location = New System.Drawing.Point(178, 131)
+        Me.cancelBtn.Location = New System.Drawing.Point(155, 131)
         Me.cancelBtn.Name = "cancelBtn"
-        Me.cancelBtn.Size = New System.Drawing.Size(75, 23)
+        Me.cancelBtn.Size = New System.Drawing.Size(95, 23)
         Me.cancelBtn.TabIndex = 5
         Me.cancelBtn.Text = "Cancel"
         Me.cancelBtn.UseVisualStyleBackColor = True

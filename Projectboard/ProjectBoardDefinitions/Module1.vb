@@ -7873,7 +7873,7 @@ Public Module Module1
             currentCell.ClearComments()
 
             currentCell.AddComment(Text:=protectiontext)
-            currentCell.Comment.Visible = True
+            currentCell.Comment.Visible = False
 
         End If
 
