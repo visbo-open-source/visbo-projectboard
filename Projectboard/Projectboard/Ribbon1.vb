@@ -1098,10 +1098,11 @@ Imports System.Web
                                         ' merken , welche Phasen, Meilensteine aktuell gezeigt werden 
                                         phaseList = projectboardShapes.getPhaseList(pName)
                                         milestoneList = projectboardShapes.getMilestoneList(pName)
-                                        Dim key As String = calcProjektKey(hproj)
-                                        ShowProjekte.Remove(pName)
+
                                         Call clearProjektinPlantafel(pName)
 
+                                        Dim key As String = calcProjektKey(hproj)
+                                        ShowProjekte.Remove(pName)
 
                                         ' jetzt müssen auch alle in der Session / AlleProjekte vorhandenen Varianten umbenannt werden 
                                         For Each vName As String In variantNamesCollection
@@ -10019,7 +10020,7 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken2
                             scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
@@ -10056,7 +10057,7 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken
                             scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name

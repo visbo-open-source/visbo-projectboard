@@ -6909,7 +6909,7 @@ Public Module agm2
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
                 If roleType = ptCustomUserRoles.RessourceManager Then
-                    If RoleDefinitions.containsNameID(specifics) Then
+                    If RoleDefinitions.containsNameOrID(specifics) Then
                         ' alles ok
                         stillOk = True
                         specificsWithIDs = CStr(RoleDefinitions.getRoleDefByIDKennung(specifics, teamID).UID)
@@ -6921,9 +6921,9 @@ Public Module agm2
 
                     For Each tmpName As String In tmpStr
 
-                        stillOk = stillOk And RoleDefinitions.containsNameID(tmpName.Trim)
+                        stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
 
-                        If RoleDefinitions.containsNameID(tmpName.Trim) Then
+                        If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
                             tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
                             If specificsWithIDs = "" Then
                                 specificsWithIDs = tmpNameUID
@@ -8258,50 +8258,61 @@ Public Module agm2
         Dim newRoleDefinitions As New clsRollen
         Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
 
-        If awinSettings.visboDebug Then
-            Call MsgBox("readRoleDefinitions")
-        End If
+        If outputCollection.Count = 0 Then
+            ' bisher alles ok
+            If awinSettings.visboDebug Then
+                Call MsgBox("readRoleDefinitions")
+            End If
 
-        ' Auslesen der Kosten Definitionen 
-        Dim newCostDefinitions As New clsKostenarten
-        Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+            ' Auslesen der Kosten Definitionen 
+            Dim newCostDefinitions As New clsKostenarten
+            Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
 
-        If awinSettings.visboDebug Then
-            Call MsgBox("readCostDefinitions")
-        End If
+            If awinSettings.visboDebug Then
+                Call MsgBox("readCostDefinitions")
+            End If
 
-        ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-        Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
+            ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+            Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
 
-        ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
-        If newRoleDefinitions.Count > 0 Then
-            ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-            ' jetzt kommt der Validation-Check 
+            If outputCollection.Count = 0 Then
+                ' weitermachen ... 
+                ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
+                If newRoleDefinitions.Count > 0 Then
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
 
-            Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
-            Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
+                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
+                    Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
-            If outputCollection.Count > 0 Then
-                ' wird an der aurufenden Stelle ausgegeben ... 
-            ElseIf TeamsAreNotOK Or existingOverloads Then
-                ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
-            Else
-                'bis hier ist alles in Ordnung 
-                With importedOrga
-                    .allRoles = newRoleDefinitions
-                    .allCosts = newCostDefinitions
-                    .validFrom = validFrom
-                End With
+                    If outputCollection.Count > 0 Then
+                        ' wird an der aurufenden Stelle ausgegeben ... 
+                    ElseIf TeamsAreNotOK Or existingOverloads Then
+                        ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
+                    Else
+                        'bis hier ist alles in Ordnung 
+                        With importedOrga
+                            .allRoles = newRoleDefinitions
+                            .allCosts = newCostDefinitions
+                            .validFrom = validFrom
+                        End With
 
-                If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
-                    ' wieder zurück setzen ..
-                    importedOrga = New clsOrganisation
-                Else
+                        If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
+                            ' wieder zurück setzen ..
+                            importedOrga = New clsOrganisation
+                        Else
+
+                        End If
+                    End If
 
                 End If
             End If
 
+        Else
+            importedOrga = New clsOrganisation
         End If
+
+
 
         ImportOrganisation = importedOrga
     End Function
@@ -9733,7 +9744,7 @@ Public Module agm2
 
 
                             ' nur weitermachen, wenn valide Angaben 
-                            If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameID(roleNameID) Then
+                            If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameOrID(roleNameID) Then
                                 Dim curDelRole As String = ""
 
                                 curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
@@ -9841,7 +9852,7 @@ Public Module agm2
                                     logtxt(2) = phaseName
 
                                     errCol = colPhaseName
-                                ElseIf Not RoleDefinitions.containsNameID(roleNameID) Then
+                                ElseIf Not RoleDefinitions.containsNameOrID(roleNameID) Then
                                     atleastOneError = True
                                     Dim roleName As String = CStr(CType(currentWS.Cells(iz, colRoleName), Excel.Range).Value)
                                     logmessage = "Rollen-Name existiert nicht: " & roleName
@@ -10503,7 +10514,7 @@ Public Module agm2
 
                         ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
                         ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
-                        If RoleDefinitions.containsNameID(roleName) Then
+                        If RoleDefinitions.containsNameOrID(roleName) Then
 
                             parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
@@ -15520,7 +15531,7 @@ Public Module agm2
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
-                                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                                             ' tk 6.5.19
                                             validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
@@ -19318,7 +19329,7 @@ Public Module agm2
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
                             Else
-                                If neueRollendefinitionen.containsNameID(tmpIDValue) Then
+                                If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
                                     errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
@@ -19424,7 +19435,13 @@ Public Module agm2
                                 Else
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
                                     If Not neueRollendefinitionen.containsName(hrole.name) Then
-                                        neueRollendefinitionen.Add(hrole)
+                                        If neueRollendefinitionen.containsUid(hrole.UID) Then
+                                            errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            meldungen.Add(errMsg)
+                                        Else
+                                            neueRollendefinitionen.Add(hrole)
+                                        End If
+
                                     End If
 
                                 End If
@@ -19442,140 +19459,147 @@ Public Module agm2
 
                 End If
 
-                ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
-                ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
-                hasHierarchy = hasHierarchy And atleastOneWithIndent
+                If meldungen.Count > 0 Then
+                    Exit Sub
+                Else
+                    ' weitermachen 
+                    ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
+                    ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
+                    hasHierarchy = hasHierarchy And atleastOneWithIndent
 
-                If hasHierarchy Then
-                    ' Hierarchie aufbauen
+                    If hasHierarchy Then
+                        ' Hierarchie aufbauen
 
-                    Dim parents(maxIndent) As String
+                        Dim parents(maxIndent) As String
 
-                    Dim ix As Integer
-                    parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
+                        Dim ix As Integer
+                        parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
 
 
-                    Dim lastLevel As Integer = 0
-                    Dim curLevel As Integer = 0
+                        Dim lastLevel As Integer = 0
+                        Dim curLevel As Integer = 0
 
-                    Dim curRoleName As String = ""
+                        Dim curRoleName As String = ""
 
-                    ix = 3
+                        ix = 3
 
-                    Do While ix <= anzZeilen - 1
+                        Do While ix <= anzZeilen - 1
 
-                        Try
-                            curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                            curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                            Try
+                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
-                            If readingGroups Then
-                                ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
-                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
-                            Else
-                                przSatz = 1.0
-                            End If
-
-                            Do While curLevel = lastLevel And ix <= anzZeilen - 1
-
-                                If curLevel > 0 Then
-                                    ' als Child aufnehmen 
-                                    ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
-                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
-                                    parentRole.addSubRole(subRole.UID, przSatz)
-
-                                    If curLevel = maxIndent And readingGroups Then
-                                        If Not parentRole.isTeam Then
-                                            parentRole.isTeam = True
-                                        End If
-                                        If subRole.getSubRoleCount > 0 Then
-                                            ' Fehler ! 
-                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                            meldungen.Add(errMsg)
-                                        Else
-                                            subRole.addTeam(parentRole.UID, przSatz)
-                                        End If
-
-                                    End If
-
-                                    ' 29.6.18 auch hier den Parent weiterschalten 
-                                    parents(curLevel) = curRoleName
+                                If readingGroups Then
+                                    ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
+                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                 Else
-                                    ' hier den Parent weiterschalten  
-                                    parents(curLevel) = curRoleName
+                                    przSatz = 1.0
                                 End If
 
-                                ' weiterschalten ..
-                                ix = ix + 1
+                                Do While curLevel = lastLevel And ix <= anzZeilen - 1
 
-                                ' hat sich der Indentlevel immer noch nicht geändert ? 
-                                If ix <= anzZeilen - 1 Then
-                                    curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                    curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
-                                    If readingGroups Then
-                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                    If curLevel > 0 Then
+                                        ' als Child aufnehmen 
+                                        ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
+                                        Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                        Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
+                                        parentRole.addSubRole(subRole.UID, przSatz)
+
+                                        If curLevel = maxIndent And readingGroups Then
+                                            If Not parentRole.isTeam Then
+                                                parentRole.isTeam = True
+                                            End If
+                                            If subRole.getSubRoleCount > 0 Then
+                                                ' Fehler ! 
+                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                meldungen.Add(errMsg)
+                                            Else
+                                                subRole.addTeam(parentRole.UID, przSatz)
+                                            End If
+
+                                        End If
+
+                                        ' 29.6.18 auch hier den Parent weiterschalten 
+                                        parents(curLevel) = curRoleName
                                     Else
-                                        przSatz = 1.0
+                                        ' hier den Parent weiterschalten  
+                                        parents(curLevel) = curRoleName
                                     End If
 
-                                Else
-                                    ' das Abbruch Kriterium schlägt gleich zu ... 
-                                End If
+                                    ' weiterschalten ..
+                                    ix = ix + 1
 
-                            Loop
-
-                            If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
-
-                                parents(curLevel) = curRoleName
-
-                                If curLevel < lastLevel Then
-                                    ' in der Hierarchie zurück 
-                                    For i As Integer = curLevel + 1 To maxIndent
-                                        parents(i) = ""
-                                    Next
-                                End If
-
-                                If curLevel > 0 Then
-                                    ' als Child aufnehmen 
-                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
-                                    parentRole.addSubRole(subRole.UID, przSatz)
-
-                                    ' hier kann er eigentlich nie hinkommen ...
-                                    If curLevel = maxIndent And readingGroups Then
-                                        If Not parentRole.isTeam Then
-                                            parentRole.isTeam = True
-                                        End If
-
-                                        If subRole.getSubRoleCount > 0 Then
-                                            ' Fehler ! 
-                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                            meldungen.Add(errMsg)
+                                    ' hat sich der Indentlevel immer noch nicht geändert ? 
+                                    If ix <= anzZeilen - 1 Then
+                                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                        curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        If readingGroups Then
+                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
-                                            subRole.addTeam(parentRole.UID, przSatz)
+                                            przSatz = 1.0
                                         End If
 
+                                    Else
+                                        ' das Abbruch Kriterium schlägt gleich zu ... 
                                     End If
 
-                                Else
-                                    ' nichts tun 
+                                Loop
+
+                                If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
+
+                                    parents(curLevel) = curRoleName
+
+                                    If curLevel < lastLevel Then
+                                        ' in der Hierarchie zurück 
+                                        For i As Integer = curLevel + 1 To maxIndent
+                                            parents(i) = ""
+                                        Next
+                                    End If
+
+                                    If curLevel > 0 Then
+                                        ' als Child aufnehmen 
+                                        Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                        Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
+                                        parentRole.addSubRole(subRole.UID, przSatz)
+
+                                        ' hier kann er eigentlich nie hinkommen ...
+                                        If curLevel = maxIndent And readingGroups Then
+                                            If Not parentRole.isTeam Then
+                                                parentRole.isTeam = True
+                                            End If
+
+                                            If subRole.getSubRoleCount > 0 Then
+                                                ' Fehler ! 
+                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                meldungen.Add(errMsg)
+                                            Else
+                                                subRole.addTeam(parentRole.UID, przSatz)
+                                            End If
+
+                                        End If
+
+                                    Else
+                                        ' nichts tun 
+                                    End If
+
+                                    ' alle alten löschen 
+                                    lastLevel = curLevel
+                                    ix = ix + 1
+
                                 End If
-
-                                ' alle alten löschen 
-                                lastLevel = curLevel
-                                ix = ix + 1
-
-                            End If
-                        Catch ex As Exception
-                            errMsg = "zeile: " & ix.ToString & " : " & ex.Message
-                            meldungen.Add(errMsg)
-                            CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
-                        End Try
+                            Catch ex As Exception
+                                errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
+                            End Try
 
 
-                    Loop
+                        Loop
 
+                    End If
                 End If
+
+
 
             End If
 

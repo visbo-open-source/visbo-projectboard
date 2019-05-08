@@ -5742,7 +5742,7 @@ Public Module Module1
                     ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
 
                         Dim curItem As String = myCustomUserRole.specifics
-                        Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
                         If isRole Then
 
@@ -5805,7 +5805,7 @@ Public Module Module1
 
                             ' wegen Einrückung in Details ...
                             Dim curItem As String = CStr(toDoCollectionR.Item(m))
-                            Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+                            Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
                             If isRole Then
 

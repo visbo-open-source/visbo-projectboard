@@ -650,7 +650,7 @@ Public Class clsRollen
                     Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
                     For Each tmpName As String In tmpStr
                         tmpName = tmpName.Trim
-                        If RoleDefinitions.containsNameID(tmpName) Then
+                        If RoleDefinitions.containsNameOrID(tmpName) Then
                             realAnzahl = realAnzahl + 1
                         End If
                     Next
@@ -660,7 +660,7 @@ Public Class clsRollen
                         Dim ix As Integer = 0
                         For Each tmpName As String In tmpStr
                             tmpName = tmpName.Trim
-                            If RoleDefinitions.containsNameID(tmpName) Then
+                            If RoleDefinitions.containsNameOrID(tmpName) Then
                                 Dim teamID As Integer
                                 tmpResult(ix) = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).UID
                                 ix = ix + 1
@@ -1406,7 +1406,7 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="nameID"></param>
     ''' <returns></returns>
-    Public ReadOnly Property containsNameID(ByVal nameID As String, Optional ByVal strongTest As Boolean = True) As Boolean
+    Public ReadOnly Property containsNameOrID(ByVal nameID As String, Optional ByVal strongTest As Boolean = True) As Boolean
         Get
             Dim tmpResult As Boolean = False
             Dim teamID As Integer = -1
@@ -1433,7 +1433,7 @@ Public Class clsRollen
                 tmpResult = False
             End If
 
-            containsNameID = tmpResult
+            containsNameOrID = tmpResult
 
         End Get
     End Property

@@ -21724,10 +21724,14 @@ Public Module Projekte
         End Try
 
         Try
-            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            Dim shpuid As String = hproj.shpUID
-            hproj.shpUID = ""
-            ShowProjekte.shpListe.Remove(shpuid)
+
+            If ShowProjekte.contains(pname) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                Dim shpuid As String = hproj.shpUID
+                hproj.shpUID = ""
+                ShowProjekte.shpListe.Remove(shpuid)
+            End If
+
         Catch ex As Exception
 
         End Try

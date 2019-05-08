@@ -156,11 +156,15 @@ Public Class clsProjekte
     Public Sub Remove(projectname As String, Optional ByVal updateCurrentConstellation As Boolean = True)
 
         Try
-            Dim SID As String = _allProjects.Item(projectname).shpUID
-            Dim vName As String = _allProjects.Item(projectname).variantName
-            _allProjects.Remove(projectname)
-            If SID <> "" Then
-                _allShapes.Remove(SID)
+            Dim vname As String = ""
+
+            If _allProjects.ContainsKey(projectname) Then
+                Dim SID As String = _allProjects.Item(projectname).shpUID
+                vname = _allProjects.Item(projectname).variantName
+                _allProjects.Remove(projectname)
+                If SID <> "" Then
+                    _allShapes.Remove(SID)
+                End If
             End If
 
             If updateCurrentConstellation Then
@@ -171,10 +175,7 @@ Public Class clsProjekte
                 End If
 
             End If
-            '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
-            'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
-            '    currentConstellationName = currentConstellationName & "(*)"
-            'End If
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
