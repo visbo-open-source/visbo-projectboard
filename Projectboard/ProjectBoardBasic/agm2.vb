@@ -10311,7 +10311,7 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+    Public Sub ImportAllianzIstdaten(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
@@ -10491,6 +10491,11 @@ Public Module agm2
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
                         Dim roleName As String = fullRoleName
+
+                        If roleName.StartsWith("*") Then
+                            roleName = roleName.Substring(1)
+                        End If
+
                         Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
                         Dim roleNameID As String = ""
                         Dim parentReferat As String = ""
@@ -10524,6 +10529,17 @@ Public Module agm2
 
                             End If
                         Else
+                            outPutLine = "Rolle nicht bekannt: " & roleName
+                            outputCollection.Add(outPutLine)
+
+                            ReDim logArray(3)
+                            logArray(0) = "unbekannte Rolle "
+                            logArray(1) = roleName
+                            logArray(2) = teamName
+                            logArray(3) = parentReferat
+
+                            Call logfileSchreiben(logArray)
+
                             ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
                             If teamName.Length > 0 Then
                                 parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
@@ -10826,33 +10842,34 @@ Public Module agm2
                 ' das Rausschreiben der Test Records 
 
                 ' Protokoll schreiben ...
-                For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+                ' tk 8.5.19 nicht mehr machen 
+                'For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Dim protocolLine As String = ""
-                    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+                '    Dim protocolLine As String = ""
+                '    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
-                        ' jetzt schreiben 
-                        Dim teamID As Integer = -1
-                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                        Dim curTagessatz As Double = hrole.tagessatzIntern
+                '        ' jetzt schreiben 
+                '        Dim teamID As Integer = -1
+                '        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                '        Dim curTagessatz As Double = hrole.tagessatzIntern
 
-                        ReDim logArray(3)
-                        logArray(0) = "Importiert wurde: "
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
-                        logArray(3) = rVKvP.Key & ": " & hrole.name
+                '        ReDim logArray(3)
+                '        logArray(0) = "Importiert wurde: "
+                '        logArray(1) = ""
+                '        logArray(2) = vPKvP.Key
+                '        logArray(3) = rVKvP.Key & ": " & hrole.name
 
 
-                        ReDim logDblArray(rVKvP.Value.Length - 1)
-                        For i As Integer = 0 To rVKvP.Value.Length - 1
-                            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                            logDblArray(i) = rVKvP.Value(i) * curTagessatz
-                        Next
+                '        ReDim logDblArray(rVKvP.Value.Length - 1)
+                '        For i As Integer = 0 To rVKvP.Value.Length - 1
+                '            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                '            logDblArray(i) = rVKvP.Value(i) * curTagessatz
+                '        Next
 
-                        Call logfileSchreiben(logArray, logDblArray)
-                    Next
+                '        Call logfileSchreiben(logArray, logDblArray)
+                '    Next
 
-                Next
+                'Next
                 ' Protokoll schreiben Ende ... 
 
                 Dim gesamtIstValue As Double = 0.0
@@ -13505,10 +13522,12 @@ Public Module agm2
                             If roleNameIDCollection.Count = 0 Then
                                 relevant = True
                             Else
-                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
-                                    relevant = True
-                                End If
+
+                                relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                'Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
+                                '    relevant = True
+                                'End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
@@ -14270,7 +14289,7 @@ Public Module agm2
         Dim spalte As Integer = 1
 
 
-        Dim startOfCustomFields As Integer = 15
+        Dim startOfCustomFields As Integer = 16
         Dim ersteZeile As Excel.Range
 
 
@@ -14281,49 +14300,51 @@ Public Module agm2
                 CType(.Cells(1, 1), Excel.Range).Value = "Project-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Variant-Name"
                 CType(.Cells(1, 3), Excel.Range).Value = "Project-Nr"
-                CType(.Cells(1, 4), Excel.Range).Value = "Responsible"
-                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Project-Start"
-                CType(.Cells(1, 7), Excel.Range).Value = "Project-End"
+                CType(.Cells(1, 4), Excel.Range).Value = "Status"
+                CType(.Cells(1, 5), Excel.Range).Value = "Responsible"
+                CType(.Cells(1, 6), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 7), Excel.Range).Value = "Project-Start"
+                CType(.Cells(1, 8), Excel.Range).Value = "Project-End"
 
                 If considerAll Then
-                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Profit/Loss [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Profit/Loss [T€]"
                 Else
-                    CType(.Cells(1, 8), Excel.Range).Value = "First Version [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Difference [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "First Version [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Difference [T€]"
                 End If
 
-                CType(.Cells(1, 9), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
-                CType(.Cells(1, 10), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
+                CType(.Cells(1, 11), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
 
-                CType(.Cells(1, 12), Excel.Range).Value = "Strategy"
-                CType(.Cells(1, 13), Excel.Range).Value = "Risk"
-                CType(.Cells(1, 14), Excel.Range).Value = "Description"
+                CType(.Cells(1, 13), Excel.Range).Value = "Strategy"
+                CType(.Cells(1, 14), Excel.Range).Value = "Risk"
+                CType(.Cells(1, 15), Excel.Range).Value = "Description"
             Else
 
                 CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
                 CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
-                CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
-                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Projekt-Start"
-                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Ende"
+                CType(.Cells(1, 4), Excel.Range).Value = "Status"
+                CType(.Cells(1, 5), Excel.Range).Value = "Verantwortlich"
+                CType(.Cells(1, 6), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Start"
+                CType(.Cells(1, 8), Excel.Range).Value = "Projekt-Ende"
 
                 If considerAll Then
-                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Gewinn/Verlust [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Gewinn/Verlust [T€]"
                 Else
-                    CType(.Cells(1, 8), Excel.Range).Value = "Erste Planung [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Differenz [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Erste Planung [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Differenz [T€]"
                 End If
 
-                CType(.Cells(1, 9), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
-                CType(.Cells(1, 10), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
+                CType(.Cells(1, 11), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
 
-                CType(.Cells(1, 12), Excel.Range).Value = "Strategie"
-                CType(.Cells(1, 13), Excel.Range).Value = "Risiko"
-                CType(.Cells(1, 14), Excel.Range).Value = "Beschreibung"
+                CType(.Cells(1, 13), Excel.Range).Value = "Strategie"
+                CType(.Cells(1, 14), Excel.Range).Value = "Risiko"
+                CType(.Cells(1, 15), Excel.Range).Value = "Beschreibung"
 
 
             End If
@@ -14410,31 +14431,32 @@ Public Module agm2
                     CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
                     CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
                     CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
-                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
-                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
-                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
-                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
+                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.Status
+                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.leadPerson
+                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.businessUnit
+                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.startDate
+                    CType(.Cells(zeile, 8), Excel.Range).Value = kvp.Value.endeDate
 
-                    CType(.Cells(zeile, 8), Excel.Range).Value = budget
-                    CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
+                    CType(.Cells(zeile, 9), Excel.Range).Value = budget
+                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
                     If Not considerAll Then
                         ' damit wird klar, von wann diese Version ist
-                        CType(.Cells(zeile, 8), Excel.Range).AddComment(standVom)
+                        CType(.Cells(zeile, 9), Excel.Range).AddComment(standVom)
                     End If
 
 
-                    CType(.Cells(zeile, 9), Excel.Range).Value = pk
-                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
-
-                    CType(.Cells(zeile, 10), Excel.Range).Value = ok
+                    CType(.Cells(zeile, 10), Excel.Range).Value = pk
                     CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
 
-                    CType(.Cells(zeile, 11), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 11), Excel.Range).Value = ok
                     CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
 
-                    CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
-                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
-                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
+                    CType(.Cells(zeile, 12), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 12), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.StrategicFit
+                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.Risiko
+                    CType(.Cells(zeile, 15), Excel.Range).Value = kvp.Value.fullDescription
 
                     spalte = startOfCustomFields
                     For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
@@ -14488,33 +14510,38 @@ Public Module agm2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     ElseIf s = 4 Then
+                        ' Status
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    ElseIf s = 5 Then
                         ' Verantwortlich
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    ElseIf s = 5 Then
+                    ElseIf s = 6 Then
                         ' Business Unit
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    ElseIf s = 6 Then
+                    ElseIf s = 7 Then
                         ' Projekt-Start
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    ElseIf s = 7 Then
+                    ElseIf s = 8 Then
                         ' Projekt-Ende
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    ElseIf s = 8 Then
+                    ElseIf s = 9 Then
                         ' Budget bzw. erste Planung 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 9 Then
+                    ElseIf s = 10 Then
                         ' summe Personalkosten
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
@@ -14522,33 +14549,33 @@ Public Module agm2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
 
-                    ElseIf s = 10 Then
+                    ElseIf s = 11 Then
                         ' summe Sonst Kosten
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 11 Then
+                    ElseIf s = 12 Then
                         ' Profit/Loss bzw. Differenz
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 12 Then
+                    ElseIf s = 13 Then
                         ' Strategie 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                    ElseIf s = 13 Then
+                    ElseIf s = 14 Then
                         ' Risiko 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                    ElseIf s = 14 Then
+                    ElseIf s = 15 Then
                         ' Beschreibung
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
@@ -15382,6 +15409,12 @@ Public Module agm2
             Dim editRange As Excel.Range
 
 
+            Dim trTeamID As Integer = -1
+            Dim restrictedTopRole As clsRollenDefinition = Nothing
+
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+            End If
 
             For Each pvName As String In todoListe
 
@@ -15483,18 +15516,21 @@ Public Module agm2
 
                                 Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                 Dim validRole As Boolean = True
+                                Dim isVirtualChild As Boolean = False
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
                                         If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
-                                            Dim trTeamID As Integer = -1
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
-                                                validRole = True
-                                            Else
-                                                validRole = False
+                                            ' tk 6.5.19
+                                            validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+
+                                            If validRole Then
+                                                If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                                    isVirtualChild = True
+                                                End If
                                             End If
+
                                         End If
                                     End If
                                 End If
@@ -15506,10 +15542,20 @@ Public Module agm2
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
 
-                                    'ReDim zeilenWerte(bis - von)
+                                    ' ggf Schreibschutz setzen für die Zeile setzen
+                                    Dim lockZeile As Boolean = False
+                                    Dim lockText As String = ""
+                                    If isProtectedbyOthers Then
+                                        lockZeile = True
+                                        lockText = protectionText
+                                    ElseIf isVirtualChild Then
+                                        ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
+                                        lockZeile = True
+                                        lockText = ""
+                                    End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, roleNameID, True,
-                                                                            protectionText, von, bis,
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                            lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
@@ -17856,9 +17902,10 @@ Public Module agm2
 
                     End If
 
+                    ' das kann nicht unmiitelbar nach Login gemacht werden 
                     Dim meldungen As Collection = New Collection
 
-                    ' jetzt werden die Rollen besetzt 
+                    '' jetzt werden die Rollen besetzt 
                     If awinSettings.readCostRolesFromDB Then
                         Call setUserRoles(meldungen)
 
@@ -17876,6 +17923,11 @@ Public Module agm2
                         End With
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole
                         Call myCustomUserRole.setNonAllowances()
+                    End If
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
+                        Call RoleDefinitions.buildTopNodes()
                     End If
 
 

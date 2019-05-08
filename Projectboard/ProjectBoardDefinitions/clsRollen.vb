@@ -169,7 +169,7 @@ Public Class clsRollen
 
 
     ''' <summary>
-    ''' gibt die Rolle zurück, die alle Team-Members enthält 
+    ''' gibt die Rolle aus der hierarchischen Organisation zurück, die alle Team-Members der teamID  enthält 
     ''' </summary>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
@@ -325,6 +325,7 @@ Public Class clsRollen
     End Property
     ''' <summary>
     ''' gibt die Toplevel NodeIds zurück ...
+    ''' für den Portfolio Manager werden alle ausser des Top Levels für Teams zurückgegeben 
     ''' Level 0 ist die erste Ebene, Level 1 die zweite. Weitere werden aktuell nicht unterstützt 
     ''' </summary>
     ''' <value></value>
@@ -334,6 +335,12 @@ Public Class clsRollen
         Get
             Dim returnResult As New List(Of Integer)
             If Level = 0 Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    Dim topTeamID As Integer = -1
+                Else
+
+                End If
+
                 returnResult = _topLevelNodeIDs
             ElseIf Level = 1 Then
                 For Each roleID As Integer In _topLevelNodeIDs
@@ -554,6 +561,36 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' gibt true zurück, wenn die angegebene roleUID Eltern-Teil von allen Teams ist 
+    ''' wird für den Aufbau / den Ausschluss des obersten Team-Knotens beim Portfolio Manager benötigt 
+    ''' </summary>
+    ''' <param name="roleUID"></param>
+    ''' <returns></returns>
+    Private ReadOnly Property isParentOfAllTeams(ByVal roleUID As Integer) As Boolean
+        Get
+            Dim allTeamIDs As SortedList(Of Integer, Double) = getAllTeamIDs
+            Dim tmpResult As Boolean = False
+            Dim firstTime As Boolean = True
+
+            For Each kvp As KeyValuePair(Of Integer, Double) In allTeamIDs
+
+                If firstTime Then
+                    firstTime = False
+                    tmpResult = True
+                End If
+
+                tmpResult = tmpResult And hasAnyChildParentRelationsship(kvp.Key, roleUID)
+                If tmpResult = False Then
+                    Exit For ' es reicht, wenn eines nicht dazu gehört ... 
+                End If
+
+            Next
+
+            isParentOfAllTeams = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt zu der angegebenen Rolle die "Sammel-Rolle" zurück, die die Rolle als direkte Sub-Role enthält 
     ''' leerer String, wenn keine Sammel-Rolle existiert, die die angegebene Rolle enthält  
     ''' </summary>
@@ -707,7 +744,8 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleIDs"></param>
     ''' <returns></returns>
-    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As Boolean
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer,
+                                                   Optional includingVirtualChilds As Boolean = False) As Boolean
 
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
@@ -718,7 +756,7 @@ Public Class clsRollen
 
         Else
             For Each summaryRoleID As Integer In summaryRoleIDs
-                tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds = includingVirtualChilds)
                 If tmpResult = True Then
                     Exit For
                 End If
@@ -734,7 +772,8 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleID"></param>
     ''' <returns></returns>
-    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer) As Boolean
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer,
+                                                   Optional includingVirtualChilds As Boolean = False) As Boolean
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
 
@@ -748,7 +787,7 @@ Public Class clsRollen
             Else
                 Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
                 If Not IsNothing(sRole) Then
-                    Dim alleChildIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all)
+                    Dim alleChildIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all, includingVirtualChilds:=includingVirtualChilds)
                     If alleChildIDs.Count > 0 Then
                         tmpResult = alleChildIDs.ContainsKey(roleNameID)
                     End If
@@ -763,6 +802,7 @@ Public Class clsRollen
     ''' <summary>
     ''' gibt true zurück, wenn roleID irgendwo unterhalb der Hierarchy von summaryRoleID zu finden ist ..
     ''' das gilt für Team-Member ebenso wie für Orga-Mitglieder
+    ''' wenn roleID ein virtuelles Kind ist, also ein Team, dessen Team-Member alle in der Orga-Einheit roleID sind, dann wird das auch als true angesehen 
     ''' </summary>
     ''' <param name="roleID"></param>
     ''' <param name="summaryRoleID"></param>
@@ -955,7 +995,8 @@ Public Class clsRollen
     ''' <returns></returns>
     Public ReadOnly Property getSubRoleNameIDsOf(ByVal roleNameID As String,
                                                Optional ByVal type As PTcbr = PTcbr.all,
-                                               Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of String, Double)
+                                               Optional ByVal excludedNames As Collection = Nothing,
+                                               Optional includingVirtualChilds As Boolean = False) As SortedList(Of String, Double)
         Get
 
             ' hier muss überprüft werden, ob die myCollection Sammelrollen enthält 
@@ -1062,7 +1103,23 @@ Public Class clsRollen
                 ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
 
                 If type = PTcbr.all Then
-                    ' nichts tun - realCollections enthält schon alles 
+                    ' nichts tun - realCollections enthält schon alles - aber ... 
+                    ' jetzt müssen die virtuellen Kinden noch ergänzt werden 
+                    ' das sind die Teams, deren Team-Mitglieder alle unterhalb der angegebenen Rolle liegen
+
+                    If includingVirtualChilds Then
+                        Dim virtualChildIds() As Integer = getVirtualChildIDs(roleID, inclSubRoles:=True)
+                        If Not IsNothing(virtualChildIds) Then
+                            If virtualChildIds.Count > 0 Then
+                                For kx As Integer = 0 To virtualChildIds.Count - 1
+                                    Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(virtualChildIds(kx), -1)
+                                    If Not realCollection.ContainsKey(tmpKey) Then
+                                        realCollection.Add(tmpKey, 1.0)
+                                    End If
+                                Next
+                            End If
+                        End If
+                    End If
 
                 ElseIf type = PTcbr.placeholders Then
                     realCollection = sammelRollenCollection
@@ -1079,6 +1136,8 @@ Public Class clsRollen
                 End If
 
 
+
+                ' jetzt alle wieder rausschmeissen, die in excluded Names drin sind 
                 If Not IsNothing(excludedNames) Then
                     ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
                     For Each exclName As String In excludedNames
@@ -1093,6 +1152,8 @@ Public Class clsRollen
 
                     Next
                 End If
+
+
             End If
 
 
@@ -1117,7 +1178,8 @@ Public Class clsRollen
     ''' <remarks></remarks>
     Public ReadOnly Property getSubRoleIDsOf(ByVal roleName As String,
                                                Optional ByVal type As Integer = PTcbr.all,
-                                               Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of Integer, Double)
+                                               Optional ByVal excludedNames As Collection = Nothing,
+                                               Optional includingVirtualChilds As Boolean = False) As SortedList(Of Integer, Double)
 
         Get
 
@@ -1211,10 +1273,27 @@ Public Class clsRollen
                 ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
 
                 If type = PTcbr.all Then
-                    ' nichts tun - realCollections enthält schon alles 
+                    ' nichts tun - realCollections enthält schon alles - aber ... 
+                    ' jetzt müssen die virtuellen Kinden noch ergänzt werden 
+                    ' das sind die Teams, deren Team-Mitglieder alle unterhalb der angegebenen Rolle liegen
+
+                    If includingVirtualChilds Then
+                        Dim virtualChildIds() As Integer = getVirtualChildIDs(initialRole.UID, inclSubRoles:=True)
+                        If Not IsNothing(virtualChildIds) Then
+                            If virtualChildIds.Count > 0 Then
+                                For kx As Integer = 0 To virtualChildIds.Count - 1
+                                    If Not realCollection.ContainsKey(virtualChildIds(kx)) Then
+                                        realCollection.Add(virtualChildIds(kx), 1.0)
+                                    End If
+                                Next
+                            End If
+                        End If
+                    End If
+
 
                 ElseIf type = PTcbr.placeholders Then
                     realCollection = sammelRollenCollection
+
 
                 ElseIf type = PTcbr.realRoles Then
                     For Each cRKvp As KeyValuePair(Of Integer, Double) In sammelRollenCollection
@@ -1583,7 +1662,10 @@ Public Class clsRollen
         Dim currentRole As clsRollenDefinition
         Dim hparent As New clsRollenDefinition
 
-        'For i = 1 To _allRollen.Count
+        ' zurücksetzen ... wenn der Portfolio Manager die Gruppen nicht angezeigt bekommen soll 
+        If _topLevelNodeIDs.Count > 0 Then
+            _topLevelNodeIDs = New List(Of Integer)
+        End If
 
         While (i <= _allRollen.Count)
 
@@ -1594,7 +1676,14 @@ Public Class clsRollen
             If IsNothing(parentRole) Then
                 If Not Me._topLevelNodeIDs.Contains(currentRole.UID) Then
                     ' aufnehmen als Top Level Node ...
-                    Me._topLevelNodeIDs.Add(currentRole.UID)
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If Not isParentOfAllTeams(currentRole.UID) Then
+                            Me._topLevelNodeIDs.Add(currentRole.UID)
+                        End If
+                    Else
+                        Me._topLevelNodeIDs.Add(currentRole.UID)
+                    End If
+
                 End If
             End If
 

@@ -35,7 +35,7 @@ Public Class clsCustomUserRole
 
             Case ptCustomUserRoles.OrgaAdmin
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M",
-                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M",
+                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1",
                                  "PTneu", "PT2G2B2",
                                  "PT2G2B4", "PTeditieren",
                                  "PTview",
@@ -79,7 +79,8 @@ Public Class clsCustomUserRole
     ''' </summary>
     ''' <param name="nameOrID"></param>
     ''' <returns></returns>
-    Public Function isAllowedToSee(ByVal nameOrID As String) As Boolean
+    Public Function isAllowedToSee(ByVal nameOrID As String,
+                                   Optional includingVirtualChilds As Boolean = False) As Boolean
         Dim isAllowed As Boolean = False
 
         If nameOrID = "" Then
@@ -99,9 +100,10 @@ Public Class clsCustomUserRole
                 If _customUserRole = ptCustomUserRoles.RessourceManager Then
                     Dim prntTeamID As Integer = -1
                     Dim parentRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(specifics, prntTeamID).UID
-                    isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID)
+                    isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID, includingVirtualChilds:=includingVirtualChilds)
 
-                    ' mit dem Folgenden wird sichergestellt, dass ein Ressourcen-Manager , z.B KB1, auch eine Person von KB1 in seiner Eigenschaft als Team-Member sehen kann  
+                    ' mit dem Folgenden wird sichergestellt, dass ein Ressourcen-Manager , z.B KB1, auch eine Person von KB1 in seiner Eigenschaft als Team-Member sehen kann
+                    ' nicht includingVirtualChilds, weil das eine PErson betrifft ..
                     If Not isAllowed And teamID > 0 Then
                         Dim roleNameIDBasic As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
                         isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameIDBasic, parentRoleID)

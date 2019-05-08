@@ -28312,12 +28312,12 @@ Public Module Projekte
         ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
         Dim resultCollection As New Collection
         Dim tmpRListe As New SortedList(Of String, String)
-
+        Dim includingVirtualChilds As Boolean = False
 
         'Dim onlyConsiderTeamMembers As Boolean = False
-        'If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-        '    onlyConsiderTeamMembers = RoleDefinitions.isParentOfTeams(myCustomUserRole.specifics)
-        'End If
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            includingVirtualChilds = True
+        End If
 
         Dim sRoles As New Collection
 
@@ -28340,7 +28340,7 @@ Public Module Projekte
 
             For Each tmpRNameID As String In sRoles
 
-                If myCustomUserRole.isAllowedToSee(tmpRNameID) Then
+                If myCustomUserRole.isAllowedToSee(tmpRNameID, includingVirtualChilds:=includingVirtualChilds) Then
                     If Not tmpRListe.ContainsKey(tmpRNameID) Then
                         tmpRListe.Add(tmpRNameID, tmpRNameID)
                     End If
