@@ -1806,11 +1806,11 @@ Public Class Request
 
         Try
             ' alle vp des aktuellen Users und aktuellen vc holen
-            If VRScache.VPsN.Count > 0 Then
-                vplist = VRScache.VPsN
-            Else
-                vplist = GETallVP(aktVCid, err, ptPRPFType.all)
+            If VRScache.VPsN.Count <= 0 Then
+                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
             End If
+
+            vplist = VRScache.VPsN
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
 
@@ -4960,6 +4960,7 @@ Public Class Request
                 Dim anzLock As Integer = webVPLockantwort.lock.Count
                 If anzLock = 0 Then
                     VRScache.VPsId(vpid).lock.Clear()
+                    VRScache.VPsN(pname).lock.Clear()
                 Else
                     VRScache.VPsId(vpid).lock = webVPLockantwort.lock
                     VRScache.VPsN(pname).lock = webVPLockantwort.lock
