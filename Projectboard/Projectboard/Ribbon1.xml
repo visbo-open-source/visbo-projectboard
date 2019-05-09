@@ -454,27 +454,32 @@
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTeinstG1" >
           <!--label="Report Sprache"-->
-          <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
-          <!--label="Report Sprache"-->
-          <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
-          <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
-          <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
-          <!--<button id="PTTestWriteProtect" label="cancel Write Protections" onAction ="PTTestWriteProtect"/>-->
-          <!--<button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />-->
+          <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>       
         </group>
       </tab>
+       <!--label="VISBO Testfunktionen"-->
+       <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+         <group id ="PTTestG1" >
+           <!--label="Report Sprache"-->
+           <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
+           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
+           <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+           <button id="PTTestWriteProtect" label="cancel Write Protections" onAction ="PTTestWriteProtect"/>
+           <!--<button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />-->
+         </group>
+       </tab>
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
         </group>
       </tab>
       <!--label="WEBServer-Funktionen"-->
-      <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
           <button id="_VCSetting" label="VCSettingTest" onAction ="PTWebVCSettingTest"/>
         </group>
-      </tab>
+      </tab>-->
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">

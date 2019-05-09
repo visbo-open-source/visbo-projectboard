@@ -3141,6 +3141,12 @@ Imports System.Web
                 Else
                     tmpLabel = "Help"
                 End If
+            Case "PTTestfunktionen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Testfuntionen"
+                Else
+                    tmpLabel = "VISBO Testings"
+                End If
             Case "PTWebServer"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "WebServer"
