@@ -5955,7 +5955,7 @@ Public Module awinGeneralModules
                                        ixZeitraum, ix, anzLoops)
 
                     If isRole Then
-                        If RoleDefinitions.containsNameID(rcNameID) Then
+                        If RoleDefinitions.containsNameOrID(rcNameID) Then
                             Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
 
                             If Not IsNothing(tmpRole) Then
