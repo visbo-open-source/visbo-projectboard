@@ -459,6 +459,7 @@
           <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
           <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+          <!--<button id="PTTestWriteProtect" label="cancel Write Protections" onAction ="PTTestWriteProtect"/>-->
           <!--<button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />-->
         </group>
       </tab>
@@ -468,12 +469,12 @@
         </group>
       </tab>
       <!--label="WEBServer-Funktionen"-->
-      <!--<tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
           <button id="_VCSetting" label="VCSettingTest" onAction ="PTWebVCSettingTest"/>
-         </group>
-      </tab>-->
+        </group>
+      </tab>
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">

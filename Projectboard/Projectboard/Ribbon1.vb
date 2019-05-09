@@ -12123,8 +12123,12 @@ Imports System.Web
         Call projektTafelInit()
         enableOnUpdate = False
         appInstance.EnableEvents = True
-
-        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err)
+        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
+            If awinSettings.visboDebug Then
+                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+            End If
+        End If
+        'Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err)
 
         enableOnUpdate = True
 
