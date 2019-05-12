@@ -330,6 +330,8 @@ Public Class clsProjektWeb
             If Not IsNothing(vp) Then
                 .projectType = vp.vpType
                 .kundenNummer = vp.kundennummer
+                ' tk 11.5.19 
+                .vpID = vp._id
             End If
 
             ' ur:04.12.2018: ergänzt

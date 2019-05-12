@@ -26,6 +26,21 @@
     ' 2: custom Liste
     ' 3: BU, ProjektStart, Name
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+
+    ' tk ergänzt am 11.5.19 
+    Private _vpfID As String
+    Public Property vpfID As String
+        Get
+            vpfID = _vpfID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _vpfID = value
+                End If
+            End If
+        End Set
+    End Property
     Private _sortType As Integer
 
 
@@ -1489,6 +1504,9 @@
         _lastCustomList = Nothing
         _sortType = skey
 
+        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        _vpfID = Nothing
+
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
     End Sub
@@ -1509,6 +1527,9 @@
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = -1
+
+        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        _vpfID = Nothing
 
         Me.constellationName = cName
 
