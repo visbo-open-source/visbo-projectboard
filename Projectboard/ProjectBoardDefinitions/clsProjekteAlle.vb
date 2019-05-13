@@ -42,6 +42,32 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt zurück, ob die kdNr bereits in einem der Projekte von der KlassenInstanz clsProjekteAlle enthalten ist ...
+    ''' </summary>
+    ''' <param name="kdNr"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsPNr(ByVal kdNr As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+
+            If Not IsNothing(kdNr) Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                    If Not IsNothing(kvp.Value.kundenNummer) Then
+                        If kvp.Value.kundenNummer = kdNr Then
+                            tmpResult = True
+                            Exit For
+                        End If
+                    End If
+
+                Next
+            End If
+
+            containsPNr = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt true zurück wenn irgendein Summary Projekt in der Liste enthalten ist 
     ''' </summary>
     ''' <returns></returns>

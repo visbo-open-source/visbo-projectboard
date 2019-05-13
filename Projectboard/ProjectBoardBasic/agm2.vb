@@ -11616,7 +11616,7 @@ Public Module agm2
 
                 If Not IsNothing(dateiName) Then
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") Then
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
 
                         errMsg = "Reading external Capacities " & dateiName
                         Call logfileSchreiben(errMsg, "", anzFehler)
@@ -11786,7 +11786,8 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        kapaFolder = awinPath & projektRessOrdner
+        'kapaFolder = awinPath & projektRessOrdner
+        kapaFolder = importOrdnerNames(PTImpExp.Kapas)
 
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
@@ -17558,131 +17559,20 @@ Public Module agm2
                 ' jetzt die CurrentOrga definieren
                 Dim currentOrga As New clsOrganisation
 
-                If Not awinSettings.readCostRolesFromDB Then
+                ' jetzt werden die ORganisation ausgelesen 
+                ' wenn es keine Organisation gibt , d
 
-                    ' tlk 15.2.19 Orga soll nur noch aus Import Orga geholt werden .. 
-                    'Dim outputCollection As New Collection
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    '' Auslesen der Rollen Definitionen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
-
-                    'If awinSettings.visboDebug Then
-                    '    Call MsgBox("readRoleDefinitions")
-                    'End If
-
-                    '' Auslesen der Kosten Definitionen 
-                    'Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
-
-
-                    '' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
-
-                    'If RoleDefinitions.Count > 0 Then
-                    '    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    '    ' jetzt kommt der Validation-Check 
-
-                    '    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
-                    '    Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
-
-                    '    If outputCollection.Count > 0 Then
-                    '        Call showOutPut(outputCollection, "Organisations-Definition", "")
-                    '    End If
-
-                    'End If
-
-                    '' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
-                    'RoleDefinitions.buildTopNodes()
-                    'With currentOrga
-                    '    .validFrom = StartofCalendar
-                    '    .allRoles = RoleDefinitions
-                    '    .allCosts = CostDefinitions
-                    'End With
-
-                Else
-
-                    ' 
-                    ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' das Organisations-Setting auslesen  mit heutigem Datum ...
-
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                    If Not IsNothing(currentOrga) Then
-                        CostDefinitions = currentOrga.allCosts
-                        RoleDefinitions = currentOrga.allRoles
-                    Else
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("You don't have any organization in your system!")
-                        Else
-                            Call MsgBox("Es existiert keine Organisation im System!")
-                        End If
-                    End If
-
-                    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-                End If
-
-                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                ' 
-                If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
+                If currentOrga.count > 0 Then
 
                     If currentOrga.count > 0 Then
                         validOrganisations.addOrga(currentOrga)
                     End If
 
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
 
-                    ' Auslesen der Orga, die vor der currentOrga gültig war
-                    ' also mit validFrom aus currentOrga lesen - 1 Tag
-
-                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
-                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
-
-                    'If Not IsNothing(beforeOrga) Then
-
-                    '    If beforeOrga.count > 0 Then
-                    '        validOrganisations.addOrga(beforeOrga)
-                    '    End If
-
-                    'End If
-
-
-                    ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
-                    ' also mit validFrom aus currentOrga lesen +  1 Tag
-
-                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
-
-                    ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
-                    'Dim nextOrga As clsOrganisation =
-                    'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
-
-
-                    'If Not IsNothing(nextOrga) Then
-
-                    '    If nextOrga.count > 0 Then
-                    '        validOrganisations.addOrga(nextOrga)
-                    '    End If
-
-                    'End If
-
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
-                    End If
-
-                End If
-
-                ' Lesen der Custom Field Definitions
-
-                If Not awinSettings.readCostRolesFromDB Then
-
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-                Else
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
@@ -17706,7 +17596,27 @@ Public Module agm2
 
                     End Try
 
+
+                Else
+                    awinSettings.readCostRolesFromDB = False
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You don't have any organization in your system!")
+                    Else
+                        Call MsgBox("Es existiert keine Organisation im System!")
+                    End If
+
+
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
                 End If
+
+
+
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -17719,14 +17629,6 @@ Public Module agm2
                     End If
 
                 End If
-
-
-                '' auslesen der anderen Informationen 
-                'Call readOtherDefinitions(wsName4)
-
-                'If awinSettings.visboDebug Then
-                '    Call MsgBox("readOtherDefinitions")
-                'End If
 
 
                 If special = "ProjectBoard" Then
@@ -17841,45 +17743,11 @@ Public Module agm2
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
-                    ' tk 12.2.19 im awinsettypen sollen die Kapas überhaupt nicht mehr gelesen werden ... 
-                    ' das Ganze soll nur noch über Menupunkt Import-Kapazitäten passieren ...
-                    'Dim meldungen As New Collection
-                    'If Not awinSettings.readCostRolesFromDB Then
-
-                    '    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                    '    Call readRessourcenDetails(meldungen)
-
-                    '    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                    '    Call readRessourcenDetails2(meldungen)
-
-                    '    If meldungen.Count > 0 Then
-                    '        Call showOutPut(meldungen, "Errors Reading Capacities", "")
-                    '        Call logfileSchreiben(meldungen)
-                    '    End If
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    'Else
-
-                    '    '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
-
-                    '    '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                    '    '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    '    If awinSettings.visboDebug Then
-                    '    '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
-                    '    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                    '    '    End If
-
-                    'End If
-
                     '
                     ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
                     If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
                         Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
                     End If
 
@@ -17926,12 +17794,27 @@ Public Module agm2
 
                     '' jetzt werden die Rollen besetzt 
                     If awinSettings.readCostRolesFromDB Then
-                        Call setUserRoles(meldungen)
+                        Try
+                            Call setUserRoles(meldungen)
+                        Catch ex As Exception
+                            If meldungen.Count > 0 Then
+                                Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                Call logfileSchreiben(meldungen)
+                            End If
 
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                            Call myCustomUserRole.setNonAllowances()
+                        End Try
+
+
+
                     Else
                         myCustomUserRole = New clsCustomUserRole
 
@@ -17944,10 +17827,12 @@ Public Module agm2
                         Call myCustomUserRole.setNonAllowances()
                     End If
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                        ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
-                        Call RoleDefinitions.buildTopNodes()
-                    End If
+                    ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
+                    ' ohne Abhängigkeit von Rolle Portfolio Manager , das brauchen ja alle Rollen 
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    '    ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
+                    '    Call RoleDefinitions.buildTopNodes()
+                    'End If
 
 
                     ' Logfile wird geschlossen
@@ -18033,7 +17918,8 @@ Public Module agm2
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
             If encryptedUserRole.Length > 0 Then
-                ' bestimme die UserRole 
+                ' bestimme die UserRole., wenn es aus SmartInfo heraus aufgerufen wird;
+                ' denn in der Slide steht ja drin, mit welcher User Role das gemacht wurde 
                 Dim chkUserRole As New clsCustomUserRole
                 Call chkUserRole.decrypt(encryptedUserRole)
 
@@ -20074,16 +19960,16 @@ Public Module agm2
 
     End Sub
 
-    ''' <summary>
-    ''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub readRessourcenDetails(ByRef meldungen As Collection)
+    '''' <summary>
+    '''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub readRessourcenDetails(ByRef meldungen As Collection)
 
-        ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
-        Call readMonthlyModifierKapas(meldungen)
+    '    ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
+    '    Call readMonthlyModifierKapas(meldungen)
 
-    End Sub
+    'End Sub
     ''' <summary>
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>

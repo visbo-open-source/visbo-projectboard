@@ -1881,7 +1881,7 @@ Public Module awinGeneralModules
                         ' dann soll das Projekt angelegt werden ...
                         Dim startDate As Date = CDate("01.01.2018")
                         Dim endDate As Date = CDate("31.12.2018")
-                        oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "created")
+                        oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "", kdNr:=projektKDNr)
 
                         If Not IsNothing(oldProj) Then
                             oldProj.kundenNummer = projektKDNr
