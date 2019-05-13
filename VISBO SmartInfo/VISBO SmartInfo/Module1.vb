@@ -1151,11 +1151,18 @@ Module Module1
                         End If
                         ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
 
+                        Dim projType As ptPRPFType = ptPRPFType.project
+
+                        If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                            projType = CType(tmpShape.Tags.Item("PRPF"), ptPRPFType)
+                        Else
+
+                        End If
                         If pvName <> "" Then
                             If smartSlideLists.containsProject(pvName) Then
                                 ' nichts tun, ist schon drin ..
                             Else
-                                smartSlideLists.addProject(pvName)
+                                smartSlideLists.addProject(pvName, projType)
                             End If
                         End If
 
