@@ -126,7 +126,8 @@ Public Class clsPPTTimeMachine
                 Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
                 If IsNothing(myHistory) Then
-                    ' von Cache oder Datenbank holen 
+
+                    ' ProjektHistorie von Cache oder Datenbank holen 
                     Dim pName As String = getPnameFromKey(pvName)
                     Dim vName As String = getVariantnameFromKey(pvName)
 

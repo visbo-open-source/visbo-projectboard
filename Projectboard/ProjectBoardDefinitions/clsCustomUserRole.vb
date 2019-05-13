@@ -41,7 +41,7 @@ Public Class clsCustomUserRole
                                  "PTview",
                                  "PTfilter", "PTsort", "PT0G1s9",
                                  "PTOPTB1", "PTreport",
-                                 "PTeinst", "PThelp", "PTWebServer"}
+                                 "PTeinst", "PThelp", "PTWebServer", "PTTestfunktionen"}
 
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
@@ -49,12 +49,12 @@ Public Class clsCustomUserRole
                 _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G1M0B2", "PTeditoa", "PTfilter",
                                  "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
-                                 "PTview", "PTWebServer", "PThelp"}
+                                 "PTview", "PTWebServer", "PThelp", "PTTestfunktionen"}
 
             Case ptCustomUserRoles.ProjektLeitung
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1", "PTeditoa",
                                  "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PTsort", "PThelp",
-                                 "PTWebServer"}
+                                 "PTWebServer", "PTTestfunktionen"}
 
 
             Case ptCustomUserRoles.RessourceManager
@@ -66,7 +66,7 @@ Public Class clsCustomUserRole
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
                                  "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
-                                 "PTWebServer"}
+                                 "PTWebServer", "PTTestfunktionen"}
 
             Case Else
                 _nonAllowance = {""}
