@@ -19,6 +19,44 @@ Public Class clsRollen
     ' im key ist die ID der Organisationseinheit, in der Liste sind die IDs der Teams, die virtuell zu dieser Orga-Einheit gehören 
     Private _orgaTeamChilds As SortedList(Of Integer, List(Of Integer))
 
+    ''' <summary>
+    ''' wird aktuell nur in ImportMSProject benötigt .. wird gebraucht, um eine unbekannte Rolel in RoleDefinitions aufzunehmen ..
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getFreeRoleID() As Integer
+        Get
+            Dim tmpResult As Integer = -1
+            Dim last As Integer = -1
+            Dim current As Integer = -1
+
+            If _allRollen.Count > 0 Then
+                For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+                    If last = -1 Then
+                        ' nichts tun 
+                    Else
+                        If kvp.Key > last + 1 Then
+                            tmpResult = last + 1
+                        End If
+                    End If
+
+                    last = kvp.Key
+
+                Next
+
+                ' wenn immer noch nix gefunden ...
+                If tmpResult = -1 Then
+                    tmpResult = _allRollen.Last.Key + 1
+                End If
+
+            Else
+                tmpResult = 1
+            End If
+
+            getFreeRoleID = tmpResult
+
+        End Get
+    End Property
+
     Public Sub Add(roledef As clsRollenDefinition)
 
         ' Änderung tk: umgestellt auf 

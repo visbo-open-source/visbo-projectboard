@@ -6522,6 +6522,10 @@ Imports System.Web
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
+
+            Dim outPutCollection As New Collection
+            Dim outputLine As String = ""
+
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
@@ -6572,14 +6576,35 @@ Imports System.Web
 
             Next i
 
+            If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
+
+                For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
+                    outputLine = "unknown ID / Role: " & kvp.Value.UID & " / " & kvp.Value.name
+                    outPutCollection.Add(outputLine)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
+                    outputLine = "unknown ID / Cost: " & kvp.Value.UID & " / " & kvp.Value.name
+                    outPutCollection.Add(outputLine)
+                Next
+
+                Call logfileOpen()
+                Call logfileSchreiben(outPutCollection)
+                Call logfileSchliessen()
+
+                Call showOutPut(outPutCollection, "Unbekannte Elemente:", "bitte in Organisations-Datei korrigieren")
+
+            Else
+
+            End If
+
             '' Cursor auf Default setzen
             Cursor.Current = Cursors.Default
 
 
-            ' '' ''End If
+            ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True)
             Catch ex As Exception
 

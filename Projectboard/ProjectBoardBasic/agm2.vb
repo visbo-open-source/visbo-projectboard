@@ -4774,70 +4774,78 @@ Public Module agm2
                                                 Try
 
                                                     Dim k As Integer = 0
+                                                    Dim knownCost As Boolean = False
 
                                                     If CostDefinitions.containsName(ass.ResourceName) Then
                                                         k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        knownCost = True
                                                     Else
                                                         ' Kostenart existiert noch nicht
                                                         ' wird hier neu aufgenommen
                                                         Dim newCostDef As New clsKostenartDefinition
                                                         newCostDef.name = ass.ResourceName
                                                         newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
-                                                        newCostDef.UID = CostDefinitions.Count + 1
+
+                                                        newCostDef.UID = missingCostDefinitions.Count + 1
                                                         If Not missingCostDefinitions.containsName(newCostDef.name) Then
                                                             missingCostDefinitions.Add(newCostDef)
                                                         End If
 
-                                                        CostDefinitions.Add(newCostDef)
+                                                        ' darf nicht übernommen werden , muss erst korrigiert werden 
+                                                        'CostDefinitions.Add(newCostDef)
 
                                                         ' Änderung tk: muss auf costdefinitions gesetzt werden 
                                                         ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                        k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        'k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                                     End If
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    Dim cost As Double = CType(ass.Cost, Double)
+                                                    If knownCost Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        Dim cost As Double = CType(ass.Cost, Double)
 
-                                                    Dim startdate As Date = CDate(msTask.Start)
-                                                    Dim endedate As Date = CDate(msTask.Finish)
+                                                        Dim startdate As Date = CDate(msTask.Start)
+                                                        Dim endedate As Date = CDate(msTask.Finish)
 
-                                                    Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+                                                        Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                        Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                        Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                                    If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                        anzdays = 1
-                                                        anzmonth = 1
+                                                        If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                            anzdays = 1
+                                                            anzmonth = 1
+                                                        End If
+                                                        If anzdays > 0 And anzmonth = 0 Then
+                                                            anzmonth = 1
+                                                        End If
+
+
+                                                        ReDim Xwerte(anzmonth - 1)
+
+                                                        Dim m As Integer
+                                                        For m = 1 To anzmonth
+
+                                                            Try
+                                                                Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                            Catch ex As Exception
+                                                                Xwerte(m - 1) = 0.0
+                                                            End Try
+
+                                                        Next m
+
+                                                        ccost = New clsKostenart(anzmonth - 1)
+
+                                                        With ccost
+                                                            .KostenTyp = k
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+
+                                                        With cphase
+                                                            .AddCost(ccost)
+                                                        End With
                                                     End If
-                                                    If anzdays > 0 And anzmonth = 0 Then
-                                                        anzmonth = 1
-                                                    End If
 
 
-                                                    ReDim Xwerte(anzmonth - 1)
-
-                                                    Dim m As Integer
-                                                    For m = 1 To anzmonth
-
-                                                        Try
-                                                            Xwerte(m - 1) = CType(cost / anzmonth, Double)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - 1) = 0.0
-                                                        End Try
-
-                                                    Next m
-
-                                                    ccost = New clsKostenart(anzmonth - 1)
-
-                                                    With ccost
-                                                        .KostenTyp = k
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-
-                                                    With cphase
-                                                        .AddCost(ccost)
-                                                    End With
                                                 Catch ex As Exception
                                                     '
                                                     ' handelt es sich um die Kostenart Definition?
@@ -4849,18 +4857,19 @@ Public Module agm2
 
                                                 Try
                                                     Dim r As Integer = 0
-
+                                                    Dim knownRole As Boolean = False
 
                                                     If RoleDefinitions.containsName(ass.ResourceName) Then
                                                         r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        knownRole = True
                                                     Else
-                                                        ' Rolle existiert noch nicht
-                                                        ' wird hier neu aufgenommen
+                                                        ' Rolle existiert noch nicht, das kann jetzt nicht so einfach in der RoleDefinitions aufgenommen werden ...
+                                                        ' das muss an der aufrufenden Stelle in einer Meldung ausgegeben werden 
 
                                                         Dim newRoleDef As New clsRollenDefinition
                                                         newRoleDef.name = ass.ResourceName
                                                         newRoleDef.farbe = RGB(120, 120, 120)
-                                                        newRoleDef.defaultKapa = 200000
+                                                        newRoleDef.defaultKapa = 18
 
                                                         ' OvertimeRate in Tagessatz umrechnen
                                                         Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
@@ -4872,93 +4881,58 @@ Public Module agm2
                                                         hstdstr = Split(hstdstr(0), "€", -1)
                                                         newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
-                                                        newRoleDef.UID = RoleDefinitions.Count + 1
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
-                                                            missingRoleDefinitions.Add(newRoleDef)
+                                                            Try
+                                                                newRoleDef.UID = missingRoleDefinitions.getFreeRoleID
+                                                                missingRoleDefinitions.Add(newRoleDef)
+                                                            Catch ex As Exception
+                                                                Dim a As Integer = 1
+                                                            End Try
+
                                                         End If
 
-                                                        RoleDefinitions.Add(newRoleDef)
-
-
-                                                        ' Änderung tk: das muss von roledefinitions geholt werden ...
-                                                        ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                        r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        ' tk das darf auf keinen Fall mehr gemacht werden, weil andernfalls Ressourcen im Projekt sind mit IDs, die nicht in der Organisation sind. 
+                                                        '
+                                                        'RoleDefinitions.Add(newRoleDef)
 
                                                     End If
 
+                                                    If knownRole Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        'Dim duration As Double = CType(ass.Duration, Double)
+                                                        Dim unit As Double = CType(ass.Units, Double)
+                                                        If ass.BudgetWork <> "" Then
+                                                            Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        End If
 
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    'Dim duration As Double = CType(ass.Duration, Double)
-                                                    Dim unit As Double = CType(ass.Units, Double)
-                                                    If ass.BudgetWork <> "" Then
-                                                        Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        Dim startdate As Date = CDate(msTask.Start).Date
+                                                        Dim endedate As Date = CDate(msTask.Finish).Date
+
+                                                        ' tk Anpassung ...
+                                                        Dim oldWerte(0) As Double
+                                                        Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                                        oldWerte(0) = work
+                                                        ReDim Xwerte(anzmonth - 1)
+                                                        Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+
+                                                        ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
+                                                        For m As Integer = 1 To anzmonth
+                                                            Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                                        Next
+
+                                                        crole = New clsRolle(anzmonth - 1)
+                                                        With crole
+                                                            .uid = r
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+                                                        With cphase
+                                                            .addRole(crole)
+                                                        End With
                                                     End If
 
 
-                                                    Dim startdate As Date = CDate(msTask.Start).Date
-                                                    Dim endedate As Date = CDate(msTask.Finish).Date
-
-                                                    ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
-                                                    ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
-                                                    ' die Berechnung Datediff ergibt aber nur 1 Monat '
-                                                    'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                                    'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                    '    anzdays = 1
-                                                    '    anzmonth = 1
-                                                    'End If
-                                                    'If anzdays > 0 And anzmonth = 0 Then
-                                                    '    anzmonth = 1
-                                                    'End If
-
-
-                                                    'ReDim Xwerte(anzmonth - 1)
-                                                    ' Ende Auskommentierung tk  
-
-                                                    ' tk Anpassung ...
-                                                    Dim oldWerte(0) As Double
-                                                    Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-                                                    oldWerte(0) = work
-                                                    ReDim Xwerte(anzmonth - 1)
-                                                    Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
-
-                                                    ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
-                                                    For m As Integer = 1 To anzmonth
-                                                        Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
-                                                    Next
-
-                                                    ' Ende tk Anpassung
-
-
-                                                    ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
-                                                    'For m As Integer = 1 To anzmonth
-
-                                                    '    Try
-                                                    '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
-                                                    '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
-
-                                                    '    Catch ex As Exception
-                                                    '        Xwerte(m - 1) = 0.0
-                                                    '    End Try
-
-                                                    'Next m
-
-                                                    ' Check , um Unterschiede in der Summe herausfinden zu können
-                                                    ' die waren immer 0 ... 
-                                                    'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
-
-                                                    crole = New clsRolle(anzmonth - 1)
-                                                    With crole
-                                                        .uid = r
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-                                                    With cphase
-                                                        .addRole(crole)
-                                                    End With
                                                 Catch ex As Exception
 
                                                 End Try
@@ -5315,7 +5289,8 @@ Public Module agm2
                 Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
 
 
-
+                ' ein MS Project PRojekt wird grundsätzich als <beauftragt> eingestuft ... 
+                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                 Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
 
@@ -5440,6 +5415,7 @@ Public Module agm2
         Catch ex As Exception
             Call MsgBox(ex)
         End Try
+
 
         enableOnUpdate = True
 
@@ -17141,14 +17117,17 @@ Public Module agm2
 
             End If
 
-            ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
-            ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
-            Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
 
             If awinSettings.awinPath = "" Then
+                ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
+                ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
+                Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+                Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
                 awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
                 If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                     ' alles ok
