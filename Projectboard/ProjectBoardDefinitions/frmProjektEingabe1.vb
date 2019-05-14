@@ -116,12 +116,20 @@ Public Class frmProjektEingabe1
             .DateTimeStart.Value = .calcProjektStart
             .DateTimeEnde.Value = .calcProjektEnde
 
-
-            .lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+            If awinSettings.englishLanguage Then
+                .lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                     calcProjektEnde.ToShortDateString
 
-            .lbl_Referenz1.Text = "Referenz"
-            .lbl_Referenz2.Text = "Referenz 2"
+                .lbl_Referenz1.Text = "Referenz"
+                .lbl_Referenz2.Text = "Referenz 2"
+            Else
+                .lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                    calcProjektEnde.ToShortDateString
+
+                .lbl_Referenz1.Text = "Referenz"
+                .lbl_Referenz2.Text = "Referenz 2"
+            End If
+
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .DateTimeEnde.Visible = False
@@ -316,8 +324,13 @@ Public Class frmProjektEingabe1
 
         End If
 
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
-                                    calcProjektEnde.ToShortDateString
+        If awinSettings.englishLanguage Then
+            lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        Else
+            lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        End If
 
         Dim hvalue As Integer = 0
         Try
@@ -364,8 +377,14 @@ Public Class frmProjektEingabe1
                 End If
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+
         End If
 
 
@@ -400,8 +419,13 @@ Public Class frmProjektEingabe1
                 End If
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
         End If
 
 
@@ -448,7 +472,7 @@ Public Class frmProjektEingabe1
                 lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
             Else
-                lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
             End If
 
@@ -495,8 +519,13 @@ Public Class frmProjektEingabe1
                 DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
 
         End If
 
@@ -524,8 +553,13 @@ Public Class frmProjektEingabe1
 
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " &
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
 
         End If
 
@@ -592,11 +626,11 @@ Public Class frmProjektEingabe1
         If vproj.getSummeKosten > 0 Then
             Me.lblProfitField.Visible = True
             Me.profitAskedFor.Visible = True
-            Me.profitAskedFor.Text = "0.0"
+            Me.profitAskedFor.Text = "0"
         Else
             Me.lblProfitField.Visible = False
             Me.profitAskedFor.Visible = False
-            Me.profitAskedFor.Text = "0.0"
+            Me.profitAskedFor.Text = "0"
         End If
 
         If IsNothing(vproj) Then

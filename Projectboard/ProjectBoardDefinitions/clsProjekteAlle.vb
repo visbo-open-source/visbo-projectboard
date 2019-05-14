@@ -51,16 +51,20 @@ Public Class clsProjekteAlle
             Dim tmpResult As Boolean = False
 
             If Not IsNothing(kdNr) Then
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                    If Not IsNothing(kvp.Value.kundenNummer) Then
-                        If kvp.Value.kundenNummer = kdNr Then
-                            tmpResult = True
-                            Exit For
+                If kdNr <> "" Then
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                        If Not IsNothing(kvp.Value.kundenNummer) Then
+                            If kvp.Value.kundenNummer = kdNr Then
+                                tmpResult = True
+                                Exit For
+                            End If
                         End If
-                    End If
 
-                Next
+                    Next
+                End If
+
             End If
 
             containsPNr = tmpResult

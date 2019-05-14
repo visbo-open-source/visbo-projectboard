@@ -289,6 +289,7 @@ Imports System.Web
 
         Call projektTafelInit()
 
+
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
         If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
@@ -357,7 +358,8 @@ Imports System.Web
 
             Dim constellationsToDo As New clsConstellations
 
-
+            ' WaitCursor einschalten ...
+            Cursor.Current = Cursors.WaitCursor
 
             If clearBoard Then
                 'currentSessionConstellation.Liste.Clear()
@@ -472,6 +474,8 @@ Imports System.Web
 
             appInstance.ScreenUpdating = True
 
+            Cursor.Current = Cursors.Default
+
         End If
 
         enableOnUpdate = True
@@ -533,7 +537,7 @@ Imports System.Web
                 Call MsgBox("keine Projekte zu speichern ...")
             End If
         Catch ex As Exception
-
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
             Call MsgBox(ex.Message)
         End Try
 
@@ -6579,12 +6583,22 @@ Imports System.Web
             If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
 
                 For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
-                    outputLine = "unknown ID / Role: " & kvp.Value.UID & " / " & kvp.Value.name
+                    If awinSettings.englishLanguage Then
+                        outputLine = "unknown Role: " & kvp.Value.name
+                    Else
+                        outputLine = "unbekannte Rolle: " & kvp.Value.name
+                    End If
+
                     outPutCollection.Add(outputLine)
                 Next
 
                 For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
-                    outputLine = "unknown ID / Cost: " & kvp.Value.UID & " / " & kvp.Value.name
+                    If awinSettings.englishLanguage Then
+                        outputLine = "unknown Cost: " & kvp.Value.name
+                    Else
+                        outputLine = "unbekannte Kostenart: " & kvp.Value.name
+                    End If
+
                     outPutCollection.Add(outputLine)
                 Next
 
@@ -6592,7 +6606,12 @@ Imports System.Web
                 Call logfileSchreiben(outPutCollection)
                 Call logfileSchliessen()
 
-                Call showOutPut(outPutCollection, "Unbekannte Elemente:", "bitte in Organisations-Datei korrigieren")
+                If awinSettings.englishLanguage Then
+                    Call showOutPut(outPutCollection, "unknown Elements:", "please modify organisation-file or input ...")
+                Else
+                    Call showOutPut(outPutCollection, "Unbekannte Elemente:", "bitte in Organisations-Datei korrigieren")
+                End If
+
 
             Else
 
@@ -6607,8 +6626,12 @@ Imports System.Web
             Try
                 Call importProjekteEintragen(importDate, True)
             Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
 
-                Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
 
 

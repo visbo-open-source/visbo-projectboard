@@ -7493,9 +7493,11 @@ Public Module awinGeneralModules
 
                             If storeNeeded Then
 
-                                If kdNrToStore And standInDB.kundenNummer <> "" Then
-                                    outputline = "Kunden-Nummer wurde geändert: von " & standInDB.kundenNummer & " zu " & hproj.kundenNummer
-                                    outPutCollection.Add(outputline)
+                                If kdNrToStore Then
+                                    If Not IsNothing(standInDB) Then
+                                        outputline = "Kunden-Nummer wurde geändert: von " & standInDB.kundenNummer & " zu " & hproj.kundenNummer
+                                        outPutCollection.Add(outputline)
+                                    End If
                                 End If
                                 Dim mproj As clsProjekt = Nothing
 
