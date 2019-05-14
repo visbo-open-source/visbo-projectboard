@@ -635,6 +635,10 @@ Public Class Request
                                     result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err, attrToStore)
                                 End If
 
+                            Case 409 ' Conflict
+
+                                Call MsgBox(err.errorMsg)
+
                             Case Else ' all others
                                 Throw New ArgumentException(err.errorMsg)
                         End Select
@@ -1234,6 +1238,65 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
 
     End Function
+
+    ''' <summary>
+    ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren. In timestamp ist Datum/Uhrzeit dessen enthalten
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                                 ByRef timestamp As Date,
+                                                             ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
+        Dim result As clsConstellation = Nothing
+
+        Try
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                                                                                                             err, storedAtOrBefore)
+
+                    If Not IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                                                                                                             err, storedAtOrBefore)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = Nothing
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("retrieveProjectsOfOneConstellationFromDB: " & ex.Message)
+        End Try
+
+        retrieveFirstVersionOfOneConstellationFromDB = result
+
+    End Function
+
+
 
     ''' <summary>
     '''  Alle Portfolios(Constellations) aus der Datenbank holen

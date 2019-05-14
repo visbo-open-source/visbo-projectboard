@@ -47,8 +47,10 @@ Public Class clsPPTTimeMachine
 
         Dim defaultSettingNecessary As Boolean = True
 
+
         If smartSlideLists.countProjects > 0 Then
             ' es gibt Projekte , also anpassen 
+
 
             For i As Integer = 1 To smartSlideLists.countProjects
                 Dim pvName As String = smartSlideLists.getPVName(i)
@@ -80,6 +82,41 @@ Public Class clsPPTTimeMachine
         Else
             ' es muss nichts weiter getan werden, minmax Werte sind bereits zurückgesetzt 
         End If
+
+
+        If smartSlideLists.countPortfolios > 0 Then
+
+            ' es gibt Portfolios, also anpassen 
+
+            Dim err As New clsErrorCodeMsg
+            Dim minTS As Date = Date.Now
+
+            For i As Integer = 1 To smartSlideLists.countPortfolios
+
+
+                Dim pfName As String = smartSlideLists.getPfName(i)
+
+                Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName,
+                                                                                                                                        minTS, err,
+                                                                                                                                        Date.MinValue.AddDays(1))
+
+                If _minmaxTimeStamps(0) > minTS Then
+                    _minmaxTimeStamps(0) = minTS
+                End If
+
+
+                defaultSettingNecessary = False
+
+                '        End If
+
+                '    End If
+                'End If
+
+            Next
+        Else
+            ' es muss nichts weiter getan werden, minmax Werte sind bereits zurückgesetzt 
+        End If
+
 
         If defaultSettingNecessary Then
             _minmaxTimeStamps(0) = Date.Now.Date
@@ -222,6 +259,7 @@ Public Class clsPPTTimeMachine
 
         Dim jetzt As Date = Date.Now
 
+
         'Dim tmpTM As clsPPTTimeMachine = Nothing
         If _projectTimeStamps.Count > 0 Then
 
@@ -285,8 +323,10 @@ Public Class clsPPTTimeMachine
 
                 Case ptNavigationButtons.letzter
 
-                    tmpDate = _minmaxTimeStamps(1)
-
+                    'ur: 20190513: letzter Stand ist gleich Stand jetzt
+                    'tmpDate = _minmaxTimeStamps(1)
+                    tmpDate = jetzt
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
                 Case ptNavigationButtons.update
 
@@ -299,10 +339,8 @@ Public Class clsPPTTimeMachine
                         tmpDate = specDate
                     Else
                         If specDate > jetzt Then
-                            'tmpIndex = varPPTTM.timeStamps.Count - 1
                             tmpDate = jetzt
                         ElseIf specDate < _minmaxTimeStamps(0) Then
-                            'tmpIndex = 0
                             tmpDate = _minmaxTimeStamps(0)
                         End If
 

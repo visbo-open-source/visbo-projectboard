@@ -7683,7 +7683,7 @@ Public Module Projekte
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
         Dim bigtype As Integer = ptReportBigTypes.charts
-        Call addSmartPPTShapeInfo2(newPPTChart, hproj, ptPRPFType.project, qualifier, qualifier2,
+        Call addSmartPPTCompInfo(newPPTChart, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                                bigtype, DID)
 
 
@@ -8207,7 +8207,7 @@ Public Module Projekte
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
         Dim bigtype As Integer = ptReportBigTypes.charts
-        Call addSmartPPTShapeInfo2(newPPTChart, hproj, ptPRPFType.project, qualifier, qualifier2,
+        Call addSmartPPTCompInfo(newPPTChart, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                                bigtype, DID)
 
 
@@ -12473,7 +12473,7 @@ Public Module Projekte
                             Dim qualifier2 As String = pptShape.Tags.Item("Q2")
 
                             ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
-                            Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
+                            Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
 
                         End If
 

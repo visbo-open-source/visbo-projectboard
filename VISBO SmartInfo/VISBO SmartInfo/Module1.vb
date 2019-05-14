@@ -1132,41 +1132,66 @@ Module Module1
                     If tmpShape.Tags.Item("BID").Length > 0 And tmpShape.Tags.Item("DID").Length > 0 Then
 
                         ' handelt es sich um das Version Field Shape? 
-                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prStand)) Or tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfStand))) Then
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                            And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prStand)) Or tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfStand))) Then
                             importantShapes(ptImportantShapes.version) = tmpShape
                         End If
 
-                        'Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
-                        'Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
-                        'If Not ((bigID = ptReportBigTypes.components And detailID = ptReportComponents.prStand) _
-                        '        Or (bigID = ptReportBigTypes.components And detailID = ptReportComponents.pfStand)) Then
-                        '    thereIsNoVersionFieldOnSlide = False
-                        'End If
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                            And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
 
-                        Dim pvName As String = ""
-                        If tmpShape.Tags.Item("PNM").Length > 0 Then
-                            Dim pName As String = tmpShape.Tags.Item("PNM")
-                            Dim vName As String = tmpShape.Tags.Item("VNM")
-                            pvName = calcProjektKey(pName, vName)
-                        End If
-                        ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
+                            'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
 
-                        Dim projType As ptPRPFType = ptPRPFType.project
-
-                        If tmpShape.Tags.Item("PRPF").Length > 0 Then
-                            projType = CType(tmpShape.Tags.Item("PRPF"), ptPRPFType)
-                        Else
-
-                        End If
-                        If pvName <> "" Then
-                            If smartSlideLists.containsProject(pvName) Then
-                                ' nichts tun, ist schon drin ..
-                            Else
-                                smartSlideLists.addProject(pvName, projType)
+                            Dim pvName As String = ""
+                            If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                Dim pName As String = tmpShape.Tags.Item("PNM")
+                                Dim vName As String = tmpShape.Tags.Item("VNM")
+                                pvName = calcProjektKey(pName, vName)
                             End If
-                        End If
 
+                            If pvName <> "" Then
+                                If smartSlideLists.containsPortfolio(pvName) Then
+                                    ' nichts tun, ist schon drin ..
+                                Else
+                                    smartSlideLists.addPortfolio(pvName)
+                                End If
+                            End If
+
+                        Else
+                            'Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
+                            'Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
+                            'If Not ((bigID = ptReportBigTypes.components And detailID = ptReportComponents.prStand) _
+                            '        Or (bigID = ptReportBigTypes.components And detailID = ptReportComponents.pfStand)) Then
+                            '    thereIsNoVersionFieldOnSlide = False
+                            'End If
+
+                            Dim pvName As String = ""
+                            If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                Dim pName As String = tmpShape.Tags.Item("PNM")
+                                Dim vName As String = tmpShape.Tags.Item("VNM")
+                                pvName = calcProjektKey(pName, vName)
+                            End If
+                            ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
+
+                            Dim projType As ptPRPFType = ptPRPFType.project
+
+                            If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                                projType = CType(tmpShape.Tags.Item("PRPF"), ptPRPFType)
+                            Else
+
+                            End If
+                            If pvName <> "" Then
+                                If smartSlideLists.containsProject(pvName) Then
+                                    ' nichts tun, ist schon drin ..
+                                Else
+                                    smartSlideLists.addProject(pvName, projType)
+                                End If
+                            End If
+
+                        End If
                     End If
+
 
                     If tmpShape.Tags.Count > 0 Then
                         If isRelevantMSPHShape(tmpShape) Or isProjectCard(tmpShape) Then
@@ -1191,6 +1216,31 @@ Module Module1
                             If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
                                 tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                             End If
+
+                            'tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
+                            If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                                If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
+
+                                    Dim pfName As String = ""
+                                    If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                        Dim pName As String = tmpShape.Tags.Item("PNM")
+                                        Dim vName As String = tmpShape.Tags.Item("VNM")
+                                        'pvName = calcProjektKey(pName, vName)
+                                        pfName = pName
+                                    End If
+
+                                    If pfName <> "" Then
+                                        If smartSlideLists.containsPortfolio(pfName) Then
+                                            ' nichts tun, ist schon drin ..
+                                        Else
+                                            smartSlideLists.addPortfolio(pfName)
+                                        End If
+                                    End If
+                                Else
+                                End If
+                            End If
+
                         End If
                     End If
                 End If
@@ -2557,7 +2607,6 @@ Module Module1
                                 showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
                                 showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
                             End If
-
 
                             continueOperation = Not IsNothing(ShowProjekte)
                         Catch ex As Exception
@@ -5727,7 +5776,7 @@ Module Module1
                             Dim bsn As String = tmpShape.Tags.Item("BSN")
                             Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                            Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                       ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                       ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -5760,7 +5809,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
+                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description,
                                                           ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone, ms.DocURL)
 
@@ -5789,7 +5838,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
+                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
                                                              ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                              ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -8463,7 +8512,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
                                                   cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
 
@@ -8490,7 +8539,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
