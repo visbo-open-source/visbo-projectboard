@@ -15602,52 +15602,57 @@ Public Module agm2
 
                             ' jetzt kommt die Behandlung der Kostenarten
 
-                            For c = 1 To cphase.countCosts
+                            ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
 
-                                Dim cost As clsKostenart = cphase.getCost(c)
-                                Dim costName As String = cost.name
-                                Dim xValues() As Double = cost.Xwerte
+                            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                For c = 1 To cphase.countCosts
+
+                                    Dim cost As clsKostenart = cphase.getCost(c)
+                                    Dim costName As String = cost.name
+                                    Dim xValues() As Double = cost.Xwerte
 
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
 
-                                'ReDim zeilenWerte(bis - von)
+                                    'ReDim zeilenWerte(bis - von)
 
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
-                                                                            protectionText, von, bis,
-                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
+                                                                                protectionText, von, bis,
+                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
-                                If ok Then
+                                    If ok Then
 
-                                    With currentWS
-                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                    End With
+                                        With currentWS
+                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                        End With
 
-                                    If schnittmenge.Sum > 0 Then
-                                        For l As Integer = 0 To bis - von
+                                        If schnittmenge.Sum > 0 Then
+                                            For l As Integer = 0 To bis - von
 
-                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                            Else
-                                                editRange.Cells(1, l + 1).value = ""
-                                            End If
+                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                Else
+                                                    editRange.Cells(1, l + 1).value = ""
+                                                End If
 
-                                        Next
+                                            Next
+                                        Else
+                                            editRange.Value = ""
+                                        End If
+
+                                        atLeastOne = True
+
+                                        zeile = zeile + 1
                                     Else
-                                        editRange.Value = ""
+                                        Call MsgBox("not ok")
                                     End If
 
-                                    atLeastOne = True
+                                Next c
+                            End If
 
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
-                                End If
-
-                            Next c
 
                             If Not atLeastOne Then
 

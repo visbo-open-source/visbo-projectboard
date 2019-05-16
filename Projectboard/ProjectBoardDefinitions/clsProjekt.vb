@@ -3063,13 +3063,16 @@ Public Class clsProjekt
 
                 Next
 
-                For Each tmpCost As clsKostenart In cPhase.kostenListe
 
-                    If costCollection.Contains(tmpCost.name) Then
-                        newprojPhase.AddCost(tmpCost)
-                    End If
+                If Not IsNothing(costCollection) Then
+                    For Each tmpCost As clsKostenart In cPhase.kostenListe
 
-                Next
+                        If costCollection.Contains(tmpCost.name) Then
+                            newprojPhase.AddCost(tmpCost)
+                        End If
+
+                    Next
+                End If
 
             Next
 
