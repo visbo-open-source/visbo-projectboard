@@ -1189,6 +1189,13 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' Alle Projekte zu der Constellation 'portfolioName' zum Zeitpunkt storedAtOrBefore sortiert nach 'Projektname#VariantenName#'
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
     Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
@@ -1238,9 +1245,66 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
 
     End Function
+    ''' <summary>
+    ''' liefert das Portfolios 'portfolioName' das zum storedAtOrBefore gespeichert war. In timestamp ist Datum/Uhrzeit dessen enthalten
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+                                                   ByRef timestamp As Date,
+                                                   ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
+
+        Dim result As clsConstellation = Nothing
+
+        Try
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                                                                                               err, storedAtOrBefore)
+
+                    If Not IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                                                                                                             err, storedAtOrBefore)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = Nothing
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("retrieveOneConstellationFromDB: " & ex.Message)
+        End Try
+
+        retrieveOneConstellationFromDB = result
+
+    End Function
 
     ''' <summary>
-    ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren. In timestamp ist Datum/Uhrzeit dessen enthalten
+    ''' liefert das Portfolios 'portfolioName' das zum storedAtOrBefore gespeichert war. In timestamp ist Datum/Uhrzeit dessen enthalten
     ''' </summary>
     ''' <param name="portfolioName"></param>
     ''' <param name="err"></param>
@@ -1289,7 +1353,7 @@ Public Class Request
 
         Catch ex As Exception
 
-            Throw New ArgumentException("retrieveProjectsOfOneConstellationFromDB: " & ex.Message)
+            Throw New ArgumentException("retrieveFirstVersionOfOneConstellationFromDB: " & ex.Message)
         End Try
 
         retrieveFirstVersionOfOneConstellationFromDB = result

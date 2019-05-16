@@ -1652,6 +1652,49 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
     End Function
 
+
+    ''' <summary>
+    ''' Portfolio 'portfolioName' die zum storedAtOrBefore gespeichert waren
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+                                                   ByRef timestamp As Date,
+                                                   ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
+
+        Dim result As New clsConstellation
+        Dim intermediate As New List(Of clsProjektWebLong)
+        Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim vpid As String = ""
+        Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
+        Dim vp As clsVP
+        Dim vpf As clsVPf
+        Dim hproj As New clsProjekt
+        Try
+            vp = GETvpid(portfolioName, err, vptype)
+            vpid = vp._id
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+
+            If err.errorCode = 200 Then
+
+                vpf = listOfPortfolios.Last.Value
+                timestamp = CType(vpf.timestamp, Date).ToLocalTime
+
+                ' umwandeln von clsVPf in clsConstellation
+                result = clsVPf2clsConstellation(vpf)
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveOneConstellationFromDB = result
+    End Function
+
     ''' <summary>
     ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
