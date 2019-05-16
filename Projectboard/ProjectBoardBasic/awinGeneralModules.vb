@@ -3656,6 +3656,15 @@ Public Module awinGeneralModules
                                 sproj.timeStamp = DBtimeStamp
 
                                 Dim kdNrToStore As Boolean = Not sproj.hasIdenticalKdNr(oldProj)
+
+                                ' abfragen, ob Portfolio MAnager
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                    If sproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                        sproj.updatedAt = oldProj.updatedAt
+                                    End If
+                                End If
+
+
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err, attrToStore:=kdNrToStore) Then
 
                                     If awinSettings.englishLanguage Then
@@ -7276,17 +7285,28 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                     ' prüfen, ob es Unterschied gibt 
                     Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
                         kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                        ' abfragen, ob Portfolio MAnager
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                hproj.updatedAt = standInDB.updatedAt
+                            End If
+                        End If
+
                     Else
                         ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                         storeNeeded = True
                     End If
+
                 Else
                     storeNeeded = True
                 End If
+
 
                 If storeNeeded Then
 
@@ -7494,6 +7514,13 @@ Public Module awinGeneralModules
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
                                     kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                                    ' abfragen, ob Portfolio MAnager
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                        If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                            hproj.updatedAt = standInDB.updatedAt
+                                        End If
+                                    End If
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -7924,6 +7951,13 @@ Public Module awinGeneralModules
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
                                     kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                                    ' abfragen, ob Portfolio MAnager
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                        If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                            hproj.updatedAt = standInDB.updatedAt
+                                        End If
+                                    End If
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
