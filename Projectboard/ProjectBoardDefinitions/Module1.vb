@@ -1044,6 +1044,7 @@ Public Module Module1
             End If
         End With
 
+
     End Sub
 
 
@@ -3340,6 +3341,7 @@ Public Module Module1
 
     ''' <summary>
     ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
+    ''' der Name enthält pName, vname und ElemID : (pname#vname)ElemID
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="elemID"></param>

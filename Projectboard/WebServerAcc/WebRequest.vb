@@ -5520,6 +5520,7 @@ Public Class Request
         Try
 
             With result
+                .vpID = vpf.vpid
                 .constellationName = vpf.name
                 ' Aufbau der Constellation.allitems
                 For Each hvpfItem As clsVPfItem In vpf.allItems

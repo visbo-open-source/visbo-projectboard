@@ -31,6 +31,7 @@ Public Class ThisAddIn
             awinSettings.visboServer = My.Settings.VISBOServer
             awinSettings.userNamePWD = My.Settings.userNamePWD
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            awinSettings.proxyURL = My.Settings.proxyServerURL
 
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If awinSettings.rememberUserPwd Then

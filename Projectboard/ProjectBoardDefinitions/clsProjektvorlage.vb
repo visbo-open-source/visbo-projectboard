@@ -25,6 +25,20 @@
     Private _customStringFields As SortedList(Of Integer, String)
     Private _customBoolFields As SortedList(Of Integer, Boolean)
 
+    ' tk ergänzt am 11.5.19 
+    Private _vpID As String
+    Public Property vpID As String
+        Get
+            vpID = _vpID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _vpID = value
+                End If
+            End If
+        End Set
+    End Property
 
     ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
     ' mögliche Werte sind: 0: project, 1: Portfolio bzw. Unio, 2: ProjektVorlage
@@ -4676,6 +4690,9 @@
         '_Status = ProjektStatus(0)
         Schrift = 12
         Schriftfarbe = RGB(0, 0, 0)
+
+        ' tk 11.5.19 , vpID ist Nothing bedeutet: dieses Projekt existiert noch nicht in der Datenbank
+        _vpID = Nothing
 
         ' die CustomFields initialisieren 
         _customDblFields = New SortedList(Of Integer, Double)

@@ -4774,70 +4774,78 @@ Public Module agm2
                                                 Try
 
                                                     Dim k As Integer = 0
+                                                    Dim knownCost As Boolean = False
 
                                                     If CostDefinitions.containsName(ass.ResourceName) Then
                                                         k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        knownCost = True
                                                     Else
                                                         ' Kostenart existiert noch nicht
                                                         ' wird hier neu aufgenommen
                                                         Dim newCostDef As New clsKostenartDefinition
                                                         newCostDef.name = ass.ResourceName
                                                         newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
-                                                        newCostDef.UID = CostDefinitions.Count + 1
+
+                                                        newCostDef.UID = missingCostDefinitions.Count + 1
                                                         If Not missingCostDefinitions.containsName(newCostDef.name) Then
                                                             missingCostDefinitions.Add(newCostDef)
                                                         End If
 
-                                                        CostDefinitions.Add(newCostDef)
+                                                        ' darf nicht übernommen werden , muss erst korrigiert werden 
+                                                        'CostDefinitions.Add(newCostDef)
 
                                                         ' Änderung tk: muss auf costdefinitions gesetzt werden 
                                                         ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                        k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        'k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                                     End If
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    Dim cost As Double = CType(ass.Cost, Double)
+                                                    If knownCost Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        Dim cost As Double = CType(ass.Cost, Double)
 
-                                                    Dim startdate As Date = CDate(msTask.Start)
-                                                    Dim endedate As Date = CDate(msTask.Finish)
+                                                        Dim startdate As Date = CDate(msTask.Start)
+                                                        Dim endedate As Date = CDate(msTask.Finish)
 
-                                                    Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+                                                        Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                        Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                        Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                                    If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                        anzdays = 1
-                                                        anzmonth = 1
+                                                        If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                            anzdays = 1
+                                                            anzmonth = 1
+                                                        End If
+                                                        If anzdays > 0 And anzmonth = 0 Then
+                                                            anzmonth = 1
+                                                        End If
+
+
+                                                        ReDim Xwerte(anzmonth - 1)
+
+                                                        Dim m As Integer
+                                                        For m = 1 To anzmonth
+
+                                                            Try
+                                                                Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                            Catch ex As Exception
+                                                                Xwerte(m - 1) = 0.0
+                                                            End Try
+
+                                                        Next m
+
+                                                        ccost = New clsKostenart(anzmonth - 1)
+
+                                                        With ccost
+                                                            .KostenTyp = k
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+
+                                                        With cphase
+                                                            .AddCost(ccost)
+                                                        End With
                                                     End If
-                                                    If anzdays > 0 And anzmonth = 0 Then
-                                                        anzmonth = 1
-                                                    End If
 
 
-                                                    ReDim Xwerte(anzmonth - 1)
-
-                                                    Dim m As Integer
-                                                    For m = 1 To anzmonth
-
-                                                        Try
-                                                            Xwerte(m - 1) = CType(cost / anzmonth, Double)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - 1) = 0.0
-                                                        End Try
-
-                                                    Next m
-
-                                                    ccost = New clsKostenart(anzmonth - 1)
-
-                                                    With ccost
-                                                        .KostenTyp = k
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-
-                                                    With cphase
-                                                        .AddCost(ccost)
-                                                    End With
                                                 Catch ex As Exception
                                                     '
                                                     ' handelt es sich um die Kostenart Definition?
@@ -4849,18 +4857,19 @@ Public Module agm2
 
                                                 Try
                                                     Dim r As Integer = 0
-
+                                                    Dim knownRole As Boolean = False
 
                                                     If RoleDefinitions.containsName(ass.ResourceName) Then
                                                         r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        knownRole = True
                                                     Else
-                                                        ' Rolle existiert noch nicht
-                                                        ' wird hier neu aufgenommen
+                                                        ' Rolle existiert noch nicht, das kann jetzt nicht so einfach in der RoleDefinitions aufgenommen werden ...
+                                                        ' das muss an der aufrufenden Stelle in einer Meldung ausgegeben werden 
 
                                                         Dim newRoleDef As New clsRollenDefinition
                                                         newRoleDef.name = ass.ResourceName
                                                         newRoleDef.farbe = RGB(120, 120, 120)
-                                                        newRoleDef.defaultKapa = 200000
+                                                        newRoleDef.defaultKapa = 18
 
                                                         ' OvertimeRate in Tagessatz umrechnen
                                                         Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
@@ -4872,93 +4881,58 @@ Public Module agm2
                                                         hstdstr = Split(hstdstr(0), "€", -1)
                                                         newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
-                                                        newRoleDef.UID = RoleDefinitions.Count + 1
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
-                                                            missingRoleDefinitions.Add(newRoleDef)
+                                                            Try
+                                                                newRoleDef.UID = missingRoleDefinitions.getFreeRoleID
+                                                                missingRoleDefinitions.Add(newRoleDef)
+                                                            Catch ex As Exception
+                                                                Dim a As Integer = 1
+                                                            End Try
+
                                                         End If
 
-                                                        RoleDefinitions.Add(newRoleDef)
-
-
-                                                        ' Änderung tk: das muss von roledefinitions geholt werden ...
-                                                        ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                        r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        ' tk das darf auf keinen Fall mehr gemacht werden, weil andernfalls Ressourcen im Projekt sind mit IDs, die nicht in der Organisation sind. 
+                                                        '
+                                                        'RoleDefinitions.Add(newRoleDef)
 
                                                     End If
 
+                                                    If knownRole Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        'Dim duration As Double = CType(ass.Duration, Double)
+                                                        Dim unit As Double = CType(ass.Units, Double)
+                                                        If ass.BudgetWork <> "" Then
+                                                            Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        End If
 
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    'Dim duration As Double = CType(ass.Duration, Double)
-                                                    Dim unit As Double = CType(ass.Units, Double)
-                                                    If ass.BudgetWork <> "" Then
-                                                        Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        Dim startdate As Date = CDate(msTask.Start).Date
+                                                        Dim endedate As Date = CDate(msTask.Finish).Date
+
+                                                        ' tk Anpassung ...
+                                                        Dim oldWerte(0) As Double
+                                                        Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                                        oldWerte(0) = work
+                                                        ReDim Xwerte(anzmonth - 1)
+                                                        Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+
+                                                        ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
+                                                        For m As Integer = 1 To anzmonth
+                                                            Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                                        Next
+
+                                                        crole = New clsRolle(anzmonth - 1)
+                                                        With crole
+                                                            .uid = r
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+                                                        With cphase
+                                                            .addRole(crole)
+                                                        End With
                                                     End If
 
 
-                                                    Dim startdate As Date = CDate(msTask.Start).Date
-                                                    Dim endedate As Date = CDate(msTask.Finish).Date
-
-                                                    ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
-                                                    ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
-                                                    ' die Berechnung Datediff ergibt aber nur 1 Monat '
-                                                    'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                                    'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                    '    anzdays = 1
-                                                    '    anzmonth = 1
-                                                    'End If
-                                                    'If anzdays > 0 And anzmonth = 0 Then
-                                                    '    anzmonth = 1
-                                                    'End If
-
-
-                                                    'ReDim Xwerte(anzmonth - 1)
-                                                    ' Ende Auskommentierung tk  
-
-                                                    ' tk Anpassung ...
-                                                    Dim oldWerte(0) As Double
-                                                    Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-                                                    oldWerte(0) = work
-                                                    ReDim Xwerte(anzmonth - 1)
-                                                    Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
-
-                                                    ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
-                                                    For m As Integer = 1 To anzmonth
-                                                        Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
-                                                    Next
-
-                                                    ' Ende tk Anpassung
-
-
-                                                    ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
-                                                    'For m As Integer = 1 To anzmonth
-
-                                                    '    Try
-                                                    '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
-                                                    '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
-
-                                                    '    Catch ex As Exception
-                                                    '        Xwerte(m - 1) = 0.0
-                                                    '    End Try
-
-                                                    'Next m
-
-                                                    ' Check , um Unterschiede in der Summe herausfinden zu können
-                                                    ' die waren immer 0 ... 
-                                                    'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
-
-                                                    crole = New clsRolle(anzmonth - 1)
-                                                    With crole
-                                                        .uid = r
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-                                                    With cphase
-                                                        .addRole(crole)
-                                                    End With
                                                 Catch ex As Exception
 
                                                 End Try
@@ -5315,7 +5289,8 @@ Public Module agm2
                 Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
 
 
-
+                ' ein MS Project PRojekt wird grundsätzich als <beauftragt> eingestuft ... 
+                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                 Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
 
@@ -5440,6 +5415,7 @@ Public Module agm2
         Catch ex As Exception
             Call MsgBox(ex)
         End Try
+
 
         enableOnUpdate = True
 
@@ -11616,7 +11592,7 @@ Public Module agm2
 
                 If Not IsNothing(dateiName) Then
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") Then
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
 
                         errMsg = "Reading external Capacities " & dateiName
                         Call logfileSchreiben(errMsg, "", anzFehler)
@@ -11755,14 +11731,14 @@ Public Module agm2
     ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
     ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
     ''' </summary>
-    Public Sub readMonthlyExternKapas(ByRef meldungen As Collection)
+    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection)
 
         Dim kapaFolder As String
 
 
         Dim ok As Boolean = True
 
-        Dim summenZeile As Integer
+        Dim endeZeile As Integer
         Dim spalte As Integer = 2
         Dim blattname As String = "Kapazität"
         Dim currentWS As Excel.Worksheet
@@ -11786,7 +11762,8 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        kapaFolder = awinPath & projektRessOrdner
+        'kapaFolder = awinPath & projektRessOrdner
+        kapaFolder = importOrdnerNames(PTImpExp.Kapas)
 
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
@@ -11794,10 +11771,11 @@ Public Module agm2
             For i = 0 To listOfImportfiles.Count - 1
 
                 Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+                endeZeile = 0
 
                 If Not IsNothing(dateiName) Then
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") Then
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
 
                         Try
                             appInstance.Workbooks.Open(dateiName)
@@ -11806,89 +11784,96 @@ Public Module agm2
                             Try
 
                                 currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
                                 Try
-                                    summenZeile = currentWS.Range("intern_sum").Row
+                                    endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
                                 Catch ex As Exception
-                                    ' wenn die Summenzeile nicht existiert, gehe ich davon aus, dass einfach jede Zeile ausgelesen werden soll 
-                                    summenZeile = 0
-                                    summenZeile = CType(currentWS.Cells(12000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
+                                    endeZeile = 0
                                 End Try
 
-                                lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                                ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+                                If endeZeile > 0 Then
 
-                                Dim aktzeile As Integer = 2
-                                Do While aktzeile < summenZeile
+                                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                                    Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
+                                    ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
-                                    If Not IsNothing(subRoleName) Then
-                                        subRoleName = subRoleName.Trim
-                                        If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+                                    Dim aktzeile As Integer = 2
+                                    Do While aktzeile < endeZeile
 
-                                            Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+                                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
 
-                                            ' nur weiter machen, wenn es keine SummenRollen ist ...
-                                            If Not subRole.isCombinedRole Then
+                                        If Not IsNothing(subRoleName) Then
+                                            subRoleName = subRoleName.Trim
+                                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
-                                                Try
-                                                    spalte = 2
-                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
 
-                                                    ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
+                                                ' nur weiter machen, wenn es keine SummenRolle ist ...
+                                                If Not subRole.isCombinedRole Then
 
-                                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
-                                                        Try
-                                                            spalte = spalte + 1
-                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                        Catch ex As Exception
+                                                    Try
+                                                        spalte = 2
+                                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
-                                                        End Try
-                                                    Loop
+                                                        ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
 
-                                                    Do While spalte < 241 And spalte <= lastSpalte
+                                                        Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                                            Try
+                                                                spalte = spalte + 1
+                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                            Catch ex As Exception
 
-                                                        Try
-                                                            index = getColumnOfDate(tmpDate)
-                                                            If index >= 1 Then
-                                                                tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+                                                            End Try
+                                                        Loop
 
-                                                                If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                    subRole.kapazitaet(index) = tmpKapa
+                                                        Do While spalte < 241 And spalte <= lastSpalte
+
+                                                            Try
+                                                                index = getColumnOfDate(tmpDate)
+                                                                If index >= 1 Then
+                                                                    tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                                                    If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                                        subRole.kapazitaet(index) = tmpKapa
+                                                                    End If
                                                                 End If
-                                                            End If
 
-                                                            spalte = spalte + 1
-                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                        Catch ex As Exception
-                                                            errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
-                                                            meldungen.Add(errMsg)
-                                                        End Try
+                                                                spalte = spalte + 1
+                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                            Catch ex As Exception
+                                                                errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                                meldungen.Add(errMsg)
+                                                            End Try
 
 
-                                                    Loop
+                                                        Loop
 
-                                                Catch ex As Exception
+                                                    Catch ex As Exception
 
-                                                End Try
+                                                    End Try
+                                                Else
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                    meldungen.Add(errMsg)
+                                                End If
                                             Else
-                                                errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                meldungen.Add(errMsg)
+                                                If subRoleName.Length > 0 Then
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                    meldungen.Add(errMsg)
+                                                End If
                                             End If
-                                        Else
-                                            If subRoleName.Length > 0 Then
-                                                errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                meldungen.Add(errMsg)
-                                            End If
+
                                         End If
 
-                                    End If
+                                        aktzeile = aktzeile + 1
+                                        ' jetzt spalte wieder auf 2 setzen 
+                                        spalte = 2
+                                    Loop
 
-                                    aktzeile = aktzeile + 1
-                                    ' jetzt spalte wieder auf 2 setzen 
-                                    spalte = 2
-                                Loop
+                                Else
+                                    errMsg = "File " & dateiName & " does not contain data in column A ..."
+                                    meldungen.Add(errMsg)
+                                End If
 
                             Catch ex2 As Exception
                                 errMsg = "File " & dateiName & ": unidentified error ... "
@@ -17132,14 +17117,17 @@ Public Module agm2
 
             End If
 
-            ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
-            ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
-            Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
 
             If awinSettings.awinPath = "" Then
+                ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
+                ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
+                Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+                Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
                 awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
                 If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                     ' alles ok
@@ -17550,131 +17538,20 @@ Public Module agm2
                 ' jetzt die CurrentOrga definieren
                 Dim currentOrga As New clsOrganisation
 
-                If Not awinSettings.readCostRolesFromDB Then
+                ' jetzt werden die ORganisation ausgelesen 
+                ' wenn es keine Organisation gibt , d
 
-                    ' tlk 15.2.19 Orga soll nur noch aus Import Orga geholt werden .. 
-                    'Dim outputCollection As New Collection
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    '' Auslesen der Rollen Definitionen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
-
-                    'If awinSettings.visboDebug Then
-                    '    Call MsgBox("readRoleDefinitions")
-                    'End If
-
-                    '' Auslesen der Kosten Definitionen 
-                    'Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
-
-
-                    '' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
-
-                    'If RoleDefinitions.Count > 0 Then
-                    '    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    '    ' jetzt kommt der Validation-Check 
-
-                    '    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
-                    '    Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
-
-                    '    If outputCollection.Count > 0 Then
-                    '        Call showOutPut(outputCollection, "Organisations-Definition", "")
-                    '    End If
-
-                    'End If
-
-                    '' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
-                    'RoleDefinitions.buildTopNodes()
-                    'With currentOrga
-                    '    .validFrom = StartofCalendar
-                    '    .allRoles = RoleDefinitions
-                    '    .allCosts = CostDefinitions
-                    'End With
-
-                Else
-
-                    ' 
-                    ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' das Organisations-Setting auslesen  mit heutigem Datum ...
-
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                    If Not IsNothing(currentOrga) Then
-                        CostDefinitions = currentOrga.allCosts
-                        RoleDefinitions = currentOrga.allRoles
-                    Else
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("You don't have any organization in your system!")
-                        Else
-                            Call MsgBox("Es existiert keine Organisation im System!")
-                        End If
-                    End If
-
-                    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-                End If
-
-                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                ' 
-                If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
+                If currentOrga.count > 0 Then
 
                     If currentOrga.count > 0 Then
                         validOrganisations.addOrga(currentOrga)
                     End If
 
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
 
-                    ' Auslesen der Orga, die vor der currentOrga gültig war
-                    ' also mit validFrom aus currentOrga lesen - 1 Tag
-
-                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
-                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
-
-                    'If Not IsNothing(beforeOrga) Then
-
-                    '    If beforeOrga.count > 0 Then
-                    '        validOrganisations.addOrga(beforeOrga)
-                    '    End If
-
-                    'End If
-
-
-                    ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
-                    ' also mit validFrom aus currentOrga lesen +  1 Tag
-
-                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
-
-                    ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
-                    'Dim nextOrga As clsOrganisation =
-                    'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
-
-
-                    'If Not IsNothing(nextOrga) Then
-
-                    '    If nextOrga.count > 0 Then
-                    '        validOrganisations.addOrga(nextOrga)
-                    '    End If
-
-                    'End If
-
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
-                    End If
-
-                End If
-
-                ' Lesen der Custom Field Definitions
-
-                If Not awinSettings.readCostRolesFromDB Then
-
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-                Else
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
@@ -17698,7 +17575,27 @@ Public Module agm2
 
                     End Try
 
+
+                Else
+                    awinSettings.readCostRolesFromDB = False
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You don't have any organization in your system!")
+                    Else
+                        Call MsgBox("Es existiert keine Organisation im System!")
+                    End If
+
+
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
                 End If
+
+
+
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -17711,14 +17608,6 @@ Public Module agm2
                     End If
 
                 End If
-
-
-                '' auslesen der anderen Informationen 
-                'Call readOtherDefinitions(wsName4)
-
-                'If awinSettings.visboDebug Then
-                '    Call MsgBox("readOtherDefinitions")
-                'End If
 
 
                 If special = "ProjectBoard" Then
@@ -17833,45 +17722,11 @@ Public Module agm2
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
-                    ' tk 12.2.19 im awinsettypen sollen die Kapas überhaupt nicht mehr gelesen werden ... 
-                    ' das Ganze soll nur noch über Menupunkt Import-Kapazitäten passieren ...
-                    'Dim meldungen As New Collection
-                    'If Not awinSettings.readCostRolesFromDB Then
-
-                    '    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                    '    Call readRessourcenDetails(meldungen)
-
-                    '    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                    '    Call readRessourcenDetails2(meldungen)
-
-                    '    If meldungen.Count > 0 Then
-                    '        Call showOutPut(meldungen, "Errors Reading Capacities", "")
-                    '        Call logfileSchreiben(meldungen)
-                    '    End If
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    'Else
-
-                    '    '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
-
-                    '    '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                    '    '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    '    If awinSettings.visboDebug Then
-                    '    '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
-                    '    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                    '    '    End If
-
-                    'End If
-
                     '
                     ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
                     If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
                         Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
                     End If
 
@@ -17918,12 +17773,27 @@ Public Module agm2
 
                     '' jetzt werden die Rollen besetzt 
                     If awinSettings.readCostRolesFromDB Then
-                        Call setUserRoles(meldungen)
+                        Try
+                            Call setUserRoles(meldungen)
+                        Catch ex As Exception
+                            If meldungen.Count > 0 Then
+                                Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                Call logfileSchreiben(meldungen)
+                            End If
 
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                            Call myCustomUserRole.setNonAllowances()
+                        End Try
+
+
+
                     Else
                         myCustomUserRole = New clsCustomUserRole
 
@@ -17936,10 +17806,12 @@ Public Module agm2
                         Call myCustomUserRole.setNonAllowances()
                     End If
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                        ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
-                        Call RoleDefinitions.buildTopNodes()
-                    End If
+                    ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
+                    ' ohne Abhängigkeit von Rolle Portfolio Manager , das brauchen ja alle Rollen 
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    '    ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
+                    '    Call RoleDefinitions.buildTopNodes()
+                    'End If
 
 
                     ' Logfile wird geschlossen
@@ -18025,7 +17897,8 @@ Public Module agm2
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
             If encryptedUserRole.Length > 0 Then
-                ' bestimme die UserRole 
+                ' bestimme die UserRole., wenn es aus SmartInfo heraus aufgerufen wird;
+                ' denn in der Slide steht ja drin, mit welcher User Role das gemacht wurde 
                 Dim chkUserRole As New clsCustomUserRole
                 Call chkUserRole.decrypt(encryptedUserRole)
 
@@ -20066,16 +19939,16 @@ Public Module agm2
 
     End Sub
 
-    ''' <summary>
-    ''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub readRessourcenDetails(ByRef meldungen As Collection)
+    '''' <summary>
+    '''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub readRessourcenDetails(ByRef meldungen As Collection)
 
-        ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
-        Call readMonthlyExternKapas(meldungen)
+    '    ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
+    '    Call readMonthlyModifierKapas(meldungen)
 
-    End Sub
+    'End Sub
     ''' <summary>
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
