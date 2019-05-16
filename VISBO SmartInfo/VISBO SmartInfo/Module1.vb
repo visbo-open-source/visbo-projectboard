@@ -2559,9 +2559,9 @@ Module Module1
     ''' <summary>
     ''' aktualisiert eine Smart PPT Komponenten, das sind Felder 
     ''' </summary>
-    ''' <param name="hproj"></param>
     ''' <param name="pptShape"></param>
     ''' <param name="detailID"></param>
+    ''' 
     ''' <remarks></remarks>
 
     Public Sub updatePPTComponent(ByRef pptShape As PowerPoint.Shape,
