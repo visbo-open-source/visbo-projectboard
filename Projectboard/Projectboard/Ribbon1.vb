@@ -263,7 +263,22 @@ Imports System.Web
 
             Next
 
+            If outPutCollection.Count > 0 Then
+                Dim msgH As String, msgE As String
+                If awinSettings.englishLanguage Then
+                    msgH = "Save Portfolios"
+                    msgE = "following results:"
+                Else
+                    msgH = "Speichern Portfolio(s"
+                    msgE = "Rückmeldungen"
+
+                End If
+
+                Call showOutPut(outPutCollection, msgH, msgE)
+
+            End If
         End If
+
 
     End Sub
 

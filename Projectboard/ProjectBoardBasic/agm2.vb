@@ -6895,22 +6895,28 @@ Public Module agm2
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
-                    For Each tmpName As String In tmpStr
+                    If tmpStr.Length = 1 And tmpStr(0) = "none" Then
+                        ' nichts weiter tun, specificsWithIDs bleibt leer 
+                        specificsWithIDs = ""
+                    Else
+                        For Each tmpName As String In tmpStr
 
-                        stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
+                            stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
 
-                        If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
-                            tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
-                            If specificsWithIDs = "" Then
-                                specificsWithIDs = tmpNameUID
+                            If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
+                                tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
+                                If specificsWithIDs = "" Then
+                                    specificsWithIDs = tmpNameUID
+                                Else
+                                    specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                End If
+
                             Else
-                                specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
                             End If
+                        Next
+                    End If
 
-                        Else
-                            Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
-                        End If
-                    Next
                 End If
             Else
                 stillOk = False
@@ -15447,7 +15453,15 @@ Public Module agm2
                         End If
                     Else
                         ' er kann es nur ändern, wenn er es für sich schützen kann 
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        Dim vNameToProtect As String = hproj.variantName
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            If hproj.variantName <> "" Then
+                                vNameToProtect = hproj.variantName
+                            Else
+                                vNameToProtect = ptVariantFixNames.pfv.ToString
+                            End If
+                        End If
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
                     End If
 
 
@@ -16163,11 +16177,7 @@ Public Module agm2
                     Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    If awinSettings.visboServer Then
-                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                    Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                    End If
+                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
 
                     If isProtectedbyOthers Then

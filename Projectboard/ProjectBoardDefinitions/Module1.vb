@@ -1570,7 +1570,11 @@ Public Module Module1
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 ' nur dann muss mehr geprüft werden 
                 Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-                tmpResult = idArray.Contains(role.UID)
+
+                If Not IsNothing(idArray) Then
+                    tmpResult = idArray.Contains(role.UID)
+                End If
+
             End If
         End If
 

@@ -2019,14 +2019,20 @@ Public Class Tabelle2
         ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             'Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
             Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
 
-            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+            If Not IsNothing(idArray) Then
+                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
 
-            If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or
-                idArray.Contains(roleID) Then
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
+                If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or
+                    idArray.Contains(roleID) Then
+                    weiterMachen = True
+                End If
+            Else
                 weiterMachen = True
             End If
+
         Else
             weiterMachen = True
         End If
