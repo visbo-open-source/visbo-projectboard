@@ -17141,13 +17141,13 @@ Public Module agm2
                 ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
                 ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
                 Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
-                Dim stdDemoDataName As String = "VISBO Demo-Daten"
+                Dim stdConfigDataName As String = "VISBO Config Data"
 
-                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
+                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdConfigDataName)
                 If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                     ' alles ok
                 Else
-                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdDemoDataName)
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdConfigDataName)
                     If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                         ' alles ok 
                     End If
