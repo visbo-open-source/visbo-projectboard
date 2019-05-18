@@ -2217,9 +2217,9 @@ Public Module awinGeneralModules
             Try
                 Dim impProjekt As clsProjekt = kvp.Value
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And impProjekt.variantName = "" Then
-                    impProjekt.variantName = ptVariantFixNames.pfv.ToString
-                End If
+                'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And impProjekt.variantName = "" Then
+                'impProjekt.variantName = ptVariantFixNames.pfv.ToString
+                'End If
 
                 If considerSummaryProjects Then
                     takeIntoAccount = (impProjekt.projectType = ptPRPFType.portfolio)
@@ -3656,6 +3656,15 @@ Public Module awinGeneralModules
                                 sproj.timeStamp = DBtimeStamp
 
                                 Dim kdNrToStore As Boolean = Not sproj.hasIdenticalKdNr(oldProj)
+
+                                ' abfragen, ob Portfolio MAnager
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                    If sproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                        sproj.updatedAt = oldProj.updatedAt
+                                    End If
+                                End If
+
+
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err, attrToStore:=kdNrToStore) Then
 
                                     If awinSettings.englishLanguage Then
@@ -3677,19 +3686,19 @@ Public Module awinGeneralModules
                                         Select Case err.errorCode
                                             Case 403  'No Permission to Create Visbo Project Version
                                                 If awinSettings.englishLanguage Then
-                                                    outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
+                                                    outputLine = "!!  No permission to store Summary Project : " & sproj.name & ", " & sproj.variantName
                                                     outPutCollection.Add(outputLine)
                                                 Else
-                                                    outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
+                                                    outputLine = "!!  Keine Erlaubnis, Summary Projekt  zu speichern : " & sproj.name & ", " & sproj.variantName
                                                     outPutCollection.Add(outputLine)
                                                 End If
 
                                             Case 409 ' VisboProjectVersion was already updated in between
                                                 If awinSettings.englishLanguage Then
-                                                    outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
+                                                    outputLine = "!! Summary Project was already updated in between : " & sproj.name & ", " & sproj.variantName
                                                     outPutCollection.Add(outputLine)
                                                 Else
-                                                    outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
+                                                    outputLine = "!!  Summary Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
                                                     outPutCollection.Add(outputLine)
                                                 End If
                                                 '' erneut das projekt holen und abändern
@@ -3793,7 +3802,23 @@ Public Module awinGeneralModules
                         Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
 
                         If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
-                            ' alles in Ordnung, Speichern hat geklappt ... 
+                            ' alles in Ordnung, Speichern hat geklappt ...
+                            Dim tsMessage As String = ""
+                            If awinSettings.englishLanguage Then
+                                tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+                            Else
+                                tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
+                            End If
+
+                            If awinSettings.englishLanguage Then
+                                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+
+                            Else
+                                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+                            End If
+
+                            outPutCollection.Add(outputLine)
+
                         Else
                             If awinSettings.englishLanguage Then
                                 outputLine = "Error when writing scenario: " & currentConstellation.constellationName
@@ -3803,6 +3828,13 @@ Public Module awinGeneralModules
                             outPutCollection.Add(outputLine)
 
                         End If
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputLine = "Portfolio contains at least one project with more than one variant - please correct: " & currentConstellation.constellationName
+                        Else
+                            outputLine = "Portfolio darf pro Projekt nicht mehr als 1 Variante enthalten - bitte korrigieren: " & currentConstellation.constellationName
+                        End If
+                        outPutCollection.Add(outputLine)
                     End If
                 Else
                     If awinSettings.englishLanguage Then
@@ -3816,34 +3848,14 @@ Public Module awinGeneralModules
                 End If
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
-                    outputLine = "Error when writing scenario" & vbLf & ex.Message
+                    outputLine = "Error when writing Portfolio" & vbLf & ex.Message
                 Else
-                    outputLine = "Fehler beim Schreiben Szenario" & vbLf & ex.Message
+                    outputLine = "Fehler beim Schreiben Portfolio" & vbLf & ex.Message
                 End If
                 outPutCollection.Add(outputLine)
                 Exit Sub
             End Try
 
-
-
-            Dim tsMessage As String = ""
-            If anzahlNeue + anzahlChanged > 0 Then
-                If awinSettings.englishLanguage Then
-                    tsMessage = "Zeitstempel: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
-                Else
-                    tsMessage = "Timestamp: " & DBtimeStamp.ToShortDateString & ", " & DBtimeStamp.ToShortTimeString
-                End If
-
-            End If
-
-            If awinSettings.englishLanguage Then
-                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
-
-            Else
-                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
-            End If
-
-            outPutCollection.Add(outputLine)
 
         End If
 
@@ -7273,17 +7285,28 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                     ' prüfen, ob es Unterschied gibt 
                     Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
                         kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                        ' abfragen, ob Portfolio MAnager
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                hproj.updatedAt = standInDB.updatedAt
+                            End If
+                        End If
+
                     Else
                         ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                         storeNeeded = True
                     End If
+
                 Else
                     storeNeeded = True
                 End If
+
 
                 If storeNeeded Then
 
@@ -7408,9 +7431,17 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
             tmpResult = False
+            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+            If awinSettings.englishLanguage Then
+                outputline = "Conflict when saving: " & hproj.name & ", " & hproj.variantName
+            Else
+                outputline = "Konflikt beim Speichern: " & hproj.name & ", " & hproj.variantName
+            End If
+
+            outputCollection.Add(outputline)
 
             ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-            Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+            'Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
             'Exit Sub
         End Try
 
@@ -7483,6 +7514,13 @@ Public Module awinGeneralModules
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
                                     kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                                    ' abfragen, ob Portfolio MAnager
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                        If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                            hproj.updatedAt = standInDB.updatedAt
+                                        End If
+                                    End If
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -7699,6 +7737,8 @@ Public Module awinGeneralModules
 
                 End If
 
+                outPutCollection.Add(outputline)
+
                 ' tk 1.5.19 wird nicht mehr benötigt ...
                 'If everythingElse Then
 
@@ -7770,7 +7810,7 @@ Public Module awinGeneralModules
                 '    End If
                 'End If
 
-                outPutCollection.Add(outputline)
+
 
                 If outPutCollection.Count > 0 Then
                     Dim msgH As String, msgE As String
@@ -7911,6 +7951,13 @@ Public Module awinGeneralModules
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
                                     kdNrToStore = Not hproj.hasIdenticalKdNr(standInDB)
+
+                                    ' abfragen, ob Portfolio MAnager
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                        If hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                                            hproj.updatedAt = standInDB.updatedAt
+                                        End If
+                                    End If
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -8014,8 +8061,14 @@ Public Module awinGeneralModules
 
                         Catch ex As Exception
 
-                            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-                            Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            If awinSettings.englishLanguage Then
+                                outputline = "Conflict when saving: " & hproj.name & ", " & hproj.variantName
+                            Else
+                                outputline = "Konflikt beim Speichern: " & hproj.name & ", " & hproj.variantName
+                            End If
+
+                            outputCollection.Add(outputline)
+                            'Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & ex.Message)
                             'Exit Sub
                         End Try
 

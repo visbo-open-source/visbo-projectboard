@@ -13959,10 +13959,11 @@ Public Module Projekte
                             Else
                                 Dim roleName As String = roleStr(0).Trim
 
-                                If RoleDefinitions.containsName(roleName) Then
+                                If RoleDefinitions.containsNameOrID(roleName) Then
                                     isRole = True
                                     summeBedarfe = CDbl(roleStr(1))
-                                    rk = CInt(RoleDefinitions.getRoledef(roleName).UID)
+                                    Dim teamID As Integer = -1
+                                    rk = CInt(RoleDefinitions.getRoleDefByIDKennung(roleName, teamID).UID)
                                     tagessatz = RoleDefinitions.getRoledef(roleName).tagessatzIntern
 
                                 Else

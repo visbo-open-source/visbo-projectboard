@@ -6895,22 +6895,28 @@ Public Module agm2
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
-                    For Each tmpName As String In tmpStr
+                    If tmpStr.Length = 1 And tmpStr(0) = "none" Then
+                        ' nichts weiter tun, specificsWithIDs bleibt leer 
+                        specificsWithIDs = ""
+                    Else
+                        For Each tmpName As String In tmpStr
 
-                        stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
+                            stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
 
-                        If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
-                            tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
-                            If specificsWithIDs = "" Then
-                                specificsWithIDs = tmpNameUID
+                            If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
+                                tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
+                                If specificsWithIDs = "" Then
+                                    specificsWithIDs = tmpNameUID
+                                Else
+                                    specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                End If
+
                             Else
-                                specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
                             End If
+                        Next
+                    End If
 
-                        Else
-                            Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
-                        End If
-                    Next
                 End If
             Else
                 stillOk = False
@@ -15447,7 +15453,15 @@ Public Module agm2
                         End If
                     Else
                         ' er kann es nur ändern, wenn er es für sich schützen kann 
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        Dim vNameToProtect As String = hproj.variantName
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            If hproj.variantName <> "" Then
+                                vNameToProtect = hproj.variantName
+                            Else
+                                vNameToProtect = ptVariantFixNames.pfv.ToString
+                            End If
+                        End If
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
                     End If
 
 
@@ -15588,52 +15602,57 @@ Public Module agm2
 
                             ' jetzt kommt die Behandlung der Kostenarten
 
-                            For c = 1 To cphase.countCosts
+                            ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
 
-                                Dim cost As clsKostenart = cphase.getCost(c)
-                                Dim costName As String = cost.name
-                                Dim xValues() As Double = cost.Xwerte
+                            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                For c = 1 To cphase.countCosts
+
+                                    Dim cost As clsKostenart = cphase.getCost(c)
+                                    Dim costName As String = cost.name
+                                    Dim xValues() As Double = cost.Xwerte
 
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
 
-                                'ReDim zeilenWerte(bis - von)
+                                    'ReDim zeilenWerte(bis - von)
 
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
-                                                                            protectionText, von, bis,
-                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
+                                                                                protectionText, von, bis,
+                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
-                                If ok Then
+                                    If ok Then
 
-                                    With currentWS
-                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                    End With
+                                        With currentWS
+                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                        End With
 
-                                    If schnittmenge.Sum > 0 Then
-                                        For l As Integer = 0 To bis - von
+                                        If schnittmenge.Sum > 0 Then
+                                            For l As Integer = 0 To bis - von
 
-                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                            Else
-                                                editRange.Cells(1, l + 1).value = ""
-                                            End If
+                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                Else
+                                                    editRange.Cells(1, l + 1).value = ""
+                                                End If
 
-                                        Next
+                                            Next
+                                        Else
+                                            editRange.Value = ""
+                                        End If
+
+                                        atLeastOne = True
+
+                                        zeile = zeile + 1
                                     Else
-                                        editRange.Value = ""
+                                        Call MsgBox("not ok")
                                     End If
 
-                                    atLeastOne = True
+                                Next c
+                            End If
 
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
-                                End If
-
-                            Next c
 
                             If Not atLeastOne Then
 
@@ -16163,11 +16182,7 @@ Public Module agm2
                     Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    If awinSettings.visboServer Then
-                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                    Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                    End If
+                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
 
                     If isProtectedbyOthers Then
@@ -17126,13 +17141,13 @@ Public Module agm2
                 ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
                 ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
                 Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
-                Dim stdDemoDataName As String = "VISBO Demo-Daten"
+                Dim stdConfigDataName As String = "VISBO Config Data"
 
-                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
+                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdConfigDataName)
                 If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                     ' alles ok
                 Else
-                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdDemoDataName)
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdConfigDataName)
                     If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                         ' alles ok 
                     End If

@@ -1489,7 +1489,7 @@ Public Class Request
                     Dim vpid As String = aktvp._id
                     Dim variantExists As Boolean = False
                     Dim deletePossible As Boolean = False
-                    Dim postPossible As Boolean = False
+                    Dim postPossible As Boolean = True
                     Dim i As Integer = 0
 
                     'If aktvp.lock.Count > 0 Then
@@ -1533,13 +1533,27 @@ Public Class Request
                             If aktvp.lock.Count > 0 Then
                                 For Each lock As clsVPLock In aktvp.lock
 
-                                    If vname = lock.variantName And
-                                        LCase(aktUser.email) = LCase(lock.email) And
-                                        lock.expiresAt < Date.UtcNow Then
+                                    If lock.expiresAt > Date.UtcNow Then
 
-                                        postPossible = True
+                                        If vname = lock.variantName Then
 
+                                            If LCase(aktUser.email) = LCase(lock.email) Then
+
+                                                postPossible = postPossible And True
+                                            Else
+
+                                                postPossible = postPossible And False
+
+                                            End If
+                                            Exit For
+
+                                            'ElseIf vname <> lock.variantName Then
+
+                                            '        postPossible = True
+
+                                        End If
                                     End If
+
 
                                 Next
                             Else
@@ -1561,14 +1575,16 @@ Public Class Request
                         Else
                             If aktvp.lock.Count > 0 Then
                                 For Each lock As clsVPLock In aktvp.lock
+                                    If lock.expiresAt > Date.UtcNow Then
 
-                                    If vname = lock.variantName And
-                                        LCase(aktUser.email) = LCase(lock.email) And
-                                        lock.expiresAt > Date.UtcNow Then
+                                        If vname = lock.variantName And
+                                            LCase(aktUser.email) = LCase(lock.email) Then
 
-                                        deletePossible = True
-                                        Exit For
+                                            deletePossible = True
+                                            Exit For
+                                        End If
                                     End If
+
                                 Next
                             End If
 
