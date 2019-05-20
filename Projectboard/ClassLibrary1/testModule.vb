@@ -6105,6 +6105,7 @@ Public Module testModule
                             .TextFrame2.TextRange.Text = textZeitraum(showRangeLeft, showRangeRight)
                             Dim bigType As Integer = ptReportBigTypes.components
                             Dim compID As Integer = ptReportComponents.prLaufzeit
+
                             Call addSmartPPTCompInfo(pptShape, Nothing, currentSessionConstellation, ptPRPFType.portfolio, qualifier, qualifier2,
                                                           bigType, compID)
                         Case Else

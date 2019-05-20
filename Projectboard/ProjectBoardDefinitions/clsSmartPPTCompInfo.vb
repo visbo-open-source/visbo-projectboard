@@ -6,7 +6,7 @@
     'Public Property vglProj As clsProjekt
     Public Property bigType As ptReportBigTypes
 
-    Public Property detailID As PTprdk
+    Public Property detailID As ptReportComponents
 
     'Public Property chartTyp As PTChartTypen
     'Public Property vergleichsArt As PTVergleichsArt
@@ -129,7 +129,12 @@
 
     Public ReadOnly Property hasValidZeitraum() As Boolean
         Get
-            hasValidZeitraum = ((getColumnOfDate(_zeitRaumRight) > getColumnOfDate(_zeitRaumLeft)) And (_zeitRaumLeft >= StartofCalendar))
+            If Not (IsNothing(_zeitRaumLeft) Or IsNothing(_zeitRaumRight)) Then
+                hasValidZeitraum = ((getColumnOfDate(_zeitRaumRight) > getColumnOfDate(_zeitRaumLeft)) And (_zeitRaumLeft >= StartofCalendar))
+            Else
+                hasValidZeitraum = False
+            End If
+
         End Get
     End Property
 
@@ -190,7 +195,7 @@
                     End If
 
                     If .Tags.Item("DID").Length > 0 Then
-                        detailID = CType(.Tags.Item("DID"), PTprdk)
+                        detailID = CType(.Tags.Item("DID"), ptReportComponents)
                     End If
 
                     If .Tags.Item("PNM").Length > 0 Then
@@ -222,11 +227,31 @@
                         text = CStr(.Tags.Item("TXT"))
                     End If
 
+                    Dim tmpLD As Date = StartofCalendar
+                    If .Tags.Item("SRLD").Length > 0 Then
+                        Try
+                            tmpLD = CDate(.Tags.Item("SRLD"))
+                        Catch ex As Exception
 
-                    'If ((getColumnOfDate(tmpRD) > getColumnOfDate(tmpLD)) And (tmpLD > StartofCalendar)) Then
-                    '    zeitRaumLeft = tmpLD
-                    '    zeitRaumRight = tmpRD
-                    'End If
+                        End Try
+
+                    End If
+
+                    Dim tmpRD As Date = StartofCalendar
+                    If .Tags.Item("SRRD").Length > 0 Then
+                        Try
+                            tmpRD = CDate(.Tags.Item("SRRD"))
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                    If ((getColumnOfDate(tmpRD) > getColumnOfDate(tmpLD)) And (tmpLD > StartofCalendar)) Then
+                        zeitRaumLeft = tmpLD
+                        zeitRaumRight = tmpRD
+                    End If
+
 
 
                 End With

@@ -5020,6 +5020,19 @@ Public Module Module1
                         .Tags.Add("Q2", qualifier2)
                     End If
 
+                    If .Tags.Item("SRLD").Length > 0 Then
+                        .Tags.Delete("SRLD")
+                    End If
+
+                    If .Tags.Item("SRRD").Length > 0 Then
+                        .Tags.Delete("SRRD")
+                    End If
+
+                    If showRangeLeft >= 0 Then
+                        .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, False)))
+                    End If
+
                     If Not IsNothing(bigType) Then
                         If .Tags.Item("BID").Length > 0 Then
                             .Tags.Delete("BID")

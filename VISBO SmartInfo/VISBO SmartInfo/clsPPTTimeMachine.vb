@@ -101,7 +101,7 @@ Public Class clsPPTTimeMachine
                                                                                                                                         Date.MinValue.AddDays(1))
 
                 If _minmaxTimeStamps(0) > minTS Then
-                    _minmaxTimeStamps(0) = minTS
+                    _minmaxTimeStamps(0) = minTS.AddSeconds(1)
                 End If
 
 
@@ -259,40 +259,44 @@ Public Class clsPPTTimeMachine
 
         Dim jetzt As Date = Date.Now
 
+        If smartSlideLists.countProjects > 0 Then
+            'Dim tmpTM As clsPPTTimeMachine = Nothing
+            If _projectTimeStamps.Count > 0 Then
 
-        'Dim tmpTM As clsPPTTimeMachine = Nothing
-        If _projectTimeStamps.Count > 0 Then
+                ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
+                ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist 
+                If _minmaxTimeStamps(1) = Date.MinValue Then
+                    ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
+                    For i As Integer = 0 To _projectTimeStamps.Count - 1
 
-            ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
-            ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist 
-            If _minmaxTimeStamps(1) = Date.MinValue Then
-                ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
-                For i As Integer = 0 To _projectTimeStamps.Count - 1
+                        Dim pHistory As clsProjektHistorie = _projectTimeStamps.ElementAt(i).Value
+                        Dim key As String = _projectTimeStamps.ElementAt(i).Key
+                        Dim pName As String = getPnameFromKey(key)
+                        Dim vName As String = getVariantnameFromKey(key)
 
-                    Dim pHistory As clsProjektHistorie = _projectTimeStamps.ElementAt(i).Value
-                    Dim key As String = _projectTimeStamps.ElementAt(i).Key
-                    Dim pName As String = getPnameFromKey(key)
-                    Dim vName As String = getVariantnameFromKey(key)
+                        If IsNothing(pHistory) Then
 
-                    If IsNothing(pHistory) Then
+                            _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
 
-                        _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                        ElseIf pHistory.Count = 0 Then
 
-                    ElseIf pHistory.Count = 0 Then
+                            _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
 
-                        _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                        End If
 
-                    End If
+                    Next
+                End If
 
-                Next
             End If
 
-            ' jetzt müssen minmax-Werte an die aktuelle Slide angepasst werden 
-            ' jetzt noch minmax-Timestamps anpassen 
-            Call adjustMinMaxToCurrentSlide()
+        End If
 
 
-            Select Case kennung
+        ' jetzt müssen minmax-Werte an die aktuelle Slide angepasst werden 
+        ' jetzt noch minmax-Timestamps anpassen 
+        Call adjustMinMaxToCurrentSlide()
+
+        Select Case kennung
                 Case ptNavigationButtons.nachher
 
 
@@ -362,14 +366,14 @@ Public Class clsPPTTimeMachine
 
             End Select
 
-            'If Not justForInformation Then
-            '    tmpTM.timeStampsIndex = tmpIndex
-            'End If
+        'If Not justForInformation Then
+        '    tmpTM.timeStampsIndex = tmpIndex
+        'End If
 
-        Else
-            ' nichts tun ...
-            tmpDate = jetzt
-        End If
+        'Else
+        '    ' nichts tun ...
+        '    tmpDate = jetzt
+        'End If
 
 
 

@@ -2571,7 +2571,7 @@ Module Module1
         '                                  ByVal detailID As Integer, ByVal curTimeStamp As Date)
         Try
             Dim hproj As clsProjekt = Nothing
-            Dim portfolio As clsConstellation = Nothing
+            Dim portfolio As clsConstellation
             Dim portfolioTS As Date = Nothing
             Dim scInfo As New clsSmartPPTCompInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
@@ -2582,9 +2582,11 @@ Module Module1
                 Dim continueOperation As Boolean = False
                 If scInfo.prPF = ptPRPFType.portfolio Then
 
+
                     If currentConstellationName = scInfo.pName Then
                         ' nix tun
                         continueOperation = True
+                        portfolio = currentSessionConstellation
                     Else
 
 
@@ -2594,10 +2596,11 @@ Module Module1
 
                             ' lade das Portfolio 
                             Dim err As New clsErrorCodeMsg
-                            portfolio =
+                            currentSessionConstellation =
                                 CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName,
                                                                                                       portfolioTS,
                                                                                                      err, storedAtOrBefore:=curTimeStamp)
+                            portfolio = currentSessionConstellation
 
                             '' bringe alles in ShowProjekte 
                             'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
@@ -2800,6 +2803,13 @@ Module Module1
                             End If
                         Else
                             ' ist Portfolio
+                            If Not IsNothing(portfolio) Then
+                                If scInfo.hasValidZeitraum Then
+                                    pptShape.TextFrame2.TextRange.Text = textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
+                                Else
+                                    pptShape.TextFrame2.TextRange.Text = "     "
+                                End If
+                            End If
                         End If
 
 
@@ -2880,10 +2890,32 @@ Module Module1
                 If scInfo.prPF = ptPRPFType.portfolio Then
 
                     If currentConstellationName = scInfo.pName Then
-                        ' nix tun
-                        continueOperation = True
-                    Else
 
+                        If ShowProjekte.Count <> 0 Then
+                            ' nix tun
+                            continueOperation = True
+                        Else
+                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                            ' lade das Portfolio 
+                            Dim err As New clsErrorCodeMsg
+                            Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+
+                            ' bringe alles in ShowProjekte 
+                            For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                            Next
+
+                            '' besetzte ggf den Zeitraum
+                            'If scInfo.hasValidZeitraum Then
+                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            'End If
+
+                            continueOperation = Not IsNothing(ShowProjekte)
+                        End If
+
+                    Else
 
                         Try
                             currentConstellationName = scInfo.pName
@@ -2898,11 +2930,11 @@ Module Module1
                                 ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                             Next
 
-                            ' besetzte ggf den Zeitraum
-                            If scInfo.hasValidZeitraum Then
-                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            End If
+                            '' besetzte ggf den Zeitraum
+                            'If scInfo.hasValidZeitraum Then
+                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            'End If
 
                             continueOperation = Not IsNothing(ShowProjekte)
                         Catch ex As Exception
