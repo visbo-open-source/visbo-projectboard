@@ -2180,13 +2180,21 @@ Public Class clsProjekte
                         End If
 
                     Else
+                        Dim myvalue As Double = 1.0
+                        If teamID > 0 Then
+                            myvalue = curRole.getTeamIDs.Item(teamID)
+                        End If
 
                         If Not realCollection.ContainsKey(curRole.UID) Then
                             ' eine Basis Rolle wird immer zu 100% genommen
-                            realCollection.Add(curRole.UID, 1.0)
+                            realCollection.Add(curRole.UID, myvalue)
                         Else
                             ' in diesem Fall wird die volle Kapazität der Basis-Rolle berechnet
-                            realCollection(curRole.UID) = 1.0
+                            Dim newValue As Double = realCollection(curRole.UID) + myvalue
+                            If newValue > 1.0 Then
+                                newValue = 1.0
+                            End If
+                            realCollection(curRole.UID) = newValue
                         End If
 
                     End If

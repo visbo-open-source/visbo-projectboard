@@ -1574,7 +1574,9 @@ Public Module Module1
                 If Not IsNothing(idArray) Then
                     tmpResult = idArray.Contains(role.UID)
                 End If
-
+                'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
+                '    tmpResult = role.isTeam
             End If
         End If
 
