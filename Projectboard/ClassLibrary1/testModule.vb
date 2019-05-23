@@ -3668,7 +3668,7 @@ Public Module testModule
                                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
                                                     ByRef pptFirstTime As Boolean,
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
-        'ByVal showNames As Boolean, ByVal showProjectLine As Boolean,
+
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
 
         Dim pptApp As pptNS.Application = Nothing

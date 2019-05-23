@@ -370,10 +370,10 @@ Module Module1
     ''' <param name="ampelColor"></param>
     ''' <param name="show"></param>
     ''' <remarks></remarks>
-    Friend Sub faerbeShape(ByRef tmpShape As PowerPoint.Shape, _
+    Friend Sub faerbeShape(ByRef tmpShape As PowerPoint.Shape,
                            ByVal ampelColor As Integer, ByVal show As Boolean)
 
-        
+
         If ampelColor >= 0 And ampelColor <= 3 Then
             'alles ok 
             Try
@@ -2482,71 +2482,71 @@ Module Module1
                             'ElseIf bigType = ptReportBigTypes.tables Then
 
                             If detailID = PTpptTableTypes.prZiele Then
-                                    Call updatePPTProjektTabelleZiele(pptShape, tsProj)
+                                Call updatePPTProjektTabelleZiele(pptShape, tsProj)
 
-                                ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
-                                    Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                            ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
+                                Try
+                                    'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
+                                    'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
 
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                        bProj = timeMachine.getFirstContractedVersion(pvName)
-                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
-
-
-                                        Dim q1 As String = pptShape.Tags.Item("Q1")
-                                        Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        'Dim nids As String = pptShape.Tags.Item("NIDS")
-
-                                        'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
-                                        '                                 toDoCollection, q1, q2)
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
+                                    'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
+                                    'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                    bProj = timeMachine.getFirstContractedVersion(pvName)
+                                    lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
 
+                                    Dim q1 As String = pptShape.Tags.Item("Q1")
+                                    Dim q2 As String = pptShape.Tags.Item("Q2")
+                                    'Dim nids As String = pptShape.Tags.Item("NIDS")
 
-                                    Catch ex As Exception
-                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
-                                        bProj = Nothing
-                                        lProj = Nothing
-                                    End Try
+                                    'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                    '                                 toDoCollection, q1, q2)
+                                    Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
 
-                                ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
-                                    Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
-                                        bProj = timeMachine.getFirstContractedVersion(pvName)
-                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
-                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+                                Catch ex As Exception
+                                    Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                    bProj = Nothing
+                                    lProj = Nothing
+                                End Try
 
-                                        Dim q1 As String = pptShape.Tags.Item("Q1")
-                                        Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+                            ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
+                                Try
+                                    'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
+                                    'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                    'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
+                                    'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
-                                        Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                         toDoCollection, q1, q2)
+                                    bProj = timeMachine.getFirstContractedVersion(pvName)
+                                    lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
-                                    Catch ex As Exception
-                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
-                                        bProj = Nothing
-                                    End Try
-                                End If
+                                    Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
+                                    Dim q1 As String = pptShape.Tags.Item("Q1")
+                                    Dim q2 As String = pptShape.Tags.Item("Q2")
+                                    Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                    Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                     toDoCollection, q1, q2)
+
+                                Catch ex As Exception
+                                    Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                    bProj = Nothing
+                                End Try
                             End If
 
                         End If
 
-
-                    Else
-                        ' kein zu aktualisierendes Shape ... 
                     End If
 
 
+                Else
+                    ' kein zu aktualisierendes Shape ... 
                 End If
+
+
+            End If
 
 
         Catch ex As Exception
@@ -2571,7 +2571,7 @@ Module Module1
         '                                  ByVal detailID As Integer, ByVal curTimeStamp As Date)
         Try
             Dim hproj As clsProjekt = Nothing
-            Dim portfolio As clsConstellation
+            Dim portfolio As clsConstellation = Nothing
             Dim portfolioTS As Date = Nothing
             Dim scInfo As New clsSmartPPTCompInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
@@ -2946,7 +2946,7 @@ Module Module1
                 Else
 
                     ' tk 23.4.19
-                    pvname = calcProjektKey(scInfo.pName, scInfo.vName)
+                    pvName = calcProjektKey(scInfo.pName, scInfo.vName)
 
                     ' damit auch eine andere Variante gezeigt werden kann ... 
                     If showOtherVariant Then
@@ -3911,7 +3911,7 @@ Module Module1
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                     If scInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                        .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
                         .Interior.Color = balkenFarbe
                     Else
                         .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
