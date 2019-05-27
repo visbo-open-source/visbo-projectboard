@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">\\desbhtcprj1\Visbo\MS Project VISBO AddIn</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">MS Project VISBO AddIn</Value>
