@@ -2435,52 +2435,64 @@ Public Class Request
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
 
-            If Not IsNothing(setting) Then
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
 
-                anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+                    anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
 
-                If anzSetting > 0 Then
-                    If anzSetting = 1 Then
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
 
-                        settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
-                        webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+                            settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                            webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+
+                        Else
+                            ' die Organisation suchen, die am nächsten an validFrom liegt
+                            Dim latestOrga As New clsVCSettingOrganisation
+                            Dim orgaSettingsListe As List(Of clsVCSettingOrganisation) = CType(setting, List(Of clsVCSettingOrganisation))
+
+                            For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
+                                If orgaSetting.timestamp > latestOrga.timestamp Then
+                                    If orgaSetting.timestamp <= validfrom Then
+                                        latestOrga = orgaSetting
+                                    End If
+                                End If
+                            Next
+
+                            webOrganisation = latestOrga.value
+
+                        End If
+
+                        webOrganisation.copyTo(result)
+
+                        ' bestimmen der _topLevelNodeIDs
+                        result.allRoles.buildTopNodes()
+
+                        ' aufbauen der OrgaTeamChilds
+                        result.allRoles.buildOrgaTeamChilds()
 
                     Else
-                        ' die Organisation suchen, die am nächsten an validFrom liegt
-                        Dim latestOrga As New clsVCSettingOrganisation
-                        Dim orgaSettingsListe As List(Of clsVCSettingOrganisation) = CType(setting, List(Of clsVCSettingOrganisation))
-
-                        For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
-                            If orgaSetting.timestamp > latestOrga.timestamp Then
-                                If orgaSetting.timestamp <= validfrom Then
-                                    latestOrga = orgaSetting
-                                End If
-                            End If
-                        Next
-
-                        webOrganisation = latestOrga.value
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
 
                     End If
-
-                    webOrganisation.copyTo(result)
-
-                    ' bestimmen der _topLevelNodeIDs
-                    result.allRoles.buildTopNodes()
-
                 Else
-                    If err.errorCode = 403 Then
-                        Call MsgBox(err.errorMsg)
-                    End If
-                    settingID = ""
+                    Call MsgBox(err.errorMsg)
 
                 End If
             Else
-                Call MsgBox(err.errorMsg)
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
 
             End If
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
         End Try
         retrieveOrganisationFromDB = result
     End Function

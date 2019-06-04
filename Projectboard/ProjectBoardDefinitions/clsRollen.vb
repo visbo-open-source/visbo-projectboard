@@ -41,6 +41,7 @@ Public Class clsRollen
     ''' die virtuelle Organisations- oder Eltern-Einheit ist die, die alle Team Member als Eltern umfasst
     ''' </summary>
     Public Sub buildOrgaTeamChilds()
+
         Dim alleTeams As SortedList(Of Integer, Double) = getAllTeamIDs
 
         _orgaTeamChilds = New SortedList(Of Integer, List(Of Integer))
@@ -89,14 +90,16 @@ Public Class clsRollen
 
                             For Each kvp As KeyValuePair(Of Integer, Double) In subRoleIDs
 
-                                If _orgaTeamChilds.ContainsKey(kvp.Key) Then
+                                If Not IsNothing(_orgaTeamChilds) Then
+                                    If _orgaTeamChilds.ContainsKey(kvp.Key) Then
 
-                                    Dim teilErgebnis As List(Of Integer) = _orgaTeamChilds.Item(kvp.Key)
-                                    For Each srID As Integer In teilErgebnis
-                                        If Not ergebnisListe.Contains(srID) Then
-                                            ergebnisListe.Add(srID)
-                                        End If
-                                    Next
+                                        Dim teilErgebnis As List(Of Integer) = _orgaTeamChilds.Item(kvp.Key)
+                                        For Each srID As Integer In teilErgebnis
+                                            If Not ergebnisListe.Contains(srID) Then
+                                                ergebnisListe.Add(srID)
+                                            End If
+                                        Next
+                                    End If
                                 End If
 
                             Next
@@ -104,9 +107,13 @@ Public Class clsRollen
                             virtualChilds = ergebnisListe.ToArray
 
                         Else
-                            If _orgaTeamChilds.ContainsKey(roleID) Then
-                                virtualChilds = _orgaTeamChilds.Item(roleID).ToArray
+
+                            If Not IsNothing(_orgaTeamChilds) Then
+                                If _orgaTeamChilds.ContainsKey(roleID) Then
+                                    virtualChilds = _orgaTeamChilds.Item(roleID).ToArray
+                                End If
                             End If
+
                         End If
 
                     End If

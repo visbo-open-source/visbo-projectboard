@@ -4289,6 +4289,11 @@ Public Module Module1
                     projectTimeStamp = Date.Now
                 End If
 
+                If .Tags.Item("SOC").Length > 0 Then
+                    .Tags.Delete("SOC")
+                End If
+                .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+
 
                 If .Tags.Item("CRD").Length > 0 Then
                     .Tags.Delete("CRD")
