@@ -25122,7 +25122,8 @@ Public Module Projekte
         End Select
 
         If spalte < 1 Then
-            Throw New ArgumentException("Datum kann nicht vor dem Start des Kalenders liegen")
+            'ur: 2019.06.03 auskommentiert versuchsweise
+            'Throw New ArgumentException("Datum kann nicht vor dem Start des Kalenders liegen")
         End If
 
         getColumnOfDate = spalte

@@ -73,11 +73,11 @@ Public Class ThisAddIn
 
         End Try
 
-        Try
-            Call closeExcelAPP()
-        Catch ex As Exception
+        'Try
+        '    Call closeExcelAPP()
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
 
     End Sub
@@ -170,20 +170,26 @@ Public Class ThisAddIn
     End Sub
 
     Private Sub Application_PresentationBeforeClose(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeClose
-
+        Dim a As Integer = 0
         ' bitte nicht benutzen siehe Module1.vb
     End Sub
 
     Private Sub Application_WindowSelectionChange(Sel As Selection) Handles Application.WindowSelectionChange
         ' bitte nicht benutzen siehe Module1.vb
+        Dim a As Integer = 0
     End Sub
 
     Private Sub Application_WindowActivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowActivate
         ' bitte nicht benutzen siehe Module1.vb
+        Dim a As Integer = 0
     End Sub
 
     Private Sub Application_WindowDeactivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowDeactivate
         ' bitte nicht benutzen siehe Module1.vb
+        Dim a As Integer = 0
     End Sub
 
+    Private Sub Application_SlideSelectionChanged(SldRange As SlideRange) Handles Application.SlideSelectionChanged
+        Dim a As Integer = 0
+    End Sub
 End Class

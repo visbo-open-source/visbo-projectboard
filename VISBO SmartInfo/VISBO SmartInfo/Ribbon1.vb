@@ -271,6 +271,9 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        pptAPP.Activate()
+        'ur:2019-06-04
+        Call MsgBox("ende btnEnd2")
     End Sub
 
 
@@ -330,6 +333,8 @@ Public Class Ribbon1
         End Try
 
 
+        'ur:2019-06-04
+        Call MsgBox("ende btnFastForward")
     End Sub
 
     ''' <summary>
@@ -384,6 +389,10 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        'ur:2019-06-04
+        Call MsgBox("ende btnFastBack")
+
+
     End Sub
     ''' <summary>
     ''' positioniert alle Slides auf den ersten Timestamp 
@@ -437,9 +446,14 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        'ur:2019-06-04
+        Call MsgBox("ende btnStart")
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
+            'ur: 2019-06-04
+            Dim control As IRibbonControl = e.Control
+
             Dim tmpDate As Date = Date.MinValue
             Call updateAllSlides(ptNavigationButtons.update, tmpDate)
 
@@ -498,6 +512,9 @@ Public Class Ribbon1
         Catch ex As Exception
             Call MsgBox(ex.StackTrace)
         End Try
+
+        'ur:2019-06-04
+        Call MsgBox("ende btnUpdate")
     End Sub
 
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
