@@ -33,21 +33,21 @@ Public Class Ribbon1
                 End With
             Else
                 With Me
-                .Group2.Label = "Aktualisieren"
-                .Group3.Label = "Time Machine"
-                .Group4.Label = "Aktionen"
-                .btnUpdate.Label = "Aktuell"
-                .btnStart.Label = "Erste Version"
-                .btnFastBack.Label = "Vorgänger Version"
-                .btnDate.Label = "Datum"
-                .btnShowChanges.Label = "Veränderung"
-                .btnFastForward.Label = "Nächste Version"
-                .btnEnd2.Label = "Neueste Version"
-                .btnToggle.Label = "hin- und herschalten"
-                .activateInfo.Label = "Eigenschaften"
-                .activateSearch.Label = "Suche"
-                .activateTab.Label = "Beschriften"
-                .btnFreeze.Label = "Konservieren/Freigeben"
+                    .Group2.Label = "Aktualisieren"
+                    .Group3.Label = "Time Machine"
+                    .Group4.Label = "Aktionen"
+                    .btnUpdate.Label = "Aktuell"
+                    .btnStart.Label = "Erste Version"
+                    .btnFastBack.Label = "Vorgänger Version"
+                    .btnDate.Label = "Datum"
+                    .btnShowChanges.Label = "Veränderung"
+                    .btnFastForward.Label = "Nächste Version"
+                    .btnEnd2.Label = "Neueste Version"
+                    .btnToggle.Label = "hin- und herschalten"
+                    .activateInfo.Label = "Eigenschaften"
+                    .activateSearch.Label = "Suche"
+                    .activateTab.Label = "Beschriften"
+                    .btnFreeze.Label = "Konservieren/Freigeben"
                     .settingsTab.Label = "Einstellungen"
                 End With
             End If
@@ -263,7 +263,7 @@ Public Class Ribbon1
         Try
 
             Dim tmpDate As Date = Date.MinValue
-            Call updateAllSlides(ptNavigationButtons.update, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
 
 
@@ -272,8 +272,12 @@ Public Class Ribbon1
         End Try
 
         pptAPP.Activate()
+
         'ur:2019-06-04
-        Call MsgBox("ende btnEnd2")
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnEnd2")
+        End If
+
     End Sub
 
 
@@ -287,7 +291,7 @@ Public Class Ribbon1
 
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call updateAllSlides(ptNavigationButtons.nachher, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.nachher, tmpDate)
 
             'Dim msg As String = ""
 
@@ -334,7 +338,10 @@ Public Class Ribbon1
 
 
         'ur:2019-06-04
-        Call MsgBox("ende btnFastForward")
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnFastForward")
+        End If
+
     End Sub
 
     ''' <summary>
@@ -346,7 +353,7 @@ Public Class Ribbon1
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call updateAllSlides(ptNavigationButtons.vorher, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.vorher, tmpDate)
 
             'Dim msg As String = ""
 
@@ -390,7 +397,9 @@ Public Class Ribbon1
         End Try
 
         'ur:2019-06-04
-        Call MsgBox("ende btnFastBack")
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnFastBack")
+        End If
 
 
     End Sub
@@ -404,7 +413,7 @@ Public Class Ribbon1
         Try
             Dim tmpDate As Date = Date.MinValue
 
-            Call updateAllSlides(ptNavigationButtons.erster, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.erster, tmpDate)
 
             'Dim msg As String = ""
 
@@ -447,7 +456,10 @@ Public Class Ribbon1
         End Try
 
         'ur:2019-06-04
-        Call MsgBox("ende btnStart")
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnStart")
+        End If
+
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
@@ -455,7 +467,7 @@ Public Class Ribbon1
             Dim control As IRibbonControl = e.Control
 
             Dim tmpDate As Date = Date.MinValue
-            Call updateAllSlides(ptNavigationButtons.update, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
             'Dim msg As String = ""
 
@@ -514,7 +526,11 @@ Public Class Ribbon1
         End Try
 
         'ur:2019-06-04
-        Call MsgBox("ende btnUpdate")
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnUpdate")
+        End If
+
+
     End Sub
 
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
@@ -603,7 +619,7 @@ Public Class Ribbon1
 
             If userResult = Windows.Forms.DialogResult.OK Then
                 Dim specDate As Date = calendarFrm.DateTimePicker1.Value
-                Call updateAllSlides(ptNavigationButtons.individual, specDate)
+                Call updateSelectedSlide(ptNavigationButtons.individual, specDate)
 
                 'Dim msg As String = ""
 
@@ -669,7 +685,7 @@ Public Class Ribbon1
 
 
             Dim tmpDate As Date = Date.MinValue
-            Call updateAllSlides(ptNavigationButtons.previous, tmpDate)
+            Call updateSelectedSlide(ptNavigationButtons.previous, tmpDate)
 
             'Dim msg As String = ""
 

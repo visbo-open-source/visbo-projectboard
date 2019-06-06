@@ -496,35 +496,35 @@ Module Module1
 
 
                     If Not IsNothing(currentOrga) Then
-                            ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                            RoleDefinitions = currentOrga.allRoles
-                            CostDefinitions = currentOrga.allCosts
-                        End If
-
-
-                        ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
-                        ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                        ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                        Try
-                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-                            If IsNothing(customFieldDefinitions) Then
-                                'Call MsgBox(err.errorMsg)
-                            End If
-                        Catch ex As Exception
-
-                        End Try
-
-                        ' in allen Slides den Sicht Schutz aufheben 
-                        protectionSolved = True
-                        Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
-
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        RoleDefinitions = currentOrga.allRoles
+                        CostDefinitions = currentOrga.allCosts
                     End If
 
 
+                    ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
+                    ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                    Try
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                        If IsNothing(customFieldDefinitions) Then
+                            'Call MsgBox(err.errorMsg)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' in allen Slides den Sicht Schutz aufheben 
+                    protectionSolved = True
+                    Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
+
                 End If
+
+
+            End If
 
         Else
             ' jetzt wird die für die Slide passende Rolle gesucht 
@@ -733,7 +733,7 @@ Module Module1
 
                     If diagResult = Windows.Forms.DialogResult.OK Then
                         Dim tmpDate As Date = Date.MinValue
-                        Call updateAllSlides(ptNavigationButtons.update, tmpDate)
+                        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
                     End If
                 End With
@@ -3931,10 +3931,10 @@ Module Module1
             ' remove old series
             ''Try
             Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
+            Do While anz > 0
+                .SeriesCollection(1).Delete()
+                anz = anz - 1
+            Loop
             ''Catch ex As Exception
 
             ''End Try
@@ -4052,7 +4052,6 @@ Module Module1
 
             End If
 
-
         End With
 
 
@@ -4072,11 +4071,7 @@ Module Module1
 
 
                 End With
-
             End If
-
-
-
         End With
 
         ' ---- hier dann final den Titel setzen 
@@ -4094,19 +4089,7 @@ Module Module1
 
         End With
 
-        ' jetzt wird das Aktivieren gemacht 
-        ''Try
 
-        'pptShape.Chart.ChartData.ActivateChartDataWindow()
-        'pptChart.ChartData.Activate()
-        ' ur: 2019-06-04
-        'pptChartData.Activate()
-
-        ''Catch ex As Exception
-
-        ''End Try
-
-        'Dim xlApp As xlNS.Application = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
         xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
@@ -4115,27 +4098,27 @@ Module Module1
         'xlApp.DisplayFormulaBar = False
 
 
-        ''Try
+        'Try
 
-        ''If Not IsNothing(xlApp.ActiveWindow) Then
+        If Not IsNothing(xlApp.ActiveWindow) Then
 
-        ''        With xlApp.ActiveWindow
-        ''            .Visible = smartChartsAreEditable
-        ''            '.Caption = "VISBO Smart Diagram"
-        ''            '.DisplayHeadings = False
-        ''            '.DisplayWorkbookTabs = False
+            With xlApp.ActiveWindow
+                .Visible = smartChartsAreEditable
+                '.Caption = "VISBO Smart Diagram"
+                '.DisplayHeadings = False
+                '.DisplayWorkbookTabs = False
 
-        ''            .Width = 50
-        ''            .Height = 15
-        ''            .Top = 10
-        ''            .Left = -120
+                .Width = 50
+                .Height = 15
+                .Top = 10
+                .Left = -120
 
-        ''        End With
-        ''    End If
+            End With
+        End If
 
-        ''Catch ex As Exception
+        'Catch ex As Exception
 
-        ''End Try
+        'End Try
 
 
         pptChart.Refresh()
@@ -6066,17 +6049,17 @@ Module Module1
         'Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
         ' ur:2019-05-29: TryCatch vermeiden
         Dim todayLineShape As PowerPoint.Shape
-            todayLineShape = Nothing
-            For i = 1 To currentSlide.Shapes.Count
-                If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-                    todayLineShape = currentSlide.Shapes.Item("todayLine")
-                    Exit For
-                End If
-                i = i + 1
-            Next
-            If Not IsNothing(todayLineShape) Then
-                Call sendTodayLinetoNewPosition(todayLineShape)
+        todayLineShape = Nothing
+        For i = 1 To currentSlide.Shapes.Count
+            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+                todayLineShape = currentSlide.Shapes.Item("todayLine")
+                Exit For
             End If
+            i = i + 1
+        Next
+        If Not IsNothing(todayLineShape) Then
+            Call sendTodayLinetoNewPosition(todayLineShape)
+        End If
         'Catch ex As Exception
 
         'End Try
@@ -9726,7 +9709,7 @@ Module Module1
     ''' wird aufgerufen direkt aus den Buttons des Ribbon1
     ''' </summary>
     ''' <param name="ptNavType"></param>
-    Public Sub updateAllSlides(ByVal ptNavType As Integer, ByVal specDate As Date)
+    Public Sub updateSelectedSlide(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
             Dim errmsg As String = ""
@@ -9754,24 +9737,24 @@ Module Module1
             ' neue Slide , also leer machen ... 
             smartSlideLists = New clsSmartSlideListen
 
-                If Not IsNothing(sld) Then
-                    If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
+            If Not IsNothing(sld) Then
+                If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
 
-                        If userIsEntitled(errmsg, sld) Then
+                    If userIsEntitled(errmsg, sld) Then
 
-                            currentTimestamp = getCurrentTimeStampFromSlide(sld)
-                            Call pptAPP_AufbauSmartSlideLists(sld)
-                            Call prepareAndPerformBtnAction(ptNavType, specDate, False)
+                        currentTimestamp = getCurrentTimeStampFromSlide(sld)
+                        Call pptAPP_AufbauSmartSlideLists(sld)
+                        Call prepareAndPerformBtnAction(ptNavType, specDate, False)
 
-                        Else
-                            ' hier ggf auf invisible setzen, wenn erforderlich 
-                            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End If
-
-
-
+                    Else
+                        ' hier ggf auf invisible setzen, wenn erforderlich 
+                        Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
                     End If
+
+
+
                 End If
+            End If
             'Next
 
             ' ur:2019-06-04: wird nicht benötigt, wenn nur jede selektierte Slide einzeln upgedated wird
@@ -10051,6 +10034,8 @@ Module Module1
 
     Public Sub own_SlideSelectionChanged(ByVal Sld As PowerPoint.Slide)
 
+        Dim beforeSlideTimestamp As Date = Date.MinValue
+
         ' die aktuelle Slide setzen 
         If Not IsNothing(Sld) Then
 
@@ -10073,11 +10058,19 @@ Module Module1
                         Try
                             beforeSlideID = currentSlide.SlideID
                             beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlideID.ToString
+                            ' jetzt die beforeSlideTimestamp setzen 
+                            With currentSlide
+                                If .Tags.Item("CRD").Length > 0 Then
+                                    beforeSlideTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+                                End If
+                            End With
+
                         Catch ex As Exception
 
                         End Try
 
                     End If
+
 
                     '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
                     currentSlide = Sld
@@ -10094,6 +10087,9 @@ Module Module1
                         End If
                     End With
 
+                    If currentTimestamp <> beforeSlideTimestamp Then
+                        updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                    End If
 
                     ' nur wenn die SlideID gewechselt hat, muss agiert werden
                     ' dabei auch berücksichtigen, ob sich Presentation geändert hat 

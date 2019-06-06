@@ -192,4 +192,12 @@ Public Class ThisAddIn
     Private Sub Application_SlideSelectionChanged(SldRange As SlideRange) Handles Application.SlideSelectionChanged
         Dim a As Integer = 0
     End Sub
+
+    Private Sub Application_PresentationPrint(Pres As Presentation) Handles Application.PresentationPrint
+        Dim a As Integer = 0
+    End Sub
+
+    Private Sub Application_PresentationBeforeSave(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeSave
+        Dim a As Integer = 0
+    End Sub
 End Class
