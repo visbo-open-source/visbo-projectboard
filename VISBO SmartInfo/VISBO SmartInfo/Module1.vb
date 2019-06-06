@@ -805,6 +805,47 @@ Module Module1
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
         ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
+        Dim a As Integer = 0
+        Dim beforeSlideTS As Date = Date.MinValue
+        Dim activeSlideTS As Date = Date.MinValue
+        Dim sld As PowerPoint.Slide
+        Dim canBeSaved As Boolean = True
+
+        If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
+            ' Vorbesetzung
+            sld = Pres.Slides.Item(1)
+            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+            For i = 2 To Pres.Slides.Count
+
+                beforeSlideTS = activeSlideTS
+                sld = Pres.Slides.Item(i)
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                If activeSlideTS <> beforeSlideTS Then
+                    canBeSaved = False
+                    Exit For
+                End If
+            Next
+
+            If beforeSlideTS > Date.MinValue And Not canBeSaved Then
+                Cancel = True
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Not saved!" & vbCrLf &
+                                "This presentation contains slides with different timestamps!")
+                Else
+                    Call MsgBox("Speichern nicht sinnvoll!" & vbCrLf &
+                                "Die Präsentation enthält Seiten mit unterschiedlichem Timestamp")
+                End If
+            ElseIf beforeSlideTS = Date.MinValue Then
+                If awinSettings.visboDebug Then
+                    Call MsgBox("An Error has occurred in PresentationBeforeSave")
+                End If
+            ElseIf canBeSaved Then
+                ' nothing to do
+                ' presentation will be saved
+            End If
+        End If
 
         If VisboProtected Then
             Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
@@ -10087,7 +10128,9 @@ Module Module1
                         End If
                     End With
 
-                    If currentTimestamp <> beforeSlideTimestamp Then
+                    Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
+
+                    If diff <> 0 Then
                         updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
                     End If
 
