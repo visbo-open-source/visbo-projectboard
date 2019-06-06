@@ -194,52 +194,12 @@ Public Class ThisAddIn
     End Sub
 
     Private Sub Application_PresentationPrint(Pres As Presentation) Handles Application.PresentationPrint
+        ' Es wird noch pptApp_PresentationPrint aufgerufen
         Dim a As Integer = 0
     End Sub
 
     Private Sub Application_PresentationBeforeSave(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeSave
-
-        'Dim a As Integer = 0
-        'Dim beforeSlideTS As Date = Date.MinValue
-        'Dim activeSlideTS As Date = Date.MinValue
-        'Dim sld As PowerPoint.Slide
-        'Dim canBeSaved As Boolean = True
-
-        'If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
-        '    Vorbesetzung
-        '    sld = Pres.Slides.Item(1)
-        '    activeSlideTS = getCurrentTimeStampFromSlide(sld)
-
-        '    For i = 2 To Pres.Slides.Count
-
-        '        beforeSlideTS = activeSlideTS
-        '        sld = Pres.Slides.Item(i)
-        '        activeSlideTS = getCurrentTimeStampFromSlide(sld)
-
-        '        If activeSlideTS <> beforeSlideTS Then
-        '            canBeSaved = False
-        '            Exit For
-        '        End If
-        '    Next
-
-        '    If beforeSlideTS > Date.MinValue And Not canBeSaved Then
-        '        Cancel = True
-        '        If awinSettings.englishLanguage Then
-        '            Call MsgBox("Not saved!" & vbCrLf &
-        '                        "This presentation contains slides with different timestamps!")
-        '        Else
-        '            Call MsgBox("Speichern nicht sinnvoll!" & vbCrLf &
-        '                        "Die Präsentation enthält Seiten mit unterschiedlichem Timestamp")
-        '        End If
-        '    ElseIf beforeSlideTS = Date.MinValue Then
-        '        If awinSettings.visboDebug Then
-        '            Call MsgBox("An Error has occurred in PresentationBeforeSave")
-        '        End If
-        '    ElseIf canBeSaved Then
-        '         nothing to do
-        '         Presentation will be saved
-        '    End If
-        'End If
-
+        ' Es wird noch pptApp_PresentationBeforeSave aufgerufen
+        Dim a As Integer = 0
     End Sub
 End Class

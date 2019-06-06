@@ -804,7 +804,7 @@ Module Module1
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
-        ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
+
         Dim a As Integer = 0
         Dim beforeSlideTS As Date = Date.MinValue
         Dim activeSlideTS As Date = Date.MinValue
@@ -847,6 +847,7 @@ Module Module1
             End If
         End If
 
+        ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
         If VisboProtected Then
             Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
         End If
@@ -872,6 +873,50 @@ Module Module1
 
             Pres.SaveAs(correctName)
             My.Computer.FileSystem.DeleteFile(vollerName)
+        End If
+    End Sub
+
+    Private Sub pptAPP_PresentationPrint(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationPrint
+
+        Dim beforeSlideTS As Date = Date.MinValue
+        Dim activeSlideTS As Date = Date.MinValue
+        Dim sld As PowerPoint.Slide
+        Dim canBeSaved As Boolean = True
+
+        If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
+            ' Vorbesetzung
+            sld = Pres.Slides.Item(1)
+            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+            For i = 2 To Pres.Slides.Count
+
+                beforeSlideTS = activeSlideTS
+                sld = Pres.Slides.Item(i)
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                If activeSlideTS <> beforeSlideTS Then
+                    canBeSaved = False
+                    Exit For
+                End If
+            Next
+
+            If beforeSlideTS > Date.MinValue And Not canBeSaved Then
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Warning!" & vbCrLf &
+                                "This presentation contains slides with different timestamps!")
+                Else
+                    Call MsgBox("Achtung!" & vbCrLf &
+                                "Die Präsentation enthält Seiten mit unterschiedlichem Timestamp")
+                End If
+            ElseIf beforeSlideTS = Date.MinValue Then
+                If awinSettings.visboDebug Then
+                    Call MsgBox("An Error has occurred in PresentationBeforeSave")
+                End If
+            ElseIf canBeSaved Then
+                ' nothing to do
+                ' presentation will be saved
+            End If
         End If
     End Sub
 
@@ -10172,6 +10217,5 @@ Module Module1
         End If
 
     End Sub
-
 
 End Module
