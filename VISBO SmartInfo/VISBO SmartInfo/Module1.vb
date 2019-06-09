@@ -1254,21 +1254,29 @@ Module Module1
                         Else
 
                         End If
-                        'If projType = ptPRPFType.portfolio Then
 
-                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
-                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
-
-                            'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
-                            ' das ist in einem Tag im tmpshape enthalten
-
-                            Dim pvName As String = ""
+                        Dim pvName As String = ""
+                        If projType = ptPRPFType.project Then
+                            If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                Dim pName As String = tmpShape.Tags.Item("PNM")
+                                Dim vName As String = tmpShape.Tags.Item("VNM")
+                                pvName = calcProjektKey(pName, vName)
+                            End If
+                        ElseIf projType = ptPRPFType.portfolio Then
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
                                 pvName = pName
                                 'pvName = calcProjektKey(pName, vName)
                             End If
+
+                        End If
+
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
+
+                            'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
 
                             If pvName <> "" Then
                                 If smartSlideLists.containsPortfolio(pvName) Then
@@ -1281,12 +1289,6 @@ Module Module1
                         ElseIf tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
                                 And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prName))) Then
 
-                            Dim pvName As String = ""
-                            If tmpShape.Tags.Item("PNM").Length > 0 Then
-                                Dim pName As String = tmpShape.Tags.Item("PNM")
-                                Dim vName As String = tmpShape.Tags.Item("VNM")
-                                pvName = calcProjektKey(pName, vName)
-                            End If
 
                             ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
 
@@ -1299,58 +1301,58 @@ Module Module1
                             End If
 
                         End If
+                    End If
 
 
-                        If tmpShape.Tags.Count > 0 Then
+                    If tmpShape.Tags.Count > 0 Then
 
-                            If isRelevantMSPHShape(tmpShape) Or isProjectCard(tmpShape) Then
-
-
-                                Dim isPcardInvisible As Boolean = isProjectCardInvisible(tmpShape)
-                                If isPcardInvisible Then
-                                    Dim a As Integer = 10
-                                End If
-
-                                bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
-
-                                Call aktualisiereSortedLists(tmpShape)
-
-                                If Not isPcardInvisible Then
-                                    If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
-                                        tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                                    End If
-                                End If
+                        If isRelevantMSPHShape(tmpShape) Or isProjectCard(tmpShape) Then
 
 
-                            ElseIf isVISBOChartElement(tmpShape) Then
+                            Dim isPcardInvisible As Boolean = isProjectCardInvisible(tmpShape)
+                            If isPcardInvisible Then
+                                Dim a As Integer = 10
+                            End If
+
+                            bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
+
+                            Call aktualisiereSortedLists(tmpShape)
+
+                            If Not isPcardInvisible Then
                                 If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
                                     tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                 End If
-
-                                'tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
-                                ' das ist in einem Tag im tmpshape enthalten
-                                If tmpShape.Tags.Item("PRPF").Length > 0 Then
-                                    If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
-                                        Dim pfName As String = ""
-                                        If tmpShape.Tags.Item("PNM").Length > 0 Then
-                                            Dim pName As String = tmpShape.Tags.Item("PNM")
-                                            Dim vName As String = tmpShape.Tags.Item("VNM")
-                                            'pvName = calcProjektKey(pName, vName)
-                                            pfName = pName
-                                        End If
-
-                                        If pfName <> "" Then
-                                            If smartSlideLists.containsPortfolio(pfName) Then
-                                                ' nichts tun, ist schon drin ..
-                                            Else
-                                                smartSlideLists.addPortfolio(pfName)
-                                            End If
-                                        End If
-                                    Else
-                                    End If
-                                End If
-
                             End If
+
+
+                        ElseIf isVISBOChartElement(tmpShape) Then
+                            If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
+                                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                            End If
+
+                            'tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
+                            If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                                If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
+                                    Dim pfName As String = ""
+                                    If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                        Dim pName As String = tmpShape.Tags.Item("PNM")
+                                        Dim vName As String = tmpShape.Tags.Item("VNM")
+                                        'pvName = calcProjektKey(pName, vName)
+                                        pfName = pName
+                                    End If
+
+                                    If pfName <> "" Then
+                                        If smartSlideLists.containsPortfolio(pfName) Then
+                                            ' nichts tun, ist schon drin ..
+                                        Else
+                                            smartSlideLists.addPortfolio(pfName)
+                                        End If
+                                    End If
+                                Else
+                                End If
+                            End If
+
                         End If
                     End If
                 End If
