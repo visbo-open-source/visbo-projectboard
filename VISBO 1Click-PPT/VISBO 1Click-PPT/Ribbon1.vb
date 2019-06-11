@@ -9,57 +9,57 @@ Public Class Ribbon1
 
 
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-        Try
+        'Try
 
-            pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+        '    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
+        '    awinSettings.databaseURL = My.Settings.mongoDBURL
+        '    awinSettings.databaseName = My.Settings.mongoDBname
 
-            awinSettings.globalPath = My.Settings.globalPath
-            awinSettings.awinPath = My.Settings.awinPath
-            awinSettings.visboTaskClass = My.Settings.TaskClass
-            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-            awinSettings.visboAmpel = My.Settings.VISBOAmpel
-            awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-            awinSettings.visboresponsible = My.Settings.VISBOresponsible
-            awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-            awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-            awinSettings.visboDebug = My.Settings.VISBODebug
-            awinSettings.visboMapping = My.Settings.VISBOMapping
-            awinSettings.visboServer = My.Settings.VISBOServer
-            awinSettings.proxyURL = My.Settings.proxyServerURL
-            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-            If awinSettings.rememberUserPwd Then
-                awinSettings.userNamePWD = My.Settings.userNamePWD
-            End If
+        '    awinSettings.globalPath = My.Settings.globalPath
+        '    awinSettings.awinPath = My.Settings.awinPath
+        '    awinSettings.visboTaskClass = My.Settings.TaskClass
+        '    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+        '    awinSettings.visboAmpel = My.Settings.VISBOAmpel
+        '    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+        '    awinSettings.visboresponsible = My.Settings.VISBOresponsible
+        '    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+        '    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+        '    awinSettings.visboDebug = My.Settings.VISBODebug
+        '    awinSettings.visboMapping = My.Settings.VISBOMapping
+        '    awinSettings.visboServer = My.Settings.VISBOServer
+        '    awinSettings.proxyURL = My.Settings.proxyServerURL
+        '    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        '    If awinSettings.rememberUserPwd Then
+        '        awinSettings.userNamePWD = My.Settings.userNamePWD
+        '    End If
 
-            dbUsername = ""
-            dbPasswort = ""
+        '    dbUsername = ""
+        '    dbPasswort = ""
 
-            Call awinsetTypen("BHTC")
+        '    Call awinsetTypen("BHTC")
 
-            StartofCalendar = StartofCalendar.AddMonths(-12)
-
-
-            If awinSettings.englishLanguage Then
-                DBspeichern.Label = "Save to DB"
-                EinzelprojektReport.Label = "Report of one Project"
-                Einstellung.Label = "Settings"
-            Else
-                DBspeichern.Label = "Speichern in DB"
-                EinzelprojektReport.Label = "Einzelprojekt Report"
-                Einstellung.Label = "Einstellungen"
-            End If
+        '    StartofCalendar = StartofCalendar.AddMonths(-12)
 
 
-        Catch ex As Exception
+        '    If awinSettings.englishLanguage Then
+        '        DBspeichern.Label = "Save to DB"
+        '        EinzelprojektReport.Label = "Report of one Project"
+        '        Einstellung.Label = "Settings"
+        '    Else
+        '        DBspeichern.Label = "Speichern in DB"
+        '        EinzelprojektReport.Label = "Einzelprojekt Report"
+        '        Einstellung.Label = "Einstellungen"
+        '    End If
 
-            Call MsgBox(ex.Message)
 
-        Finally
+        'Catch ex As Exception
 
-        End Try
+        '    Call MsgBox(ex.Message)
+
+        'Finally
+
+        'End Try
 
     End Sub
 
@@ -103,6 +103,7 @@ Public Class Ribbon1
 
                 Catch ex As Exception
 
+                    fehlerBeimLoad = True
                     Call MsgBox(ex.Message)
 
                 Finally
@@ -133,28 +134,36 @@ Public Class Ribbon1
                 Dim aktuellesDatum = Date.Now
                 Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
+                Dim permissionOK As Boolean = False
+
 
                 '' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
                 '' ''    ' ''    ''If aktuellesDatum > validDatum Then
+                If Not awinSettings.visboServer Then
+                    ' Testen, ob der User die passende Lizenz besitzt
+                    Dim user As String = myWindowsName
+                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
 
-                ' Testen, ob der User die passende Lizenz besitzt
-                Dim user As String = myWindowsName
-                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+                    ' Lesen des Lizenzen-Files
+                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
-                ' Lesen des Lizenzen-Files
+                    ' Prüfen der Lizenzen
+                    permissionOK = lizenzen.validLicence(user, komponente)
+
+                Else
+                    permissionOK = awinSettings.visboServer
+                End If
 
 
-                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
-
-                ' Prüfen der Lizenzen
-                If lizenzen.validLicence(user, komponente) Then
+                If permissionOK Then
 
                     '' Set cursor as hourglass
                     Cursor.Current = Cursors.WaitCursor
 
                     'Call MsgBox("EPReport_Click")
 
-                    ' Laden des aktuell geladenen Projektes
+                    Call MsgBox("Laden des aktuell in MSProject geöffneten Projektes")
+
                     Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
 
                     If Not IsNothing(hproj) Then

@@ -167,6 +167,8 @@ Public Class ThisAddIn
                         awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
                         awinSettings.visboDebug = My.Settings.VISBODebug
                         awinSettings.visboMapping = My.Settings.VISBOMapping
+                        awinSettings.visboServer = My.Settings.VISBOServer
+                        awinSettings.proxyURL = My.Settings.proxyServerURL
                         awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
                         If awinSettings.rememberUserPwd Then
                             awinSettings.userNamePWD = My.Settings.userNamePWD
@@ -213,21 +215,32 @@ Public Class ThisAddIn
                 Dim aktuellesDatum = Date.Now
                 Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
+                Dim permissionOK As Boolean = False
 
                 '' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
                 '' ''    ' ''    ''If aktuellesDatum > validDatum Then
 
-                ' Testen, ob der User die passende Lizenz besitzt
-                Dim user As String = myWindowsName
-                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+                If Not awinSettings.visboServer Then
 
-                ' Lesen des Lizenzen-Files
+                    ' Testen, ob der User die passende Lizenz besitzt
+                    Dim user As String = myWindowsName
+                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+
+                    ' Lesen des Lizenzen-Files
 
 
-                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
-                ' Prüfen der Lizenzen
-                If lizenzen.validLicence(user, komponente) Then
+                    permissionOK = lizenzen.validLicence(user, komponente)
+                Else
+
+                    permissionOK = awinSettings.visboServer
+
+                End If
+
+                ' Prüfen der Erlaubnis
+
+                If permissionOK Then
 
                     '' Set cursor as hourglass
                     Cursor.Current = Cursors.WaitCursor
@@ -323,6 +336,8 @@ Public Class ThisAddIn
         '                    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
         '                    awinSettings.visboDebug = My.Settings.VISBODebug
         '                    awinSettings.visboMapping = My.Settings.VISBOMapping
+        '                    awinSettings.visboServer = My.Settings.VISBOServer
+        '                    awinSettings.proxyURL = My.Settings.proxyServerURL
         '                    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
         '                    If awinSettings.rememberUserPwd Then
         '                        awinSettings.userNamePWD = My.Settings.userNamePWD

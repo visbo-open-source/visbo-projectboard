@@ -3,16 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\desbhtcprj1\Visbo\MS Project VISBO AddIn</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\telair\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Task Class</Value>
+      <Value Profile="(Default)">Visbo Task Class</Value>
     </Setting>
     <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Alias</Value>
+      <Value Profile="(Default)">VISBO Alias</Value>
     </Setting>
     <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Ampel</Value>
@@ -21,19 +21,16 @@
       <Value Profile="(Default)">https://staging.visbo.net/api</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">bhtc</Value>
+      <Value Profile="(Default)">Telair19</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Indicators</Value>
     </Setting>
     <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Deliverables</Value>
-    </Setting>
-    <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -53,10 +50,10 @@
     <Setting Name="mongoDBWithSSL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">TMS_View</Value>
-    </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
