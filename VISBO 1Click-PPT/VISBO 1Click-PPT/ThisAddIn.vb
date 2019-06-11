@@ -32,6 +32,7 @@ Public Class ThisAddIn
             awinSettings.proxyURL = My.Settings.proxyServerURL
             awinSettings.userNamePWD = My.Settings.userNamePWD
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            awinSettings.proxyURL = My.Settings.proxyServerURL
 
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If awinSettings.rememberUserPwd Then

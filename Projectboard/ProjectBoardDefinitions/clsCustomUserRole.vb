@@ -47,6 +47,7 @@ Public Class clsCustomUserRole
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
                 '                 "PTview", "PTfilter", "PTWebServer"}
                 _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G1M0B2", "PTeditoa", "PTfilter",
+                                 "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTview", "PTWebServer", "PThelp", "PTTestfunktionen"}
 
@@ -112,10 +113,15 @@ Public Class clsCustomUserRole
 
                 ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
                     Dim idArray() As Integer = getAggregationRoleIDs()
-                    isAllowed = idArray.Contains(roleID)
-                    If Not isAllowed Then
-                        isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
+                    If Not IsNothing(idArray) Then
+                        isAllowed = idArray.Contains(roleID)
+                        If Not isAllowed Then
+                            isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
+                        End If
+                    Else
+                        isAllowed = True
                     End If
+
 
                 ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Then
                     isAllowed = True
@@ -230,7 +236,7 @@ Public Class clsCustomUserRole
     ''' </summary>
     ''' <returns></returns>
     Public Function getAggregationRoleIDs() As Integer()
-        Dim result() As Integer = {1}
+        Dim result() As Integer = Nothing
 
         If specifics <> "" And _customUserRole = ptCustomUserRoles.PortfolioManager Then
 

@@ -29,10 +29,10 @@ Public Class frmProjektEingabe1
             ' Sprach-Einstellungen ...
             If awinSettings.englishLanguage Then
                 .Text = "create a new project"
-                .pName.Text = "Project-Name"
+                .lbl_pName.Text = "Project-Name"
                 .lblVorlage.Text = "Template"
-                .lblStrategicFit.Text = "Strategic Fit"
-                .lblRisk.Text = "Risk"
+                .lbl_Number.Text = "Number"
+                .lbl_Description.Text = "Goals"
                 .lblProfitField.Text = "Margin(%)"
                 .dauerUnverändert.Text = "duration like template"
                 .lbl_Laufzeit.Text = "Duration: "
@@ -46,11 +46,12 @@ Public Class frmProjektEingabe1
             ' Sichtbarkeit und Voreinstellungen 
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
+            .txtbx_pNr.Text = ""
+
         End With
     End Sub
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Dim randomValue As Double
 
         Call defineButtonVisibility()
 
@@ -92,18 +93,13 @@ Public Class frmProjektEingabe1
             ' Projekt-Dauer setzen 
             newProjektDauer = dauerVorlage
 
-            ' jetzt die Business-Unit Dropbox aufbauen 
-            For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                businessUnitDropBox.Items.Add(kvp.Value.name)
-            Next kvp
-            businessUnitDropBox.Text = ""
 
 
             ' Jetzt den Wert für den Erlös bestimmen 
 
             Dim hvalue As Integer = 0
             Try
-                hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10, _
+                hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10,
                                                                      mode:=MidpointRounding.ToEven) * 10, Integer)
             Catch ex As Exception
 
@@ -111,13 +107,8 @@ Public Class frmProjektEingabe1
 
             .Erloes.Text = hvalue.ToString("N0")
 
-            '.selectedMonth.Value = DateDiff(DateInterval.Month, StartofCalendar, Date.Now) + 2
 
-            randomValue = appInstance.WorksheetFunction.RandBetween(1, 100) / 10
-            ' immer als Vorgabe 5 
-            .risiko.Text = "5"
-            .sFit.Text = "5"
-
+            .txtbx_description.Text = ""
             .dauerUnverändert.Checked = True
             .calcProjektStart = Date.Now.AddMonths(1)
             .calcProjektEnde = .calcProjektStart.AddDays(dauerVorlage - 1)
@@ -125,12 +116,20 @@ Public Class frmProjektEingabe1
             .DateTimeStart.Value = .calcProjektStart
             .DateTimeEnde.Value = .calcProjektEnde
 
-
-            .lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                .lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                     calcProjektEnde.ToShortDateString
 
-            .lbl_Referenz1.Text = "Referenz"
-            .lbl_Referenz2.Text = "Referenz 2"
+                .lbl_Referenz1.Text = "Referenz"
+                .lbl_Referenz2.Text = "Referenz 2"
+            Else
+                .lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                    calcProjektEnde.ToShortDateString
+
+                .lbl_Referenz1.Text = "Referenz"
+                .lbl_Referenz2.Text = "Referenz 2"
+            End If
+
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .DateTimeEnde.Visible = False
@@ -144,34 +143,7 @@ Public Class frmProjektEingabe1
         End With
     End Sub
 
-    'Private Sub selectedMonth_ValueChanged(sender As Object, e As EventArgs) Handles selectedMonth.ValueChanged
 
-    '    calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
-
-    'End Sub
-    Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
-
-        'With projectName
-        '    If Len(.Text) >= 1 Then
-
-        '        If IsNumeric(.Text) Then
-        '            MsgBox("Zahlen sind nicht zugelassen")
-        '            .Text = ""
-        '            .Focus()
-        '            Exit Sub
-        '        ElseIf inProjektliste(.Text) Then
-        '            MsgBox("Projekt-Name bereits vorhanden !")
-        '            .Text = ""
-        '            .Focus()
-        '            Exit Sub
-        '        End If
-        '    Else
-        '        MsgBox("ProjektName muss mindestens 1 Zeichen sein!")
-        '        Focus()
-        '    End If
-        'End With
-
-    End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
@@ -226,9 +198,9 @@ Public Class frmProjektEingabe1
                     DialogResult = System.Windows.Forms.DialogResult.None
                 ElseIf Not isValidProjectName(.Text) Then
                     If awinSettings.englishLanguage Then
-                        msgtxt = "projectname must not contain any #, (, ) characters"
+                        msgtxt = "projectname must not contain any special characters"
                     Else
-                        msgtxt = "Der Projekt-Name darf keine #, (, ) Zeichen enthalten"
+                        msgtxt = "Der Projekt-Name darf keine Sonderzeichen Zeichen enthalten"
                     End If
                     Call MsgBox(msgtxt)
 
@@ -237,19 +209,26 @@ Public Class frmProjektEingabe1
                     DialogResult = System.Windows.Forms.DialogResult.None
                 Else
 
-                    ' Änderung: das wird ja bereits in den Eingabefeldern entsprechend berechnet
-                    'If dauerUnverändert.Checked Then
-                    '    calcProjektStart = DateTimeStart.Value
-                    '    calcProjektEnde = DateTimeStart.Value.AddDays(dauerVorlage - 1)
 
-                    'Else
-                    '    calcProjektStart = DateTimeStart.Value
-                    '    calcProjektEnde = DateTimeEnde.Value
+                    If Not AlleProjekte.containsPNr(txtbx_pNr.Text) Then
+                        DialogResult = System.Windows.Forms.DialogResult.OK
+                        MyBase.Close()
+                    Else
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Project Nr already exists ... "
+                        Else
+                            msgtxt = "Die Projekt-Nummer existiert bereits ..."
+                        End If
 
-                    'End If
+                        Call MsgBox(msgtxt)
 
-                    DialogResult = System.Windows.Forms.DialogResult.OK
-                    MyBase.Close()
+                        txtbx_pNr.Text = ""
+                        txtbx_pNr.Undo()
+                        DialogResult = System.Windows.Forms.DialogResult.None
+
+                    End If
+
+
                 End If
             End If
         End With
@@ -280,51 +259,6 @@ Public Class frmProjektEingabe1
     End Sub
 
 
-    Private Sub sFit_LostFocus(sender As Object, e As EventArgs) Handles sFit.LostFocus
-
-        With Me.sFit
-
-            If Not IsNumeric(.Text) Then
-                MsgBox("bitte eine Zahl zwischen 0. und 10 eingeben ")
-                .Text = ""
-                .Focus()
-            ElseIf CType(.Text, Double) < 0 Or CType(.Text, Double) > 10 Then
-                Call MsgBox(" der strategische Fit muss eine positive Dezimal-Zahl zwischen 0. und 10 sein")
-                .Text = ""
-                .Focus()
-            Else
-                Dim hfit As Double
-                hfit = CType(.Text, Double)
-                .Text = hfit.ToString("0.0")
-            End If
-
-        End With
-
-    End Sub
-
-
-    Private Sub risiko_LostFocus(sender As Object, e As EventArgs) Handles risiko.LostFocus
-
-        With Me.risiko
-
-            If Not IsNumeric(.Text) Then
-                MsgBox("bitte eine Zahl zwischen 0. und 10 eingeben ")
-                .Text = ""
-                .Focus()
-            ElseIf CType(.Text, Double) < 0 Or CType(.Text, Double) > 10 Then
-                Call MsgBox(" das Risiko muss eine positive Dezimal-Zahl zwischen 0. und 10 sein")
-                .Text = ""
-                .Focus()
-            Else
-                Dim hrisk As Double
-                hrisk = CType(.Text, Double)
-                .Text = hrisk.ToString("0.0")
-            End If
-
-        End With
-
-    End Sub
-
     Private Sub vorlagenDropbox_LostFocus(sender As Object, e As EventArgs) Handles vorlagenDropbox.LostFocus
 
         If Projektvorlagen.Liste.ContainsKey(vorlagenDropbox.Text) Then
@@ -332,7 +266,7 @@ Public Class frmProjektEingabe1
 
             Dim hvalue As Integer
             Try
-                hvalue = CType(System.Math.Round(Projektvorlagen.getProject(vorlagenDropbox.Text).getGesamtKostenBedarf.Sum / 10, _
+                hvalue = CType(System.Math.Round(Projektvorlagen.getProject(vorlagenDropbox.Text).getGesamtKostenBedarf.Sum / 10,
                                                      mode:=MidpointRounding.ToEven) * 10, Integer)
 
             Catch ex As Exception
@@ -374,7 +308,7 @@ Public Class frmProjektEingabe1
 
         If dauerUnverändert.Checked Then
             'StartDatum muss gemäß Vorlagendauer errechnet werden
-            
+
             calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
             calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
 
@@ -382,7 +316,7 @@ Public Class frmProjektEingabe1
 
 
         Else
-            
+
             calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
             calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
 
@@ -390,12 +324,17 @@ Public Class frmProjektEingabe1
 
         End If
 
-        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
-                                    calcProjektEnde.ToShortDateString
+        If awinSettings.englishLanguage Then
+            lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        Else
+            lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        End If
 
         Dim hvalue As Integer = 0
         Try
-            hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10, _
+            hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10,
                                                                  mode:=MidpointRounding.ToEven) * 10, Integer)
         Catch ex As Exception
 
@@ -438,11 +377,17 @@ Public Class frmProjektEingabe1
                 End If
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+
         End If
 
-        
+
     End Sub
 
     Private Sub DateTimeStart_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
@@ -474,10 +419,15 @@ Public Class frmProjektEingabe1
                 End If
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
         End If
-        
+
 
     End Sub
 
@@ -488,7 +438,12 @@ Public Class frmProjektEingabe1
         Else
             If dauerUnverändert.Checked Then
 
-                lbl_Referenz1.Text = "Referenz"
+                If awinSettings.englishLanguage Then
+                    lbl_Referenz1.Text = "Reference"
+                Else
+                    lbl_Referenz1.Text = "Referenz"
+                End If
+
                 lbl_Referenz2.Visible = False
                 endMilestoneDropbox.Visible = False
                 DateTimeEnde.Visible = False
@@ -499,19 +454,30 @@ Public Class frmProjektEingabe1
                 DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
                 calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
             Else
+                If awinSettings.englishLanguage Then
+                    lbl_Referenz1.Text = "Reference 1"
+                    lbl_Referenz2.Text = "Reference 2"
+                Else
+                    lbl_Referenz1.Text = "Referenz 1"
+                    lbl_Referenz2.Text = "Referenz 2"
+                End If
 
-                lbl_Referenz1.Text = "Referenz 1"
-                lbl_Referenz2.Text = "Referenz 2"
                 lbl_Referenz2.Visible = True
                 endMilestoneDropbox.Visible = True
                 DateTimeEnde.Visible = True
 
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+
         End If
-        
+
 
     End Sub
 
@@ -529,14 +495,6 @@ Public Class frmProjektEingabe1
 
     End Sub
 
-
-    Private Sub Label6_Click(sender As Object, e As EventArgs)
-
-    End Sub
-
-    Private Sub Label6_Click_1(sender As Object, e As EventArgs) Handles lbl_Referenz1.Click
-
-    End Sub
 
 
     Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
@@ -561,11 +519,16 @@ Public Class frmProjektEingabe1
                 DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
 
         End If
-        
+
     End Sub
 
     Private Sub endMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles endMilestoneDropbox.SelectedIndexChanged
@@ -590,11 +553,16 @@ Public Class frmProjektEingabe1
 
             End If
 
-            lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
                                         calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
 
         End If
-        
+
     End Sub
 
     ''' <summary>
@@ -627,7 +595,7 @@ Public Class frmProjektEingabe1
         End Get
     End Property
 
-    Private Sub businessUnitDropBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles businessUnitDropBox.SelectedIndexChanged
+    Private Sub businessUnitDropBox_SelectedIndexChanged(sender As Object, e As EventArgs)
 
     End Sub
 
@@ -643,29 +611,7 @@ Public Class frmProjektEingabe1
         End If
     End Sub
 
-    Private Sub sFit_TextChanged(sender As Object, e As EventArgs) Handles sFit.TextChanged
-        If IsNumeric(sFit.Text) Then
-            If CDbl(sFit.Text) < 0.01 Or CDbl(sFit.Text) > 9.99 Then
-                Call MsgBox("Kennzahl Strategie muss eine Zahl zwischen 0.01 und 9.99 sein")
-                sFit.Text = "5"
-            End If
-        Else
-            Call MsgBox("Kennzahl Strategie muss eine Zahl zwischen 0.01 und 9.99 sein")
-            sFit.Text = "5"
-        End If
-    End Sub
 
-    Private Sub risiko_TextChanged(sender As Object, e As EventArgs) Handles risiko.TextChanged
-        If IsNumeric(risiko.Text) Then
-            If CDbl(risiko.Text) < 0.01 Or CDbl(risiko.Text) > 9.99 Then
-                Call MsgBox("Kennzahl Risiko muss eine Zahl zwischen 0.01 und 9.99 sein")
-                risiko.Text = "5"
-            End If
-        Else
-            Call MsgBox("Kennzahl Risiko muss eine Zahl zwischen 0.01 und 9.99 sein")
-            risiko.Text = "5"
-        End If
-    End Sub
 
     ''' <summary>
     ''' wird aufgerufen, wenn die Vorlage wechselt: dann muss die Meilenstein Liste neu aufgebaut werden  
@@ -680,11 +626,11 @@ Public Class frmProjektEingabe1
         If vproj.getSummeKosten > 0 Then
             Me.lblProfitField.Visible = True
             Me.profitAskedFor.Visible = True
-            Me.profitAskedFor.Text = "0.0"
+            Me.profitAskedFor.Text = "0"
         Else
             Me.lblProfitField.Visible = False
             Me.profitAskedFor.Visible = False
-            Me.profitAskedFor.Text = "0.0"
+            Me.profitAskedFor.Text = "0"
         End If
 
         If IsNothing(vproj) Then
@@ -724,7 +670,7 @@ Public Class frmProjektEingabe1
 
     End Sub
 
-    Private Sub Label5_Click(sender As Object, e As EventArgs) Handles lblProfitField.Click
+    Private Sub txtbx_pNr_TextChanged(sender As Object, e As EventArgs) Handles txtbx_pNr.TextChanged
 
     End Sub
 End Class

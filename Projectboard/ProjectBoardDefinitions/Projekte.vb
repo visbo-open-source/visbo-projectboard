@@ -13533,114 +13533,18 @@ Public Module Projekte
     ''' <param name="risk">Wert für das Risiko</param>
     ''' <param name="profitUserAskedFor">der Ergebnis Forecast in Prozent der Gesamtkosten, den der Nutzer gerne sehen möchte</param>
     ''' <remarks></remarks>
-    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
-                                 ByVal endedate As Date, ByVal budgetVorgabe As Double, _
-                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String, _
-                                 ByVal kurzBeschreibung As String, ByVal buName As String)
+    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
+                                 ByVal endedate As Date, ByVal budgetVorgabe As Double,
+                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
+                                 ByVal kurzBeschreibung As String, ByVal kdNummer As String)
 
         Dim hproj As clsProjekt = Nothing
 
-        hproj = erstelleProjektAusVorlage(pname, vorlagenName, startdate, endedate, budgetVorgabe, _
-                                  tafelZeile, sfit, risk, profitUserAskedFor, _
-                                  kurzBeschreibung, buName)
-
-        ' '' ''Dim newprojekt As Boolean
-        ' '' ''Dim hproj As clsProjekt
-        ' '' ''Dim pStatus As String = ProjektStatus(0)
-        ' '' ''Dim zeile As Integer = tafelZeile
-        '' '' ''Dim spalte As Integer = start
-        ' '' ''Dim plen As Integer
-        '' '' ''Dim top As Double, left As Double, width As Double, height As Double
-        '' '' ''Dim shpElement As Excel.Shape
-        ' '' ''Dim pcolor As Object
-        ' '' ''Dim heute As Date = Date.Now
-        ' '' ''Dim heute1 As Date = Now
-        ' '' ''Dim key As String = pname & "#"
-        ' '' ''Dim ms As Long = heute.Millisecond
-        ' '' ''Dim zielrenditenVorgabe As Double = Nothing
-        ' '' ''Dim zielrenditenVorgabe1 As Double = Nothing
-        ' '' ''Dim zielrenditenVorgabe2 As Double = Nothing
-        ' '' ''newprojekt = True
-
-        '' '' ''
-        '' '' '' ein neues Projekt wird als Objekt angelegt ....
-        '' '' ''
-
-        ' '' ''hproj = New clsProjekt
-
-        ' '' ''If Projektvorlagen.Contains(vorlagenName) Then
-        ' '' ''    ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
-        ' '' ''    If IsNothing(profitUserAskedFor) Then
-        ' '' ''        ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
-        ' '' ''    Else
-        ' '' ''        If IsNumeric(profitUserAskedFor) Then
-        ' '' ''            Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-        ' '' ''            If referenceBudget > 0 Then
-        ' '' ''                'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
-        ' '' ''                'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
-        ' '' ''                'zielrenditenVorgabe1 = (budgetVorgabe * (CDbl(profitUserAskedFor) / 100 + 1)) / referenceBudget
-        ' '' ''                zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUserAskedFor) / 100)) / referenceBudget
-        ' '' ''            End If
-
-        ' '' ''        Else
-        ' '' ''            Call MsgBox("keine zulässige Renditen Angabe ...")
-        ' '' ''            Exit Sub
-        ' '' ''        End If
-        ' '' ''    End If
-        ' '' ''Else
-        ' '' ''    Call MsgBox("es gibt keine entsprechende Vorlage ..")
-        ' '' ''    Exit Sub
-        ' '' ''End If
+        hproj = erstelleProjektAusVorlage(pname, vorlagenName, startdate, endedate, budgetVorgabe,
+                                  tafelZeile, sfit, risk, profitUserAskedFor,
+                                  kurzBeschreibung, "", kdNr:=kdNummer)
 
 
-        ' '' ''Try
-        ' '' ''    ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
-        ' '' ''    Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
-
-        ' '' ''Catch ex As Exception
-        ' '' ''    Call MsgBox("es gibt keine entsprechende Vorlage ..")
-        ' '' ''    Exit Sub
-        ' '' ''End Try
-
-
-        ' '' ''Try
-        ' '' ''    With hproj
-        ' '' ''        .name = pname
-        ' '' ''        .VorlagenName = vorlagenName
-        ' '' ''        .startDate = startdate
-        ' '' ''        .businessUnit = buName
-        ' '' ''        .Erloes = budgetVorgabe
-        ' '' ''        .earliestStartDate = .startDate.AddMonths(.earliestStart)
-        ' '' ''        .latestStartDate = .startDate.AddMonths(.latestStart)
-        ' '' ''        .Status = ProjektStatus(PTProjektStati.geplant)
-        ' '' ''        .description = kurzBeschreibung
-
-        ' '' ''        .StrategicFit = sfit
-        ' '' ''        .Risiko = risk
-        ' '' ''        plen = .anzahlRasterElemente
-        ' '' ''        pcolor = .farbe
-        ' '' ''    End With
-
-
-        ' '' ''    ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
-        ' '' ''    ' workaround
-        ' '' ''    Dim tmpdata As Integer = hproj.dauerInDays
-        ' '' ''    'Call awinCreateBudgetWerte(hproj)
-
-        ' '' ''Catch ex As Exception
-        ' '' ''    Call MsgBox(ex.Message)
-        ' '' ''    Exit Sub
-        ' '' ''End Try
-
-        '' '' '' Anpassen der Daten für die Termine 
-        '' '' '' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
-        '' '' '' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
-        '' '' '' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
-
-
-        '' '' ''
-        '' '' '' Ende Objekt Anlage
-        '' '' ''
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -13702,12 +13606,12 @@ Public Module Projekte
     ''' <param name="risk">Integer Wert für Risiko KPI, zwischen 1 und 9</param>
     ''' <param name="profitUserAskedFor">Nothing oder positiver Wert zwischen 0 und 1, 0.1 heisst 10%</param>
     ''' <param name="kurzBeschreibung">Kurzbeschreibung des Projektes</param>
-    ''' <param name="buName">Frei-Text für Business-Unit, wird nicht überprüft</param>
+    ''' <param name="kdNr">Frei-Text für vom Kunden vergebene Projekt-Nummer; wird beim Input auf Zulässigkeit überprüft  </param>
     ''' <returns></returns>
     Public Function erstelleProjektAusVorlage(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
                                 ByVal endedate As Date, ByVal budgetVorgabe As Double,
                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
-                                ByVal kurzBeschreibung As String, ByVal buName As String) As clsProjekt
+                                ByVal kurzBeschreibung As String, ByVal buName As String, Optional ByVal kdNr As String = "") As clsProjekt
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -13775,6 +13679,7 @@ Public Module Projekte
                 .name = pname
                 .VorlagenName = vorlagenName
                 .startDate = startdate
+                .kundenNummer = kdNr
                 .businessUnit = buName
                 .Erloes = budgetVorgabe
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
@@ -14102,10 +14007,11 @@ Public Module Projekte
                             Else
                                 Dim roleName As String = roleStr(0).Trim
 
-                                If RoleDefinitions.containsName(roleName) Then
+                                If RoleDefinitions.containsNameOrID(roleName) Then
                                     isRole = True
                                     summeBedarfe = CDbl(roleStr(1))
-                                    rk = CInt(RoleDefinitions.getRoledef(roleName).UID)
+                                    Dim teamID As Integer = -1
+                                    rk = CInt(RoleDefinitions.getRoleDefByIDKennung(roleName, teamID).UID)
                                     tagessatz = RoleDefinitions.getRoledef(roleName).tagessatzIntern
 
                                 Else
@@ -21772,10 +21678,14 @@ Public Module Projekte
         End Try
 
         Try
-            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            Dim shpuid As String = hproj.shpUID
-            hproj.shpUID = ""
-            ShowProjekte.shpListe.Remove(shpuid)
+
+            If ShowProjekte.contains(pname) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+                Dim shpuid As String = hproj.shpUID
+                hproj.shpUID = ""
+                ShowProjekte.shpListe.Remove(shpuid)
+            End If
+
         Catch ex As Exception
 
         End Try

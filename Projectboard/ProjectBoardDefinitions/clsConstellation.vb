@@ -26,6 +26,21 @@
     ' 2: custom Liste
     ' 3: BU, ProjektStart, Name
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+
+    ' tk ergänzt am 11.5.19 
+    Private _vpID As String
+    Public Property vpID As String
+        Get
+            vpID = _vpID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _vpID = value
+                End If
+            End If
+        End Set
+    End Property
     Private _sortType As Integer
 
 
@@ -209,7 +224,7 @@
 
                         Do While vx >= 0 And chkzeile >= 2
                             'If Not ShowProjekte.contains(_sortList.ElementAt(vx).Value) And _
-                            If Not Me.isShown(_sortList.ElementAt(vx).Value) And _
+                            If Not Me.isShown(_sortList.ElementAt(vx).Value) And
                                 (Me.getRowNrFromKey(vx) <= chkzeile) Then
                                 deductBecausePrevNotShown = deductBecausePrevNotShown + 1
                                 chkzeile = chkzeile - 1
@@ -288,7 +303,7 @@
             Dim found As Boolean = False
 
             Do While ix <= _allItems.Count - 1 And Not found
-                If _allItems.ElementAt(ix).Value.projectName = pName And _
+                If _allItems.ElementAt(ix).Value.projectName = pName And
                     _allItems.ElementAt(ix).Value.show = True Then
                     found = True
                 Else
@@ -667,8 +682,8 @@
 
     Public Sub checkAndCorrectYourself()
 
-            ' Check 1: 
-            ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
+        ' Check 1: 
+        ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
             Try
 
@@ -690,8 +705,8 @@
 
         Next
 
-            ' Check 2: 
-            ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
+        ' Check 2: 
+        ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
             If kvp.Value.show = True Then
                 Dim hproj As clsProjekt = Nothing
@@ -912,7 +927,7 @@
     ''' <param name="vName" >Varianten-Name </param>
     ''' <param name="showAttribute" >show: true; noShow:false</param>
     ''' <remarks></remarks>
-    Public Sub updateShowAttributes(ByVal pName As String, ByVal vName As String, _
+    Public Sub updateShowAttributes(ByVal pName As String, ByVal vName As String,
                                     ByVal showAttribute As Boolean)
         Dim currentProjectName As String = ""
 
@@ -975,19 +990,19 @@
                 '    .lastCustomList = Nothing
                 'Else
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
-                        .add(cItem:=copiedItem, noUpdateSortlist:=True)
-                    Next
+                    Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
+                    .add(cItem:=copiedItem, noUpdateSortlist:=True)
+                Next
 
-                    ' jetzt sortliste und sorttype kopieren 
-                    .sortListe(_sortType) = _sortList
+                ' jetzt sortliste und sorttype kopieren 
+                .sortListe(_sortType) = _sortList
 
-                    ' jetzt ggf die lastCustomList kopieren 
-                    If Not IsNothing(_lastCustomList) Then
-                        If _lastCustomList.Count > 0 Then
-                            .lastCustomList = _lastCustomList
-                        End If
+                ' jetzt ggf die lastCustomList kopieren 
+                If Not IsNothing(_lastCustomList) Then
+                    If _lastCustomList.Count > 0 Then
+                        .lastCustomList = _lastCustomList
                     End If
+                End If
                 'End If
 
 
@@ -1026,9 +1041,9 @@
     ''' </summary>
     ''' <param name="cItem"></param>
     ''' <remarks></remarks>
-    Public Sub add(ByVal cItem As clsConstellationItem, _
-                   Optional ByVal sKey As Integer = -1, _
-                   Optional ByVal noUpdateSortlist As Boolean = False, _
+    Public Sub add(ByVal cItem As clsConstellationItem,
+                   Optional ByVal sKey As Integer = -1,
+                   Optional ByVal noUpdateSortlist As Boolean = False,
                    Optional ByVal oldProjkey As String = "")
 
         Dim key As String
@@ -1056,9 +1071,9 @@
             ' der alte Schlüssel soll nur dann rausgenommen werden, 
             ' wenn er aufgrund einer neuen Variante neu berechnet werden muss 
             ' und nicht alphabetisch, Custom-Liste oder TF gesteuert ist 
-            If _sortList.ContainsValue(cItem.projectName) And cItem.show And _
-                Not (_sortType = ptSortCriteria.customTF Or _
-                     _sortType = ptSortCriteria.customListe Or _
+            If _sortList.ContainsValue(cItem.projectName) And cItem.show And
+                Not (_sortType = ptSortCriteria.customTF Or
+                     _sortType = ptSortCriteria.customListe Or
                      _sortType = ptSortCriteria.alphabet) Then
                 ' Remove den bisherigen Schlüssel 
                 Dim ix As Integer = _sortList.IndexOfValue(cItem.projectName)
@@ -1156,7 +1171,7 @@
             End If
         End If
 
-        
+
 
     End Sub
 
@@ -1377,7 +1392,7 @@
 
                 End If
             End If
-            
+
         End If
 
 
@@ -1489,6 +1504,9 @@
         _lastCustomList = Nothing
         _sortType = skey
 
+        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        _vpID = Nothing
+
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
     End Sub
@@ -1500,15 +1518,18 @@
     ''' </summary>
     ''' <param name="projektListe"></param>
     ''' <remarks></remarks>
-    Sub New(ByVal projektListe As clsProjekteAlle, _
-            Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing, _
-            Optional ByVal cName As String = "", _
+    Sub New(ByVal projektListe As clsProjekteAlle,
+            Optional ByVal fullProjectNames As SortedList(Of String, String) = Nothing,
+            Optional ByVal cName As String = "",
             Optional ByVal takeWhat As Integer = ptSzenarioConsider.all)
 
         _allItems = New SortedList(Of String, clsConstellationItem)
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = -1
+
+        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        _vpID = Nothing
 
         Me.constellationName = cName
 

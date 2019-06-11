@@ -197,6 +197,10 @@ Public Class clsProjektWeb
 
 
         With projekt
+
+            ' tk 11.5.19 , Me.vpid hat den glkeichen Inhalt wie vp._id
+            .vpID = Me.vpid
+
             .timeStamp = Me.timestamp.ToLocalTime
 
             ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name

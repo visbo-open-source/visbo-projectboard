@@ -5166,7 +5166,7 @@ Public Class frmHierarchySelection
 
             If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                 If myCustomUserRole.specifics.Length > 0 Then
-                    If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                    If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                         topNodes.Clear()
                         Dim teamID As Integer = -1

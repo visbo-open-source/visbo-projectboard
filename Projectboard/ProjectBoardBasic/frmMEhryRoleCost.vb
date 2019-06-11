@@ -226,7 +226,7 @@ Public Class frmMEhryRoleCost
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             topNodes.Clear()
                             Dim teamID As Integer = -1
@@ -304,52 +304,55 @@ Public Class frmMEhryRoleCost
                 Next
             End If
 
-            If CostDefinitions.Count > 1 Then
+            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If CostDefinitions.Count > 1 Then
 
-                For i = 1 To CostDefinitions.Count - 1
-                    Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
+                    For i = 1 To CostDefinitions.Count - 1
+                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
 
-                    topLevelNode = .Nodes.Add(cost.name)
-                    topLevelNode.Text = cost.name
-                    topLevelNode.Name = cost.name
-                    '
-                    ' 9.12.18 neuer Stuff 
-                    '
-                    Dim nrTag As New clsNodeRoleTag
-                    With nrTag
-                        .pTag = "X"
-                        .isRole = False
-                    End With
+                        topLevelNode = .Nodes.Add(cost.name)
+                        topLevelNode.Text = cost.name
+                        topLevelNode.Name = cost.name
+                        '
+                        ' 9.12.18 neuer Stuff 
+                        '
+                        Dim nrTag As New clsNodeRoleTag
+                        With nrTag
+                            .pTag = "X"
+                            .isRole = False
+                        End With
 
-                    topLevelNode.Tag = nrTag
-
-
-                    ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
-                    If initialCostsOfPhase.ContainsKey(cost.name) Then
-                        topLevelNode.Checked = True
-                    End If
+                        topLevelNode.Tag = nrTag
 
 
-                    ' 9.12.18 alter Stuff
-                    'topLevelNode.Text = cost.name
-
-                    'If Not IsNothing(hPhase) Then
-                    '    If Not IsNothing(hPhase.getCost(cost.name)) Then
-
-                    '        ' entsprechend kennzeichnen 
-                    '        topLevelNode.NodeFont = existingRoleFont
-                    '        topLevelNode.ForeColor = existingRoleColor
-
-                    '        If cost.name = rcName Then
-                    '            topLevelNode.Checked = True
-                    '        End If
-
-                    '    End If
-                    'End If
+                        ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
+                        If initialCostsOfPhase.ContainsKey(cost.name) Then
+                            topLevelNode.Checked = True
+                        End If
 
 
-                Next
+                        ' 9.12.18 alter Stuff
+                        'topLevelNode.Text = cost.name
+
+                        'If Not IsNothing(hPhase) Then
+                        '    If Not IsNothing(hPhase.getCost(cost.name)) Then
+
+                        '        ' entsprechend kennzeichnen 
+                        '        topLevelNode.NodeFont = existingRoleFont
+                        '        topLevelNode.ForeColor = existingRoleColor
+
+                        '        If cost.name = rcName Then
+                        '            topLevelNode.Checked = True
+                        '        End If
+
+                        '    End If
+                        'End If
+
+
+                    Next
+                End If
             End If
+
 
 
         End With
