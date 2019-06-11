@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">\\desbhtcprj1\Visbo\MS Project VISBO AddIn</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
@@ -12,7 +12,7 @@
       <Value Profile="(Default)">VISBO Task Class</Value>
     </Setting>
     <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Alias</Value>
+      <Value Profile="(Default)">Alias</Value>
     </Setting>
     <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Ampel</Value>
@@ -45,16 +45,16 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="VISBOresponsible" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Kontaktperson</Value>
+      <Value Profile="(Default)">Contact</Value>
     </Setting>
     <Setting Name="VISBOpercentDone" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">% Abgeschlossen</Value>
+      <Value Profile="(Default)">% Complete</Value>
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">TMS_View</Value>
     </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />

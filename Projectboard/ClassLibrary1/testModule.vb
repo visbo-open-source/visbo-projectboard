@@ -433,17 +433,26 @@ Public Module testModule
         End If
 
         Try
+
             ' prüft, ob bereits Powerpoint geöffnet ist 
+
             pptAppfromX = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
             Try
                 pptAppfromX = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+
             Catch ex1 As Exception
                 Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
                 Exit Sub
             End Try
 
         End Try
+
+        'Try
+        '    pptApp.Visible = False
+        'Catch ex As Exception
+
+        'End Try
 
 
         ' jetzt gibt es die pptAppFromX ..
@@ -3385,6 +3394,8 @@ Public Module testModule
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
                 End If
+
+                'pptApp.Visible = True
 
             Catch ex As Exception
 

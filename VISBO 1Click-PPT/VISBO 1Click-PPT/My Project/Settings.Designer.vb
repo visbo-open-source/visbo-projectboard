@@ -55,12 +55,13 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("\\desbhtcprj1\Visbo\MS Project VISBO AddIn")>  _
     Public ReadOnly Property globalPath() As String
         Get
             Return CType(Me("globalPath"),String)
         End Get
     End Property
+
 
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
@@ -71,18 +72,18 @@ Partial Friend NotInheritable Class MySettings
         End Get
     End Property
 
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")>  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")>
     Public ReadOnly Property TaskClass() As String
         Get
-            Return CType(Me("TaskClass"),String)
+            Return CType(Me("TaskClass"), String)
         End Get
     End Property
-    
+
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Alias")>  _
     Public ReadOnly Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
@@ -97,13 +98,13 @@ Partial Friend NotInheritable Class MySettings
             Return CType(Me("VISBOAmpel"),String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>
     Public ReadOnly Property mongoDBURL() As String
         Get
-            Return CType(Me("mongoDBURL"),String)
+            Return CType(Me("mongoDBURL"), String)
         End Get
     End Property
 
@@ -142,16 +143,34 @@ Partial Friend NotInheritable Class MySettings
             Return CType(Me("VISBOdeliverables"),String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-    Public ReadOnly Property VISBOMapping() As String
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("Contact")>
+    Public ReadOnly Property VISBOresponsible() As String
         Get
-            Return CType(Me("VISBOMapping"),String)
+            Return CType(Me("VISBOresponsible"), String)
         End Get
     End Property
-    
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Complete")>  _
+    Public ReadOnly Property VISBOpercentDone() As String
+        Get
+            Return CType(Me("VISBOpercentDone"),String)
+        End Get
+    End Property
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("TMS_View")>
+    Public ReadOnly Property VISBOMapping() As String
+        Get
+            Return CType(Me("VISBOMapping"), String)
+        End Get
+    End Property
+
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("")>  _

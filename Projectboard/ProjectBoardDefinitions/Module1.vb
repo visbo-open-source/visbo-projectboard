@@ -1010,12 +1010,14 @@ Public Module Module1
     Public historicDate As Date
 
     Public FirstX As Double = -1.0
+
     Public FirstY As Double = -1.0
     Public LastX As Double = -1.0
     Public LastY As Double = -1.0
     Public firstPress As Boolean = True
 
     Public fehlerBeimLoad As Boolean = False
+    Public awinsetTypen_Performed As Boolean = False
 
 
     Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
