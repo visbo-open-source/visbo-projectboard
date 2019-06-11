@@ -42,6 +42,11 @@ Public Class clsOrganisations
             getOrganisationValidAt = tmpOrga
         End Get
     End Property
+    ''' <summary>
+    ''' fügt in die Organisationsliste eine neue Orga ein 
+    ''' und baut dabei die OrgaTeamChilds für die jeweiligen Rollen mit auf
+    ''' </summary>
+    ''' <param name="orga"></param>
     Public Sub addOrga(ByVal orga As clsOrganisation)
 
         Dim key As Integer = getColumnOfDate(orga.validFrom)
@@ -49,14 +54,15 @@ Public Class clsOrganisations
             _validOrganisations.Remove(key)
         End If
 
-        Try
-            ' jetzt wird in der Orga die virtuelle Orga-/Team Struktur aufgebaut
-            ' die ist dafür notwendig, dass die entsprechende Orga-Einheit den Personal-aufwand ausweist, der durch Multi-Orga-Teams entsteht. 
-            ' Die Orga-Einheit, in der der Team Aufwand ausgewiesen wird, ist die jüngste (Groß-)Elternteil der allen Team-Mitgliedern gemeinsam ist. 
-            Call orga.allRoles.buildOrgaTeamChilds()
-        Catch ex As Exception
-            Call MsgBox("Fehler in Organisations Strukur: Zuordnung Teams als virtuelle Kinder fehlgeschlagen!" & vbLf & "Bitte kontaktieren Sie ihren System-Admin")
-        End Try
+        ' ur:2019-05-29: wird nun in retrieveOrganisationfromDB erledigt
+        'Try
+        '    ' jetzt wird in der Orga die virtuelle Orga-/Team Struktur aufgebaut
+        '    ' die ist dafür notwendig, dass die entsprechende Orga-Einheit den Personal-aufwand ausweist, der durch Multi-Orga-Teams entsteht. 
+        '    ' Die Orga-Einheit, in der der Team Aufwand ausgewiesen wird, ist die jüngste (Groß-)Elternteil der allen Team-Mitgliedern gemeinsam ist. 
+        '    Call orga.allRoles.buildOrgaTeamChilds()
+        'Catch ex As Exception
+        '    Call MsgBox("Fehler in Organisations Strukur: Zuordnung Teams als virtuelle Kinder fehlgeschlagen!" & vbLf & "Bitte kontaktieren Sie ihren System-Admin")
+        'End Try
 
 
         ' jetzt kann fehlerfrei eingetragen werden 

@@ -377,6 +377,7 @@ Public Module Module1
         prSymSchedules = 18
         prSymTeam = 19
         prSymProject = 20
+        pfName = 21
     End Enum
 
     ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
@@ -4294,6 +4295,11 @@ Public Module Module1
                     projectTimeStamp = Date.Now
                 End If
 
+                If .Tags.Item("SOC").Length > 0 Then
+                    .Tags.Delete("SOC")
+                End If
+                .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+
 
                 If .Tags.Item("CRD").Length > 0 Then
                     .Tags.Delete("CRD")
@@ -4370,7 +4376,7 @@ Public Module Module1
     ''' <param name="ampelColor"></param>
     ''' <param name="ampelErlaeuterung"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape,
+    Public Sub addSmartPPTMsPhInfo(ByRef pptShape As PowerPoint.Shape,
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String,
                                           ByVal bestShortName As String, ByVal bestLongName As String,
                                           ByVal startDate As Date, ByVal endDate As Date,
@@ -4930,18 +4936,60 @@ Public Module Module1
     ''' <param name="prpf"></param>
     ''' <param name="qualifier"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt,
+    Public Sub addSmartPPTCompInfo(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, ByVal hportfolio As clsConstellation,
                                      ByVal prpf As Integer, ByVal qualifier As String, ByVal qualifier2 As String,
                                      ByVal bigType As Integer, ByVal detailID As Integer)
-
-        If IsNothing(hproj) Then
-            Exit Sub
-        End If
-
-        Dim pName As String = hproj.name
-        Dim vName As String = hproj.variantName
-        Dim chtObjName As String = ""
         Try
+            Dim pName As String = ""
+            Dim vName As String = ""
+
+            If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
+                ' hier handelt es sich um ein Portfolio
+                pName = hportfolio.constellationName
+                vName = ""
+
+            Else
+                ' hier handelt es sich um ein Projekt
+                If prpf = ptPRPFType.project And Not IsNothing(hproj) Then
+
+                    pName = hproj.name
+                    vName = hproj.variantName
+
+
+                    ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
+                    If bigType = ptReportBigTypes.tables Then
+                        ' sonst keine weiteren Dinge ... das wird in der eigenen Methode addSmartPPTTableInfo gemacht 
+
+                    ElseIf bigType = ptReportBigTypes.components Then
+                        ' bei Symbolen muss noch was ergänzt werden 
+
+                        If detailID = ptReportComponents.prSymTrafficLight Or
+                            detailID = ptReportComponents.prSymRisks Or
+                            detailID = ptReportComponents.prSymDescription Or
+                            detailID = ptReportComponents.prSymFinance Or
+                            detailID = ptReportComponents.prSymProject Or
+                            detailID = ptReportComponents.prSymSchedules Or
+                            detailID = ptReportComponents.prSymTeam Then
+
+                            Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
+
+                        End If
+
+
+                        ' sonst keine weiteren Dinge 
+
+                    Else
+                        ' noch nicht implementiert 
+                    End If
+
+                Else
+
+                    Exit Sub
+
+                End If
+
+            End If
+
 
             If Not IsNothing(pptShape) Then
 
@@ -4983,6 +5031,19 @@ Public Module Module1
                         .Tags.Add("Q2", qualifier2)
                     End If
 
+                    If .Tags.Item("SRLD").Length > 0 Then
+                        .Tags.Delete("SRLD")
+                    End If
+
+                    If .Tags.Item("SRRD").Length > 0 Then
+                        .Tags.Delete("SRRD")
+                    End If
+
+                    If showRangeLeft >= 0 Then
+                        .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, False)))
+                    End If
+
                     If Not IsNothing(bigType) Then
                         If .Tags.Item("BID").Length > 0 Then
                             .Tags.Delete("BID")
@@ -5000,34 +5061,8 @@ Public Module Module1
 
                 End With
 
-                ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
-                If bigType = ptReportBigTypes.tables Then
-                    ' sonst keine weiteren Dinge ... das wird in der eigenen Methode addSmartPPTTableInfo gemacht 
-
-                ElseIf bigType = ptReportBigTypes.components Then
-                    ' bei Symbolen muss noch was ergänzt werden 
-
-                    If detailID = ptReportComponents.prSymTrafficLight Or
-                        detailID = ptReportComponents.prSymRisks Or
-                        detailID = ptReportComponents.prSymDescription Or
-                        detailID = ptReportComponents.prSymFinance Or
-                        detailID = ptReportComponents.prSymProject Or
-                        detailID = ptReportComponents.prSymSchedules Or
-                        detailID = ptReportComponents.prSymTeam Then
-
-                        Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
-
-                    End If
-
-
-                    ' sonst keine weiteren Dinge 
-
-                Else
-                    ' noch nicht implementiert 
-                End If
-
-
             End If
+
 
         Catch ex As Exception
             Dim a As Integer = 1
@@ -5637,7 +5672,7 @@ Public Module Module1
         ' jetzt wird die SmartTableInfo gesetzt 
         Dim emptyCollection As New Collection
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projecttype, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName,
                                   q1, q2, bigType, compID,
                                   emptyCollection)
 

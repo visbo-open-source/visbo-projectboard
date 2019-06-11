@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Tom\Documents\VISBO Demo Systeme\telair</Value>
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>
@@ -21,10 +21,10 @@
       <Value Profile="(Default)">https://staging.visbo.net/api</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Telair19</Value>
+      <Value Profile="(Default)">bhtc</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Indicators</Value>
@@ -52,6 +52,9 @@
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.String" Scope="Application">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />

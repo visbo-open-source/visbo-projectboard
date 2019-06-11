@@ -61,16 +61,16 @@ Partial Friend NotInheritable Class MySettings
             Return CType(Me("globalPath"),String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Tom\Documents\VISBO Demo Systeme\telair")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+    Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\")>
     Public ReadOnly Property awinPath() As String
         Get
-            Return CType(Me("awinPath"),String)
+            Return CType(Me("awinPath"), String)
         End Get
     End Property
-    
+
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")>  _
@@ -106,19 +106,19 @@ Partial Friend NotInheritable Class MySettings
             Return CType(Me("mongoDBURL"),String)
         End Get
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Telair19")>  _
+
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("bhtc")>
     Public ReadOnly Property mongoDBname() As String
         Get
-            Return CType(Me("mongoDBname"),String)
+            Return CType(Me("mongoDBname"), String)
         End Get
     End Property
-    
+
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public ReadOnly Property VISBODebug() As Boolean
         Get
             Return CType(Me("VISBODebug"),Boolean)
