@@ -647,6 +647,7 @@ Public Module Module1
         beauftragung = 2
         letzterStand = 3
         ersterStand = 4
+        letzteBeauftragung = 5
     End Enum
 
     ' Enumeration für die Farbe 

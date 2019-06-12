@@ -5099,8 +5099,16 @@ Imports System.Web
                         Try
                             If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                                 ' das muss noch abgefragt werden ... 
+
                                 Dim startdate As Date = CDate("1.1.2019")
                                 Dim enddate As Date = CDate("31.12.2019")
+
+                                ' tk aktuelle Krücke für Allianz um das Einlesen der Batchliste für 2020 zu machen
+                                ' dazu muss die Datenbank mit 20 enden ...
+                                If awinSettings.databaseName.EndsWith("20") Then
+                                    startdate = CDate("1.1.2020")
+                                    enddate = CDate("31.12.2020")
+                                End If
 
                                 isAllianzImport1 = True
                                 Call importAllianzType1(startdate, enddate)

@@ -447,6 +447,7 @@ Public Module testModule
 
 
         ' jetzt gibt es die pptAppFromX ..
+
         ' das ist hier nicht erlaubt 
         ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
 
@@ -10222,6 +10223,13 @@ Public Module testModule
                     vergleichstyp = PThis.ersterStand
                 ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
                     vergleichstyp = PThis.letzterStand
+                    ' der letzte Stand soll immer der letzte Tag des Vormonats sein ... 
+                    vglDate = Date.Now.AddDays(-1 * Date.Now.Day).Date.AddHours(23).AddMinutes(59)
+                ElseIf qualifier.Trim = "B1" Then
+                    vergleichstyp = PThis.beauftragung
+                    vglDate = Date.Now
+                ElseIf qualifier.Trim = "BL" Or qualifier.Trim = "BN" Then
+                    vergleichstyp = PThis.letzteBeauftragung
                     vglDate = Date.Now
                 Else
                     istVglMitKonkretemDatum = True
@@ -10351,7 +10359,7 @@ Public Module testModule
                     End If
 
 
-
+                    ' tk 10.6.19 es wird mit den pfv's verglichen oder mit dem letzten Stand 
                     projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
 
