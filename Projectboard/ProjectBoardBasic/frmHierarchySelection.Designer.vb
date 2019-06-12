@@ -115,17 +115,17 @@ Partial Class frmHierarchySelection
         Me.Panel1.Controls.Add(Me.einstellungen)
         Me.Panel1.Controls.Add(Me.hryTreeView)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(609, 570)
+        Me.Panel1.Size = New System.Drawing.Size(457, 463)
         Me.Panel1.TabIndex = 0
         '
         'auswLaden
         '
         Me.auswLaden.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.auswLaden.Location = New System.Drawing.Point(433, 465)
-        Me.auswLaden.Margin = New System.Windows.Forms.Padding(4)
+        Me.auswLaden.Location = New System.Drawing.Point(325, 378)
         Me.auswLaden.Name = "auswLaden"
-        Me.auswLaden.Size = New System.Drawing.Size(151, 26)
+        Me.auswLaden.Size = New System.Drawing.Size(113, 21)
         Me.auswLaden.TabIndex = 94
         Me.auswLaden.Text = "Laden"
         Me.auswLaden.UseVisualStyleBackColor = True
@@ -148,19 +148,17 @@ Partial Class frmHierarchySelection
         Me.Panel2.Controls.Add(Me.pictureRoles)
         Me.Panel2.Controls.Add(Me.pictureCosts)
         Me.Panel2.Controls.Add(Me.rdbCosts)
-        Me.Panel2.Location = New System.Drawing.Point(12, 12)
-        Me.Panel2.Margin = New System.Windows.Forms.Padding(4)
+        Me.Panel2.Location = New System.Drawing.Point(9, 10)
         Me.Panel2.Name = "Panel2"
-        Me.Panel2.Size = New System.Drawing.Size(586, 50)
+        Me.Panel2.Size = New System.Drawing.Size(440, 41)
         Me.Panel2.TabIndex = 92
         '
         'rdbPhaseMilest
         '
         Me.rdbPhaseMilest.AutoSize = True
-        Me.rdbPhaseMilest.Location = New System.Drawing.Point(8, 20)
-        Me.rdbPhaseMilest.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbPhaseMilest.Location = New System.Drawing.Point(6, 16)
         Me.rdbPhaseMilest.Name = "rdbPhaseMilest"
-        Me.rdbPhaseMilest.Size = New System.Drawing.Size(17, 16)
+        Me.rdbPhaseMilest.Size = New System.Drawing.Size(14, 13)
         Me.rdbPhaseMilest.TabIndex = 67
         Me.rdbPhaseMilest.UseVisualStyleBackColor = True
         Me.rdbPhaseMilest.Visible = False
@@ -168,10 +166,9 @@ Partial Class frmHierarchySelection
         'picturePhaseMilest
         '
         Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
-        Me.picturePhaseMilest.Location = New System.Drawing.Point(35, 4)
-        Me.picturePhaseMilest.Margin = New System.Windows.Forms.Padding(4)
+        Me.picturePhaseMilest.Location = New System.Drawing.Point(26, 3)
         Me.picturePhaseMilest.Name = "picturePhaseMilest"
-        Me.picturePhaseMilest.Size = New System.Drawing.Size(44, 41)
+        Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
         Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.picturePhaseMilest.TabIndex = 66
         Me.picturePhaseMilest.TabStop = False
@@ -181,10 +178,9 @@ Partial Class frmHierarchySelection
         '
         Me.rdbPhases.AutoSize = True
         Me.rdbPhases.Checked = True
-        Me.rdbPhases.Location = New System.Drawing.Point(8, 20)
-        Me.rdbPhases.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbPhases.Location = New System.Drawing.Point(6, 16)
         Me.rdbPhases.Name = "rdbPhases"
-        Me.rdbPhases.Size = New System.Drawing.Size(17, 16)
+        Me.rdbPhases.Size = New System.Drawing.Size(14, 13)
         Me.rdbPhases.TabIndex = 52
         Me.rdbPhases.TabStop = True
         Me.rdbPhases.UseVisualStyleBackColor = True
@@ -192,20 +188,18 @@ Partial Class frmHierarchySelection
         'picturePhasen
         '
         Me.picturePhasen.Image = CType(resources.GetObject("picturePhasen.Image"), System.Drawing.Image)
-        Me.picturePhasen.Location = New System.Drawing.Point(35, 4)
-        Me.picturePhasen.Margin = New System.Windows.Forms.Padding(4)
+        Me.picturePhasen.Location = New System.Drawing.Point(26, 3)
         Me.picturePhasen.Name = "picturePhasen"
-        Me.picturePhasen.Size = New System.Drawing.Size(44, 41)
+        Me.picturePhasen.Size = New System.Drawing.Size(33, 33)
         Me.picturePhasen.TabIndex = 55
         Me.picturePhasen.TabStop = False
         '
         'pictureTyp
         '
         Me.pictureTyp.Image = CType(resources.GetObject("pictureTyp.Image"), System.Drawing.Image)
-        Me.pictureTyp.Location = New System.Drawing.Point(487, 4)
-        Me.pictureTyp.Margin = New System.Windows.Forms.Padding(4)
+        Me.pictureTyp.Location = New System.Drawing.Point(365, 3)
         Me.pictureTyp.Name = "pictureTyp"
-        Me.pictureTyp.Size = New System.Drawing.Size(44, 41)
+        Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
         Me.pictureTyp.TabIndex = 65
         Me.pictureTyp.TabStop = False
         Me.pictureTyp.Visible = False
@@ -213,20 +207,18 @@ Partial Class frmHierarchySelection
         'rdbMilestones
         '
         Me.rdbMilestones.AutoSize = True
-        Me.rdbMilestones.Location = New System.Drawing.Point(98, 20)
-        Me.rdbMilestones.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbMilestones.Location = New System.Drawing.Point(74, 16)
         Me.rdbMilestones.Name = "rdbMilestones"
-        Me.rdbMilestones.Size = New System.Drawing.Size(17, 16)
+        Me.rdbMilestones.Size = New System.Drawing.Size(14, 13)
         Me.rdbMilestones.TabIndex = 56
         Me.rdbMilestones.UseVisualStyleBackColor = True
         '
         'rdbTyp
         '
         Me.rdbTyp.AutoSize = True
-        Me.rdbTyp.Location = New System.Drawing.Point(462, 20)
-        Me.rdbTyp.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbTyp.Location = New System.Drawing.Point(346, 16)
         Me.rdbTyp.Name = "rdbTyp"
-        Me.rdbTyp.Size = New System.Drawing.Size(17, 16)
+        Me.rdbTyp.Size = New System.Drawing.Size(14, 13)
         Me.rdbTyp.TabIndex = 64
         Me.rdbTyp.UseVisualStyleBackColor = True
         Me.rdbTyp.Visible = False
@@ -234,20 +226,18 @@ Partial Class frmHierarchySelection
         'pictureMilestones
         '
         Me.pictureMilestones.Image = Global.ProjectBoardBasic.My.Resources.Resources.milestones_icon1
-        Me.pictureMilestones.Location = New System.Drawing.Point(125, 4)
-        Me.pictureMilestones.Margin = New System.Windows.Forms.Padding(4)
+        Me.pictureMilestones.Location = New System.Drawing.Point(94, 3)
         Me.pictureMilestones.Name = "pictureMilestones"
-        Me.pictureMilestones.Size = New System.Drawing.Size(44, 41)
+        Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)
         Me.pictureMilestones.TabIndex = 57
         Me.pictureMilestones.TabStop = False
         '
         'pictureBU
         '
         Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
-        Me.pictureBU.Location = New System.Drawing.Point(391, 4)
-        Me.pictureBU.Margin = New System.Windows.Forms.Padding(4)
+        Me.pictureBU.Location = New System.Drawing.Point(293, 3)
         Me.pictureBU.Name = "pictureBU"
-        Me.pictureBU.Size = New System.Drawing.Size(44, 41)
+        Me.pictureBU.Size = New System.Drawing.Size(33, 33)
         Me.pictureBU.TabIndex = 63
         Me.pictureBU.TabStop = False
         Me.pictureBU.Visible = False
@@ -255,20 +245,18 @@ Partial Class frmHierarchySelection
         'rdbRoles
         '
         Me.rdbRoles.AutoSize = True
-        Me.rdbRoles.Location = New System.Drawing.Point(186, 20)
-        Me.rdbRoles.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbRoles.Location = New System.Drawing.Point(140, 16)
         Me.rdbRoles.Name = "rdbRoles"
-        Me.rdbRoles.Size = New System.Drawing.Size(17, 16)
+        Me.rdbRoles.Size = New System.Drawing.Size(14, 13)
         Me.rdbRoles.TabIndex = 58
         Me.rdbRoles.UseVisualStyleBackColor = True
         '
         'rdbBU
         '
         Me.rdbBU.AutoSize = True
-        Me.rdbBU.Location = New System.Drawing.Point(365, 20)
-        Me.rdbBU.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbBU.Location = New System.Drawing.Point(274, 16)
         Me.rdbBU.Name = "rdbBU"
-        Me.rdbBU.Size = New System.Drawing.Size(17, 16)
+        Me.rdbBU.Size = New System.Drawing.Size(14, 13)
         Me.rdbBU.TabIndex = 62
         Me.rdbBU.UseVisualStyleBackColor = True
         Me.rdbBU.Visible = False
@@ -276,30 +264,27 @@ Partial Class frmHierarchySelection
         'pictureRoles
         '
         Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
-        Me.pictureRoles.Location = New System.Drawing.Point(212, 4)
-        Me.pictureRoles.Margin = New System.Windows.Forms.Padding(4)
+        Me.pictureRoles.Location = New System.Drawing.Point(159, 3)
         Me.pictureRoles.Name = "pictureRoles"
-        Me.pictureRoles.Size = New System.Drawing.Size(44, 41)
+        Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
         Me.pictureRoles.TabIndex = 59
         Me.pictureRoles.TabStop = False
         '
         'pictureCosts
         '
         Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
-        Me.pictureCosts.Location = New System.Drawing.Point(303, 4)
-        Me.pictureCosts.Margin = New System.Windows.Forms.Padding(4)
+        Me.pictureCosts.Location = New System.Drawing.Point(227, 3)
         Me.pictureCosts.Name = "pictureCosts"
-        Me.pictureCosts.Size = New System.Drawing.Size(44, 41)
+        Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
         Me.pictureCosts.TabIndex = 61
         Me.pictureCosts.TabStop = False
         '
         'rdbCosts
         '
         Me.rdbCosts.AutoSize = True
-        Me.rdbCosts.Location = New System.Drawing.Point(274, 20)
-        Me.rdbCosts.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbCosts.Location = New System.Drawing.Point(206, 16)
         Me.rdbCosts.Name = "rdbCosts"
-        Me.rdbCosts.Size = New System.Drawing.Size(17, 16)
+        Me.rdbCosts.Size = New System.Drawing.Size(14, 13)
         Me.rdbCosts.TabIndex = 60
         Me.rdbCosts.UseVisualStyleBackColor = True
         '
@@ -308,10 +293,9 @@ Partial Class frmHierarchySelection
         Me.filterBox.Enabled = False
         Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.filterBox.HideSelection = False
-        Me.filterBox.Location = New System.Drawing.Point(163, 114)
-        Me.filterBox.Margin = New System.Windows.Forms.Padding(4)
+        Me.filterBox.Location = New System.Drawing.Point(122, 93)
         Me.filterBox.Name = "filterBox"
-        Me.filterBox.Size = New System.Drawing.Size(199, 26)
+        Me.filterBox.Size = New System.Drawing.Size(150, 22)
         Me.filterBox.TabIndex = 91
         Me.filterBox.Visible = False
         '
@@ -319,10 +303,9 @@ Partial Class frmHierarchySelection
         '
         Me.headerLine.AutoSize = True
         Me.headerLine.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.headerLine.Location = New System.Drawing.Point(13, 117)
-        Me.headerLine.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.headerLine.Location = New System.Drawing.Point(10, 95)
         Me.headerLine.Name = "headerLine"
-        Me.headerLine.Size = New System.Drawing.Size(129, 20)
+        Me.headerLine.Size = New System.Drawing.Size(91, 16)
         Me.headerLine.TabIndex = 90
         Me.headerLine.Text = "Label1              "
         '
@@ -333,10 +316,9 @@ Partial Class frmHierarchySelection
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(12, 396)
-        Me.SelectionSet.Margin = New System.Windows.Forms.Padding(4)
+        Me.SelectionSet.Location = New System.Drawing.Point(9, 322)
         Me.SelectionSet.Name = "SelectionSet"
-        Me.SelectionSet.Size = New System.Drawing.Size(21, 20)
+        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
         Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionSet.TabIndex = 89
         Me.SelectionSet.TabStop = False
@@ -344,10 +326,9 @@ Partial Class frmHierarchySelection
         'auswSpeichern
         '
         Me.auswSpeichern.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.auswSpeichern.Location = New System.Drawing.Point(433, 432)
-        Me.auswSpeichern.Margin = New System.Windows.Forms.Padding(4)
+        Me.auswSpeichern.Location = New System.Drawing.Point(325, 351)
         Me.auswSpeichern.Name = "auswSpeichern"
-        Me.auswSpeichern.Size = New System.Drawing.Size(151, 26)
+        Me.auswSpeichern.Size = New System.Drawing.Size(113, 21)
         Me.auswSpeichern.TabIndex = 88
         Me.auswSpeichern.Text = "Speichern"
         Me.auswSpeichern.UseVisualStyleBackColor = True
@@ -357,10 +338,9 @@ Partial Class frmHierarchySelection
         Me.filterLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.filterLabel.AutoSize = True
         Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterLabel.Location = New System.Drawing.Point(12, 434)
-        Me.filterLabel.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.filterLabel.Location = New System.Drawing.Point(9, 353)
         Me.filterLabel.Name = "filterLabel"
-        Me.filterLabel.Size = New System.Drawing.Size(47, 20)
+        Me.filterLabel.Size = New System.Drawing.Size(37, 16)
         Me.filterLabel.TabIndex = 87
         Me.filterLabel.Text = "Filter"
         Me.filterLabel.Visible = False
@@ -370,11 +350,10 @@ Partial Class frmHierarchySelection
         Me.filterDropbox.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.filterDropbox.FormattingEnabled = True
-        Me.filterDropbox.Location = New System.Drawing.Point(203, 433)
-        Me.filterDropbox.Margin = New System.Windows.Forms.Padding(4)
+        Me.filterDropbox.Location = New System.Drawing.Point(152, 352)
         Me.filterDropbox.MaxDropDownItems = 10
         Me.filterDropbox.Name = "filterDropbox"
-        Me.filterDropbox.Size = New System.Drawing.Size(203, 24)
+        Me.filterDropbox.Size = New System.Drawing.Size(153, 21)
         Me.filterDropbox.Sorted = True
         Me.filterDropbox.TabIndex = 86
         Me.filterDropbox.Visible = False
@@ -384,10 +363,9 @@ Partial Class frmHierarchySelection
         Me.collapseCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(85, 396)
-        Me.collapseCompletely.Margin = New System.Windows.Forms.Padding(4)
+        Me.collapseCompletely.Location = New System.Drawing.Point(64, 322)
         Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(21, 20)
+        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
         Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.collapseCompletely.TabIndex = 85
         Me.collapseCompletely.TabStop = False
@@ -397,10 +375,9 @@ Partial Class frmHierarchySelection
         Me.expandCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(115, 396)
-        Me.expandCompletely.Margin = New System.Windows.Forms.Padding(4)
+        Me.expandCompletely.Location = New System.Drawing.Point(86, 322)
         Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(21, 20)
+        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.expandCompletely.TabIndex = 84
         Me.expandCompletely.TabStop = False
@@ -411,10 +388,9 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(41, 396)
-        Me.SelectionReset.Margin = New System.Windows.Forms.Padding(4)
+        Me.SelectionReset.Location = New System.Drawing.Point(31, 322)
         Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(21, 20)
+        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
         Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionReset.TabIndex = 83
         Me.SelectionReset.TabStop = False
@@ -426,19 +402,17 @@ Partial Class frmHierarchySelection
         Me.Panel3.Controls.Add(Me.rdbProjStruktTyp)
         Me.Panel3.Controls.Add(Me.rdbNameList)
         Me.Panel3.Controls.Add(Me.rdbProjStruktProj)
-        Me.Panel3.Location = New System.Drawing.Point(12, 70)
-        Me.Panel3.Margin = New System.Windows.Forms.Padding(4)
+        Me.Panel3.Location = New System.Drawing.Point(9, 57)
         Me.Panel3.Name = "Panel3"
-        Me.Panel3.Size = New System.Drawing.Size(589, 31)
+        Me.Panel3.Size = New System.Drawing.Size(442, 25)
         Me.Panel3.TabIndex = 93
         '
         'rdbProjStruktTyp
         '
         Me.rdbProjStruktTyp.AutoSize = True
-        Me.rdbProjStruktTyp.Location = New System.Drawing.Point(98, 6)
-        Me.rdbProjStruktTyp.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbProjStruktTyp.Location = New System.Drawing.Point(74, 5)
         Me.rdbProjStruktTyp.Name = "rdbProjStruktTyp"
-        Me.rdbProjStruktTyp.Size = New System.Drawing.Size(166, 21)
+        Me.rdbProjStruktTyp.Size = New System.Drawing.Size(125, 17)
         Me.rdbProjStruktTyp.TabIndex = 68
         Me.rdbProjStruktTyp.Text = "Projekt-Struktur (Typ)"
         Me.rdbProjStruktTyp.UseVisualStyleBackColor = True
@@ -447,10 +421,9 @@ Partial Class frmHierarchySelection
         '
         Me.rdbNameList.AutoSize = True
         Me.rdbNameList.Checked = True
-        Me.rdbNameList.Location = New System.Drawing.Point(8, 6)
-        Me.rdbNameList.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbNameList.Location = New System.Drawing.Point(6, 5)
         Me.rdbNameList.Name = "rdbNameList"
-        Me.rdbNameList.Size = New System.Drawing.Size(59, 21)
+        Me.rdbNameList.Size = New System.Drawing.Size(47, 17)
         Me.rdbNameList.TabIndex = 66
         Me.rdbNameList.TabStop = True
         Me.rdbNameList.Text = "Liste"
@@ -459,10 +432,9 @@ Partial Class frmHierarchySelection
         'rdbProjStruktProj
         '
         Me.rdbProjStruktProj.AutoSize = True
-        Me.rdbProjStruktProj.Location = New System.Drawing.Point(275, 4)
-        Me.rdbProjStruktProj.Margin = New System.Windows.Forms.Padding(4)
+        Me.rdbProjStruktProj.Location = New System.Drawing.Point(206, 3)
         Me.rdbProjStruktProj.Name = "rdbProjStruktProj"
-        Me.rdbProjStruktProj.Size = New System.Drawing.Size(186, 21)
+        Me.rdbProjStruktProj.Size = New System.Drawing.Size(140, 17)
         Me.rdbProjStruktProj.TabIndex = 67
         Me.rdbProjStruktProj.Text = "Projekt-Struktur (Projekt)"
         Me.rdbProjStruktProj.UseVisualStyleBackColor = True
@@ -471,10 +443,9 @@ Partial Class frmHierarchySelection
         '
         Me.AbbrButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.AbbrButton.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.AbbrButton.Location = New System.Drawing.Point(343, 497)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.AbbrButton.Location = New System.Drawing.Point(257, 404)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(117, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(88, 23)
         Me.AbbrButton.TabIndex = 82
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = False
@@ -484,10 +455,9 @@ Partial Class frmHierarchySelection
         '
         Me.chkbxOneChart.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.chkbxOneChart.AutoSize = True
-        Me.chkbxOneChart.Location = New System.Drawing.Point(433, 395)
-        Me.chkbxOneChart.Margin = New System.Windows.Forms.Padding(4)
+        Me.chkbxOneChart.Location = New System.Drawing.Point(322, 321)
         Me.chkbxOneChart.Name = "chkbxOneChart"
-        Me.chkbxOneChart.Size = New System.Drawing.Size(155, 21)
+        Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
         Me.chkbxOneChart.TabIndex = 76
         Me.chkbxOneChart.Text = "Alles in einem Chart"
         Me.chkbxOneChart.UseVisualStyleBackColor = True
@@ -497,10 +467,9 @@ Partial Class frmHierarchySelection
         '
         Me.statusLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(8, 531)
-        Me.statusLabel.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.statusLabel.Location = New System.Drawing.Point(6, 431)
         Me.statusLabel.Name = "statusLabel"
-        Me.statusLabel.Size = New System.Drawing.Size(51, 17)
+        Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 80
         Me.statusLabel.Text = "Label1"
         '
@@ -509,20 +478,18 @@ Partial Class frmHierarchySelection
         Me.repVorlagenDropbox.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.repVorlagenDropbox.FormattingEnabled = True
-        Me.repVorlagenDropbox.Location = New System.Drawing.Point(203, 466)
-        Me.repVorlagenDropbox.Margin = New System.Windows.Forms.Padding(4)
+        Me.repVorlagenDropbox.Location = New System.Drawing.Point(152, 379)
         Me.repVorlagenDropbox.Name = "repVorlagenDropbox"
-        Me.repVorlagenDropbox.Size = New System.Drawing.Size(203, 24)
+        Me.repVorlagenDropbox.Size = New System.Drawing.Size(153, 21)
         Me.repVorlagenDropbox.TabIndex = 77
         Me.repVorlagenDropbox.Visible = False
         '
         'OKButton
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.OKButton.Location = New System.Drawing.Point(203, 497)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Location = New System.Drawing.Point(152, 404)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(154, 28)
+        Me.OKButton.Size = New System.Drawing.Size(116, 23)
         Me.OKButton.TabIndex = 78
         Me.OKButton.Text = "Anzeigen"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -532,10 +499,9 @@ Partial Class frmHierarchySelection
         Me.labelPPTVorlage.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.labelPPTVorlage.AutoSize = True
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelPPTVorlage.Location = New System.Drawing.Point(12, 472)
-        Me.labelPPTVorlage.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 384)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
-        Me.labelPPTVorlage.Size = New System.Drawing.Size(166, 20)
+        Me.labelPPTVorlage.Size = New System.Drawing.Size(136, 16)
         Me.labelPPTVorlage.TabIndex = 79
         Me.labelPPTVorlage.Text = "Powerpoint Template"
         Me.labelPPTVorlage.Visible = False
@@ -546,10 +512,9 @@ Partial Class frmHierarchySelection
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(461, 503)
-        Me.einstellungen.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.einstellungen.Location = New System.Drawing.Point(346, 409)
         Me.einstellungen.Name = "einstellungen"
-        Me.einstellungen.Size = New System.Drawing.Size(93, 17)
+        Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 81
         Me.einstellungen.Text = "Einstellungen"
         Me.einstellungen.Visible = False
@@ -561,20 +526,18 @@ Partial Class frmHierarchySelection
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.hryTreeView.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryTreeView.FullRowSelect = True
-        Me.hryTreeView.Location = New System.Drawing.Point(10, 148)
-        Me.hryTreeView.Margin = New System.Windows.Forms.Padding(4)
+        Me.hryTreeView.Location = New System.Drawing.Point(8, 120)
         Me.hryTreeView.Name = "hryTreeView"
-        Me.hryTreeView.Size = New System.Drawing.Size(587, 240)
+        Me.hryTreeView.Size = New System.Drawing.Size(441, 196)
         Me.hryTreeView.TabIndex = 73
         '
         'frmHierarchySelection
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(609, 573)
+        Me.ClientSize = New System.Drawing.Size(457, 466)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmHierarchySelection"
         Me.Text = "Auswahl von Plan-Objekten"
         Me.TopMost = True

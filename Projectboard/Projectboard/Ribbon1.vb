@@ -263,7 +263,22 @@ Imports System.Web
 
             Next
 
+            If outPutCollection.Count > 0 Then
+                Dim msgH As String, msgE As String
+                If awinSettings.englishLanguage Then
+                    msgH = "Save Portfolios"
+                    msgE = "following results:"
+                Else
+                    msgH = "Speichern Portfolio(s"
+                    msgE = "Rückmeldungen"
+
+                End If
+
+                Call showOutPut(outPutCollection, msgH, msgE)
+
+            End If
         End If
+
 
     End Sub
 
@@ -288,6 +303,7 @@ Imports System.Web
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
+
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
@@ -357,7 +373,8 @@ Imports System.Web
 
             Dim constellationsToDo As New clsConstellations
 
-
+            ' WaitCursor einschalten ...
+            Cursor.Current = Cursors.WaitCursor
 
             If clearBoard Then
                 'currentSessionConstellation.Liste.Clear()
@@ -472,6 +489,8 @@ Imports System.Web
 
             appInstance.ScreenUpdating = True
 
+            Cursor.Current = Cursors.Default
+
         End If
 
         enableOnUpdate = True
@@ -533,7 +552,7 @@ Imports System.Web
                 Call MsgBox("keine Projekte zu speichern ...")
             End If
         Catch ex As Exception
-
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
             Call MsgBox(ex.Message)
         End Try
 
@@ -1098,10 +1117,11 @@ Imports System.Web
                                         ' merken , welche Phasen, Meilensteine aktuell gezeigt werden 
                                         phaseList = projectboardShapes.getPhaseList(pName)
                                         milestoneList = projectboardShapes.getMilestoneList(pName)
-                                        Dim key As String = calcProjektKey(hproj)
-                                        ShowProjekte.Remove(pName)
+
                                         Call clearProjektinPlantafel(pName)
 
+                                        Dim key As String = calcProjektKey(hproj)
+                                        ShowProjekte.Remove(pName)
 
                                         ' jetzt müssen auch alle in der Session / AlleProjekte vorhandenen Varianten umbenannt werden 
                                         For Each vName As String In variantNamesCollection
@@ -1200,8 +1220,11 @@ Imports System.Web
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
+
+        Dim pNrDoesNotExistYet As Boolean = True
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Call projektTafelInit()
+
 
         enableOnUpdate = False
 
@@ -1210,7 +1233,6 @@ Imports System.Web
 
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
-                Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
 
                 Dim profitUserAskedFor As String = Nothing
                 If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
@@ -1223,18 +1245,36 @@ Imports System.Web
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
+                        If .txtbx_pNr.Text <> "" Then
 
-                            ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+                            Try
+                                pNrDoesNotExistYet = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(.txtbx_pNr.Text, err).Count = 0
+                            Catch ex As Exception
 
+                            End Try
 
-                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
-                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
-                                               CStr(""), buName)
-                        Else
-                            Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
                         End If
+
+                        If pNrDoesNotExistYet Then
+
+                            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
+
+                                ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+
+
+                                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                   CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                   5.0, 5.0, profitUserAskedFor,
+                                                   CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+                            Else
+                                Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                            End If
+
+                        Else
+                            Call MsgBox(" Projekt-Nummer '" & .txtbx_pNr.Text & "' existiert bereits in der Datenbank!")
+                        End If
+
+
                     Else
 
                         Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
@@ -1243,8 +1283,8 @@ Imports System.Web
                         ' Projekt soll trotzdem angezeigt werden
                         Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
-                                               CStr(""), buName)
+                                               5.0, 5.0, profitUserAskedFor,
+                                               CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
 
                     End If
 
@@ -1254,9 +1294,9 @@ Imports System.Web
 
                     ' Projekt soll trotzdem angezeigt werden
                     Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
-                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
-                                           CStr(""), buName)
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                               5.0, 5.0, profitUserAskedFor,
+                                               CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
 
                 End If
 
@@ -3140,6 +3180,12 @@ Imports System.Web
                     tmpLabel = "Help"
                 Else
                     tmpLabel = "Help"
+                End If
+            Case "PTTestfunktionen"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Testfuntionen"
+                Else
+                    tmpLabel = "VISBO Testings"
                 End If
             Case "PTWebServer"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -5053,8 +5099,16 @@ Imports System.Web
                         Try
                             If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                                 ' das muss noch abgefragt werden ... 
+
                                 Dim startdate As Date = CDate("1.1.2019")
                                 Dim enddate As Date = CDate("31.12.2019")
+
+                                ' tk aktuelle Krücke für Allianz um das Einlesen der Batchliste für 2020 zu machen
+                                ' dazu muss die Datenbank mit 20 enden ...
+                                If awinSettings.databaseName.EndsWith("20") Then
+                                    startdate = CDate("1.1.2020")
+                                    enddate = CDate("31.12.2020")
+                                End If
 
                                 isAllianzImport1 = True
                                 Call importAllianzType1(startdate, enddate)
@@ -5078,7 +5132,7 @@ Imports System.Web
                                     Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
                                     Dim outputCollection As New Collection
-                                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                                    Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                                 End If
 
@@ -5102,6 +5156,8 @@ Imports System.Web
                             'sessionConstellationP enthält alle Projekte aus dem Import 
                             Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
+
+                            ' tk 8.5.19 das soll jetzt nicht mehr gemacht werden - immer alle Projekte zeigen, die importiert wurden und sich verändert haben 
                             If isAllianzImport1 Then
                                 sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
                             End If
@@ -5134,36 +5190,46 @@ Imports System.Web
                             End If
 
 
-                            If isAllianzImport1 Then
-                                If sessionConstellationS.count > 0 Then
-
-                                    If projectConstellations.Contains(scenarioNameS) Then
-                                        projectConstellations.Remove(scenarioNameS)
-                                    End If
-
-                                    projectConstellations.Add(sessionConstellationS)
-                                    ' jetzt auf Projekt-Tafel anzeigen 
-
-                                    Call loadSessionConstellation(scenarioNameS, False, True)
-
-                                Else
-                                    Call MsgBox("keine Programmlinien importiert ...")
-                                End If
-                            Else
-                                If sessionConstellationP.count > 0 Then
-
-                                    If projectConstellations.Contains(scenarioNameP) Then
-                                        projectConstellations.Remove(scenarioNameP)
-                                    End If
-
-                                    projectConstellations.Add(sessionConstellationP)
-                                    ' jetzt auf Projekt-Tafel anzeigen 
-                                    Call loadSessionConstellation(scenarioNameP, False, True)
-
-                                Else
-                                    Call MsgBox("keine Projekte importiert ...")
-                                End If
+                            ' auch im Fall Allianz sollen die Projekte gezeigt werden - nicht die Summary-Projekte 
+                            If projectConstellations.Contains(scenarioNameP) Then
+                                projectConstellations.Remove(scenarioNameP)
                             End If
+
+                            projectConstellations.Add(sessionConstellationP)
+                            ' jetzt auf Projekt-Tafel anzeigen 
+                            Call loadSessionConstellation(scenarioNameP, False, True)
+
+                            '' tk 8.5.19 auskommentiert 
+                            'If isAllianzImport1 Then
+                            '    If sessionConstellationS.count > 0 Then
+
+                            '        If projectConstellations.Contains(scenarioNameS) Then
+                            '            projectConstellations.Remove(scenarioNameS)
+                            '        End If
+
+                            '        projectConstellations.Add(sessionConstellationS)
+                            '        ' jetzt auf Projekt-Tafel anzeigen 
+
+                            '        Call loadSessionConstellation(scenarioNameS, False, True)
+
+                            '    Else
+                            '        Call MsgBox("keine Programmlinien importiert ...")
+                            '    End If
+                            'Else
+                            '    If sessionConstellationP.count > 0 Then
+
+                            '        If projectConstellations.Contains(scenarioNameP) Then
+                            '            projectConstellations.Remove(scenarioNameP)
+                            '        End If
+
+                            '        projectConstellations.Add(sessionConstellationP)
+                            '        ' jetzt auf Projekt-Tafel anzeigen 
+                            '        Call loadSessionConstellation(scenarioNameP, False, True)
+
+                            '    Else
+                            '        Call MsgBox("keine Projekte importiert ...")
+                            '    End If
+                            'End If
 
 
 
@@ -6029,7 +6095,7 @@ Imports System.Web
                     Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
 
-                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                    Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                 End If
 
@@ -6222,8 +6288,14 @@ Imports System.Web
                 '    ' VISBO Externe Kapazitäts-Dateien 
                 '    Call readMonthlyExternKapas(outputCollection)
                 'End If
+
+                ' wenn es gibt - lesen der Modifier Kapas, wo interne wie externe angegeben sein können ..
+                Call readMonthlyModifierKapas(outputCollection)
+
+                ' wenn es gibt - lesen der Externen Verträge 
                 Call readMonthlyExternKapasEV(outputCollection)
 
+                ' wenn es gibt - lesen der Urlaubslisten 
                 Call readInterneAnwesenheitslisten(outputCollection)
 
 
@@ -6477,6 +6549,10 @@ Imports System.Web
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
+
+            Dim outPutCollection As New Collection
+            Dim outputLine As String = ""
+
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
@@ -6527,18 +6603,58 @@ Imports System.Web
 
             Next i
 
+            If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
+
+                For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
+                    If awinSettings.englishLanguage Then
+                        outputLine = "unknown Role: " & kvp.Value.name
+                    Else
+                        outputLine = "unbekannte Rolle: " & kvp.Value.name
+                    End If
+
+                    outPutCollection.Add(outputLine)
+                Next
+
+                For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
+                    If awinSettings.englishLanguage Then
+                        outputLine = "unknown Cost: " & kvp.Value.name
+                    Else
+                        outputLine = "unbekannte Kostenart: " & kvp.Value.name
+                    End If
+
+                    outPutCollection.Add(outputLine)
+                Next
+
+                Call logfileOpen()
+                Call logfileSchreiben(outPutCollection)
+                Call logfileSchliessen()
+
+                If awinSettings.englishLanguage Then
+                    Call showOutPut(outPutCollection, "unknown Elements:", "please modify organisation-file or input ...")
+                Else
+                    Call showOutPut(outPutCollection, "Unbekannte Elemente:", "bitte in Organisations-Datei korrigieren")
+                End If
+
+
+            Else
+
+            End If
+
             '' Cursor auf Default setzen
             Cursor.Current = Cursors.Default
 
 
-            ' '' ''End If
+            ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True)
             Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
 
-                Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
 
 
@@ -10007,7 +10123,7 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken2
                             scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
@@ -10044,7 +10160,7 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken
                             scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
@@ -12111,8 +12227,12 @@ Imports System.Web
         Call projektTafelInit()
         enableOnUpdate = False
         appInstance.EnableEvents = True
-
-        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err)
+        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
+            If awinSettings.visboDebug Then
+                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+            End If
+        End If
+        'Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err)
 
         enableOnUpdate = True
 

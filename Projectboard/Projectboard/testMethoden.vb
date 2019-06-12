@@ -215,65 +215,69 @@ Module testMethoden
 
         Next
 
-        Dim chckSum1() As Double
-        Dim chckSum2() As Double
-        ReDim chckSum1(testRoleIDs.Length - 1)
-        ReDim chckSum2(testRoleIDs.Length - 1)
+        If Not IsNothing(testRoleIDs) Then
+            Dim chckSum1() As Double
+            Dim chckSum2() As Double
+            ReDim chckSum1(testRoleIDs.Length - 1)
+            ReDim chckSum2(testRoleIDs.Length - 1)
 
-        If found Then
+            If found Then
 
-            ' komplettes Showprojekte überprüfen ...
+                ' komplettes Showprojekte überprüfen ...
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                aggregatedProject = kvp.Value.aggregateForPortfolioMgr(testRoleIDs)
+                    aggregatedProject = kvp.Value.aggregateForPortfolioMgr(testRoleIDs)
 
-                ix = 0
+                    ix = 0
+                    For Each roleID As Integer In testRoleIDs
+                        array1 = kvp.Value.getRessourcenBedarf(roleID, True, False, False)
+                        array2 = aggregatedProject.getRessourcenBedarf(roleID, True, False, False)
+
+                        If arraysAreDifferent(array1, array2) Then
+                            errMsg = "Unterschiede Projekt / Aggregated Projekt: )" & kvp.Value.name
+                            outputCollection.Add(errMsg)
+                        End If
+
+                        chckSum1(ix) = chckSum1(ix) + array1.Sum
+                        chckSum2(ix) = chckSum2(ix) + array2.Sum
+                        ix = ix + 1
+                    Next
+
+
+                    testportfolioProjekte.Add(kvp.Value, False)
+
+
+                Next
+
                 For Each roleID As Integer In testRoleIDs
-                    array1 = kvp.Value.getRessourcenBedarf(roleID, True, False, False)
-                    array2 = aggregatedProject.getRessourcenBedarf(roleID, True, False, False)
+
+                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                    array1 = ShowProjekte.getRoleValuesInMonth(roleNameID, True, PTcbr.all, Nothing)
+                    array2 = testportfolioProjekte.getRoleValuesInMonth(roleNameID, True, PTcbr.all, Nothing)
 
                     If arraysAreDifferent(array1, array2) Then
-                        errMsg = "Unterschiede Projekt / Aggregated Projekt: )" & kvp.Value.name
+                        errMsg = "Unterschiede Portfolio / Aggregated Portfolio: )" & array1.Sum.ToString & " vs. " & array2.Sum.ToString
                         outputCollection.Add(errMsg)
                     End If
 
-                    chckSum1(ix) = chckSum1(ix) + array1.Sum
-                    chckSum2(ix) = chckSum2(ix) + array2.Sum
-                    ix = ix + 1
+                    If chckSum1.Sum <> array1.Sum Then
+                        errMsg = "Unterschiede Summe Einzelprojekte / Portfolio: )" & chckSum1.Sum.ToString & " vs. " & array1.Sum.ToString
+                        outputCollection.Add(errMsg)
+                    End If
+
+                    If chckSum2.Sum <> array2.Sum Then
+                        errMsg = "Unterschiede Summe Einzelprojekte / Portfolio: )" & chckSum2.ToString & " vs. " & array2.Sum.ToString
+                        outputCollection.Add(errMsg)
+                    End If
+
+
                 Next
 
-
-                testportfolioProjekte.Add(kvp.Value, False)
-
-
-            Next
-
-            For Each roleID As Integer In testRoleIDs
-
-                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
-                array1 = ShowProjekte.getRoleValuesInMonth(roleNameID, True, PTcbr.all, Nothing)
-                array2 = testportfolioProjekte.getRoleValuesInMonth(roleNameID, True, PTcbr.all, Nothing)
-
-                If arraysAreDifferent(array1, array2) Then
-                    errMsg = "Unterschiede Portfolio / Aggregated Portfolio: )" & array1.Sum.ToString & " vs. " & array2.Sum.ToString
-                    outputCollection.Add(errMsg)
-                End If
-
-                If chckSum1.Sum <> array1.Sum Then
-                    errMsg = "Unterschiede Summe Einzelprojekte / Portfolio: )" & chckSum1.Sum.ToString & " vs. " & array1.Sum.ToString
-                    outputCollection.Add(errMsg)
-                End If
-
-                If chckSum2.Sum <> array2.Sum Then
-                    errMsg = "Unterschiede Summe Einzelprojekte / Portfolio: )" & chckSum2.ToString & " vs. " & array2.Sum.ToString
-                    outputCollection.Add(errMsg)
-                End If
-
-
-            Next
+            End If
 
         End If
+
 
         TestAggregateMethod = Nothing
 

@@ -47,6 +47,10 @@ Public Class frmMEhryRoleCost
     ' der ggf dazugehörende Team-Name 
     Public teamName As String
 
+    ' tk 19.5.19 wird für Allianz Team / Hierarchie Prototypen benötigt ...
+    Private showTeamsOnly As Boolean = True
+
+
 
     ' das in der Zeile aktive Projekt
     Public hproj As clsProjekt
@@ -202,6 +206,9 @@ Public Class frmMEhryRoleCost
 
 
 
+    ''' <summary>
+    ''' es sollen jetzt auch die virtuellen Childs angezeigt werden ..
+    ''' </summary>
     Public Sub buildMERoleTree()
 
 
@@ -226,7 +233,7 @@ Public Class frmMEhryRoleCost
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                             topNodes.Clear()
                             Dim teamID As Integer = -1
@@ -304,52 +311,55 @@ Public Class frmMEhryRoleCost
                 Next
             End If
 
-            If CostDefinitions.Count > 1 Then
+            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If CostDefinitions.Count > 1 Then
 
-                For i = 1 To CostDefinitions.Count - 1
-                    Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
+                    For i = 1 To CostDefinitions.Count - 1
+                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
 
-                    topLevelNode = .Nodes.Add(cost.name)
-                    topLevelNode.Text = cost.name
-                    topLevelNode.Name = cost.name
-                    '
-                    ' 9.12.18 neuer Stuff 
-                    '
-                    Dim nrTag As New clsNodeRoleTag
-                    With nrTag
-                        .pTag = "X"
-                        .isRole = False
-                    End With
+                        topLevelNode = .Nodes.Add(cost.name)
+                        topLevelNode.Text = cost.name
+                        topLevelNode.Name = cost.name
+                        '
+                        ' 9.12.18 neuer Stuff 
+                        '
+                        Dim nrTag As New clsNodeRoleTag
+                        With nrTag
+                            .pTag = "X"
+                            .isRole = False
+                        End With
 
-                    topLevelNode.Tag = nrTag
-
-
-                    ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
-                    If initialCostsOfPhase.ContainsKey(cost.name) Then
-                        topLevelNode.Checked = True
-                    End If
+                        topLevelNode.Tag = nrTag
 
 
-                    ' 9.12.18 alter Stuff
-                    'topLevelNode.Text = cost.name
-
-                    'If Not IsNothing(hPhase) Then
-                    '    If Not IsNothing(hPhase.getCost(cost.name)) Then
-
-                    '        ' entsprechend kennzeichnen 
-                    '        topLevelNode.NodeFont = existingRoleFont
-                    '        topLevelNode.ForeColor = existingRoleColor
-
-                    '        If cost.name = rcName Then
-                    '            topLevelNode.Checked = True
-                    '        End If
-
-                    '    End If
-                    'End If
+                        ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
+                        If initialCostsOfPhase.ContainsKey(cost.name) Then
+                            topLevelNode.Checked = True
+                        End If
 
 
-                Next
+                        ' 9.12.18 alter Stuff
+                        'topLevelNode.Text = cost.name
+
+                        'If Not IsNothing(hPhase) Then
+                        '    If Not IsNothing(hPhase.getCost(cost.name)) Then
+
+                        '        ' entsprechend kennzeichnen 
+                        '        topLevelNode.NodeFont = existingRoleFont
+                        '        topLevelNode.ForeColor = existingRoleColor
+
+                        '        If cost.name = rcName Then
+                        '            topLevelNode.Checked = True
+                        '        End If
+
+                        '    End If
+                        'End If
+
+
+                    Next
+                End If
             End If
+
 
 
         End With
@@ -529,6 +539,9 @@ Public Class frmMEhryRoleCost
         Dim anzChilds As Integer
         Dim elemID As String
 
+        ' für Prototyp und Diskussion Allianz 
+        'Dim showTeamsOnly As Boolean = True
+
         node = e.Node
         elemID = node.Name
 
@@ -549,8 +562,27 @@ Public Class frmMEhryRoleCost
 
                 Dim nodelist As New SortedList(Of Integer, Double)
                 Try
+
                     Dim teamID As Integer
-                    nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
+                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
+
+                    If showTeamsOnly And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And Not curRole.isTeam Then
+                        ' Allianz Proof of Concept : wenn es sich zunächst um einen Ressourcen Manager oder einen Projektleiter handelt , dann sollen die virtuellen Childs der aktuellen Rolle auch angezeigt werden ... 
+                        Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
+
+                        If Not IsNothing(virtualChilds) Then
+                            For Each vcID As Integer In virtualChilds
+                                If Not nodelist.ContainsKey(vcID) Then
+                                    nodelist.Add(vcID, 1.0)
+                                End If
+                            Next
+                        End If
+
+                    Else
+                        nodelist = curRole.getSubRoleIDs
+                    End If
+
+
                     anzChilds = nodelist.Count
                 Catch ex As Exception
                     anzChilds = 0

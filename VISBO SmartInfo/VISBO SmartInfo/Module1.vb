@@ -1151,11 +1151,18 @@ Module Module1
                         End If
                         ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
 
+                        Dim projType As ptPRPFType = ptPRPFType.project
+
+                        If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                            projType = CType(tmpShape.Tags.Item("PRPF"), ptPRPFType)
+                        Else
+
+                        End If
                         If pvName <> "" Then
                             If smartSlideLists.containsProject(pvName) Then
                                 ' nichts tun, ist schon drin ..
                             Else
-                                smartSlideLists.addProject(pvName)
+                                smartSlideLists.addProject(pvName, projType)
                             End If
                         End If
 
@@ -3512,7 +3519,11 @@ Module Module1
             Dim dontShowPlanung As Boolean = False
 
             If scInfo.prPF = ptPRPFType.portfolio Then
-                dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+
+                If ShowProjekte.actualDataUntil >= StartofCalendar Then
+                    dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+                End If
+
             Else
                 If scInfo.hproj.hasActualValues Then
                     dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
@@ -3558,7 +3569,7 @@ Module Module1
                     With .Format.Line
                         .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
                         .ForeColor.RGB = visboFarbeRed
-                        .Weight = 4
+                        .Weight = 2
                     End With
 
 

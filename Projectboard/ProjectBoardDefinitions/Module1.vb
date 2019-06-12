@@ -647,6 +647,7 @@ Public Module Module1
         beauftragung = 2
         letzterStand = 3
         ersterStand = 4
+        letzteBeauftragung = 5
     End Enum
 
     ' Enumeration für die Farbe 
@@ -1043,6 +1044,7 @@ Public Module Module1
                 .ScreenUpdating = True
             End If
         End With
+
 
     End Sub
 
@@ -1569,7 +1571,13 @@ Public Module Module1
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 ' nur dann muss mehr geprüft werden 
                 Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-                tmpResult = idArray.Contains(role.UID)
+
+                If Not IsNothing(idArray) Then
+                    tmpResult = idArray.Contains(role.UID)
+                End If
+                'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
+                '    tmpResult = role.isTeam
             End If
         End If
 
@@ -3340,6 +3348,7 @@ Public Module Module1
 
     ''' <summary>
     ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
+    ''' der Name enthält pName, vname und ElemID : (pname#vname)ElemID
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="elemID"></param>
@@ -5742,7 +5751,7 @@ Public Module Module1
                     ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
 
                         Dim curItem As String = myCustomUserRole.specifics
-                        Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
                         If isRole Then
 
@@ -5805,7 +5814,7 @@ Public Module Module1
 
                             ' wegen Einrückung in Details ...
                             Dim curItem As String = CStr(toDoCollectionR.Item(m))
-                            Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+                            Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
                             If isRole Then
 
@@ -7873,7 +7882,7 @@ Public Module Module1
             currentCell.ClearComments()
 
             currentCell.AddComment(Text:=protectiontext)
-            currentCell.Comment.Visible = True
+            currentCell.Comment.Visible = False
 
         End If
 

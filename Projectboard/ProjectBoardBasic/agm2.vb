@@ -4774,70 +4774,78 @@ Public Module agm2
                                                 Try
 
                                                     Dim k As Integer = 0
+                                                    Dim knownCost As Boolean = False
 
                                                     If CostDefinitions.containsName(ass.ResourceName) Then
                                                         k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        knownCost = True
                                                     Else
                                                         ' Kostenart existiert noch nicht
                                                         ' wird hier neu aufgenommen
                                                         Dim newCostDef As New clsKostenartDefinition
                                                         newCostDef.name = ass.ResourceName
                                                         newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
-                                                        newCostDef.UID = CostDefinitions.Count + 1
+
+                                                        newCostDef.UID = missingCostDefinitions.Count + 1
                                                         If Not missingCostDefinitions.containsName(newCostDef.name) Then
                                                             missingCostDefinitions.Add(newCostDef)
                                                         End If
 
-                                                        CostDefinitions.Add(newCostDef)
+                                                        ' darf nicht übernommen werden , muss erst korrigiert werden 
+                                                        'CostDefinitions.Add(newCostDef)
 
                                                         ' Änderung tk: muss auf costdefinitions gesetzt werden 
                                                         ' k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
-                                                        k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                                        'k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
                                                     End If
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    Dim cost As Double = CType(ass.Cost, Double)
+                                                    If knownCost Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        Dim cost As Double = CType(ass.Cost, Double)
 
-                                                    Dim startdate As Date = CDate(msTask.Start)
-                                                    Dim endedate As Date = CDate(msTask.Finish)
+                                                        Dim startdate As Date = CDate(msTask.Start)
+                                                        Dim endedate As Date = CDate(msTask.Finish)
 
-                                                    Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+                                                        Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                                        Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                                        Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                                    If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                        anzdays = 1
-                                                        anzmonth = 1
+                                                        If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                            anzdays = 1
+                                                            anzmonth = 1
+                                                        End If
+                                                        If anzdays > 0 And anzmonth = 0 Then
+                                                            anzmonth = 1
+                                                        End If
+
+
+                                                        ReDim Xwerte(anzmonth - 1)
+
+                                                        Dim m As Integer
+                                                        For m = 1 To anzmonth
+
+                                                            Try
+                                                                Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                            Catch ex As Exception
+                                                                Xwerte(m - 1) = 0.0
+                                                            End Try
+
+                                                        Next m
+
+                                                        ccost = New clsKostenart(anzmonth - 1)
+
+                                                        With ccost
+                                                            .KostenTyp = k
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+
+                                                        With cphase
+                                                            .AddCost(ccost)
+                                                        End With
                                                     End If
-                                                    If anzdays > 0 And anzmonth = 0 Then
-                                                        anzmonth = 1
-                                                    End If
 
 
-                                                    ReDim Xwerte(anzmonth - 1)
-
-                                                    Dim m As Integer
-                                                    For m = 1 To anzmonth
-
-                                                        Try
-                                                            Xwerte(m - 1) = CType(cost / anzmonth, Double)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - 1) = 0.0
-                                                        End Try
-
-                                                    Next m
-
-                                                    ccost = New clsKostenart(anzmonth - 1)
-
-                                                    With ccost
-                                                        .KostenTyp = k
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-
-                                                    With cphase
-                                                        .AddCost(ccost)
-                                                    End With
                                                 Catch ex As Exception
                                                     '
                                                     ' handelt es sich um die Kostenart Definition?
@@ -4849,18 +4857,19 @@ Public Module agm2
 
                                                 Try
                                                     Dim r As Integer = 0
-
+                                                    Dim knownRole As Boolean = False
 
                                                     If RoleDefinitions.containsName(ass.ResourceName) Then
                                                         r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        knownRole = True
                                                     Else
-                                                        ' Rolle existiert noch nicht
-                                                        ' wird hier neu aufgenommen
+                                                        ' Rolle existiert noch nicht, das kann jetzt nicht so einfach in der RoleDefinitions aufgenommen werden ...
+                                                        ' das muss an der aufrufenden Stelle in einer Meldung ausgegeben werden 
 
                                                         Dim newRoleDef As New clsRollenDefinition
                                                         newRoleDef.name = ass.ResourceName
                                                         newRoleDef.farbe = RGB(120, 120, 120)
-                                                        newRoleDef.defaultKapa = 200000
+                                                        newRoleDef.defaultKapa = 18
 
                                                         ' OvertimeRate in Tagessatz umrechnen
                                                         Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
@@ -4872,93 +4881,58 @@ Public Module agm2
                                                         hstdstr = Split(hstdstr(0), "€", -1)
                                                         newRoleDef.tagessatzIntern = CType(hstdstr(0), Double) * msproj.HoursPerDay
 
-                                                        newRoleDef.UID = RoleDefinitions.Count + 1
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
-                                                            missingRoleDefinitions.Add(newRoleDef)
+                                                            Try
+                                                                newRoleDef.UID = missingRoleDefinitions.getFreeRoleID
+                                                                missingRoleDefinitions.Add(newRoleDef)
+                                                            Catch ex As Exception
+                                                                Dim a As Integer = 1
+                                                            End Try
+
                                                         End If
 
-                                                        RoleDefinitions.Add(newRoleDef)
-
-
-                                                        ' Änderung tk: das muss von roledefinitions geholt werden ...
-                                                        ' r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
-                                                        r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                                        ' tk das darf auf keinen Fall mehr gemacht werden, weil andernfalls Ressourcen im Projekt sind mit IDs, die nicht in der Organisation sind. 
+                                                        '
+                                                        'RoleDefinitions.Add(newRoleDef)
 
                                                     End If
 
+                                                    If knownRole Then
+                                                        Dim work As Double = CType(ass.Work, Double)
+                                                        'Dim duration As Double = CType(ass.Duration, Double)
+                                                        Dim unit As Double = CType(ass.Units, Double)
+                                                        If ass.BudgetWork <> "" Then
+                                                            Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        End If
 
 
-                                                    Dim work As Double = CType(ass.Work, Double)
-                                                    'Dim duration As Double = CType(ass.Duration, Double)
-                                                    Dim unit As Double = CType(ass.Units, Double)
-                                                    If ass.BudgetWork <> "" Then
-                                                        Dim budgetWork As Double = CType(ass.BudgetWork, Double)
+                                                        Dim startdate As Date = CDate(msTask.Start).Date
+                                                        Dim endedate As Date = CDate(msTask.Finish).Date
+
+                                                        ' tk Anpassung ...
+                                                        Dim oldWerte(0) As Double
+                                                        Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+                                                        oldWerte(0) = work
+                                                        ReDim Xwerte(anzmonth - 1)
+                                                        Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
+
+                                                        ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
+                                                        For m As Integer = 1 To anzmonth
+                                                            Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
+                                                        Next
+
+                                                        crole = New clsRolle(anzmonth - 1)
+                                                        With crole
+                                                            .uid = r
+                                                            .Xwerte = Xwerte
+                                                        End With
+
+                                                        With cphase
+                                                            .addRole(crole)
+                                                        End With
                                                     End If
 
 
-                                                    Dim startdate As Date = CDate(msTask.Start).Date
-                                                    Dim endedate As Date = CDate(msTask.Finish).Date
-
-                                                    ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
-                                                    ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
-                                                    ' die Berechnung Datediff ergibt aber nur 1 Monat '
-                                                    'Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
-                                                    'Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
-                                                    'Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
-
-                                                    'If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
-                                                    '    anzdays = 1
-                                                    '    anzmonth = 1
-                                                    'End If
-                                                    'If anzdays > 0 And anzmonth = 0 Then
-                                                    '    anzmonth = 1
-                                                    'End If
-
-
-                                                    'ReDim Xwerte(anzmonth - 1)
-                                                    ' Ende Auskommentierung tk  
-
-                                                    ' tk Anpassung ...
-                                                    Dim oldWerte(0) As Double
-                                                    Dim anzmonth As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
-                                                    oldWerte(0) = work
-                                                    ReDim Xwerte(anzmonth - 1)
-                                                    Call cphase.berechneBedarfe(startdate, endedate, oldWerte, 1.0, Xwerte)
-
-                                                    ' Xwerte in Anzahl Tage; in MSProject alle Werte intern  in anz. Minuten
-                                                    For m As Integer = 1 To anzmonth
-                                                        Xwerte(m - 1) = Xwerte(m - 1) / 60 / 8
-                                                    Next
-
-                                                    ' Ende tk Anpassung
-
-
-                                                    ' Änderung tk: wieder auskommentieren - alter Code: hier wurde gleichverteilt  
-                                                    'For m As Integer = 1 To anzmonth
-
-                                                    '    Try
-                                                    '        ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
-                                                    '        Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
-
-                                                    '    Catch ex As Exception
-                                                    '        Xwerte(m - 1) = 0.0
-                                                    '    End Try
-
-                                                    'Next m
-
-                                                    ' Check , um Unterschiede in der Summe herausfinden zu können
-                                                    ' die waren immer 0 ... 
-                                                    'Dim aChck As Double = Xwerte1.Sum - Xwerte.Sum
-
-                                                    crole = New clsRolle(anzmonth - 1)
-                                                    With crole
-                                                        .uid = r
-                                                        .Xwerte = Xwerte
-                                                    End With
-
-                                                    With cphase
-                                                        .addRole(crole)
-                                                    End With
                                                 Catch ex As Exception
 
                                                 End Try
@@ -5315,7 +5289,8 @@ Public Module agm2
                 Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
 
 
-
+                ' ein MS Project PRojekt wird grundsätzich als <beauftragt> eingestuft ... 
+                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                 Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
 
@@ -5440,6 +5415,7 @@ Public Module agm2
         Catch ex As Exception
             Call MsgBox(ex)
         End Try
+
 
         enableOnUpdate = True
 
@@ -6909,7 +6885,7 @@ Public Module agm2
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
                 If roleType = ptCustomUserRoles.RessourceManager Then
-                    If RoleDefinitions.containsNameID(specifics) Then
+                    If RoleDefinitions.containsNameOrID(specifics) Then
                         ' alles ok
                         stillOk = True
                         specificsWithIDs = CStr(RoleDefinitions.getRoleDefByIDKennung(specifics, teamID).UID)
@@ -6919,22 +6895,28 @@ Public Module agm2
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
-                    For Each tmpName As String In tmpStr
+                    If tmpStr.Length = 1 And tmpStr(0) = "none" Then
+                        ' nichts weiter tun, specificsWithIDs bleibt leer 
+                        specificsWithIDs = ""
+                    Else
+                        For Each tmpName As String In tmpStr
 
-                        stillOk = stillOk And RoleDefinitions.containsNameID(tmpName.Trim)
+                            stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
 
-                        If RoleDefinitions.containsNameID(tmpName.Trim) Then
-                            tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
-                            If specificsWithIDs = "" Then
-                                specificsWithIDs = tmpNameUID
+                            If RoleDefinitions.containsNameOrID(tmpName.Trim) Then
+                                tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
+                                If specificsWithIDs = "" Then
+                                    specificsWithIDs = tmpNameUID
+                                Else
+                                    specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                End If
+
                             Else
-                                specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                                Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
                             End If
+                        Next
+                    End If
 
-                        Else
-                            Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
-                        End If
-                    Next
                 End If
             Else
                 stillOk = False
@@ -8258,50 +8240,61 @@ Public Module agm2
         Dim newRoleDefinitions As New clsRollen
         Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
 
-        If awinSettings.visboDebug Then
-            Call MsgBox("readRoleDefinitions")
-        End If
+        If outputCollection.Count = 0 Then
+            ' bisher alles ok
+            If awinSettings.visboDebug Then
+                Call MsgBox("readRoleDefinitions")
+            End If
 
-        ' Auslesen der Kosten Definitionen 
-        Dim newCostDefinitions As New clsKostenarten
-        Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+            ' Auslesen der Kosten Definitionen 
+            Dim newCostDefinitions As New clsKostenarten
+            Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
 
-        If awinSettings.visboDebug Then
-            Call MsgBox("readCostDefinitions")
-        End If
+            If awinSettings.visboDebug Then
+                Call MsgBox("readCostDefinitions")
+            End If
 
-        ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-        Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
+            ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+            Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
 
-        ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
-        If newRoleDefinitions.Count > 0 Then
-            ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-            ' jetzt kommt der Validation-Check 
+            If outputCollection.Count = 0 Then
+                ' weitermachen ... 
+                ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
+                If newRoleDefinitions.Count > 0 Then
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
 
-            Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
-            Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
+                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
+                    Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
-            If outputCollection.Count > 0 Then
-                ' wird an der aurufenden Stelle ausgegeben ... 
-            ElseIf TeamsAreNotOK Or existingOverloads Then
-                ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
-            Else
-                'bis hier ist alles in Ordnung 
-                With importedOrga
-                    .allRoles = newRoleDefinitions
-                    .allCosts = newCostDefinitions
-                    .validFrom = validFrom
-                End With
+                    If outputCollection.Count > 0 Then
+                        ' wird an der aurufenden Stelle ausgegeben ... 
+                    ElseIf TeamsAreNotOK Or existingOverloads Then
+                        ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
+                    Else
+                        'bis hier ist alles in Ordnung 
+                        With importedOrga
+                            .allRoles = newRoleDefinitions
+                            .allCosts = newCostDefinitions
+                            .validFrom = validFrom
+                        End With
 
-                If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
-                    ' wieder zurück setzen ..
-                    importedOrga = New clsOrganisation
-                Else
+                        If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
+                            ' wieder zurück setzen ..
+                            importedOrga = New clsOrganisation
+                        Else
+
+                        End If
+                    End If
 
                 End If
             End If
 
+        Else
+            importedOrga = New clsOrganisation
         End If
+
+
 
         ImportOrganisation = importedOrga
     End Function
@@ -8350,7 +8343,7 @@ Public Module agm2
         Dim emptyPrograms As Integer = 0
 
 
-        Dim vorlageName As String = "Rel"
+
         Dim lastRow As Integer
         Dim lastColumn As Integer
         Dim geleseneProjekte As Integer
@@ -8364,8 +8357,14 @@ Public Module agm2
         ' Standard-Definition
         Dim anzReleases As Integer = 5
 
+
+        Dim vorlageName As String = "Rel"
+        If awinSettings.databaseName.EndsWith("20") Then
+            vorlageName = "Rel20"
+        End If
+
         Try
-            anzReleases = Projektvorlagen.getProject("Rel").CountPhases - 1
+            anzReleases = Projektvorlagen.getProject(vorlageName).CountPhases - 1
         Catch ex As Exception
 
         End Try
@@ -8686,6 +8685,7 @@ Public Module agm2
                                 If pgmlinie.Contains(itemType) Then
                                     ' die bisherige Constellation wegschreiben ...
 
+
                                     If Not IsNothing(current1program) Then
                                         ' ggf hier wieder rausnehmen ...
 
@@ -8774,6 +8774,36 @@ Public Module agm2
                                     'With current1program
                                     '    .constellationName = itemType.ToString & " - " & pName
                                     'End With
+
+                                    ' wenn jetzt als nächstes gleich wieder eine Programm-Linie kommt, dann muss dem Program als sein erstes und einziges Projekt 
+                                    ' die Programm-Linie sein
+                                    Dim programItemfound As Boolean = False
+                                    Dim nextItemType As Integer
+                                    Dim kidItemFound As Boolean = False
+                                    Dim tmpZ As Integer = zeile + 1
+
+
+                                    Do While tmpZ <= lastRow And Not kidItemFound And Not programItemfound
+                                        Try
+                                            nextItemType = CInt(CType(.Cells(tmpZ, colFields(allianzSpalten.itemType)), Excel.Range).Value)
+                                        Catch ex As Exception
+                                            nextItemType = 0
+                                        End Try
+
+                                        kidItemFound = projektvorhaben.Contains(nextItemType)
+                                        programItemfound = pgmlinie.Contains(nextItemType)
+                                        tmpZ = tmpZ + 1
+
+                                    Loop
+
+                                    If Not kidItemFound And programItemfound Then
+                                        ' jetzt wird sichergestellt, dass diese Programm-Linie jetzt als Projekt angelegt wird ..
+                                        ok = True
+                                        projVorhabensBudget = last1Budget
+                                    ElseIf tmpZ > lastRow Then
+                                        ok = True
+                                        projVorhabensBudget = last1Budget
+                                    End If
 
                                 End If
                             End If
@@ -9733,7 +9763,7 @@ Public Module agm2
 
 
                             ' nur weitermachen, wenn valide Angaben 
-                            If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameID(roleNameID) Then
+                            If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameOrID(roleNameID) Then
                                 Dim curDelRole As String = ""
 
                                 curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
@@ -9841,7 +9871,7 @@ Public Module agm2
                                     logtxt(2) = phaseName
 
                                     errCol = colPhaseName
-                                ElseIf Not RoleDefinitions.containsNameID(roleNameID) Then
+                                ElseIf Not RoleDefinitions.containsNameOrID(roleNameID) Then
                                     atleastOneError = True
                                     Dim roleName As String = CStr(CType(currentWS.Cells(iz, colRoleName), Excel.Range).Value)
                                     logmessage = "Rollen-Name existiert nicht: " & roleName
@@ -10311,7 +10341,7 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+    Public Sub ImportAllianzIstdaten(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
@@ -10491,6 +10521,11 @@ Public Module agm2
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
                         Dim roleName As String = fullRoleName
+
+                        If roleName.StartsWith("*") Then
+                            roleName = roleName.Substring(1)
+                        End If
+
                         Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
                         Dim roleNameID As String = ""
                         Dim parentReferat As String = ""
@@ -10498,7 +10533,7 @@ Public Module agm2
 
                         ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
                         ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
-                        If RoleDefinitions.containsNameID(roleName) Then
+                        If RoleDefinitions.containsNameOrID(roleName) Then
 
                             parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
@@ -10524,6 +10559,17 @@ Public Module agm2
 
                             End If
                         Else
+                            outPutLine = "Rolle nicht bekannt: " & roleName
+                            outputCollection.Add(outPutLine)
+
+                            ReDim logArray(3)
+                            logArray(0) = "unbekannte Rolle "
+                            logArray(1) = roleName
+                            logArray(2) = teamName
+                            logArray(3) = parentReferat
+
+                            Call logfileSchreiben(logArray)
+
                             ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
                             If teamName.Length > 0 Then
                                 parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
@@ -10826,33 +10872,34 @@ Public Module agm2
                 ' das Rausschreiben der Test Records 
 
                 ' Protokoll schreiben ...
-                For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+                ' tk 8.5.19 nicht mehr machen 
+                'For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Dim protocolLine As String = ""
-                    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+                '    Dim protocolLine As String = ""
+                '    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
-                        ' jetzt schreiben 
-                        Dim teamID As Integer = -1
-                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                        Dim curTagessatz As Double = hrole.tagessatzIntern
+                '        ' jetzt schreiben 
+                '        Dim teamID As Integer = -1
+                '        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                '        Dim curTagessatz As Double = hrole.tagessatzIntern
 
-                        ReDim logArray(3)
-                        logArray(0) = "Importiert wurde: "
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
-                        logArray(3) = rVKvP.Key & ": " & hrole.name
+                '        ReDim logArray(3)
+                '        logArray(0) = "Importiert wurde: "
+                '        logArray(1) = ""
+                '        logArray(2) = vPKvP.Key
+                '        logArray(3) = rVKvP.Key & ": " & hrole.name
 
 
-                        ReDim logDblArray(rVKvP.Value.Length - 1)
-                        For i As Integer = 0 To rVKvP.Value.Length - 1
-                            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                            logDblArray(i) = rVKvP.Value(i) * curTagessatz
-                        Next
+                '        ReDim logDblArray(rVKvP.Value.Length - 1)
+                '        For i As Integer = 0 To rVKvP.Value.Length - 1
+                '            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                '            logDblArray(i) = rVKvP.Value(i) * curTagessatz
+                '        Next
 
-                        Call logfileSchreiben(logArray, logDblArray)
-                    Next
+                '        Call logfileSchreiben(logArray, logDblArray)
+                '    Next
 
-                Next
+                'Next
                 ' Protokoll schreiben Ende ... 
 
                 Dim gesamtIstValue As Double = 0.0
@@ -11588,7 +11635,7 @@ Public Module agm2
 
                 If Not IsNothing(dateiName) Then
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") Then
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
 
                         errMsg = "Reading external Capacities " & dateiName
                         Call logfileSchreiben(errMsg, "", anzFehler)
@@ -11727,14 +11774,14 @@ Public Module agm2
     ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
     ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
     ''' </summary>
-    Public Sub readMonthlyExternKapas(ByRef meldungen As Collection)
+    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection)
 
         Dim kapaFolder As String
 
 
         Dim ok As Boolean = True
 
-        Dim summenZeile As Integer
+        Dim endeZeile As Integer
         Dim spalte As Integer = 2
         Dim blattname As String = "Kapazität"
         Dim currentWS As Excel.Worksheet
@@ -11758,7 +11805,8 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        kapaFolder = awinPath & projektRessOrdner
+        'kapaFolder = awinPath & projektRessOrdner
+        kapaFolder = importOrdnerNames(PTImpExp.Kapas)
 
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
@@ -11766,10 +11814,11 @@ Public Module agm2
             For i = 0 To listOfImportfiles.Count - 1
 
                 Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+                endeZeile = 0
 
                 If Not IsNothing(dateiName) Then
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") Then
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
 
                         Try
                             appInstance.Workbooks.Open(dateiName)
@@ -11778,89 +11827,96 @@ Public Module agm2
                             Try
 
                                 currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
                                 Try
-                                    summenZeile = currentWS.Range("intern_sum").Row
+                                    endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
                                 Catch ex As Exception
-                                    ' wenn die Summenzeile nicht existiert, gehe ich davon aus, dass einfach jede Zeile ausgelesen werden soll 
-                                    summenZeile = 0
-                                    summenZeile = CType(currentWS.Cells(12000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
+                                    endeZeile = 0
                                 End Try
 
-                                lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                                ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+                                If endeZeile > 0 Then
 
-                                Dim aktzeile As Integer = 2
-                                Do While aktzeile < summenZeile
+                                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                                    Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
+                                    ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
-                                    If Not IsNothing(subRoleName) Then
-                                        subRoleName = subRoleName.Trim
-                                        If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+                                    Dim aktzeile As Integer = 2
+                                    Do While aktzeile < endeZeile
 
-                                            Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+                                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
 
-                                            ' nur weiter machen, wenn es keine SummenRollen ist ...
-                                            If Not subRole.isCombinedRole Then
+                                        If Not IsNothing(subRoleName) Then
+                                            subRoleName = subRoleName.Trim
+                                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
-                                                Try
-                                                    spalte = 2
-                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
 
-                                                    ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
+                                                ' nur weiter machen, wenn es keine SummenRolle ist ...
+                                                If Not subRole.isCombinedRole Then
 
-                                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
-                                                        Try
-                                                            spalte = spalte + 1
-                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                        Catch ex As Exception
+                                                    Try
+                                                        spalte = 2
+                                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
-                                                        End Try
-                                                    Loop
+                                                        ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
 
-                                                    Do While spalte < 241 And spalte <= lastSpalte
+                                                        Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                                            Try
+                                                                spalte = spalte + 1
+                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                            Catch ex As Exception
 
-                                                        Try
-                                                            index = getColumnOfDate(tmpDate)
-                                                            If index >= 1 Then
-                                                                tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+                                                            End Try
+                                                        Loop
 
-                                                                If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                    subRole.kapazitaet(index) = tmpKapa
+                                                        Do While spalte < 241 And spalte <= lastSpalte
+
+                                                            Try
+                                                                index = getColumnOfDate(tmpDate)
+                                                                If index >= 1 Then
+                                                                    tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                                                    If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                                        subRole.kapazitaet(index) = tmpKapa
+                                                                    End If
                                                                 End If
-                                                            End If
 
-                                                            spalte = spalte + 1
-                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                        Catch ex As Exception
-                                                            errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
-                                                            meldungen.Add(errMsg)
-                                                        End Try
+                                                                spalte = spalte + 1
+                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                            Catch ex As Exception
+                                                                errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                                meldungen.Add(errMsg)
+                                                            End Try
 
 
-                                                    Loop
+                                                        Loop
 
-                                                Catch ex As Exception
+                                                    Catch ex As Exception
 
-                                                End Try
+                                                    End Try
+                                                Else
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                    meldungen.Add(errMsg)
+                                                End If
                                             Else
-                                                errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                meldungen.Add(errMsg)
+                                                If subRoleName.Length > 0 Then
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                    meldungen.Add(errMsg)
+                                                End If
                                             End If
-                                        Else
-                                            If subRoleName.Length > 0 Then
-                                                errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                meldungen.Add(errMsg)
-                                            End If
+
                                         End If
 
-                                    End If
+                                        aktzeile = aktzeile + 1
+                                        ' jetzt spalte wieder auf 2 setzen 
+                                        spalte = 2
+                                    Loop
 
-                                    aktzeile = aktzeile + 1
-                                    ' jetzt spalte wieder auf 2 setzen 
-                                    spalte = 2
-                                Loop
+                                Else
+                                    errMsg = "File " & dateiName & " does not contain data in column A ..."
+                                    meldungen.Add(errMsg)
+                                End If
 
                             Catch ex2 As Exception
                                 errMsg = "File " & dateiName & ": unidentified error ... "
@@ -13505,10 +13561,12 @@ Public Module agm2
                             If roleNameIDCollection.Count = 0 Then
                                 relevant = True
                             Else
-                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
-                                    relevant = True
-                                End If
+
+                                relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                'Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
+                                '    relevant = True
+                                'End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
@@ -14270,7 +14328,7 @@ Public Module agm2
         Dim spalte As Integer = 1
 
 
-        Dim startOfCustomFields As Integer = 15
+        Dim startOfCustomFields As Integer = 16
         Dim ersteZeile As Excel.Range
 
 
@@ -14281,49 +14339,51 @@ Public Module agm2
                 CType(.Cells(1, 1), Excel.Range).Value = "Project-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Variant-Name"
                 CType(.Cells(1, 3), Excel.Range).Value = "Project-Nr"
-                CType(.Cells(1, 4), Excel.Range).Value = "Responsible"
-                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Project-Start"
-                CType(.Cells(1, 7), Excel.Range).Value = "Project-End"
+                CType(.Cells(1, 4), Excel.Range).Value = "Status"
+                CType(.Cells(1, 5), Excel.Range).Value = "Responsible"
+                CType(.Cells(1, 6), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 7), Excel.Range).Value = "Project-Start"
+                CType(.Cells(1, 8), Excel.Range).Value = "Project-End"
 
                 If considerAll Then
-                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Profit/Loss [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Profit/Loss [T€]"
                 Else
-                    CType(.Cells(1, 8), Excel.Range).Value = "First Version [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Difference [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "First Version [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Difference [T€]"
                 End If
 
-                CType(.Cells(1, 9), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
-                CType(.Cells(1, 10), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
+                CType(.Cells(1, 11), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
 
-                CType(.Cells(1, 12), Excel.Range).Value = "Strategy"
-                CType(.Cells(1, 13), Excel.Range).Value = "Risk"
-                CType(.Cells(1, 14), Excel.Range).Value = "Description"
+                CType(.Cells(1, 13), Excel.Range).Value = "Strategy"
+                CType(.Cells(1, 14), Excel.Range).Value = "Risk"
+                CType(.Cells(1, 15), Excel.Range).Value = "Description"
             Else
 
                 CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
                 CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
-                CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
-                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Projekt-Start"
-                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Ende"
+                CType(.Cells(1, 4), Excel.Range).Value = "Status"
+                CType(.Cells(1, 5), Excel.Range).Value = "Verantwortlich"
+                CType(.Cells(1, 6), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Start"
+                CType(.Cells(1, 8), Excel.Range).Value = "Projekt-Ende"
 
                 If considerAll Then
-                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Gewinn/Verlust [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Gewinn/Verlust [T€]"
                 Else
-                    CType(.Cells(1, 8), Excel.Range).Value = "Erste Planung [T€]"
-                    CType(.Cells(1, 11), Excel.Range).Value = "Differenz [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Erste Planung [T€]"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Differenz [T€]"
                 End If
 
-                CType(.Cells(1, 9), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
-                CType(.Cells(1, 10), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
+                CType(.Cells(1, 11), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
 
-                CType(.Cells(1, 12), Excel.Range).Value = "Strategie"
-                CType(.Cells(1, 13), Excel.Range).Value = "Risiko"
-                CType(.Cells(1, 14), Excel.Range).Value = "Beschreibung"
+                CType(.Cells(1, 13), Excel.Range).Value = "Strategie"
+                CType(.Cells(1, 14), Excel.Range).Value = "Risiko"
+                CType(.Cells(1, 15), Excel.Range).Value = "Beschreibung"
 
 
             End If
@@ -14410,31 +14470,32 @@ Public Module agm2
                     CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
                     CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
                     CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
-                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
-                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
-                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
-                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
+                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.Status
+                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.leadPerson
+                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.businessUnit
+                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.startDate
+                    CType(.Cells(zeile, 8), Excel.Range).Value = kvp.Value.endeDate
 
-                    CType(.Cells(zeile, 8), Excel.Range).Value = budget
-                    CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
+                    CType(.Cells(zeile, 9), Excel.Range).Value = budget
+                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
                     If Not considerAll Then
                         ' damit wird klar, von wann diese Version ist
-                        CType(.Cells(zeile, 8), Excel.Range).AddComment(standVom)
+                        CType(.Cells(zeile, 9), Excel.Range).AddComment(standVom)
                     End If
 
 
-                    CType(.Cells(zeile, 9), Excel.Range).Value = pk
-                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
-
-                    CType(.Cells(zeile, 10), Excel.Range).Value = ok
+                    CType(.Cells(zeile, 10), Excel.Range).Value = pk
                     CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
 
-                    CType(.Cells(zeile, 11), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 11), Excel.Range).Value = ok
                     CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
 
-                    CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
-                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
-                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
+                    CType(.Cells(zeile, 12), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 12), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.StrategicFit
+                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.Risiko
+                    CType(.Cells(zeile, 15), Excel.Range).Value = kvp.Value.fullDescription
 
                     spalte = startOfCustomFields
                     For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
@@ -14488,33 +14549,38 @@ Public Module agm2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     ElseIf s = 4 Then
+                        ' Status
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    ElseIf s = 5 Then
                         ' Verantwortlich
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    ElseIf s = 5 Then
+                    ElseIf s = 6 Then
                         ' Business Unit
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    ElseIf s = 6 Then
+                    ElseIf s = 7 Then
                         ' Projekt-Start
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    ElseIf s = 7 Then
+                    ElseIf s = 8 Then
                         ' Projekt-Ende
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    ElseIf s = 8 Then
+                    ElseIf s = 9 Then
                         ' Budget bzw. erste Planung 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 9 Then
+                    ElseIf s = 10 Then
                         ' summe Personalkosten
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
@@ -14522,33 +14588,33 @@ Public Module agm2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
 
-                    ElseIf s = 10 Then
+                    ElseIf s = 11 Then
                         ' summe Sonst Kosten
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 11 Then
+                    ElseIf s = 12 Then
                         ' Profit/Loss bzw. Differenz
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                    ElseIf s = 12 Then
+                    ElseIf s = 13 Then
                         ' Strategie 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                    ElseIf s = 13 Then
+                    ElseIf s = 14 Then
                         ' Risiko 
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                    ElseIf s = 14 Then
+                    ElseIf s = 15 Then
                         ' Beschreibung
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
@@ -15382,6 +15448,12 @@ Public Module agm2
             Dim editRange As Excel.Range
 
 
+            Dim trTeamID As Integer = -1
+            Dim restrictedTopRole As clsRollenDefinition = Nothing
+
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+            End If
 
             For Each pvName As String In todoListe
 
@@ -15418,7 +15490,15 @@ Public Module agm2
                         End If
                     Else
                         ' er kann es nur ändern, wenn er es für sich schützen kann 
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        Dim vNameToProtect As String = hproj.variantName
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            If hproj.variantName <> "" Then
+                                vNameToProtect = hproj.variantName
+                            Else
+                                vNameToProtect = ptVariantFixNames.pfv.ToString
+                            End If
+                        End If
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
                     End If
 
 
@@ -15483,18 +15563,21 @@ Public Module agm2
 
                                 Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                 Dim validRole As Boolean = True
+                                Dim isVirtualChild As Boolean = False
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
-                                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
-                                            Dim trTeamID As Integer = -1
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
+                                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
-                                                validRole = True
-                                            Else
-                                                validRole = False
+                                            ' tk 6.5.19
+                                            validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+
+                                            If validRole Then
+                                                If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                                    isVirtualChild = True
+                                                End If
                                             End If
+
                                         End If
                                     End If
                                 End If
@@ -15506,10 +15589,20 @@ Public Module agm2
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
 
-                                    'ReDim zeilenWerte(bis - von)
+                                    ' ggf Schreibschutz setzen für die Zeile setzen
+                                    Dim lockZeile As Boolean = False
+                                    Dim lockText As String = ""
+                                    If isProtectedbyOthers Then
+                                        lockZeile = True
+                                        lockText = protectionText
+                                    ElseIf isVirtualChild Then
+                                        ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
+                                        lockZeile = True
+                                        lockText = ""
+                                    End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, roleNameID, True,
-                                                                            protectionText, von, bis,
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                            lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
@@ -15546,52 +15639,57 @@ Public Module agm2
 
                             ' jetzt kommt die Behandlung der Kostenarten
 
-                            For c = 1 To cphase.countCosts
+                            ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
 
-                                Dim cost As clsKostenart = cphase.getCost(c)
-                                Dim costName As String = cost.name
-                                Dim xValues() As Double = cost.Xwerte
+                            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                For c = 1 To cphase.countCosts
+
+                                    Dim cost As clsKostenart = cphase.getCost(c)
+                                    Dim costName As String = cost.name
+                                    Dim xValues() As Double = cost.Xwerte
 
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
 
-                                'ReDim zeilenWerte(bis - von)
+                                    'ReDim zeilenWerte(bis - von)
 
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
-                                                                            protectionText, von, bis,
-                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
+                                                                                protectionText, von, bis,
+                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
-                                If ok Then
+                                    If ok Then
 
-                                    With currentWS
-                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                    End With
+                                        With currentWS
+                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                        End With
 
-                                    If schnittmenge.Sum > 0 Then
-                                        For l As Integer = 0 To bis - von
+                                        If schnittmenge.Sum > 0 Then
+                                            For l As Integer = 0 To bis - von
 
-                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                            Else
-                                                editRange.Cells(1, l + 1).value = ""
-                                            End If
+                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                Else
+                                                    editRange.Cells(1, l + 1).value = ""
+                                                End If
 
-                                        Next
+                                            Next
+                                        Else
+                                            editRange.Value = ""
+                                        End If
+
+                                        atLeastOne = True
+
+                                        zeile = zeile + 1
                                     Else
-                                        editRange.Value = ""
+                                        Call MsgBox("not ok")
                                     End If
 
-                                    atLeastOne = True
+                                Next c
+                            End If
 
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
-                                End If
-
-                            Next c
 
                             If Not atLeastOne Then
 
@@ -16121,11 +16219,7 @@ Public Module agm2
                     Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
-                    If awinSettings.visboServer Then
-                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                    Else
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
-                    End If
+                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
 
 
                     If isProtectedbyOthers Then
@@ -17075,19 +17169,22 @@ Public Module agm2
 
             End If
 
-            ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
-            ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
-            Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
 
             If awinSettings.awinPath = "" Then
-                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
+                ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
+                ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
+                Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
+                Dim stdConfigDataName As String = "VISBO Config Data"
+
+                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdConfigDataName)
                 If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                     ' alles ok
                 Else
-                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdDemoDataName)
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdConfigDataName)
                     If My.Computer.FileSystem.DirectoryExists(awinPath) Then
                         ' alles ok 
                     End If
@@ -17493,131 +17590,20 @@ Public Module agm2
                 ' jetzt die CurrentOrga definieren
                 Dim currentOrga As New clsOrganisation
 
-                If Not awinSettings.readCostRolesFromDB Then
+                ' jetzt werden die ORganisation ausgelesen 
+                ' wenn es keine Organisation gibt , d
 
-                    ' tlk 15.2.19 Orga soll nur noch aus Import Orga geholt werden .. 
-                    'Dim outputCollection As New Collection
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    '' Auslesen der Rollen Definitionen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
-
-                    'If awinSettings.visboDebug Then
-                    '    Call MsgBox("readRoleDefinitions")
-                    'End If
-
-                    '' Auslesen der Kosten Definitionen 
-                    'Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
-
-
-                    '' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
-
-                    'If RoleDefinitions.Count > 0 Then
-                    '    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    '    ' jetzt kommt der Validation-Check 
-
-                    '    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
-                    '    Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
-
-                    '    If outputCollection.Count > 0 Then
-                    '        Call showOutPut(outputCollection, "Organisations-Definition", "")
-                    '    End If
-
-                    'End If
-
-                    '' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
-                    'RoleDefinitions.buildTopNodes()
-                    'With currentOrga
-                    '    .validFrom = StartofCalendar
-                    '    .allRoles = RoleDefinitions
-                    '    .allCosts = CostDefinitions
-                    'End With
-
-                Else
-
-                    ' 
-                    ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' das Organisations-Setting auslesen  mit heutigem Datum ...
-
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                    If Not IsNothing(currentOrga) Then
-                        CostDefinitions = currentOrga.allCosts
-                        RoleDefinitions = currentOrga.allRoles
-                    Else
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("You don't have any organization in your system!")
-                        Else
-                            Call MsgBox("Es existiert keine Organisation im System!")
-                        End If
-                    End If
-
-                    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-                End If
-
-                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                ' 
-                If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
+                If currentOrga.count > 0 Then
 
                     If currentOrga.count > 0 Then
                         validOrganisations.addOrga(currentOrga)
                     End If
 
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
 
-                    ' Auslesen der Orga, die vor der currentOrga gültig war
-                    ' also mit validFrom aus currentOrga lesen - 1 Tag
-
-                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
-                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
-                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
-
-                    'If Not IsNothing(beforeOrga) Then
-
-                    '    If beforeOrga.count > 0 Then
-                    '        validOrganisations.addOrga(beforeOrga)
-                    '    End If
-
-                    'End If
-
-
-                    ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
-                    ' also mit validFrom aus currentOrga lesen +  1 Tag
-
-                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
-
-                    ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
-                    'Dim nextOrga As clsOrganisation =
-                    'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
-
-
-                    'If Not IsNothing(nextOrga) Then
-
-                    '    If nextOrga.count > 0 Then
-                    '        validOrganisations.addOrga(nextOrga)
-                    '    End If
-
-                    'End If
-
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
-                    End If
-
-                End If
-
-                ' Lesen der Custom Field Definitions
-
-                If Not awinSettings.readCostRolesFromDB Then
-
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-                Else
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
@@ -17641,7 +17627,27 @@ Public Module agm2
 
                     End Try
 
+
+                Else
+                    awinSettings.readCostRolesFromDB = False
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You don't have any organization in your system!")
+                    Else
+                        Call MsgBox("Es existiert keine Organisation im System!")
+                    End If
+
+
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
                 End If
+
+
+
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -17654,14 +17660,6 @@ Public Module agm2
                     End If
 
                 End If
-
-
-                '' auslesen der anderen Informationen 
-                'Call readOtherDefinitions(wsName4)
-
-                'If awinSettings.visboDebug Then
-                '    Call MsgBox("readOtherDefinitions")
-                'End If
 
 
                 If special = "ProjectBoard" Then
@@ -17776,45 +17774,11 @@ Public Module agm2
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
-                    ' tk 12.2.19 im awinsettypen sollen die Kapas überhaupt nicht mehr gelesen werden ... 
-                    ' das Ganze soll nur noch über Menupunkt Import-Kapazitäten passieren ...
-                    'Dim meldungen As New Collection
-                    'If Not awinSettings.readCostRolesFromDB Then
-
-                    '    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                    '    Call readRessourcenDetails(meldungen)
-
-                    '    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                    '    Call readRessourcenDetails2(meldungen)
-
-                    '    If meldungen.Count > 0 Then
-                    '        Call showOutPut(meldungen, "Errors Reading Capacities", "")
-                    '        Call logfileSchreiben(meldungen)
-                    '    End If
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    'Else
-
-                    '    '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
-
-                    '    '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                    '    '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-
-                    '    '    RoleDefinitions.buildTopNodes()
-
-                    '    '    If awinSettings.visboDebug Then
-                    '    '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
-                    '    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                    '    '    End If
-
-                    'End If
-
                     '
                     ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
                     If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
                         Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
                     End If
 
@@ -17856,16 +17820,32 @@ Public Module agm2
 
                     End If
 
+                    ' das kann nicht unmiitelbar nach Login gemacht werden 
                     Dim meldungen As Collection = New Collection
 
-                    ' jetzt werden die Rollen besetzt 
+                    '' jetzt werden die Rollen besetzt 
                     If awinSettings.readCostRolesFromDB Then
-                        Call setUserRoles(meldungen)
+                        Try
+                            Call setUserRoles(meldungen)
+                        Catch ex As Exception
+                            If meldungen.Count > 0 Then
+                                Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                Call logfileSchreiben(meldungen)
+                            End If
 
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                            Call myCustomUserRole.setNonAllowances()
+                        End Try
+
+
+
                     Else
                         myCustomUserRole = New clsCustomUserRole
 
@@ -17877,6 +17857,13 @@ Public Module agm2
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole
                         Call myCustomUserRole.setNonAllowances()
                     End If
+
+                    ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
+                    ' ohne Abhängigkeit von Rolle Portfolio Manager , das brauchen ja alle Rollen 
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    '    ' die TopLevel NodeIds müssen - ohne die Top Team Einheit - gesetzt werden
+                    '    Call RoleDefinitions.buildTopNodes()
+                    'End If
 
 
                     ' Logfile wird geschlossen
@@ -17962,7 +17949,8 @@ Public Module agm2
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
             If encryptedUserRole.Length > 0 Then
-                ' bestimme die UserRole 
+                ' bestimme die UserRole., wenn es aus SmartInfo heraus aufgerufen wird;
+                ' denn in der Slide steht ja drin, mit welcher User Role das gemacht wurde 
                 Dim chkUserRole As New clsCustomUserRole
                 Call chkUserRole.decrypt(encryptedUserRole)
 
@@ -19266,7 +19254,7 @@ Public Module agm2
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
                             Else
-                                If neueRollendefinitionen.containsNameID(tmpIDValue) Then
+                                If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
                                     errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
@@ -19372,7 +19360,13 @@ Public Module agm2
                                 Else
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
                                     If Not neueRollendefinitionen.containsName(hrole.name) Then
-                                        neueRollendefinitionen.Add(hrole)
+                                        If neueRollendefinitionen.containsUid(hrole.UID) Then
+                                            errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            meldungen.Add(errMsg)
+                                        Else
+                                            neueRollendefinitionen.Add(hrole)
+                                        End If
+
                                     End If
 
                                 End If
@@ -19390,140 +19384,147 @@ Public Module agm2
 
                 End If
 
-                ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
-                ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
-                hasHierarchy = hasHierarchy And atleastOneWithIndent
+                If meldungen.Count > 0 Then
+                    Exit Sub
+                Else
+                    ' weitermachen 
+                    ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
+                    ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
+                    hasHierarchy = hasHierarchy And atleastOneWithIndent
 
-                If hasHierarchy Then
-                    ' Hierarchie aufbauen
+                    If hasHierarchy Then
+                        ' Hierarchie aufbauen
 
-                    Dim parents(maxIndent) As String
+                        Dim parents(maxIndent) As String
 
-                    Dim ix As Integer
-                    parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
+                        Dim ix As Integer
+                        parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
 
 
-                    Dim lastLevel As Integer = 0
-                    Dim curLevel As Integer = 0
+                        Dim lastLevel As Integer = 0
+                        Dim curLevel As Integer = 0
 
-                    Dim curRoleName As String = ""
+                        Dim curRoleName As String = ""
 
-                    ix = 3
+                        ix = 3
 
-                    Do While ix <= anzZeilen - 1
+                        Do While ix <= anzZeilen - 1
 
-                        Try
-                            curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                            curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                            Try
+                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
-                            If readingGroups Then
-                                ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
-                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
-                            Else
-                                przSatz = 1.0
-                            End If
-
-                            Do While curLevel = lastLevel And ix <= anzZeilen - 1
-
-                                If curLevel > 0 Then
-                                    ' als Child aufnehmen 
-                                    ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
-                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
-                                    parentRole.addSubRole(subRole.UID, przSatz)
-
-                                    If curLevel = maxIndent And readingGroups Then
-                                        If Not parentRole.isTeam Then
-                                            parentRole.isTeam = True
-                                        End If
-                                        If subRole.getSubRoleCount > 0 Then
-                                            ' Fehler ! 
-                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                            meldungen.Add(errMsg)
-                                        Else
-                                            subRole.addTeam(parentRole.UID, przSatz)
-                                        End If
-
-                                    End If
-
-                                    ' 29.6.18 auch hier den Parent weiterschalten 
-                                    parents(curLevel) = curRoleName
+                                If readingGroups Then
+                                    ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
+                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                 Else
-                                    ' hier den Parent weiterschalten  
-                                    parents(curLevel) = curRoleName
+                                    przSatz = 1.0
                                 End If
 
-                                ' weiterschalten ..
-                                ix = ix + 1
+                                Do While curLevel = lastLevel And ix <= anzZeilen - 1
 
-                                ' hat sich der Indentlevel immer noch nicht geändert ? 
-                                If ix <= anzZeilen - 1 Then
-                                    curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                    curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
-                                    If readingGroups Then
-                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                    If curLevel > 0 Then
+                                        ' als Child aufnehmen 
+                                        ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
+                                        Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                        Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
+                                        parentRole.addSubRole(subRole.UID, przSatz)
+
+                                        If curLevel = maxIndent And readingGroups Then
+                                            If Not parentRole.isTeam Then
+                                                parentRole.isTeam = True
+                                            End If
+                                            If subRole.getSubRoleCount > 0 Then
+                                                ' Fehler ! 
+                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                meldungen.Add(errMsg)
+                                            Else
+                                                subRole.addTeam(parentRole.UID, przSatz)
+                                            End If
+
+                                        End If
+
+                                        ' 29.6.18 auch hier den Parent weiterschalten 
+                                        parents(curLevel) = curRoleName
                                     Else
-                                        przSatz = 1.0
+                                        ' hier den Parent weiterschalten  
+                                        parents(curLevel) = curRoleName
                                     End If
 
-                                Else
-                                    ' das Abbruch Kriterium schlägt gleich zu ... 
-                                End If
+                                    ' weiterschalten ..
+                                    ix = ix + 1
 
-                            Loop
-
-                            If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
-
-                                parents(curLevel) = curRoleName
-
-                                If curLevel < lastLevel Then
-                                    ' in der Hierarchie zurück 
-                                    For i As Integer = curLevel + 1 To maxIndent
-                                        parents(i) = ""
-                                    Next
-                                End If
-
-                                If curLevel > 0 Then
-                                    ' als Child aufnehmen 
-                                    Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
-                                    parentRole.addSubRole(subRole.UID, przSatz)
-
-                                    ' hier kann er eigentlich nie hinkommen ...
-                                    If curLevel = maxIndent And readingGroups Then
-                                        If Not parentRole.isTeam Then
-                                            parentRole.isTeam = True
-                                        End If
-
-                                        If subRole.getSubRoleCount > 0 Then
-                                            ' Fehler ! 
-                                            errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
-                                            meldungen.Add(errMsg)
+                                    ' hat sich der Indentlevel immer noch nicht geändert ? 
+                                    If ix <= anzZeilen - 1 Then
+                                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                        curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        If readingGroups Then
+                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
-                                            subRole.addTeam(parentRole.UID, przSatz)
+                                            przSatz = 1.0
                                         End If
 
+                                    Else
+                                        ' das Abbruch Kriterium schlägt gleich zu ... 
                                     End If
 
-                                Else
-                                    ' nichts tun 
+                                Loop
+
+                                If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
+
+                                    parents(curLevel) = curRoleName
+
+                                    If curLevel < lastLevel Then
+                                        ' in der Hierarchie zurück 
+                                        For i As Integer = curLevel + 1 To maxIndent
+                                            parents(i) = ""
+                                        Next
+                                    End If
+
+                                    If curLevel > 0 Then
+                                        ' als Child aufnehmen 
+                                        Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
+                                        Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
+                                        parentRole.addSubRole(subRole.UID, przSatz)
+
+                                        ' hier kann er eigentlich nie hinkommen ...
+                                        If curLevel = maxIndent And readingGroups Then
+                                            If Not parentRole.isTeam Then
+                                                parentRole.isTeam = True
+                                            End If
+
+                                            If subRole.getSubRoleCount > 0 Then
+                                                ' Fehler ! 
+                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                meldungen.Add(errMsg)
+                                            Else
+                                                subRole.addTeam(parentRole.UID, przSatz)
+                                            End If
+
+                                        End If
+
+                                    Else
+                                        ' nichts tun 
+                                    End If
+
+                                    ' alle alten löschen 
+                                    lastLevel = curLevel
+                                    ix = ix + 1
+
                                 End If
-
-                                ' alle alten löschen 
-                                lastLevel = curLevel
-                                ix = ix + 1
-
-                            End If
-                        Catch ex As Exception
-                            errMsg = "zeile: " & ix.ToString & " : " & ex.Message
-                            meldungen.Add(errMsg)
-                            CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
-                        End Try
+                            Catch ex As Exception
+                                errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
+                            End Try
 
 
-                    Loop
+                        Loop
 
+                    End If
                 End If
+
+
 
             End If
 
@@ -19990,16 +19991,16 @@ Public Module agm2
 
     End Sub
 
-    ''' <summary>
-    ''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub readRessourcenDetails(ByRef meldungen As Collection)
+    '''' <summary>
+    '''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub readRessourcenDetails(ByRef meldungen As Collection)
 
-        ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
-        Call readMonthlyExternKapas(meldungen)
+    '    ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
+    '    Call readMonthlyModifierKapas(meldungen)
 
-    End Sub
+    'End Sub
     ''' <summary>
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>

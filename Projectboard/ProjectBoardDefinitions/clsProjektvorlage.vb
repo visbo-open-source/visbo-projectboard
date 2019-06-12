@@ -25,6 +25,20 @@
     Private _customStringFields As SortedList(Of Integer, String)
     Private _customBoolFields As SortedList(Of Integer, Boolean)
 
+    ' tk ergänzt am 11.5.19 
+    Private _vpID As String
+    Public Property vpID As String
+        Get
+            vpID = _vpID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _vpID = value
+                End If
+            End If
+        End Set
+    End Property
 
     ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
     ' mögliche Werte sind: 0: project, 1: Portfolio bzw. Unio, 2: ProjektVorlage
@@ -2813,7 +2827,8 @@
 
                     Else
                         existingRoleNameIds = getRoleNameIDs
-                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+                        ' hier müssen jetzt die virtuellen Kinder noch ergänzt werden ... 
+                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all, includingVirtualChilds:=True)
 
                         matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 
@@ -4446,48 +4461,48 @@
 
     End Property
 
-    '
-    ' übergibt in getSummeRessourcen den Ressourcen Bedarf in Mann-Monaten  die Werte der Kostenart <roleId>
-    '
-    Public ReadOnly Property getSummeRessourcen() As Double
+    ''
+    '' übergibt in getSummeRessourcen den Ressourcen Bedarf in Mann-Monaten  die Werte der Kostenart <roleId>
+    ''
+    'Public ReadOnly Property getSummeRessourcen() As Double
 
-        Get
-            Dim roleValues() As Double
-            Dim ErgebnisListe As New Collection
-            Dim roleSum As Double
-            Dim anzRollen As Integer
-            Dim i As Integer, r As Integer
-            Dim roleName As String
+    '    Get
+    '        Dim roleValues() As Double
+    '        Dim ErgebnisListe As New Collection
+    '        Dim roleSum As Double
+    '        Dim anzRollen As Integer
+    '        Dim i As Integer, r As Integer
+    '        Dim roleName As String
 
 
-            If _Dauer > 0 Then
+    '        If _Dauer > 0 Then
 
-                ReDim roleValues(_Dauer - 1)
+    '            ReDim roleValues(_Dauer - 1)
 
-                roleSum = 0
+    '            roleSum = 0
 
-                ' Jetzt werden die einzelnen Rollen aufsummiert
-                ErgebnisListe = Me.getRoleNames
-                anzRollen = ErgebnisListe.Count
+    '            ' Jetzt werden die einzelnen Rollen aufsummiert
+    '            ErgebnisListe = Me.getRoleNames
+    '            anzRollen = ErgebnisListe.Count
 
-                For r = 1 To anzRollen
-                    roleName = CStr(ErgebnisListe.Item(r))
-                    roleValues = Me.getRessourcenBedarf(roleName)
-                    For i = 0 To _Dauer - 1
-                        roleSum = roleSum + roleValues(i)
-                        roleValues(i) = 0
-                    Next i
-                Next r
+    '            For r = 1 To anzRollen
+    '                roleName = CStr(ErgebnisListe.Item(r))
+    '                roleValues = Me.getRessourcenBedarf(roleName)
+    '                For i = 0 To _Dauer - 1
+    '                    roleSum = roleSum + roleValues(i)
+    '                    roleValues(i) = 0
+    '                Next i
+    '            Next r
 
-                getSummeRessourcen = roleSum
+    '            getSummeRessourcen = roleSum
 
-            Else
-                getSummeRessourcen = 0
-            End If
+    '        Else
+    '            getSummeRessourcen = 0
+    '        End If
 
-        End Get
+    '    End Get
 
-    End Property
+    'End Property
 
 
     ''' <summary>
@@ -4675,6 +4690,9 @@
         '_Status = ProjektStatus(0)
         Schrift = 12
         Schriftfarbe = RGB(0, 0, 0)
+
+        ' tk 11.5.19 , vpID ist Nothing bedeutet: dieses Projekt existiert noch nicht in der Datenbank
+        _vpID = Nothing
 
         ' die CustomFields initialisieren 
         _customDblFields = New SortedList(Of Integer, Double)

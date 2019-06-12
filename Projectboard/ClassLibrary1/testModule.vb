@@ -447,6 +447,7 @@ Public Module testModule
 
 
         ' jetzt gibt es die pptAppFromX ..
+
         ' das ist hier nicht erlaubt 
         ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
 
@@ -724,18 +725,14 @@ Public Module testModule
                             tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         Else
-
-                            Dim dummyStr As String = .TextFrame2.TextRange.Text
-                            If Not IsNothing(dummyStr) Then
+                            If .HasTextFrame Then
+                                Dim dummyStr As String = .TextFrame2.TextRange.Text
                                 tmpStr = dummyStr.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                                 kennzeichnung = tmpStr(0).Trim
                             Else
                                 kennzeichnung = "nicht identifizierbar"
                             End If
-
-
                         End If
-
 
                     Catch ex As Exception
                         kennzeichnung = "nicht identifizierbar"
@@ -5930,37 +5927,42 @@ Public Module testModule
                                 ' Text im ShapeContainer / Platzhalter zurücksetzen 
                                 .TextFrame2.TextRange.Text = ""
 
+                                If qualifier <> "" Then
+                                    Dim smartChartInfo As New clsSmartPPTChartInfo
+                                    With smartChartInfo
 
-                                Dim smartChartInfo As New clsSmartPPTChartInfo
-                                With smartChartInfo
+                                        If showRangeLeft > 0 Then
+                                            .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                        End If
+                                        If showRangeRight > 0 Then
+                                            .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                        End If
 
-                                    If showRangeLeft > 0 Then
-                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                        .einheit = PTEinheiten.personentage
+                                        .pName = currentConstellationName
+                                        .vName = ""
+                                        .prPF = ptPRPFType.portfolio
+                                        .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                        .bigType = ptReportBigTypes.charts
+
+                                        ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                        .hproj = Nothing
+                                        .vglProj = Nothing
+
+
+                                    End With
+
+                                    If smartChartInfo.q2 <> "" Then
+                                        Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                        appInstance.ScreenUpdating = False
+
+                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                        appInstance.ScreenUpdating = formerSU
                                     End If
-                                    If showRangeRight > 0 Then
-                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
-                                    End If
 
-                                    .einheit = PTEinheiten.personentage
-                                    .pName = currentConstellationName
-                                    .vName = ""
-                                    .prPF = ptPRPFType.portfolio
-                                    .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
-                                    .bigType = ptReportBigTypes.charts
+                                End If
 
-                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
-                                    .hproj = Nothing
-                                    .vglProj = Nothing
-
-
-                                End With
-
-                                Dim formerSU As Boolean = appInstance.ScreenUpdating
-                                appInstance.ScreenUpdating = False
-
-                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
-
-                                appInstance.ScreenUpdating = formerSU
 
                                 boxName = ""
                                 notYetDone = False
@@ -10221,6 +10223,13 @@ Public Module testModule
                     vergleichstyp = PThis.ersterStand
                 ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
                     vergleichstyp = PThis.letzterStand
+                    ' der letzte Stand soll immer der letzte Tag des Vormonats sein ... 
+                    vglDate = Date.Now.AddDays(-1 * Date.Now.Day).Date.AddHours(23).AddMinutes(59)
+                ElseIf qualifier.Trim = "B1" Then
+                    vergleichstyp = PThis.beauftragung
+                    vglDate = Date.Now
+                ElseIf qualifier.Trim = "BL" Or qualifier.Trim = "BN" Then
+                    vergleichstyp = PThis.letzteBeauftragung
                     vglDate = Date.Now
                 Else
                     istVglMitKonkretemDatum = True
@@ -10350,7 +10359,7 @@ Public Module testModule
                     End If
 
 
-
+                    ' tk 10.6.19 es wird mit den pfv's verglichen oder mit dem letzten Stand 
                     projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
 

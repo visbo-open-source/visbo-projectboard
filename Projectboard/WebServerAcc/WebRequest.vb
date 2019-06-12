@@ -863,7 +863,7 @@ Public Class Request
 
                         If attrToStore Then
 
-                            If String.Compare(aktvp.kundennummer, projekt.kundenNummer) = 0 Then
+                            If String.Compare(aktvp.kundennummer, projekt.kundenNummer) <> 0 Then
                                 aktvp.kundennummer = projekt.kundenNummer
                                 Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
                             End If
@@ -1488,6 +1488,37 @@ Public Class Request
 
                     Dim vpid As String = aktvp._id
                     Dim variantExists As Boolean = False
+                    Dim deletePossible As Boolean = False
+                    Dim postPossible As Boolean = True
+                    Dim i As Integer = 0
+
+                    'If aktvp.lock.Count > 0 Then
+                    '    For Each lock As clsVPLock In aktvp.lock
+
+                    '        If vname = lock.variantName And
+                    '            LCase(aktUser.email) = LCase(lock.email) And
+                    '            lock.expiresAt > Date.UtcNow Then
+
+                    '            deletePossible = True
+                    '            Exit For
+                    '        Else
+
+                    '            If vname = lock.variantName And
+                    '                LCase(aktUser.email) = LCase(lock.email) And
+                    '                lock.expiresAt < Date.UtcNow Then
+
+                    '                postPossible = True
+
+                    '            End If
+                    '            If LCase(aktUser.email) = LCase(lock.email) Then
+
+                    '            End If
+                    '        End If
+                    '    Next
+                    'Else
+                    '    postPossible = True
+                    'End If
+
 
                     For Each var As clsVPvariant In aktvp.Variant
                         If var.variantName = vname Then
@@ -1498,9 +1529,77 @@ Public Class Request
                     If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
 
                         If wpItem.isProtected Then
-                            result = POSTVPLock(vpid, vname, err)
+
+                            If aktvp.lock.Count > 0 Then
+                                For Each lock As clsVPLock In aktvp.lock
+
+                                    If lock.expiresAt > Date.UtcNow Then
+
+                                        If vname = lock.variantName Then
+
+                                            If LCase(aktUser.email) = LCase(lock.email) Then
+
+                                                postPossible = postPossible And True
+                                            Else
+
+                                                postPossible = postPossible And False
+
+                                            End If
+                                            Exit For
+
+                                            'ElseIf vname <> lock.variantName Then
+
+                                            '        postPossible = True
+
+                                        End If
+                                    End If
+
+
+                                Next
+                            Else
+                                postPossible = True
+                            End If
+
+                            If postPossible Then
+                                result = POSTVPLock(vpid, vname, err)
+                            Else
+                                err.errorCode = 409
+                                err.errorMsg = "Visbo Project already locked by another user"
+                                'If awinSettings.englishLanguage Then
+                                '    Call MsgBox("Project '" & pname & "/" & vname & "'" & " is locked by another user")
+                                'Else
+                                '    Call MsgBox("Projekt '" & pname & "/" & vname & "'" & " ist von einem anderen Benutzer geschützt")
+                                'End If
+                            End If
+
                         Else
-                            result = DELETEVPLock(vpid, err, vname)
+                            If aktvp.lock.Count > 0 Then
+                                For Each lock As clsVPLock In aktvp.lock
+                                    If lock.expiresAt > Date.UtcNow Then
+
+                                        If vname = lock.variantName And
+                                            LCase(aktUser.email) = LCase(lock.email) Then
+
+                                            deletePossible = True
+                                            Exit For
+                                        End If
+                                    End If
+
+                                Next
+                            End If
+
+                            If deletePossible Then
+                                result = DELETEVPLock(vpid, err, vname)
+                            Else
+                                err.errorCode = 409
+                                err.errorMsg = "Visbo Project already locked by another user"
+                                'If awinSettings.englishLanguage Then
+                                '    Call MsgBox("Project '" & pname & "/" & vname & "'" & " is locked by another user")
+                                'Else
+                                '    Call MsgBox("Projekt '" & pname & "/" & vname & "'" & " ist von einem anderen Benutzer geschützt")
+                                'End If
+                            End If
+
                         End If
 
                     Else
@@ -1806,30 +1905,36 @@ Public Class Request
 
         Try
             ' alle vp des aktuellen Users und aktuellen vc holen
-            If VRScache.VPsN.Count > 0 Then
-                vplist = VRScache.VPsN
-            Else
-                vplist = GETallVP(aktVCid, err, ptPRPFType.all)
+            If VRScache.VPsN.Count <= 0 Then
+                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
             End If
+
+            vplist = VRScache.VPsN
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
 
-                If kvp.Value.lock.Count > 0 Then
+                Dim vpid As String = kvp.Value._id
+                Dim locklist As New List(Of clsVPLock)
 
-                    ' holt zu der vpid die Varianten aus vpv Collection
-                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(vpid:=kvp.Value._id, err:=err,
-                                                                                      vpvid:="",
-                                                                                      status:="", refNext:=False,
-                                                                                      variantName:=noVariantName,
-                                                                                      storedAtorBefore:=Date.Now.ToUniversalTime,
-                                                                                      fromReST:=False)
+                For Each vplock As clsVPLock In kvp.Value.lock
+                    locklist.Add(vplock)
+                Next
+                'locklist = kvp.Value.lock
 
-                    ' Lock löschen für jede Variante des Projektes mit vpid
-                    For Each vTp As clsProjektWebShort In variantToProj
+                If locklist.Count > 0 Then
 
-                        result = result And DELETEVPLock(kvp.Value._id, err, vTp.variantName)
+                    ' alle locks des akt. Users löschen
 
+                    For Each lock As clsVPLock In locklist
+
+                        If LCase(aktUser.email) = LCase(lock.email) And
+                            lock.expiresAt > Date.UtcNow Then
+
+                            result = result And DELETEVPLock(vpid, err, lock.variantName)
+
+                        End If
                     Next
+
                 End If
 
             Next
@@ -4960,6 +5065,7 @@ Public Class Request
                 Dim anzLock As Integer = webVPLockantwort.lock.Count
                 If anzLock = 0 Then
                     VRScache.VPsId(vpid).lock.Clear()
+                    VRScache.VPsN(pname).lock.Clear()
                 Else
                     VRScache.VPsId(vpid).lock = webVPLockantwort.lock
                     VRScache.VPsN(pname).lock = webVPLockantwort.lock
@@ -5430,6 +5536,7 @@ Public Class Request
         Try
 
             With result
+                .vpID = vpf.vpid
                 .constellationName = vpf.name
                 ' Aufbau der Constellation.allitems
                 For Each hvpfItem As clsVPfItem In vpf.allItems

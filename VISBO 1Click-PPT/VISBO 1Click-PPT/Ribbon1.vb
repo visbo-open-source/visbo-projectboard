@@ -15,6 +15,7 @@ Public Class Ribbon1
 
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
+
             awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
             awinSettings.visboTaskClass = My.Settings.TaskClass
@@ -30,6 +31,9 @@ Public Class Ribbon1
             If awinSettings.rememberUserPwd Then
                 awinSettings.userNamePWD = My.Settings.userNamePWD
             End If
+
+            ' tk 14.5.19
+            awinSettings.visboServer = My.Settings.VISBOServer
 
             dbUsername = ""
             dbPasswort = ""
