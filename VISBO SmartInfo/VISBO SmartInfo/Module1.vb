@@ -2714,6 +2714,7 @@ Module Module1
         Dim istDatenReihe() As Double
         Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
+        Dim internKapaDatenreihe() As Double = Nothing
         Dim vSum As Double = 0.0
         Dim tSum As Double
 
@@ -2785,12 +2786,13 @@ Module Module1
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -3078,6 +3080,7 @@ Module Module1
         Dim istDatenReihe() As Double
         Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
+        Dim internKapaDatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim tSum As Double
 
@@ -3149,12 +3152,13 @@ Module Module1
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -3382,6 +3386,7 @@ Module Module1
         Dim istDatenReihe() As Double
         Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
+        Dim internKapaDatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim tSum As Double
 
@@ -3461,12 +3466,13 @@ Module Module1
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -3574,6 +3580,27 @@ Module Module1
 
 
                 End With
+
+                Dim tmpSum As Double = internKapaDatenreihe.Sum
+                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                    ' es gibt geplante externe Ressourcen ... 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        .HasDataLabels = False
+                        '.name = "Kapazität incl. Externe"
+                        .Name = bestimmeLegendNameIPB("CI")
+                        '.Name = repMessages.getmsg(118)
+
+                        .Values = internKapaDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                            .Weight = 2
+                        End With
+
+                    End With
+                End If
             Else
                 If Not IsNothing(scInfo.vglProj) Then
 

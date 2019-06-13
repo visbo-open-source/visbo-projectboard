@@ -5528,6 +5528,7 @@ Public Module Projekte
         Dim istDatenReihe() As Double = Nothing
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
+        Dim internKapaDatenreihe() As Double = Nothing
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double = 0.0
 
@@ -5574,7 +5575,7 @@ Public Module Projekte
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6748,6 +6749,7 @@ Public Module Projekte
         Dim istDatenReihe() As Double = Nothing
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
+        Dim internKapaDatenreihe() As Double = Nothing
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double = 0.0
 
@@ -6762,7 +6764,7 @@ Public Module Projekte
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
