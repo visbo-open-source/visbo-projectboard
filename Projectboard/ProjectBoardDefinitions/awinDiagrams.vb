@@ -7111,7 +7111,7 @@ Public Module awinDiagrams
                 End If
 
             Case "P"
-                ' Planung 
+                ' Planung Projekt
                 If awinSettings.englishLanguage Then
                     tmpResult = "Forecast"
                 Else
@@ -7119,7 +7119,7 @@ Public Module awinDiagrams
                 End If
 
             Case "PS"
-                ' Planung 
+                ' Planung Portfolio 
                 If awinSettings.englishLanguage Then
                     tmpResult = "Forecast (Sum of Portfolio)"
                 Else

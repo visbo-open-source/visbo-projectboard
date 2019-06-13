@@ -29,6 +29,7 @@ Public Class ThisAddIn
             awinSettings.visboDebug = My.Settings.VISBODebug
             awinSettings.visboMapping = My.Settings.VISBOMapping
             awinSettings.visboServer = My.Settings.VISBOServer
+            awinSettings.proxyURL = My.Settings.proxyServerURL
             awinSettings.userNamePWD = My.Settings.userNamePWD
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             awinSettings.proxyURL = My.Settings.proxyServerURL
