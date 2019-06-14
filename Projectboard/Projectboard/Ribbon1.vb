@@ -123,7 +123,7 @@ Imports System.Web
 
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -252,7 +252,7 @@ Imports System.Web
         If returnValue = DialogResult.OK Then
 
             Dim errMsg As New clsErrorCodeMsg
-            Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(errMsg)
+            Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
 
             For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
 
@@ -311,7 +311,7 @@ Imports System.Web
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
+                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
 
                 Try
                     timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
@@ -370,6 +370,8 @@ Imports System.Web
             Else
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
+
+            dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
 
             Dim constellationsToDo As New clsConstellations
 
