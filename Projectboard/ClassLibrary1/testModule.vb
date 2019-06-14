@@ -10643,17 +10643,10 @@ Public Module testModule
                         spalte = 12 - colDelta
                         If Not IsNothing(vproj) Then
                             Dim timeStamp As Date = vproj.timeStamp
-                            If istVglMitKonkretemDatum Then
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglDate.ToShortDateString
-                            Else
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
-                            End If
-
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                         End If
-
-
 
                     End With
 
