@@ -1367,7 +1367,7 @@ Public Class Request
     '''  Das Ergebnis dieser Funktion ist eine Liste (String, clsConstellation) 
     ''' </summary>
     ''' <returns></returns>
-    Public Function retrieveConstellationsFromDB(ByRef err As clsErrorCodeMsg) As clsConstellations
+    Public Function retrieveConstellationsFromDB(ByVal storedAtOrBefore As Date, ByRef err As clsErrorCodeMsg) As clsConstellations
 
         Dim result As clsConstellations = Nothing
 
@@ -1375,7 +1375,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
 
                     If result.Count <= 0 Then
 
@@ -1387,7 +1387,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
                                 End If
 
                             Case Else ' all others
