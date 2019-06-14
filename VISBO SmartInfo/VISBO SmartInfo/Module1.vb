@@ -2713,256 +2713,258 @@ Module Module1
 
             If scInfo.pName <> "" Then
 
-
-                Dim continueOperation As Boolean = False
-                If scInfo.prPF = ptPRPFType.portfolio Then
+                If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
 
-                    If currentConstellationName = scInfo.pName Then
-                        ' nix tun
-                        continueOperation = True
-                        portfolio = currentSessionConstellation
-                    Else
+                    Dim continueOperation As Boolean = False
+                    If scInfo.prPF = ptPRPFType.portfolio Then
 
 
-                        Try
-                            currentConstellationName = scInfo.pName
-                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+                        If currentConstellationName = scInfo.pName Then
+                            ' nix tun
+                            continueOperation = True
+                            portfolio = currentSessionConstellation
+                        Else
 
-                            ' lade das Portfolio 
-                            Dim err As New clsErrorCodeMsg
-                            currentSessionConstellation =
+
+                            Try
+                                currentConstellationName = scInfo.pName
+                                ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                                ' lade das Portfolio 
+                                Dim err As New clsErrorCodeMsg
+                                currentSessionConstellation =
                                 CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName,
                                                                                                       portfolioTS,
                                                                                                      err, storedAtOrBefore:=curTimeStamp)
-                            portfolio = currentSessionConstellation
+                                portfolio = currentSessionConstellation
 
-                            '' bringe alles in ShowProjekte 
-                            'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
-                            '    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
-                            'Next
+                                '' bringe alles in ShowProjekte 
+                                'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                '    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                                'Next
 
-                            ' besetzte ggf den Zeitraum
-                            If scInfo.hasValidZeitraum Then
-                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                ' besetzte ggf den Zeitraum
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
+
+                                continueOperation = Not IsNothing(portfolio)
+                            Catch ex As Exception
+                                Call MsgBox("Componente kann nicht aktualisiert werden ..")
+                            End Try
+                        End If
+                    Else
+                        ' ist Projekt
+                        Dim pName As String = pptShape.Tags.Item("PNM")
+                        Dim vName As String = pptShape.Tags.Item("VNM")
+
+                        'If showOtherVariant Then
+                        '    vName = currentVariantname
+                        '    If pptShape.Tags.Item("VNM").Length > 0 Then
+                        '        pptShape.Tags.Delete("VNM")
+                        '    End If
+                        '    pptShape.Tags.Add("VNM", vName)
+                        '    Dim chck As String = pptShape.Tags.Item("VNM")
+                        'End If
+
+                        If pName <> "" Then
+                            Dim pvName As String = calcProjektKey(pName, vName)
+
+                            ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                            hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                            If Not IsNothing(hproj) Then
+
+                                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+
+                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+                            End If
+                        End If
+                    End If
+
+
+
+                    Select Case detailID
+
+                        Case ptReportComponents.prName
+
+                            If Not IsNothing(hproj) Then
+                                pptShape.TextFrame2.TextRange.Text = hproj.getShapeText
+                            End If
+                        Case ptReportComponents.pfName
+
+                            If Not IsNothing(portfolio) Then
+                                pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
                             End If
 
-                            continueOperation = Not IsNothing(portfolio)
-                        Catch ex As Exception
-                            Call MsgBox("Componente kann nicht aktualisiert werden ..")
-                        End Try
-                    End If
-                Else
-                    ' ist Projekt
-                    Dim pName As String = pptShape.Tags.Item("PNM")
-                    Dim vName As String = pptShape.Tags.Item("VNM")
+                        Case ptReportComponents.prCustomField
+                            Dim qualifier As String = pptShape.Tags.Item("Q1")
+                            If Not IsNothing(qualifier) Then
+                                If qualifier.Length > 0 Then
+                                    Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
 
-                    'If showOtherVariant Then
-                    '    vName = currentVariantname
-                    '    If pptShape.Tags.Item("VNM").Length > 0 Then
-                    '        pptShape.Tags.Delete("VNM")
-                    '    End If
-                    '    pptShape.Tags.Add("VNM", vName)
-                    '    Dim chck As String = pptShape.Tags.Item("VNM")
-                    'End If
+                                    If uid <> -1 Then
+                                        Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
 
-                    If pName <> "" Then
-                        Dim pvName As String = calcProjektKey(pName, vName)
-
-                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                        If Not IsNothing(hproj) Then
-
-                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-
-                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-
-                        End If
-                    End If
-                End If
-
-
-
-                Select Case detailID
-
-                    Case ptReportComponents.prName
-
-                        If Not IsNothing(hproj) Then
-                            pptShape.TextFrame2.TextRange.Text = hproj.getShapeText
-                        End If
-                    Case ptReportComponents.pfName
-
-                        If Not IsNothing(portfolio) Then
-                            pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
-                        End If
-
-                    Case ptReportComponents.prCustomField
-                        Dim qualifier As String = pptShape.Tags.Item("Q1")
-                        If Not IsNothing(qualifier) Then
-                            If qualifier.Length > 0 Then
-                                Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
-
-                                If uid <> -1 Then
-                                    Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
-
-                                    Select Case cftype
-                                        Case ptCustomFields.Str
-                                            Dim wert As String = hproj.getCustomSField(uid)
-                                            If Not IsNothing(wert) Then
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                            End If
-
-                                        Case ptCustomFields.Dbl
-                                            Dim wert As Double = hproj.getCustomDField(uid)
-                                            If Not IsNothing(wert) Then
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                            End If
-
-                                        Case ptCustomFields.bool
-                                            Dim wert As Boolean = hproj.getCustomBField(uid)
-
-                                            If Not IsNothing(wert) Then
-                                                If wert Then
-                                                    ' Sprache !
-                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                        Select Case cftype
+                                            Case ptCustomFields.Str
+                                                Dim wert As String = hproj.getCustomSField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
                                                 Else
-                                                    ' Sprache !
-                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
                                                 End If
 
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                            End If
+                                            Case ptCustomFields.Dbl
+                                                Dim wert As Double = hproj.getCustomDField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                                Else
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
 
+                                            Case ptCustomFields.bool
+                                                Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                                If Not IsNothing(wert) Then
+                                                    If wert Then
+                                                        ' Sprache !
+                                                        pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                    Else
+                                                        ' Sprache !
+                                                        pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    End If
+
+                                                Else
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                        End Select
+
+                                    Else
+                                        pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                    End If
+                                End If
+                            End If
+
+                        Case ptReportComponents.prAmpel
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    Select Case hproj.ampelStatus
+                                        Case 0
+                                            'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Gray.ToArgb
+                                            pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGray
+                                        Case 1
+                                            'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Green.ToArgb
+                                            pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
+                                        Case 2
+                                            'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Yellow.ToArgb
+                                            pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
+                                        Case 3
+                                            'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Red.ToArgb
+                                            pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
+                                        Case Else
                                     End Select
+                                End If
+                            Else
+                                ' ist Portfolio
+                            End If
 
-                                Else
-                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+
+                        Case ptReportComponents.prAmpelText
+
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    'Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                                    ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
+                                    pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                End If
+                            Else
+                                ' ist Portfolio
+
+                            End If
+
+                        Case ptReportComponents.prBusinessUnit
+                            If Not IsNothing(hproj) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.businessUnit
+                            End If
+
+                        Case ptReportComponents.prStand
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                                    'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                                    pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
+                                End If
+                            Else
+                                ' ist Portfolio
+                                If Not IsNothing(portfolio) Then
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                                    'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                                    pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("d", repCult) & ")"
                                 End If
                             End If
-                        End If
+                        Case ptReportComponents.prDescription
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
+                                    Dim initialText As String = hproj.description
 
-                    Case ptReportComponents.prAmpel
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                Select Case hproj.ampelStatus
-                                    Case 0
-                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Gray.ToArgb
-                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGray
-                                    Case 1
-                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Green.ToArgb
-                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
-                                    Case 2
-                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Yellow.ToArgb
-                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
-                                    Case 3
-                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Red.ToArgb
-                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
-                                    Case Else
-                                End Select
-                            End If
-                        Else
-                            ' ist Portfolio
-                        End If
+                                    If hproj.variantDescription.Length > 0 Then
 
-
-                    Case ptReportComponents.prAmpelText
-
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                'Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
-                                ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
-                                pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
-                            End If
-                        Else
-                            ' ist Portfolio
-
-                        End If
-
-                    Case ptReportComponents.prBusinessUnit
-                        If Not IsNothing(hproj) Then
-                            Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                            pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.businessUnit
-                        End If
-
-                    Case ptReportComponents.prStand
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
-                            End If
-                        Else
-                            ' ist Portfolio
-                            If Not IsNothing(portfolio) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
-                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("d", repCult) & ")"
-                            End If
-                        End If
-                    Case ptReportComponents.prDescription
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
-                                Dim initialText As String = hproj.description
-
-                                If hproj.variantDescription.Length > 0 Then
-
-                                    pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf &
+                                        pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf &
                             "Varianten-Beschreibung: " & hproj.variantDescription
+                                    End If
+                                    pptShape.TextFrame2.TextRange.Text = initialText
                                 End If
-                                pptShape.TextFrame2.TextRange.Text = initialText
+                            Else
+                                ' ist Portfolio
                             End If
-                        Else
-                            ' ist Portfolio
-                        End If
 
 
-                    Case ptReportComponents.prLaufzeit
+                        Case ptReportComponents.prLaufzeit
 
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & textZeitraum(hproj.startDate, hproj.endeDate)
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & textZeitraum(hproj.startDate, hproj.endeDate)
 
-                            End If
-                        Else
-                            ' ist Portfolio
-                            If Not IsNothing(portfolio) Then
-                                If scInfo.hasValidZeitraum Then
-                                    pptShape.TextFrame2.TextRange.Text = textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
-                                Else
-                                    pptShape.TextFrame2.TextRange.Text = "     "
+                                End If
+                            Else
+                                ' ist Portfolio
+                                If Not IsNothing(portfolio) Then
+                                    If scInfo.hasValidZeitraum Then
+                                        pptShape.TextFrame2.TextRange.Text = textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
+                                    Else
+                                        pptShape.TextFrame2.TextRange.Text = "     "
+                                    End If
                                 End If
                             End If
-                        End If
 
 
-                    Case ptReportComponents.prVerantwortlich
-                        If scInfo.prPF = ptPRPFType.project Then
-                            If Not IsNothing(hproj) Then
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
+                        Case ptReportComponents.prVerantwortlich
+                            If scInfo.prPF = ptPRPFType.project Then
+                                If Not IsNothing(hproj) Then
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                    pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
 
+                                End If
+                            Else
+                                ' ist Portfolio
                             End If
-                        Else
-                            ' ist Portfolio
-                        End If
 
 
 
-                    Case Else
-                        If detailID = ptReportComponents.prSymDescription Or
+                        Case Else
+                            If detailID = ptReportComponents.prSymDescription Or
                     detailID = ptReportComponents.prSymTrafficLight Or
                     detailID = ptReportComponents.prSymFinance Or
                     detailID = ptReportComponents.prSymProject Or
@@ -2970,25 +2972,27 @@ Module Module1
                     detailID = ptReportComponents.prSymSchedules Or
                     detailID = ptReportComponents.prSymTeam Then
 
-                            If Not IsNothing(hproj) Then
+                                If Not IsNothing(hproj) Then
 
-                                If detailID = ptReportComponents.prSymTrafficLight Then
-                                    Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+                                    If detailID = ptReportComponents.prSymTrafficLight Then
+                                        Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+                                    End If
+
+                                    Dim qualifier As String = pptShape.Tags.Item("Q1")
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+
+                                    ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
+
                                 End If
-
-                                Dim qualifier As String = pptShape.Tags.Item("Q1")
-                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-
-                                ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
 
                             End If
 
-                        End If
 
+                    End Select
+                End If      ' scInfo.pName enthält "_last"
+            End If          ' scInfo.pName <> ""
 
-                End Select
-            End If
 
         Catch ex As Exception
             If awinSettings.visboDebug Then
@@ -3024,172 +3028,177 @@ Module Module1
 
             If scInfo.pName <> "" Then
 
-                Dim continueOperation As Boolean = False
-                If scInfo.prPF = ptPRPFType.portfolio Then
+                If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
-                    If currentConstellationName = scInfo.pName Then
+                    Dim continueOperation As Boolean = False
+                    If scInfo.prPF = ptPRPFType.portfolio Then
 
-                        If ShowProjekte.Count <> 0 Then
-                            ' nix tun
-                            continueOperation = True
+                        If currentConstellationName = scInfo.pName Then
+
+                            If ShowProjekte.Count <> 0 Then
+                                ' nix tun
+                                continueOperation = True
+                            Else
+                                ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                                ' lade das Portfolio 
+                                Dim err As New clsErrorCodeMsg
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+
+                                ' bringe alles in ShowProjekte 
+                                For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                                Next
+
+                                '' besetzte ggf den Zeitraum
+                                'If scInfo.hasValidZeitraum Then
+                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                'End If
+
+                                continueOperation = Not IsNothing(ShowProjekte)
+                            End If
+
                         Else
-                            ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                            ' lade das Portfolio 
-                            Dim err As New clsErrorCodeMsg
-                            Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+                            Try
+                                currentConstellationName = scInfo.pName
+                                ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                            ' bringe alles in ShowProjekte 
-                            For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
-                                ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
-                            Next
+                                ' lade das Portfolio 
+                                Dim err As New clsErrorCodeMsg
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
 
-                            '' besetzte ggf den Zeitraum
-                            'If scInfo.hasValidZeitraum Then
-                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            'End If
+                                ' bringe alles in ShowProjekte 
+                                For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                                Next
 
-                            continueOperation = Not IsNothing(ShowProjekte)
+                                '' besetzte ggf den Zeitraum
+                                'If scInfo.hasValidZeitraum Then
+                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                'End If
+
+                                continueOperation = Not IsNothing(ShowProjekte)
+                            Catch ex As Exception
+                                Call MsgBox("Chart kann nicht aktualisiert werden ..")
+                            End Try
                         End If
+
 
                     Else
 
-                        Try
-                            currentConstellationName = scInfo.pName
-                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+                        ' tk 23.4.19
+                        pvName = calcProjektKey(scInfo.pName, scInfo.vName)
 
-                            ' lade das Portfolio 
-                            Dim err As New clsErrorCodeMsg
-                            Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+                        ' damit auch eine andere Variante gezeigt werden kann ... 
+                        If showOtherVariant Then
+                            Dim tmpPName As String = getPnameFromKey(pvName)
+                            pvName = calcProjektKey(tmpPName, currentVariantname)
+                            scInfo.vName = currentVariantname
+                        End If
 
-                            ' bringe alles in ShowProjekte 
-                            For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
-                                ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
-                            Next
+                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                        'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                        scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
 
-                            '' besetzte ggf den Zeitraum
-                            'If scInfo.hasValidZeitraum Then
-                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            'End If
+                        ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                        continueOperation = Not IsNothing(scInfo.hproj)
 
-                            continueOperation = Not IsNothing(ShowProjekte)
-                        Catch ex As Exception
-                            Call MsgBox("Chart kann nicht aktualisiert werden ..")
-                        End Try
                     End If
 
-
-                Else
-
-                    ' tk 23.4.19
-                    pvName = calcProjektKey(scInfo.pName, scInfo.vName)
-
-                    ' damit auch eine andere Variante gezeigt werden kann ... 
-                    If showOtherVariant Then
-                        Dim tmpPName As String = getPnameFromKey(pvName)
-                        pvName = calcProjektKey(tmpPName, currentVariantname)
-                        scInfo.vName = currentVariantname
-                    End If
-
-                    ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                    'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                    ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                    continueOperation = Not IsNothing(scInfo.hproj)
-
-                End If
-
-                If continueOperation Then
-                    Try
-
-                        ' -----------------------------
-                        ' Alternative 2 und 3: ja, tun
-                        'Call createNewHiddenExcel()
-                        ' -----------------------------
-
-                        ' jetzt muss das chtobj aktualisiert werden ... 
+                    If continueOperation Then
                         Try
 
-                            If (scInfo.chartTyp = PTChartTypen.Balken) Or
+                            ' -----------------------------
+                            ' Alternative 2 und 3: ja, tun
+                            'Call createNewHiddenExcel()
+                            ' -----------------------------
+
+                            ' jetzt muss das chtobj aktualisiert werden ... 
+                            Try
+
+                                If (scInfo.chartTyp = PTChartTypen.Balken) Or
                                 (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
 
 
-                                If scInfo.prPF = ptPRPFType.project Then
-                                    Try
-                                        Dim a As Integer = scInfo.hproj.dauerInDays
+                                    If scInfo.prPF = ptPRPFType.project Then
+                                        Try
+                                            Dim a As Integer = scInfo.hproj.dauerInDays
 
-                                        If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
-                                        ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
-                                        End If
+                                            If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                                scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
+                                            ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
+                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                                scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                            End If
 
 
-                                    Catch ex As Exception
+                                        Catch ex As Exception
 
-                                        scInfo.vglProj = Nothing
+                                            scInfo.vglProj = Nothing
 
-                                    End Try
+                                        End Try
+                                    End If
+
+
+                                    ' Alternative 1a - pptApp.activate auskommentiert
+                                    Call updateProjectChartInPPT(scInfo, pptShape)
+                                    'pptAPP.Activate()
+
+                                    ' -----------------------------------------
+                                    ' Alternative 2 - funktioniert nicht 
+                                    'Call updateProjektChartinPPT2(scInfo, pptShape)
+                                    'pptAPP.Activate()
+                                    'pptShape.Chart.Refresh()
+                                    ' --------------------------------------------
+
+                                    ' -----------------------------------------
+                                    ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
+                                    'Call updateProjectChartInPPT3(scInfo, pptShape)
+                                    'pptAPP.Activate()
+                                    'pptShape.Chart.Refresh()
+                                    ' --------------------------------------------
+
+
+                                ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
+
+
+
+                                ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
+
+
+                                ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
+
+
+                                ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
+
+                                Else
+
                                 End If
 
 
-                                ' Alternative 1a - pptApp.activate auskommentiert
-                                Call updateProjectChartInPPT(scInfo, pptShape)
-                                'pptAPP.Activate()
-
-                                ' -----------------------------------------
-                                ' Alternative 2 - funktioniert nicht 
-                                'Call updateProjektChartinPPT2(scInfo, pptShape)
-                                'pptAPP.Activate()
-                                'pptShape.Chart.Refresh()
-                                ' --------------------------------------------
-
-                                ' -----------------------------------------
-                                ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
-                                'Call updateProjectChartInPPT3(scInfo, pptShape)
-                                'pptAPP.Activate()
-                                'pptShape.Chart.Refresh()
-                                ' --------------------------------------------
 
 
-                            ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
-
-
-
-                            ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
-
-
-                            ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
-
-
-                            ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
-
-                            Else
-
-                            End If
-
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
 
 
 
                         Catch ex As Exception
-                            Call MsgBox(ex.Message)
+                            Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
                         End Try
 
+                    End If
 
 
-                    Catch ex As Exception
-                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
-                    End Try
+                End If   'Not scInfo.pName.Contains("_last")
 
-                End If
+            End If    'scInfo.pName <> ""
 
-
-            End If
 
         End If
 
