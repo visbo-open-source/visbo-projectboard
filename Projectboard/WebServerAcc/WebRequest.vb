@@ -1621,6 +1621,13 @@ Public Class Request
         setWriteProtection = result
     End Function
 
+    ''' <summary>
+    ''' liefert alle Projekte zu der Version des Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
     Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
@@ -1661,6 +1668,86 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
     End Function
 
+
+    ''' <summary>
+    ''' Portfolio 'portfolioName' die zum storedAtOrBefore gespeichert waren
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+                                                   ByRef timestamp As Date,
+                                                   ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
+
+        Dim result As New clsConstellation
+        Dim intermediate As New List(Of clsProjektWebLong)
+        Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim vpid As String = ""
+        Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
+        Dim vp As clsVP
+        Dim vpf As clsVPf
+        Dim hproj As New clsProjekt
+        Try
+            vp = GETvpid(portfolioName, err, vptype)
+            vpid = vp._id
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+
+            If err.errorCode = 200 Then
+
+                vpf = listOfPortfolios.Last.Value
+                timestamp = CType(vpf.timestamp, Date).ToLocalTime
+
+                ' umwandeln von clsVPf in clsConstellation
+                result = clsVPf2clsConstellation(vpf)
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveOneConstellationFromDB = result
+    End Function
+
+    ''' <summary>
+    ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+                                                                 ByRef timestamp As Date,
+                                                             ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
+
+        Dim result As New clsConstellation
+        Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim vpid As String = ""
+        Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
+        Dim vp As clsVP
+        Dim vpfid As String = ""
+
+        Try
+
+            vp = GETvpid(portfolioName, err, vptype)
+            vpid = vp._id
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+
+            If err.errorCode = 200 Then
+                timestamp = listOfPortfolios.First.Key.ToLocalTime
+                result = clsVPf2clsConstellation(listOfPortfolios.First.Value)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveFirstVersionOfOneConstellationFromDB = result
+
+    End Function
 
     ''' <summary>
     '''  Alle Portfolios(Constellations) aus der Datenbank holen
@@ -2364,52 +2451,64 @@ Public Class Request
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
 
-            If Not IsNothing(setting) Then
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
 
-                anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+                    anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
 
-                If anzSetting > 0 Then
-                    If anzSetting = 1 Then
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
 
-                        settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
-                        webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+                            settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                            webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+
+                        Else
+                            ' die Organisation suchen, die am nächsten an validFrom liegt
+                            Dim latestOrga As New clsVCSettingOrganisation
+                            Dim orgaSettingsListe As List(Of clsVCSettingOrganisation) = CType(setting, List(Of clsVCSettingOrganisation))
+
+                            For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
+                                If orgaSetting.timestamp > latestOrga.timestamp Then
+                                    If orgaSetting.timestamp <= validfrom Then
+                                        latestOrga = orgaSetting
+                                    End If
+                                End If
+                            Next
+
+                            webOrganisation = latestOrga.value
+
+                        End If
+
+                        webOrganisation.copyTo(result)
+
+                        ' bestimmen der _topLevelNodeIDs
+                        result.allRoles.buildTopNodes()
+
+                        ' aufbauen der OrgaTeamChilds
+                        result.allRoles.buildOrgaTeamChilds()
 
                     Else
-                        ' die Organisation suchen, die am nächsten an validFrom liegt
-                        Dim latestOrga As New clsVCSettingOrganisation
-                        Dim orgaSettingsListe As List(Of clsVCSettingOrganisation) = CType(setting, List(Of clsVCSettingOrganisation))
-
-                        For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
-                            If orgaSetting.timestamp > latestOrga.timestamp Then
-                                If orgaSetting.timestamp <= validfrom Then
-                                    latestOrga = orgaSetting
-                                End If
-                            End If
-                        Next
-
-                        webOrganisation = latestOrga.value
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
 
                     End If
-
-                    webOrganisation.copyTo(result)
-
-                    ' bestimmen der _topLevelNodeIDs
-                    result.allRoles.buildTopNodes()
-
                 Else
-                    If err.errorCode = 403 Then
-                        Call MsgBox(err.errorMsg)
-                    End If
-                    settingID = ""
+                    Call MsgBox(err.errorMsg)
 
                 End If
             Else
-                Call MsgBox(err.errorMsg)
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
 
             End If
 
-        Catch ex As Exception
 
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
         End Try
         retrieveOrganisationFromDB = result
     End Function
@@ -3814,14 +3913,19 @@ Public Class Request
     End Function
 
 
+
+
     ''' <summary>
     ''' Holt alle VisboProject-PortfolioVersionen zu dem aktuellen VISboCenter  und VisboProject-Id vpid
-    ''' und baut im Cache die Liste VPsId sortiert nach id und die VPsN sortiert nach Namen auf
-    ''' </summary>
+    ''' 
     ''' <param name="vpid">vpid = "": es werden alle VisboportfolioVersions  dieser vpid geholt
     '''                    die jünger sind als timestamp</param>
+    ''' <param name="timestamp"></param>
+    ''' <param name="refNext">refNext = true: es wird die erste Version nach dem timestamp zurückgegeben</param>
+    ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
-    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg) As SortedList(Of Date, clsVPf)
+    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
+                               Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
@@ -3836,8 +3940,14 @@ Public Class Request
             serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
 
             If timestamp > Date.MinValue Then
+
+                timestamp = timestamp.ToUniversalTime
                 Dim refDate As String = DateTimeToISODate(timestamp)
+
                 serverUriString = serverUriString & "?refDate=" & refDate
+                If refNext Then
+                    serverUriString = serverUriString & "&refNext=1"
+                End If
             End If
 
             Dim serverUri As New Uri(serverUriString)

@@ -51,6 +51,7 @@ Module oneClickGeneralModules
                     If Not loginErfolgreich Then
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                         Call MsgBox("LOGIN cancelled ...")
+                        Throw New ArgumentException("LOGIN cancelled ...")
                     Else
                         Dim speichernInDBOk As Boolean = False
                         Dim identical As Boolean = False
@@ -158,7 +159,9 @@ Module oneClickGeneralModules
 
 
         Catch ex As Exception
-            Call MsgBox(ex.Message)
+            'Call MsgBox(ex.Message)
+            Throw New ArgumentException(ex.Message)
+
         End Try
     End Sub
 

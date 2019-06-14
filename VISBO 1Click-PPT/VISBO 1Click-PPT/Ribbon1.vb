@@ -27,6 +27,8 @@ Public Class Ribbon1
             awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
             awinSettings.visboDebug = My.Settings.VISBODebug
             awinSettings.visboMapping = My.Settings.VISBOMapping
+            awinSettings.visboServer = My.Settings.VISBOServer
+            awinSettings.proxyURL = My.Settings.proxyServerURL
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If awinSettings.rememberUserPwd Then
                 awinSettings.userNamePWD = My.Settings.userNamePWD

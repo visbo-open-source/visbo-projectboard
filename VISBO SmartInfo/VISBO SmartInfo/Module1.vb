@@ -25,8 +25,8 @@ Module Module1
 
     Friend myPPTWindow As PowerPoint.DocumentWindow = Nothing
 
-    Friend xlApp As xlNS.Application = Nothing
-    Friend updateWorkbook As xlNS.Workbook = Nothing
+    'Friend xlApp As New xlNS.Application
+    'Friend updateWorkbook As xlNS.Workbook = Nothing
 
     Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
@@ -370,10 +370,10 @@ Module Module1
     ''' <param name="ampelColor"></param>
     ''' <param name="show"></param>
     ''' <remarks></remarks>
-    Friend Sub faerbeShape(ByRef tmpShape As PowerPoint.Shape, _
+    Friend Sub faerbeShape(ByRef tmpShape As PowerPoint.Shape,
                            ByVal ampelColor As Integer, ByVal show As Boolean)
 
-        
+
         If ampelColor >= 0 And ampelColor <= 3 Then
             'alles ok 
             Try
@@ -484,6 +484,16 @@ Module Module1
                     ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
                     Dim currentOrga As New clsOrganisation
                     currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    If Not IsNothing(currentOrga) Then
+
+
+                        If currentOrga.count > 0 Then
+                            validOrganisations.addOrga(currentOrga)
+                        End If
+
+                    End If
+
 
                     If Not IsNothing(currentOrga) Then
                         ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
@@ -723,7 +733,8 @@ Module Module1
 
                     If diagResult = Windows.Forms.DialogResult.OK Then
                         Dim tmpDate As Date = Date.MinValue
-                        Call updateAllSlides(ptNavigationButtons.update, tmpDate)
+                        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
+
                     End If
                 End With
 
@@ -793,8 +804,50 @@ Module Module1
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
-        ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
 
+        Dim a As Integer = 0
+        Dim beforeSlideTS As Date = Date.MinValue
+        Dim activeSlideTS As Date = Date.MinValue
+        Dim sld As PowerPoint.Slide
+        Dim canBeSaved As Boolean = True
+
+        If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
+            ' Vorbesetzung
+            sld = Pres.Slides.Item(1)
+            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+            For i = 2 To Pres.Slides.Count
+
+                beforeSlideTS = activeSlideTS
+                sld = Pres.Slides.Item(i)
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                If activeSlideTS <> beforeSlideTS Then
+                    canBeSaved = False
+                    Exit For
+                End If
+            Next
+
+            If beforeSlideTS > Date.MinValue And Not canBeSaved Then
+                Cancel = True
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Not saved!" & vbCrLf &
+                                "This presentation contains slides with different timestamps!")
+                Else
+                    Call MsgBox("Speichern nicht sinnvoll!" & vbCrLf &
+                                "Die Präsentation enthält Seiten mit unterschiedlichem Timestamp")
+                End If
+            ElseIf beforeSlideTS = Date.MinValue Then
+                If awinSettings.visboDebug Then
+                    Call MsgBox("An Error has occurred in PresentationBeforeSave")
+                End If
+            ElseIf canBeSaved Then
+                ' nothing to do
+                ' presentation will be saved
+            End If
+        End If
+
+        ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
         If VisboProtected Then
             Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
         End If
@@ -823,6 +876,50 @@ Module Module1
         End If
     End Sub
 
+    Private Sub pptAPP_PresentationPrint(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationPrint
+
+        Dim beforeSlideTS As Date = Date.MinValue
+        Dim activeSlideTS As Date = Date.MinValue
+        Dim sld As PowerPoint.Slide
+        Dim canBeSaved As Boolean = True
+
+        If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
+            ' Vorbesetzung
+            sld = Pres.Slides.Item(1)
+            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+            For i = 2 To Pres.Slides.Count
+
+                beforeSlideTS = activeSlideTS
+                sld = Pres.Slides.Item(i)
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                If activeSlideTS <> beforeSlideTS Then
+                    canBeSaved = False
+                    Exit For
+                End If
+            Next
+
+            If beforeSlideTS > Date.MinValue And Not canBeSaved Then
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Warning!" & vbCrLf &
+                                "This presentation contains slides with different timestamps!")
+                Else
+                    Call MsgBox("Achtung!" & vbCrLf &
+                                "Die Präsentation enthält Seiten mit unterschiedlichem Timestamp")
+                End If
+            ElseIf beforeSlideTS = Date.MinValue Then
+                If awinSettings.visboDebug Then
+                    Call MsgBox("An Error has occurred in PresentationBeforeSave")
+                End If
+            ElseIf canBeSaved Then
+                ' nothing to do
+                ' presentation will be saved
+            End If
+        End If
+    End Sub
+
 
     ''' <summary>
     ''' wird aufgerufen, sobald der User eine andere Slide wählt
@@ -832,95 +929,99 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_SlideSelectionChanged(SldRange As PowerPoint.SlideRange) Handles pptAPP.SlideSelectionChanged
 
-
         ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
-
-            If currentPresHasVISBOElements Then
-                ' nur dann muss irgendwas weitergemacht werden ..
-
-                Dim afterSlideID As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
-
-                ' hier muss nur weitergemacht werden, wenn es sich um eine VISBO slide handelt 
-                If isVisboSlide(SldRange.Item(1)) Then
-
-                    Dim afterSlideKennung As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name & afterSlideID.ToString
-                    Dim beforeSlideKennung As String = ""
-
-                    Dim key As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name
-
-                    Dim beforeSlideID As Integer = 0               ' zuvor selektierte SlideID
-
-                    If Not IsNothing(currentSlide) Then
-                        Try
-                            beforeSlideID = currentSlide.SlideID
-                            beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlideID.ToString
-                        Catch ex As Exception
-
-                        End Try
-
-                    End If
-
-                    '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
-                    currentSlide = SldRange.Item(1)
-
-                    If beforeSlideKennung <> afterSlideKennung Or smartSlideLists.countProjects = 0 Then
-                        Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
-
-                        'If varPPTTM.ContainsKey(key) Then
-                        '    ' fertig ... 
-                        'Else
-                        '    Dim tmpTM As clsPPTTimeMachine = Nothing
-                        '    varPPTTM.Add(key, tmpTM)
-                        'End If
-
-                    End If
-
-                    ' jetzt die currentTimeStamp setzen 
-                    With currentSlide
-                        If .Tags.Item("CRD").Length > 0 Then
-                            currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
-                        End If
-                    End With
-
-
-                    ' nur wenn die SlideID gewechselt hat, muss agiert werden
-                    ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
-                    If beforeSlideKennung <> afterSlideKennung Then
-                        Try
-                            ' das Change-Formular aktualisieren, wenn es gezeigt wird  
-                            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
-                            If Not IsNothing(changeFrm) Then
-
-                                changeFrm.changeliste.clearChangeList()
-
-                                If chgeLstListe.ContainsKey(key) Then
-                                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
-                                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
-                                    Else
-                                        ' eine Liste für die neue SlideID einfügen ..
-                                    End If
-                                End If
-
-                                changeFrm.neuAufbau()
-                            End If
-                        Catch ex As Exception
-
-                        End Try
-
-                    End If       'Ende ob SlideIDs ungleich sind
-                Else
-                    'ur: ???
-                    'currentSlide = Nothing
-                End If
-            Else
-                'ur: ???
-                'currentSlide = Nothing
-            End If ' if currentPresHasVisboElements
-
-        Else
-            ' nichts tun, das heisst auch nichts verändern ...
+            Call own_SlideSelectionChanged(SldRange.Item(1))
         End If
+
+
+        'If SldRange.Count = 1 Then
+
+        '    If currentPresHasVISBOElements Then
+        '        ' nur dann muss irgendwas weitergemacht werden ..
+
+        '        Dim afterSlideID As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
+
+        '        ' hier muss nur weitergemacht werden, wenn es sich um eine VISBO slide handelt 
+        '        If isVisboSlide(SldRange.Item(1)) Then
+
+        '            Dim afterSlideKennung As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name & afterSlideID.ToString
+        '            Dim beforeSlideKennung As String = ""
+
+        '            Dim key As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name
+
+        '            Dim beforeSlideID As Integer = 0               ' zuvor selektierte SlideID
+
+        '            If Not IsNothing(currentSlide) Then
+        '                Try
+        '                    beforeSlideID = currentSlide.SlideID
+        '                    beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlideID.ToString
+        '                Catch ex As Exception
+
+        '                End Try
+
+        '            End If
+
+        '            '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
+        '            currentSlide = SldRange.Item(1)
+
+        '            If beforeSlideKennung <> afterSlideKennung Or smartSlideLists.countProjects = 0 Then
+        '                Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
+
+        '                'If varPPTTM.ContainsKey(key) Then
+        '                '    ' fertig ... 
+        '                'Else
+        '                '    Dim tmpTM As clsPPTTimeMachine = Nothing
+        '                '    varPPTTM.Add(key, tmpTM)
+        '                'End If
+
+        '            End If
+
+        '            ' jetzt die currentTimeStamp setzen 
+        '            With currentSlide
+        '                If .Tags.Item("CRD").Length > 0 Then
+        '                    currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+        '                End If
+        '            End With
+
+
+        '            ' nur wenn die SlideID gewechselt hat, muss agiert werden
+        '            ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
+        '            If beforeSlideKennung <> afterSlideKennung Then
+        '                Try
+        '                    ' das Change-Formular aktualisieren, wenn es gezeigt wird  
+        '                    Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+        '                    If Not IsNothing(changeFrm) Then
+
+        '                        changeFrm.changeliste.clearChangeList()
+
+        '                        If chgeLstListe.ContainsKey(key) Then
+        '                            If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+        '                                changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+        '                            Else
+        '                                ' eine Liste für die neue SlideID einfügen ..
+        '                            End If
+        '                        End If
+
+        '                        changeFrm.neuAufbau()
+        '                    End If
+        '                Catch ex As Exception
+
+        '                End Try
+
+        '            End If       'Ende ob SlideIDs ungleich sind
+        '        Else
+        '            'ur: ???
+        '            'currentSlide = Nothing
+        '        End If
+        '    Else
+        '        'ur: ???
+        '        'currentSlide = Nothing
+        '    End If ' if currentPresHasVisboElements
+
+        'Else
+        '    ' nichts tun, das heisst auch nichts verändern ...
+        'End If
 
     End Sub
 
@@ -1049,8 +1150,8 @@ Module Module1
         Dim err As New clsErrorCodeMsg
 
 
-        ' vorherige smartSlideLists zwischenspeichern
-        Dim former_smartSlideLists As clsSmartSlideListen = smartSlideLists
+        '' vorherige smartSlideLists zwischenspeichern
+        'Dim former_smartSlideLists As clsSmartSlideListen = smartSlideLists
 
         ' zurücksetzen der SmartSlideLists
         smartSlideLists = New clsSmartSlideListen
@@ -1075,11 +1176,21 @@ Module Module1
         importantShapes(ptImportantShapes.version) = Nothing
 
         ' jetzt todayLine suchen ...
-        Try
-            importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-        Catch ex As Exception
-            importantShapes(ptImportantShapes.todayline) = Nothing
-        End Try
+        'Try
+        '    importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        'Catch ex As Exception
+        '    importantShapes(ptImportantShapes.todayline) = Nothing
+        'End Try
+        'ur: 2019-05-29: TryCatch vermeiden
+        For i = 1 To currentSlide.Shapes.Count
+            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+                importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+                Exit For
+            Else
+                importantShapes(ptImportantShapes.todayline) = Nothing
+            End If
+            i = i + 1
+        Next
 
 
         With currentSlide
@@ -1128,28 +1239,13 @@ Module Module1
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
                 If Not IsNothing(tmpShape) Then
 
-
                     If tmpShape.Tags.Item("BID").Length > 0 And tmpShape.Tags.Item("DID").Length > 0 Then
 
                         ' handelt es sich um das Version Field Shape? 
-                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prStand)) Or tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfStand))) Then
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                            And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prStand)) Or tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfStand))) Then
                             importantShapes(ptImportantShapes.version) = tmpShape
                         End If
-
-                        'Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
-                        'Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
-                        'If Not ((bigID = ptReportBigTypes.components And detailID = ptReportComponents.prStand) _
-                        '        Or (bigID = ptReportBigTypes.components And detailID = ptReportComponents.pfStand)) Then
-                        '    thereIsNoVersionFieldOnSlide = False
-                        'End If
-
-                        Dim pvName As String = ""
-                        If tmpShape.Tags.Item("PNM").Length > 0 Then
-                            Dim pName As String = tmpShape.Tags.Item("PNM")
-                            Dim vName As String = tmpShape.Tags.Item("VNM")
-                            pvName = calcProjektKey(pName, vName)
-                        End If
-                        ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
 
                         Dim projType As ptPRPFType = ptPRPFType.project
 
@@ -1158,18 +1254,60 @@ Module Module1
                         Else
 
                         End If
-                        If pvName <> "" Then
-                            If smartSlideLists.containsProject(pvName) Then
-                                ' nichts tun, ist schon drin ..
-                            Else
-                                smartSlideLists.addProject(pvName, projType)
+
+                        Dim pvName As String = ""
+                        If projType = ptPRPFType.project Then
+                            If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                Dim pName As String = tmpShape.Tags.Item("PNM")
+                                Dim vName As String = tmpShape.Tags.Item("VNM")
+                                pvName = calcProjektKey(pName, vName)
                             End If
+                        ElseIf projType = ptPRPFType.portfolio Then
+                            If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                Dim pName As String = tmpShape.Tags.Item("PNM")
+                                Dim vName As String = tmpShape.Tags.Item("VNM")
+                                pvName = pName
+                                'pvName = calcProjektKey(pName, vName)
+                            End If
+
                         End If
 
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfName))) Then
+
+                            'tmpShape ist ein Componente , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
+
+                            If pvName <> "" Then
+                                If smartSlideLists.containsPortfolio(pvName) Then
+                                    ' nichts tun, ist schon drin ..
+                                Else
+                                    smartSlideLists.addPortfolio(pvName)
+                                End If
+                            End If
+
+                        ElseIf tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
+                                And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prName))) Then
+
+
+                            ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
+
+                            If pvName <> "" Then
+                                If smartSlideLists.containsProject(pvName) Then
+                                    ' nichts tun, ist schon drin ..
+                                Else
+                                    smartSlideLists.addProject(pvName, projType)
+                                End If
+                            End If
+
+                        End If
                     End If
 
+
                     If tmpShape.Tags.Count > 0 Then
+
                         If isRelevantMSPHShape(tmpShape) Or isProjectCard(tmpShape) Then
+
 
                             Dim isPcardInvisible As Boolean = isProjectCardInvisible(tmpShape)
                             If isPcardInvisible Then
@@ -1191,9 +1329,34 @@ Module Module1
                             If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
                                 tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                             End If
+
+                            'tmpShape ist ein Chart , wenn Portfoliochart, dann muss verwendetes Porfolio (TAG: PNM und/oder VPID) in _portfoliolist aufgenommen werden
+                            ' das ist in einem Tag im tmpshape enthalten
+                            If tmpShape.Tags.Item("PRPF").Length > 0 Then
+                                If CType(tmpShape.Tags.Item("PRPF"), ptPRPFType) = ptPRPFType.portfolio Then
+                                    Dim pfName As String = ""
+                                    If tmpShape.Tags.Item("PNM").Length > 0 Then
+                                        Dim pName As String = tmpShape.Tags.Item("PNM")
+                                        Dim vName As String = tmpShape.Tags.Item("VNM")
+                                        'pvName = calcProjektKey(pName, vName)
+                                        pfName = pName
+                                    End If
+
+                                    If pfName <> "" Then
+                                        If smartSlideLists.containsPortfolio(pfName) Then
+                                            ' nichts tun, ist schon drin ..
+                                        Else
+                                            smartSlideLists.addPortfolio(pfName)
+                                        End If
+                                    End If
+                                Else
+                                End If
+                            End If
+
                         End If
                     End If
                 End If
+
             Catch ex As Exception
 
             End Try
@@ -1403,280 +1566,302 @@ Module Module1
         If currentPresHasVISBOElements Then
 
             Try
-                Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
+                Select Case Sel.Type
+                    Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionShapes
 
-                If Not IsNothing(shpRange) And slideHasSmartElements Then
+                        Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
 
-                    ' jetzt muss hier die Behandlung für Office 2010 rein 
-                    Dim correctErrorShape1 As PowerPoint.Shape = Nothing
-                    Dim correctErrorShape2 As PowerPoint.Shape = Nothing
+                        If Not IsNothing(shpRange) And slideHasSmartElements Then
 
-                    ' nur was machen, wenn es sich um Office 2010 handelt ... 
-                    ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
-                    ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
-                    ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
-                    If pptAPP.Version = "14.0" Then
-                        Try
-                            correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
-                        Catch ex As Exception
+                            ' jetzt muss hier die Behandlung für Office 2010 rein 
+                            Dim correctErrorShape1 As PowerPoint.Shape = Nothing
+                            Dim correctErrorShape2 As PowerPoint.Shape = Nothing
 
-                        End Try
+                            ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                            ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                            ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                            ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
+                            If pptAPP.Version = "14.0" Then
+                                Try
+                                    correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
+                                Catch ex As Exception
 
-                        Try
-                            correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
-                        Catch ex As Exception
+                                End Try
 
-                        End Try
-                    End If
+                                Try
+                                    correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
+                                Catch ex As Exception
 
-
-                    If ((pptAPP.Version = "14.0") And
-                    (((Not propertiesPane.Visible) Or
-                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
-                    (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
-                        ' Erzeugen eines Hilfs-Elements
-
-                        ' Ist es 
-                        If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
-                            ' nichts machen 
-                        Else
-                            If IsNothing(correctErrorShape1) Then
-                                ' erzeugen und selektieren der beiden Shapes  
-                                Dim oldShape As PowerPoint.Shape = shpRange(1)
-
-                                Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                                                                               0, 0, 50, 50)
+                                End Try
+                            End If
 
 
+                            If ((pptAPP.Version = "14.0") And
+                                (((Not propertiesPane.Visible) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
+                                ' Erzeugen eines Hilfs-Elements
 
-                                If Not IsNothing(helpShape1) Then
-                                    helpShape1.Name = "visboCorrectError1"
-                                    helpShape1.Tags.Add("formerSN", oldShape.Name)
-                                    helpShape1.Select()
+                                ' Ist es 
+                                If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
+                                    ' nichts machen 
+                                Else
+                                    If IsNothing(correctErrorShape1) Then
+                                        ' erzeugen und selektieren der beiden Shapes  
+                                        Dim oldShape As PowerPoint.Shape = shpRange(1)
+
+                                        Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+
+
+
+                                        If Not IsNothing(helpShape1) Then
+                                            helpShape1.Name = "visboCorrectError1"
+                                            helpShape1.Tags.Add("formerSN", oldShape.Name)
+                                            helpShape1.Select()
+                                        End If
+
+
+
+                                    ElseIf IsNothing(correctErrorShape2) Then
+
+                                        ' jetzt die zweite Welle 
+                                        propertiesPane.Visible = True
+
+                                        Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+                                        If Not IsNothing(helpShape2) Then
+                                            helpShape2.Name = "visboCorrectError2"
+                                            helpShape2.Select()
+                                        End If
+                                    Else
+
+
+                                        ' Selektieren des vorher geklickten shapes 
+                                        Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
+                                        Dim formerSelShape As PowerPoint.Shape = Nothing
+
+                                        If formerShapeName.Length > 0 Then
+                                            Try
+
+                                                formerSelShape = currentSlide.Shapes(formerShapeName)
+
+                                                ' Löschen der Hilfs-Shapes 
+                                                correctErrorShape1.Delete()
+                                                correctErrorShape2.Delete()
+
+                                                ' Selektieren des formerShapes
+                                                formerSelShape.Select()
+
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+                                    End If
                                 End If
 
-
-
-                            ElseIf IsNothing(correctErrorShape2) Then
-
-                                ' jetzt die zweite Welle 
-                                propertiesPane.Visible = True
-
-                                Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                                                                               0, 0, 50, 50)
-                                If Not IsNothing(helpShape2) Then
-                                    helpShape2.Name = "visboCorrectError2"
-                                    helpShape2.Select()
-                                End If
                             Else
+                                ' es sind ein oder mehrere Shapes selektiert worden 
+                                Dim i As Integer = 0
+                                If shpRange.Count = 1 Then
+
+                                    ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                                    ' Listbox passt 
+
+                                    '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                                    '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                                    ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                                    ' ''    If infoFrm.rdbName.Visible Then
+                                    ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                                    ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                                    ' ''        End If
+                                    ' ''    End If
+                                    ' ''End If
 
 
-                                ' Selektieren des vorher geklickten shapes 
-                                Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
-                                Dim formerSelShape As PowerPoint.Shape = Nothing
+                                    ' jetzt ggf die angezeigten Marker löschen 
+                                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                                        Call deleteMarkerShapes()
+                                    ElseIf markerShpNames.Count > 1 Then
+                                        Call deleteMarkerShapes(shpRange(1).Name)
+                                    End If
 
-                                If formerShapeName.Length > 0 Then
+                                    ' prüfen, ob es ein Kommentar ist 
+                                    Dim tmpShape As PowerPoint.Shape = shpRange(1)
+                                    If isCommentShape(tmpShape) Then
+                                        Call markReferenceShape(tmpShape.Name)
+                                    End If
+                                ElseIf shpRange.Count > 1 Then
+                                    ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                                    For Each tmpShape As PowerPoint.Shape In shpRange
+                                        If isCommentShape(tmpShape) Then
+                                            Call markReferenceShape(tmpShape.Name)
+                                        End If
+                                    Next
+                                ElseIf shpRange.Count = 0 Then
+
+                                    Call deleteMarkerShapes()
+
+                                End If
+
+
+                                For Each tmpShape As PowerPoint.Shape In shpRange
+
+                                    If tmpShape.Tags.Count > 0 Then
+
+                                        'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
+
+                                        If isRelevantShape(tmpShape) Then
+                                            If bekannteIDs.ContainsKey(tmpShape.Id) Or
+                                        tmpShape.Name.EndsWith(shadowName) Then
+
+                                                If Not relevantShapeNames.Contains(tmpShape.Name) Then
+                                                    relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                                End If
+
+                                            Else
+                                                ' die vorhandenen Tags löschen ... und den Namen ändern 
+                                                Call deleteShpTags(tmpShape)
+                                            End If
+
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+                                '' Anfang ... das war vorher innerhalb der next Schleife .. 
+                                ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                                If relevantShapeNames.Count >= 1 Then
+
+                                    ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                                    For ix As Integer = 1 To relevantShapeNames.Count
+                                        arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                                    Next
+
+                                    selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+
+                                ElseIf isSymbolShape(shpRange(1)) Then
+
+                                    selectedPlanShapes = shpRange
+                                    Call aktualisiereInfoPane(shpRange(1))
+
+                                Else
+                                    ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
+                                    Call checkHomeChangeBtnEnablement()
                                     Try
-
-                                        formerSelShape = currentSlide.Shapes(formerShapeName)
-
-                                        ' Löschen der Hilfs-Shapes 
-                                        correctErrorShape1.Delete()
-                                        correctErrorShape2.Delete()
-
-                                        ' Selektieren des formerShapes
-                                        formerSelShape.Select()
-
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
                                     Catch ex As Exception
 
                                     End Try
 
+                                    ' ur: wegen Pane
+                                    ' ''If formIsShown Then
+                                    ' ''    Call aktualisiereInfoFrm(Nothing)
+                                    ' ''End If
                                 End If
+                                '' Ende ...
 
-                            End If
-                        End If
+                                If Not isSymbolShape(shpRange(1)) Then
+                                    If Not IsNothing(selectedPlanShapes) Then
 
-                    Else
-                        ' es sind ein oder mehrere Shapes selektiert worden 
-                        Dim i As Integer = 0
-                        If shpRange.Count = 1 Then
+                                        Dim tmpShape As PowerPoint.Shape = Nothing
+                                        Dim elemWasMoved As Boolean = False
 
-                            ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
-                            ' Listbox passt 
+                                        Dim isPCard As Boolean = isProjectCard(shpRange(1))
 
-                            '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
-                            '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
-                            ' ''If Not IsNothing(infoFrm) And formIsShown Then
-                            ' ''    If infoFrm.rdbName.Visible Then
-                            ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
-                            ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
-                            ' ''        End If
-                            ' ''    End If
-                            ' ''End If
+                                        If Not isPCard Then
+                                            For Each tmpShape In selectedPlanShapes
+                                                ' hier sind nur noch richtige Shapes  
 
+                                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                                If elemWasMoved Then
+                                                    homeButtonRelevance = True
+                                                Else
+                                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                                        changedButtonRelevance = True
+                                                    End If
+                                                End If
 
-                            ' jetzt ggf die angezeigten Marker löschen 
-                            If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
-                                Call deleteMarkerShapes()
-                            ElseIf markerShpNames.Count > 1 Then
-                                Call deleteMarkerShapes(shpRange(1).Name)
-                            End If
-
-                            ' prüfen, ob es ein Kommentar ist 
-                            Dim tmpShape As PowerPoint.Shape = shpRange(1)
-                            If isCommentShape(tmpShape) Then
-                                Call markReferenceShape(tmpShape.Name)
-                            End If
-                        ElseIf shpRange.Count > 1 Then
-                            ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
-                            For Each tmpShape As PowerPoint.Shape In shpRange
-                                If isCommentShape(tmpShape) Then
-                                    Call markReferenceShape(tmpShape.Name)
-                                End If
-                            Next
-                        ElseIf shpRange.Count = 0 Then
-
-                            Call deleteMarkerShapes()
-
-                        End If
-
-
-                        For Each tmpShape As PowerPoint.Shape In shpRange
-
-                            If tmpShape.Tags.Count > 0 Then
-
-                                'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
-
-                                If isRelevantShape(tmpShape) Then
-                                    If bekannteIDs.ContainsKey(tmpShape.Id) Or
-                                    tmpShape.Name.EndsWith(shadowName) Then
-
-                                        If Not relevantShapeNames.Contains(tmpShape.Name) Then
-                                            relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                            Next
+                                        Else
+                                            tmpShape = selectedPlanShapes(1)
                                         End If
 
+
+                                        ' hier wird die Information zu dem selektierten Shape angezeigt 
+                                        If Not IsNothing(propertiesPane) Then
+                                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                                        End If
+                                        ' ur: wegen Pane
+                                        If formIsShown Then
+                                            If isPCard Then
+                                                Call aktualisiereInfoFrm(Nothing)
+                                            Else
+                                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                            End If
+
+                                        End If
+
+
+                                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                                        Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                                        ' kann jetzt wieder aktiviert werden ...
+                                        If Not IsNothing(propertiesPane) Then
+                                            propertiesPane.Visible = True
+                                        End If
                                     Else
-                                        ' die vorhandenen Tags löschen ... und den Namen ändern 
-                                        Call deleteShpTags(tmpShape)
+
+                                        Call checkHomeChangeBtnEnablement()
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
+
+
                                     End If
 
                                 End If
 
                             End If
 
-
+                        End If
+                    Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionSlides
+                        For i = 0 To 1000
+                            i = i + 1
                         Next
 
-                        '' Anfang ... das war vorher innerhalb der next Schleife .. 
-                        ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
-                        If relevantShapeNames.Count >= 1 Then
-
-                            ReDim arrayOfNames(relevantShapeNames.Count - 1)
-
-                            For ix As Integer = 1 To relevantShapeNames.Count
-                                arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
-                            Next
-
-                            selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
-
-                        ElseIf isSymbolShape(shpRange(1)) Then
-
-                            selectedPlanShapes = shpRange
-                            Call aktualisiereInfoPane(shpRange(1))
-
-                        Else
-                            ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
-                            Call checkHomeChangeBtnEnablement()
-                            Try
-                                If propertiesPane.Visible Then
-                                    Call aktualisiereInfoPane(Nothing)
-                                End If
-                            Catch ex As Exception
-
-                            End Try
-
-                            ' ur: wegen Pane
-                            ' ''If formIsShown Then
-                            ' ''    Call aktualisiereInfoFrm(Nothing)
-                            ' ''End If
-                        End If
-                        '' Ende ...
-
-                        If Not isSymbolShape(shpRange(1)) Then
-                            If Not IsNothing(selectedPlanShapes) Then
-
-                                Dim tmpShape As PowerPoint.Shape = Nothing
-                                Dim elemWasMoved As Boolean = False
-
-                                Dim isPCard As Boolean = isProjectCard(shpRange(1))
-
-                                If Not isPCard Then
-                                    For Each tmpShape In selectedPlanShapes
-                                        ' hier sind nur noch richtige Shapes  
-
-                                        ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                                        elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                                        If elemWasMoved Then
-                                            homeButtonRelevance = True
-                                        Else
-                                            If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                                changedButtonRelevance = True
-                                            End If
-                                        End If
-
-                                    Next
-                                Else
-                                    tmpShape = selectedPlanShapes(1)
-                                End If
+                    Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionText
+                        For i = 0 To 1000
+                            i = i + 1
+                        Next
 
 
-                                ' hier wird die Information zu dem selektierten Shape angezeigt 
-                                If Not IsNothing(propertiesPane) Then
-                                    Call aktualisiereInfoPane(tmpShape, elemWasMoved)
-                                End If
-                                ' ur: wegen Pane
-                                If formIsShown Then
-                                    If isPCard Then
-                                        Call aktualisiereInfoFrm(Nothing)
-                                    Else
-                                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
-                                    End If
-
-                                End If
-
-
-                                ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
-                                ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
-                                Call ensureVisibilityOfSelection(selectedPlanShapes)
-
-                                ' kann jetzt wieder aktiviert werden ...
-                                If Not IsNothing(propertiesPane) Then
-                                    propertiesPane.Visible = True
-                                End If
-                            Else
-
-                                Call checkHomeChangeBtnEnablement()
-                                If propertiesPane.Visible Then
-                                    Call aktualisiereInfoPane(Nothing)
-                                End If
-
-
+                    Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionNone
+                        If Not IsNothing(propertiesPane) Then
+                            If propertiesPane.Visible Then
+                                Call aktualisiereInfoPane(Nothing)
                             End If
-
                         End If
-
-                    End If
-
-                End If
+                End Select
 
 
             Catch ex As Exception
 
-                If Not IsNothing(propertiesPane) Then
-                    If propertiesPane.Visible Then
-                        Call aktualisiereInfoPane(Nothing)
-                    End If
-                End If
+                Call MsgBox("in windowSelectionChange: sel.type = " & Sel.Type.ToString)
+                'If Not IsNothing(propertiesPane) Then
+                '    If propertiesPane.Visible Then
+                '        Call aktualisiereInfoPane(Nothing)
+                '    End If
+                'End If
 
             End Try
 
@@ -2398,8 +2583,11 @@ Module Module1
                     End If
 
 
-                ElseIf bigType = ptReportBigTypes.components Or
-                       bigType = ptReportBigTypes.tables Then
+                ElseIf bigType = ptReportBigTypes.components Then
+
+                    Call updatePPTComponent(pptShape, detailID, curTimeStamp)
+
+                ElseIf bigType = ptReportBigTypes.tables Then
 
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
@@ -2425,78 +2613,76 @@ Module Module1
 
                             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
-                            If bigType = ptReportBigTypes.components Then
-                                Call updatePPTComponent(tsProj, pptShape, detailID, curTimeStamp)
 
-                            ElseIf bigType = ptReportBigTypes.tables Then
+                            'ElseIf bigType = ptReportBigTypes.tables Then
 
-                                If detailID = PTpptTableTypes.prZiele Then
-                                    Call updatePPTProjektTabelleZiele(pptShape, tsProj)
+                            If detailID = PTpptTableTypes.prZiele Then
+                                Call updatePPTProjektTabelleZiele(pptShape, tsProj)
 
-                                ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
-                                    Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                            ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
+                                Try
+                                    'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
+                                    'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
 
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                        bProj = timeMachine.getFirstContractedVersion(pvName)
-                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                    'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
+                                    'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                    bProj = timeMachine.getFirstContractedVersion(pvName)
+                                    lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
 
-                                        Dim q1 As String = pptShape.Tags.Item("Q1")
-                                        Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        'Dim nids As String = pptShape.Tags.Item("NIDS")
+                                    Dim q1 As String = pptShape.Tags.Item("Q1")
+                                    Dim q2 As String = pptShape.Tags.Item("Q2")
+                                    'Dim nids As String = pptShape.Tags.Item("NIDS")
 
-                                        'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
-                                        '                                 toDoCollection, q1, q2)
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
+                                    'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                    '                                 toDoCollection, q1, q2)
+                                    Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
 
 
 
-                                    Catch ex As Exception
-                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
-                                        bProj = Nothing
-                                        lProj = Nothing
-                                    End Try
+                                Catch ex As Exception
+                                    Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                    bProj = Nothing
+                                    lProj = Nothing
+                                End Try
 
-                                ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
-                                    Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
-                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                            ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
+                                Try
+                                    'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
+                                    'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                    'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
+                                    'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
-                                        bProj = timeMachine.getFirstContractedVersion(pvName)
-                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                    bProj = timeMachine.getFirstContractedVersion(pvName)
+                                    lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
-                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+                                    Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
-                                        Dim q1 As String = pptShape.Tags.Item("Q1")
-                                        Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+                                    Dim q1 As String = pptShape.Tags.Item("Q1")
+                                    Dim q2 As String = pptShape.Tags.Item("Q2")
+                                    Dim nids As String = pptShape.Tags.Item("NIDS")
 
-                                        Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                         toDoCollection, q1, q2)
+                                    Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                     toDoCollection, q1, q2)
 
-                                    Catch ex As Exception
-                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
-                                        bProj = Nothing
-                                    End Try
-                                End If
-
+                                Catch ex As Exception
+                                    Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                    bProj = Nothing
+                                End Try
                             End If
 
                         End If
 
-
-                    Else
-                        ' kein zu aktualisierendes Shape ... 
                     End If
 
 
+                Else
+                    ' kein zu aktualisierendes Shape ... 
                 End If
+
+
             End If
+
 
         Catch ex As Exception
             Call MsgBox("UpdateVisboComponent: " & ex.Message)
@@ -2505,6 +2691,314 @@ Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' aktualisiert eine Smart PPT Komponenten, das sind Felder 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="detailID"></param>
+    ''' 
+    ''' <remarks></remarks>
+
+    Public Sub updatePPTComponent(ByRef pptShape As PowerPoint.Shape,
+                                  ByVal detailID As Integer, ByVal curTimeStamp As Date)
+
+        'Public Sub updatePPTComponent(ByVal hproj As clsProjekt, ByRef pptShape As PowerPoint.Shape,
+        '                                  ByVal detailID As Integer, ByVal curTimeStamp As Date)
+        Try
+            Dim hproj As clsProjekt = Nothing
+            Dim portfolio As clsConstellation = Nothing
+            Dim portfolioTS As Date = Nothing
+            Dim scInfo As New clsSmartPPTCompInfo
+            Call scInfo.getValuesFromPPTShape(pptShape)
+
+            If scInfo.pName <> "" Then
+
+
+                Dim continueOperation As Boolean = False
+                If scInfo.prPF = ptPRPFType.portfolio Then
+
+
+                    If currentConstellationName = scInfo.pName Then
+                        ' nix tun
+                        continueOperation = True
+                        portfolio = currentSessionConstellation
+                    Else
+
+
+                        Try
+                            currentConstellationName = scInfo.pName
+                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                            ' lade das Portfolio 
+                            Dim err As New clsErrorCodeMsg
+                            currentSessionConstellation =
+                                CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName,
+                                                                                                      portfolioTS,
+                                                                                                     err, storedAtOrBefore:=curTimeStamp)
+                            portfolio = currentSessionConstellation
+
+                            '' bringe alles in ShowProjekte 
+                            'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                            '    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                            'Next
+
+                            ' besetzte ggf den Zeitraum
+                            If scInfo.hasValidZeitraum Then
+                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            End If
+
+                            continueOperation = Not IsNothing(portfolio)
+                        Catch ex As Exception
+                            Call MsgBox("Componente kann nicht aktualisiert werden ..")
+                        End Try
+                    End If
+                Else
+                    ' ist Projekt
+                    Dim pName As String = pptShape.Tags.Item("PNM")
+                    Dim vName As String = pptShape.Tags.Item("VNM")
+
+                    'If showOtherVariant Then
+                    '    vName = currentVariantname
+                    '    If pptShape.Tags.Item("VNM").Length > 0 Then
+                    '        pptShape.Tags.Delete("VNM")
+                    '    End If
+                    '    pptShape.Tags.Add("VNM", vName)
+                    '    Dim chck As String = pptShape.Tags.Item("VNM")
+                    'End If
+
+                    If pName <> "" Then
+                        Dim pvName As String = calcProjektKey(pName, vName)
+
+                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                        hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                        If Not IsNothing(hproj) Then
+
+                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+
+                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+                        End If
+                    End If
+                End If
+
+
+
+                Select Case detailID
+
+                    Case ptReportComponents.prName
+
+                        If Not IsNothing(hproj) Then
+                            pptShape.TextFrame2.TextRange.Text = hproj.getShapeText
+                        End If
+                    Case ptReportComponents.pfName
+
+                        If Not IsNothing(portfolio) Then
+                            pptShape.TextFrame2.TextRange.Text = portfolio.constellationName
+                        End If
+
+                    Case ptReportComponents.prCustomField
+                        Dim qualifier As String = pptShape.Tags.Item("Q1")
+                        If Not IsNothing(qualifier) Then
+                            If qualifier.Length > 0 Then
+                                Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
+
+                                If uid <> -1 Then
+                                    Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
+
+                                    Select Case cftype
+                                        Case ptCustomFields.Str
+                                            Dim wert As String = hproj.getCustomSField(uid)
+                                            If Not IsNothing(wert) Then
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
+                                            Else
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                            End If
+
+                                        Case ptCustomFields.Dbl
+                                            Dim wert As Double = hproj.getCustomDField(uid)
+                                            If Not IsNothing(wert) Then
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                            Else
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                            End If
+
+                                        Case ptCustomFields.bool
+                                            Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                            If Not IsNothing(wert) Then
+                                                If wert Then
+                                                    ' Sprache !
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                Else
+                                                    ' Sprache !
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                                End If
+
+                                            Else
+                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                            End If
+
+                                    End Select
+
+                                Else
+                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                End If
+                            End If
+                        End If
+
+                    Case ptReportComponents.prAmpel
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                Select Case hproj.ampelStatus
+                                    Case 0
+                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Gray.ToArgb
+                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGray
+                                    Case 1
+                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Green.ToArgb
+                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGreen
+                                    Case 2
+                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Yellow.ToArgb
+                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbYellow
+                                    Case 3
+                                        'pptShape.Fill.ForeColor.RGB = System.Drawing.Color.Red.ToArgb
+                                        pptShape.Fill.ForeColor.RGB = PowerPoint.XlRgbColor.rgbRed
+                                    Case Else
+                                End Select
+                            End If
+                        Else
+                            ' ist Portfolio
+                        End If
+
+
+                    Case ptReportComponents.prAmpelText
+
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                'Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                                ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
+                                pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                            End If
+                        Else
+                            ' ist Portfolio
+
+                        End If
+
+                    Case ptReportComponents.prBusinessUnit
+                        If Not IsNothing(hproj) Then
+                            Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                            pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.businessUnit
+                        End If
+
+                    Case ptReportComponents.prStand
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
+                            End If
+                        Else
+                            ' ist Portfolio
+                            If Not IsNothing(portfolio) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                                'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString & " (DB: " & portfolioTS.ToString("d", repCult) & ")"
+                            End If
+                        End If
+                    Case ptReportComponents.prDescription
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
+                                Dim initialText As String = hproj.description
+
+                                If hproj.variantDescription.Length > 0 Then
+
+                                    pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf &
+                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                End If
+                                pptShape.TextFrame2.TextRange.Text = initialText
+                            End If
+                        Else
+                            ' ist Portfolio
+                        End If
+
+
+                    Case ptReportComponents.prLaufzeit
+
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & textZeitraum(hproj.startDate, hproj.endeDate)
+
+                            End If
+                        Else
+                            ' ist Portfolio
+                            If Not IsNothing(portfolio) Then
+                                If scInfo.hasValidZeitraum Then
+                                    pptShape.TextFrame2.TextRange.Text = textZeitraum(scInfo.zeitRaumLeft, scInfo.zeitRaumRight)
+                                Else
+                                    pptShape.TextFrame2.TextRange.Text = "     "
+                                End If
+                            End If
+                        End If
+
+
+                    Case ptReportComponents.prVerantwortlich
+                        If scInfo.prPF = ptPRPFType.project Then
+                            If Not IsNothing(hproj) Then
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                                pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
+
+                            End If
+                        Else
+                            ' ist Portfolio
+                        End If
+
+
+
+                    Case Else
+                        If detailID = ptReportComponents.prSymDescription Or
+                    detailID = ptReportComponents.prSymTrafficLight Or
+                    detailID = ptReportComponents.prSymFinance Or
+                    detailID = ptReportComponents.prSymProject Or
+                    detailID = ptReportComponents.prSymRisks Or
+                    detailID = ptReportComponents.prSymSchedules Or
+                    detailID = ptReportComponents.prSymTeam Then
+
+                            If Not IsNothing(hproj) Then
+
+                                If detailID = ptReportComponents.prSymTrafficLight Then
+                                    Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+                                End If
+
+                                Dim qualifier As String = pptShape.Tags.Item("Q1")
+                                Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+
+                                ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
+
+                            End If
+
+                        End If
+
+
+                End Select
+            End If
+
+        Catch ex As Exception
+            If awinSettings.visboDebug Then
+                Call MsgBox("hier in updatePPTComponent: " & ex.Message)
+            End If
+            Call MsgBox("hier in updatePPTComponent: " & ex.Message)
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' neue Methode, um Charts zu aktualisieren
@@ -2534,10 +3028,32 @@ Module Module1
                 If scInfo.prPF = ptPRPFType.portfolio Then
 
                     If currentConstellationName = scInfo.pName Then
-                        ' nix tun
-                        continueOperation = True
-                    Else
 
+                        If ShowProjekte.Count <> 0 Then
+                            ' nix tun
+                            continueOperation = True
+                        Else
+                            ShowProjekte.Clear(updateCurrentConstellation:=False)
+
+                            ' lade das Portfolio 
+                            Dim err As New clsErrorCodeMsg
+                            Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+
+                            ' bringe alles in ShowProjekte 
+                            For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                                ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                            Next
+
+                            '' besetzte ggf den Zeitraum
+                            'If scInfo.hasValidZeitraum Then
+                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            'End If
+
+                            continueOperation = Not IsNothing(ShowProjekte)
+                        End If
+
+                    Else
 
                         Try
                             currentConstellationName = scInfo.pName
@@ -2552,12 +3068,11 @@ Module Module1
                                 ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                             Next
 
-                            ' besetzte ggf den Zeitraum
-                            If scInfo.hasValidZeitraum Then
-                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            End If
-
+                            '' besetzte ggf den Zeitraum
+                            'If scInfo.hasValidZeitraum Then
+                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            'End If
 
                             continueOperation = Not IsNothing(ShowProjekte)
                         Catch ex As Exception
@@ -2569,7 +3084,7 @@ Module Module1
                 Else
 
                     ' tk 23.4.19
-                    pvname = calcProjektKey(scInfo.pName, scInfo.vName)
+                    pvName = calcProjektKey(scInfo.pName, scInfo.vName)
 
                     ' damit auch eine andere Variante gezeigt werden kann ... 
                     If showOtherVariant Then
@@ -2682,679 +3197,679 @@ Module Module1
 
     End Sub
 
-    ''' <summary>
-    ''' Breaklink - dann Aufbau der Daten im updateWorkbook - setsourceData - 
-    ''' in der übergeordneten Methode ppt.activate, dann refresh chart  
-    ''' </summary>
-    ''' <param name="scInfo"></param>
-    ''' <param name="pptShape"></param>
-    Public Sub updateProjektChartinPPT2(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
+    '''' <summary>
+    '''' Breaklink - dann Aufbau der Daten im updateWorkbook - setsourceData - 
+    '''' in der übergeordneten Methode ppt.activate, dann refresh chart  
+    '''' </summary>
+    '''' <param name="scInfo"></param>
+    '''' <param name="pptShape"></param>
+    'Public Sub updateProjektChartinPPT2(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
 
-        Dim pptChart As PowerPoint.Chart = Nothing
+    '    Dim pptChart As PowerPoint.Chart = Nothing
 
-        If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-            Exit Sub
-        End If
+    '    If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+    '        Exit Sub
+    '    End If
 
-        pptChart = pptShape.Chart
-        ' ------ Alternative 2 -------
-        ' jetzt den Breaklink machen 
-        pptChart.ChartData.BreakLink()
+    '    pptChart = pptShape.Chart
+    '    ' ------ Alternative 2 -------
+    '    ' jetzt den Breaklink machen 
+    '    pptChart.ChartData.BreakLink()
 
-        Dim curWS As Excel.Worksheet = CType(updateWorkbook.Worksheets.Item(1), Excel.Worksheet)
-        curWS.UsedRange.Clear()
-        'curWS.Name = "VISBO-Chart"
-        ' ----------------------------
+    '    Dim curWS As Excel.Worksheet = CType(updateWorkbook.Worksheets.Item(1), Excel.Worksheet)
+    '    curWS.UsedRange.Clear()
+    '    'curWS.Name = "VISBO-Chart"
+    '    ' ----------------------------
 
-        Dim diagramTitle As String = " "
-        Dim plen As Integer
+    '    Dim diagramTitle As String = " "
+    '    Dim plen As Integer
 
-        Dim Xdatenreihe() As String
-        Dim tdatenreihe() As Double
-        Dim istDatenReihe() As Double
-        Dim prognoseDatenReihe() As Double
-        Dim vdatenreihe() As Double
-        Dim vSum As Double = 0.0
-        Dim tSum As Double
+    '    Dim Xdatenreihe() As String
+    '    Dim tdatenreihe() As Double
+    '    Dim istDatenReihe() As Double
+    '    Dim prognoseDatenReihe() As Double
+    '    Dim vdatenreihe() As Double
+    '    Dim vSum As Double = 0.0
+    '    Dim tSum As Double
 
 
-        Dim pkIndex As Integer = CostDefinitions.Count
-        Dim pstart As Integer
+    '    Dim pkIndex As Integer = CostDefinitions.Count
+    '    Dim pstart As Integer
 
-        Dim zE As String = awinSettings.kapaEinheit
+    '    Dim zE As String = awinSettings.kapaEinheit
 
-        Dim tmpCollection As New Collection
-        Dim maxlenTitle1 As Integer = 20
+    '    Dim tmpCollection As New Collection
+    '    Dim maxlenTitle1 As Integer = 20
 
-        Dim curmaxScale As Double
+    '    Dim curmaxScale As Double
 
-        Dim IstCharttype As Microsoft.Office.Core.XlChartType
-        Dim PlanChartType As Microsoft.Office.Core.XlChartType
-        Dim vglChartType As Microsoft.Office.Core.XlChartType
+    '    Dim IstCharttype As Microsoft.Office.Core.XlChartType
+    '    Dim PlanChartType As Microsoft.Office.Core.XlChartType
+    '    Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+    '    Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
 
-        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+    '    If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+    '        IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
 
-            If considerIstDaten Then
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
-            Else
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
-            End If
+    '        If considerIstDaten Then
+    '            PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+    '        Else
+    '            PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '        End If
 
-            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
-        Else
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
-            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
-            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
-        End If
+    '        vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '    Else
+    '        IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+    '        PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+    '        vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '    End If
 
 
-        ' die ganzen Vor-Klärungen machen ...
-        With pptChart
+    '    ' die ganzen Vor-Klärungen machen ...
+    '    With pptChart
 
-            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+    '        If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
-                    curmaxScale = .MaximumScale
-                    .MaximumScaleIsAuto = False
-                End With
+    '            With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+    '                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+    '                ' hinausgehende Werte hat 
+    '                curmaxScale = .MaximumScale
+    '                .MaximumScaleIsAuto = False
+    '            End With
 
-            End If
+    '        End If
 
-        End With
+    '    End With
 
 
-        'Dim pname As String = scInfo.hproj.name
+    '    'Dim pname As String = scInfo.hproj.name
 
-        '
-        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
-        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
-        '
+    '    '
+    '    ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+    '    ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
+    '    '
 
-        Call bestimmePstartPlen(scInfo, pstart, plen)
+    '    Call bestimmePstartPlen(scInfo, pstart, plen)
 
 
 
 
-        ReDim Xdatenreihe(plen - 1)
-        ReDim tdatenreihe(plen - 1)
-        ReDim istDatenReihe(plen - 1)
-        ReDim prognoseDatenReihe(plen - 1)
-        ReDim vdatenreihe(plen - 1)
+    '    ReDim Xdatenreihe(plen - 1)
+    '    ReDim tdatenreihe(plen - 1)
+    '    ReDim istDatenReihe(plen - 1)
+    '    ReDim prognoseDatenReihe(plen - 1)
+    '    ReDim vdatenreihe(plen - 1)
 
 
-        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
-        Dim errMsg As String = ""
-        Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+    '    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+    '    Dim errMsg As String = ""
+    '    Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+    '                                   Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
 
-        If errMsg <> "" Then
-            ' es ist ein Fehler aufgetreten
-            If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
-                pptShape.TextFrame2.TextRange.Text = errMsg
-            End If
-            Exit Sub
-        End If
+    '    If errMsg <> "" Then
+    '        ' es ist ein Fehler aufgetreten
+    '        If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+    '            pptShape.TextFrame2.TextRange.Text = errMsg
+    '        End If
+    '        Exit Sub
+    '    End If
 
 
-        Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
+    '    Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
 
-        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            tSum = tdatenreihe(tdatenreihe.Length - 1)
-            vSum = vdatenreihe(vdatenreihe.Length - 1)
-        Else
-            tSum = tdatenreihe.Sum
-            vSum = vdatenreihe.Sum
+    '    If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+    '        tSum = tdatenreihe(tdatenreihe.Length - 1)
+    '        vSum = vdatenreihe(vdatenreihe.Length - 1)
+    '    Else
+    '        tSum = tdatenreihe.Sum
+    '        vSum = vdatenreihe.Sum
 
-        End If
+    '    End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+    '    Dim startRed As Integer = 0
+    '    Dim lengthRed As Integer = 0
+    '    diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
 
 
 
-        With CType(pptChart, PowerPoint.Chart)
+    '    With CType(pptChart, PowerPoint.Chart)
 
-            ' remove old series
-            Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
-            Catch ex As Exception
+    '        ' remove old series
+    '        Try
+    '            Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+    '            Do While anz > 0
+    '                .SeriesCollection(1).Delete()
+    '                anz = anz - 1
+    '            Loop
+    '        Catch ex As Exception
 
-            End Try
-        End With
+    '        End Try
+    '    End With
 
 
-        ' jetzt werden die Collections in dem Chart aufgebaut ...
-        With CType(pptChart, PowerPoint.Chart)
+    '    ' jetzt werden die Collections in dem Chart aufgebaut ...
+    '    With CType(pptChart, PowerPoint.Chart)
 
 
-            ' Planung / Forecast
-            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '        ' Planung / Forecast
+    '        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = prognoseDatenReihe
-                .XValues = Xdatenreihe
-                .ChartType = PlanChartType
+    '            .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+    '            .Interior.Color = visboFarbeBlau
+    '            .Values = prognoseDatenReihe
+    '            .XValues = Xdatenreihe
+    '            .ChartType = PlanChartType
 
-                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                    ' es handelt sich um eine Line
-                    .Format.Line.Weight = 4
-                    .Format.Line.ForeColor.RGB = visboFarbeBlau
-                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                End If
+    '            If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+    '                ' es handelt sich um eine Line
+    '                .Format.Line.Weight = 4
+    '                .Format.Line.ForeColor.RGB = visboFarbeBlau
+    '                .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+    '            End If
 
-            End With
+    '        End With
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(scInfo.vglProj) Then
+    '        ' Beauftragung bzw. Vergleichsdaten
+    '        If Not IsNothing(scInfo.vglProj) Then
 
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
+    '            'series
+    '            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '                .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+    '                .Values = vdatenreihe
+    '                .XValues = Xdatenreihe
 
-                    .ChartType = vglChartType
+    '                .ChartType = vglChartType
 
-                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
+    '                If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+    '                    With .Format.Line
+    '                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+    '                        .ForeColor.RGB = visboFarbeOrange
+    '                        .Weight = 4
+    '                    End With
+    '                Else
+    '                    ' ggf noch was definieren ..
+    '                End If
 
-                End With
+    '            End With
 
-            End If
+    '        End If
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
+    '        ' jetzt kommt der Neu-Aufbau der Series-Collections
+    '        If considerIstDaten Then
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+    '            ' jetzt die Istdaten zeichnen 
+    '            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '                '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+    '                .Name = bestimmeLegendNameIPB("I")
+    '                .Interior.Color = awinSettings.SollIstFarbeArea
+    '                .Values = istDatenReihe
+    '                .XValues = Xdatenreihe
+    '                .ChartType = IstCharttype
+    '            End With
 
-            End If
+    '        End If
 
 
-        End With
+    '    End With
 
 
 
-        ' Skalierung etc anpassen 
-        With CType(pptChart, PowerPoint.Chart)
+    '    ' Skalierung etc anpassen 
+    '    With CType(pptChart, PowerPoint.Chart)
 
-            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+    '        If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
+    '            With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+    '                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+    '                ' hinausgehende Werte hat 
 
-                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
-                    End If
+    '                If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+    '                    .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+    '                End If
 
 
-                End With
+    '            End With
 
-            End If
+    '        End If
 
-            ' nur wenn es auch einen Titel gibt ... 
-            If .HasTitle Then
-                .ChartTitle.Text = diagramTitle
-            End If
+    '        ' nur wenn es auch einen Titel gibt ... 
+    '        If .HasTitle Then
+    '            .ChartTitle.Text = diagramTitle
+    '        End If
 
 
-        End With
+    '    End With
 
-        ' -----------------------------------------------
-        ' 1. Variante : seriesCollections verändern : funktioniert nicht ! Chart wird aktualisiert, aber erst mit interaktiv Bearbeiten-Daten sieht man das auch 
-        ' 2. Variante : curWS aus HiddenExcel beziehen 
-        ' 3. Variante : as-is curWS aus 
-        ' die Frage ist: braucht man das hier wirklich 
-        ' tk 21.10.18
-        ' jetzt wird myRange gesetzt und setSourceData gesetzt 
-        'Dim fZeile As Integer = usedRange.Rows.Count + 1
+    '    ' -----------------------------------------------
+    '    ' 1. Variante : seriesCollections verändern : funktioniert nicht ! Chart wird aktualisiert, aber erst mit interaktiv Bearbeiten-Daten sieht man das auch 
+    '    ' 2. Variante : curWS aus HiddenExcel beziehen 
+    '    ' 3. Variante : as-is curWS aus 
+    '    ' die Frage ist: braucht man das hier wirklich 
+    '    ' tk 21.10.18
+    '    ' jetzt wird myRange gesetzt und setSourceData gesetzt 
+    '    'Dim fZeile As Integer = usedRange.Rows.Count + 1
 
 
-        ' wird in Alternative 2 nicht gebraucht 
-        'With pptShape.Chart.ChartData
-        '    .Activate()
-        '    '.ActivateChartDataWindow()
+    '    ' wird in Alternative 2 nicht gebraucht 
+    '    'With pptShape.Chart.ChartData
+    '    '    .Activate()
+    '    '    '.ActivateChartDataWindow()
 
-        '    xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+    '    '    xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        '    Try
+    '    '    Try
 
-        '        If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
-        '            xlApp.DisplayFormulaBar = False
-        '            With xlApp.ActiveWindow
+    '    '        If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
+    '    '            xlApp.DisplayFormulaBar = False
+    '    '            With xlApp.ActiveWindow
 
-        '                .Caption = "VISBO Smart Diagram"
-        '                .DisplayHeadings = False
-        '                .DisplayWorkbookTabs = False
+    '    '                .Caption = "VISBO Smart Diagram"
+    '    '                .DisplayHeadings = False
+    '    '                .DisplayWorkbookTabs = False
 
-        '                .Width = 500
-        '                .Height = 150
-        '                .Top = 100
-        '                .Left = -1200
+    '    '                .Width = 500
+    '    '                .Height = 150
+    '    '                .Top = 100
+    '    '                .Left = -1200
 
-        '            End With
-        '        End If
+    '    '            End With
+    '    '        End If
 
-        '    Catch ex As Exception
+    '    '    Catch ex As Exception
 
-        '    End Try
+    '    '    End Try
 
-        '    curWS = CType(CType(.Workbook, Excel.Workbook).Worksheets.Item(1), Excel.Worksheet)
-        '    curWS.UsedRange.Clear()
+    '    '    curWS = CType(CType(.Workbook, Excel.Workbook).Worksheets.Item(1), Excel.Worksheet)
+    '    '    curWS.UsedRange.Clear()
 
-        '    If Not smartChartsAreEditable Then
-        '        With xlApp
-        '            '.Visible = False
-        '            '.ActiveWindow.Visible = False
-        '        End With
-        '    End If
+    '    '    If Not smartChartsAreEditable Then
+    '    '        With xlApp
+    '    '            '.Visible = False
+    '    '            '.ActiveWindow.Visible = False
+    '    '        End With
+    '    '    End If
 
-        'End With
+    '    'End With
 
-        Dim fzeile As Integer = 1
-        Dim anzSpalten As Integer = plen + 1
-        Dim anzRows As Integer = 0
+    '    Dim fzeile As Integer = 1
+    '    Dim anzSpalten As Integer = plen + 1
+    '    Dim anzRows As Integer = 0
 
 
-        ' für das SetSourceData 
-        Dim myRange As Excel.Range = Nothing
-        'Dim usedRange As Excel.Range = curWS.UsedRange
-        ' Ende setsource Vorbereitungen 
+    '    ' für das SetSourceData 
+    '    Dim myRange As Excel.Range = Nothing
+    '    'Dim usedRange As Excel.Range = curWS.UsedRange
+    '    ' Ende setsource Vorbereitungen 
 
-        With curWS
-            ' neu 
+    '    With curWS
+    '        ' neu 
 
-            .Cells(fzeile, 1).value = ""
-            .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
+    '        .Cells(fzeile, 1).value = ""
+    '        .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
 
-            If considerIstDaten Then
+    '        If considerIstDaten Then
 
-                anzRows = 3
+    '            anzRows = 3
 
-                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
-                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
+    '            .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
+    '            .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
 
-                .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
+    '            .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+    '            .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
 
-                If Not IsNothing(scInfo.vglProj) Then
+    '            If Not IsNothing(scInfo.vglProj) Then
 
-                    anzRows = 4
-                    .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                    .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
+    '                anzRows = 4
+    '                .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+    '                .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
 
-                End If
+    '            End If
 
-            Else
+    '        Else
 
-                anzRows = 2
+    '            anzRows = 2
 
-                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
+    '            .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+    '            .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
 
-                If Not IsNothing(scInfo.vglProj) Then
-                    anzRows = 3
+    '            If Not IsNothing(scInfo.vglProj) Then
+    '                anzRows = 3
 
-                    .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                    .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
+    '                .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+    '                .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
 
-                End If
+    '            End If
 
-            End If
+    '        End If
 
-            myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
+    '        myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
 
-            ' Ende neu 
+    '        ' Ende neu 
 
-        End With
+    '    End With
 
 
 
-        Try
-            ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
-            Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
-            pptShape.Chart.SetSourceData(Source:=rangeString)
+    '    Try
+    '        ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
+    '        Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
+    '        pptShape.Chart.SetSourceData(Source:=rangeString)
 
-            pptShape.Chart.ChartData.Activate()
+    '        pptShape.Chart.ChartData.Activate()
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-        End Try
+    '    End Try
 
 
 
 
-    End Sub
+    'End Sub
 
 
-    ''' <summary>
-    ''' eine hidden ExcelApp ist mit screenupdate = false geöffnet , es wird nur mit seriesCollections gearbeitet
-    ''' 
-    ''' </summary>
-    ''' <param name="scInfo"></param>
-    ''' <param name="pptShape"></param>
-    Public Sub updateProjectChartInPPT3(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
+    '''' <summary>
+    '''' eine hidden ExcelApp ist mit screenupdate = false geöffnet , es wird nur mit seriesCollections gearbeitet
+    '''' 
+    '''' </summary>
+    '''' <param name="scInfo"></param>
+    '''' <param name="pptShape"></param>
+    'Public Sub updateProjectChartInPPT3(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
 
-        Dim pptChart As PowerPoint.Chart = Nothing
+    '    Dim pptChart As PowerPoint.Chart = Nothing
 
-        If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-            Exit Sub
-        End If
+    '    If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+    '        Exit Sub
+    '    End If
 
-        pptChart = pptShape.Chart
+    '    pptChart = pptShape.Chart
 
-        Dim diagramTitle As String = " "
-        Dim plen As Integer
+    '    Dim diagramTitle As String = " "
+    '    Dim plen As Integer
 
-        Dim Xdatenreihe() As String
-        Dim tdatenreihe() As Double
-        Dim istDatenReihe() As Double
-        Dim prognoseDatenReihe() As Double
-        Dim vdatenreihe() As Double
-        Dim vSum As Double = 0.0
-        Dim tSum As Double
+    '    Dim Xdatenreihe() As String
+    '    Dim tdatenreihe() As Double
+    '    Dim istDatenReihe() As Double
+    '    Dim prognoseDatenReihe() As Double
+    '    Dim vdatenreihe() As Double
+    '    Dim vSum As Double = 0.0
+    '    Dim tSum As Double
 
 
-        Dim pkIndex As Integer = CostDefinitions.Count
-        Dim pstart As Integer
+    '    Dim pkIndex As Integer = CostDefinitions.Count
+    '    Dim pstart As Integer
 
-        Dim zE As String = awinSettings.kapaEinheit
+    '    Dim zE As String = awinSettings.kapaEinheit
 
-        Dim tmpCollection As New Collection
-        Dim maxlenTitle1 As Integer = 20
+    '    Dim tmpCollection As New Collection
+    '    Dim maxlenTitle1 As Integer = 20
 
-        Dim curmaxScale As Double
+    '    Dim curmaxScale As Double
 
-        Dim IstCharttype As Microsoft.Office.Core.XlChartType
-        Dim PlanChartType As Microsoft.Office.Core.XlChartType
-        Dim vglChartType As Microsoft.Office.Core.XlChartType
+    '    Dim IstCharttype As Microsoft.Office.Core.XlChartType
+    '    Dim PlanChartType As Microsoft.Office.Core.XlChartType
+    '    Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+    '    Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
 
-        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+    '    If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+    '        IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
 
-            If considerIstDaten Then
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
-            Else
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
-            End If
+    '        If considerIstDaten Then
+    '            PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+    '        Else
+    '            PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '        End If
 
-            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
-        Else
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
-            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
-            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
-        End If
+    '        vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '    Else
+    '        IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+    '        PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+    '        vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+    '    End If
 
 
-        ' die ganzen Vor-Klärungen machen ...
-        With pptChart
+    '    ' die ganzen Vor-Klärungen machen ...
+    '    With pptChart
 
-            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+    '        If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
-                    curmaxScale = .MaximumScale
-                    .MaximumScaleIsAuto = False
-                End With
+    '            With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+    '                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+    '                ' hinausgehende Werte hat 
+    '                curmaxScale = .MaximumScale
+    '                .MaximumScaleIsAuto = False
+    '            End With
 
-            End If
+    '        End If
 
-        End With
+    '    End With
 
 
-        'Dim pname As String = scInfo.hproj.name
+    '    'Dim pname As String = scInfo.hproj.name
 
-        '
-        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
-        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
-        '
+    '    '
+    '    ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+    '    ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
+    '    '
 
-        Call bestimmePstartPlen(scInfo, pstart, plen)
+    '    Call bestimmePstartPlen(scInfo, pstart, plen)
 
 
 
 
-        ReDim Xdatenreihe(plen - 1)
-        ReDim tdatenreihe(plen - 1)
-        ReDim istDatenReihe(plen - 1)
-        ReDim prognoseDatenReihe(plen - 1)
-        ReDim vdatenreihe(plen - 1)
+    '    ReDim Xdatenreihe(plen - 1)
+    '    ReDim tdatenreihe(plen - 1)
+    '    ReDim istDatenReihe(plen - 1)
+    '    ReDim prognoseDatenReihe(plen - 1)
+    '    ReDim vdatenreihe(plen - 1)
 
 
-        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
-        Dim errMsg As String = ""
-        Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+    '    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+    '    Dim errMsg As String = ""
+    '    Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+    '                                   Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
 
-        If errMsg <> "" Then
-            ' es ist ein Fehler aufgetreten
-            If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
-                pptShape.TextFrame2.TextRange.Text = errMsg
-            End If
-            Exit Sub
-        End If
+    '    If errMsg <> "" Then
+    '        ' es ist ein Fehler aufgetreten
+    '        If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+    '            pptShape.TextFrame2.TextRange.Text = errMsg
+    '        End If
+    '        Exit Sub
+    '    End If
 
 
-        Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
+    '    Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
 
-        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            tSum = tdatenreihe(tdatenreihe.Length - 1)
-            vSum = vdatenreihe(vdatenreihe.Length - 1)
-        Else
-            tSum = tdatenreihe.Sum
-            vSum = vdatenreihe.Sum
+    '    If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+    '        tSum = tdatenreihe(tdatenreihe.Length - 1)
+    '        vSum = vdatenreihe(vdatenreihe.Length - 1)
+    '    Else
+    '        tSum = tdatenreihe.Sum
+    '        vSum = vdatenreihe.Sum
 
-        End If
+    '    End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+    '    Dim startRed As Integer = 0
+    '    Dim lengthRed As Integer = 0
+    '    diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
 
 
 
-        With CType(pptChart, PowerPoint.Chart)
+    '    With CType(pptChart, PowerPoint.Chart)
 
-            ' remove old series
-            Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
-            Catch ex As Exception
+    '        ' remove old series
+    '        Try
+    '            Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+    '            Do While anz > 0
+    '                .SeriesCollection(1).Delete()
+    '                anz = anz - 1
+    '            Loop
+    '        Catch ex As Exception
 
-            End Try
-        End With
+    '        End Try
+    '    End With
 
 
-        ' jetzt werden die Collections in dem Chart aufgebaut ...
-        With CType(pptChart, PowerPoint.Chart)
+    '    ' jetzt werden die Collections in dem Chart aufgebaut ...
+    '    With CType(pptChart, PowerPoint.Chart)
 
 
-            ' Planung / Forecast
-            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '        ' Planung / Forecast
+    '        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = prognoseDatenReihe
-                .XValues = Xdatenreihe
-                .ChartType = PlanChartType
+    '            .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+    '            .Interior.Color = visboFarbeBlau
+    '            .Values = prognoseDatenReihe
+    '            .XValues = Xdatenreihe
+    '            .ChartType = PlanChartType
 
-                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                    ' es handelt sich um eine Line
-                    .Format.Line.Weight = 4
-                    .Format.Line.ForeColor.RGB = visboFarbeBlau
-                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                End If
+    '            If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+    '                ' es handelt sich um eine Line
+    '                .Format.Line.Weight = 4
+    '                .Format.Line.ForeColor.RGB = visboFarbeBlau
+    '                .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+    '            End If
 
-            End With
+    '        End With
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(scInfo.vglProj) Then
+    '        ' Beauftragung bzw. Vergleichsdaten
+    '        If Not IsNothing(scInfo.vglProj) Then
 
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
+    '            'series
+    '            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '                .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+    '                .Values = vdatenreihe
+    '                .XValues = Xdatenreihe
 
-                    .ChartType = vglChartType
+    '                .ChartType = vglChartType
 
-                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
+    '                If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+    '                    With .Format.Line
+    '                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+    '                        .ForeColor.RGB = visboFarbeOrange
+    '                        .Weight = 4
+    '                    End With
+    '                Else
+    '                    ' ggf noch was definieren ..
+    '                End If
 
-                End With
+    '            End With
 
-            End If
+    '        End If
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
+    '        ' jetzt kommt der Neu-Aufbau der Series-Collections
+    '        If considerIstDaten Then
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+    '            ' jetzt die Istdaten zeichnen 
+    '            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+    '                '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+    '                .Name = bestimmeLegendNameIPB("I")
+    '                .Interior.Color = awinSettings.SollIstFarbeArea
+    '                .Values = istDatenReihe
+    '                .XValues = Xdatenreihe
+    '                .ChartType = IstCharttype
+    '            End With
 
-            End If
+    '        End If
 
 
-        End With
+    '    End With
 
-        ' Skalierung etc anpassen 
-        With CType(pptChart, PowerPoint.Chart)
+    '    ' Skalierung etc anpassen 
+    '    With CType(pptChart, PowerPoint.Chart)
 
-            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+    '        If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
 
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
+    '            With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+    '                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+    '                ' hinausgehende Werte hat 
 
-                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
-                    End If
+    '                If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+    '                    .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+    '                End If
 
 
-                End With
+    '            End With
 
-            End If
+    '        End If
 
 
 
-        End With
+    '    End With
 
 
-        ' jetzt wird das Aktivieren gemacht 
-        With pptShape.Chart.ChartData
+    '    ' jetzt wird das Aktivieren gemacht 
+    '    With pptShape.Chart.ChartData
 
-            Try
-                '.ActivateChartDataWindow()
-                .Activate()
-            Catch ex As Exception
-                ' in Office 10 und 13 scheint es den Befehl Data Window nicht zu geben ..
-                .Activate()
-            End Try
+    '        Try
+    '            '.ActivateChartDataWindow()
+    '            .Activate()
+    '        Catch ex As Exception
+    '            ' in Office 10 und 13 scheint es den Befehl Data Window nicht zu geben ..
+    '            .Activate()
+    '        End Try
 
 
-            If IsNothing(xlApp) Then
-                xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
-            End If
+    '        If IsNothing(xlApp) Then
+    '            xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+    '        End If
 
-            Try
-                If Not IsNothing(xlApp) Then
-                    With xlApp
-                        .Visible = smartChartsAreEditable
-                        xlApp.DisplayFormulaBar = False
-                        Try
-                            If Not IsNothing(.ActiveWindow) Then
-                                .ActiveWindow.Visible = smartChartsAreEditable
-                                .ActiveWindow.Caption = "VISBO Smart Diagram"
-                                .ActiveWindow.DisplayHeadings = False
-                                .ActiveWindow.DisplayWorkbookTabs = False
+    '        Try
+    '            If Not IsNothing(xlApp) Then
+    '                With xlApp
+    '                    .Visible = smartChartsAreEditable
+    '                    xlApp.DisplayFormulaBar = False
+    '                    Try
+    '                        If Not IsNothing(.ActiveWindow) Then
+    '                            .ActiveWindow.Visible = smartChartsAreEditable
+    '                            .ActiveWindow.Caption = "VISBO Smart Diagram"
+    '                            .ActiveWindow.DisplayHeadings = False
+    '                            .ActiveWindow.DisplayWorkbookTabs = False
 
-                                .ActiveWindow.Width = 500
-                                .ActiveWindow.Height = 150
-                                .ActiveWindow.Top = 100
-                                .ActiveWindow.Left = -1200
+    '                            .ActiveWindow.Width = 500
+    '                            .ActiveWindow.Height = 150
+    '                            .ActiveWindow.Top = 100
+    '                            .ActiveWindow.Left = -1200
 
-                            End If
+    '                        End If
 
-                        Catch ex As Exception
+    '                    Catch ex As Exception
 
-                        End Try
+    '                    End Try
 
-                    End With
+    '                End With
 
-                End If
+    '            End If
 
-            Catch ex As Exception
+    '        Catch ex As Exception
 
-            End Try
+    '        End Try
 
 
-        End With
+    '    End With
 
 
 
-        ' ---- hier dann final den Titel setzen 
-        With pptShape.Chart
-            If .HasTitle Then
-                .ChartTitle.Text = diagramTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+    '    ' ---- hier dann final den Titel setzen 
+    '    With pptShape.Chart
+    '        If .HasTitle Then
+    '            .ChartTitle.Text = diagramTitle
+    '            .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
-                End If
-            End If
+    '            If startRed > 0 And lengthRed > 0 Then
+    '                ' die aktuelle Summe muss rot eingefärbt werden 
+    '                .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+    '                    lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+    '            End If
+    '        End If
 
-        End With
+    '    End With
 
-        pptShape.Chart.Refresh()
+    '    pptShape.Chart.Refresh()
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' neue Aktualisierungs Methode von Balken und Curce-cumulated Charts 
@@ -3363,16 +3878,24 @@ Module Module1
     ''' <param name="pptShape"></param>
     Public Sub updateProjectChartInPPT(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
 
-        'Dim curWS As Excel.Worksheet = Nothing
 
 
-        Dim pptChart As PowerPoint.Chart = Nothing
+        Dim pptChart As PowerPoint.Chart
+        Dim pptChartData As PowerPoint.ChartData
+        Dim xlApp As xlNS.Application
 
         If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
             Exit Sub
         End If
 
         pptChart = pptShape.Chart
+        pptChartData = pptChart.ChartData
+        If Not IsNothing(pptChartData.Workbook) Then
+            'pptChartData.ActivateChartDataWindow()
+            pptChartData.Activate()
+        End If
+
+
 
         Dim diagramTitle As String = " "
         Dim plen As Integer
@@ -3453,9 +3976,6 @@ Module Module1
 
         Call bestimmePstartPlen(scInfo, pstart, plen)
 
-
-
-
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
         ReDim istDatenReihe(plen - 1)
@@ -3497,15 +4017,15 @@ Module Module1
         With CType(pptChart, PowerPoint.Chart)
 
             ' remove old series
-            Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
-            Catch ex As Exception
+            ''Try
+            Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+            Do While anz > 0
+                .SeriesCollection(1).Delete()
+                anz = anz - 1
+            Loop
+            ''Catch ex As Exception
 
-            End Try
+            ''End Try
         End With
 
         ' jetzt die Farbe bestimme
@@ -3534,7 +4054,7 @@ Module Module1
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                     If scInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                        .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
                         .Interior.Color = balkenFarbe
                     Else
                         .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
@@ -3620,7 +4140,6 @@ Module Module1
 
             End If
 
-
         End With
 
 
@@ -3640,61 +4159,11 @@ Module Module1
 
 
                 End With
-
             End If
-
-
-
         End With
-
-        ' jetzt wird das Aktivieren gemacht 
-        With pptShape.Chart.ChartData
-
-            Try
-                '.ActivateChartDataWindow()
-                .Activate()
-            Catch ex As Exception
-
-            End Try
-
-            xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
-
-
-            With xlApp
-                .Visible = smartChartsAreEditable
-                .ScreenUpdating = False
-                xlApp.DisplayFormulaBar = False
-            End With
-
-            Try
-
-                If Not IsNothing(xlApp.ActiveWindow) Then
-
-                    With xlApp.ActiveWindow
-
-                        .Visible = smartChartsAreEditable
-                        .Caption = "VISBO Smart Diagram"
-                        .DisplayHeadings = False
-                        .DisplayWorkbookTabs = False
-
-                        .Width = 500
-                        .Height = 150
-                        .Top = 100
-                        .Left = -1200
-
-                    End With
-                End If
-
-            Catch ex As Exception
-
-            End Try
-
-        End With
-
-
 
         ' ---- hier dann final den Titel setzen 
-        With pptShape.Chart
+        With pptChart
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
@@ -3708,8 +4177,58 @@ Module Module1
 
         End With
 
-        pptShape.Chart.Refresh()
 
+        xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
+
+
+        xlApp.Visible = smartChartsAreEditable
+        'xlApp.ScreenUpdating = False
+        'xlApp.DisplayFormulaBar = False
+
+
+        'Try
+
+        If Not IsNothing(xlApp.ActiveWindow) Then
+
+            With xlApp.ActiveWindow
+                .Visible = smartChartsAreEditable
+                '.Caption = "VISBO Smart Diagram"
+                '.DisplayHeadings = False
+                '.DisplayWorkbookTabs = False
+
+                .Width = 50
+                .Height = 15
+                .Top = 10
+                .Left = -120
+
+            End With
+        End If
+
+        'Catch ex As Exception
+
+        'End Try
+
+
+        pptChart.Refresh()
+        ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
+        On Error Resume Next
+        On Error GoTo 0
+        pptChartData = Nothing
+        pptChart = Nothing
+
+
+        'If xlApp.Workbooks.Count = 1 Then
+
+        '    For Each wb As Excel.Workbook In xlApp.Workbooks
+        '        wb.Saved = True
+        '        xlApp.Quit()
+        '    Next
+        'Else
+        '    For Each wb As Excel.Workbook In xlApp.Workbooks
+        '        wb.Close(SaveChanges:=False)
+        '    Next
+
+        'End If
 
 
     End Sub
@@ -5216,73 +5735,73 @@ Module Module1
 
     ''End Sub
 
-    ''' <summary>    ''' 
-    ''' im AddIn-Shutdown beendet ...
-    ''' danach ist xlAPP gesetzt und es gibt das updateWorkbook 
-    ''' wenn das HiddenExcel bereits existiert wird nichts gemacht ... 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Friend Sub createNewHiddenExcel()
+    '''' <summary>    ''' 
+    '''' im AddIn-Shutdown beendet ...
+    '''' danach ist xlAPP gesetzt und es gibt das updateWorkbook 
+    '''' wenn das HiddenExcel bereits existiert wird nichts gemacht ... 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Friend Sub createNewHiddenExcel()
 
-        Try
-            If IsNothing(xlApp) Then
-                xlApp = CType(CreateObject("Excel.Application"), Excel.Application)
-                xlApp.Visible = False
-                xlApp.ScreenUpdating = False
-            End If
+    '    Try
+    '        If IsNothing(xlApp) Then
+    '            xlApp = CType(CreateObject("Excel.Application"), Excel.Application)
+    '            xlApp.Visible = False
+    '            xlApp.ScreenUpdating = False
+    '        End If
 
-        Catch ex As Exception
-            xlApp = Nothing
-            updateWorkbook = Nothing
-            Exit Sub
-        End Try
+    '    Catch ex As Exception
+    '        xlApp = Nothing
+    '        updateWorkbook = Nothing
+    '        Exit Sub
+    '    End Try
 
-        'Dim updWS As Excel.Worksheet = Nothing
-        'Dim creationNeeded As Boolean = False
+    '    'Dim updWS As Excel.Worksheet = Nothing
+    '    'Dim creationNeeded As Boolean = False
 
-        '' wenn 
-        'Try
-        '    If Not IsNothing(xlApp) Then
-        '        ' lediglich ein Test auf Zugreifbarkeit ... fällt auf die Nase, wenn User das Excel geschlossen hat 
-        '        Dim testCount As Integer = CType(xlApp.Workbooks, Excel.Workbooks).Count
-        '    End If
+    '    '' wenn 
+    '    'Try
+    '    '    If Not IsNothing(xlApp) Then
+    '    '        ' lediglich ein Test auf Zugreifbarkeit ... fällt auf die Nase, wenn User das Excel geschlossen hat 
+    '    '        Dim testCount As Integer = CType(xlApp.Workbooks, Excel.Workbooks).Count
+    '    '    End If
 
-        'Catch ex As Exception
-        '    ' in diesem Fall wurde das Excel gelöscht ... 
-        '    xlApp = Nothing
-        'End Try
+    '    'Catch ex As Exception
+    '    '    ' in diesem Fall wurde das Excel gelöscht ... 
+    '    '    xlApp = Nothing
+    '    'End Try
 
-        'If Not IsNothing(xlApp) Then
+    '    'If Not IsNothing(xlApp) Then
 
-        '    If IsNothing(updateWorkbook) Then
-        '        If xlApp.Workbooks.Count > 0 Then
-        '            ' fertig  - es gibt bereits ein Workbook 
-        '            updateWorkbook = xlApp.Workbooks.Item(1)
-        '        Else
-        '            updateWorkbook = xlApp.Workbooks.Add()
-        '        End If
-        '    Else
-        '        ' andernfalsl gibt es das ja schon 
-        '    End If
+    '    '    If IsNothing(updateWorkbook) Then
+    '    '        If xlApp.Workbooks.Count > 0 Then
+    '    '            ' fertig  - es gibt bereits ein Workbook 
+    '    '            updateWorkbook = xlApp.Workbooks.Item(1)
+    '    '        Else
+    '    '            updateWorkbook = xlApp.Workbooks.Add()
+    '    '        End If
+    '    '    Else
+    '    '        ' andernfalsl gibt es das ja schon 
+    '    '    End If
 
-        'Else
+    '    'Else
 
-        '    Try
+    '    '    Try
 
-        '        xlApp = CType(CreateObject("Excel.Application"), Excel.Application)
-        '        xlApp.Visible = False
+    '    '        xlApp = CType(CreateObject("Excel.Application"), Excel.Application)
+    '    '        xlApp.Visible = False
 
-        '        updateWorkbook = xlApp.Workbooks.Add()
+    '    '        updateWorkbook = xlApp.Workbooks.Add()
 
-        '    Catch ex As Exception
-        '        xlApp = Nothing
-        '        updateWorkbook = Nothing
-        '        Exit Sub
-        '    End Try
+    '    '    Catch ex As Exception
+    '    '        xlApp = Nothing
+    '    '        updateWorkbook = Nothing
+    '    '        Exit Sub
+    '    '    End Try
 
-        'End If
+    '    'End If
 
-    End Sub
+    'End Sub
     ''' <summary>
     ''' ändert den Kommentar Ampel-Text, Lieferumfang
     ''' je nachdem, ob es sich um eine Ampel-Erläuterung oder einen Lieferumfang handelt ...  
@@ -5614,14 +6133,24 @@ Module Module1
         Next
 
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
-        Try
-            Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-            If Not IsNothing(todayLineShape) Then
-                Call sendTodayLinetoNewPosition(todayLineShape)
+        'Try
+        'Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
+        ' ur:2019-05-29: TryCatch vermeiden
+        Dim todayLineShape As PowerPoint.Shape
+        todayLineShape = Nothing
+        For i = 1 To currentSlide.Shapes.Count
+            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+                todayLineShape = currentSlide.Shapes.Item("todayLine")
+                Exit For
             End If
-        Catch ex As Exception
+            i = i + 1
+        Next
+        If Not IsNothing(todayLineShape) Then
+            Call sendTodayLinetoNewPosition(todayLineShape)
+        End If
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
         ' jetzt müssen die Shape-Namen neu gesetzt werden, wenn es sich um eine Variante handelte 
         If showOtherVariant Then
@@ -5727,7 +6256,7 @@ Module Module1
                             Dim bsn As String = tmpShape.Tags.Item("BSN")
                             Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                            Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                       ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                       ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -5760,7 +6289,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
+                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description,
                                                           ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone, ms.DocURL)
 
@@ -5789,7 +6318,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
+                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
                                                              ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                              ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -5835,11 +6364,16 @@ Module Module1
 
         Dim tsMsgDidAlreadyExist As Boolean = False
 
-        Try
-            tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
-        Catch ex As Exception
-            tsMsgBox = Nothing
-        End Try
+        'ur: 2019-05-29: Try Catch entfernt
+        Dim i As Integer = 1
+        tsMsgBox = Nothing
+        For i = 1 To currentSlide.Shapes.Count
+            If currentSlide.Shapes.Item(i).Name = "TimeStampInfo" Then
+                tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
+                Exit For
+            End If
+            i = i + 1
+        Next
 
         If IsNothing(tsMsgBox) And (Not IsNothing(importantShapes(ptImportantShapes.todayline)) Or IsNothing(importantShapes(ptImportantShapes.version))) Then
             ' erstellen ...
@@ -8463,7 +8997,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
                                                   cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
 
@@ -8490,7 +9024,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -8877,31 +9411,33 @@ Module Module1
 
 
 
-    ''' <summary>
-    ''' löscht beim Beenden von Powerpoint die Hidden App wieder 
-    ''' </summary>
-    Friend Sub closeExcelAPP()
+    '''' <summary>
+    '''' löscht beim Beenden von Powerpoint die Hidden App wieder 
+    '''' </summary>
+    Friend Sub closeExcelAPP(ByVal xlApp As xlNS.Application)
         Try
+            'ur:2019-06-04: Test
+            If xlApp.Workbooks.Count = 1 Then
 
-
-            If Not IsNothing(xlApp) Then
-                For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
-                    tmpWB.Close(SaveChanges:=False)
+                For Each wb As Excel.Workbook In xlApp.Workbooks
+                    wb.Saved = True
+                    xlApp.Quit()
                 Next
-                xlApp.Quit()
+            Else
+                For Each wb As Excel.Workbook In xlApp.Workbooks
+                    wb.Close(SaveChanges:=False)
+                Next
+
             End If
 
-            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
-
-            'If My.Computer.FileSystem.FileExists(fullPathName) Then
-            '    ' löschen ...
-            '    My.Computer.FileSystem.DeleteFile(fullPathName)
-
+            'If Not IsNothing(xlApp) Then
+            '    For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
+            '        tmpWB.Close(SaveChanges:=False)
+            '    Next
+            '    xlApp.Quit()
             'End If
 
-            updateWorkbook = Nothing
-            'Call Sleep(300)
-            xlApp = Nothing
+            'xlApp = Nothing
         Catch ex As Exception
 
         End Try
@@ -9261,65 +9797,79 @@ Module Module1
     ''' wird aufgerufen direkt aus den Buttons des Ribbon1
     ''' </summary>
     ''' <param name="ptNavType"></param>
-    Public Sub updateAllSlides(ByVal ptNavType As Integer, ByVal specDate As Date)
+    Public Sub updateSelectedSlide(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
             Dim errmsg As String = ""
-
+            'Call closeExcelAPP()
 
             Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
             Dim formerSlide As PowerPoint.Slide = currentSlide
             'Dim saveCurrentTimeStamp As Date = currentTimestamp
 
-            For i As Integer = 1 To pres.Slides.Count
-                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+            'ur:2019-06-04
 
-                ' neue Slide , also leer machen ... 
-                smartSlideLists = New clsSmartSlideListen
+            Dim slideIDList As New SortedList(Of Integer, Integer)
 
-                If Not IsNothing(sld) Then
-                    If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
-
-                        If userIsEntitled(errmsg, sld) Then
-
-                            currentTimestamp = getCurrentTimeStampFromSlide(sld)
-                            Call pptAPP_AufbauSmartSlideLists(sld)
-                            Call prepareAndPerformBtnAction(ptNavType, specDate, False)
-
-                        Else
-                            ' hier ggf auf invisible setzen, wenn erforderlich 
-                            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End If
-
-
-
-                    End If
-                End If
+            For Each sl As PowerPoint.Slide In pres.Slides
+                slideIDList.Add(sl.SlideID, sl.SlideID)
             Next
 
-            If currentSlide.SlideID <> formerSlide.SlideID Then
+            'For Each sldID As KeyValuePair(Of Integer, Integer) In slideIDList
 
-                currentSlide = formerSlide
-                currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+            'Dim sld As PowerPoint.Slide = pres.Slides.FindBySlideID(sldID.Key)
+            'Dim sld As PowerPoint.Slide = pres.Slides.FindBySlideID(slideIDList.ElementAt(2).Key)
+            Dim sld As PowerPoint.Slide = currentSlide
 
-                smartSlideLists = New clsSmartSlideListen
 
-                If Not IsNothing(currentSlide) Then
-                    If Not (currentSlide.Tags.Item("FROZEN").Length > 0) And (currentSlide.Tags.Item("SMART") = "visbo") Then
+            ' neue Slide , also leer machen ... 
+            smartSlideLists = New clsSmartSlideListen
 
-                        If userIsEntitled(errmsg, currentSlide) Then
+            If Not IsNothing(sld) Then
+                If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
 
-                            Call pptAPP_AufbauSmartSlideLists(currentSlide)
+                    If userIsEntitled(errmsg, sld) Then
 
-                        Else
-                            ' hier ggf auf invisible setzen, wenn erforderlich
-                            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
-                        End If
+                        currentTimestamp = getCurrentTimeStampFromSlide(sld)
+                        Call pptAPP_AufbauSmartSlideLists(sld)
+                        Call prepareAndPerformBtnAction(ptNavType, specDate, False)
 
+                    Else
+                        ' hier ggf auf invisible setzen, wenn erforderlich 
+                        Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
                     End If
-                End If
 
+
+
+                End If
             End If
+            'Next
+
+            ' ur:2019-06-04: wird nicht benötigt, wenn nur jede selektierte Slide einzeln upgedated wird
+
+            'If currentSlide.SlideID <> formerSlide.SlideID Then
+
+            '    currentSlide = formerSlide
+            '    currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+
+            '    smartSlideLists = New clsSmartSlideListen
+
+            '    If Not IsNothing(currentSlide) Then
+            '        If Not (currentSlide.Tags.Item("FROZEN").Length > 0) And (currentSlide.Tags.Item("SMART") = "visbo") Then
+
+            '            If userIsEntitled(errmsg, currentSlide) Then
+
+            '                Call pptAPP_AufbauSmartSlideLists(currentSlide)
+
+            '            Else
+            '                ' hier ggf auf invisible setzen, wenn erforderlich
+            '                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
+            '            End If
+
+            '        End If
+            '    End If
+
+            'End If
 
             ' das Formular ggf, also wenn aktiv,  updaten 
             If Not IsNothing(changeFrm) Then
@@ -9335,6 +9885,7 @@ Module Module1
             Call MsgBox(ex.Message)
         End Try
 
+
     End Sub
 
 
@@ -9347,7 +9898,7 @@ Module Module1
 
         ' tk 28.10.18 braucht man doch nicht ... 
         '' Versuch den Undo-Stack zu löschen
-        'pptAPP.StartNewUndoEntry()
+        '' pptAPP.StartNewUndoEntry()
 
         Dim ddiff As Long = DateDiff(DateInterval.Second, newdate, currentTimestamp)
 
@@ -9567,6 +10118,106 @@ Module Module1
         If updateModus = ptNavigationButtons.letzter Then
             specDate = newDate
         End If
+    End Sub
+
+    Public Sub own_SlideSelectionChanged(ByVal Sld As PowerPoint.Slide)
+
+        Dim beforeSlideTimestamp As Date = Date.MinValue
+
+        ' die aktuelle Slide setzen 
+        If Not IsNothing(Sld) Then
+
+            If currentPresHasVISBOElements Then
+                ' nur dann muss irgendwas weitergemacht werden ..
+
+                Dim afterSlideID As Integer = Sld.SlideID ' aktuell selektierte SlideID
+
+                ' hier muss nur weitergemacht werden, wenn es sich um eine VISBO slide handelt 
+                If isVisboSlide(Sld) Then
+
+                    Dim afterSlideKennung As String = CType(Sld.Parent, PowerPoint.Presentation).Name & afterSlideID.ToString
+                    Dim beforeSlideKennung As String = ""
+
+                    Dim key As String = CType(Sld.Parent, PowerPoint.Presentation).Name
+
+                    Dim beforeSlideID As Integer = 0               ' zuvor selektierte SlideID
+
+                    If Not IsNothing(currentSlide) Then
+                        Try
+                            beforeSlideID = currentSlide.SlideID
+                            beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlideID.ToString
+                            ' jetzt die beforeSlideTimestamp setzen 
+                            With currentSlide
+                                If .Tags.Item("CRD").Length > 0 Then
+                                    beforeSlideTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+                                End If
+                            End With
+
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+
+                    '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
+                    currentSlide = Sld
+
+                    If beforeSlideKennung <> afterSlideKennung Or smartSlideLists.countProjects = 0 Then
+                        Call pptAPP_AufbauSmartSlideLists(Sld)
+
+                    End If
+
+                    ' jetzt die currentTimeStamp setzen 
+                    With currentSlide
+                        If .Tags.Item("CRD").Length > 0 Then
+                            currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
+                        End If
+                    End With
+
+                    Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
+
+                    If diff <> 0 Then
+                        updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                    End If
+
+                    ' nur wenn die SlideID gewechselt hat, muss agiert werden
+                    ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
+                    If beforeSlideKennung <> afterSlideKennung Then
+                        Try
+                            ' das Change-Formular aktualisieren, wenn es gezeigt wird  
+                            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+                            If Not IsNothing(changeFrm) Then
+
+                                changeFrm.changeliste.clearChangeList()
+
+                                If chgeLstListe.ContainsKey(key) Then
+                                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+                                    Else
+                                        ' eine Liste für die neue SlideID einfügen ..
+                                    End If
+                                End If
+
+                                changeFrm.neuAufbau()
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If       'Ende ob SlideIDs ungleich sind
+                Else
+                    'ur: ???
+                    'currentSlide = Nothing
+                End If
+            Else
+                'ur: ???
+                'currentSlide = Nothing
+            End If ' if currentPresHasVisboElements
+        Else
+            'nichts tun
+        End If
+
     End Sub
 
 End Module

@@ -916,7 +916,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = fullName
                                 End If
 
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                            ptReportBigTypes.components, ptReportComponents.prName)
 
                             Case "Custom-Field"
@@ -962,7 +962,7 @@ Public Module testModule
 
                                         End Select
 
-                                        Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                        Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                            ptReportBigTypes.components, ptReportComponents.prCustomField)
                                     Else
                                         .TextFrame2.TextRange.Text = "Custom-Field " & qualifier &
@@ -3110,7 +3110,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpel
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
 
@@ -3126,7 +3126,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpelText
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "Business-Unit:"
@@ -3139,7 +3139,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prBusinessUnit
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "Beschreibung"
@@ -3167,7 +3167,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prDescription
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymTrafficLight"
@@ -3178,7 +3178,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymTrafficLight
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymRisks"
@@ -3187,7 +3187,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymRisks
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymGoals"
@@ -3195,7 +3195,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymDescription
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
 
@@ -3204,7 +3204,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymFinance
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymSchedules"
@@ -3212,7 +3212,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymSchedules
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymTeam"
@@ -3220,7 +3220,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymTeam
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "SymProject"
@@ -3228,7 +3228,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymProject
                                 qualifier2 = ""
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "Stand:"
@@ -3241,7 +3241,7 @@ Public Module testModule
                                 '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "Laufzeit:"
@@ -3253,7 +3253,7 @@ Public Module testModule
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prLaufzeit
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
                             Case "Verantwortlich:"
@@ -3266,7 +3266,7 @@ Public Module testModule
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prVerantwortlich
                                 qualifier2 = boxName
-                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
                             Case Else
                         End Select
@@ -3301,7 +3301,7 @@ Public Module testModule
                                         .Height = CSng(height * 0.96)
                                     End With
 
-                                    Call addSmartPPTShapeInfo2(newShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                    Call addSmartPPTCompInfo(newShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                                bigType, compID)
 
                                     reportObj.Delete()
@@ -3668,7 +3668,7 @@ Public Module testModule
                                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
                                                     ByRef pptFirstTime As Boolean,
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
-        'ByVal showNames As Boolean, ByVal showProjectLine As Boolean,
+
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
 
         Dim pptApp As pptNS.Application = Nothing
@@ -3700,6 +3700,7 @@ Public Module testModule
 
         Dim msgtxt As String = ""
 
+        currentSessionConstellation.constellationName = portfolioName
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
@@ -4315,6 +4316,10 @@ Public Module testModule
                             Else
                                 .TextFrame2.TextRange.Text = portfolioName & " (" & ShowProjekte.Count & " P.)"
                             End If
+                            Dim bigType As Integer = ptReportBigTypes.components
+                            Dim compID As Integer = ptReportComponents.pfName
+                            Call addSmartPPTCompInfo(pptShape, Nothing, currentSessionConstellation, ptPRPFType.portfolio, qualifier, qualifier2,
+                                                          bigType, compID)
 
 
 
@@ -6086,6 +6091,10 @@ Public Module testModule
                                 boxName = repMessages.getmsg(223)
                             End If
                             .TextFrame2.TextRange.Text = Date.Now.ToString("d", repCult)
+                            Dim bigType As Integer = ptReportBigTypes.components
+                            Dim compID As Integer = ptReportComponents.prStand
+                            Call addSmartPPTCompInfo(pptShape, Nothing, currentSessionConstellation, ptPRPFType.portfolio, qualifier, qualifier2,
+                                                          bigType, compID)
 
 
                         Case "Zeitraum:"
@@ -6094,7 +6103,11 @@ Public Module testModule
                                 boxName = repMessages.getmsg(224)
                             End If
                             .TextFrame2.TextRange.Text = textZeitraum(showRangeLeft, showRangeRight)
+                            Dim bigType As Integer = ptReportBigTypes.components
+                            Dim compID As Integer = ptReportComponents.prLaufzeit
 
+                            Call addSmartPPTCompInfo(pptShape, Nothing, currentSessionConstellation, ptPRPFType.portfolio, qualifier, qualifier2,
+                                                          bigType, compID)
                         Case Else
 
                     End Select
@@ -10619,17 +10632,10 @@ Public Module testModule
                         spalte = 12 - colDelta
                         If Not IsNothing(vproj) Then
                             Dim timeStamp As Date = vproj.timeStamp
-                            If istVglMitKonkretemDatum Then
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglDate.ToShortDateString
-                            Else
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
-                            End If
-
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                         End If
-
-
 
                     End With
 
@@ -14426,7 +14432,7 @@ Public Module testModule
                 End If
 
 
-                Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                             fullBreadCrumb, cphase.name, shortText, originalName,
                                             bestShortName, bestLongName,
                                             cphase.getStartDate, cphase.getEndDate,
@@ -14497,7 +14503,7 @@ Public Module testModule
                         originalName = Nothing
                     End If
 
-                    Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                    Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                                 fullBreadCrumb, cphase.name, shortText, originalName,
                                                 bestShortName, bestLongName,
                                                 cphase.getStartDate, cphase.getEndDate,
@@ -16663,7 +16669,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1),
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -16689,7 +16695,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1),
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -16779,7 +16785,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1),
                                                    Nothing, hproj.getShapeText, Nothing, Nothing,
                                                    Nothing, Nothing,
                                                    hproj.startDate, hproj.endeDate,
@@ -17163,7 +17169,7 @@ Public Module testModule
                                         originalName = Nothing
                                     End If
 
-                                    Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                    Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                                                 fullBreadCrumb, cphase.name, shortText, originalName,
                                                                 bestShortName, bestLongName,
                                                                 phaseStart, phaseEnd,
@@ -17859,7 +17865,7 @@ Public Module testModule
             End If
 
             Dim lieferumfaenge As String = MS.getAllDeliverables("#")
-            Call addSmartPPTShapeInfo(copiedShape.Item(1),
+            Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                         fullBreadCrumb, MS.name, shortText, originalName,
                                         bestShortName, bestLongName,
                                         Nothing, msdate,
@@ -18126,7 +18132,7 @@ Public Module testModule
                     originalName = Nothing
                 End If
 
-                Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                             fullBreadCrumb, cphase.name, shortText, originalName,
                                             bestShortName, bestLongName,
                                             phStartDate, phEndDate,
@@ -18345,7 +18351,7 @@ Public Module testModule
                         End If
 
                         Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
-                        Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                        Call addSmartPPTMsPhInfo(copiedShape.Item(1),
                                                     fullBreadCrumb, cMilestone.name, shortText, originalName,
                                                     bestShortName, bestLongName,
                                                     Nothing, msDate,
@@ -20680,9 +20686,9 @@ Public Module testModule
                                 End If
 
                                 Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                                    segmentChanged = False
-                                End If
+                                segmentChanged = False
                             End If
+                        End If
 
                     Else
                         segmentChanged = False
@@ -21425,7 +21431,7 @@ Public Module testModule
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
     ''' <remarks></remarks>
-    Private Sub prepZeichneLegendenTabelle(ByRef pptslide As pptNS.Slide, ByRef tableShape As pptNS.Shape, ByVal legendFontSize As Single, _
+    Private Sub prepZeichneLegendenTabelle(ByRef pptslide As pptNS.Slide, ByRef tableShape As pptNS.Shape, ByVal legendFontSize As Single,
                                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection)
 
         Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
@@ -21485,9 +21491,9 @@ Public Module testModule
             ' alle Information vorhanden 
 
             Try
-                Call zeichneLegendenTabelle(tableShape, pptslide, _
-                                            selectedPhases, selectedMilestones, _
-                                            legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
+                Call zeichneLegendenTabelle(tableShape, pptslide,
+                                            selectedPhases, selectedMilestones,
+                                            legendPhaseVorlagenShape, legendMilestoneVorlagenShape,
                                             legendBuColorShape)
 
             Catch ex As Exception
@@ -21939,6 +21945,6 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
- 
+
 
 End Module
