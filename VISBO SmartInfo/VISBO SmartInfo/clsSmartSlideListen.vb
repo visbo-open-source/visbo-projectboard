@@ -31,7 +31,8 @@ Public Class clsSmartSlideListen
     Private _mVList As SortedList(Of Integer, Boolean)
     ' enthält die Liste an Projekten , im Integer ist der Project Type abgelegt  
     Private _projectList As SortedList(Of String, ptPRPFType)
-
+    ' enthält die Liste an Portfolio, sortiert nach Namen 
+    Private _portfolioList As SortedList(Of String, String)
     ' enthält die Liste der Rollen -> ShapiID , Summe ; erfordert Datenbank Access 
     Private _resourceList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
@@ -144,6 +145,80 @@ Public Class clsSmartSlideListen
     End Property
 
     ''' <summary>
+    ''' liefert true, wenn das Portfolio mit portfolioName = pName in der Liste der Portfolios enthalten ist 
+    ''' </summary>
+    ''' <param name="pfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPortfolio(ByVal pfName As String) As Boolean
+        Get
+            containsPortfolio = _portfolioList.ContainsKey(pfName)
+        End Get
+    End Property
+
+
+
+    ''' <summary>
+    ''' liefert die Anzahl an Projekten, die auf der Slide zu finden sind 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countProjects() As Integer
+        Get
+            countProjects = _projectList.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert die Anzahl an Portfolios, die auf der Slide zu finden sind 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countPortfolios() As Integer
+        Get
+            countPortfolios = _portfolioList.Count
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' fügt der Projektliste ein neues Element hinzu; 
+    ''' die Project TimeStampListe kann Nothing sein ... 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="pType">gibt an, ob Projekt oder Portfolio Projekt</param>
+    ''' <remarks></remarks>
+    Public Sub addProject(ByVal pvName As String, Optional ByVal pType As ptPRPFType = ptPRPFType.project)
+
+        If _projectList.ContainsKey(pvName) Then
+            _projectList.Remove(pvName)
+        End If
+
+        _projectList.Add(pvName, pType)
+
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' fügt der Portfolioliste ein neues Element hinzu; 
+    ''' </summary>
+    ''' <param name="pfName"></param>
+    ''' <remarks></remarks>
+    Public Sub addPortfolio(ByVal pfName As String)
+
+        If _portfolioList.ContainsKey(pfName) Then
+            _portfolioList.Remove(pfName)
+        End If
+
+        _portfolioList.Add(pfName, pfName)
+
+    End Sub
+    ''' <summary>
     ''' gibt den Projekt-Varianten-Namen des i.ten-Elements zurück
     ''' i läuft von 1.. count 
     ''' der Name hat folgenden Aufbau: pName#vName 
@@ -166,35 +241,25 @@ Public Class clsSmartSlideListen
     End Property
 
     ''' <summary>
-    ''' liefert die Anzahl an Projekten, die auf der Slide zu finden sind 
+    ''' gibt den PortfolioNamen des i.ten-Elements zurück
+    ''' i läuft von 1.. count 
+    ''' Aufruf mit unzulässigem Index gibt Nothing zurück 
     ''' </summary>
+    ''' <param name="index"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property countProjects() As Integer
+    Public ReadOnly Property getPfName(ByVal index As Integer) As String
         Get
-            countProjects = _projectList.Count
+
+            If index >= 1 And index <= _portfolioList.Count Then
+                getPfName = _portfolioList.ElementAt(index - 1).Key
+            Else
+                getPfName = Nothing
+            End If
+
         End Get
     End Property
-
-
-
-    ''' <summary>
-    ''' fügt der Projektliste ein neues Element hinzu; 
-    ''' die Project TimeStampListe kann Nothing sein ... 
-    ''' </summary>
-    ''' <param name="pvName"></param>
-    ''' <param name="pType">gibt an, ob Projekt oder Portfolio Projekt</param>
-    ''' <remarks></remarks>
-    Public Sub addProject(ByVal pvName As String, Optional ByVal pType As ptPRPFType = ptPRPFType.project)
-
-        If _projectList.ContainsKey(pvName) Then
-            _projectList.Remove(pvName)
-        End If
-
-        _projectList.Add(pvName, pType)
-
-    End Sub
 
 
     Public ReadOnly Property getUID(ByVal shapeName As String) As Integer
@@ -1248,6 +1313,8 @@ Public Class clsSmartSlideListen
         _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
         _projectList = New SortedList(Of String, ptPRPFType)
+
+        _portfolioList = New SortedList(Of String, String)
 
         _resourceList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _costList = New SortedList(Of String, SortedList(Of Integer, Boolean))

@@ -100,6 +100,7 @@
     <Compile Include="clsroleHrchy.vb" />
     <Compile Include="clsroleNode.vb" />
     <Compile Include="clsSmartPPTChartInfo.vb" />
+    <Compile Include="clsSmartPPTCompInfo.vb" />
     <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />

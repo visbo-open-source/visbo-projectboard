@@ -41,12 +41,14 @@ Public Class clsCache
         Dim vpid As String = ""
         Dim hvpv As SortedList(Of String, clsVarTs)
         Dim hVarTS As New clsVarTs
-
+        Dim vp As New clsVP
         Try
 
             For Each vpv As clsProjektWebShort In result
 
+                vp = VPsId(vpv.vpid)
                 vpid = vpv.vpid
+
 
                 If _VPvs.ContainsKey(vpid) Then
                     hvpv = _VPvs(vpid)
@@ -63,6 +65,16 @@ Public Class clsCache
                 ' vpv nur eintragen, wenn der timestamp nicht bereits vorhanden
                 If Not hVarTS.tsShort.ContainsKey(vpv.timestamp) Then
                     hVarTS.vname = vpv.variantName
+                    ' Anzahl Versionen dieser Variante merken in hVarTS
+                    If vpv.variantName = "" Then
+                        hVarTS.vpvCount = vp.vpvCount
+                    Else
+                        For Each vpvariant In vp.Variant
+                            If vpvariant.variantName = vpv.variantName Then
+                                hVarTS.vpvCount = vpvariant.vpvCount
+                            End If
+                        Next
+                    End If
                     hVarTS.timeCShort = timeCached
                     hVarTS.tsShort.Add(vpv.timestamp, vpv)
                 End If
@@ -97,13 +109,15 @@ Public Class clsCache
         Dim vpid As String = ""
         Dim hvpv As SortedList(Of String, clsVarTs)
         Dim hVarTS As New clsVarTs
+        Dim vp As New clsVP
 
         Try
             For Each vpv As clsProjektWebLong In result
 
                 Dim vpvshort As clsProjektWebShort = vpvLong2vpvshort(vpv)
-
+                vp = VPsId(vpv.vpid)
                 vpid = vpv.vpid
+
 
                 If _VPvs.ContainsKey(vpid) Then
                     hvpv = _VPvs(vpid)
@@ -121,6 +135,16 @@ Public Class clsCache
                 ' longVersion in den Cache
                 If Not hVarTS.tsLong.ContainsKey(vpv.timestamp) Then
                     hVarTS.vname = vpv.variantName
+                    ' Anzahl Versionen dieser Variante merken in hVarTS
+                    If vpv.variantName = "" Then
+                        hVarTS.vpvCount = vp.vpvCount
+                    Else
+                        For Each vpvariant In vp.Variant
+                            If vpvariant.variantName = vpv.variantName Then
+                                hVarTS.vpvCount = vpvariant.vpvCount
+                            End If
+                        Next
+                    End If
                     ' timeCached soll nicht aktualisiert werden, da Timestamps nicht vollständig sind, sondern nur einzelne dazukamen
                     If timeCached > Date.MinValue Then
                         hVarTS.timeCLong = timeCached
@@ -216,12 +240,14 @@ Public Class clsCache
 
         Dim nothingToDo As Boolean = False
         Dim timeDiff As Long = 0
+
         Try
 
             If vpid <> "" Then
 
                 If _VPvs.ContainsKey(vpid) Then
 
+                    ' Anzahl Variante > 0
                     If _VPvs(vpid).Count > 0 Then
 
                         If vpvid <> "" Then
@@ -251,7 +277,7 @@ Public Class clsCache
                                     If Not longVersion Then
 
                                         timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
-                                        If _VPvs(vpid)(vName).tsShort.Count > 0 And
+                                        If _VPvs(vpid)(vName).tsShort.Count = _VPvs(vpid)(vName).vpvCount And
                                             timeDiff <= updateDelay Then
 
                                             nothingToDo = True
@@ -262,7 +288,7 @@ Public Class clsCache
                                     Else
 
                                         timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-                                        If _VPvs(vpid)(vName).tsLong.Count > 0 And
+                                        If _VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).vpvCount And
                                            timeDiff <= updateDelay Then
 
                                             nothingToDo = True
@@ -294,7 +320,7 @@ Public Class clsCache
 
                                             timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCShort, Date.Now.ToUniversalTime)
 
-                                            If (_VPvs(vpid)(vName).tsShort.Count > 0) And
+                                            If (_VPvs(vpid)(vName).tsShort.Count = _VPvs(vpid)(vName).vpvCount) And
                                             (_VPvs(vpid)(vName).tsShort.Count >= _VPvs(vpid)(vName).tsLong.Count) And
                                             timeDiff <= updateDelay Then
 
@@ -307,7 +333,7 @@ Public Class clsCache
 
                                             timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
 
-                                            If (_VPvs(vpid)(vName).tsLong.Count > 0) And
+                                            If (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).vpvCount) And
                                             (_VPvs(vpid)(vName).tsLong.Count = _VPvs(vpid)(vName).tsShort.Count) And
                                             timeDiff <= updateDelay Then
 
@@ -335,7 +361,7 @@ Public Class clsCache
 
                                                 If Not longVersion Then
                                                     timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vpvar.variantName).timeCShort, Date.Now.ToUniversalTime)
-                                                    If (_VPvs(vpid)(vpvar.variantName).tsShort.Count > 0) And
+                                                    If (_VPvs(vpid)(vpvar.variantName).tsShort.Count = _VPvs(vpid)(vpvar.variantName).vpvCount) And
                                                         (_VPvs(vpid)(vpvar.variantName).tsShort.Count >= _VPvs(vpid)(vpvar.variantName).tsLong.Count) And
                                                          timeDiff <= updateDelay Then
 
@@ -348,7 +374,7 @@ Public Class clsCache
                                                 Else
 
                                                     timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-                                                    If (_VPvs(vpid)(vpvar.variantName).tsLong.Count > 0) And
+                                                    If (_VPvs(vpid)(vpvar.variantName).tsLong.Count = _VPvs(vpid)(vpvar.variantName).vpvCount) And
                                                         (_VPvs(vpid)(vpvar.variantName).tsLong.Count = _VPvs(vpid)(vpvar.variantName).tsShort.Count) And
                                                         timeDiff <= updateDelay Then
 
