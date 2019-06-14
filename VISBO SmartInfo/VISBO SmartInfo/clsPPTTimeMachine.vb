@@ -96,21 +96,28 @@ Public Class clsPPTTimeMachine
 
                 Dim pfName As String = smartSlideLists.getPfName(i)
 
-                Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName,
+                If pfName.Contains("_last") Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("The portfolio, named '" & pfName & "' is not saved in your database.")
+                    Else
+                        Call MsgBox("Das Portfolio '" & pfName & "' war nur ein temporäres Portfolio" & vbLf &
+                                    "Es ist nicht in der DB gespeichert ist.")
+                    End If
+                Else
+
+                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName,
                                                                                                                                         minTS, err,
                                                                                                                                         Date.MinValue.AddDays(1))
 
-                If _minmaxTimeStamps(0) > minTS Then
-                    _minmaxTimeStamps(0) = minTS.AddSeconds(1)
+                    If _minmaxTimeStamps(0) > minTS Then
+                        _minmaxTimeStamps(0) = minTS.AddSeconds(1)
+                    End If
+
+
                 End If
 
 
                 defaultSettingNecessary = False
-
-                '        End If
-
-                '    End If
-                'End If
 
             Next
         Else
