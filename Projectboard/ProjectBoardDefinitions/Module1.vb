@@ -4593,6 +4593,15 @@ Public Module Module1
                 End If
                 .Tags.Add(kennung, tmpStr)
 
+                ' hier kommt nochmal der vpid rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.vpID
+                kennung = "VPID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+
                 ' jetzt das Startdatum des Projektes bzw. der Phase
                 If Not IsNothing(cphase) Then
                     tmpStr = cphase.getStartDate.ToShortDateString
@@ -4806,6 +4815,7 @@ Public Module Module1
         'Dim vName As String = scinfo.hproj.variantName
         Dim pName As String = scinfo.pName
         Dim vName As String = scinfo.vName
+        Dim vpid As String = scinfo.vpid
 
         Dim chtObjName As String = ""
 
@@ -4878,6 +4888,13 @@ Public Module Module1
                             .Tags.Add("VNM", vName)
                         End If
 
+                        If Not IsNothing(vpid) Then
+                            If .Tags.Item("VPID").Length > 0 Then
+                                .Tags.Delete("VPID")
+                            End If
+                            .Tags.Add("VPID", vpid)
+                        End If
+
 
                         If .Tags.Item("Q1").Length > 0 Then
                             .Tags.Delete("Q1")
@@ -4944,6 +4961,7 @@ Public Module Module1
         Try
             Dim pName As String = ""
             Dim vName As String = ""
+            Dim vpid As String = ""
 
             If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
                 ' hier handelt es sich um ein Portfolio
@@ -4956,7 +4974,7 @@ Public Module Module1
 
                     pName = hproj.name
                     vName = hproj.variantName
-
+                    vpid = hproj.vpID
 
                     ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
                     If bigType = ptReportBigTypes.tables Then
@@ -5017,6 +5035,13 @@ Public Module Module1
                             .Tags.Delete("VNM")
                         End If
                         .Tags.Add("VNM", vName)
+                    End If
+
+                    If Not IsNothing(vName) Then
+                        If .Tags.Item("VPID").Length > 0 Then
+                            .Tags.Delete("VPID")
+                        End If
+                        .Tags.Add("VPID", vName)
                     End If
 
                     If Not IsNothing(qualifier) Then
@@ -5287,7 +5312,7 @@ Public Module Module1
     ''' <param name="nameIDS"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape,
-                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String,
+                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, ByVal vpid As String,
                                         ByVal q1 As String, ByVal q2 As String,
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
                                         ByVal nameIDS As Collection)
@@ -5324,6 +5349,13 @@ Public Module Module1
                             .Tags.Delete("VNM")
                         End If
                         .Tags.Add("VNM", vnm)
+                    End If
+
+                    If Not IsNothing(vpid) Then
+                        If .Tags.Item("VPID").Length > 0 Then
+                            .Tags.Delete("VPID")
+                        End If
+                        .Tags.Add("VPID", vpid)
                     End If
 
                     If Not IsNothing(q1) Then
@@ -5438,7 +5470,7 @@ Public Module Module1
         ' jetzt wird SmartTableInfo gesetzt 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projectType, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
                                   toDoCollection)
 
@@ -5674,7 +5706,7 @@ Public Module Module1
         ' jetzt wird die SmartTableInfo gesetzt 
         Dim emptyCollection As New Collection
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projectType, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
                                   emptyCollection)
 

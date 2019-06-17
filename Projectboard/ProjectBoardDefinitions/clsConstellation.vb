@@ -1504,7 +1504,7 @@
         _lastCustomList = Nothing
         _sortType = skey
 
-        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
 
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)

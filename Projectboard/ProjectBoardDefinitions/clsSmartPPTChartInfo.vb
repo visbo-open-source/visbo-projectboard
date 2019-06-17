@@ -54,6 +54,25 @@
             End If
         End Set
     End Property
+    Private _vpid As String
+    ''' <summary>
+    ''' wenn ein hproj bereits angegeben ist, nimmt er immer den Namen des hproj
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property vpid As String
+        Get
+            If Not IsNothing(_hproj) Then
+                vpid = _hproj.vpID
+            Else
+                vpid = _vpid
+            End If
+        End Get
+        Set(value As String)
+            If IsNothing(_hproj) Then
+                _vpid = value
+            End If
+        End Set
+    End Property
 
 
     Private _prPF As ptPRPFType
@@ -226,6 +245,10 @@
                             _vName = .Tags.Item("VNM")
                         End If
 
+                        If .Tags.Item("VPID").Length > 0 Then
+                            _vpid = .Tags.Item("VPID")
+                        End If
+
                         If .Tags.Item("PRPF").Length > 0 Then
                             _prPF = CType(.Tags.Item("PRPF"), ptPRPFType)
                         End If
@@ -247,6 +270,7 @@
     Public Sub New()
         _pName = ""
         _vName = ""
+        _vpid = Nothing '???? neu 14.06.2019
         _zeitRaumLeft = StartofCalendar
         _zeitRaumRight = StartofCalendar
         _prPF = ptPRPFType.project
