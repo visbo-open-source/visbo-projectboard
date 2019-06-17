@@ -9482,7 +9482,7 @@ Public Module Projekte
     ''' roleCollection = Nothing: über alles
     ''' Auswahl 1: Überlastung
     ''' Auswahl 2: Unterauslastung
-    ''' RoleCollection enthält Rollen: dann nur die und deren Kinder  
+    ''' RoleCollection enthält Rollen: dann nur deren Kinder  
     ''' </summary>
     ''' <param name="roleCollection"></param>
     ''' <param name="auswahl"></param>
@@ -9499,7 +9499,14 @@ Public Module Projekte
         Else
 
             For Each tmpRoleName As String In roleCollection
+                Dim teamID As Integer = -1
+                Dim tmpRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(tmpRoleName, teamID).UID
+
                 Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
+                ' herausnehmen der Rolle, mit der aufgerufen wurde ..
+                If tmpRoleIds.ContainsKey(tmpRoleID) Then
+                    tmpRoleIds.Remove(tmpRoleID)
+                End If
 
                 For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
                     If Not roleIDs.ContainsKey(srKvP.Key) Then
