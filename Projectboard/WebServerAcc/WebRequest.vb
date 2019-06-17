@@ -1754,13 +1754,13 @@ Public Class Request
     '''  Das Ergebnis dieser Funktion ist eine Liste (String, clsConstellation) 
     ''' </summary>
     ''' <returns></returns>
-    Public Function retrieveConstellationsFromDB(ByRef err As clsErrorCodeMsg) As clsConstellations
+    Public Function retrieveConstellationsFromDB(ByVal storedAtOrBefore As Date, ByRef err As clsErrorCodeMsg) As clsConstellations
 
         Dim result As New clsConstellations
         Try
 
             Dim intermediate As New SortedList(Of String, clsVP)
-            Dim timestamp As Date = Date.Now.ToUniversalTime
+            Dim timestamp As Date = storedAtOrBefore.ToUniversalTime
             Dim c As New clsConstellation
 
             intermediate = GETallVP(aktVCid, err, ptPRPFType.portfolio)
