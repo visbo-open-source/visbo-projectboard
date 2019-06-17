@@ -60,9 +60,13 @@ Public Class clsProjekte
             Dim tmpResult As Date = Date.Now
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                Dim currentUntilDate As Date = kvp.Value.actualDataUntil
 
-                If kvp.Value.actualDataUntil < tmpResult Then
-                    tmpResult = kvp.Value.actualDataUntil
+                If currentUntilDate < tmpResult Then
+                    ' nur dann machen, wenn das Projekt nicht gestoppt ist und nicht bereits beendet 
+                    If DateDiff(DateInterval.Month, currentUntilDate, kvp.Value.endeDate) > 0 Then
+                        tmpResult = kvp.Value.actualDataUntil
+                    End If
                 End If
 
             Next
@@ -2112,7 +2116,8 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection) As Double()
+    Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection,
+                                                 Optional ByVal onlyIntern As Boolean = False) As Double()
 
         Get
             Dim kapaValues() As Double
@@ -2180,13 +2185,21 @@ Public Class clsProjekte
                         End If
 
                     Else
+                        Dim myvalue As Double = 1.0
+                        If teamID > 0 Then
+                            myvalue = curRole.getTeamIDs.Item(teamID)
+                        End If
 
                         If Not realCollection.ContainsKey(curRole.UID) Then
                             ' eine Basis Rolle wird immer zu 100% genommen
-                            realCollection.Add(curRole.UID, 1.0)
+                            realCollection.Add(curRole.UID, myvalue)
                         Else
                             ' in diesem Fall wird die volle Kapazität der Basis-Rolle berechnet
-                            realCollection(curRole.UID) = 1.0
+                            Dim newValue As Double = realCollection(curRole.UID) + myvalue
+                            If newValue > 1.0 Then
+                                newValue = 1.0
+                            End If
+                            realCollection(curRole.UID) = newValue
                         End If
 
                     End If
@@ -2208,22 +2221,25 @@ Public Class clsProjekte
                 Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
                 If Not IsNothing(curRole) Then
 
-                    ' in kvp.value steht jetzt der Prozentsatz, mit dem die Kapa der Rolle berücksichtig werden soll 
-                    For i = showRangeLeft To showRangeRight
+                    ' wenn onlyIntern gesucht wird, dann werden nur die Rollen betrachtet, die interne sind 
+                    If Not onlyIntern Or Not curRole.isExternRole Then
+                        ' in kvp.value steht jetzt der Prozentsatz, mit dem die Kapa der Rolle berücksichtig werden soll 
+                        For i = showRangeLeft To showRangeRight
 
-                        tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
+                            tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
 
-                        If tmpValues(i - showRangeLeft) < 0 Then
-                            tmpValues(i - showRangeLeft) = 0
-                        End If
-                    Next
+                            If tmpValues(i - showRangeLeft) < 0 Then
+                                tmpValues(i - showRangeLeft) = 0
+                            End If
+                        Next
 
 
-                    For m = 0 To zeitraum
-                        ' Änderung 27.7 Holen der Kapa Werte , jetzt aufgeschlüsselt nach 
-                        'kapaValues(m) = kapaValues(m) + hkapa
-                        kapaValues(m) = kapaValues(m) + tmpValues(m)
-                    Next m
+                        For m = 0 To zeitraum
+                            ' Änderung 27.7 Holen der Kapa Werte , jetzt aufgeschlüsselt nach 
+                            'kapaValues(m) = kapaValues(m) + hkapa
+                            kapaValues(m) = kapaValues(m) + tmpValues(m)
+                        Next m
+                    End If
 
                 End If
 
