@@ -497,11 +497,15 @@ Public Class ucSearch
             Try
                 selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
 
-                For Each tmpshape As PowerPoint.Shape In selectedPlanShapes
-                    If isProjectCardInvisible(tmpshape) Then
-                        tmpshape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                If Not IsNothing(selectedPlanShapes) Then
+                    If selectedPlanShapes.Count > 0 Then
+                        For Each tmpshape As PowerPoint.Shape In selectedPlanShapes
+                            If isProjectCardInvisible(tmpshape) Then
+                                tmpshape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                            End If
+                        Next
                     End If
-                Next
+                End If
 
                 ' wird ganz am Ende gemacht ...
                 'selectedPlanShapes.Select()
