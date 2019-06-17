@@ -6629,8 +6629,8 @@ Public Module awinDiagrams
             End If
 
         ElseIf scInfo.prPF = ptPRPFType.portfolio Then
-            pstart = showRangeLeft
-            plen = showRangeRight - showRangeLeft + 1
+            pstart = getColumnOfDate(scInfo.zeitRaumLeft)
+            plen = getColumnOfDate(scInfo.zeitRaumRight) - getColumnOfDate(scInfo.zeitRaumLeft) + 1
         End If
 
 
@@ -7017,7 +7017,7 @@ Public Module awinDiagrams
             If scInfo.prPF = ptPRPFType.project Then
                 actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
             Else
-                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - showRangeLeft
+                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - pstart
             End If
 
             ' die Prognose Daten bereinigen
