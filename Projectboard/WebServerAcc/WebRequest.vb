@@ -3924,6 +3924,7 @@ Public Class Request
     ''' <param name="refNext">refNext = true: es wird die erste Version nach dem timestamp zurückgegeben</param>
     ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
+    ''' </summary>
     Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
                                Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
