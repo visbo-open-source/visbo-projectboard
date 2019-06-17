@@ -28,6 +28,10 @@ Public Class frmHierarchySelection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
 
+    ' tk 19.5.19 wird für Allianz Team / Hierarchie Prototypen benötigt ...
+    Private showTeamsOnly As Boolean = True
+
+
     ' ur: 23.04.2019: hryStufen wurde entfernt, da der Wert immer auf 50 festgelegt wurde.
     Private hryStufenValue As Integer = 50
 
@@ -1757,6 +1761,7 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
+
         'Dim childRole As clsRollenDefinition
 
         node = e.Node
@@ -1781,7 +1786,19 @@ Public Class frmHierarchySelection
                     Dim nodelist As New SortedList(Of Integer, Double)
                     Try
                         Dim teamID As Integer
-                        nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
+                        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
+
+                        If showTeamsOnly And Not curRole.isTeam And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                            Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
+                            For Each vcID As Integer In virtualChilds
+                                If Not nodelist.ContainsKey(vcID) Then
+                                    nodelist.Add(vcID, 1.0)
+                                End If
+                            Next
+                        Else
+                            nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
+                        End If
+
                         anzChilds = nodelist.Count
                     Catch ex As Exception
                         anzChilds = 0

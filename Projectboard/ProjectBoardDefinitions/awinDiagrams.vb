@@ -145,7 +145,7 @@ Public Module awinDiagrams
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
-        'Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
+        Dim kdatenreiheIntern() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim msdatenreihe(,) As Double
         Dim prcName As String = ""
         Dim startdate As Date
@@ -204,7 +204,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
-        'ReDim kdatenreihePlus(bis - von)
+        ReDim kdatenreiheIntern(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
         ReDim VarValues(bis - von)
         ReDim msdatenreihe(3, bis - von)
@@ -309,7 +309,7 @@ Public Module awinDiagrams
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
-            'kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
+            kdatenreiheIntern = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -791,28 +791,35 @@ Public Module awinDiagrams
 
                     '''' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
                     '''' ansonsten werden nur die internen Kapazitäten angezeigt 
-                    ''''If prcTyp = DiagrammTypen(1) Then
-                    ''''    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                    ''''        ' es gibt geplante externe Ressourcen ... 
-                    ''''        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    ''''            .HasDataLabels = False
-                    ''''            '.name = "Kapazität incl. Externe"
-                    ''''            .Name = repMessages.getmsg(118)
+                    If prcTyp = DiagrammTypen(1) Then
 
-                    ''''            .Values = kdatenreihePlus
-                    ''''            .XValues = Xdatenreihe
-                    ''''            .ChartType = Excel.XlChartType.xlLine
-                    ''''            With .Format.Line
-                    ''''                .DashStyle = MsoLineDashStyle.msoLineSysDot
-                    ''''                .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                    ''''                .Weight = 2
-                    ''''            End With
-                    ''''            nr_pts = CType(.Points, Excel.Points).Count
-                    ''''        End With
-                    ''''    End If
-                    ''''End If
+                        Dim tmpSum As Double = kdatenreiheIntern.Sum
+                        If kdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                            ' es gibt geplante externe Ressourcen ... 
+                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                                .HasDataLabels = False
+                                '.name = "Kapazität incl. Externe"
+                                If awinSettings.englishLanguage Then
+                                    .Name = "intern"
+                                Else
+                                    .Name = "intern"
+                                End If
+                                '.Name = repMessages.getmsg(118)
 
-                    If prcTyp = DiagrammTypen(1) Or
+                                .Values = kdatenreiheIntern
+                                .XValues = Xdatenreihe
+                                .ChartType = Excel.XlChartType.xlLine
+                                With .Format.Line
+                                    .DashStyle = MsoLineDashStyle.msoLineSysDot
+                                    .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                                    .Weight = 2
+                                End With
+                                nr_pts = CType(.Points, Excel.Points).Count
+                            End With
+                        End If
+                    End If
+
+                        If prcTyp = DiagrammTypen(1) Or
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -1061,7 +1068,7 @@ Public Module awinDiagrams
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
 
         Dim kdatenreihe() As Double
-        'Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
+        Dim kdatenreiheIntern() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim prcName As String = ""
 
         Dim breadcrumb As String = ""
@@ -1133,7 +1140,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
-        'ReDim kdatenreihePlus(bis - von)
+        ReDim kdatenreiheIntern(bis - von)
         ReDim seldatenreihe(bis - von)
         ReDim tmpdatenreihe(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
@@ -1245,7 +1252,7 @@ Public Module awinDiagrams
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
-            'kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
+            kdatenreiheIntern = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -1564,7 +1571,7 @@ Public Module awinDiagrams
 
                             End If
                         End If
-                        
+
                         Dim legendName As String = ""
                         If awinSettings.englishLanguage Then
                             legendName = "Sum over all projects"
@@ -1601,7 +1608,7 @@ Public Module awinDiagrams
                             .Values = datenreihe
                             .XValues = Xdatenreihe
                             If myCollection.Count = 1 Then
-                                If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Or _
+                                If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Or
                                     (selectedProjekte.Count > 0 And awinSettings.showValuesOfSelected) Then
                                     .ChartType = Excel.XlChartType.xlColumnStacked
                                 Else
@@ -1639,7 +1646,7 @@ Public Module awinDiagrams
 
                 If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                     For i = 0 To bis - von
-                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) +
                                                     edatenreihe(i)
                     Next i
                 Else
@@ -1672,32 +1679,38 @@ Public Module awinDiagrams
             ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
             ' ansonsten werden nur die internen Kapazitäten angezeigt 
             ' hier werden die externen mitgezeichnet ....
-            'If prcTyp = DiagrammTypen(1) Then
-            '    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-            '        'es gibt geplante externe Ressourcen ... 
-            '        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-            '            .HasDataLabels = False
-            '            '.name = "Kapazität incl. Externe"
-            '            .Name = repMessages.getmsg(118)
+            If prcTyp = DiagrammTypen(1) Then
+                Dim tmpSum As Double = kdatenreiheIntern.Sum
+                If kdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                    'es gibt  externe Ressourcen ... 
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .HasDataLabels = False
+                        '.name = "Kapazität incl. Externe"
+                        If awinSettings.englishLanguage Then
+                            .Name = "intern"
+                        Else
+                            .Name = "intern"
+                        End If
+                        '.Name = repMessages.getmsg(118)
 
-            '            .Values = kdatenreihePlus
-            '            .XValues = Xdatenreihe
-            '            .ChartType = Excel.XlChartType.xlLine
+                        .Values = kdatenreiheIntern
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlLine
 
-            '            'tk 28.3.17 soll bleiben wie es urspünglich war 
-            '            With .Format.Line
-            '                .DashStyle = MsoLineDashStyle.msoLineSysDot
-            '                .ForeColor.RGB = XlRgbColor.rgbFuchsia
-            '                .Weight = 2
-            '            End With
+                        'tk 28.3.17 soll bleiben wie es urspünglich war 
+                        With .Format.Line
+                            .DashStyle = MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                            .Weight = 2
+                        End With
 
-            '            'nr_pts = CType(.Points, Excel.Points).Count
-            '        End With
-            '    End If
-            'End If
+                        'nr_pts = CType(.Points, Excel.Points).Count
+                    End With
+                End If
+            End If
 
-            ' hier werde nur die internen gezeichnet ...
-            If prcTyp = DiagrammTypen(1) Or _
+                ' hier werde nur die internen gezeichnet ...
+                If prcTyp = DiagrammTypen(1) Or _
                    (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                    (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -6310,8 +6323,10 @@ Public Module awinDiagrams
         Dim Xdatenreihe() As String = Nothing
         Dim tdatenreihe() As Double = Nothing
         Dim istDatenReihe() As Double = Nothing
+
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
+        Dim internKapaDatenreihe() As Double = Nothing
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double
 
@@ -6340,7 +6355,7 @@ Public Module awinDiagrams
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, sCInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6450,6 +6465,28 @@ Public Module awinDiagrams
 
 
                 End With
+
+                Dim tmpSum As Double = internKapaDatenreihe.Sum
+                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                    ' es gibt geplante externe Ressourcen ... 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        .HasDataLabels = False
+                        '.name = "Kapazität incl. Externe"
+                        .Name = bestimmeLegendNameIPB("CI")
+                        '.Name = repMessages.getmsg(118)
+
+                        .Values = internKapaDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                            .Weight = 2
+                        End With
+
+                    End With
+                End If
+
             Else
                 If Not IsNothing(sCInfo.vglProj) Then
 
@@ -6674,10 +6711,11 @@ Public Module awinDiagrams
     ''' <param name="vdatenreihe"></param>
     ''' <param name="istDatenReihe"></param>
     ''' <param name="prognoseDatenReihe"></param>
+    ''' <param name="internKapaDatenreihe"></param>
     ''' <param name="errMsg"></param>
     Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal scInfo As clsSmartPPTChartInfo,
                                         ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
-                                        ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double,
+                                        ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double, ByRef internKapaDatenreihe() As Double,
                                         ByRef errMsg As String)
 
 
@@ -6685,6 +6723,7 @@ Public Module awinDiagrams
         ReDim Xdatenreihe(plen - 1)
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
 
         ReDim tdatenreihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
@@ -6800,6 +6839,9 @@ Public Module awinDiagrams
 
                     ' jetzt muss noch die Vdaten-Reihe, also die Kapas bestimmt werden 
                     tmpVdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+
+                    ' die internen Kapazitäten 
+                    internKapaDatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
 
                 End If
 
@@ -7098,6 +7140,14 @@ Public Module awinDiagrams
                     tmpResult = "Capacity"
                 Else
                     tmpResult = "Kapazität"
+                End If
+
+            Case "CI"
+                ' interne Capacity 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "intern"
+                Else
+                    tmpResult = "intern"
                 End If
             Case Else
 
