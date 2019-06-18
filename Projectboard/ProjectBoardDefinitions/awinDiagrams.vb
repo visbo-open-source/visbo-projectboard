@@ -7047,7 +7047,8 @@ Public Module awinDiagrams
         Else
             ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception
             If ShowProjekte.actualDataUntil >= StartofCalendar Then
-                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeLeft
+                Dim adu As Integer = getColumnOfDate(ShowProjekte.actualDataUntil)
+                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= pstart
             End If
 
         End If

@@ -3028,6 +3028,11 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            ' showRangeLeft und showRangeRight müssen gesetzt werden, damit bei der Bestimmung der Kapas und
+            ' Plandaten der Zeitraum bekannt ist.
+            showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+            showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+
             If scInfo.pName <> "" Then
 
                 If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
@@ -4259,7 +4264,7 @@ Module Module1
         xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        xlApp.Visible = smartChartsAreEditable
+        'xlApp.Visible = smartChartsAreEditable
         'xlApp.ScreenUpdating = False
         'xlApp.DisplayFormulaBar = False
 
