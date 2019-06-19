@@ -447,6 +447,7 @@ Public Module testModule
 
 
         ' jetzt gibt es die pptAppFromX ..
+
         ' das ist hier nicht erlaubt 
         ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
 
@@ -5854,7 +5855,13 @@ Public Module testModule
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, translateToRoleNames(selectedRoles))
 
+                            Dim vglName As String = ""
+                            If myCollection.Count > 0 Then
+                                vglName = myCollection.Item(1)
+                            End If
+
                             ' jetzt muss die Liste an Bottleneck Rollen aufgebaut werden 
+                            ' diese Liste soll das Elternteil selber nicht enthalten ... 
                             Dim sortierteListe As SortedList(Of Double, String) = getSortedListOfCapaUtilization(myCollection, 1)
 
                             ' in qualifier2 sollte jetzt die Nummer stehen ..
@@ -5877,47 +5884,86 @@ Public Module testModule
                                 myCollection.Add(aktRoleName, aktRoleName)
                             End If
 
-                            If myCollection.Count > 0 Then
+                            If aktRoleName <> "" And aktRoleName <> vglName Then
 
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                .TextFrame2.TextRange.Text = ""
 
-                                htop = 100
-                                hleft = 100
-                                hheight = chartHeight  ' height of all charts
-                                hwidth = chartWidth   ' width of all charts
-                                obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
+                                ' tk 14.6.19 neues Chart-Creation - wie in Rolle genutzt - 
+                                Dim smartChartInfo As New clsSmartPPTChartInfo
+                                With smartChartInfo
 
-                                reportObj = obj
-                                ' jetzt wird die Größe der Überschrift neu bestimmt ...
-                                'With reportObj
-                                '    .Chart.ChartTitle.Font.Size = pptSize
-                                'End With
+                                    If showRangeLeft > 0 Then
+                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    End If
+                                    If showRangeRight > 0 Then
+                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                    End If
 
-                                ''reportObj.Copy()
-                                ''newShapeRange = pptSlide.Shapes.Paste
-                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+                                    .einheit = PTEinheiten.personentage
+                                    .pName = currentConstellationName
+                                    .vName = ""
+                                    .prPF = ptPRPFType.portfolio
+                                    '.q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                    .q2 = aktRoleName
+                                    .bigType = ptReportBigTypes.charts
 
-                                With newShapeRange.Item(1)
-                                    .Top = CSng(top + 0.02 * height)
-                                    .Left = CSng(left + 0.02 * width)
-                                    .Width = CSng(width * 0.96)
-                                    .Height = CSng(height * 0.96)
+                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                    .hproj = Nothing
+                                    .vglProj = Nothing
+
+
                                 End With
 
-                                'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+                                If smartChartInfo.q2 <> "" Then
+                                    Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                    appInstance.ScreenUpdating = False
 
-                                Try
-                                    reportObj.Delete()
-                                Catch ex As Exception
+                                    Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
 
-                                End Try
+                                    appInstance.ScreenUpdating = formerSU
+                                End If
+
+
+                                ' Ende tk 14.6.19 
+
+                                ' alter Code bis 14.6.19
+                                'pptSize = .TextFrame2.TextRange.Font.Size
+                                '.TextFrame2.TextRange.Text = " "
+
+                                'htop = 100
+                                'hleft = 100
+                                'hheight = chartHeight  ' height of all charts
+                                'hwidth = chartWidth   ' width of all charts
+                                'obj = Nothing
+                                'Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True, pptSize)
+
+                                'reportObj = obj
+                                '' jetzt wird die Größe der Überschrift neu bestimmt ...
+                                ''With reportObj
+                                ''    .Chart.ChartTitle.Font.Size = pptSize
+                                ''End With
+
+                                'newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                'With newShapeRange.Item(1)
+                                '    .Top = CSng(top + 0.02 * height)
+                                '    .Left = CSng(left + 0.02 * width)
+                                '    .Width = CSng(width * 0.96)
+                                '    .Height = CSng(height * 0.96)
+                                'End With
+
+                                ''Call awinDeleteChart(reportObj)
+                                '' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                'Try
+                                '    reportObj.Delete()
+                                'Catch ex As Exception
+
+                                'End Try
 
                             Else
                                 '.TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
-                                .TextFrame2.TextRange.Text = "keine weiteren Engpässe für " & qualifier
+                                .TextFrame2.TextRange.Text = "keine weiteren Engpässe für " & vglName
 
                             End If
 
@@ -10235,6 +10281,13 @@ Public Module testModule
                     vergleichstyp = PThis.ersterStand
                 ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
                     vergleichstyp = PThis.letzterStand
+                    ' der letzte Stand soll immer der letzte Tag des Vormonats sein ... 
+                    vglDate = Date.Now.AddDays(-1 * Date.Now.Day).Date.AddHours(23).AddMinutes(59)
+                ElseIf qualifier.Trim = "B1" Then
+                    vergleichstyp = PThis.beauftragung
+                    vglDate = Date.Now
+                ElseIf qualifier.Trim = "BL" Or qualifier.Trim = "BN" Then
+                    vergleichstyp = PThis.letzteBeauftragung
                     vglDate = Date.Now
                 Else
                     istVglMitKonkretemDatum = True
@@ -10364,7 +10417,7 @@ Public Module testModule
                     End If
 
 
-
+                    ' tk 10.6.19 es wird mit den pfv's verglichen oder mit dem letzten Stand 
                     projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
 
@@ -10630,11 +10683,12 @@ Public Module testModule
 
                         ' TimeStamp des Vergleichsprojektes
                         spalte = 12 - colDelta
+                        Dim timestamp As Date = hproj.timeStamp
                         If Not IsNothing(vproj) Then
-                            Dim timeStamp As Date = vproj.timeStamp
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                            Dim vtimeStamp As Date = vproj.timeStamp
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timestamp.ToShortDateString & "/" & vtimeStamp.ToShortDateString
                         Else
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timestamp.ToShortDateString & "/" & "n.v."
                         End If
 
                     End With
