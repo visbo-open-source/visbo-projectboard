@@ -891,7 +891,7 @@ Public Module Module1
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
-    Public StartofCalendar As Date = #1/1/2000#
+    Public StartofCalendar As Date = #1/1/2015#
 
     Public weightStrategicFit As Double
 

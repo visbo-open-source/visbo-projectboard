@@ -678,7 +678,7 @@ Public Module awinGeneralModules
         If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             ' alle Konstellationen laden 
-            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
 
             ' hier werden jetzt auch alle Abhängigkeiten geladen 
             allDependencies = CType(databaseAcc, DBAccLayer.Request).retrieveDependenciesFromDB()
@@ -2732,8 +2732,6 @@ Public Module awinGeneralModules
         'Dim allProjectsList As SortedList(Of String, clsProjekt)
         Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
         Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
-        Dim storedHeute As Date = Now
-        Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
 
@@ -2742,7 +2740,7 @@ Public Module awinGeneralModules
 
         If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
 
             ' Showprojekte leer machen 
             Try
@@ -6667,7 +6665,7 @@ Public Module awinGeneralModules
                     Dim hproj As New clsProjekt
                     Dim constellations As New clsConstellations
                     '' '????ur
-                    constellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
+                    constellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(timestamp, err)
                     If Not IsNothing(constellations) Then
 
                         Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
@@ -7682,7 +7680,7 @@ Public Module awinGeneralModules
                 If everythingElse Then
                     ' jetzt werden alle definierten Constellations weggeschrieben
                     Dim errMsg As New clsErrorCodeMsg
-                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(errMsg)
+                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
 
                     For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
