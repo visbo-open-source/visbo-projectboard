@@ -1176,21 +1176,11 @@ Module Module1
         importantShapes(ptImportantShapes.version) = Nothing
 
         ' jetzt todayLine suchen ...
-        'Try
-        '    importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-        'Catch ex As Exception
-        '    importantShapes(ptImportantShapes.todayline) = Nothing
-        'End Try
-        'ur: 2019-05-29: TryCatch vermeiden
-        For i = 1 To currentSlide.Shapes.Count
-            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-                importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-                Exit For
-            Else
-                importantShapes(ptImportantShapes.todayline) = Nothing
-            End If
-            i = i + 1
-        Next
+        Try
+            importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        Catch ex As Exception
+            importantShapes(ptImportantShapes.todayline) = Nothing
+        End Try
 
 
         With currentSlide
@@ -3022,6 +3012,7 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+
             If scInfo.pName <> "" Then
 
                 Dim continueOperation As Boolean = False
@@ -3045,10 +3036,10 @@ Module Module1
                             Next
 
                             '' besetzte ggf den Zeitraum
-                            'If scInfo.hasValidZeitraum Then
-                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            'End If
+                            If scInfo.hasValidZeitraum Then
+                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            End If
 
                             continueOperation = Not IsNothing(ShowProjekte)
                         End If
@@ -3069,10 +3060,10 @@ Module Module1
                             Next
 
                             '' besetzte ggf den Zeitraum
-                            'If scInfo.hasValidZeitraum Then
-                            '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                            '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                            'End If
+                            If scInfo.hasValidZeitraum Then
+                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                            End If
 
                             continueOperation = Not IsNothing(ShowProjekte)
                         Catch ex As Exception
@@ -6200,24 +6191,15 @@ Module Module1
         Next
 
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
-        'Try
-        'Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-        ' ur:2019-05-29: TryCatch vermeiden
-        Dim todayLineShape As PowerPoint.Shape
-        todayLineShape = Nothing
-        For i = 1 To currentSlide.Shapes.Count
-            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-                todayLineShape = currentSlide.Shapes.Item("todayLine")
-                Exit For
-            End If
-            i = i + 1
-        Next
-        If Not IsNothing(todayLineShape) Then
-            Call sendTodayLinetoNewPosition(todayLineShape)
-        End If
-        'Catch ex As Exception
+        Try
+            Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
 
-        'End Try
+            If Not IsNothing(todayLineShape) Then
+                Call sendTodayLinetoNewPosition(todayLineShape)
+            End If
+        Catch ex As Exception
+
+        End Try
 
         ' jetzt müssen die Shape-Namen neu gesetzt werden, wenn es sich um eine Variante handelte 
         If showOtherVariant Then
