@@ -259,8 +259,9 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
 
-
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
 
             Dim tmpDate As Date = Date.MinValue
             Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
@@ -271,7 +272,7 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Activate()
+        pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -289,7 +290,9 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
 
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
             Dim tmpDate As Date = Date.MinValue
             Call updateSelectedSlide(ptNavigationButtons.nachher, tmpDate)
 
@@ -336,6 +339,7 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -351,7 +355,10 @@ Public Class Ribbon1
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
+
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
             Dim tmpDate As Date = Date.MinValue
             Call updateSelectedSlide(ptNavigationButtons.vorher, tmpDate)
 
@@ -396,6 +403,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        pptAPP.Presentations(presName).Windows(1).Activate()
+
         'ur:2019-06-04
         If awinSettings.visboDebug Then
             Call MsgBox("ende btnFastBack")
@@ -410,7 +419,10 @@ Public Class Ribbon1
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
+
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
             Dim tmpDate As Date = Date.MinValue
 
             Call updateSelectedSlide(ptNavigationButtons.erster, tmpDate)
@@ -455,6 +467,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
+        pptAPP.Presentations(presName).Windows(1).Activate()
+
         'ur:2019-06-04
         If awinSettings.visboDebug Then
             Call MsgBox("ende btnStart")
@@ -462,7 +476,10 @@ Public Class Ribbon1
 
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
+
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
             'ur: 2019-06-04
             Dim control As IRibbonControl = e.Control
 
@@ -524,6 +541,8 @@ Public Class Ribbon1
         Catch ex As Exception
             Call MsgBox(ex.StackTrace)
         End Try
+
+        pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -607,7 +626,10 @@ Public Class Ribbon1
     Private Sub btnDate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnDate.Click
 
         Dim userResult As Windows.Forms.DialogResult
+
+        Dim presName As String = ""
         Try
+            presName = pptAPP.ActivePresentation.Name
             Try
                 ' das Formular für Kalender aufschalten 
                 calendarFrm = New frmCalendar
@@ -677,12 +699,21 @@ Public Class Ribbon1
         Catch ex As Exception
             Call MsgBox(ex.StackTrace)
         End Try
+
+        pptAPP.Presentations(presName).Windows(1).Activate()
+
+        'ur:2019-06-04
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnDate")
+        End If
     End Sub
 
 
     Private Sub btnToggle_Click(sender As Object, e As RibbonControlEventArgs) Handles btnToggle.Click
-        Try
 
+        Dim presName As String = ""
+        Try
+            presName = pptAPP.ActivePresentation.Name
 
             Dim tmpDate As Date = Date.MinValue
             Call updateSelectedSlide(ptNavigationButtons.previous, tmpDate)
@@ -727,6 +758,13 @@ Public Class Ribbon1
         Catch ex As Exception
             Call MsgBox(ex.StackTrace)
         End Try
+
+        pptAPP.Presentations(presName).Windows(1).Activate()
+
+        'ur:2019-06-04
+        If awinSettings.visboDebug Then
+            Call MsgBox("ende btnToggle")
+        End If
     End Sub
 End Class
 

@@ -7066,7 +7066,6 @@ Public Module awinDiagrams
             ' die Prognose Daten bereinigen
             ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
 
-
             If scInfo.chartTyp = PTChartTypen.CurveCumul Then
                 For ix As Integer = 0 To actualdataIndex - 1
                     prognoseDatenReihe(ix) = 0
