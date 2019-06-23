@@ -731,17 +731,17 @@ Module Module1
                 Dim msgtxt As String = "there might be a newer Version" & vbLf & "than " & currentTimestamp.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
 
 
-                Dim updateFrm As New frmUpdateInfo
-                With updateFrm
-                    .updateMsg.Text = msgtxt
-                    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+                'Dim updateFrm As New frmUpdateInfo
+                'With updateFrm
+                '    .updateMsg.Text = msgtxt
+                '    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
 
-                    If diagResult = Windows.Forms.DialogResult.OK Then
-                        Dim tmpDate As Date = Date.MinValue
-                        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
+                '    If diagResult = Windows.Forms.DialogResult.OK Then
+                '        Dim tmpDate As Date = Date.MinValue
+                '        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
-                    End If
-                End With
+                '    End If
+                'End With
 
             Else
                 ' es wird jetzt gleich aus der Presi ausgelesen 
@@ -819,18 +819,26 @@ Module Module1
         If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
             ' Vorbesetzung
             sld = Pres.Slides.Item(1)
-            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            If isVisboSlide(sld) Then
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            End If
 
             For i = 2 To Pres.Slides.Count
 
                 beforeSlideTS = activeSlideTS
                 sld = Pres.Slides.Item(i)
-                activeSlideTS = getCurrentTimeStampFromSlide(sld)
 
-                If activeSlideTS <> beforeSlideTS Then
-                    canBeSaved = False
-                    Exit For
+                If isVisboSlide(sld) Then
+
+                    activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                    If activeSlideTS <> beforeSlideTS Then
+                        canBeSaved = False
+                        Exit For
+                    End If
+
                 End If
+
             Next
 
             If beforeSlideTS > Date.MinValue And Not canBeSaved Then
@@ -3028,6 +3036,7 @@ Module Module1
 
                     If Not scInfo.pName.Contains("_last") Then
 
+
                         If currentConstellationName = scInfo.pName Then
 
                             If ShowProjekte.Count <> 0 Then
@@ -3050,6 +3059,7 @@ Module Module1
                                 For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
+
 
                                 continueOperation = Not IsNothing(ShowProjekte)
                             End If
@@ -3075,16 +3085,20 @@ Module Module1
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
 
+
                                 continueOperation = Not IsNothing(ShowProjekte)
+
                             Catch ex As Exception
                                 Call MsgBox("Chart kann nicht aktualisiert werden ..")
                             End Try
                         End If
 
                     Else
-                        Call MsgBox("Portfolio Name nicht bekannt - Chart kann nicht aktualisiert werden" & vbLf &
-                                    scInfo.pName)
-                        continueOperation = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Portfolio named: " & scInfo.pName & " cannot be updated")
+                        Else
+                            Call MsgBox("Das Portfolio " & scInfo.pName & " kann nicht aktualisiert werden")
+                        End If
                     End If
 
 
@@ -3121,7 +3135,7 @@ Module Module1
                         Try
 
                             If (scInfo.chartTyp = PTChartTypen.Balken) Or
-                            (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
+                                (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
 
 
                                 If scInfo.prPF = ptPRPFType.project Then
@@ -3193,16 +3207,13 @@ Module Module1
                         Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
                     End Try
 
+
                 End If
 
 
+            End If        'scInfo.pName <> ""
 
-
-            End If    'scInfo.pName <> ""
-
-
-        End If
-
+        End If            ' hasChart
 
 
     End Sub
@@ -4258,7 +4269,7 @@ Module Module1
         xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        xlApp.Visible = smartChartsAreEditable
+        'xlApp.Visible = smartChartsAreEditable
         'xlApp.ScreenUpdating = False
         'xlApp.DisplayFormulaBar = False
 
@@ -6418,7 +6429,7 @@ Module Module1
     ''' </summary>
     ''' <param name="currentTimestamp"></param>
     ''' <remarks></remarks>
-    Friend Sub showTSMessage(ByVal currentTimestamp As Date)
+    Public Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
         Dim left As Single = 75, top As Single = 7, width As Single = 70, height As Single = 20
@@ -9989,7 +10000,7 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            Call showTSMessage(currentTimestamp)
+            'Call showTSMessage(currentTimestamp)
 
             Try
                 If Not IsNothing(selectedPlanShapes) Then
@@ -10250,7 +10261,7 @@ Module Module1
                         Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
 
                         If diff <> 0 Then
-                            updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                            Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
                         End If
 
 
