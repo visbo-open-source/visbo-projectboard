@@ -335,6 +335,8 @@ Public Module testModule
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
 
+        Dim reportCreationDate As Date = Date.Now
+
         Dim bigType As Integer = -1
         Dim compID As Integer = -1
 
@@ -703,7 +705,7 @@ Public Module testModule
 
             ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
             'Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
-            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(pptSlide, reportCreationDate, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -3698,6 +3700,8 @@ Public Module testModule
         Dim myCollection As New Collection
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
+        ' muss einheitlich sein, sonst kriegt jede Slide ein anderes Datum ...
+        Dim reportCreationDate As Date = Date.Now
 
         Dim msgtxt As String = ""
 
@@ -3929,7 +3933,7 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als smartSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.portfolio)
+            Call addSmartPPTSlideBaseInfo(pptSlide, reportCreationDate, ptPRPFType.portfolio)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count

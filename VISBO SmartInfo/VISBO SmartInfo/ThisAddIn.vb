@@ -202,4 +202,6 @@ Public Class ThisAddIn
         ' Es wird noch pptApp_PresentationBeforeSave aufgerufen
         Dim a As Integer = 0
     End Sub
+
+
 End Class
