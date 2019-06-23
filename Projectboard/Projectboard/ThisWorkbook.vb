@@ -233,10 +233,9 @@ Public Class ThisWorkbook
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
         Dim cancelAbbruch As Boolean = False
+        Dim err As New clsErrorCodeMsg
 
         If loginErfolgreich Then
-
-
 
 
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
@@ -290,15 +289,15 @@ Public Class ThisWorkbook
                     End If
 
 
-                    ' ???ur: 05.12.2018???
-                    'If Not cancelAbbruch Then
-                    '    ' die temporären Schutz
-                    '    If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
-                    '        If awinSettings.visboDebug Then
-                    '            Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-                    '        End If
-                    '    End If
-                    'End If
+                    ' ur:19.06.2019
+                    If Not cancelAbbruch Then
+                        ' die temporären Schutz
+                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                            End If
+                        End If
+                    End If
 
 
                 End If

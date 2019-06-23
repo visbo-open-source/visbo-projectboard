@@ -6666,8 +6666,8 @@ Public Module awinDiagrams
             End If
 
         ElseIf scInfo.prPF = ptPRPFType.portfolio Then
-            pstart = showRangeLeft
-            plen = showRangeRight - showRangeLeft + 1
+            pstart = getColumnOfDate(scInfo.zeitRaumLeft)
+            plen = getColumnOfDate(scInfo.zeitRaumRight) - getColumnOfDate(scInfo.zeitRaumLeft) + 1
         End If
 
 
@@ -7047,7 +7047,8 @@ Public Module awinDiagrams
         Else
             ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception
             If ShowProjekte.actualDataUntil >= StartofCalendar Then
-                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeLeft
+                Dim adu As Integer = getColumnOfDate(ShowProjekte.actualDataUntil)
+                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= pstart
             End If
 
         End If
@@ -7059,12 +7060,11 @@ Public Module awinDiagrams
             If scInfo.prPF = ptPRPFType.project Then
                 actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
             Else
-                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - showRangeLeft
+                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - pstart
             End If
 
             ' die Prognose Daten bereinigen
             ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
-
 
             If scInfo.chartTyp = PTChartTypen.CurveCumul Then
                 For ix As Integer = 0 To actualdataIndex - 1

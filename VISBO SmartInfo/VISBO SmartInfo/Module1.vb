@@ -731,17 +731,17 @@ Module Module1
                 Dim msgtxt As String = "there might be a newer Version" & vbLf & "than " & currentTimestamp.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
 
 
-                Dim updateFrm As New frmUpdateInfo
-                With updateFrm
-                    .updateMsg.Text = msgtxt
-                    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+                'Dim updateFrm As New frmUpdateInfo
+                'With updateFrm
+                '    .updateMsg.Text = msgtxt
+                '    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
 
-                    If diagResult = Windows.Forms.DialogResult.OK Then
-                        Dim tmpDate As Date = Date.MinValue
-                        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
+                '    If diagResult = Windows.Forms.DialogResult.OK Then
+                '        Dim tmpDate As Date = Date.MinValue
+                '        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
-                    End If
-                End With
+                '    End If
+                'End With
 
             Else
                 ' es wird jetzt gleich aus der Presi ausgelesen 
@@ -819,18 +819,26 @@ Module Module1
         If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
             ' Vorbesetzung
             sld = Pres.Slides.Item(1)
-            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            If isVisboSlide(sld) Then
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            End If
 
             For i = 2 To Pres.Slides.Count
 
                 beforeSlideTS = activeSlideTS
                 sld = Pres.Slides.Item(i)
-                activeSlideTS = getCurrentTimeStampFromSlide(sld)
 
-                If activeSlideTS <> beforeSlideTS Then
-                    canBeSaved = False
-                    Exit For
+                If isVisboSlide(sld) Then
+
+                    activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                    If activeSlideTS <> beforeSlideTS Then
+                        canBeSaved = False
+                        Exit For
+                    End If
+
                 End If
+
             Next
 
             If beforeSlideTS > Date.MinValue And Not canBeSaved Then
@@ -3028,12 +3036,19 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            '' showRangeLeft und showRangeRight müssen gesetzt werden, damit bei der Bestimmung der Kapas und
+            '' Plandaten der Zeitraum bekannt ist.
+            'showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+            'showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+
             If scInfo.pName <> "" Then
 
-                If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
-                    Dim continueOperation As Boolean = False
-                    If scInfo.prPF = ptPRPFType.portfolio Then
+                Dim continueOperation As Boolean = False
+                If scInfo.prPF = ptPRPFType.portfolio Then
+
+                    If Not scInfo.pName.Contains("_last") Then
+
 
                         If currentConstellationName = scInfo.pName Then
 
@@ -3053,10 +3068,10 @@ Module Module1
                                 Next
 
                                 '' besetzte ggf den Zeitraum
-                                'If scInfo.hasValidZeitraum Then
-                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                'End If
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
                             End If
@@ -3077,133 +3092,136 @@ Module Module1
                                 Next
 
                                 '' besetzte ggf den Zeitraum
-                                'If scInfo.hasValidZeitraum Then
-                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                'End If
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
+
                             Catch ex As Exception
                                 Call MsgBox("Chart kann nicht aktualisiert werden ..")
                             End Try
                         End If
-
-
                     Else
-
-                        ' tk 23.4.19
-                        pvName = calcProjektKey(scInfo.pName, scInfo.vName)
-
-                        ' damit auch eine andere Variante gezeigt werden kann ... 
-                        If showOtherVariant Then
-                            Dim tmpPName As String = getPnameFromKey(pvName)
-                            pvName = calcProjektKey(tmpPName, currentVariantname)
-                            scInfo.vName = currentVariantname
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Portfolio named: " & scInfo.pName & " cannot be updated")
+                        Else
+                            Call MsgBox("Das Portfolio " & scInfo.pName & " kann nicht aktualisiert werden")
                         End If
-
-                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                        scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                        ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                        continueOperation = Not IsNothing(scInfo.hproj)
-
                     End If
 
-                    If continueOperation Then
+                Else
+
+                    ' tk 23.4.19
+                    pvName = calcProjektKey(scInfo.pName, scInfo.vName)
+
+                    ' damit auch eine andere Variante gezeigt werden kann ... 
+                    If showOtherVariant Then
+                        Dim tmpPName As String = getPnameFromKey(pvName)
+                        pvName = calcProjektKey(tmpPName, currentVariantname)
+                        scInfo.vName = currentVariantname
+                    End If
+
+                    ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                    'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                    ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                    continueOperation = Not IsNothing(scInfo.hproj)
+
+                End If
+
+                If continueOperation Then
+                    Try
+
+                        ' -----------------------------
+                        ' Alternative 2 und 3: ja, tun
+                        'Call createNewHiddenExcel()
+                        ' -----------------------------
+
+                        ' jetzt muss das chtobj aktualisiert werden ... 
                         Try
 
-                            ' -----------------------------
-                            ' Alternative 2 und 3: ja, tun
-                            'Call createNewHiddenExcel()
-                            ' -----------------------------
-
-                            ' jetzt muss das chtobj aktualisiert werden ... 
-                            Try
-
-                                If (scInfo.chartTyp = PTChartTypen.Balken) Or
+                            If (scInfo.chartTyp = PTChartTypen.Balken) Or
                                 (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
 
 
-                                    If scInfo.prPF = ptPRPFType.project Then
-                                        Try
-                                            Dim a As Integer = scInfo.hproj.dauerInDays
+                                If scInfo.prPF = ptPRPFType.project Then
+                                    Try
+                                        Dim a As Integer = scInfo.hproj.dauerInDays
 
-                                            If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                                scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
-                                            ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                                scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
-                                            End If
-
-
-                                        Catch ex As Exception
-
-                                            scInfo.vglProj = Nothing
-
-                                        End Try
-                                    End If
+                                        If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
+                                        ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                        End If
 
 
-                                    ' Alternative 1a - pptApp.activate auskommentiert
-                                    Call updateProjectChartInPPT(scInfo, pptShape)
-                                    'pptAPP.Activate()
+                                    Catch ex As Exception
 
-                                    ' -----------------------------------------
-                                    ' Alternative 2 - funktioniert nicht 
-                                    'Call updateProjektChartinPPT2(scInfo, pptShape)
-                                    'pptAPP.Activate()
-                                    'pptShape.Chart.Refresh()
-                                    ' --------------------------------------------
+                                        scInfo.vglProj = Nothing
 
-                                    ' -----------------------------------------
-                                    ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
-                                    'Call updateProjectChartInPPT3(scInfo, pptShape)
-                                    'pptAPP.Activate()
-                                    'pptShape.Chart.Refresh()
-                                    ' --------------------------------------------
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
-
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
-
-                                Else
-
+                                    End Try
                                 End If
 
 
+                                ' Alternative 1a - pptApp.activate auskommentiert
+                                Call updateProjectChartInPPT(scInfo, pptShape)
+                                'pptAPP.Activate()
+
+                                ' -----------------------------------------
+                                ' Alternative 2 - funktioniert nicht 
+                                'Call updateProjektChartinPPT2(scInfo, pptShape)
+                                'pptAPP.Activate()
+                                'pptShape.Chart.Refresh()
+                                ' --------------------------------------------
+
+                                ' -----------------------------------------
+                                ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
+                                'Call updateProjectChartInPPT3(scInfo, pptShape)
+                                'pptAPP.Activate()
+                                'pptShape.Chart.Refresh()
+                                ' --------------------------------------------
 
 
-                            Catch ex As Exception
-                                Call MsgBox(ex.Message)
-                            End Try
+                            ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
+
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
+
+                            Else
+
+                            End If
+
 
 
 
                         Catch ex As Exception
-                            Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
+                            Call MsgBox(ex.Message)
                         End Try
 
-                    End If
 
 
-                End If   'Not scInfo.pName.Contains("_last")
+                    Catch ex As Exception
+                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
+                    End Try
 
-            End If    'scInfo.pName <> ""
+                End If
 
 
-        End If
+            End If        'scInfo.pName <> ""
 
+        End If            ' hasChart
 
 
     End Sub
@@ -4259,7 +4277,7 @@ Module Module1
         xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        xlApp.Visible = smartChartsAreEditable
+        'xlApp.Visible = smartChartsAreEditable
         'xlApp.ScreenUpdating = False
         'xlApp.DisplayFormulaBar = False
 
@@ -6427,7 +6445,7 @@ Module Module1
     ''' </summary>
     ''' <param name="currentTimestamp"></param>
     ''' <remarks></remarks>
-    Friend Sub showTSMessage(ByVal currentTimestamp As Date)
+    Public Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
         Dim left As Single = 75, top As Single = 7, width As Single = 70, height As Single = 20
@@ -9998,7 +10016,7 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            Call showTSMessage(currentTimestamp)
+            'Call showTSMessage(currentTimestamp)
 
             Try
                 If Not IsNothing(selectedPlanShapes) Then
@@ -10259,7 +10277,7 @@ Module Module1
                         Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
 
                         If diff <> 0 Then
-                            updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                            Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
                         End If
 
 
