@@ -373,6 +373,20 @@ Imports System.Web
 
             dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
 
+            'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
+            ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
+
+                If projectConstellations.Contains(kvp.Key) Then
+                    projectConstellations.Remove(kvp.Key)
+                    projectConstellations.Add(kvp.Value)
+                Else
+                    projectConstellations.Add(kvp.Value)
+                End If
+
+            Next
+
+
             Dim constellationsToDo As New clsConstellations
 
             ' WaitCursor einschalten ...
@@ -5101,8 +5115,16 @@ Imports System.Web
                         Try
                             If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                                 ' das muss noch abgefragt werden ... 
+
                                 Dim startdate As Date = CDate("1.1.2019")
                                 Dim enddate As Date = CDate("31.12.2019")
+
+                                ' tk aktuelle Krücke für Allianz um das Einlesen der Batchliste für 2020 zu machen
+                                ' dazu muss die Datenbank mit 20 enden ...
+                                If awinSettings.databaseName.EndsWith("20") Then
+                                    startdate = CDate("1.1.2020")
+                                    enddate = CDate("31.12.2020")
+                                End If
 
                                 isAllianzImport1 = True
                                 Call importAllianzType1(startdate, enddate)

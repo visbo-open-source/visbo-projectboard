@@ -8343,7 +8343,7 @@ Public Module agm2
         Dim emptyPrograms As Integer = 0
 
 
-        Dim vorlageName As String = "Rel"
+
         Dim lastRow As Integer
         Dim lastColumn As Integer
         Dim geleseneProjekte As Integer
@@ -8357,8 +8357,14 @@ Public Module agm2
         ' Standard-Definition
         Dim anzReleases As Integer = 5
 
+
+        Dim vorlageName As String = "Rel"
+        If awinSettings.databaseName.EndsWith("20") Then
+            vorlageName = "Rel20"
+        End If
+
         Try
-            anzReleases = Projektvorlagen.getProject("Rel").CountPhases - 1
+            anzReleases = Projektvorlagen.getProject(vorlageName).CountPhases - 1
         Catch ex As Exception
 
         End Try
@@ -8679,6 +8685,7 @@ Public Module agm2
                                 If pgmlinie.Contains(itemType) Then
                                     ' die bisherige Constellation wegschreiben ...
 
+
                                     If Not IsNothing(current1program) Then
                                         ' ggf hier wieder rausnehmen ...
 
@@ -8767,6 +8774,36 @@ Public Module agm2
                                     'With current1program
                                     '    .constellationName = itemType.ToString & " - " & pName
                                     'End With
+
+                                    ' wenn jetzt als nächstes gleich wieder eine Programm-Linie kommt, dann muss dem Program als sein erstes und einziges Projekt 
+                                    ' die Programm-Linie sein
+                                    Dim programItemfound As Boolean = False
+                                    Dim nextItemType As Integer
+                                    Dim kidItemFound As Boolean = False
+                                    Dim tmpZ As Integer = zeile + 1
+
+
+                                    Do While tmpZ <= lastRow And Not kidItemFound And Not programItemfound
+                                        Try
+                                            nextItemType = CInt(CType(.Cells(tmpZ, colFields(allianzSpalten.itemType)), Excel.Range).Value)
+                                        Catch ex As Exception
+                                            nextItemType = 0
+                                        End Try
+
+                                        kidItemFound = projektvorhaben.Contains(nextItemType)
+                                        programItemfound = pgmlinie.Contains(nextItemType)
+                                        tmpZ = tmpZ + 1
+
+                                    Loop
+
+                                    If Not kidItemFound And programItemfound Then
+                                        ' jetzt wird sichergestellt, dass diese Programm-Linie jetzt als Projekt angelegt wird ..
+                                        ok = True
+                                        projVorhabensBudget = last1Budget
+                                    ElseIf tmpZ > lastRow Then
+                                        ok = True
+                                        projVorhabensBudget = last1Budget
+                                    End If
 
                                 End If
                             End If

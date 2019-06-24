@@ -1987,6 +1987,11 @@ Public Module awinGeneralModules
                 showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
                 showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
+                If awinSettings.databaseName.EndsWith("20") Then
+                    showRangeLeft = getColumnOfDate(CDate("1.1.2020"))
+                    showRangeRight = getColumnOfDate(CDate("31.12.2020"))
+                End If
+
                 For Each tmpRoleNameID As String In uRoles
 
                     Dim myCollection As New Collection
@@ -3790,10 +3795,12 @@ Public Module awinGeneralModules
                     End If
 
                 End If
-                
+
 
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
+
+                    currentConstellation.timestamp = Date.Now
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then

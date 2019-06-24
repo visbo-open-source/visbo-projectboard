@@ -26,6 +26,24 @@
     ' 2: custom Liste
     ' 3: BU, ProjektStart, Name
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
+    Private _sortType As Integer
+
+    ' ur: 21.06.2019 ergänzt
+    ' gibt den Zeitpunkt an, zu dem das Portfolio zusammengestellt wurde
+    Private _timestamp As Date
+    Public Property timestamp As Date
+        Get
+            timestamp = _timestamp
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                If value <> Date.MinValue Then
+                    _timestamp = value
+                End If
+            End If
+        End Set
+    End Property
+
 
     ' tk ergänzt am 11.5.19 
     Private _vpID As String
@@ -41,7 +59,7 @@
             End If
         End Set
     End Property
-    Private _sortType As Integer
+
 
 
     Private _constellationName As String = "Last"
@@ -977,6 +995,7 @@
 
             With copyResult
                 .constellationName = cName
+                .timestamp = Me.timestamp
 
                 'If prepareForDB Then
                 '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
@@ -1503,6 +1522,7 @@
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = skey
+        _timestamp = Date.Now
 
         ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
@@ -1527,6 +1547,7 @@
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = -1
+        _timestamp = Date.Now
 
         ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing

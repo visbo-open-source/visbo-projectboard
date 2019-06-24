@@ -648,6 +648,7 @@ Public Module Module1
         beauftragung = 2
         letzterStand = 3
         ersterStand = 4
+        letzteBeauftragung = 5
     End Enum
 
     ' Enumeration für die Farbe 
@@ -890,7 +891,7 @@ Public Module Module1
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
-    Public StartofCalendar As Date = #1/1/2000#
+    Public StartofCalendar As Date = #1/1/2015#
 
     Public weightStrategicFit As Double
 
@@ -1577,7 +1578,9 @@ Public Module Module1
                 If Not IsNothing(idArray) Then
                     tmpResult = idArray.Contains(role.UID)
                 End If
-
+                'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
+                '    tmpResult = role.isTeam
             End If
         End If
 

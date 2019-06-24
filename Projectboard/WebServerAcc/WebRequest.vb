@@ -1849,9 +1849,9 @@ Public Class Request
             If Not IsNothing(cVPf) Then
                 cVPf.vpid = cVP._id
 
-                ' timestamp setzen
-
-                cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+                'uir:21.06.2019 ist nun in clsConstellation enthalten
+                '' timestamp setzen
+                'cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
 
 
                 If cVP._id <> "" Then
@@ -3912,6 +3912,7 @@ Public Class Request
     ''' <param name="refNext">refNext = true: es wird die erste Version nach dem timestamp zurückgegeben</param>
     ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
+    ''' </summary>
     Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
                                Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
@@ -5636,6 +5637,8 @@ Public Class Request
             With result
                 .vpID = vpf.vpid
                 .constellationName = vpf.name
+                .timestamp = vpf.timestamp
+
                 ' Aufbau der Constellation.allitems
                 For Each hvpfItem As clsVPfItem In vpf.allItems
 
@@ -5686,13 +5689,9 @@ Public Class Request
             With result
                 .name = c.constellationName
                 ._id = ""
-
-                ' angepasst: 20180914: ReST-Server muss auf ptPRPFType-Enumeration angepasst werden
-                '.vpid = GETvpid(c.constellationName, vpType:=2)._id
+                .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 
                 .vpid = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
-
-                .timestamp = DateTimeToISODate(Date.Now)
 
                 .sortType = c.sortCriteria
                 ' .sortlist aufbauen aus c.sortlist

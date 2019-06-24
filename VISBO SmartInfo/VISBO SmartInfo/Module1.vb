@@ -479,6 +479,11 @@ Module Module1
                         sld.Tags.Add("PRXYL", awinSettings.proxyURL)
                     End If
 
+                    'Start of Calendar auslesen, damit Orga richtig interpretiert wird
+                    If sld.Tags.Item("SOC").Length > 0 Then
+                        StartofCalendar = CDate(sld.Tags.Item("SOC"))
+                    End If
+
                     tmpResult = True
 
                     ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
@@ -726,17 +731,17 @@ Module Module1
                 Dim msgtxt As String = "there might be a newer Version" & vbLf & "than " & currentTimestamp.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
 
 
-                Dim updateFrm As New frmUpdateInfo
-                With updateFrm
-                    .updateMsg.Text = msgtxt
-                    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+                'Dim updateFrm As New frmUpdateInfo
+                'With updateFrm
+                '    .updateMsg.Text = msgtxt
+                '    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
 
-                    If diagResult = Windows.Forms.DialogResult.OK Then
-                        Dim tmpDate As Date = Date.MinValue
-                        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
+                '    If diagResult = Windows.Forms.DialogResult.OK Then
+                '        Dim tmpDate As Date = Date.MinValue
+                '        Call updateSelectedSlide(ptNavigationButtons.update, tmpDate)
 
-                    End If
-                End With
+                '    End If
+                'End With
 
             Else
                 ' es wird jetzt gleich aus der Presi ausgelesen 
@@ -814,18 +819,26 @@ Module Module1
         If Not IsNothing(Pres) And Pres.Slides.Count > 1 Then
             ' Vorbesetzung
             sld = Pres.Slides.Item(1)
-            activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            If isVisboSlide(sld) Then
+                activeSlideTS = getCurrentTimeStampFromSlide(sld)
+            End If
 
             For i = 2 To Pres.Slides.Count
 
                 beforeSlideTS = activeSlideTS
                 sld = Pres.Slides.Item(i)
-                activeSlideTS = getCurrentTimeStampFromSlide(sld)
 
-                If activeSlideTS <> beforeSlideTS Then
-                    canBeSaved = False
-                    Exit For
+                If isVisboSlide(sld) Then
+
+                    activeSlideTS = getCurrentTimeStampFromSlide(sld)
+
+                    If activeSlideTS <> beforeSlideTS Then
+                        canBeSaved = False
+                        Exit For
+                    End If
+
                 End If
+
             Next
 
             If beforeSlideTS > Date.MinValue And Not canBeSaved Then
@@ -1176,21 +1189,21 @@ Module Module1
         importantShapes(ptImportantShapes.version) = Nothing
 
         ' jetzt todayLine suchen ...
-        'Try
-        '    importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-        'Catch ex As Exception
-        '    importantShapes(ptImportantShapes.todayline) = Nothing
-        'End Try
+        Try
+            importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        Catch ex As Exception
+            importantShapes(ptImportantShapes.todayline) = Nothing
+        End Try
         'ur: 2019-05-29: TryCatch vermeiden
-        For i = 1 To currentSlide.Shapes.Count
-            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-                importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
-                Exit For
-            Else
-                importantShapes(ptImportantShapes.todayline) = Nothing
-            End If
-            i = i + 1
-        Next
+        'For i = 1 To currentSlide.Shapes.Count
+        '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+
+        '        importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        '        Exit For
+        '    Else
+        '        importantShapes(ptImportantShapes.todayline) = Nothing
+        '    End If
+        'Next
 
 
         With currentSlide
@@ -2713,81 +2726,78 @@ Module Module1
 
             If scInfo.pName <> "" Then
 
+                Dim continueOperation As Boolean = False
                 If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
 
-                    Dim continueOperation As Boolean = False
-                    If scInfo.prPF = ptPRPFType.portfolio Then
+                    If currentConstellationName = scInfo.pName Then
+                        ' nix tun
+                        continueOperation = True
+                        portfolio = currentSessionConstellation
+                    Else
 
 
-                        If currentConstellationName = scInfo.pName Then
-                            ' nix tun
-                            continueOperation = True
-                            portfolio = currentSessionConstellation
-                        Else
+                        Try
+                            currentConstellationName = scInfo.pName
+                            ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-
-                            Try
-                                currentConstellationName = scInfo.pName
-                                ShowProjekte.Clear(updateCurrentConstellation:=False)
-
-                                ' lade das Portfolio 
-                                Dim err As New clsErrorCodeMsg
-                                currentSessionConstellation =
+                            ' lade das Portfolio 
+                            Dim err As New clsErrorCodeMsg
+                            currentSessionConstellation =
                                 CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName,
                                                                                                       portfolioTS,
                                                                                                      err, storedAtOrBefore:=curTimeStamp)
-                                portfolio = currentSessionConstellation
+                            portfolio = currentSessionConstellation
 
-                                '' bringe alles in ShowProjekte 
-                                'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
-                                '    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
-                                'Next
+                            '' bringe alles in ShowProjekte 
+                            'For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
+                            '    ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
+                            'Next
 
-                                ' besetzte ggf den Zeitraum
-                                If scInfo.hasValidZeitraum Then
-                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                End If
-
-                                continueOperation = Not IsNothing(portfolio)
-                            Catch ex As Exception
-                                Call MsgBox("Componente kann nicht aktualisiert werden ..")
-                            End Try
-                        End If
-                    Else
-                        ' ist Projekt
-                        Dim pName As String = pptShape.Tags.Item("PNM")
-                        Dim vName As String = pptShape.Tags.Item("VNM")
-
-                        'If showOtherVariant Then
-                        '    vName = currentVariantname
-                        '    If pptShape.Tags.Item("VNM").Length > 0 Then
-                        '        pptShape.Tags.Delete("VNM")
-                        '    End If
-                        '    pptShape.Tags.Add("VNM", vName)
-                        '    Dim chck As String = pptShape.Tags.Item("VNM")
-                        'End If
-
-                        If pName <> "" Then
-                            Dim pvName As String = calcProjektKey(pName, vName)
-
-                            ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                            hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                            If Not IsNothing(hproj) Then
-
-                                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-
-                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-
+                            ' besetzte ggf den Zeitraum
+                            If scInfo.hasValidZeitraum Then
+                                showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
                             End If
+
+                            continueOperation = Not IsNothing(portfolio)
+                        Catch ex As Exception
+                            Call MsgBox("Componente kann nicht aktualisiert werden ..")
+                        End Try
+                    End If
+                Else
+                    ' ist Projekt
+                    Dim pName As String = pptShape.Tags.Item("PNM")
+                    Dim vName As String = pptShape.Tags.Item("VNM")
+
+                    'If showOtherVariant Then
+                    '    vName = currentVariantname
+                    '    If pptShape.Tags.Item("VNM").Length > 0 Then
+                    '        pptShape.Tags.Delete("VNM")
+                    '    End If
+                    '    pptShape.Tags.Add("VNM", vName)
+                    '    Dim chck As String = pptShape.Tags.Item("VNM")
+                    'End If
+
+                    If pName <> "" Then
+                        Dim pvName As String = calcProjektKey(pName, vName)
+
+                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                        hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                        If Not IsNothing(hproj) Then
+
+                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+
+                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
                         End If
                     End If
+                End If
 
 
 
-                    Select Case detailID
+                Select Case detailID
 
                         Case ptReportComponents.prName
 
@@ -2990,8 +3000,8 @@ Module Module1
 
 
                     End Select
-                End If      ' scInfo.pName enthält "_last"
-            End If          ' scInfo.pName <> ""
+
+                End If          ' scInfo.pName <> ""
 
 
         Catch ex As Exception
@@ -3026,12 +3036,19 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            '' showRangeLeft und showRangeRight müssen gesetzt werden, damit bei der Bestimmung der Kapas und
+            '' Plandaten der Zeitraum bekannt ist.
+            'showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+            'showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+
             If scInfo.pName <> "" Then
 
-                If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
-                    Dim continueOperation As Boolean = False
-                    If scInfo.prPF = ptPRPFType.portfolio Then
+                Dim continueOperation As Boolean = False
+                If scInfo.prPF = ptPRPFType.portfolio Then
+
+                    If Not scInfo.pName.Contains("_last") Then
+
 
                         If currentConstellationName = scInfo.pName Then
 
@@ -3051,10 +3068,10 @@ Module Module1
                                 Next
 
                                 '' besetzte ggf den Zeitraum
-                                'If scInfo.hasValidZeitraum Then
-                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                'End If
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
                             End If
@@ -3075,136 +3092,140 @@ Module Module1
                                 Next
 
                                 '' besetzte ggf den Zeitraum
-                                'If scInfo.hasValidZeitraum Then
-                                '    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                '    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                'End If
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
+
                             Catch ex As Exception
                                 Call MsgBox("Chart kann nicht aktualisiert werden ..")
                             End Try
                         End If
-
-
                     Else
-
-                        ' tk 23.4.19
-                        pvName = calcProjektKey(scInfo.pName, scInfo.vName)
-
-                        ' damit auch eine andere Variante gezeigt werden kann ... 
-                        If showOtherVariant Then
-                            Dim tmpPName As String = getPnameFromKey(pvName)
-                            pvName = calcProjektKey(tmpPName, currentVariantname)
-                            scInfo.vName = currentVariantname
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Portfolio named: " & scInfo.pName & " cannot be updated")
+                        Else
+                            Call MsgBox("Das Portfolio " & scInfo.pName & " kann nicht aktualisiert werden")
                         End If
-
-                        ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                        scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
-
-                        ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                        continueOperation = Not IsNothing(scInfo.hproj)
-
                     End If
 
-                    If continueOperation Then
+                Else
+
+                    ' tk 23.4.19
+                    pvName = calcProjektKey(scInfo.pName, scInfo.vName)
+
+                    ' damit auch eine andere Variante gezeigt werden kann ... 
+                    If showOtherVariant Then
+                        Dim tmpPName As String = getPnameFromKey(pvName)
+                        pvName = calcProjektKey(tmpPName, currentVariantname)
+                        scInfo.vName = currentVariantname
+                    End If
+
+                    ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                    'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+
+                    ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                    continueOperation = Not IsNothing(scInfo.hproj)
+
+                End If
+
+                If continueOperation Then
+                    Try
+
+                        ' -----------------------------
+                        ' Alternative 2 und 3: ja, tun
+                        'Call createNewHiddenExcel()
+                        ' -----------------------------
+
+                        ' jetzt muss das chtobj aktualisiert werden ... 
                         Try
 
-                            ' -----------------------------
-                            ' Alternative 2 und 3: ja, tun
-                            'Call createNewHiddenExcel()
-                            ' -----------------------------
-
-                            ' jetzt muss das chtobj aktualisiert werden ... 
-                            Try
-
-                                If (scInfo.chartTyp = PTChartTypen.Balken) Or
+                            If (scInfo.chartTyp = PTChartTypen.Balken) Or
                                 (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
 
 
-                                    If scInfo.prPF = ptPRPFType.project Then
-                                        Try
-                                            Dim a As Integer = scInfo.hproj.dauerInDays
+                                If scInfo.prPF = ptPRPFType.project Then
+                                    Try
+                                        Dim a As Integer = scInfo.hproj.dauerInDays
 
-                                            If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                                scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
-                                            ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                                'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                                scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
-                                            End If
-
-
-                                        Catch ex As Exception
-
-                                            scInfo.vglProj = Nothing
-
-                                        End Try
-                                    End If
+                                        If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
+                                        ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
+                                            'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                        End If
 
 
-                                    ' Alternative 1a - pptApp.activate auskommentiert
-                                    Call updateProjectChartInPPT(scInfo, pptShape)
-                                    'pptAPP.Activate()
+                                    Catch ex As Exception
 
-                                    ' -----------------------------------------
-                                    ' Alternative 2 - funktioniert nicht 
-                                    'Call updateProjektChartinPPT2(scInfo, pptShape)
-                                    'pptAPP.Activate()
-                                    'pptShape.Chart.Refresh()
-                                    ' --------------------------------------------
+                                        scInfo.vglProj = Nothing
 
-                                    ' -----------------------------------------
-                                    ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
-                                    'Call updateProjectChartInPPT3(scInfo, pptShape)
-                                    'pptAPP.Activate()
-                                    'pptShape.Chart.Refresh()
-                                    ' --------------------------------------------
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
-
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
-
-
-                                ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
-
-                                Else
-
+                                    End Try
                                 End If
 
 
+                                ' Alternative 1a - pptApp.activate auskommentiert
+                                Call updateProjectChartInPPT(scInfo, pptShape)
+                                'pptAPP.Activate()
+
+                                ' -----------------------------------------
+                                ' Alternative 2 - funktioniert nicht 
+                                'Call updateProjektChartinPPT2(scInfo, pptShape)
+                                'pptAPP.Activate()
+                                'pptShape.Chart.Refresh()
+                                ' --------------------------------------------
+
+                                ' -----------------------------------------
+                                ' Alternative 3 - funktioniert etwas unschön , ständiges Update Geflacker 
+                                'Call updateProjectChartInPPT3(scInfo, pptShape)
+                                'pptAPP.Activate()
+                                'pptShape.Chart.Refresh()
+                                ' --------------------------------------------
 
 
-                            Catch ex As Exception
-                                Call MsgBox(ex.Message)
-                            End Try
+                            ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
+
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
+
+                            Else
+
+                            End If
+
 
 
 
                         Catch ex As Exception
-                            Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
+                            Call MsgBox(ex.Message)
                         End Try
 
-                    End If
 
 
-                End If   'Not scInfo.pName.Contains("_last")
+                    Catch ex As Exception
+                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
+                    End Try
 
-            End If    'scInfo.pName <> ""
+                End If
 
 
-        End If
+            End If        'scInfo.pName <> ""
 
+        End If            ' hasChart
 
 
     End Sub
+
 
     '''' <summary>
     '''' Breaklink - dann Aufbau der Daten im updateWorkbook - setsourceData - 
@@ -3230,8 +3251,16 @@ Module Module1
     '    'curWS.Name = "VISBO-Chart"
     '    ' ----------------------------
 
-    '    Dim diagramTitle As String = " "
-    '    Dim plen As Integer
+
+    'Dim Xdatenreihe() As String
+    '    Dim tdatenreihe() As Double
+    '    Dim istDatenReihe() As Double
+    '    Dim prognoseDatenReihe() As Double
+    '    Dim vdatenreihe() As Double
+    '    Dim internKapaDatenreihe() As Double = Nothing
+    '    Dim vSum As Double = 0.0
+    '    Dim tSum As Double
+
 
     '    Dim Xdatenreihe() As String
     '    Dim tdatenreihe() As Double
@@ -3304,11 +3333,25 @@ Module Module1
 
 
 
+    'ReDim Xdatenreihe(plen - 1)
+    '    ReDim tdatenreihe(plen - 1)
+    '    ReDim istDatenReihe(plen - 1)
+    '    ReDim prognoseDatenReihe(plen - 1)
+    '    ReDim vdatenreihe(plen - 1)
+    '    ReDim internKapaDatenreihe(plen - 1)
+
+
     '    ReDim Xdatenreihe(plen - 1)
     '    ReDim tdatenreihe(plen - 1)
     '    ReDim istDatenReihe(plen - 1)
     '    ReDim prognoseDatenReihe(plen - 1)
     '    ReDim vdatenreihe(plen - 1)
+
+
+    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+    'Dim errMsg As String = ""
+    '    Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+    '                                   Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
 
     '    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
@@ -3594,8 +3637,15 @@ Module Module1
 
     '    pptChart = pptShape.Chart
 
-    '    Dim diagramTitle As String = " "
-    '    Dim plen As Integer
+
+    'Dim Xdatenreihe() As String
+    '    Dim tdatenreihe() As Double
+    '    Dim istDatenReihe() As Double
+    '    Dim prognoseDatenReihe() As Double
+    '    Dim vdatenreihe() As Double
+    '    Dim internKapaDatenreihe() As Double
+    '    Dim vSum As Double = 0.0
+    '    Dim tSum As Double
 
     '    Dim Xdatenreihe() As String
     '    Dim tdatenreihe() As Double
@@ -3668,11 +3718,25 @@ Module Module1
 
 
 
+    'ReDim Xdatenreihe(plen - 1)
+    '    ReDim tdatenreihe(plen - 1)
+    '    ReDim istDatenReihe(plen - 1)
+    '    ReDim prognoseDatenReihe(plen - 1)
+    '    ReDim vdatenreihe(plen - 1)
+    '    ReDim internKapaDatenreihe(plen - 1)
+
+
     '    ReDim Xdatenreihe(plen - 1)
     '    ReDim tdatenreihe(plen - 1)
     '    ReDim istDatenReihe(plen - 1)
     '    ReDim prognoseDatenReihe(plen - 1)
     '    ReDim vdatenreihe(plen - 1)
+
+
+    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+    'Dim errMsg As String = ""
+    '    Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+    '                                   Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
 
     '    ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
@@ -3914,6 +3978,7 @@ Module Module1
         Dim istDatenReihe() As Double
         Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
+        Dim internKapaDatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim tSum As Double
 
@@ -3990,12 +4055,13 @@ Module Module1
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -4103,6 +4169,27 @@ Module Module1
 
 
                 End With
+
+                Dim tmpSum As Double = internKapaDatenreihe.Sum
+                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                    ' es gibt geplante externe Ressourcen ... 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        .HasDataLabels = False
+                        '.name = "Kapazität incl. Externe"
+                        .Name = bestimmeLegendNameIPB("CI")
+                        '.Name = repMessages.getmsg(118)
+
+                        .Values = internKapaDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                            .Weight = 2
+                        End With
+
+                    End With
+                End If
             Else
                 If Not IsNothing(scInfo.vglProj) Then
 
@@ -4190,7 +4277,7 @@ Module Module1
         xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        xlApp.Visible = smartChartsAreEditable
+        'xlApp.Visible = smartChartsAreEditable
         'xlApp.ScreenUpdating = False
         'xlApp.DisplayFormulaBar = False
 
@@ -6022,11 +6109,15 @@ Module Module1
                         Try
                             ' PropertiesPane (sofern sichtbar) mit selektiertem Shape aktualisieren
                             If propertiesPane.Visible Then
-                                For Each shp As PowerPoint.Shape In selectedPlanShapes
-                                    If shp.Id = tmpShape.Id Then
-                                        Call aktualisiereInfoPane(tmpShape)
-                                    End If
-                                Next
+
+                                If Not IsNothing(selectedPlanShapes) Then
+                                    For Each shp As PowerPoint.Shape In selectedPlanShapes
+                                        If shp.Id = tmpShape.Id Then
+                                            Call aktualisiereInfoPane(tmpShape)
+                                        End If
+                                    Next
+                                End If
+
                             End If
                         Catch ex As Exception
 
@@ -6142,24 +6233,23 @@ Module Module1
         Next
 
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
-        'Try
-        'Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-        ' ur:2019-05-29: TryCatch vermeiden
-        Dim todayLineShape As PowerPoint.Shape
-        todayLineShape = Nothing
-        For i = 1 To currentSlide.Shapes.Count
-            If currentSlide.Shapes.Item(i).Name = "todayLine" Then
-                todayLineShape = currentSlide.Shapes.Item("todayLine")
-                Exit For
+        Try
+            Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
+            ' ur:2019-05-29: TryCatch vermeiden
+            'Dim todayLineShape As PowerPoint.Shape
+            'todayLineShape = Nothing
+            'For i = 1 To currentSlide.Shapes.Count
+            '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+            '        todayLineShape = currentSlide.Shapes.Item("todayLine")
+            '        Exit For
+            '    End If
+            'Next
+            If Not IsNothing(todayLineShape) Then
+                Call sendTodayLinetoNewPosition(todayLineShape)
             End If
-            i = i + 1
-        Next
-        If Not IsNothing(todayLineShape) Then
-            Call sendTodayLinetoNewPosition(todayLineShape)
-        End If
-        'Catch ex As Exception
+        Catch ex As Exception
 
-        'End Try
+        End Try
 
         ' jetzt müssen die Shape-Namen neu gesetzt werden, wenn es sich um eine Variante handelte 
         If showOtherVariant Then
@@ -6355,7 +6445,7 @@ Module Module1
     ''' </summary>
     ''' <param name="currentTimestamp"></param>
     ''' <remarks></remarks>
-    Friend Sub showTSMessage(ByVal currentTimestamp As Date)
+    Public Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
         Dim left As Single = 75, top As Single = 7, width As Single = 70, height As Single = 20
@@ -6373,16 +6463,14 @@ Module Module1
 
         Dim tsMsgDidAlreadyExist As Boolean = False
 
-        'ur: 2019-05-29: Try Catch entfernt
-        Dim i As Integer = 1
-        tsMsgBox = Nothing
-        For i = 1 To currentSlide.Shapes.Count
-            If currentSlide.Shapes.Item(i).Name = "TimeStampInfo" Then
-                tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
-                Exit For
-            End If
-            i = i + 1
-        Next
+        'ur: 2019-05-29: Try Catch entfernt (hatte nicht funktioniert)
+        Try
+            tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
+        Catch ex As Exception
+            tsMsgBox = Nothing
+        End Try
+
+
 
         If IsNothing(tsMsgBox) And (Not IsNothing(importantShapes(ptImportantShapes.todayline)) Or IsNothing(importantShapes(ptImportantShapes.version))) Then
             ' erstellen ...
@@ -9928,7 +10016,7 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            Call showTSMessage(currentTimestamp)
+            'Call showTSMessage(currentTimestamp)
 
             Try
                 If Not IsNothing(selectedPlanShapes) Then
@@ -10184,37 +10272,41 @@ Module Module1
                         End If
                     End With
 
-                    Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
+                    If beforeSlideTimestamp > Date.MinValue Then
 
-                    If diff <> 0 Then
-                        updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
-                    End If
+                        Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
 
-                    ' nur wenn die SlideID gewechselt hat, muss agiert werden
-                    ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
-                    If beforeSlideKennung <> afterSlideKennung Then
-                        Try
-                            ' das Change-Formular aktualisieren, wenn es gezeigt wird  
-                            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
-                            If Not IsNothing(changeFrm) Then
+                        If diff <> 0 Then
+                            Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                        End If
 
-                                changeFrm.changeliste.clearChangeList()
 
-                                If chgeLstListe.ContainsKey(key) Then
-                                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
-                                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
-                                    Else
-                                        ' eine Liste für die neue SlideID einfügen ..
+                        ' nur wenn die SlideID gewechselt hat, muss agiert werden
+                        ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
+                        If beforeSlideKennung <> afterSlideKennung Then
+                            Try
+                                ' das Change-Formular aktualisieren, wenn es gezeigt wird  
+                                Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+                                If Not IsNothing(changeFrm) Then
+
+                                    changeFrm.changeliste.clearChangeList()
+
+                                    If chgeLstListe.ContainsKey(key) Then
+                                        If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                                            changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+                                        Else
+                                            ' eine Liste für die neue SlideID einfügen ..
+                                        End If
                                     End If
+
+                                    changeFrm.neuAufbau()
                                 End If
+                            Catch ex As Exception
 
-                                changeFrm.neuAufbau()
-                            End If
-                        Catch ex As Exception
+                            End Try
 
-                        End Try
-
-                    End If       'Ende ob SlideIDs ungleich sind
+                        End If       'Ende ob SlideIDs ungleich sind
+                    End If
                 Else
                     'ur: ???
                     'currentSlide = Nothing
