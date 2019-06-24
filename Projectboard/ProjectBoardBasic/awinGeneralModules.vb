@@ -3795,10 +3795,12 @@ Public Module awinGeneralModules
                     End If
 
                 End If
-                
+
 
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
+
+                    currentConstellation.timestamp = Date.Now
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then
