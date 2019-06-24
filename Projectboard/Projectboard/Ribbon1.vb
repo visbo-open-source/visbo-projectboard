@@ -373,6 +373,20 @@ Imports System.Web
 
             dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
 
+            'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
+            ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
+
+                If projectConstellations.Contains(kvp.Key) Then
+                    projectConstellations.Remove(kvp.Key)
+                    projectConstellations.Add(kvp.Value)
+                Else
+                    projectConstellations.Add(kvp.Value)
+                End If
+
+            Next
+
+
             Dim constellationsToDo As New clsConstellations
 
             ' WaitCursor einschalten ...
