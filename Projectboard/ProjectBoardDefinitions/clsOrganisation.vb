@@ -44,7 +44,7 @@
 
 
     ''' <summary>
-    ''' prüft, ob die neue Organisation gültig ist; wenn ja, werden auch die Kapa-Werte aus der alten auf die neue übertragen
+    ''' prüft, ob die neue Organisation gültig ist; 
     ''' sie ist nur dann gültig, wenn jede Element-ID aus der alten Organisation auch im neuen vorkommt 
     ''' eine neue Element-ID darf keinen Namen haben, der bereits in der alten vorkommt 
     ''' sollte eine Element-ID im Neuen einen anderen Namen haben, dann ist das nur gültig, wenn dieser Name die alte Organisation 
@@ -149,6 +149,7 @@
 
             End If
         End If
+
 
         ' wenn es keine Einträge gegeben hat, dann ist alles o.k
         validityCheckWith = (Listeneintraege = outputCollection.Count)
