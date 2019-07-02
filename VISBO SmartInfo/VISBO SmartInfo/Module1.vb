@@ -3957,9 +3957,6 @@ Module Module1
             pptChart = pptShape.Chart
             pptChartData = pptChart.ChartData
 
-            ' tk 23.06.19 Breaklink eingeführt 
-            pptChart.ChartData.BreakLink()
-
             If Not IsNothing(pptChartData.Workbook) Then
                 'pptChartData.ActivateChartDataWindow()
                 pptChartData.Activate()
@@ -4277,27 +4274,27 @@ Module Module1
             'xlApp.DisplayFormulaBar = False
 
 
-            'Try
+            Try
 
-            If Not IsNothing(xlApp.ActiveWindow) Then
+                If Not IsNothing(xlApp.ActiveWindow) Then
 
-                With xlApp.ActiveWindow
-                    .Visible = smartChartsAreEditable
-                    '.Caption = "VISBO Smart Diagram"
-                    '.DisplayHeadings = False
-                    '.DisplayWorkbookTabs = False
+                    With xlApp.ActiveWindow
+                        .Visible = smartChartsAreEditable
+                        .Caption = "VISBO Smart Diagram"
+                        .DisplayHeadings = False
+                        .DisplayWorkbookTabs = False
 
-                    .Width = 50
-                    .Height = 15
-                    .Top = 10
-                    .Left = -120
+                        .Width = 50
+                        .Height = 15
+                        .Top = 10
+                        .Left = -120
 
-                End With
-            End If
+                    End With
+                End If
 
-            'Catch ex As Exception
-
-            'End Try
+            Catch ex As Exception
+                Dim a As Integer = -1
+            End Try
 
 
             pptChart.Refresh()
@@ -4306,11 +4303,13 @@ Module Module1
             ' mit Try Catch geklammert - findet das ist besserer Programmier-Stil 
             'On Error Resume Next
             'On Error GoTo 0
+
+
             pptChartData = Nothing
             pptChart = Nothing
 
         Catch ex As Exception
-
+            Dim a As Integer = -1
         End Try
 
 
@@ -10277,6 +10276,7 @@ Module Module1
 
                         If diff <> 0 Then
                             Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
+                            pptAPP.Activate()
                         End If
 
 

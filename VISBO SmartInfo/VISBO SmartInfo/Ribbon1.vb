@@ -272,7 +272,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -339,7 +340,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -403,7 +405,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -467,7 +470,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -542,7 +546,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -700,7 +705,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then
@@ -759,7 +765,8 @@ Public Class Ribbon1
             Call MsgBox(ex.StackTrace)
         End Try
 
-        pptAPP.Presentations(presName).Windows(1).Activate()
+        pptAPP.Activate()
+        'pptAPP.Presentations(presName).Windows(1).Activate()
 
         'ur:2019-06-04
         If awinSettings.visboDebug Then

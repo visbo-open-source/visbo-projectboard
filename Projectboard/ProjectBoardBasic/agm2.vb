@@ -11730,7 +11730,7 @@ Public Module agm2
                                 Loop
 
                             Catch ex2 As Exception
-                                errMsg = "File " & dateiName & ": Fehler / Error  ... " & vbLf & ex2.Message
+                                errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
                                 meldungen.Add(errMsg)
                                 Call logfileSchreiben(errMsg, "", anzFehler)
 
