@@ -5040,11 +5040,11 @@ Public Module Module1
                         .Tags.Add("VNM", vName)
                     End If
 
-                    If Not IsNothing(vName) Then
+                    If Not IsNothing(vpid) Then
                         If .Tags.Item("VPID").Length > 0 Then
                             .Tags.Delete("VPID")
                         End If
-                        .Tags.Add("VPID", vName)
+                        .Tags.Add("VPID", vpid)
                     End If
 
                     If Not IsNothing(qualifier) Then

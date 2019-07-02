@@ -2033,6 +2033,7 @@ Public Module testModule
 
                                             ' muss mit dem ersten oder letzten verglichen werden ? 
                                             .hproj = hproj
+                                            .vpid = hproj.vpID
                                             If .vergleichsTyp = PTVergleichsTyp.erster Then
                                                 .vglProj = bproj
                                             ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then

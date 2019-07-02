@@ -29,8 +29,8 @@ Public Class clsSmartSlideListen
     Private _LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Elemente, die manuell verschoben wurden, für die also ein Change Request erstellt wurde .. 
     Private _mVList As SortedList(Of Integer, Boolean)
-    ' enthält die Liste an Projekten , im Integer ist der Project Type abgelegt  
-    Private _projectList As SortedList(Of String, ptPRPFType)
+    ' enthält die Liste an Projekten , im string ist die zugehörige VPID 
+    Private _projectList As SortedList(Of String, String)
     ' enthält die Liste an Portfolio, sortiert nach Namen 
     Private _portfolioList As SortedList(Of String, String)
     ' enthält die Liste der Rollen -> ShapiID , Summe ; erfordert Datenbank Access 
@@ -133,16 +133,63 @@ Public Class clsSmartSlideListen
 
     ''' <summary>
     ''' liefert true, wenn das Projekt mit projectVariantName = pName#vName in der Liste der Projekte enthalten ist 
+    ''' oder wenn vpid und vName mit passender vName in ProjectList enthalten ist
     ''' </summary>
     ''' <param name="pvName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property containsProject(ByVal pvName As String) As Boolean
+    Public ReadOnly Property containsProject(ByVal pvName As String, Optional ByVal vpid As String = "") As Boolean
         Get
-            containsProject = _projectList.ContainsKey(pvName)
+            Dim result As Boolean = False
+
+            If vpid = "" Then
+                result = _projectList.ContainsKey(pvName)
+            Else
+                Dim variante As String = getVariantnameFromKey(pvName)
+
+                For Each kvp As KeyValuePair(Of String, String) In _projectList
+                    Dim pname As String = getPnameFromKey(kvp.Key)
+                    Dim vname As String = getVariantnameFromKey(kvp.Key)
+                    If kvp.Value = vpid Then
+                        If vname = variante Then
+                            result = True
+                            Exit For
+                        Else
+                            result = False
+                        End If
+                    End If
+                Next
+
+            End If
+
+            containsProject = result
         End Get
     End Property
+    ''' <summary>
+    ''' hiermit wird gecheckt, ob die _projectList mit vpids ist oder nur mit pvname
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property projectsWithVPid() As Boolean
+        Get
+            Dim result As Boolean = True
+            If _projectList.Count > 0 Then
+
+                For Each kvp As KeyValuePair(Of String, String) In _projectList
+                    If kvp.Value <> "" Then
+                        result = result And True
+                    Else
+                        result = False
+                        Exit For
+                    End If
+                Next
+            Else
+                result = False
+            End If
+            projectsWithVPid = result
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' liefert true, wenn das Portfolio mit portfolioName = pName in der Liste der Portfolios enthalten ist 
@@ -189,15 +236,15 @@ Public Class clsSmartSlideListen
     ''' die Project TimeStampListe kann Nothing sein ... 
     ''' </summary>
     ''' <param name="pvName"></param>
-    ''' <param name="pType">gibt an, ob Projekt oder Portfolio Projekt</param>
+    ''' <param name="vpid">gibt an, ob Projekt oder Portfolio Projekt</param>
     ''' <remarks></remarks>
-    Public Sub addProject(ByVal pvName As String, Optional ByVal pType As ptPRPFType = ptPRPFType.project)
+    Public Sub addProject(ByVal pvName As String, Optional ByVal vpid As String = "")
 
-        If _projectList.ContainsKey(pvName) Then
+        If Me.containsProject(pvName, vpid) Then
             _projectList.Remove(pvName)
         End If
 
-        _projectList.Add(pvName, pType)
+        _projectList.Add(pvName, vpid)
 
     End Sub
 
@@ -235,6 +282,26 @@ Public Class clsSmartSlideListen
                 getPVName = _projectList.ElementAt(index - 1).Key
             Else
                 getPVName = Nothing
+            End If
+
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt die vpid des i.ten-Elements zurück
+    ''' i läuft von 1.. count 
+    ''' Aufruf mit unzulässigem Index gibt Nothing zurück 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getvpID(ByVal index As Integer) As String
+        Get
+
+            If index >= 1 And index <= _projectList.Count Then
+                getvpID = _projectList.ElementAt(index - 1).Value
+            Else
+                getvpID = Nothing
             End If
 
         End Get
@@ -1312,7 +1379,8 @@ Public Class clsSmartSlideListen
 
         _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
-        _projectList = New SortedList(Of String, ptPRPFType)
+        '
+        _projectList = New SortedList(Of String, String)
 
         _portfolioList = New SortedList(Of String, String)
 

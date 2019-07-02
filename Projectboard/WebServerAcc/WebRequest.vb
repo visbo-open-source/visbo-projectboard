@@ -1110,20 +1110,33 @@ Public Class Request
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
                                                  ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
-                                                 ByRef err As clsErrorCodeMsg) As clsProjektHistorie
+                                                 ByRef err As clsErrorCodeMsg,
+                                                 Optional ByVal vpid As String = "") As clsProjektHistorie
 
         Dim result As New clsProjektHistorie
         storedLatest = storedLatest.ToUniversalTime()
         storedEarliest = storedEarliest.ToUniversalTime()
+        Dim vp As New clsVP
 
         Try
+            ' ur: 25.06.2019: vpid wurde angegeben
+            If vpid = "" Then
+                vp = GETvpid(projectname, err)
 
-            'Dim zwischenResult As New SortedList(Of DateTime, clsProjektWebLong)
-            Dim vpid As String = ""
-            Dim vp As clsVP = GETvpid(projectname, err)
+                ' VPID zu Projekt projectName holen vom WebServer/DB
+                vpid = vp._id
+            Else
+                If Not IsNothing(VRScache) Then
+                    If VRScache.VPsId.Count > 0 Then
+                        vp = VRScache.VPsId(vpid)
+                    Else
+                        VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+                        vp = VRScache.VPsId(vpid)
+                    End If
+                End If
 
-            ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = vp._id
+            End If
+
 
             If vpid <> "" Then
 

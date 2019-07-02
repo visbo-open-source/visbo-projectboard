@@ -1185,6 +1185,7 @@ Module Module1
         ReDim importantShapes(1)
         '
         ' zurücksetzen der importantShapes 
+
         importantShapes(ptImportantShapes.todayline) = Nothing
         importantShapes(ptImportantShapes.version) = Nothing
 
@@ -1269,11 +1270,15 @@ Module Module1
                         End If
 
                         Dim pvName As String = ""
+                        Dim vpid As String = ""
                         If projType = ptPRPFType.project Then
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
                                 Dim vName As String = tmpShape.Tags.Item("VNM")
                                 pvName = calcProjektKey(pName, vName)
+                            End If
+                            If tmpShape.Tags.Item("VPID").Length > 0 Then
+                                vpid = tmpShape.Tags.Item("VPID")
                             End If
                         ElseIf projType = ptPRPFType.portfolio Then
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
@@ -1282,7 +1287,9 @@ Module Module1
                                 pvName = pName
                                 'pvName = calcProjektKey(pName, vName)
                             End If
-
+                            If tmpShape.Tags.Item("VPID").Length > 0 Then
+                                vpid = tmpShape.Tags.Item("VPID")
+                            End If
                         End If
 
                         If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
@@ -1299,6 +1306,7 @@ Module Module1
                                 End If
                             End If
 
+
                         ElseIf tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) _
                                 And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prName))) Then
 
@@ -1306,10 +1314,10 @@ Module Module1
                             ' um zu berücksichtigen, dass auch Slides ohne Meilensteine / Phasen als Smart-Slides aufgefasst werden ...
 
                             If pvName <> "" Then
-                                If smartSlideLists.containsProject(pvName) Then
+                                If smartSlideLists.containsProject(pvName, vpid) Then
                                     ' nichts tun, ist schon drin ..
                                 Else
-                                    smartSlideLists.addProject(pvName, projType)
+                                    smartSlideLists.addProject(pvName, vpid)
                                 End If
                             End If
 
@@ -1381,15 +1389,15 @@ Module Module1
 
             ' hier müssen jetzt die Timestamps noch aufgebaut werden 
             For i As Integer = 1 To smartSlideLists.countProjects
+
                 Dim pvName As String = smartSlideLists.getPVName(i)
+                Dim vpid As String = smartSlideLists.getvpID(i)
 
-                If Not timeMachine.containsProject(pvName) Then
-                    timeMachine.addProject(pvName)
+                If Not timeMachine.containsProject(pvName, vpid) Then
+                    timeMachine.addProject(pvName, vpid)
                 End If
-
                 'Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
                 'smartSlideLists.addToListOfTS(tsCollection)
-
             Next
 
 
@@ -1994,20 +2002,23 @@ Module Module1
         Dim pvName As String = ""
         ' neu ergänzt wegen dem Element projectCard
         Dim isPCard As Boolean = False
+        ' neu ergänzt wegen zu verwendender vpid
+        Dim vpid As String = getVPIDFromTags(tmpShape)
 
         If isProjectCard(tmpShape) Then
             isPCard = True
             pvName = getPVnameFromTags(tmpShape)
+            vpid = getVPIDFromTags(tmpShape)
         Else
             pvName = getPVnameFromShpName(tmpShape.Name)
         End If
 
 
-        If pvName <> "" Then
+        If pvName <> "" And vpid <> "" Then
             If smartSlideLists.containsProject(pvName) Then
                 ' nichts tun, ist schon drin ..
             Else
-                smartSlideLists.addProject(pvName)
+                smartSlideLists.addProject(pvName, vpid)
             End If
         End If
 
@@ -2769,6 +2780,7 @@ Module Module1
                     ' ist Projekt
                     Dim pName As String = pptShape.Tags.Item("PNM")
                     Dim vName As String = pptShape.Tags.Item("VNM")
+                    Dim vpid As String = pptShape.Tags.Item("VPID")
 
                     'If showOtherVariant Then
                     '    vName = currentVariantname
@@ -2778,12 +2790,12 @@ Module Module1
                     '    pptShape.Tags.Add("VNM", vName)
                     '    Dim chck As String = pptShape.Tags.Item("VNM")
                     'End If
+                    If vpid <> "" Then
 
-                    If pName <> "" Then
                         Dim pvName As String = calcProjektKey(pName, vName)
 
                         ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+                        hproj = timeMachine.getProjectVersion(pvName, curTimeStamp, vpid)
 
                         If Not IsNothing(hproj) Then
 
@@ -2792,7 +2804,24 @@ Module Module1
                             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
                         End If
+
+                    Else
+                        If pName <> "" Then
+                            Dim pvName As String = calcProjektKey(pName, vName)
+
+                            ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                            hproj = timeMachine.getProjectVersion(pvName, curTimeStamp, vpid)
+
+                            If Not IsNothing(hproj) Then
+
+                                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+
+                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+                            End If
+                        End If
                     End If
+
                 End If
 
 
@@ -3125,7 +3154,7 @@ Module Module1
 
                     ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
                     'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
+                    scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp, scInfo.vpid)
 
                     ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                     continueOperation = Not IsNothing(scInfo.hproj)
@@ -3153,10 +3182,10 @@ Module Module1
 
                                         If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
                                             'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
+                                            scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName, scInfo.vpid)
                                         ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
                                             'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
+                                            scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp, scInfo.vpid)
                                         End If
 
 
@@ -7077,6 +7106,44 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt die vpid aus den Tags zurück 
+    ''' 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    Friend Function getVPIDFromTags(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpResult As String = ""
+
+        If curShape.Tags.Item("VPID").Length > 0 Then
+            tmpResult = curShape.Tags.Item("VPID")
+        End If
+
+        getVPIDFromTags = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' gibt die vpid und VariantNaame aus String zurück 
+    ''' 
+    ''' </summary>
+    ''' <param name="vpidVN"></param>
+    ''' <returns></returns>
+    Friend Function getVPIDVNfromString(ByVal vpidVN As String) As clsvpidVN
+
+        Const MongoDBIDLength As Integer = 24
+        Dim VNlength As Integer = vpidVN.Length - MongoDBIDLength
+
+        Dim vpid As String = LSet(vpidVN, MongoDBIDLength)
+        Dim VN As String = RSet(vpidVN, vpidVN.Length - MongoDBIDLength)
+
+
+        getVPIDVNfromString = New clsvpidVN(vpid, VN)
+
+    End Function
+
+
+    ''' <summary>
     ''' gibt den Projekt-/Varianten Namen zurück
     ''' ShapeName ist aufgebaut (pName#variantName)ElemID  
     ''' </summary>
@@ -10274,9 +10341,9 @@ Module Module1
 
                     If beforeSlideTimestamp > Date.MinValue Then
 
-                        Dim diff As Long = DateDiff(DateInterval.Second, currentTimestamp, beforeSlideTimestamp)
+                        Dim diff As Long = DateDiff(DateInterval.Minute, currentTimestamp, beforeSlideTimestamp)
 
-                        If diff <> 0 Then
+                        If diff <> 0 And Not noDBAccessInPPT Then
                             Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
                         End If
 

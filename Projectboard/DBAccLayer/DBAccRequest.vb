@@ -788,7 +788,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg) As clsProjektHistorie
+                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg,
+                                                 Optional ByVal vpid As String = "") As clsProjektHistorie
 
         Dim result As New clsProjektHistorie
 
@@ -797,7 +798,7 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                     If result.liste.Count <= 0 Then
 
                         Select Case err.errorCode
@@ -809,7 +810,7 @@ Public Class Request
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                                 End If
 
                             Case Else ' all others
