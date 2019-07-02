@@ -140,7 +140,7 @@
                 Dim curTimestamp As Date = _pfvliste.ElementAt(ix).Value.timeStamp
 
                 found = (refDate >= curTimestamp)
-                Do While ix >= 0 And Not found
+                Do While ix > 0 And Not found
                     ix = ix - 1
                     curTimestamp = _pfvliste.ElementAt(ix).Value.timeStamp
                     found = (refDate >= curTimestamp)
