@@ -10163,7 +10163,7 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            'Call showTSMessage(currentTimestamp)
+            Call showTSMessage(currentTimestamp)
 
             Try
                 If Not IsNothing(selectedPlanShapes) Then
