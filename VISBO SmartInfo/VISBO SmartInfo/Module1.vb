@@ -874,7 +874,6 @@ Module Module1
     ''' <param name="Pres"></param>
     ''' <remarks></remarks>
     Private Sub pptAPP_PresentationSave(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationSave
-
         If VisboProtected And Not Pres.Name.EndsWith(".pptx") Then
             If englishLanguage Then
                 Call MsgBox("Save only possible with file extension .pptx !")
@@ -1195,6 +1194,16 @@ Module Module1
         Catch ex As Exception
             importantShapes(ptImportantShapes.todayline) = Nothing
         End Try
+        'ur: 2019-05-29: TryCatch vermeiden
+        'For i = 1 To currentSlide.Shapes.Count
+        '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+
+        '        importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        '        Exit For
+        '    Else
+        '        importantShapes(ptImportantShapes.todayline) = Nothing
+        '    End If
+        'Next
 
 
         With currentSlide
@@ -1860,12 +1869,12 @@ Module Module1
 
             Catch ex As Exception
 
-                'Call MsgBox("in windowSelectionChange: sel.type = " & Sel.Type.ToString)
-                If Not IsNothing(propertiesPane) Then
-                    If propertiesPane.Visible Then
-                        Call aktualisiereInfoPane(Nothing)
-                    End If
-                End If
+                Call MsgBox("in windowSelectionChange: sel.type = " & Sel.Type.ToString)
+                'If Not IsNothing(propertiesPane) Then
+                '    If propertiesPane.Visible Then
+                '        Call aktualisiereInfoPane(Nothing)
+                '    End If
+                'End If
 
             End Try
 
@@ -3027,6 +3036,10 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            '' showRangeLeft und showRangeRight müssen gesetzt werden, damit bei der Bestimmung der Kapas und
+            '' Plandaten der Zeitraum bekannt ist.
+            'showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+            'showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
 
             If scInfo.pName <> "" Then
 
@@ -3045,12 +3058,6 @@ Module Module1
                             Else
                                 ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                                '' besetzte ggf den Zeitraum
-                                If scInfo.hasValidZeitraum Then
-                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                End If
-
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
                                 Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
@@ -3060,6 +3067,11 @@ Module Module1
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
 
+                                '' besetzte ggf den Zeitraum
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
                             End If
@@ -3070,12 +3082,6 @@ Module Module1
                                 currentConstellationName = scInfo.pName
                                 ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                                '' besetzte ggf den Zeitraum
-                                If scInfo.hasValidZeitraum Then
-                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                End If
-
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
                                 Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
@@ -3085,6 +3091,11 @@ Module Module1
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
 
+                                '' besetzte ggf den Zeitraum
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
 
@@ -3092,7 +3103,6 @@ Module Module1
                                 Call MsgBox("Chart kann nicht aktualisiert werden ..")
                             End Try
                         End If
-
                     Else
                         If awinSettings.englishLanguage Then
                             Call MsgBox("Portfolio named: " & scInfo.pName & " cannot be updated")
@@ -3100,7 +3110,6 @@ Module Module1
                             Call MsgBox("Das Portfolio " & scInfo.pName & " kann nicht aktualisiert werden")
                         End If
                     End If
-
 
                 Else
 
@@ -3206,7 +3215,6 @@ Module Module1
                     Catch ex As Exception
                         Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
                     End Try
-
 
                 End If
 
@@ -3947,395 +3955,376 @@ Module Module1
 
         Dim pptChart As PowerPoint.Chart
         Dim pptChartData As PowerPoint.ChartData
-        Dim xlApp As xlNS.Application = Nothing
+        Dim xlApp As xlNS.Application
 
         If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
             Exit Sub
         End If
 
-        Try
-            pptChart = pptShape.Chart
-            pptChartData = pptChart.ChartData
-
-            If Not IsNothing(pptChartData.Workbook) Then
-                'pptChartData.ActivateChartDataWindow()
-                pptChartData.Activate()
-            End If
+        pptChart = pptShape.Chart
+        pptChartData = pptChart.ChartData
+        If Not IsNothing(pptChartData.Workbook) Then
+            'pptChartData.ActivateChartDataWindow()
+            pptChartData.Activate()
+        End If
 
 
 
-            Dim diagramTitle As String = " "
-            Dim plen As Integer
+        Dim diagramTitle As String = " "
+        Dim plen As Integer
 
-            Dim Xdatenreihe() As String
-            Dim tdatenreihe() As Double
-            Dim istDatenReihe() As Double
-            Dim prognoseDatenReihe() As Double
-            Dim vdatenreihe() As Double
-            Dim internKapaDatenreihe() As Double
-            Dim vSum As Double = 0.0
-            Dim tSum As Double
-
-
-            Dim pkIndex As Integer = CostDefinitions.Count
-            Dim pstart As Integer
-
-            Dim zE As String = awinSettings.kapaEinheit
-
-            Dim tmpCollection As New Collection
-            Dim maxlenTitle1 As Integer = 20
-
-            Dim curmaxScale As Double
-
-            Dim IstCharttype As Microsoft.Office.Core.XlChartType
-            Dim PlanChartType As Microsoft.Office.Core.XlChartType
-            Dim vglChartType As Microsoft.Office.Core.XlChartType
-
-            Dim considerIstDaten As Boolean = False
-
-            ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
-            If scInfo.prPF = ptPRPFType.portfolio Then
-                considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
-            ElseIf scInfo.prPF = ptPRPFType.project Then
-                considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
-            End If
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
+        Dim vdatenreihe() As Double
+        Dim internKapaDatenreihe() As Double
+        Dim vSum As Double = 0.0
+        Dim tSum As Double
 
 
-            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-                IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
 
-                If considerIstDaten Then
-                    PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
-                Else
-                    PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
-                End If
+        Dim zE As String = awinSettings.kapaEinheit
 
-                vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        Dim tmpCollection As New Collection
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim curmaxScale As Double
+
+        Dim IstCharttype As Microsoft.Office.Core.XlChartType
+        Dim PlanChartType As Microsoft.Office.Core.XlChartType
+        Dim vglChartType As Microsoft.Office.Core.XlChartType
+
+        Dim considerIstDaten As Boolean = False
+
+        ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
+        If scInfo.prPF = ptPRPFType.portfolio Then
+            considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+        ElseIf scInfo.prPF = ptPRPFType.project Then
+            considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        End If
+
+
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+
+            If considerIstDaten Then
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
             Else
-                IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
-                vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             End If
 
-
-            ' die ganzen Vor-Klärungen machen ...
-            With pptChart
-
-                If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
-
-                    With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                        ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                        ' hinausgehende Werte hat 
-                        curmaxScale = .MaximumScale
-                        .MaximumScaleIsAuto = False
-                    End With
-
-                End If
-
-            End With
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        Else
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        End If
 
 
-            'Dim pname As String = scInfo.hproj.name
+        ' die ganzen Vor-Klärungen machen ...
+        With pptChart
 
-            '
-            ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
-            ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
-            '
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
 
-            Call bestimmePstartPlen(scInfo, pstart, plen)
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    curmaxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
 
-            ReDim Xdatenreihe(plen - 1)
-            ReDim tdatenreihe(plen - 1)
-            ReDim istDatenReihe(plen - 1)
-            ReDim prognoseDatenReihe(plen - 1)
-            ReDim vdatenreihe(plen - 1)
-            ReDim internKapaDatenreihe(plen - 1)
+            End If
+
+        End With
 
 
-            ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
-            Dim errMsg As String = ""
-            Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+        'Dim pname As String = scInfo.hproj.name
+
+        '
+        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
+        '
+
+        Call bestimmePstartPlen(scInfo, pstart, plen)
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
+        ReDim internKapaDatenreihe(plen - 1)
+
+
+        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+        Dim errMsg As String = ""
+        Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
                                        Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
 
-            If errMsg <> "" Then
-                ' es ist ein Fehler aufgetreten
-                If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
-                    pptShape.TextFrame2.TextRange.Text = errMsg
-                End If
-                Exit Sub
+        If errMsg <> "" Then
+            ' es ist ein Fehler aufgetreten
+            If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                pptShape.TextFrame2.TextRange.Text = errMsg
             End If
+            Exit Sub
+        End If
 
 
-            Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
+        Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
 
-            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-                tSum = tdatenreihe(tdatenreihe.Length - 1)
-                vSum = vdatenreihe(vdatenreihe.Length - 1)
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            tSum = tdatenreihe(tdatenreihe.Length - 1)
+            vSum = vdatenreihe(vdatenreihe.Length - 1)
+        Else
+            tSum = tdatenreihe.Sum
+            vSum = vdatenreihe.Sum
+
+        End If
+
+        Dim startRed As Integer = 0
+        Dim lengthRed As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+
+
+
+        With CType(pptChart, PowerPoint.Chart)
+
+            ' remove old series
+            ''Try
+            Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+            Do While anz > 0
+                .SeriesCollection(1).Delete()
+                anz = anz - 1
+            Loop
+            ''Catch ex As Exception
+
+            ''End Try
+        End With
+
+        ' jetzt die Farbe bestimme
+        Dim balkenFarbe As Integer = bestimmeBalkenFarbe(scInfo)
+
+
+        ' jetzt werden die Collections in dem Chart aufgebaut ...
+        With CType(pptChart, PowerPoint.Chart)
+
+
+            Dim dontShowPlanung As Boolean = False
+
+            If scInfo.prPF = ptPRPFType.portfolio Then
+
+                If ShowProjekte.actualDataUntil >= StartofCalendar Then
+                    dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+                End If
+
             Else
-                tSum = tdatenreihe.Sum
-                vSum = vdatenreihe.Sum
-
+                If scInfo.hproj.hasActualValues Then
+                    dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
+                End If
             End If
 
-            Dim startRed As Integer = 0
-            Dim lengthRed As Integer = 0
-            diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+            If Not dontShowPlanung Then
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-            With CType(pptChart, PowerPoint.Chart)
-
-                ' remove old series
-                ''Try
-                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
-                Do While anz > 0
-                    .SeriesCollection(1).Delete()
-                    anz = anz - 1
-                Loop
-                ''Catch ex As Exception
-
-                ''End Try
-            End With
-
-            ' jetzt die Farbe bestimme
-            Dim balkenFarbe As Integer = bestimmeBalkenFarbe(scInfo)
-
-
-            ' jetzt werden die Collections in dem Chart aufgebaut ...
-            With CType(pptChart, PowerPoint.Chart)
-
-
-                Dim dontShowPlanung As Boolean = False
-
-                If scInfo.prPF = ptPRPFType.portfolio Then
-
-                    If ShowProjekte.actualDataUntil >= StartofCalendar Then
-                        dontShowPlanung = getColumnOfDate(ShowProjekte.actualDataUntil) >= showRangeRight
+                    If scInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
+                        .Interior.Color = balkenFarbe
+                    Else
+                        .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
                     End If
 
-                Else
-                    If scInfo.hproj.hasActualValues Then
-                        dontShowPlanung = getColumnOfDate(scInfo.hproj.actualDataUntil) >= getColumnOfDate(scInfo.hproj.endeDate)
+
+                    .Values = prognoseDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = PlanChartType
+
+                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                        ' es handelt sich um eine Line
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
                     End If
-                End If
 
-                If Not dontShowPlanung Then
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                End With
+            End If
 
-                        If scInfo.prPF = ptPRPFType.portfolio Then
-                            .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
-                            .Interior.Color = balkenFarbe
-                        Else
-                            .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                            .Interior.Color = visboFarbeBlau
-                        End If
+            ' Beauftragung bzw. Vergleichsdaten
+            If scInfo.prPF = ptPRPFType.portfolio Then
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
+                    .Name = bestimmeLegendNameIPB("C")
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
 
-                        .Values = prognoseDatenReihe
-                        .XValues = Xdatenreihe
-                        .ChartType = PlanChartType
-
-                        If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                            ' es handelt sich um eine Line
-                            .Format.Line.Weight = 4
-                            .Format.Line.ForeColor.RGB = visboFarbeBlau
-                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                        End If
-
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                        .ForeColor.RGB = visboFarbeRed
+                        .Weight = 2
                     End With
-                End If
 
-                ' Beauftragung bzw. Vergleichsdaten
-                If scInfo.prPF = ptPRPFType.portfolio Then
-                    'series
+
+                End With
+
+                Dim tmpSum As Double = internKapaDatenreihe.Sum
+                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                    ' es gibt geplante externe Ressourcen ... 
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        .HasDataLabels = False
+                        '.name = "Kapazität incl. Externe"
+                        .Name = bestimmeLegendNameIPB("CI")
+                        '.Name = repMessages.getmsg(118)
 
-                        .Name = bestimmeLegendNameIPB("C")
-                        .Values = vdatenreihe
+                        .Values = internKapaDatenreihe
                         .XValues = Xdatenreihe
-
                         .ChartType = Microsoft.Office.Core.XlChartType.xlLine
                         With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                            .ForeColor.RGB = visboFarbeRed
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                            .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
                             .Weight = 2
                         End With
 
-
                     End With
-
-                    Dim tmpSum As Double = internKapaDatenreihe.Sum
-                    If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
-                        ' es gibt geplante externe Ressourcen ... 
-                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                            .HasDataLabels = False
-                            '.name = "Kapazität incl. Externe"
-                            .Name = bestimmeLegendNameIPB("CI")
-                            '.Name = repMessages.getmsg(118)
-
-                            .Values = internKapaDatenreihe
-                            .XValues = Xdatenreihe
-                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
-                                .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
-                                .Weight = 2
-                            End With
-
-                        End With
-                    End If
-                Else
-                    If Not IsNothing(scInfo.vglProj) Then
-
-                        'series
-                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-
-                            .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                            .Values = vdatenreihe
-                            .XValues = Xdatenreihe
-
-                            .ChartType = vglChartType
-
-                            If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                                With .Format.Line
-                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                    .ForeColor.RGB = visboFarbeOrange
-                                    .Weight = 4
-                                End With
-                            Else
-                                ' ggf noch was definieren ..
-                            End If
-
-                        End With
-
-                    End If
                 End If
+            Else
+                If Not IsNothing(scInfo.vglProj) Then
 
-
-                ' jetzt kommt der Neu-Aufbau der Series-Collections
-                If considerIstDaten Then
-
-                    ' jetzt die Istdaten zeichnen 
+                    'series
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                        If scInfo.prPF = ptPRPFType.portfolio Then
-                            .Name = bestimmeLegendNameIPB("IS")
-                        Else
-                            .Name = bestimmeLegendNameIPB("I")
-                        End If
-                        .Interior.Color = awinSettings.SollIstFarbeArea
-                        .Values = istDatenReihe
+
+                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Values = vdatenreihe
                         .XValues = Xdatenreihe
-                        .ChartType = IstCharttype
-                    End With
 
-                End If
+                        .ChartType = vglChartType
 
-            End With
-
-
-
-            ' Skalierung etc anpassen 
-            With CType(pptChart, PowerPoint.Chart)
-
-                If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
-
-                    With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
-                        ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                        ' hinausgehende Werte hat 
-
-                        If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                            .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                .ForeColor.RGB = visboFarbeOrange
+                                .Weight = 4
+                            End With
+                        Else
+                            ' ggf noch was definieren ..
                         End If
 
-
                     End With
-                End If
-            End With
-
-            ' ---- hier dann final den Titel setzen 
-            With pptChart
-                If .HasTitle Then
-                    .ChartTitle.Text = diagramTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
-
-                    If startRed > 0 And lengthRed > 0 Then
-                        ' die aktuelle Summe muss rot eingefärbt werden 
-                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
-                    End If
-                End If
-
-            End With
-
-
-            xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
-
-
-            'xlApp.Visible = smartChartsAreEditable
-            'xlApp.ScreenUpdating = False
-            'xlApp.DisplayFormulaBar = False
-
-
-            Try
-
-                If Not IsNothing(xlApp.ActiveWindow) Then
-
-                    With xlApp.ActiveWindow
-                        .Visible = smartChartsAreEditable
-                        .Caption = "VISBO Smart Diagram"
-                        .DisplayHeadings = False
-                        .DisplayWorkbookTabs = False
-
-                        .Width = 50
-                        .Height = 15
-                        .Top = 10
-                        .Left = -120
-
-                    End With
-                End If
-
-            Catch ex As Exception
-                Dim a As Integer = -1
-            End Try
-
-
-            pptChart.Refresh()
-
-            ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
-            ' mit Try Catch geklammert - findet das ist besserer Programmier-Stil 
-            'On Error Resume Next
-            'On Error GoTo 0
-
-
-            pptChartData = Nothing
-            pptChart = Nothing
-
-        Catch ex As Exception
-            Dim a As Integer = -1
-        End Try
-
-
-        Try
-
-            If Not IsNothing(xlApp) Then
-                If xlApp.Workbooks.Count = 1 Then
-
-                    For Each wb As Excel.Workbook In xlApp.Workbooks
-                        wb.Saved = True
-                    Next
-                Else
-                    For Each wb As Excel.Workbook In xlApp.Workbooks
-                        wb.Close(SaveChanges:=False)
-                    Next
 
                 End If
-
-                xlApp.Quit()
             End If
 
-        Catch ex As Exception
-            Call MsgBox("Fehler in updateProjectChartinPPT " & vbLf & ex.Message)
-        End Try
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    If scInfo.prPF = ptPRPFType.portfolio Then
+                        .Name = bestimmeLegendNameIPB("IS")
+                    Else
+                        .Name = bestimmeLegendNameIPB("I")
+                    End If
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = IstCharttype
+                End With
+
+            End If
+
+        End With
 
 
+
+        ' Skalierung etc anpassen 
+        With CType(pptChart, PowerPoint.Chart)
+
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+
+                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                    End If
+
+
+                End With
+            End If
+        End With
+
+        ' ---- hier dann final den Titel setzen 
+        With pptChart
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+
+                If startRed > 0 And lengthRed > 0 Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                End If
+            End If
+
+        End With
+
+
+        xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
+
+
+        'xlApp.Visible = smartChartsAreEditable
+        'xlApp.ScreenUpdating = False
+        'xlApp.DisplayFormulaBar = False
+
+
+        'Try
+
+        If Not IsNothing(xlApp.ActiveWindow) Then
+
+            With xlApp.ActiveWindow
+                .Visible = smartChartsAreEditable
+                '.Caption = "VISBO Smart Diagram"
+                '.DisplayHeadings = False
+                '.DisplayWorkbookTabs = False
+
+                .Width = 50
+                .Height = 15
+                .Top = 10
+                .Left = -120
+
+            End With
+        End If
+
+        'Catch ex As Exception
+
+        'End Try
+
+
+        pptChart.Refresh()
+        ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
+        On Error Resume Next
+        On Error GoTo 0
+        pptChartData = Nothing
+        pptChart = Nothing
+
+
+        'If xlApp.Workbooks.Count = 1 Then
+
+        '    For Each wb As Excel.Workbook In xlApp.Workbooks
+        '        wb.Saved = True
+        '        xlApp.Quit()
+        '    Next
+        'Else
+        '    For Each wb As Excel.Workbook In xlApp.Workbooks
+        '        wb.Close(SaveChanges:=False)
+        '    Next
+
+        'End If
 
 
     End Sub
@@ -6246,7 +6235,15 @@ Module Module1
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
         Try
             Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-
+            ' ur:2019-05-29: TryCatch vermeiden
+            'Dim todayLineShape As PowerPoint.Shape
+            'todayLineShape = Nothing
+            'For i = 1 To currentSlide.Shapes.Count
+            '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+            '        todayLineShape = currentSlide.Shapes.Item("todayLine")
+            '        Exit For
+            '    End If
+            'Next
             If Not IsNothing(todayLineShape) Then
                 Call sendTodayLinetoNewPosition(todayLineShape)
             End If
@@ -10019,30 +10016,35 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            'Call showTSMessage(currentTimestamp)
+            Call showTSMessage(currentTimestamp)
 
             Try
-                ' jetzt noch das InfoPane aktualisieren
                 If Not IsNothing(selectedPlanShapes) Then
 
-                    If selectedPlanShapes.Count >= 1 Then
-                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        If isRelevantMSPHShape(tmpShape) Then
-                            Call aktualisiereInfoPane(tmpShape)
-                        End If
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim curShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
 
-                        Call aktualisiereInfoFrm(tmpShape)
+                        Call aktualisiereInfoPane(curShape)
+                        Call aktualisiereInfoFrm(curShape)
+
                     End If
                 End If
             Catch ex As Exception
 
             End Try
 
+            ' jetzt noch das InfoPane aktualisieren
+            If Not IsNothing(selectedPlanShapes) Then
+                If selectedPlanShapes.Count >= 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    If isRelevantMSPHShape(tmpShape) Then
+                        Call aktualisiereInfoPane(tmpShape)
+                    End If
+                End If
+            End If
 
 
         End If
-
-        'pptAPP.Activate()
 
     End Sub
 
@@ -10276,7 +10278,6 @@ Module Module1
 
                         If diff <> 0 Then
                             Call updateSelectedSlide(ptNavigationButtons.individual, beforeSlideTimestamp)
-                            pptAPP.Activate()
                         End If
 
 
