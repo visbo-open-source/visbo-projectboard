@@ -874,7 +874,6 @@ Module Module1
     ''' <param name="Pres"></param>
     ''' <remarks></remarks>
     Private Sub pptAPP_PresentationSave(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationSave
-
         If VisboProtected And Not Pres.Name.EndsWith(".pptx") Then
             If englishLanguage Then
                 Call MsgBox("Save only possible with file extension .pptx !")
@@ -1195,6 +1194,16 @@ Module Module1
         Catch ex As Exception
             importantShapes(ptImportantShapes.todayline) = Nothing
         End Try
+        'ur: 2019-05-29: TryCatch vermeiden
+        'For i = 1 To currentSlide.Shapes.Count
+        '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+
+        '        importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        '        Exit For
+        '    Else
+        '        importantShapes(ptImportantShapes.todayline) = Nothing
+        '    End If
+        'Next
 
 
         With currentSlide
@@ -3027,6 +3036,10 @@ Module Module1
             Dim scInfo As New clsSmartPPTChartInfo
             Call scInfo.getValuesFromPPTShape(pptShape)
 
+            '' showRangeLeft und showRangeRight müssen gesetzt werden, damit bei der Bestimmung der Kapas und
+            '' Plandaten der Zeitraum bekannt ist.
+            'showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+            'showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
 
             If scInfo.pName <> "" Then
 
@@ -3045,12 +3058,6 @@ Module Module1
                             Else
                                 ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                                '' besetzte ggf den Zeitraum
-                                If scInfo.hasValidZeitraum Then
-                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                End If
-
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
                                 Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
@@ -3060,6 +3067,11 @@ Module Module1
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
 
+                                '' besetzte ggf den Zeitraum
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
                             End If
@@ -3070,12 +3082,6 @@ Module Module1
                                 currentConstellationName = scInfo.pName
                                 ShowProjekte.Clear(updateCurrentConstellation:=False)
 
-                                '' besetzte ggf den Zeitraum
-                                If scInfo.hasValidZeitraum Then
-                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
-                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
-                                End If
-
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
                                 Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
@@ -3085,6 +3091,11 @@ Module Module1
                                     ShowProjekte.Add(kvp.Value, updateCurrentConstellation:=False)
                                 Next
 
+                                '' besetzte ggf den Zeitraum
+                                If scInfo.hasValidZeitraum Then
+                                    showRangeLeft = getColumnOfDate(scInfo.zeitRaumLeft)
+                                    showRangeRight = getColumnOfDate(scInfo.zeitRaumRight)
+                                End If
 
                                 continueOperation = Not IsNothing(ShowProjekte)
 
@@ -3092,7 +3103,6 @@ Module Module1
                                 Call MsgBox("Chart kann nicht aktualisiert werden ..")
                             End Try
                         End If
-
                     Else
                         If awinSettings.englishLanguage Then
                             Call MsgBox("Portfolio named: " & scInfo.pName & " cannot be updated")
@@ -3100,7 +3110,6 @@ Module Module1
                             Call MsgBox("Das Portfolio " & scInfo.pName & " kann nicht aktualisiert werden")
                         End If
                     End If
-
 
                 Else
 
@@ -3206,7 +3215,6 @@ Module Module1
                     Catch ex As Exception
                         Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
                     End Try
-
 
                 End If
 
@@ -6227,7 +6235,15 @@ Module Module1
         ' und schließlich muss noch nachgesehen werden, ob es eine todayLine gibt 
         Try
             Dim todayLineShape As PowerPoint.Shape = currentSlide.Shapes.Item("todayLine")
-
+            ' ur:2019-05-29: TryCatch vermeiden
+            'Dim todayLineShape As PowerPoint.Shape
+            'todayLineShape = Nothing
+            'For i = 1 To currentSlide.Shapes.Count
+            '    If currentSlide.Shapes.Item(i).Name = "todayLine" Then
+            '        todayLineShape = currentSlide.Shapes.Item("todayLine")
+            '        Exit For
+            '    End If
+            'Next
             If Not IsNothing(todayLineShape) Then
                 Call sendTodayLinetoNewPosition(todayLineShape)
             End If
@@ -10000,7 +10016,7 @@ Module Module1
             Call setCurrentTimestampInSlide(currentTimestamp)
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
-            'Call showTSMessage(currentTimestamp)
+            Call showTSMessage(currentTimestamp)
 
             Try
                 If Not IsNothing(selectedPlanShapes) Then

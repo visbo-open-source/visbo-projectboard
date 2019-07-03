@@ -1579,6 +1579,12 @@ Public Module Module1
                 'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                 '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
                 '    tmpResult = role.isTeam
+            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+
+                ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
+                ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
+                tmpResult = role.isTeam
+
             End If
         End If
 
