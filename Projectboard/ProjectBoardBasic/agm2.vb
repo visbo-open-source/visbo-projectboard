@@ -17509,9 +17509,9 @@ Public Module agm2
                 Call MsgBox("wsName4 angesprochen")
             End If
 
-            If special = "ProjectBoard" Then
+            'If special = "ProjectBoard" Then
 
-                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
                     noDB = False
 
@@ -17548,7 +17548,7 @@ Public Module agm2
 
                 End If
 
-            End If 'if special="ProjectBoard"
+            'End If 'if special="ProjectBoard"
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -17648,9 +17648,6 @@ Public Module agm2
                     End Try
 
                 End If
-
-
-
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then

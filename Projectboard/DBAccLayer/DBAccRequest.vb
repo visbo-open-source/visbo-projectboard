@@ -377,7 +377,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <param name="onlyLatest"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String,
+    Public Function retrieveProjectsFromDB(ByVal vpid As String,
+                                           ByVal projectname As String, ByVal variantName As String,
                                                ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
                                                ByVal onlyLatest As Boolean,
@@ -391,7 +392,7 @@ Public Class Request
             If usedWebServer Then
 
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
 
@@ -404,7 +405,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
                                 End If
@@ -490,6 +491,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,
+                                             ByVal vpid As String,
                                              ByVal storedAtOrBefore As DateTime,
                                              ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
@@ -499,7 +501,7 @@ Public Class Request
             If usedWebServer Then
 
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, vpid, storedAtOrBefore, err)
 
                     If IsNothing(result) Then
 
@@ -510,7 +512,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, vpid, storedAtOrBefore, err)
                                 End If
 
                             Case Else ' all others
@@ -786,7 +788,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg) As clsProjektHistorie
+                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg,
+                                                 Optional ByVal vpid As String = "") As clsProjektHistorie
 
         Dim result As New clsProjektHistorie
 
@@ -795,7 +798,7 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                     If result.liste.Count <= 0 Then
 
                         Select Case err.errorCode
@@ -807,7 +810,7 @@ Public Class Request
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                                 End If
 
                             Case Else ' all others
