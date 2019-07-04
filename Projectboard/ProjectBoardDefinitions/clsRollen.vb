@@ -1,6 +1,6 @@
 ﻿''' <summary>
-''' Die Rollen müssen immer in der customization file in der ursprünglichen Reihenfolge aufgeführt sein; 
-''' ein Name kann umbenannt werden , aber er darf auf keinen Fall mit einer anderen ID im Customization File versehen werden 
+''' Die Rollen sind in der Orga-Struktur als sortierte Liste von RollenDefinitionen drin. 
+''' Sortier-Key nach der uid (integer) der RollenDefinition. 
 ''' 
 ''' </summary>
 ''' <remarks></remarks>
@@ -1646,7 +1646,8 @@ Public Class clsRollen
 
     End Function
     ''' <summary>
-    ''' gibt die Rolle mit der entsprechenden ID zurück ...
+    ''' gibt die Rolle zurück, die die gesuchte ID hat ...
+    ''' _allRollen ist eine sortierte Liste ..
     ''' </summary>
     ''' <param name="uid"></param>
     ''' <value></value>

@@ -5801,6 +5801,44 @@ Public Class clsProjekt
         End Get
     End Property
 
+    Public ReadOnly Property getPhaseIdsWithRoleCost(ByVal namenListe As Collection, ByVal namesAreRoleIDs As Boolean) As Collection
+        Get
+            Dim iDCollection As New Collection
+            Dim teamID As Integer = -1
+
+            For i As Integer = 1 To Me.CountPhases
+
+                Dim cphase As clsPhase = Me.getPhase(i)
+                Dim phaseNameID As String = cphase.nameID
+
+                If namesAreRoleIDs Then
+                    For Each tmpItem As String In namenListe
+                        Dim roleID As Integer = RoleDefinitions.getRoleDefByIDKennung(tmpItem, teamID).UID
+                        If Me.rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
+                            If Not iDCollection.Contains(phaseNameID) Then
+                                iDCollection.Add(phaseNameID, phaseNameID)
+                            End If
+                        End If
+                    Next
+                Else
+                    ' Kosten 
+                    For Each tmpItem As String In namenListe
+                        Dim costID As Integer = CostDefinitions.getCostdef(tmpItem).UID
+                        If Me.rcLists.phaseContainsCost(phaseNameID, costID) Then
+                            If Not iDCollection.Contains(phaseNameID) Then
+                                iDCollection.Add(phaseNameID, phaseNameID)
+                            End If
+                        End If
+                    Next
+                End If
+
+
+            Next
+
+            getPhaseIdsWithRoleCost = iDCollection
+        End Get
+    End Property
+
     ''' <summary>
     ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
     ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
