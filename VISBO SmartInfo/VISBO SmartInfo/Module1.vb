@@ -2224,10 +2224,11 @@ Module Module1
             ' denn nur die können Resourcen und Kostenbedarfe haben 
             If Not noDBAccessInPPT And Not isMilestone Then
                 Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
+                Dim vpid As String = smartSlideLists.getvpID(1)
 
                 If pvName <> "" Then
                     'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
-                    Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
+                    Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp, vpid)
                     Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
                     Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                     Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
@@ -3224,8 +3225,8 @@ Module Module1
 
                     ' tk 23.4.19
                     pvName = calcProjektKey(scInfo.pName, scInfo.vName)
-
                     ' damit auch eine andere Variante gezeigt werden kann ... 
+
                     If showOtherVariant Then
                         Dim tmpPName As String = getPnameFromKey(pvName)
                         pvName = calcProjektKey(tmpPName, currentVariantname)
@@ -6039,6 +6040,7 @@ Module Module1
 
                     ' überprüfe, ob es zu dem angegebenen Shape bereits ein TS Projekt gibt 
                     Dim pvName As String = getPVnameFromShpName(cmtShape.Name)
+                    Dim vpid As String = getVPIDFromTags(cmtShape)
 
                     ' damit auch eine andere Variante gezeigt werden kann ... 
                     Dim tmpPName As String = getPnameFromKey(pvName)
@@ -6046,10 +6048,11 @@ Module Module1
                         pvName = calcProjektKey(tmpPName, currentVariantname)
                     End If
 
-                    If pvName <> "" Then
+
+                    If pvName <> "" Or vpid <> "" Then
                         ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
                         'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
-                        Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp)
+                        Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp, vpid)
 
                         If Not IsNothing(tsProj) Then
 
@@ -6433,6 +6436,7 @@ Module Module1
             ' Voraussetzung: es handelt sich um ein relevantes Shapes, also einen Meilenstein, eine Phase, einen Swimlane- oder Segment Bezeichner ... eine Phase oder einen Meilenstein ... 
 
             Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
+            Dim vpid As String = getVPIDFromTags(tmpShape)
 
             ' damit auch eine andere Variante gezeigt werden kann ... 
             If showOtherVariant Then
@@ -6440,10 +6444,11 @@ Module Module1
                 pvName = calcProjektKey(tmpPName, currentVariantname)
             End If
 
+
             If pvName <> "" Then
                 ' wenn das Projekt noch nicht geladen wurde, wird es aus der DB geholt und angelegt  ... 
                 'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
-                Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp)
+                Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp, vpid)
                 ' kann dann nothing werden, wenn es zu diesem Zeitpunkt noch nicht existiert hat
                 If Not IsNothing(tsProj) Then
                     Dim elemName As String = tmpShape.Tags.Item("CN")
@@ -6464,7 +6469,7 @@ Module Module1
                             Dim bsn As String = tmpShape.Tags.Item("BSN")
                             Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                            Call addSmartPPTMsPhInfo(tmpShape, tsProj, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                       ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                       ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -6497,7 +6502,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
+                                Call addSmartPPTMsPhInfo(tmpShape, tsProj, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description,
                                                           ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone, ms.DocURL)
 
@@ -6526,7 +6531,7 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTMsPhInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
+                                Call addSmartPPTMsPhInfo(tmpShape, tsProj, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
                                                              ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                              ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -7704,8 +7709,10 @@ Module Module1
                     If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
                         Try
                             Dim pvName As String = getPVnameFromShpName(curShape.Name)
+                            Dim vpid As String = getVPIDFromTags(curShape)
+
                             'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
-                            Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
+                            Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp, vpid)
                             Dim phNameID As String = getElemIDFromShpName(curShape.Name)
                             Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                             Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
@@ -9177,9 +9184,10 @@ Module Module1
             Dim elemID As String = getElemIDFromShpName(nameArrayO(i - 1))
             Dim pvName As String = getPVnameFromShpName(nameArrayO(i - 1))
             Dim origShape As PowerPoint.Shape = currentSlide.Shapes(nameArrayO(i - 1))
+            Dim vpid As String = getVPIDFromTags(origShape)
 
             'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName:=pvName, tsDate:=previousTimeStamp)
-            Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, previousTimeStamp)
+            Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, previousTimeStamp, vpid)
             Dim isMilestone As Boolean = elemIDIstMeilenstein(elemID)
 
             If Not IsNothing(origShape) Then
@@ -9241,7 +9249,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                        Call addSmartPPTMsPhInfo(shadowShape, tsProj, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
                                                   cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
 
@@ -9268,7 +9276,7 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
-                        Call addSmartPPTMsPhInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                        Call addSmartPPTMsPhInfo(shadowShape, tsProj, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
 
@@ -9955,8 +9963,10 @@ Module Module1
         If Not noDBAccessInPPT And pptShapeIsPhase(curshape) Then
             Try
                 Dim pvName As String = getPVnameFromShpName(curshape.Name)
+                Dim vpid As String = getVPIDFromTags(curshape)
+
                 'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
-                Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
+                Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp, vpid)
                 Dim phNameID As String = getElemIDFromShpName(curshape.Name)
                 Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                 Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues

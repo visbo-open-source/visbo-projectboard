@@ -4382,6 +4382,7 @@ Public Module Module1
     ''' <param name="ampelErlaeuterung"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTMsPhInfo(ByRef pptShape As PowerPoint.Shape,
+                                   ByVal hproj As clsProjekt,
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String,
                                           ByVal bestShortName As String, ByVal bestLongName As String,
                                           ByVal startDate As Date, ByVal endDate As Date,
@@ -4395,6 +4396,12 @@ Public Module Module1
 
         If Not IsNothing(pptShape) Then
             With pptShape
+                If Not IsNothing(hproj.vpID) Then
+                    If .Tags.Item("VPID").Length > 0 Then
+                        .Tags.Delete("VPID")
+                    End If
+                    .Tags.Add("VPID", hproj.vpID)
+                End If
 
 
                 If Not IsNothing(fullBreadCrumb) Then
@@ -5167,7 +5174,7 @@ Public Module Module1
                     Dim ix As Integer = 0
                     Dim curDate As Date = sortedListOfMilestones.ElementAt(ix).Key
 
-                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0 And ix <= sortedListOfMilestones.Count - 1
 
                         If hproj.getMilestoneByID(sortedListOfMilestones.ElementAt(ix).Value).percentDone < 1 Then
                             overDue = overDue + 1
@@ -5182,11 +5189,12 @@ Public Module Module1
 
                 End If
 
+                ' jetzt die Phasen überprüfen 
                 If sortedListOfTasks.Count > 0 Then
                     Dim ix As Integer = 0
                     Dim curDate As Date = sortedListOfTasks.ElementAt(ix).Key
 
-                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0 And ix <= sortedListOfTasks.Count - 1
 
                         If hproj.getPhaseByID(sortedListOfTasks.ElementAt(ix).Value).percentDone < 1 Then
                             overDue = overDue + 1
@@ -6063,8 +6071,17 @@ Public Module Module1
 
         If repmsg.Contains(itemNameID) Then
             roleBezeichner = itemNameID
-        Else
+        ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
             roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+        ElseIf CostDefinitions.containsName(itemNameID) Then
+            roleBezeichner = itemNameID
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("Role/Cost ID " & itemNameID & " isn't defined yet")
+            Else
+                Call MsgBox("Rolle oder Kostenart " & itemNameID & " ist nicht in der Organisation enthalten")
+            End If
+            Exit Sub
         End If
 
 

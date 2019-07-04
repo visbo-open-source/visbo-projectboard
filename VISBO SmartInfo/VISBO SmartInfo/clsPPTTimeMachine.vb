@@ -292,6 +292,28 @@ Public Class clsPPTTimeMachine
                     If Not IsNothing(myHistory) Then
                         result = myHistory.ElementAtorBefore(refDate)
                     End If
+
+                Else   ' ist unter pvname gespeichert
+
+                    If _projectTimeStamps.ContainsKey(pvName) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+
+                        If IsNothing(myHistory) Then
+
+                            ' ProjektHistorie von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vName As String = getVariantnameFromKey(pvName)
+
+                            _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvName)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.ElementAtorBefore(refDate)
+                        End If
+                    End If
                 End If
             End If
 
@@ -345,6 +367,28 @@ Public Class clsPPTTimeMachine
                     If Not IsNothing(myHistory) Then
                         result = myHistory.beauftragung
                     End If
+
+                Else   ' Versuch mit Liste sortiert nach pvname
+
+                    If _projectTimeStamps.ContainsKey(pvname) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvname)
+
+                        If IsNothing(myHistory) Then
+                            ' von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvname)
+                            Dim vName As String = getVariantnameFromKey(pvname)
+
+                            _projectTimeStamps.Item(pvname) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvname)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.beauftragung
+                        End If
+                    End If
+
                 End If
             End If
 
@@ -396,6 +440,27 @@ Public Class clsPPTTimeMachine
                     ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
                     If Not IsNothing(myHistory) Then
                         result = myHistory.lastBeauftragung(refdate)
+                    End If
+
+                Else   'Versuch aus Liste sortiert nach pvname zu erhalten
+
+                    If _projectTimeStamps.ContainsKey(pvName) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+
+                        If IsNothing(myHistory) Then
+                            ' von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vName As String = getVariantnameFromKey(pvName)
+
+                            _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvName)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.lastBeauftragung(refdate)
+                        End If
                     End If
                 End If
             End If
