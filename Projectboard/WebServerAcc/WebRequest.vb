@@ -5704,7 +5704,13 @@ Public Class Request
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 
-                .vpid = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                Dim hilfsvpID As String = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                If hilfsvpID <> "" Then
+                    .vpid = hilfsvpID
+                Else
+                    .vpid = c.vpID
+                End If
+
 
                 .sortType = c.sortCriteria
                 ' .sortlist aufbauen aus c.sortlist
@@ -5755,6 +5761,7 @@ Public Class Request
 
                 .projectName = GETpName(vpfItem.vpid)
                 .variantName = vpfItem.variantName
+                .vpid = vpfItem.vpid
                 .start = vpfItem.start
                 .show = vpfItem.show
                 .zeile = vpfItem.zeile
@@ -5784,7 +5791,11 @@ Public Class Request
             With result
 
                 result.name = cItem.projectName
-                result.vpid = GETvpid(cItem.projectName, err)._id
+                If cItem.vpid <> "" Then
+                    result.vpid = cItem.vpid
+                Else
+                    result.vpid = GETvpid(cItem.projectName, err)._id
+                End If
                 result._id = ""
                 result.projectName = cItem.projectName
                 result.variantName = cItem.variantName

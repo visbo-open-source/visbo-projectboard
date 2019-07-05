@@ -5,6 +5,7 @@ Public Class clsConstellationItem
     Private _reasonToInclude As String = ""
     Private _projectName As String = ""
     Private _variantName As String = ""
+    Private _vpid As String = ""
     Private _start As Date = StartofCalendar
     Private _show As Boolean = False
     Private _zeile As Integer = 0
@@ -90,6 +91,19 @@ Public Class clsConstellationItem
 
         End Set
     End Property
+    Public Property vpid As String
+        Get
+            vpid = _vpid
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _vpid = value
+            Else
+                _vpid = ""
+            End If
+
+        End Set
+    End Property
     Public Property start As Date
         Get
             start = _start
@@ -145,7 +159,7 @@ Public Class clsConstellationItem
                 Else
                     .variantName = Me.variantName
                 End If
-
+                .vpid = Me.vpid
                 .show = Me.show
                 .projectTyp = Me.projectTyp
                 .reasonToInclude = Me.reasonToInclude
@@ -162,6 +176,7 @@ Public Class clsConstellationItem
 
         _projectName = ""
         _variantName = ""
+        _vpid = ""
         _start = StartofCalendar.AddMonths(-1)
         _show = False
         _zeile = 0
