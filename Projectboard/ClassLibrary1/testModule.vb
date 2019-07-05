@@ -335,6 +335,8 @@ Public Module testModule
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
 
+        Dim reportCreationDate As Date = Date.Now
+
         Dim bigType As Integer = -1
         Dim compID As Integer = -1
 
@@ -712,7 +714,7 @@ Public Module testModule
 
             ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
             'Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
-            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(pptSlide, reportCreationDate, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -3710,6 +3712,8 @@ Public Module testModule
         Dim myCollection As New Collection
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
+        ' muss einheitlich sein, sonst kriegt jede Slide ein anderes Datum ...
+        Dim reportCreationDate As Date = Date.Now
 
         Dim msgtxt As String = ""
 
@@ -3941,7 +3945,7 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als smartSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.portfolio)
+            Call addSmartPPTSlideBaseInfo(pptSlide, reportCreationDate, ptPRPFType.portfolio)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -13541,6 +13545,8 @@ Public Module testModule
 
         Dim QuartalsName() As String = {"Q1", "Q2", "Q3", "Q4"}
 
+        ' für Demo Arcadis
+        'minCal = True
 
         Dim newShapes As pptNS.ShapeRange
 
@@ -20163,13 +20169,33 @@ Public Module testModule
             ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
             Dim paperSizeRatio As Double
 
-            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count + selectedRoles.Count + selectedCosts.Count = 0)
             Dim selectedPhaseIDs As New Collection
             Dim selectedMilestoneIDs As New Collection
             Dim breadcrumbArray As String() = Nothing
 
             If Not considerAll Then
-                selectedPhaseIDs = hproj.getElemIdsOf(selectedPhases, False)
+                Dim tmpPhaseIDs As New Collection
+                If selectedPhases.Count > 0 Then
+                    selectedPhaseIDs = hproj.getElemIdsOf(selectedPhases, False)
+                End If
+                If selectedRoles.Count > 0 Then
+                    tmpPhaseIDs = hproj.getPhaseIdsWithRoleCost(selectedRoles, True)
+                    For Each tmpPhaseID As String In tmpPhaseIDs
+                        If Not selectedPhaseIDs.Contains(tmpPhaseID) Then
+                            selectedPhaseIDs.Add(tmpPhaseID, tmpPhaseID)
+                        End If
+                    Next
+                End If
+                If selectedCosts.Count > 0 Then
+                    tmpPhaseIDs = hproj.getPhaseIdsWithRoleCost(selectedCosts, False)
+                    For Each tmpPhaseID As String In tmpPhaseIDs
+                        If Not selectedPhaseIDs.Contains(tmpPhaseID) Then
+                            selectedPhaseIDs.Add(tmpPhaseID, tmpPhaseID)
+                        End If
+                    Next
+                End If
+
                 selectedMilestoneIDs = hproj.getElemIdsOf(selectedMilestones, True)
                 breadcrumbArray = hproj.getBreadCrumbArray(selectedPhaseIDs, selectedMilestoneIDs)
             End If
@@ -20272,7 +20298,8 @@ Public Module testModule
 
 
             ' tk:1.2.16 ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. oder aber considerAll gilt: 
-            awinSettings.mppExtendedMode = (awinSettings.mppExtendedMode And (selectedPhases.Count > 0)) Or
+            ' dabei müssen aber auch die selectedPhaseIDs berücksichtigt werden 
+            awinSettings.mppExtendedMode = (awinSettings.mppExtendedMode And (selectedPhases.Count > 0 Or selectedPhaseIDs.Count > 0)) Or
                                             (awinSettings.mppExtendedMode And considerAll)
 
 
@@ -20290,8 +20317,8 @@ Public Module testModule
             Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
 
             ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
-
-            Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+            ' dabei muss berücksichtigt werden dass selectedPhases.count = 0 sein kann, aber selectedPhaseIDs.count > 0 
+            Call rds.bestimmeZeilenHoehe(System.Math.Max(selectedPhases.Count, selectedPhaseIDs.Count), selectedMilestones.Count, considerAll)
 
 
             ' tk 1.2.16

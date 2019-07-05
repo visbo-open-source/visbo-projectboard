@@ -8257,6 +8257,7 @@ Public Module agm2
             ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
             Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
 
+
             If outputCollection.Count = 0 Then
                 ' weitermachen ... 
                 ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
@@ -8282,6 +8283,7 @@ Public Module agm2
                         If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
                             ' wieder zurück setzen ..
                             importedOrga = New clsOrganisation
+
                         Else
 
                         End If
@@ -11728,7 +11730,7 @@ Public Module agm2
                                 Loop
 
                             Catch ex2 As Exception
-                                errMsg = "File " & dateiName & ": Fehler / Error  ... " & vbLf & ex2.Message
+                                errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
                                 meldungen.Add(errMsg)
                                 Call logfileSchreiben(errMsg, "", anzFehler)
 

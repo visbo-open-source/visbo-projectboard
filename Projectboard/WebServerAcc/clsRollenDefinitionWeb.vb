@@ -13,11 +13,12 @@ Public Class clsRollenDefinitionWeb
     Public isTeam As Boolean
 
     Public uid As Integer
+
     Public name As String
     Public farbe As Long
     Public defaultKapa As Double
-
     Public tagessatzIntern As Double
+
     Public kapazitaet() As Double
 
     ' tk 23.11. nicht mehr relevant, bleibt drin, um alte Datenmodelle behandeln zu können 
@@ -53,7 +54,7 @@ Public Class clsRollenDefinitionWeb
                     Try
                         .addSubRole(CInt(sr.key), tmpValue)
                     Catch ex As Exception
-                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                        Call MsgBox("1119765: not allowed to have both team-Membership and Childs ..")
                     End Try
 
                 Next

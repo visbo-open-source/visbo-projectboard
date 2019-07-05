@@ -29,7 +29,7 @@ Public Class frmHierarchySelection
     Private selectedTyps As New Collection
 
     ' tk 19.5.19 wird für Allianz Team / Hierarchie Prototypen benötigt ...
-    Private showTeamsOnly As Boolean = True
+    Private showTeamsOnly As Boolean = False
 
 
     ' ur: 23.04.2019: hryStufen wurde entfernt, da der Wert immer auf 50 festgelegt wurde.
