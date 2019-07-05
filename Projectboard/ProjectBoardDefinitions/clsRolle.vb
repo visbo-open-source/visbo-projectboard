@@ -1,7 +1,10 @@
 ﻿Imports System.Math
 Public Class clsRolle
 
+    ' die ID der Rolle
     Private _uid As Integer
+
+    ' der Monats-Array mit den monatlichen Bedarfen
     Private _bedarf() As Double
 
     ' tk 24.11.18 isCalculated wird nie gebraucht 
