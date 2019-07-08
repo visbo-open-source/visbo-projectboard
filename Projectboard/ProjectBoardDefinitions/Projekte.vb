@@ -9721,7 +9721,7 @@ Public Module Projekte
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
         ErgebnisListeR = New Collection
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             Try
                 Dim teamID As Integer = -1
                 Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
@@ -9769,7 +9769,7 @@ Public Module Projekte
         anzRollen = ErgebnisListeR.Count
 
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or anzRollen = 0 Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or anzRollen = 0 Then
             ' eine Dimension größer, weil dei Eltern-Rolel noch mitkommt 
             ReDim tdatenreihe(anzRollen)
             ReDim Xdatenreihe(anzRollen)
@@ -9794,7 +9794,7 @@ Public Module Projekte
         Next r
 
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             ' jetzt soll die Specifics noch aufgenommen werden 
             anzRollen = anzRollen + 1
 
@@ -10045,7 +10045,7 @@ Public Module Projekte
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
         ErgebnisListeR = New Collection
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             Try
                 Dim teamID As Integer = -1
                 Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
@@ -10091,7 +10091,7 @@ Public Module Projekte
 
         anzRollen = ErgebnisListeR.Count
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or anzRollen = 0 Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or anzRollen = 0 Then
             ' eine Dimension größer, weil dei Eltern-Rolel noch mitkommt 
             ReDim tdatenreihe(anzRollen)
             ReDim Xdatenreihe(anzRollen)
@@ -10115,7 +10115,7 @@ Public Module Projekte
         Next r
 
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             ' jetzt soll die Specifics noch aufgenommen werden 
             anzRollen = anzRollen + 1
 
@@ -25443,7 +25443,7 @@ Public Module Projekte
     ''' <returns></returns>
     Public Function calcCurKey(ByVal userName As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String) As String
         Dim key As String = userName.Trim & CInt(customRoleType).ToString.Trim
-        If customRoleType = ptCustomUserRoles.RessourceManager Then
+        If customRoleType = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             key = key & specifics
         End If
 
@@ -27075,6 +27075,27 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' gibt aus dem String Visbo Center 1#Visbo Center 2#Visbo Center 3 eine Collection zurück, in der alle durch # getrennten Einträge enthalten sind 
+    ''' </summary>
+    ''' <param name="dbNames"></param>
+    ''' <returns></returns>
+    Public Function getPossibleVCNames(ByVal dbNames As String) As Collection
+        Dim resultCollection As New Collection
+
+        If Not IsNothing(dbNames) Then
+            Dim tmpNames() As String = dbNames.Split(New Char() {CChar("#")})
+
+            For Each tmpName As String In tmpNames
+                If Not resultCollection.Contains(tmpName) Then
+                    resultCollection.Add(tmpName, tmpName)
+                End If
+            Next
+        End If
+
+        getPossibleVCNames = resultCollection
+    End Function
+
+    ''' <summary>
     ''' extrahiert den Projekt-, Phasen- Namen bzw. die Meilenstein Nummer
     ''' je nachdem was als type angegeben wurde 
     ''' </summary>
@@ -28283,7 +28304,7 @@ Public Module Projekte
         Dim includingVirtualChilds As Boolean = False
 
         'Dim onlyConsiderTeamMembers As Boolean = False
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             includingVirtualChilds = True
         End If
 

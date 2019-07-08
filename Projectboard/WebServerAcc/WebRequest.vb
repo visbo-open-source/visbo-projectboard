@@ -915,7 +915,7 @@ Public Class Request
 
                         Case 409
 
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                                 Dim errNew As New clsErrorCodeMsg
                                 Dim newResult As Boolean = result
                                 Dim loopIndex As Integer = 1

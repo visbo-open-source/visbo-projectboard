@@ -3498,7 +3498,8 @@ Public Module testModule
 
             If selectedRoles.Count = 0 Then
                 ' die myCustomUserRole ist entscheidend 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     qualifier2 = myCustomUserRole.specifics
                 End If
             Else

@@ -115,6 +115,22 @@ Public Class ThisWorkbook
 
             End If
 
+            ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+            Dim collectionOfVCs As Collection = getPossibleVCNames(awinSettings.databaseName)
+
+            If collectionOfVCs.Count > 1 Then
+                Dim chooseVC As New frmSelectOneItem
+                chooseVC.itemsCollection = collectionOfVCs
+                If chooseVC.ShowDialog = DialogResult.OK Then
+                    ' alles ok 
+                    awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                Else
+                    Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                End If
+
+            End If
+
+
             ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If My.Settings.rememberUserPWD Then

@@ -28,8 +28,8 @@ Public Class frmHierarchySelection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
 
-    ' tk 19.5.19 wird für Allianz Team / Hierarchie Prototypen benötigt ...
-    Private showTeamsOnly As Boolean = False
+    ' tk 7.7.19 für Rolle Team-Manager 
+    Private showTeamsOnly As Boolean = myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager
 
 
     ' ur: 23.04.2019: hryStufen wurde entfernt, da der Wert immer auf 50 festgelegt wurde.
@@ -1788,7 +1788,7 @@ Public Class frmHierarchySelection
                         Dim teamID As Integer
                         Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                        If showTeamsOnly And Not curRole.isTeam And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                        If showTeamsOnly And Not curRole.isTeam And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                             Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
                             For Each vcID As Integer In virtualChilds
                                 If Not nodelist.ContainsKey(vcID) Then
@@ -5181,7 +5181,7 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                 If myCustomUserRole.specifics.Length > 0 Then
                     If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 

@@ -6884,7 +6884,7 @@ Public Module agm2
 
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
-                If roleType = ptCustomUserRoles.RessourceManager Then
+                If roleType = ptCustomUserRoles.RessourceManager Or roleType = ptCustomUserRoles.TeamManager Then
                     If RoleDefinitions.containsNameOrID(specifics) Then
                         ' alles ok
                         stillOk = True
@@ -15453,7 +15453,7 @@ Public Module agm2
             Dim trTeamID As Integer = -1
             Dim restrictedTopRole As clsRollenDefinition = Nothing
 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                 restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
             End If
 
@@ -15484,7 +15484,7 @@ Public Module agm2
 
                     ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                         If awinSettings.visboServer Then
                             isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
                         Else
@@ -15567,7 +15567,7 @@ Public Module agm2
                                 Dim validRole As Boolean = True
                                 Dim isVirtualChild As Boolean = False
 
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
                                         If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -15643,7 +15643,7 @@ Public Module agm2
 
                             ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
 
-                            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                            If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
                                 For c = 1 To cphase.countCosts
 
                                     Dim cost As clsKostenart = cphase.getCost(c)

@@ -2006,7 +2006,7 @@ Public Class Tabelle2
         Dim teamID As Integer = -1
 
         ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             Dim parentCollection As New Collection
 
             'parentCollection.Add(myCustomUserRole.specifics)
