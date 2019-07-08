@@ -150,6 +150,7 @@ Public Class clsPPTTimeMachine
 
 
                 Dim pfName As String = smartSlideLists.getPfName(i)
+                Dim vpid As String = smartSlideLists.getPFvpID(i)
 
                 If pfName.Contains("_last") Then
                     If awinSettings.englishLanguage Then
@@ -160,7 +161,7 @@ Public Class clsPPTTimeMachine
                     End If
                 Else
 
-                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName,
+                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName, vpid,
                                                                                                                                         minTS, err,
                                                                                                                                         Date.MinValue.AddDays(1))
 

@@ -1191,15 +1191,15 @@ Public Class Request
         setWriteProtection = result
     End Function
 
-
     ''' <summary>
     ''' Alle Projekte zu der Constellation 'portfolioName' zum Zeitpunkt storedAtOrBefore sortiert nach 'Projektname#VariantenName#'
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
@@ -1209,7 +1209,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
 
                     If result.Count <= 0 Then
 
@@ -1221,7 +1221,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
                                 End If
 
                             Case Else ' all others
@@ -1248,14 +1248,17 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
 
     End Function
+
     ''' <summary>
     ''' liefert das Portfolios 'portfolioName' das zum storedAtOrBefore gespeichert war. In timestamp ist Datum/Uhrzeit dessen enthalten
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1266,7 +1269,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                err, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
@@ -1279,7 +1282,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
                                 End If
 
@@ -1313,7 +1316,7 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1323,7 +1326,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
@@ -1336,7 +1339,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
                                 End If
 
