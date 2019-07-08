@@ -193,14 +193,30 @@ Public Class clsSmartSlideListen
 
     ''' <summary>
     ''' liefert true, wenn das Portfolio mit portfolioName = pName in der Liste der Portfolios enthalten ist 
+    ''' oder vpid = 
     ''' </summary>
     ''' <param name="pfName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property containsPortfolio(ByVal pfName As String) As Boolean
+    Public ReadOnly Property containsPortfolio(ByVal pfName As String, ByVal vpid As String) As Boolean
         Get
-            containsPortfolio = _portfolioList.ContainsKey(pfName)
+            Dim result As Boolean = False
+            If vpid = "" Then
+                result = _portfolioList.ContainsKey(pfName)
+            Else
+                For Each kvp As KeyValuePair(Of String, String) In _portfolioList
+                    If kvp.Value = vpid Then
+                        If pfName = kvp.Key Then
+                            result = True
+                            Exit For
+                        Else
+                            result = False
+                        End If
+                    End If
+                Next
+            End If
+            containsPortfolio = result
         End Get
     End Property
 
@@ -256,13 +272,13 @@ Public Class clsSmartSlideListen
     ''' </summary>
     ''' <param name="pfName"></param>
     ''' <remarks></remarks>
-    Public Sub addPortfolio(ByVal pfName As String)
+    Public Sub addPortfolio(ByVal pfName As String, Optional ByVal vpid As String = "")
 
         If _portfolioList.ContainsKey(pfName) Then
             _portfolioList.Remove(pfName)
         End If
 
-        _portfolioList.Add(pfName, pfName)
+        _portfolioList.Add(pfName, vpid)
 
     End Sub
     ''' <summary>
@@ -323,6 +339,26 @@ Public Class clsSmartSlideListen
                 getPfName = _portfolioList.ElementAt(index - 1).Key
             Else
                 getPfName = Nothing
+            End If
+
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt die vpid des i.ten-Elements zurück
+    ''' i läuft von 1.. count 
+    ''' Aufruf mit unzulässigem Index gibt Nothing zurück 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPFvpID(ByVal index As Integer) As String
+        Get
+
+            If index >= 1 And index <= _portfolioList.Count Then
+                getPFvpID = _portfolioList.ElementAt(index - 1).Value
+            Else
+                getPFvpID = Nothing
             End If
 
         End Get

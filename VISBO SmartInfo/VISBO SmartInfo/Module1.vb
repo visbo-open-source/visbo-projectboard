@@ -2,6 +2,7 @@
 Imports ClassLibrary1
 Imports DBAccLayer
 Imports ProjectBoardBasic
+Imports PowerPoint = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core.MsoThemeColorIndex
 
@@ -1161,7 +1162,7 @@ Module Module1
     Friend Sub buildSmartSlideLists()
 
         Dim err As New clsErrorCodeMsg
-
+        Dim vpid As String = ""
 
         '' vorherige smartSlideLists zwischenspeichern
         'Dim former_smartSlideLists As clsSmartSlideListen = smartSlideLists
@@ -1270,7 +1271,7 @@ Module Module1
                         End If
 
                         Dim pvName As String = ""
-                        Dim vpid As String = ""
+
                         If projType = ptPRPFType.project Then
                             If tmpShape.Tags.Item("PNM").Length > 0 Then
                                 Dim pName As String = tmpShape.Tags.Item("PNM")
@@ -1299,10 +1300,13 @@ Module Module1
                             ' das ist in einem Tag im tmpshape enthalten
 
                             If pvName <> "" Then
-                                If smartSlideLists.containsPortfolio(pvName) Then
+                                If tmpShape.Tags.Item("VPID").Length > 0 Then
+                                    vpid = tmpShape.Tags.Item("VPID")
+                                End If
+                                If smartSlideLists.containsPortfolio(pvName, vpid) Then
                                     ' nichts tun, ist schon drin ..
                                 Else
-                                    smartSlideLists.addPortfolio(pvName)
+                                    smartSlideLists.addPortfolio(pvName, vpid)
                                 End If
                             End If
 
@@ -1362,12 +1366,14 @@ Module Module1
                                         'pvName = calcProjektKey(pName, vName)
                                         pfName = pName
                                     End If
-
+                                    If tmpShape.Tags.Item("VPID").Length > 0 Then
+                                        vpid = tmpShape.Tags.Item("VPID")
+                                    End If
                                     If pfName <> "" Then
-                                        If smartSlideLists.containsPortfolio(pfName) Then
+                                        If smartSlideLists.containsPortfolio(pfName, vpid) Then
                                             ' nichts tun, ist schon drin ..
                                         Else
-                                            smartSlideLists.addPortfolio(pfName)
+                                            smartSlideLists.addPortfolio(pfName, vpid)
                                         End If
                                     End If
                                 Else
@@ -1391,7 +1397,7 @@ Module Module1
             For i As Integer = 1 To smartSlideLists.countProjects
 
                 Dim pvName As String = smartSlideLists.getPVName(i)
-                Dim vpid As String = smartSlideLists.getvpID(i)
+                vpid = smartSlideLists.getvpID(i)
 
                 If Not timeMachine.containsProject(pvName, vpid) Then
                     timeMachine.addProject(pvName, vpid)
@@ -2836,7 +2842,7 @@ Module Module1
                             ' lade das Portfolio 
                             Dim err As New clsErrorCodeMsg
                             currentSessionConstellation =
-                                CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName,
+                                CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid,
                                                                                                       portfolioTS,
                                                                                                      err, storedAtOrBefore:=curTimeStamp)
                             portfolio = currentSessionConstellation
@@ -3170,7 +3176,7 @@ Module Module1
 
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
-                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, scInfo.vpid, err, storedAtOrBefore:=curTimeStamp)
 
                                 ' bringe alles in ShowProjekte 
                                 For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe
@@ -3194,7 +3200,7 @@ Module Module1
 
                                 ' lade das Portfolio 
                                 Dim err As New clsErrorCodeMsg
-                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, err, storedAtOrBefore:=curTimeStamp)
+                                Dim pfListe As SortedList(Of String, clsProjekt) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(scInfo.pName, scInfo.vpid, err, storedAtOrBefore:=curTimeStamp)
 
                                 ' bringe alles in ShowProjekte 
                                 For Each kvp As KeyValuePair(Of String, clsProjekt) In pfListe

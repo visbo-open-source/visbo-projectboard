@@ -58,6 +58,7 @@ Public Class clsVPfItem
 
         End Set
     End Property
+
     Public Property start As Date
         Get
             start = _start

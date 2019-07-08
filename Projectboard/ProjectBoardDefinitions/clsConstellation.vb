@@ -995,7 +995,10 @@
 
             With copyResult
                 .constellationName = cName
+                .vpID = Me.vpID
+
                 .timestamp = Me.timestamp
+
 
                 'If prepareForDB Then
                 '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems

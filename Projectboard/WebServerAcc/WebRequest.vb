@@ -1622,28 +1622,34 @@ Public Class Request
         setWriteProtection = result
     End Function
 
+
     ''' <summary>
     ''' liefert alle Projekte zu der Version des Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpfid As String = ""
         Dim hproj As New clsProjekt
+
         Try
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
@@ -1670,14 +1676,18 @@ Public Class Request
     End Function
 
 
+
     ''' <summary>
     ''' Portfolio 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
     Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+                                                   ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1685,14 +1695,18 @@ Public Class Request
         Dim result As New clsConstellation
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpf As clsVPf
         Dim hproj As New clsProjekt
+
         Try
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
             If err.errorCode = 200 Then
@@ -1716,25 +1730,29 @@ Public Class Request
     ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpfid As String = ""
 
         Try
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
 
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
 
             If err.errorCode = 200 Then
@@ -5704,7 +5722,13 @@ Public Class Request
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 
-                .vpid = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                Dim hilfsvpID As String = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                If hilfsvpID <> "" Then
+                    .vpid = hilfsvpID
+                Else
+                    .vpid = c.vpID
+                End If
+
 
                 .sortType = c.sortCriteria
                 ' .sortlist aufbauen aus c.sortlist
@@ -5755,6 +5779,7 @@ Public Class Request
 
                 .projectName = GETpName(vpfItem.vpid)
                 .variantName = vpfItem.variantName
+                .vpid = vpfItem.vpid
                 .start = vpfItem.start
                 .show = vpfItem.show
                 .zeile = vpfItem.zeile
@@ -5784,7 +5809,11 @@ Public Class Request
             With result
 
                 result.name = cItem.projectName
-                result.vpid = GETvpid(cItem.projectName, err)._id
+                If cItem.vpid <> "" Then
+                    result.vpid = cItem.vpid
+                Else
+                    result.vpid = GETvpid(cItem.projectName, err)._id
+                End If
                 result._id = ""
                 result.projectName = cItem.projectName
                 result.variantName = cItem.variantName

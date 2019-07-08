@@ -3473,6 +3473,9 @@ Public Module awinGeneralModules
             Next
 
             If constellationsToShow.Count = 1 Then
+
+                'ur: 2019-07-08: notwendig um die vpid zu retten
+                currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
                 If clearSession Or sessionWasEmpty Or
                     clearBoard Or boardWasEmpty Then
                     currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
@@ -3489,6 +3492,8 @@ Public Module awinGeneralModules
                 currentConstellationName = calcLastSessionScenarioName()
                 ' hier muss jetzt der sortType auf CustomTF gesetzt werden  
                 If Not IsNothing(currentSessionConstellation) Then
+                    'ur:2019-07-08: es sind mehrere Portfolios in einer currentSessionConstellation
+                    currentSessionConstellation.vpID = ""
                     currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                 End If
             End If

@@ -6007,6 +6007,7 @@ Public Module testModule
                                         .einheit = PTEinheiten.personentage
                                         .pName = currentConstellationName
                                         .vName = ""
+                                        .vpid = currentSessionConstellation.vpID
                                         .prPF = ptPRPFType.portfolio
                                         .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
                                         .bigType = ptReportBigTypes.charts
