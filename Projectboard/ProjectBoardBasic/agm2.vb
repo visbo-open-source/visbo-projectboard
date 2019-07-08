@@ -18350,13 +18350,14 @@ Public Module agm2
             Try
                 If phaseAppearanceClasses.Length > 0 Then
                     With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Delete()
                         .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop,
                                                                                Formula1:=phaseAppearanceClasses)
                     End With
                 End If
 
             Catch ex As Exception
-
+                Call MsgBox("Fehler in WriteDefinitions Phasen: " & vbLf & ex.Message & vbLf & ex.Source)
             End Try
 
 
@@ -18447,13 +18448,14 @@ Public Module agm2
             Try
                 If milestoneAppearanceClasses.Length > 0 Then
                     With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
+                        .Validation.Delete()
                         .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop,
                                                                                Formula1:=milestoneAppearanceClasses)
                     End With
                 End If
 
             Catch ex As Exception
-
+                Call MsgBox("Fehler in WriteDefinitions Meilensteine: " & vbLf & ex.Message & vbLf & ex.Source)
             End Try
 
         Next ix
