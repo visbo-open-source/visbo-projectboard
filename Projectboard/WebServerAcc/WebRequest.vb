@@ -2578,16 +2578,31 @@ Public Class Request
         retrieveCustomFieldsFromDB = result
     End Function
 
-    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+    ''' <summary>
+    ''' Es werden alle vcName in einer Liste zurückgegeben, auf die der akt. User (akt. Token) Zugriff hat
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
-        Dim result As String = ""
+        Dim result As New List(Of String)
+
 
         Try
-            result = "not defined"
+            ' Alle VCs holen, auf die der aktuell eingeloggte User (sprich der akt. Token) Zugriff hat
+            VCs = GETallVC("")
+            For Each vc As clsVC In VCs
+                If Not result.Contains(vc.name) Then
+                    result.Add(vc.name)
+                Else
+                    result.Remove(vc.name)
+                    result.Add(vc.name)
+                End If
+            Next
         Catch ex As Exception
 
         End Try
-        retrieveUserIDFromName = result
+        retrieveVCsForUser = result
     End Function
 
     ' ------------------------------------------------------------------------------------------
@@ -5628,6 +5643,25 @@ Public Class Request
     ' Allgemeine Funktionen und Prozeduren, die hierin benötigt werden
     '------------------------------------------------------------------------------------------------------------------
 
+    ''' <summary>
+    ''' setzt das VC um, damit alle weiteren Calls auf dieses VC geleitet werden
+    ''' </summary>
+    ''' <param name="vcName"></param>
+    ''' <returns></returns>
+    Public Function updateActualVC(ByVal vcName As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            aktVCid = GETvcid(vcName)
+            result = True
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        updateActualVC = result
+
+    End Function
     ''' <summary>
     ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
     ''' </summary>
