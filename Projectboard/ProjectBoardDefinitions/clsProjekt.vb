@@ -2976,7 +2976,9 @@ Public Class clsProjekt
             If variantName = "" Then
                 variantName = getDefaultVariantNameAccordingUserRole()
             End If
-        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        Else
+            ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
+            'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             If variantName = ptVariantFixNames.pfv.ToString Then
                 variantName = getDefaultVariantNameAccordingUserRole()
             End If

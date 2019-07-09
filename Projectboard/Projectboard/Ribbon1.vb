@@ -1637,7 +1637,7 @@ Imports System.Web
 
 
                                 ' wenn es sich um einen Ressourcen-Manager handelt, dann muss das, was er geändert hat in die bisherige Basis Variante gemerged werden 
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
 
                                     Dim mergedProj As clsProjekt = Nothing
                                     Dim summaryRoleIDs As New Collection
@@ -7929,7 +7929,7 @@ Imports System.Web
                 Dim scInfo As New clsSmartPPTChartInfo
                 With scInfo
                     .hproj = hproj
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                         .q2 = myCustomUserRole.specifics
                     Else
                         .q2 = ""
@@ -8100,7 +8100,7 @@ Imports System.Web
                         Dim scInfo As New clsSmartPPTChartInfo
                         With scInfo
                             .hproj = hproj
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                                 .q2 = myCustomUserRole.specifics
                             Else
                                 .q2 = ""
@@ -10137,7 +10137,7 @@ Imports System.Web
                 scInfo.q2 = ""
                 scInfo.detailID = PTprdk.KostenBalken2
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -10174,7 +10174,7 @@ Imports System.Web
                 scInfo.q2 = ""
                 scInfo.detailID = PTprdk.KostenBalken
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 

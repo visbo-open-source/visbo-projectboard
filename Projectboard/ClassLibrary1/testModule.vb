@@ -751,6 +751,7 @@ Public Module testModule
 
                     If kennzeichnung = "Projekt-Name" Or
                         kennzeichnung = "Custom-Field" Or
+                        kennzeichnung = "selectedItems" Or
                         kennzeichnung = "Soll-Ist & Prognose" Or
                         kennzeichnung = "Multivariantensicht" Or
                         kennzeichnung = "Einzelprojektsicht" Or
@@ -851,7 +852,6 @@ Public Module testModule
             Next
 
 
-
             For Each tmpShape As pptNS.Shape In listofShapes
 
 
@@ -930,6 +930,43 @@ Public Module testModule
 
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                            ptReportBigTypes.components, ptReportComponents.prName)
+
+                            Case "selectedItems"
+
+                                Dim selTxt As String = ""
+
+                                If selectedRoles.Count > 0 Then
+                                    For Each tmpRoleID As String In selectedRoles
+                                        Dim teamID As Integer = -1
+                                        Dim tmpRoleName As String = RoleDefinitions.getRoleDefByIDKennung(tmpRoleID, teamID).name
+                                        If selTxt = "" Then
+                                            selTxt = tmpRoleName
+                                        Else
+                                            selTxt = selTxt & "; " & tmpRoleName
+                                        End If
+                                    Next
+                                End If
+
+                                If selectedCosts.Count > 0 Then
+                                    Dim firstTime As Boolean = True
+                                    For Each tmpCostName As String In selectedCosts
+                                        If selTxt = "" Then
+                                            selTxt = tmpCostName
+                                        Else
+                                            If firstTime Then
+                                                selTxt = selTxt & vbLf & tmpCostName
+                                            Else
+                                                selTxt = selTxt & "; " & tmpCostName
+                                            End If
+                                        End If
+                                        firstTime = False
+                                    Next
+                                End If
+
+                                ' wenn nichts in selTxtx drin steht , ist es auch gut. Dann "verschwindet" dieses Feld ...
+                                .TextFrame2.TextRange.Text = selTxt
+
+
 
                             Case "Custom-Field"
                                 If qualifier.Length > 0 Then
@@ -3473,7 +3510,8 @@ Public Module testModule
 
             If selectedRoles.Count = 0 Then
                 ' die myCustomUserRole ist entscheidend 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     qualifier2 = myCustomUserRole.specifics
                 End If
             Else
@@ -13989,143 +14027,148 @@ Public Module testModule
             End If
 
             ReDim position(dimension)
+            Try
 
-            If beschrifteLevel3 Then
+                If beschrifteLevel3 Then
 
-                rowHeight = qmHeightfaktor * KalenderHoehe
+                    rowHeight = qmHeightfaktor * KalenderHoehe
 
-                ' Play it safe - einfach Puffer von 5 daruf geben 
+                    ' Play it safe - einfach Puffer von 5 daruf geben 
 
-                If drawKWs Then
-                    ' die erste KW berechnen 
-                    curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfWeek + 1)
-                    If DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) < 0 Then
-                        curDatePtr = curDatePtr.AddDays(7)
-                    End If
-                Else
-                    curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
-                End If
-
-
-
-                Do While curDatePtr <= rds.PPTEndOFCalendar
-                    curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
-
-                    If curDatePtr < rds.PPTEndOFCalendar Then
-                        beschrifteLevel3 = beschrifteLevel3 Or (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+                    If drawKWs Then
+                        ' die erste KW berechnen 
+                        curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfWeek + 1)
+                        If DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) < 0 Then
+                            curDatePtr = curDatePtr.AddDays(7)
+                        End If
                     Else
-                        beschrifteLevel3 = (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+                        curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
                     End If
 
 
-                    ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
-                    ' und nur wenn nicht = endofPPTCalendar
-                    If (drawKWs Or (curDatePtr.Month <> 12)) And curDatePtr < rds.PPTEndOFCalendar Then
-                        position(positionPtr) = curRight
-                        positionPtr = positionPtr + 1
-                    End If
 
-                    ' auch das StepShape muss nur gezeichnet werden, wenn kleiner als endofPPTCalendar
-                    If curDatePtr < rds.PPTEndOFCalendar Then
-                        ''rds.calendarStepShape.Copy()
+                    Do While curDatePtr <= rds.PPTEndOFCalendar
+                        curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
+
+                        If curDatePtr < rds.PPTEndOFCalendar Then
+                            beschrifteLevel3 = beschrifteLevel3 Or (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+                        Else
+                            beschrifteLevel3 = (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+                        End If
+
+
+                        ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
+                        ' und nur wenn nicht = endofPPTCalendar
+                        If (drawKWs Or (curDatePtr.Month <> 12)) And curDatePtr < rds.PPTEndOFCalendar Then
+                            position(positionPtr) = curRight
+                            positionPtr = positionPtr + 1
+                        End If
+
+                        ' auch das StepShape muss nur gezeichnet werden, wenn kleiner als endofPPTCalendar
+                        If curDatePtr < rds.PPTEndOFCalendar Then
+                            ''rds.calendarStepShape.Copy()
+                            ''newShapes = rds.pptSlide.Shapes.Paste
+                            newShapes = pptCopypptPaste(rds.calendarStepShape, rds.pptSlide)
+
+                            With newShapes.Item(1)
+                                .Left = curRight
+                                .Top = curTop
+                                .Height = rowHeight
+                                .Name = .Name & .Id
+                                .AlternativeText = ""
+                                .Title = ""
+
+                                namesOfCalItemsCollection.Add(.Name, .Name)
+                            End With
+                        End If
+
+
+                        ' jetzt die KW bzw. Monatszahl  schreiben 
+
+                        If drawKWs Then
+                            If curDatePtr.DayOfWeek = 1 Then
+                                beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                            Else
+                                beschriftung = calcKW(curDatePtr).ToString("0#")
+                            End If
+
+                        Else
+
+                            beschriftung = monthName(curDatePtr.Month - 1)
+
+                        End If
+
+
+                        ''rds.quarterMonthVorlagenShape.Copy()
                         ''newShapes = rds.pptSlide.Shapes.Paste
-                        newShapes = pptCopypptPaste(rds.calendarStepShape, rds.pptSlide)
+                        newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
 
                         With newShapes.Item(1)
-                            .Left = curRight
-                            .Top = curTop
-                            .Height = rowHeight
+                            .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                            .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
                             .Name = .Name & .Id
                             .AlternativeText = ""
                             .Title = ""
 
+                            .TextFrame2.TextRange.Text = beschriftung
                             namesOfCalItemsCollection.Add(.Name, .Name)
                         End With
-                    End If
 
 
-                    ' jetzt die KW bzw. Monatszahl  schreiben 
-
-                    If drawKWs Then
-                        If curDatePtr.DayOfWeek = 1 Then
-                            beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                        curLeft = curRight
+                        If drawKWs Then
+                            curDatePtr = curDatePtr.AddDays(7)
                         Else
-                            beschriftung = calcKW(curDatePtr).ToString("0#")
+                            curDatePtr = curDatePtr.AddDays(1).AddMonths(1).AddDays(-1)
                         End If
 
-                    Else
 
-                        beschriftung = monthName(curDatePtr.Month - 1)
+                    Loop
 
+                    ' jetzt muss noch die Behandlung kommen, ob der Rest noch beschriftet werden soll 
+
+                    If curDatePtr > rds.PPTEndOFCalendar Then
+                        curDatePtr = rds.PPTEndOFCalendar
                     End If
 
+                    curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+                    If curRight - curLeft > rds.quarterMonthVorlagenShape.Width Then
 
-                    ''rds.quarterMonthVorlagenShape.Copy()
-                    ''newShapes = rds.pptSlide.Shapes.Paste
-                    newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
-
-                    With newShapes.Item(1)
-                        .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
-                        .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
-                        .Name = .Name & .Id
-                        .AlternativeText = ""
-                        .Title = ""
-
-                        .TextFrame2.TextRange.Text = beschriftung
-                        namesOfCalItemsCollection.Add(.Name, .Name)
-                    End With
-
-
-                    curLeft = curRight
-                    If drawKWs Then
-                        curDatePtr = curDatePtr.AddDays(7)
-                    Else
-                        curDatePtr = curDatePtr.AddDays(1).AddMonths(1).AddDays(-1)
-                    End If
-
-
-                Loop
-
-                ' jetzt muss noch die Behandlung kommen, ob der Rest noch beschriftet werden soll 
-
-                If curDatePtr > rds.PPTEndOFCalendar Then
-                    curDatePtr = rds.PPTEndOFCalendar
-                End If
-
-                curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
-                If curRight - curLeft > rds.quarterMonthVorlagenShape.Width Then
-
-                    If drawKWs Then
-                        If curDatePtr.DayOfWeek = 1 Then
-                            beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                        If drawKWs Then
+                            If curDatePtr.DayOfWeek = 1 Then
+                                beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                            Else
+                                beschriftung = calcKW(curDatePtr).ToString("0#")
+                            End If
                         Else
-                            beschriftung = calcKW(curDatePtr).ToString("0#")
+                            beschriftung = monthName(curDatePtr.Month - 1)
                         End If
-                    Else
-                        beschriftung = monthName(curDatePtr.Month - 1)
+
+                        ''rds.quarterMonthVorlagenShape.Copy()
+                        ''newShapes = rds.pptSlide.Shapes.Paste
+                        newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
+
+                        With newShapes.Item(1)
+                            .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                            .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
+                            .Name = .Name & .Id
+                            .AlternativeText = ""
+                            .Title = ""
+
+                            .TextFrame2.TextRange.Text = beschriftung
+                            namesOfCalItemsCollection.Add(.Name, .Name)
+                        End With
+
+
                     End If
 
-                    ''rds.quarterMonthVorlagenShape.Copy()
-                    ''newShapes = rds.pptSlide.Shapes.Paste
-                    newShapes = pptCopypptPaste(rds.quarterMonthVorlagenShape, rds.pptSlide)
-
-                    With newShapes.Item(1)
-                        .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
-                        .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
-                        .Name = .Name & .Id
-                        .AlternativeText = ""
-                        .Title = ""
-
-                        .TextFrame2.TextRange.Text = beschriftung
-                        namesOfCalItemsCollection.Add(.Name, .Name)
-                    End With
-
-
+                Else
+                    ' keine Kalender-Beschriftung vornehmen 
                 End If
 
-            Else
-                ' keine Kalender-Beschriftung vornehmen 
-            End If
+            Catch ex As Exception
+                Dim a As Integer = 0
+            End Try
 
             beschrifteLevel2 = True
 
@@ -20319,7 +20362,9 @@ Public Module testModule
 
             ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
             ' dabei muss berücksichtigt werden dass selectedPhases.count = 0 sein kann, aber selectedPhaseIDs.count > 0 
-            Call rds.bestimmeZeilenHoehe(System.Math.Max(selectedPhases.Count, selectedPhaseIDs.Count), selectedMilestones.Count, considerAll)
+
+            Call rds.bestimmeZeilenHoehe(System.Math.Max(selectedPhases.Count, selectedPhaseIDs.Count),
+                                         System.Math.Max(selectedMilestones.Count, hproj.getPhase(1).countMilestones), considerAll)
 
 
             ' tk 1.2.16
