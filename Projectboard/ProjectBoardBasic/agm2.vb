@@ -14839,10 +14839,12 @@ Public Module agm2
 
         Dim ok As Boolean = True
 
+
         Try
 
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
             Dim zeile As Integer = currentCell.Row
+
 
             If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
 
@@ -14850,6 +14852,7 @@ Public Module agm2
                 Dim columnStartData As Integer = visboZustaende.meColSD
                 Dim columnRC As Integer = visboZustaende.meColRC
 
+                Dim isProtectedZeile As Boolean = meWS.Cells(zeile, columnRC).locked
 
                 Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
@@ -14868,11 +14871,15 @@ Public Module agm2
                 Dim actualDataExists As Boolean = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, isRole, False).Sum > 0
 
                 ' jetzt wird gelöscht, wenn es noch keine Ist-Daten gibt ..
-                If Not actualDataExists Then
+                If Not actualDataExists And Not isProtectedZeile Then
                     Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID, isRole)
                 Else
-                    Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Delete not possible ... row is protected or contains actual data")
+                    Else
+                        Call MsgBox("Löschen nicht möglich ... Zeile ist geschützt oder enthält Ist-Daten")
+                    End If
+
                 End If
 
 
@@ -15597,10 +15604,24 @@ Public Module agm2
                                     If isProtectedbyOthers Then
                                         lockZeile = True
                                         lockText = protectionText
-                                    ElseIf isVirtualChild Then
+                                    ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                         ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
                                         lockZeile = True
-                                        lockText = ""
+                                        If awinSettings.englishLanguage Then
+                                            lockText = "Ressourcen-Manager darf Teams nicht editieren"
+                                        Else
+                                            lockText = "Ressourcen-Manager may not edit Teams"
+                                        End If
+
+                                    ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And restrictedTopRole.UID <> roleUID Then
+                                        ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
+                                        lockZeile = True
+                                        If awinSettings.englishLanguage Then
+                                            lockText = "Ressourcen-Manager darf Teams nicht editieren"
+                                        Else
+                                            lockText = "Ressourcen-Manager may not edit Teams"
+                                        End If
+
                                     End If
 
                                     Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
@@ -15955,6 +15976,8 @@ Public Module agm2
 
                 ' Business Unit schreiben 
                 CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                ' diese Zelle soll immer selektierbar sein, damit hier die Chart-Funktion was zeigen kann ...
+                CType(.Cells(zeile, 1), Excel.Range).Locked = False
 
                 ' Name schreiben
                 Call writeMEcellWithProjectName(CType(.Cells(zeile, 2), Excel.Range), hproj.name, isProtectedbyOthers, protectiontext)
@@ -16034,7 +16057,11 @@ Public Module agm2
                                 .Font.Color = XlRgbColor.rgbBlack
                             Else
                                 .Interior.Color = visboFarbeBlau
-                                .Font.Color = XlRgbColor.rgbWhite
+                                If Not isProtectedbyOthers Then
+                                    .Font.Color = XlRgbColor.rgbWhite
+                                Else
+                                    .Font.Color = XlRgbColor.rgbBlack
+                                End If
                             End If
 
                         Else
