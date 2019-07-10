@@ -1869,7 +1869,7 @@ Module Module1
 
             Catch ex As Exception
 
-                Call MsgBox("in windowSelectionChange: sel.type = " & Sel.Type.ToString)
+                'Call MsgBox("in windowSelectionChange: sel.type = " & Sel.Type.ToString)
                 'If Not IsNothing(propertiesPane) Then
                 '    If propertiesPane.Visible Then
                 '        Call aktualisiereInfoPane(Nothing)
