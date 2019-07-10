@@ -1,6 +1,6 @@
 ﻿Public Class frmSelectOneItem
 
-    Public itemsCollection As New Collection
+    Public itemsCollection As New List(Of String)
     Private Sub frmSelectOneItem_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Call languageSettings()

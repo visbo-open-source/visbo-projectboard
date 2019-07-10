@@ -377,7 +377,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <param name="onlyLatest"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String,
+    Public Function retrieveProjectsFromDB(ByVal vpid As String,
+                                           ByVal projectname As String, ByVal variantName As String,
                                                ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
                                                ByVal onlyLatest As Boolean,
@@ -391,7 +392,7 @@ Public Class Request
             If usedWebServer Then
 
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
 
@@ -404,7 +405,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
                                 End If
@@ -490,6 +491,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,
+                                             ByVal vpid As String,
                                              ByVal storedAtOrBefore As DateTime,
                                              ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
@@ -499,7 +501,7 @@ Public Class Request
             If usedWebServer Then
 
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, vpid, storedAtOrBefore, err)
 
                     If IsNothing(result) Then
 
@@ -510,7 +512,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, vpid, storedAtOrBefore, err)
                                 End If
 
                             Case Else ' all others
@@ -786,7 +788,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg) As clsProjektHistorie
+                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg,
+                                                 Optional ByVal vpid As String = "") As clsProjektHistorie
 
         Dim result As New clsProjektHistorie
 
@@ -795,7 +798,7 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                     If result.liste.Count <= 0 Then
 
                         Select Case err.errorCode
@@ -807,7 +810,7 @@ Public Class Request
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                             storedEarliest, storedLatest, err)
+                                                                                             storedEarliest, storedLatest, err, vpid)
                                 End If
 
                             Case Else ' all others
@@ -1188,15 +1191,15 @@ Public Class Request
         setWriteProtection = result
     End Function
 
-
     ''' <summary>
     ''' Alle Projekte zu der Constellation 'portfolioName' zum Zeitpunkt storedAtOrBefore sortiert nach 'Projektname#VariantenName#'
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
@@ -1206,7 +1209,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
 
                     If result.Count <= 0 Then
 
@@ -1218,7 +1221,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, err, storedAtOrBefore)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
                                 End If
 
                             Case Else ' all others
@@ -1245,14 +1248,17 @@ Public Class Request
         retrieveProjectsOfOneConstellationFromDB = result
 
     End Function
+
     ''' <summary>
     ''' liefert das Portfolios 'portfolioName' das zum storedAtOrBefore gespeichert war. In timestamp ist Datum/Uhrzeit dessen enthalten
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1263,7 +1269,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                err, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
@@ -1276,7 +1282,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, timestamp,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
                                 End If
 
@@ -1310,7 +1316,7 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1320,7 +1326,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
@@ -1333,7 +1339,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, timestamp,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
                                 End If
 
@@ -2175,14 +2181,14 @@ Public Class Request
 
         retrieveCustomFieldsFromDB = result
     End Function
-    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+    Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
-        Dim result As String = ""
+        Dim result As New List(Of String)
         Try
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveVCsForUser(err)
 
                     If result.Count <= 0 Then
 
@@ -2194,7 +2200,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveVCsForUser(err)
                                 End If
 
                             Case Else ' all others
@@ -2213,9 +2219,24 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveUserIDFromName = result
+        retrieveVCsForUser = result
     End Function
 
+    Public Function updateActualVC(ByVal vcName As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            dbname = vcName
+            result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName)
+            result = (dbname = awinSettings.databaseName)
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        updateActualVC = result
+
+    End Function
     Public Function clearCache()
         Dim result As Boolean = False
         Try

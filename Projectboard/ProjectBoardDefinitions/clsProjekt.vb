@@ -2622,6 +2622,7 @@ Public Class clsProjekt
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
             .kundenNummer = Me.kundenNummer
+            .vpID = Me.vpID
 
             Try
                 .movable = _movable

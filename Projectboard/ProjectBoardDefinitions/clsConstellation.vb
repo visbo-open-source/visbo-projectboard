@@ -995,7 +995,10 @@
 
             With copyResult
                 .constellationName = cName
+                .vpID = Me.vpID
+
                 .timestamp = Me.timestamp
+
 
                 'If prepareForDB Then
                 '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
@@ -1524,7 +1527,7 @@
         _sortType = skey
         _timestamp = Date.Now
 
-        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
 
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)

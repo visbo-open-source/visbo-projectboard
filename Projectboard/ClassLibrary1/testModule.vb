@@ -435,17 +435,26 @@ Public Module testModule
         End If
 
         Try
+
             ' prüft, ob bereits Powerpoint geöffnet ist 
+
             pptAppfromX = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
             Try
                 pptAppfromX = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+
             Catch ex1 As Exception
                 Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
                 Exit Sub
             End Try
 
         End Try
+
+        'Try
+        '    pptApp.Visible = False
+        'Catch ex As Exception
+
+        'End Try
 
 
         ' jetzt gibt es die pptAppFromX ..
@@ -2063,6 +2072,7 @@ Public Module testModule
 
                                             ' muss mit dem ersten oder letzten verglichen werden ? 
                                             .hproj = hproj
+                                            .vpid = hproj.vpID
                                             If .vergleichsTyp = PTVergleichsTyp.erster Then
                                                 .vglProj = bproj
                                             ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
@@ -3425,6 +3435,8 @@ Public Module testModule
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
                 End If
+
+                'pptApp.Visible = True
 
             Catch ex As Exception
 
@@ -6033,6 +6045,7 @@ Public Module testModule
                                         .einheit = PTEinheiten.personentage
                                         .pName = currentConstellationName
                                         .vName = ""
+                                        .vpid = currentSessionConstellation.vpID
                                         .prPF = ptPRPFType.portfolio
                                         .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
                                         .bigType = ptReportBigTypes.charts
@@ -10110,7 +10123,7 @@ Public Module testModule
 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projectType, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
                                   todoCollection)
 
@@ -14535,7 +14548,7 @@ Public Module testModule
                 End If
 
 
-                Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+                Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                             fullBreadCrumb, cphase.name, shortText, originalName,
                                             bestShortName, bestLongName,
                                             cphase.getStartDate, cphase.getEndDate,
@@ -14606,7 +14619,7 @@ Public Module testModule
                         originalName = Nothing
                     End If
 
-                    Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+                    Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                                 fullBreadCrumb, cphase.name, shortText, originalName,
                                                 bestShortName, bestLongName,
                                                 cphase.getStartDate, cphase.getEndDate,
@@ -16772,7 +16785,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -16798,7 +16811,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -16888,7 +16901,7 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1),
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
                                                    Nothing, hproj.getShapeText, Nothing, Nothing,
                                                    Nothing, Nothing,
                                                    hproj.startDate, hproj.endeDate,
@@ -17272,7 +17285,7 @@ Public Module testModule
                                         originalName = Nothing
                                     End If
 
-                                    Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+                                    Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                                                 fullBreadCrumb, cphase.name, shortText, originalName,
                                                                 bestShortName, bestLongName,
                                                                 phaseStart, phaseEnd,
@@ -17968,7 +17981,7 @@ Public Module testModule
             End If
 
             Dim lieferumfaenge As String = MS.getAllDeliverables("#")
-            Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+            Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                         fullBreadCrumb, MS.name, shortText, originalName,
                                         bestShortName, bestLongName,
                                         Nothing, msdate,
@@ -18235,7 +18248,7 @@ Public Module testModule
                     originalName = Nothing
                 End If
 
-                Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+                Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                             fullBreadCrumb, cphase.name, shortText, originalName,
                                             bestShortName, bestLongName,
                                             phStartDate, phEndDate,
@@ -18454,7 +18467,7 @@ Public Module testModule
                         End If
 
                         Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
-                        Call addSmartPPTMsPhInfo(copiedShape.Item(1),
+                        Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
                                                     fullBreadCrumb, cMilestone.name, shortText, originalName,
                                                     bestShortName, bestLongName,
                                                     Nothing, msDate,

@@ -17536,30 +17536,48 @@ Public Module agm2
                 Call MsgBox("wsName4 angesprochen")
             End If
 
-            If special = "ProjectBoard" Then
+            'If special = "ProjectBoard" Then
 
-                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
                     noDB = False
 
-                    '' ur: 23.01.2015: Abfragen der Login-Informationen
-                    'loginErfolgreich = loginProzedur()
+                '' ur: 23.01.2015: Abfragen der Login-Informationen
+                'loginErfolgreich = loginProzedur()
 
-                    loginErfolgreich = logInToMongoDB(True)
-
-                    ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
-                    '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-                    ''Dim allMyCustomUserRoles As New clsCustomUserRoles
-                    ''allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
-
-                    ''If allMyCustomUserRoles.count > 1 Then
-                    ''    Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
-                    ''Else
-                    ''    myCustomUserRole = allMyCustomUserRoles.elementAt(0)
-                    ''End If
+                loginErfolgreich = logInToMongoDB(True)
 
 
-                    If Not loginErfolgreich Then
+                ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+
+                If listOfVCs.Count > 1 Then
+                    Dim chooseVC As New frmSelectOneItem
+                    chooseVC.itemsCollection = listOfVCs
+                    If chooseVC.ShowDialog = DialogResult.OK Then
+                        ' alles ok 
+                        awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName)
+
+                    Else
+                        Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                    End If
+
+                End If
+
+                ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
+                '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+                ''Dim allMyCustomUserRoles As New clsCustomUserRoles
+                ''allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
+
+                ''If allMyCustomUserRoles.count > 1 Then
+                ''    Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
+                ''Else
+                ''    myCustomUserRole = allMyCustomUserRoles.elementAt(0)
+                ''End If
+
+
+                If Not loginErfolgreich Then
 
                         ' Customization-File wird geschlossen
                         xlsCustomization.Close(SaveChanges:=False)
@@ -17575,7 +17593,7 @@ Public Module agm2
 
                 End If
 
-            End If 'if special="ProjectBoard"
+            'End If 'if special="ProjectBoard"
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -17675,9 +17693,6 @@ Public Module agm2
                     End Try
 
                 End If
-
-
-
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then

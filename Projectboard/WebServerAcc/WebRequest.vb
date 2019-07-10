@@ -446,8 +446,9 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <param name="onlyLatest"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String,
-                                               ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
+    Public Function retrieveProjectsFromDB(ByVal vpid As String,
+                                           ByVal projectname As String, ByVal variantName As String,
+                                           ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
                                                ByVal onlyLatest As Boolean, ByRef err As clsErrorCodeMsg) _
                                                As SortedList(Of String, clsProjekt)
@@ -473,7 +474,10 @@ Public Class Request
 
             ' Kein Projekt  angegeben. es werden alle Projekte im angebenen Zeitraum zurückgegeben
 
-            If projectname = "" Then
+            If projectname = "" And vpid = "" Then
+
+                ' vpid immer noch leer, aber auch projectname = "" , alle Projekte sollen geholt werden
+
                 Try
 
                     VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
@@ -481,19 +485,14 @@ Public Class Request
                     If err.errorCode = 200 Then    ' Cache wurde erfolgreich gefüllt
 
                         Dim VisboPv_all As New List(Of clsProjektWebLong)
-                        'VisboPv_all = GETallVPvLong("", err, , , , variantName, aktDate)
+
                         VisboPv_all = GETallVPvLong(vpid:="", err:=err, variantName:=variantName, storedAtorBefore:=aktDate)
-
-                        'ur: nur zu testzwecken eingefügt
-                        'diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
-
-                        'Dim copyBeginn As Date = Date.Now
 
                         For Each webProj As clsProjektWebLong In VisboPv_all
 
                             If (webProj.startDate <= zeitraumEnde And
-                                    webProj.endDate >= zeitraumStart And
-                                    webProj.timestamp <= storedLatest) Then
+                                        webProj.endDate >= zeitraumStart And
+                                        webProj.timestamp <= storedLatest) Then
 
                                 hproj = New clsProjekt
                                 Dim vp As clsVP = Nothing
@@ -518,44 +517,7 @@ Public Class Request
 
                         Next
 
-                        'ur: nur zu testzwecken eingefügt
-                        'diffCopy = DateDiff(DateInterval.Second, copyBeginn, Date.Now)
 
-                        '' ur: 2018.11.14: das Holen aller Projekte und Varianten einzeln verursacht zu lange Antwortzeit
-                        ''
-                        '' schleife über alle VisboProjects
-                        'For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsN
-
-                        '    Dim vpid As String = kvp.Value._id
-
-                        '    If vpid <> "" Then
-                        '        ' gewünschten Varianten vom Server anfordern
-                        '        Dim allVPv As New List(Of clsProjektWebLong)
-                        '        allVPv = GETallVPvLong(vpid, , variantName, aktDate)
-
-                        '        For Each webProj As clsProjektWebLong In allVPv
-
-                        '            If (webProj.startDate <= zeitraumEnde And
-                        '                webProj.endDate >= zeitraumStart And
-                        '                webProj.timestamp <= storedLatest) Then
-
-                        '                hproj = New clsProjekt
-
-                        '                webProj.copyto(hproj)
-                        '                Dim a As Integer = hproj.dauerInDays
-                        '                Dim key As String = Projekte.calcProjektKey(hproj)
-                        '                If Not result.ContainsKey(key) Then
-                        '                    result.Add(key, hproj)
-                        '                End If
-
-                        '            End If
-
-                        '        Next
-                        '    Else
-                        '        ' kann eigentlich nicht vorkommen
-                        '    End If
-
-                        'Next
                     Else
                         If awinSettings.englishLanguage Then
                             Call MsgBox("Error, while reading the Projects from DB: " & err.errorMsg)
@@ -570,40 +532,56 @@ Public Class Request
                 End Try
 
             Else
-                Try
 
+                If vpid = "" And projectname <> "" Then
                     '  Projekt angegeben: d.h. es werden alle Timestamps der übergebenen Projekt-Variante zurückgegeben
                     Dim vp As clsVP = GETvpid(projectname, err)
-                    Dim vpid As String = vp._id
-                    If vpid <> "" Then
-                        ' gewünschten Varianten vom Server anfordern
-                        Dim allVPv As New List(Of clsProjektWebLong)
-                        allVPv = GETallVPvLong(vpid, err, , , , variantName, storedLatest)
+                    If Not IsNothing(vp) Then
+                        vpid = vp._id
+                    End If
+                End If
 
-                        For Each webProj As clsProjektWebLong In allVPv
-                            If webProj.timestamp >= storedEarliest Then
+                ' nun ist vpid gegeben
+                If vpid <> "" Then
 
-                                hproj = New clsProjekt
+                    Try
+                        '  Projekt angegeben: d.h. es werden alle Timestamps der übergebenen Projekt-Variante zurückgegeben
+                        Dim vp As clsVP = VRScache.VPsId(vpid)
+                        ' Projekt mit vpid noch nicht im Cache
+                        If IsNothing(vp) Then
+                            VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
+                        End If
 
-                                webProj.copyto(hproj, vp)
-                                Dim a As Integer = hproj.dauerInDays
-                                Dim key As String = Projekte.calcProjektKey(hproj)
-                                If Not result.ContainsKey(key) Then
-                                    result.Add(key, hproj)
+                        If vpid <> "" Then
+                            ' gewünschten Varianten vom Server anfordern
+                            Dim allVPv As New List(Of clsProjektWebLong)
+                            allVPv = GETallVPvLong(vpid, err, , , , variantName, storedLatest)
+
+                            For Each webProj As clsProjektWebLong In allVPv
+                                If webProj.timestamp >= storedEarliest Then
+
+                                    hproj = New clsProjekt
+
+                                    webProj.copyto(hproj, vp)
+                                    Dim a As Integer = hproj.dauerInDays
+                                    Dim key As String = Projekte.calcProjektKey(hproj)
+                                    If Not result.ContainsKey(key) Then
+                                        result.Add(key, hproj)
+                                    End If
+
                                 End If
 
-                            End If
+                            Next
 
-                        Next
+                        End If
 
-                    End If
+                    Catch ex As Exception
 
-                Catch ex As Exception
+                    End Try
 
-                End Try
+                End If
 
             End If
-
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -629,6 +607,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,
+                                             ByVal vpid As String,
                                              ByVal storedAtOrBefore As DateTime,
                                              ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
@@ -637,14 +616,23 @@ Public Class Request
 
         Try
             Dim hproj As New clsProjekt
-            Dim vpid As String = ""
+            Dim vp As clsVP
+
             'ur:24.02.19: 
             'Dim vp As clsVP = GETvpid(projectname, err)
+            If vpid = "" Then
+                ' projectname aus allen vps heraussuchen
+                vp = GETvpid(projectname, err, ptPRPFType.all)
 
-            ' projectname aus allen vps heraussuchen
-            Dim vp As clsVP = GETvpid(projectname, err, ptPRPFType.all)
+                vpid = vp._id
+            Else
+                vp = VRScache.VPsId(vpid)
+                If IsNothing(vp) Then
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
+                    vp = VRScache.VPsId(vpid)
+                End If
+            End If
 
-            vpid = vp._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
@@ -924,7 +912,7 @@ Public Class Request
                                     Dim summaryRoleIDs As New Collection
                                     summaryRoleIDs.Add(myCustomUserRole.specifics)
 
-                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, Date.Now, errNew)
+                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.vpID, projekt.name, projekt.variantName, Date.Now, errNew)
 
                                     If Not IsNothing(newproj) Then
                                         If Not newproj.isIdenticalTo(projekt) Then
@@ -1122,20 +1110,33 @@ Public Class Request
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
                                                  ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
-                                                 ByRef err As clsErrorCodeMsg) As clsProjektHistorie
+                                                 ByRef err As clsErrorCodeMsg,
+                                                 Optional ByVal vpid As String = "") As clsProjektHistorie
 
         Dim result As New clsProjektHistorie
         storedLatest = storedLatest.ToUniversalTime()
         storedEarliest = storedEarliest.ToUniversalTime()
+        Dim vp As New clsVP
 
         Try
+            ' ur: 25.06.2019: vpid wurde angegeben
+            If vpid = "" Then
+                vp = GETvpid(projectname, err)
 
-            'Dim zwischenResult As New SortedList(Of DateTime, clsProjektWebLong)
-            Dim vpid As String = ""
-            Dim vp As clsVP = GETvpid(projectname, err)
+                ' VPID zu Projekt projectName holen vom WebServer/DB
+                vpid = vp._id
+            Else
+                If Not IsNothing(VRScache) Then
+                    If VRScache.VPsId.Count > 0 Then
+                        vp = VRScache.VPsId(vpid)
+                    Else
+                        VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+                        vp = VRScache.VPsId(vpid)
+                    End If
+                End If
 
-            ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = vp._id
+            End If
+
 
             If vpid <> "" Then
 
@@ -1621,28 +1622,34 @@ Public Class Request
         setWriteProtection = result
     End Function
 
+
     ''' <summary>
     ''' liefert alle Projekte zu der Version des Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpfid As String = ""
         Dim hproj As New clsProjekt
+
         Try
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
@@ -1669,14 +1676,18 @@ Public Class Request
     End Function
 
 
+
     ''' <summary>
     ''' Portfolio 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
     Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
+                                                   ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
@@ -1684,14 +1695,18 @@ Public Class Request
         Dim result As New clsConstellation
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpf As clsVPf
         Dim hproj As New clsProjekt
+
         Try
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
             If err.errorCode = 200 Then
@@ -1715,25 +1730,29 @@ Public Class Request
     ''' liefert das Portfolios 'portfolioName' die zum storedAtOrBefore gespeichert waren
     ''' </summary>
     ''' <param name="portfolioName"></param>
+    ''' <param name="vpid"></param>
+    ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String,
+    Public Function retrieveFirstVersionOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                                  ByRef timestamp As Date,
                                                              ByRef err As clsErrorCodeMsg,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
-        Dim vpid As String = ""
+
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
         Dim vpfid As String = ""
 
         Try
+            If vpid = "" Then
+                vp = GETvpid(portfolioName, err, vptype)
+                vpid = vp._id
+            End If
 
-            vp = GETvpid(portfolioName, err, vptype)
-            vpid = vp._id
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
 
             If err.errorCode = 200 Then
@@ -2559,16 +2578,31 @@ Public Class Request
         retrieveCustomFieldsFromDB = result
     End Function
 
-    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+    ''' <summary>
+    ''' Es werden alle vcName in einer Liste zurückgegeben, auf die der akt. User (akt. Token) Zugriff hat
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
-        Dim result As String = ""
+        Dim result As New List(Of String)
+
 
         Try
-            result = "not defined"
+            ' Alle VCs holen, auf die der aktuell eingeloggte User (sprich der akt. Token) Zugriff hat
+            VCs = GETallVC("")
+            For Each vc As clsVC In VCs
+                If Not result.Contains(vc.name) Then
+                    result.Add(vc.name)
+                Else
+                    result.Remove(vc.name)
+                    result.Add(vc.name)
+                End If
+            Next
         Catch ex As Exception
 
         End Try
-        retrieveUserIDFromName = result
+        retrieveVCsForUser = result
     End Function
 
     ' ------------------------------------------------------------------------------------------
@@ -5610,6 +5644,25 @@ Public Class Request
     '------------------------------------------------------------------------------------------------------------------
 
     ''' <summary>
+    ''' setzt das VC um, damit alle weiteren Calls auf dieses VC geleitet werden
+    ''' </summary>
+    ''' <param name="vcName"></param>
+    ''' <returns></returns>
+    Public Function updateActualVC(ByVal vcName As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            aktVCid = GETvcid(vcName)
+            result = True
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        updateActualVC = result
+
+    End Function
+    ''' <summary>
     ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
     ''' </summary>
     ''' <param name="datumUhrzeit"></param>
@@ -5703,7 +5756,13 @@ Public Class Request
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 
-                .vpid = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                Dim hilfsvpID As String = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
+                If hilfsvpID <> "" Then
+                    .vpid = hilfsvpID
+                Else
+                    .vpid = c.vpID
+                End If
+
 
                 .sortType = c.sortCriteria
                 ' .sortlist aufbauen aus c.sortlist
@@ -5754,6 +5813,7 @@ Public Class Request
 
                 .projectName = GETpName(vpfItem.vpid)
                 .variantName = vpfItem.variantName
+                .vpid = vpfItem.vpid
                 .start = vpfItem.start
                 .show = vpfItem.show
                 .zeile = vpfItem.zeile
@@ -5783,7 +5843,11 @@ Public Class Request
             With result
 
                 result.name = cItem.projectName
-                result.vpid = GETvpid(cItem.projectName, err)._id
+                If cItem.vpid <> "" Then
+                    result.vpid = cItem.vpid
+                Else
+                    result.vpid = GETvpid(cItem.projectName, err)._id
+                End If
                 result._id = ""
                 result.projectName = cItem.projectName
                 result.variantName = cItem.variantName

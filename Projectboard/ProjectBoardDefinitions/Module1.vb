@@ -1012,12 +1012,14 @@ Public Module Module1
     Public historicDate As Date
 
     Public FirstX As Double = -1.0
+
     Public FirstY As Double = -1.0
     Public LastX As Double = -1.0
     Public LastY As Double = -1.0
     Public firstPress As Boolean = True
 
     Public fehlerBeimLoad As Boolean = False
+    Public awinsetTypen_Performed As Boolean = False
 
 
     Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
@@ -4386,6 +4388,7 @@ Public Module Module1
     ''' <param name="ampelErlaeuterung"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTMsPhInfo(ByRef pptShape As PowerPoint.Shape,
+                                   ByVal hproj As clsProjekt,
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String,
                                           ByVal bestShortName As String, ByVal bestLongName As String,
                                           ByVal startDate As Date, ByVal endDate As Date,
@@ -4399,6 +4402,12 @@ Public Module Module1
 
         If Not IsNothing(pptShape) Then
             With pptShape
+                If Not IsNothing(hproj.vpID) Then
+                    If .Tags.Item("VPID").Length > 0 Then
+                        .Tags.Delete("VPID")
+                    End If
+                    .Tags.Add("VPID", hproj.vpID)
+                End If
 
                 ' die Tag Werte müssen immer !! gelöscht werden; andernfalls behalten die Shapes diese Werte und der Update über die Zeit zeigt falsche Ergebnise !!
 
@@ -4599,6 +4608,15 @@ Public Module Module1
                     .Tags.Delete(kennung)
                 End If
                 .Tags.Add(kennung, tmpStr)
+
+                ' hier kommt nochmal der vpid rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.vpID
+                kennung = "VPID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
 
                 ' jetzt das Startdatum des Projektes bzw. der Phase
                 If Not IsNothing(cphase) Then
@@ -4813,6 +4831,7 @@ Public Module Module1
         'Dim vName As String = scinfo.hproj.variantName
         Dim pName As String = scinfo.pName
         Dim vName As String = scinfo.vName
+        Dim vpid As String = scinfo.vpid
 
         Dim chtObjName As String = ""
 
@@ -4884,6 +4903,13 @@ Public Module Module1
                             .Tags.Add("VNM", vName)
                         End If
 
+                        If .Tags.Item("VPID").Length > 0 Then
+                            .Tags.Delete("VPID")
+                        End If
+                        If Not IsNothing(vpid) Then
+                            .Tags.Add("VPID", vpid)
+                        End If
+
 
                         If .Tags.Item("Q1").Length > 0 Then
                             .Tags.Delete("Q1")
@@ -4950,11 +4976,13 @@ Public Module Module1
         Try
             Dim pName As String = ""
             Dim vName As String = ""
+            Dim vpid As String = ""
 
             If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
                 ' hier handelt es sich um ein Portfolio
                 pName = hportfolio.constellationName
                 vName = ""
+                vpid = hportfolio.vpID
 
             Else
                 ' hier handelt es sich um ein Projekt
@@ -4962,7 +4990,7 @@ Public Module Module1
 
                     pName = hproj.name
                     vName = hproj.variantName
-
+                    vpid = hproj.vpID
 
                     ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
                     If bigType = ptReportBigTypes.tables Then
@@ -5023,6 +5051,13 @@ Public Module Module1
                     End If
                     If Not IsNothing(vName) Then
                         .Tags.Add("VNM", vName)
+                    End If
+
+                    If .Tags.Item("VPID").Length > 0 Then
+                        .Tags.Delete("VPID")
+                    End If
+                    If Not IsNothing(vpid) Then
+                        .Tags.Add("VPID", vpid)
                     End If
 
                     If .Tags.Item("Q1").Length > 0 Then
@@ -5145,7 +5180,7 @@ Public Module Module1
                     Dim ix As Integer = 0
                     Dim curDate As Date = sortedListOfMilestones.ElementAt(ix).Key
 
-                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0 And ix <= sortedListOfMilestones.Count - 1
 
                         If hproj.getMilestoneByID(sortedListOfMilestones.ElementAt(ix).Value).percentDone < 1 Then
                             overDue = overDue + 1
@@ -5160,11 +5195,12 @@ Public Module Module1
 
                 End If
 
+                ' jetzt die Phasen überprüfen 
                 If sortedListOfTasks.Count > 0 Then
                     Dim ix As Integer = 0
                     Dim curDate As Date = sortedListOfTasks.ElementAt(ix).Key
 
-                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0 And ix <= sortedListOfTasks.Count - 1
 
                         If hproj.getPhaseByID(sortedListOfTasks.ElementAt(ix).Value).percentDone < 1 Then
                             overDue = overDue + 1
@@ -5293,7 +5329,7 @@ Public Module Module1
     ''' <param name="nameIDS"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape,
-                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String,
+                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, ByVal vpid As String,
                                         ByVal q1 As String, ByVal q2 As String,
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
                                         ByVal nameIDS As Collection)
@@ -5332,12 +5368,20 @@ Public Module Module1
                         .Tags.Add("VNM", vnm)
                     End If
 
+                    If .Tags.Item("VPID").Length > 0 Then
+                        .Tags.Delete("VPID")
+                    End If
+                    If Not IsNothing(vpid) Then
+                        .Tags.Add("VPID", vpid)
+                    End If
+
                     If .Tags.Item("Q1").Length > 0 Then
                         .Tags.Delete("Q1")
                     End If
                     If Not IsNothing(q1) Then
                         .Tags.Add("Q1", q1)
                     End If
+
 
                     If .Tags.Item("Q2").Length > 0 Then
                         .Tags.Delete("Q2")
@@ -5444,7 +5488,7 @@ Public Module Module1
         ' jetzt wird SmartTableInfo gesetzt 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projectType, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
                                   toDoCollection)
 
@@ -5680,7 +5724,7 @@ Public Module Module1
         ' jetzt wird die SmartTableInfo gesetzt 
         Dim emptyCollection As New Collection
         Call addSmartPPTTableInfo(pptShape,
-                                  hproj.projectType, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName, hproj.vpID,
                                   q1, q2, bigType, compID,
                                   emptyCollection)
 
@@ -6034,8 +6078,17 @@ Public Module Module1
 
         If repmsg.Contains(itemNameID) Then
             roleBezeichner = itemNameID
-        Else
+        ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
             roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+        ElseIf CostDefinitions.containsName(itemNameID) Then
+            roleBezeichner = itemNameID
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("Role/Cost ID " & itemNameID & " isn't defined yet")
+            Else
+                Call MsgBox("Rolle oder Kostenart " & itemNameID & " ist nicht in der Organisation enthalten")
+            End If
+            Exit Sub
         End If
 
 

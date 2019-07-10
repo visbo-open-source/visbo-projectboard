@@ -178,7 +178,7 @@ Public Module awinGeneralModules
                                         ' wenn es in der DB existiert, dann im Cache aufbauen 
                                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(dbPName, dbVName, Date.Now, err) Then
                                             ' jetzt aus datenbank holen und in AlleProjekte eintragen 
-                                            pproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(dbPName, dbVName, Date.Now, err)
+                                            pproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(dbPName, dbVName, "", Date.Now, err)
                                             If Not IsNothing(pproj) Then
                                                 If Not AlleProjekte.Containskey(kvp.Key) Then
                                                     AlleProjekte.Add(pproj, False)
@@ -1494,7 +1494,7 @@ Public Module awinGeneralModules
                     If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, datum, err) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, datum, err)
+                        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", datum, err)
 
                     Else
                         ' nichts tun, tmpResult ist bereits Nothing 
@@ -1740,7 +1740,7 @@ Public Module awinGeneralModules
                 Dim storedAtOrBefore = Date.Now
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pname, "", storedAtOrBefore, err) Then
-                    oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pname, "", storedAtOrBefore, err)
+                    oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pname, "", "", storedAtOrBefore, err)
                 End If
 
                 If Not IsNothing(oldProj) Then
@@ -1776,7 +1776,7 @@ Public Module awinGeneralModules
                         Dim visboDBname As String = pNames.Item(1)
 
                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore, err) Then
-                            oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore, err)
+                            oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", "", storedAtOrBefore, err)
                         End If
 
                         If Not IsNothing(oldProj) Then
@@ -1827,7 +1827,7 @@ Public Module awinGeneralModules
                         If visboDBname.Trim <> "" Then
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore, err) Then
 
-                                Dim rupiProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore, err)
+                                Dim rupiProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", "", storedAtOrBefore, err)
                                 If Not IsNothing(rupiProj) Then
                                     projektListe.Add(rupiProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                                     fctResult = True
@@ -2268,7 +2268,7 @@ Public Module awinGeneralModules
                                     If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now, err) Then
 
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now, err)
+                                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, "", impProjekt.variantName, Date.Now, err)
 
                                         If IsNothing(vglProj) Then
                                             ' kann eigentlich nicht sein 
@@ -2295,7 +2295,7 @@ Public Module awinGeneralModules
 
                                         ElseIf nameCollection.Count = 1 Then
                                             ' es existiert angeblich genau einmal 
-                                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(nameCollection.Item(1), impProjekt.variantName, Date.Now, err)
+                                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(nameCollection.Item(1), impProjekt.variantName, "", Date.Now, err)
 
                                             If Not IsNothing(vglProj) Then
 
@@ -2813,7 +2813,7 @@ Public Module awinGeneralModules
 
         If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-            projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True, err)
+            projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumbis, storedGestern, storedHeute, True, err)
         Else
             Call MsgBox("Datenbank-Verbindung ist unterbrochen")
         End If
@@ -3067,7 +3067,7 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAtOrBefore, err) Then
 
                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAtOrBefore, err)
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtOrBefore, err)
 
                     If Not IsNothing(hproj) Then
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
@@ -3148,14 +3148,14 @@ Public Module awinGeneralModules
             If IsNothing(hproj) Then
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
-                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAt, err)
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAt, err)
                 Else
                     ' jetzt soll versucht werden, das Projekt über die Kunden-Nummer zu bestimmen, sofern die Kunden-Nummer angegeben wurde 
                     If kdNr <> "" Then
                         Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
                         If nameCollection.Count > 0 Then
                             Dim newPname As String = CStr(nameCollection.Item(1))
-                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, storedAt, err)
+                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, "", storedAt, err)
                         End If
                     End If
                 End If
@@ -3473,6 +3473,9 @@ Public Module awinGeneralModules
             Next
 
             If constellationsToShow.Count = 1 Then
+
+                'ur: 2019-07-08: notwendig um die vpid zu retten
+                currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
                 If clearSession Or sessionWasEmpty Or
                     clearBoard Or boardWasEmpty Then
                     currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
@@ -3489,6 +3492,8 @@ Public Module awinGeneralModules
                 currentConstellationName = calcLastSessionScenarioName()
                 ' hier muss jetzt der sortType auf CustomTF gesetzt werden  
                 If Not IsNothing(currentSessionConstellation) Then
+                    'ur:2019-07-08: es sind mehrere Portfolios in einer currentSessionConstellation
+                    currentSessionConstellation.vpID = ""
                     currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                 End If
             End If
@@ -3650,7 +3655,7 @@ Public Module awinGeneralModules
                         End If
                     Else
                         ' das Portfolio Projekt wird gespeichert , wenn es Unterschiede gibt 
-                        Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now, err)
+                        Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, "", Date.Now, err)
                         ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
 
                         If Not IsNothing(oldProj) Then
@@ -3957,7 +3962,7 @@ Public Module awinGeneralModules
             ' ab diesem Wert soll neu gezeichnet werden 
             Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAtORBefore, err)
+            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 
 
             If Not IsNothing(hproj) Then
@@ -4533,7 +4538,7 @@ Public Module awinGeneralModules
             If IsNothing(baseVariantProj) Then
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now, err) Then
-                    baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", Date.Now, err)
+                    baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
                     If Not IsNothing(baseVariantProj) Then
                         baseVariantStatus = baseVariantProj.Status
                     Else
@@ -6562,7 +6567,7 @@ Public Module awinGeneralModules
                         'Das gewählte Projekt reporten
 
                         Dim hproj As New clsProjekt
-                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projekte, variante, timestamp, err)
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projekte, variante, "", timestamp, err)
 
                         If Not IsNothing(hproj) Then
 
@@ -6676,7 +6681,7 @@ Public Module awinGeneralModules
 
                             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
 
-                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp, err)
+                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, "", timestamp, err)
 
                                 If Not IsNothing(hproj) Then
 
@@ -7289,7 +7294,7 @@ Public Module awinGeneralModules
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                     ' prüfen, ob es Unterschied gibt 
-                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
 
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
@@ -7514,7 +7519,7 @@ Public Module awinGeneralModules
 
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                standInDB = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+                                standInDB = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -7951,7 +7956,7 @@ Public Module awinGeneralModules
                             Dim kdNrToStore As Boolean = False
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
