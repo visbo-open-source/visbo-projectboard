@@ -2181,14 +2181,14 @@ Public Class Request
 
         retrieveCustomFieldsFromDB = result
     End Function
-    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+    Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
-        Dim result As String = ""
+        Dim result As New List(Of String)
         Try
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveVCsForUser(err)
 
                     If result.Count <= 0 Then
 
@@ -2200,7 +2200,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveVCsForUser(err)
                                 End If
 
                             Case Else ' all others
@@ -2219,9 +2219,24 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveUserIDFromName = result
+        retrieveVCsForUser = result
     End Function
 
+    Public Function updateActualVC(ByVal vcName As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            dbname = vcName
+            result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName)
+            result = (dbname = awinSettings.databaseName)
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        updateActualVC = result
+
+    End Function
     Public Function clearCache()
         Dim result As Boolean = False
         Try

@@ -301,6 +301,7 @@ Public Module Module1
         Alles = 4
         InternalViewer = 5
         ExternalViewer = 6
+        TeamManager = 7
     End Enum
 
     ''' <summary>
@@ -1581,7 +1582,7 @@ Public Module Module1
                 'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                 '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
                 '    tmpResult = role.isTeam
-            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
                 ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
                 ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
@@ -1657,8 +1658,7 @@ Public Module Module1
 
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             tmpResult = ptVariantFixNames.pfv.ToString
-        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-            tmpResult = ""
+
         End If
 
         getDefaultVariantNameAccordingUserRole = tmpResult
@@ -5832,7 +5832,7 @@ Public Module Module1
                         tabelle.Rows.Add()
                         tabellenzeile = tabellenzeile + 1
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
 
                         Dim curItem As String = myCustomUserRole.specifics
                         Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
@@ -5871,7 +5871,7 @@ Public Module Module1
                     ' 
                     If Not showOverviewOnly Then
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                             ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
                             Dim tmpNameID As String = myCustomUserRole.specifics
                             If toDoCollectionR.Contains(tmpNameID) Then
@@ -6850,7 +6850,7 @@ Public Module Module1
                 Dim outputmsg As String = ""
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     Dim teamID As Integer = -1
                     roleName = roleName & " " & RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
