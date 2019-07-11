@@ -43,7 +43,25 @@ Public Class clsVCSettingOrganisation
     Sub New()
         _value = New clsOrganisationWeb
     End Sub
-    End Class
+
+End Class
+
+''' <summary>
+''' Definitionen, die ursprünglich im Customization-File gespeichert waren
+''' z.B. StartOfCalendar, Farben für rote, gelbe, grüne Ampel, Farbe für vieles mehr
+''' Arbeitstage pro Monat, RollenKostenDefinition aus DB lesen, Zeiteinheit, Kapzitätseinheit, Zeilenhöhe, Spaltenbreite, unbekannte Phase/Meilensteine Definitionen auto aufnehmen,
+''' Duplikate eliminieren, Sprachen englisch, ...
+''' </summary>
+Public Class clsVCSettingCustomization
+
+    Inherits clsVCSetting
+    Public Property value As clsCustomizationWeb
+
+    Sub New()
+        _value = New clsCustomizationWeb
+    End Sub
+
+End Class
 
 
 
