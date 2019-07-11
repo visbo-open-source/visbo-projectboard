@@ -5181,7 +5181,8 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+                myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                 If myCustomUserRole.specifics.Length > 0 Then
                     If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -5321,6 +5322,7 @@ Public Class frmHierarchySelection
     Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
 
     End Sub
+
 
 
 

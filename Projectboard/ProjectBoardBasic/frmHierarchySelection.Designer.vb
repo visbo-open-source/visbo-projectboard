@@ -115,7 +115,7 @@ Partial Class frmHierarchySelection
         Me.Panel1.Controls.Add(Me.einstellungen)
         Me.Panel1.Controls.Add(Me.hryTreeView)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(457, 463)
         Me.Panel1.TabIndex = 0
