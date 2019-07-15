@@ -17596,8 +17596,10 @@ Public Module agm2
                     If chooseVC.ShowDialog = DialogResult.OK Then
                         ' alles ok 
                         awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName)
-
+                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                        If Not changeOK Then
+                            Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                        End If
                     Else
                         Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
                     End If
