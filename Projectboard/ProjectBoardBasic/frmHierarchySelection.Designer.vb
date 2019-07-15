@@ -94,20 +94,20 @@ Partial Class frmHierarchySelection
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.SelectionSet)
+        Me.Panel1.Controls.Add(Me.collapseCompletely)
+        Me.Panel1.Controls.Add(Me.expandCompletely)
+        Me.Panel1.Controls.Add(Me.SelectionReset)
+        Me.Panel1.Controls.Add(Me.chkbxOneChart)
         Me.Panel1.Controls.Add(Me.auswLaden)
         Me.Panel1.Controls.Add(Me.Panel2)
         Me.Panel1.Controls.Add(Me.filterBox)
         Me.Panel1.Controls.Add(Me.headerLine)
-        Me.Panel1.Controls.Add(Me.SelectionSet)
         Me.Panel1.Controls.Add(Me.auswSpeichern)
         Me.Panel1.Controls.Add(Me.filterLabel)
         Me.Panel1.Controls.Add(Me.filterDropbox)
-        Me.Panel1.Controls.Add(Me.collapseCompletely)
-        Me.Panel1.Controls.Add(Me.expandCompletely)
-        Me.Panel1.Controls.Add(Me.SelectionReset)
         Me.Panel1.Controls.Add(Me.Panel3)
         Me.Panel1.Controls.Add(Me.AbbrButton)
-        Me.Panel1.Controls.Add(Me.chkbxOneChart)
         Me.Panel1.Controls.Add(Me.statusLabel)
         Me.Panel1.Controls.Add(Me.repVorlagenDropbox)
         Me.Panel1.Controls.Add(Me.OKButton)
@@ -117,13 +117,13 @@ Partial Class frmHierarchySelection
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(457, 463)
+        Me.Panel1.Size = New System.Drawing.Size(457, 454)
         Me.Panel1.TabIndex = 0
         '
         'auswLaden
         '
         Me.auswLaden.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.auswLaden.Location = New System.Drawing.Point(325, 378)
+        Me.auswLaden.Location = New System.Drawing.Point(318, 368)
         Me.auswLaden.Name = "auswLaden"
         Me.auswLaden.Size = New System.Drawing.Size(113, 21)
         Me.auswLaden.TabIndex = 94
@@ -316,7 +316,7 @@ Partial Class frmHierarchySelection
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(9, 322)
+        Me.SelectionSet.Location = New System.Drawing.Point(9, 346)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
         Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -326,7 +326,7 @@ Partial Class frmHierarchySelection
         'auswSpeichern
         '
         Me.auswSpeichern.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.auswSpeichern.Location = New System.Drawing.Point(325, 351)
+        Me.auswSpeichern.Location = New System.Drawing.Point(325, 342)
         Me.auswSpeichern.Name = "auswSpeichern"
         Me.auswSpeichern.Size = New System.Drawing.Size(113, 21)
         Me.auswSpeichern.TabIndex = 88
@@ -338,7 +338,7 @@ Partial Class frmHierarchySelection
         Me.filterLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.filterLabel.AutoSize = True
         Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterLabel.Location = New System.Drawing.Point(9, 353)
+        Me.filterLabel.Location = New System.Drawing.Point(9, 344)
         Me.filterLabel.Name = "filterLabel"
         Me.filterLabel.Size = New System.Drawing.Size(37, 16)
         Me.filterLabel.TabIndex = 87
@@ -350,7 +350,7 @@ Partial Class frmHierarchySelection
         Me.filterDropbox.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.filterDropbox.FormattingEnabled = True
-        Me.filterDropbox.Location = New System.Drawing.Point(152, 352)
+        Me.filterDropbox.Location = New System.Drawing.Point(152, 345)
         Me.filterDropbox.MaxDropDownItems = 10
         Me.filterDropbox.Name = "filterDropbox"
         Me.filterDropbox.Size = New System.Drawing.Size(153, 21)
@@ -363,7 +363,7 @@ Partial Class frmHierarchySelection
         Me.collapseCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(64, 322)
+        Me.collapseCompletely.Location = New System.Drawing.Point(64, 346)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
         Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -375,7 +375,7 @@ Partial Class frmHierarchySelection
         Me.expandCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(86, 322)
+        Me.expandCompletely.Location = New System.Drawing.Point(86, 346)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -388,7 +388,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(31, 322)
+        Me.SelectionReset.Location = New System.Drawing.Point(31, 346)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
         Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -443,7 +443,7 @@ Partial Class frmHierarchySelection
         '
         Me.AbbrButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.AbbrButton.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.AbbrButton.Location = New System.Drawing.Point(257, 404)
+        Me.AbbrButton.Location = New System.Drawing.Point(267, 405)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(88, 23)
         Me.AbbrButton.TabIndex = 82
@@ -455,7 +455,7 @@ Partial Class frmHierarchySelection
         '
         Me.chkbxOneChart.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.chkbxOneChart.AutoSize = True
-        Me.chkbxOneChart.Location = New System.Drawing.Point(322, 321)
+        Me.chkbxOneChart.Location = New System.Drawing.Point(322, 345)
         Me.chkbxOneChart.Name = "chkbxOneChart"
         Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
         Me.chkbxOneChart.TabIndex = 76
@@ -467,7 +467,7 @@ Partial Class frmHierarchySelection
         '
         Me.statusLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(6, 431)
+        Me.statusLabel.Location = New System.Drawing.Point(12, 433)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 80
@@ -478,7 +478,7 @@ Partial Class frmHierarchySelection
         Me.repVorlagenDropbox.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.repVorlagenDropbox.FormattingEnabled = True
-        Me.repVorlagenDropbox.Location = New System.Drawing.Point(152, 379)
+        Me.repVorlagenDropbox.Location = New System.Drawing.Point(152, 376)
         Me.repVorlagenDropbox.Name = "repVorlagenDropbox"
         Me.repVorlagenDropbox.Size = New System.Drawing.Size(153, 21)
         Me.repVorlagenDropbox.TabIndex = 77
@@ -487,7 +487,7 @@ Partial Class frmHierarchySelection
         'OKButton
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.OKButton.Location = New System.Drawing.Point(152, 404)
+        Me.OKButton.Location = New System.Drawing.Point(152, 405)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(116, 23)
         Me.OKButton.TabIndex = 78
@@ -499,7 +499,7 @@ Partial Class frmHierarchySelection
         Me.labelPPTVorlage.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.labelPPTVorlage.AutoSize = True
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 384)
+        Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 378)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
         Me.labelPPTVorlage.Size = New System.Drawing.Size(136, 16)
         Me.labelPPTVorlage.TabIndex = 79
@@ -512,7 +512,7 @@ Partial Class frmHierarchySelection
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(346, 409)
+        Me.einstellungen.Location = New System.Drawing.Point(361, 410)
         Me.einstellungen.Name = "einstellungen"
         Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 81
@@ -528,14 +528,14 @@ Partial Class frmHierarchySelection
         Me.hryTreeView.FullRowSelect = True
         Me.hryTreeView.Location = New System.Drawing.Point(8, 120)
         Me.hryTreeView.Name = "hryTreeView"
-        Me.hryTreeView.Size = New System.Drawing.Size(441, 196)
+        Me.hryTreeView.Size = New System.Drawing.Size(441, 216)
         Me.hryTreeView.TabIndex = 73
         '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(457, 466)
+        Me.ClientSize = New System.Drawing.Size(457, 455)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"

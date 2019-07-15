@@ -8589,16 +8589,19 @@ Public Module agm2
                 End If
 
                 ' tk Test Logfile schreiben ...
-                Try
-                    ReDim logmsg(realRoleNamesToConsider.Count)
-                    logmsg(0) = ""
-                    For ix As Integer = 1 To realRoleNamesToConsider.Count
-                        logmsg(ix) = realRoleNamesToConsider(ix - 1)
-                    Next
-                    Call logfileSchreiben(logmsg)
-                Catch ex As Exception
+                If awinSettings.visboDebug Then
+                    Try
+                        ReDim logmsg(realRoleNamesToConsider.Count)
+                        logmsg(0) = ""
+                        For ix As Integer = 1 To realRoleNamesToConsider.Count
+                            logmsg(ix) = realRoleNamesToConsider(ix - 1)
+                        Next
+                        Call logfileSchreiben(logmsg)
+                    Catch ex As Exception
 
-                End Try
+                    End Try
+                End If
+
 
                 ' jetzt die zugelassenen Werte für 
                 Dim pgmlinie() As Integer
@@ -8791,9 +8794,10 @@ Public Module agm2
                                                 outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
                                                 outputCollection.Add(outPutLine)
 
-                                                ReDim logmsg(1)
+                                                ReDim logmsg(2)
                                                 logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                                logmsg(1) = current1program.constellationName
+                                                logmsg(1) = ""
+                                                logmsg(2) = current1program.constellationName
                                                 Call logfileSchreiben(logmsg)
                                             End If
                                             ' ende test
@@ -8887,9 +8891,10 @@ Public Module agm2
 
                                             outputCollection.Add(outPutLine)
 
-                                            Dim logtxt(1) As String
+                                            Dim logtxt(2) As String
                                             logtxt(0) = "Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .. "
-                                            logtxt(1) = pName
+                                            logtxt(1) = ""
+                                            logtxt(2) = pName
 
                                             Call logfileSchreiben(logtxt)
 
@@ -9044,8 +9049,6 @@ Public Module agm2
 
                         If ok Then
 
-                            ' Varianten-Name wird hier nicht ausgelesen ..., deshalb Default Wert annehmen 
-                            variantName = ""
 
                             'Projekt anlegen ,Verschiebung um 
                             Dim hproj As clsProjekt = Nothing
@@ -9097,9 +9100,10 @@ Public Module agm2
 
                             ' Test tk 
                             Try
-                                ReDim logmsg(1)
+                                ReDim logmsg(2)
                                 logmsg(0) = "Importiert: "
-                                logmsg(1) = pName
+                                logmsg(1) = ""
+                                logmsg(2) = pName
 
                                 For ix As Integer = 1 To realRoleNamesToConsider.Count
 
@@ -9127,7 +9131,10 @@ Public Module agm2
                                     outputCollection.Add(outPutLine)
                                 End If
 
-                                Call logfileSchreiben(logmsg, roleNeeds)
+                                If awinSettings.visboDebug Then
+                                    Call logfileSchreiben(logmsg, roleNeeds)
+                                End If
+
 
                             Catch ex As Exception
 
@@ -9258,9 +9265,10 @@ Public Module agm2
                             outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
                             outputCollection.Add(outPutLine)
 
-                            ReDim logmsg(1)
+                            ReDim logmsg(2)
                             logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                            logmsg(1) = current1program.constellationName
+                            logmsg(1) = ""
+                            logmsg(2) = current1program.constellationName
                             Call logfileSchreiben(logmsg)
 
                         End If
@@ -10592,9 +10600,13 @@ Public Module agm2
                                 outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
                                 outputCollection.Add(outPutLine)
 
-                                ReDim logArray(1)
+                                ReDim logArray(5)
                                 logArray(0) = "Rolle hat kein Ist-Daten Referat "
-                                logArray(1) = roleName
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = ""
+                                logArray(5) = ""
 
                                 Call logfileSchreiben(logArray)
 
@@ -10603,13 +10615,7 @@ Public Module agm2
                             outPutLine = "Rolle nicht bekannt: " & roleName
                             outputCollection.Add(outPutLine)
 
-                            ReDim logArray(3)
-                            logArray(0) = "unbekannte Rolle "
-                            logArray(1) = roleName
-                            logArray(2) = teamName
-                            logArray(3) = parentReferat
-
-                            Call logfileSchreiben(logArray)
+                            Dim protocolEntryWritten As Boolean = False
 
                             ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
                             If teamName.Length > 0 Then
@@ -10656,11 +10662,16 @@ Public Module agm2
                                         outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
                                         outputCollection.Add(outPutLine)
 
-                                        ReDim logArray(1)
+                                        ReDim logArray(5)
                                         logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                        logArray(1) = roleName
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = teamName
+                                        logArray(5) = parentReferat
 
                                         Call logfileSchreiben(logArray)
+                                        protocolEntryWritten = True
 
 
                                     End If
@@ -10696,14 +10707,31 @@ Public Module agm2
                                     outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
                                     outputCollection.Add(outPutLine)
 
-                                    ReDim logArray(1)
+                                    ReDim logArray(5)
                                     logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                    logArray(1) = roleName
+                                    logArray(1) = ""
+                                    logArray(2) = ""
+                                    logArray(3) = fullRoleName
+                                    logArray(4) = teamName
+                                    logArray(5) = parentReferat
 
                                     Call logfileSchreiben(logArray)
-
+                                    protocolEntryWritten = True
 
                                 End If
+
+                            End If
+
+                            If Not protocolEntryWritten Then
+                                ReDim logArray(5)
+                                logArray(0) = "unbekannte Rolle "
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = teamName
+                                logArray(5) = parentReferat
+
+                                Call logfileSchreiben(logArray)
 
                             End If
 
@@ -10746,12 +10774,13 @@ Public Module agm2
                                     CType(.Cells(zeile, colPname), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
                                     CType(.Cells(zeile, colProjectNr), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
-                                    ReDim logArray(4)
+                                    ReDim logArray(5)
                                     logArray(0) = "unbekannte PNr / Projekt "
                                     logArray(1) = tmpPNr
                                     logArray(2) = pName
                                     logArray(3) = ""
                                     logArray(4) = ""
+                                    logArray(5) = ""
                                     Call logfileSchreiben(logArray)
 
                                     shallContinue = False
@@ -10867,7 +10896,7 @@ Public Module agm2
                                         logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
                                         logArray(1) = ""
                                         logArray(2) = ""
-                                        logArray(3) = roleName
+                                        logArray(3) = fullRoleName
                                         Call logfileSchreiben(logArray)
                                     End If
 
@@ -10881,9 +10910,10 @@ Public Module agm2
                                     logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
                                     outputCollection.Add(logmessage)
 
-                                    ReDim logArray(1)
+                                    ReDim logArray(3)
                                     logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
-                                    logArray(1) = pvkey
+                                    logArray(1) = ""
+                                    logArray(2) = pvkey
                                     Call logfileSchreiben(logArray)
                                 End If
 
@@ -10988,23 +11018,26 @@ Public Module agm2
                             abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
                         End If
 
-                        If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
-                            ReDim logArray(3)
-                            logArray(0) = "Import Istdaten old/new/diff/check1/check2"
-                            logArray(1) = ""
-                            logArray(2) = vPKvP.Key
-                            logArray(3) = ""
+                        If awinSettings.visboDebug Then
+                            If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                ReDim logArray(3)
+                                logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                logArray(1) = ""
+                                logArray(2) = vPKvP.Key
+                                logArray(3) = ""
 
-                            ReDim logDblArray(4)
-                            logDblArray(0) = oldPlanValue
-                            logDblArray(1) = newIstValue
-                            logDblArray(2) = oldPlanValue - newIstValue
-                            logDblArray(3) = checkIstValue
-                            logDblArray(4) = gesamtNachher - checkNachher
+                                ReDim logDblArray(4)
+                                logDblArray(0) = oldPlanValue
+                                logDblArray(1) = newIstValue
+                                logDblArray(2) = oldPlanValue - newIstValue
+                                logDblArray(3) = checkIstValue
+                                logDblArray(4) = gesamtNachher - checkNachher
 
-                            Call logfileSchreiben(logArray, logDblArray)
+                                Call logfileSchreiben(logArray, logDblArray)
 
+                            End If
                         End If
+
 
 
 
@@ -11020,8 +11053,8 @@ Public Module agm2
                         ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
 
                     Else
-                        ReDim logArray(4)
-                        logArray(0) = " Projekt existiert nicht !!?? ... kann eigentlich nicht sein ..."
+                        ReDim logArray(5)
+                        logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
                         logArray(1) = ""
                         logArray(2) = vPKvP.Key
                         logArray(3) = ""
@@ -11033,15 +11066,18 @@ Public Module agm2
                 Next
 
                 ' tk Test 
-                ReDim logArray(3)
-                logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
-                logArray(1) = ""
-                logArray(2) = ""
-                logArray(3) = ""
+                If awinSettings.visboDebug Then
+                    ReDim logArray(3)
+                    logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                    logArray(1) = ""
+                    logArray(2) = ""
+                    logArray(3) = ""
 
-                ReDim logDblArray(0)
-                logDblArray(0) = gesamtIstValue
-                Call logfileSchreiben(logArray, logDblArray)
+                    ReDim logDblArray(0)
+                    logDblArray(0) = gesamtIstValue
+                    Call logfileSchreiben(logArray, logDblArray)
+                End If
+
 
 
             End With
