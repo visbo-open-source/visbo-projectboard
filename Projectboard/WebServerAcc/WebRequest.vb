@@ -2282,6 +2282,16 @@ Public Class Request
                         settingID = ""
                     End If
 
+                Case settingTypes(ptSettingTypes.Customization)
+                    setting = New List(Of clsVCSettingCustomization)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomization)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
+
             End Select
 
             If ts > Date.MinValue Then
@@ -2373,6 +2383,14 @@ Public Class Request
                         ' Create der Organisation - Setting
                         result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                     End If
+
+
+                Case settingTypes(ptSettingTypes.customization)
+
+                    Dim listofCustomWeb As New clsCustomizationWeb
+                    listofCustomWeb = listofSetting
+
+
             End Select
 
 
@@ -2576,6 +2594,68 @@ Public Class Request
 
         End Try
         retrieveCustomFieldsFromDB = result
+    End Function
+
+    Public Function retrieveCustomizationFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As clsCustomizationWeb
+
+        Dim result As New clsCustomizationWeb
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.organisation)
+
+        timestamp = timestamp.ToUniversalTime
+
+        Dim webCustomization As New clsCustomizationWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomization)
+            setting = GETOneVCsetting(aktVCid, type, name, timestamp, "", err, refnext)
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
+
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomization)).Count
+
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
+
+                            settingID = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)._id
+                            webCustomization = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0).value
+
+                        Else
+                            ' Fehler: es gibt nur eine Customization pro VC
+
+
+                        End If
+
+                    Else
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
+
+                    End If
+                Else
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveCustomizationFromDB = result
     End Function
 
     ''' <summary>

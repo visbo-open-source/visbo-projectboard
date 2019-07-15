@@ -272,13 +272,13 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "clientsettings", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
 
     Public Enum ptSettingTypes
         customfields = 0
         customroles = 1
         organisation = 2
-        clientsettings = 3
+        customization = 3
         phasemilestonedefs = 4
         reportprofiles = 5
         ppttemplates = 6
