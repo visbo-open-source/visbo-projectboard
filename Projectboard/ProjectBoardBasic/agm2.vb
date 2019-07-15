@@ -6884,7 +6884,9 @@ Public Module agm2
 
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
-                If roleType = ptCustomUserRoles.RessourceManager Or roleType = ptCustomUserRoles.TeamManager Then
+                If roleType = ptCustomUserRoles.RessourceManager Or roleType = ptCustomUserRoles.TeamManager Or
+                    roleType = ptCustomUserRoles.InternalViewer Then
+
                     If RoleDefinitions.containsNameOrID(specifics) Then
                         ' alles ok
                         stillOk = True
@@ -6893,6 +6895,7 @@ Public Module agm2
                         stillOk = False
                     End If
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
+
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
                     If tmpStr.Length = 1 And tmpStr(0) = "none" Then
@@ -6916,6 +6919,42 @@ Public Module agm2
                             End If
                         Next
                     End If
+                    'ElseIf roleType = ptCustomUserRoles.InternalViewer Then
+                    '    Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+
+                    '    ' bestimme 
+                    '    If tmpStr.Length = 0 Then
+                    '        stillOk = False
+                    '    ElseIf tmpStr.Length = 1 And tmpStr(0) = "none" Then
+                    '        ' nichts weiter tun, specificsWithIDs bleibt leer 
+                    '        stillOk = False
+                    '    Else
+                    '        Dim firstTime As Boolean = True
+                    '        Dim parentRoleID As Integer = -1
+                    '        For Each tmpName As String In tmpStr
+
+                    '            stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
+                    '            ' jetzt wird Plausibilität gecheckt, ob alle angegebenen Rollen den gleichen Vater haben ..
+                    '            If stillOk Then
+                    '                tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
+                    '                If firstTime Then
+                    '                    parentRoleID = RoleDefinitions.getParentRoleOf(tmpNameUID).UID
+                    '                    firstTime = False
+                    '                Else
+                    '                    stillOk = stillOk And (parentRoleID = RoleDefinitions.getParentRoleOf(tmpNameUID).UID)
+                    '                End If
+
+                    '                If specificsWithIDs = "" Then
+                    '                    specificsWithIDs = tmpNameUID
+                    '                Else
+                    '                    specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                    '                End If
+
+                    '            Else
+                    '                Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
+                    '            End If
+                    '        Next
+                    '    End If
 
                 End If
             Else

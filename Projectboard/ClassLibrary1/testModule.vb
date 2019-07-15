@@ -539,9 +539,9 @@ Public Module testModule
 
         Catch ex As Exception
 
-            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... " & vbLf & ex.Message
             If awinSettings.englishLanguage Then
-                msgTxt = "Cancelled ... please close/store all open presentations ..."
+                msgTxt = "Cancelled ... please close/store all open presentations ..." & vbLf & ex.Message
             End If
 
             If Not IsNothing(worker) Then
