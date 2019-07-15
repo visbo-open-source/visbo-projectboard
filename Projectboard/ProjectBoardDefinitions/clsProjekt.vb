@@ -581,14 +581,27 @@ Public Class clsProjekt
                         ' String CustomFields
                         Dim ix As Integer = 0
                         Do While stillOK And ix <= Me.customStringFields.Count - 1
+
                             Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
                             Dim cFVgl As KeyValuePair(Of Integer, String) = vProj.customStringFields.ElementAt(ix)
 
-                            If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
-                                ix = ix + 1
+                            If Not IsNothing(cFMe.Value) And Not IsNothing(cFVgl.Value) Then
+                                Try
+                                    If cFMe.Key = cFVgl.Key And cFMe.Value.Trim = cFVgl.Value.Trim Then
+                                        ix = ix + 1
+                                    Else
+                                        stillOK = False
+                                    End If
+                                Catch ex As Exception
+                                    stillOK = False
+                                End Try
+                            ElseIf IsNothing(cFMe.Value) And IsNothing(cFVgl.Value) Then
+                                ' unverändert lassen 
                             Else
+                                ' eines is Nothing , eines ist nicht Nothing, also unterscheidelich 
                                 stillOK = False
                             End If
+
                         Loop
 
 
