@@ -2222,16 +2222,45 @@ Public Class Request
         retrieveVCsForUser = result
     End Function
 
-    Public Function updateActualVC(ByVal vcName As String) As Boolean
+    Public Function updateActualVC(ByVal vcName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
-
         Try
-            dbname = vcName
-            result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName)
-            result = (dbname = awinSettings.databaseName)
+
+            If usedWebServer Then
+                Try
+                    dbname = vcName
+                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, err)
+                    result = (dbname = awinSettings.databaseName)
+
+                    If Not result Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+            Else
+                ' nothing to do for direct MongoAccess
+            End If
+
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
+
         End Try
 
         updateActualVC = result

@@ -5648,13 +5648,21 @@ Public Class Request
     ''' </summary>
     ''' <param name="vcName"></param>
     ''' <returns></returns>
-    Public Function updateActualVC(ByVal vcName As String) As Boolean
+    Public Function updateActualVC(ByVal vcName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
         Try
             aktVCid = GETvcid(vcName)
-            result = True
+
+            If aktVCid <> "" Then
+                ' Cache leeren und die VP des neuen VCs laden
+                VRScache.Clear()
+                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+            End If
+
+            result = (aktVCid <> "")
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
