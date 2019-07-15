@@ -2466,7 +2466,7 @@ Public Class frmProjPortfolioAdmin
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
-
+                            ' ??? Ute Löschen eines kompletten Projektes mit DELETEOneVP
                             For v = 1 To anzahlVarianten
 
                                 variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))

@@ -8235,7 +8235,7 @@ Public Module agm2
                     End If
 
                 Catch ex As Exception
-                    errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & saveSpecificsForErrMsg
+                    errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & saveSpecificsForErrMsg & vbLf & ex.Message
                     outputCollection.Add(errMsg)
                     CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                 End Try
@@ -15688,14 +15688,22 @@ Public Module agm2
                                             lockText = "Ressourcen-Manager may not edit Teams"
                                         End If
 
-                                    ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And restrictedTopRole.UID <> roleUID Then
+                                    ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                                         ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
-                                        lockZeile = True
-                                        If awinSettings.englishLanguage Then
-                                            lockText = "Ressourcen-Manager darf Teams nicht editieren"
-                                        Else
-                                            lockText = "Ressourcen-Manager may not edit Teams"
-                                        End If
+                                        Try
+                                            If restrictedTopRole.UID <> roleUID Then
+                                                lockZeile = True
+                                                If awinSettings.englishLanguage Then
+                                                    lockText = "Team-Manager darf Personen nicht editieren"
+                                                Else
+                                                    lockText = "Team-Manager may not edit persons"
+                                                End If
+                                            End If
+                                        Catch ex As Exception
+
+                                        End Try
+
+
 
                                     End If
 
