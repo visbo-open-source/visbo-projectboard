@@ -748,7 +748,6 @@ Public Class Request
             Dim vpType As Integer = ptPRPFType.project
             Dim cVP As New clsVP
 
-
             cVP = GETvpid(pname, err, vpType)
 
             If cVP._id <> "" Then
