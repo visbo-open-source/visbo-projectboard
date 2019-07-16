@@ -2468,6 +2468,7 @@ Public Class frmProjPortfolioAdmin
 
                             Dim err As New clsErrorCodeMsg
                             Dim erledigt As Boolean = CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err)
+
                             'For v = 1 To anzahlVarianten
 
                             '    variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
