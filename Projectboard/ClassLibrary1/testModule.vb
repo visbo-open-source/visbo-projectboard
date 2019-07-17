@@ -539,9 +539,9 @@ Public Module testModule
 
         Catch ex As Exception
 
-            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            msgTxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... " & vbLf & ex.Message
             If awinSettings.englishLanguage Then
-                msgTxt = "Cancelled ... please close/store all open presentations ..."
+                msgTxt = "Cancelled ... please close/store all open presentations ..." & vbLf & ex.Message
             End If
 
             If Not IsNothing(worker) Then
@@ -553,7 +553,7 @@ Public Module testModule
                 Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
             End If
-
+            Call MsgBox(msgTxt)
             Exit Sub
         End Try
 
@@ -3828,9 +3828,9 @@ Public Module testModule
                         pptTemplatePresentation.Close()
 
 
-                        msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                        msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... " & vbCrLf & ex.Message
                         If awinSettings.englishLanguage Then
-                            msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
+                            msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..." & vbCrLf & ex.Message
                         End If
 
                         If Not IsNothing(worker) Then
@@ -3844,6 +3844,7 @@ Public Module testModule
                             Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
                         End If
 
+                        Call MsgBox(msgtxt)
 
                         Exit Sub
 
@@ -3855,9 +3856,9 @@ Public Module testModule
 
         Catch ex As Exception
 
-            msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+            msgtxt = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... " & vbCrLf & ex.Message
             If awinSettings.englishLanguage Then
-                msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..."
+                msgtxt = "Cancellation ... please close all open Powerpoint Presentations ..." & vbCrLf & ex.Message
             End If
 
             If Not IsNothing(worker) Then
@@ -3868,6 +3869,7 @@ Public Module testModule
             Else
                 Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
+            Call MsgBox(msgtxt)
             Exit Sub
         End Try
 

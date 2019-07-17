@@ -231,7 +231,8 @@ Public Class frmMEhryRoleCost
             If RoleDefinitions.Count > 0 Then
                 Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -242,7 +243,6 @@ Public Class frmMEhryRoleCost
 
                         End If
                     End If
-
                 End If
 
                 For i = 0 To topNodes.Count - 1

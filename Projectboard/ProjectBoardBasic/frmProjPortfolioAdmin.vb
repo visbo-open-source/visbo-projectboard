@@ -2466,16 +2466,18 @@ Public Class frmProjPortfolioAdmin
 
                         ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
+                            ' ur: 20190716 Versuch ein ganzes Projekt zu löschen - nur möglich, wenn nicht in Portfolio enthalten
+                            '              dieser Check muss noch gemacht werden
 
-                            For v = 1 To anzahlVarianten
-
-                                variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
-                                ' Fehler-Behandlung, d.h auch Abfrage ob PName#vName referenziert in Szenario ist, passiert dort drin ... 
-                                Call deleteCompleteProjectVariant(outPutCollection,
-                                                                  pname, variantName, aKtionskennung)
-
-
-                            Next
+                            'Dim err As New clsErrorCodeMsg
+                            'Dim erledigt As Boolean = CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err)
+                            Call deleteCompleteProjectFromDB(outPutCollection, pname)
+                            'For v = 1 To anzahlVarianten
+                            '    variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
+                            '    ' Fehler-Behandlung, d.h auch Abfrage ob PName#vName referenziert in Szenario ist, passiert dort drin ... 
+                            '    Call deleteCompleteProjectVariant(outPutCollection,
+                            '                                     pname, variantName, aKtionskennung)
+                            'Next
 
 
                         ElseIf aKtionskennung = PTTvActions.loadPV Then

@@ -68,6 +68,16 @@ Public Class frmHierarchySelection
             auswLaden.Text = "Load"
         End If
 
+        ' tk 11.7.19 die aktuell nicht benutzten Buttons ausblenden 
+        Me.auswLaden.Visible = False
+        Me.auswSpeichern.Visible = False
+        Me.filterLabel.Visible = False
+        Me.filterDropbox.Visible = False
+        ' Ende Ausblenden der nicht benutzten Buttons 
+
+
+
+
         With Me
 
 
@@ -158,17 +168,17 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = False
                 .einstellungen.Visible = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
                 ' Auswahl Speichern
                 .auswSpeichern.Visible = False
                 .auswSpeichern.Enabled = False
 
-                ' Auswahl Laden
-                .auswLaden.Visible = False
-                .auswLaden.Enabled = False
+                '' Auswahl Laden
+                '.auswLaden.Visible = False
+                '.auswLaden.Enabled = False
 
                 .einstellungen.Visible = False
 
@@ -246,9 +256,9 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = False
                 .einstellungen.Visible = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
 
 
@@ -338,8 +348,8 @@ Public Class frmHierarchySelection
                 .einstellungen.Visible = False
 
                 ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
 
             ElseIf .menuOption = PTmenue.einzelprojektReport Then
@@ -404,9 +414,9 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = True
                 .einstellungen.Visible = True
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
             ElseIf .menuOption = PTmenue.multiprojektReport Then
 
@@ -491,9 +501,9 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = True
                 .einstellungen.Visible = True
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
 
             ElseIf .menuOption = PTmenue.excelExport Then
@@ -521,9 +531,9 @@ Public Class frmHierarchySelection
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
                 .einstellungen.Visible = False
 
@@ -552,9 +562,9 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = False
                 .einstellungen.Visible = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
 
             ElseIf .menuOption = PTmenue.reportBHTC Or
@@ -676,10 +686,10 @@ Public Class frmHierarchySelection
                 .labelPPTVorlage.Visible = True
                 .einstellungen.Visible = True
 
-                ' Filter
-                .filterDropbox.DropDownStyle = ComboBoxStyle.Simple
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
+                '' Filter
+                '.filterDropbox.DropDownStyle = ComboBoxStyle.Simple
+                '.filterDropbox.Visible = True
+                '.filterLabel.Visible = True
 
 
             End If
@@ -5181,7 +5191,8 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+                myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                 If myCustomUserRole.specifics.Length > 0 Then
                     If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -5321,6 +5332,7 @@ Public Class frmHierarchySelection
     Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
 
     End Sub
+
 
 
 

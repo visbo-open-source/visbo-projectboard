@@ -2725,6 +2725,13 @@ Imports System.Web
                     tmpLabel = "Projects/Variants"
                 End If
 
+            Case "PT2G2M" 'Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
             Case "PT2G2oa" 'Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekte/Varianten"
