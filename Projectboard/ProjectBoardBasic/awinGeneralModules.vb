@@ -4011,6 +4011,59 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' löscht in der Datenbank das ganze Projekt mit allen Varianten und Timestamps
+    ''' nur: wenn es nicht in einem Portfolio referenziert ist
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <param name="pname"></param>
+    Public Sub deleteCompleteProjectFromDB(ByRef outputCollection As Collection,
+                                           ByVal pname As String)
+
+        Dim result As Boolean = True
+        Dim err As New clsErrorCodeMsg
+        Dim outputline As String = ""
+
+        '' Test, ob Standardvariante in einem Portfolio referenziert wird
+        'If notReferencedByAnyPortfolio(pname, "") Then
+        '    result = result And True
+        'Else
+        '    outputline = ("Projekt '" & pname & "' kann nicht gelöscht werden - es wird in einem Portfolio referenziert")
+        '    outputCollection.Add(outputline)
+        '    result = False
+        'End If
+
+
+        Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
+        'hinzufügen der Standardvariante
+        variantListe.Add("", "")
+
+        If Not IsNothing(variantListe) Then
+
+            For Each vname In variantListe
+                If notReferencedByAnyPortfolio(pname, vname) Then
+                    result = result And True
+                Else
+                    outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
+                    outputCollection.Add(outputline)
+                    result = False
+                    Exit For
+                End If
+            Next
+        Else
+            result = True
+
+        End If
+
+        If result Then
+            If CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err) Then
+                outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                outputCollection.Add(outputline)
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' löscht in der Datenbank alle Timestamps der Projekt-Variante pname, variantname
     ''' die Timestamps werden zudem alle im Papierkorb gesichert 
     ''' </summary>

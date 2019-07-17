@@ -27,7 +27,7 @@ Public Class Request
 
     Private version As System.Version
     Private visboContentType As String = "application/json"
-
+    Private cookies As New CookieCollection
     Private visboUserAgent As String = " (" & System.Environment.OSVersion.ToString & ";" & System.Environment.OSVersion.Platform.ToString & ")"
 
     Private aktVCid As String = ""
@@ -734,6 +734,33 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' Löschen des kompletten Projektes mit allen vorhandenen Versionen aus der Datenbank
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function removeCompleteProjectFromDB(ByVal pname As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            Dim vpType As Integer = ptPRPFType.project
+            Dim cVP As New clsVP
+
+            cVP = GETvpid(pname, err, vpType)
+
+            If cVP._id <> "" Then
+                result = DELETEOneVP(cVP._id, err)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        removeCompleteProjectFromDB = result
+
+    End Function
 
 
     ''' <summary>
@@ -2703,6 +2730,10 @@ Public Class Request
 
 
             Dim cc As New CookieContainer
+            For Each c In cookies
+                cc.Add(c)
+            Next
+
             request.CookieContainer = cc
 
             request.Method = method
@@ -2990,6 +3021,7 @@ Public Class Request
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
+                cookies = httpresp.Cookies
 
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
