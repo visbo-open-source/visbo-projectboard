@@ -7109,7 +7109,7 @@ Public Module awinGeneralModules
                                     If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
                                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                                         If Not IsNothing(potentialParents) Then
-                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents)
+                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
                                             If tmpParentName <> "" Then
                                                 scInfo.q2 = tmpParentName
                                             End If

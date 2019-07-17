@@ -10159,7 +10159,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
@@ -10196,7 +10196,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
