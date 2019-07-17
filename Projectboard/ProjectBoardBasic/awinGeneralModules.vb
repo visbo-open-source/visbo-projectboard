@@ -4023,8 +4023,19 @@ Public Module awinGeneralModules
         Dim err As New clsErrorCodeMsg
         Dim outputline As String = ""
 
+        '' Test, ob Standardvariante in einem Portfolio referenziert wird
+        'If notReferencedByAnyPortfolio(pname, "") Then
+        '    result = result And True
+        'Else
+        '    outputline = ("Projekt '" & pname & "' kann nicht gelöscht werden - es wird in einem Portfolio referenziert")
+        '    outputCollection.Add(outputline)
+        '    result = False
+        'End If
+
 
         Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
+        'hinzufügen der Standardvariante
+        variantListe.Add("", "")
 
         If Not IsNothing(variantListe) Then
 
@@ -4032,7 +4043,7 @@ Public Module awinGeneralModules
                 If notReferencedByAnyPortfolio(pname, vname) Then
                     result = result And True
                 Else
-                    outputline = ("Projekt " & pname & " Variante " & vname & " wird in einem Portfolio referenziert")
+                    outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
                     outputCollection.Add(outputline)
                     result = False
                     Exit For
@@ -4044,7 +4055,10 @@ Public Module awinGeneralModules
         End If
 
         If result Then
-            CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, Err)
+            If CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err) Then
+                outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                outputCollection.Add(outputline)
+            End If
         End If
 
     End Sub
