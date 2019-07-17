@@ -252,13 +252,13 @@ Public Class frmSelectPPTTempl
 
             End With
 
-            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                   tmpCollection, tmpCollection, _
-                                                   tmpCollection, tmpCollection, _
-                                                   tmpCollection, tmpCollection, True, _
+            Call createPPTSlidesFromConstellation(vorlagenDateiName,
+                                                   tmpCollection, tmpCollection,
+                                                   tmpCollection, tmpCollection,
+                                                   tmpCollection, tmpCollection, True,
                                                    worker, e)
 
- 
+
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
             Call MsgBox(" in BAckground Worker ...")
@@ -305,7 +305,7 @@ Public Class frmSelectPPTTempl
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
-        
+
         Try
             'currentReportProfil.calcRepVonBis(vonDate, bisDate)
             currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
@@ -353,10 +353,10 @@ Public Class frmSelectPPTTempl
             End With
 
 
-            Call createPPTReportFromProjects(vorlagenDateiName, _
-                                             tmpCollection, tmpCollection, _
-                                             tmpCollection, tmpCollection, _
-                                             tmpCollection, tmpCollection, _
+            Call createPPTReportFromProjects(vorlagenDateiName,
+                                             tmpCollection, tmpCollection,
+                                             tmpCollection, tmpCollection,
+                                             tmpCollection, tmpCollection,
                                              worker, e)
 
         Catch ex As Exception
@@ -385,7 +385,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
-    Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs) Handles statusNotification.TextChanged
+    Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs)
 
     End Sub
 
