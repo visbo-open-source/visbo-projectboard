@@ -9380,11 +9380,19 @@ Public Module agm2
                     Else
                         Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
                         If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                            tmpResult = tmpStr2(0).Trim
+
+                            If RoleDefinitions.getRoledef(tmpStr2(0).Trim).isTeam Then
+                                tmpResult = tmpStr2(0).Trim
+                            End If
+
                         Else
                             Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
                             If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-                                tmpResult = tmpstr3(0).Trim
+
+                                If RoleDefinitions.getRoledef(tmpstr3(0).Trim).isTeam Then
+                                    tmpResult = tmpstr3(0).Trim
+                                End If
+
                             End If
                         End If
 
@@ -9815,7 +9823,7 @@ Public Module agm2
                             If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameOrID(roleNameID) Then
                                 Dim curDelRole As String = ""
 
-                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
+                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList, True)
                                 If curDelRole.Length > 0 Then
                                     If Not deleteRoles.Contains(curDelRole) Then
                                         deleteRoles.Add(curDelRole, curDelRole)
@@ -10582,9 +10590,71 @@ Public Module agm2
 
                         ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
                         ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
-                        If RoleDefinitions.containsNameOrID(roleName) Then
 
-                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
+                        ' Abfrage #1 : ist es ein Team, dann dem Team zuordnen, nicht der dort angegebenen Person 
+                        ' dann, wenn kein Team bekannt: ist es eine bekannte Person, wenn nein: wer ist das Referat ... 
+                        If teamName.Length > 0 Then
+                            ' dann ist bereits sichergestellt, dass es sich um ein Team handelt ... 
+
+                            ' jetzt muss geprüft werden, ob die Rolle bekannt ist
+                            ' wenn nein, darf sie nicht aufgenommen werden, weil andernfalls eine Rolle auf das Team kontiert, aber eben keine Kapa dazu beiträgt
+
+                            If RoleDefinitions.containsNameOrID(roleName) Then
+                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste, True)
+
+                                If parentReferat.Length > 0 Then
+                                    ' alles in Ordnung 
+                                    roleName = teamName
+                                    teamName = ""
+                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
+                                    weitermachen = True
+                                Else
+                                    ' Parent Referat nicht gefunden - 
+                                    ' Fehlermeldung ... 
+                                    weitermachen = False
+                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+
+                                    outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
+                                    outputCollection.Add(outPutLine)
+
+                                    ReDim logArray(5)
+                                    logArray(0) = "Rolle hat kein Ist-Daten Referat "
+                                    logArray(1) = ""
+                                    logArray(2) = ""
+                                    logArray(3) = fullRoleName
+                                    logArray(4) = ""
+                                    logArray(5) = ""
+
+                                    Call logfileSchreiben(logArray)
+
+                                End If
+
+                            Else
+                                ' Rolle nicht gefunden , Wert darf / sollte nicht aufgenommen werden
+                                weitermachen = False
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+                                outPutLine = "Rolle nicht bekannt: " & roleName
+                                outputCollection.Add(outPutLine)
+
+                                ReDim logArray(5)
+                                logArray(0) = "unbekannte Rolle "
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = ""
+                                logArray(5) = ""
+
+                                Call logfileSchreiben(logArray)
+                            End If
+
+
+
+
+                        ElseIf RoleDefinitions.containsNameOrID(roleName) Then
+
+                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste, True)
 
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
@@ -10618,109 +10688,48 @@ Public Module agm2
                             Dim protocolEntryWritten As Boolean = False
 
                             ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
-                            If teamName.Length > 0 Then
-                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
 
-                                If parentReferat.Length > 0 Then
-                                    ' 2. Beste Alternative 
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-                                    weitermachen = True
-                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                    roleName = teamName
-                                    teamName = ""
+                            ' es muss als letzte Alternative das Referat genommen werden ... 
+                            If tmpReferat = "D-BITSV-KB" Then
+                                tmpReferat = "D-BITSV-KB0"
+                            End If
+                            parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste, True)
 
-                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                Else
-                                    ' es muss als letzte Bastion das Referat genommen werden ... 
-                                    If tmpReferat = "D-BITSV-KB" Then
-                                        tmpReferat = "D-BITSV-KB0"
-                                    End If
+                            If parentReferat.Length > 0 Then
+                                ' 3. Beste Alternative 
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
+                                weitermachen = True
+                                ' IN Folge sollen die Werte dem Team zugeordnet werden 
+                                roleName = parentReferat
+                                teamName = ""
 
-                                    parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
-
-                                    If parentReferat.Length > 0 Then
-                                        ' 3. Beste Alternative 
-                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-
-                                        weitermachen = True
-                                        ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                        roleName = parentReferat
-                                        teamName = ""
-
-                                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                    Else
-                                        ' Fehlermeldung 
-                                        ' 
-                                        weitermachen = False
-                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-
-                                        outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
-                                        outputCollection.Add(outPutLine)
-
-                                        ReDim logArray(5)
-                                        logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        logArray(4) = teamName
-                                        logArray(5) = parentReferat
-
-                                        Call logfileSchreiben(logArray)
-                                        protocolEntryWritten = True
-
-
-                                    End If
-
-
-                                End If
+                                roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
                             Else
-                                ' es muss als letzte Alternative das Referat genommen werden ... 
-                                If tmpReferat = "D-BITSV-KB" Then
-                                    tmpReferat = "D-BITSV-KB0"
-                                End If
-                                parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
+                                ' Fehlermeldung 
+                                ' 
+                                weitermachen = False
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
-                                If parentReferat.Length > 0 Then
-                                    ' 3. Beste Alternative 
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-                                    weitermachen = True
-                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                    roleName = parentReferat
-                                    teamName = ""
+                                outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
+                                outputCollection.Add(outPutLine)
 
-                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                Else
-                                    ' Fehlermeldung 
-                                    ' 
-                                    weitermachen = False
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                ReDim logArray(5)
+                                logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = teamName
+                                logArray(5) = parentReferat
 
-                                    outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
-                                    outputCollection.Add(outPutLine)
-
-                                    ReDim logArray(5)
-                                    logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                    logArray(1) = ""
-                                    logArray(2) = ""
-                                    logArray(3) = fullRoleName
-                                    logArray(4) = teamName
-                                    logArray(5) = parentReferat
-
-                                    Call logfileSchreiben(logArray)
-                                    protocolEntryWritten = True
-
-                                End If
+                                Call logfileSchreiben(logArray)
+                                protocolEntryWritten = True
 
                             End If
+
 
                             If Not protocolEntryWritten Then
                                 ReDim logArray(5)
