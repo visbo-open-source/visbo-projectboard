@@ -26,6 +26,11 @@ Partial Class frmHierarchySelection
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.SelectionSet = New System.Windows.Forms.PictureBox()
+        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
+        Me.expandCompletely = New System.Windows.Forms.PictureBox()
+        Me.SelectionReset = New System.Windows.Forms.PictureBox()
+        Me.chkbxOneChart = New System.Windows.Forms.CheckBox()
         Me.auswLaden = New System.Windows.Forms.Button()
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.rdbPhaseMilest = New System.Windows.Forms.RadioButton()
@@ -44,19 +49,14 @@ Partial Class frmHierarchySelection
         Me.rdbCosts = New System.Windows.Forms.RadioButton()
         Me.filterBox = New System.Windows.Forms.TextBox()
         Me.headerLine = New System.Windows.Forms.Label()
-        Me.SelectionSet = New System.Windows.Forms.PictureBox()
         Me.auswSpeichern = New System.Windows.Forms.Button()
         Me.filterLabel = New System.Windows.Forms.Label()
         Me.filterDropbox = New System.Windows.Forms.ComboBox()
-        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
-        Me.expandCompletely = New System.Windows.Forms.PictureBox()
-        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
         Me.rdbNameList = New System.Windows.Forms.RadioButton()
         Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
         Me.AbbrButton = New System.Windows.Forms.Button()
-        Me.chkbxOneChart = New System.Windows.Forms.CheckBox()
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.repVorlagenDropbox = New System.Windows.Forms.ComboBox()
         Me.OKButton = New System.Windows.Forms.Button()
@@ -64,6 +64,10 @@ Partial Class frmHierarchySelection
         Me.einstellungen = New System.Windows.Forms.Label()
         Me.hryTreeView = New System.Windows.Forms.TreeView()
         Me.Panel1.SuspendLayout()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel2.SuspendLayout()
         CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -72,10 +76,6 @@ Partial Class frmHierarchySelection
         CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel3.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -119,6 +119,69 @@ Partial Class frmHierarchySelection
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(457, 454)
         Me.Panel1.TabIndex = 0
+        '
+        'SelectionSet
+        '
+        Me.SelectionSet.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
+        Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
+        Me.SelectionSet.InitialImage = Nothing
+        Me.SelectionSet.Location = New System.Drawing.Point(9, 346)
+        Me.SelectionSet.Name = "SelectionSet"
+        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.SelectionSet.TabIndex = 89
+        Me.SelectionSet.TabStop = False
+        '
+        'collapseCompletely
+        '
+        Me.collapseCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
+        Me.collapseCompletely.Location = New System.Drawing.Point(64, 346)
+        Me.collapseCompletely.Name = "collapseCompletely"
+        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.collapseCompletely.TabIndex = 85
+        Me.collapseCompletely.TabStop = False
+        '
+        'expandCompletely
+        '
+        Me.expandCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
+        Me.expandCompletely.Location = New System.Drawing.Point(86, 346)
+        Me.expandCompletely.Name = "expandCompletely"
+        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.expandCompletely.TabIndex = 84
+        Me.expandCompletely.TabStop = False
+        '
+        'SelectionReset
+        '
+        Me.SelectionReset.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
+        Me.SelectionReset.InitialImage = Nothing
+        Me.SelectionReset.Location = New System.Drawing.Point(31, 346)
+        Me.SelectionReset.Name = "SelectionReset"
+        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.SelectionReset.TabIndex = 83
+        Me.SelectionReset.TabStop = False
+        '
+        'chkbxOneChart
+        '
+        Me.chkbxOneChart.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.chkbxOneChart.AutoSize = True
+        Me.chkbxOneChart.Location = New System.Drawing.Point(322, 345)
+        Me.chkbxOneChart.Name = "chkbxOneChart"
+        Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
+        Me.chkbxOneChart.TabIndex = 76
+        Me.chkbxOneChart.Text = "Alles in einem Chart"
+        Me.chkbxOneChart.UseVisualStyleBackColor = True
+        Me.chkbxOneChart.Visible = False
         '
         'auswLaden
         '
@@ -309,20 +372,6 @@ Partial Class frmHierarchySelection
         Me.headerLine.TabIndex = 90
         Me.headerLine.Text = "Label1              "
         '
-        'SelectionSet
-        '
-        Me.SelectionSet.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
-        Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
-        Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(9, 346)
-        Me.SelectionSet.Name = "SelectionSet"
-        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
-        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.SelectionSet.TabIndex = 89
-        Me.SelectionSet.TabStop = False
-        '
         'auswSpeichern
         '
         Me.auswSpeichern.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -357,43 +406,6 @@ Partial Class frmHierarchySelection
         Me.filterDropbox.Sorted = True
         Me.filterDropbox.TabIndex = 86
         Me.filterDropbox.Visible = False
-        '
-        'collapseCompletely
-        '
-        Me.collapseCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(64, 346)
-        Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.collapseCompletely.TabIndex = 85
-        Me.collapseCompletely.TabStop = False
-        '
-        'expandCompletely
-        '
-        Me.expandCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(86, 346)
-        Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.expandCompletely.TabIndex = 84
-        Me.expandCompletely.TabStop = False
-        '
-        'SelectionReset
-        '
-        Me.SelectionReset.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
-        Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(31, 346)
-        Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
-        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.SelectionReset.TabIndex = 83
-        Me.SelectionReset.TabStop = False
         '
         'Panel3
         '
@@ -450,18 +462,6 @@ Partial Class frmHierarchySelection
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = False
         Me.AbbrButton.Visible = False
-        '
-        'chkbxOneChart
-        '
-        Me.chkbxOneChart.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.chkbxOneChart.AutoSize = True
-        Me.chkbxOneChart.Location = New System.Drawing.Point(322, 345)
-        Me.chkbxOneChart.Name = "chkbxOneChart"
-        Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
-        Me.chkbxOneChart.TabIndex = 76
-        Me.chkbxOneChart.Text = "Alles in einem Chart"
-        Me.chkbxOneChart.UseVisualStyleBackColor = True
-        Me.chkbxOneChart.Visible = False
         '
         'statusLabel
         '
@@ -543,6 +543,10 @@ Partial Class frmHierarchySelection
         Me.TopMost = True
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
         CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).EndInit()
@@ -552,10 +556,6 @@ Partial Class frmHierarchySelection
         CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel3.ResumeLayout(False)
         Me.Panel3.PerformLayout()
         Me.ResumeLayout(False)

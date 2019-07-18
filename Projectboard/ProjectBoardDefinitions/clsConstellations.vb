@@ -103,14 +103,25 @@
                 If kvp.Key = "Last" Or kvp.Key = "Session" Then
                     ' nichts tun, sind systembedingt 
                 Else
-                    Dim tmpKey As String = calcProjektKey(pname, vname)
-                    If kvp.Value.contains(tmpKey, False) Then
-                        If tmpResult = "" Then
-                            tmpResult = kvp.Key
-                        Else
-                            tmpResult = tmpResult & "; " & kvp.Key
+                    If vname = "$ALL" Then
+                        If kvp.Value.containsProject(pname) Then
+                            If tmpResult = "" Then
+                                tmpResult = kvp.Key
+                            Else
+                                tmpResult = tmpResult & "; " & kvp.Key
+                            End If
+                        End If
+                    Else
+                        Dim tmpKey As String = calcProjektKey(pname, vname)
+                        If kvp.Value.contains(tmpKey, False) Then
+                            If tmpResult = "" Then
+                                tmpResult = kvp.Key
+                            Else
+                                tmpResult = tmpResult & "; " & kvp.Key
+                            End If
                         End If
                     End If
+
                 End If
             Next
 
