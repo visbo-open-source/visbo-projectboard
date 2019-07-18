@@ -96,6 +96,8 @@
     ''' <remarks></remarks>
     Public ReadOnly Property getSzenarioNamesWith(ByVal pname As String, ByVal vname As String) As String
         Get
+
+            Dim initMSg As String = "referenced by: " & vbLf
             Dim tmpResult As String = ""
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In _allConstellations
@@ -106,7 +108,7 @@
                     If vname = "$ALL" Then
                         If kvp.Value.containsProject(pname) Then
                             If tmpResult = "" Then
-                                tmpResult = kvp.Key
+                                tmpResult = initMSg & kvp.Key
                             Else
                                 tmpResult = tmpResult & "; " & kvp.Key
                             End If
@@ -115,7 +117,7 @@
                         Dim tmpKey As String = calcProjektKey(pname, vname)
                         If kvp.Value.contains(tmpKey, False) Then
                             If tmpResult = "" Then
-                                tmpResult = kvp.Key
+                                tmpResult = initMSg & kvp.Key
                             Else
                                 tmpResult = tmpResult & "; " & kvp.Key
                             End If
