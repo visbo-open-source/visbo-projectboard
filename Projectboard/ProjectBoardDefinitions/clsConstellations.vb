@@ -94,11 +94,16 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSzenarioNamesWith(ByVal pname As String, ByVal vname As String) As String
+    Public ReadOnly Property getSzenarioNamesWith(ByVal pname As String, ByVal vname As String,
+                                                  Optional ByVal inclExplanation As Boolean = True) As String
         Get
 
-            Dim initMSg As String = "referenced by: " & vbLf
+            Dim initMSg As String = "referenced by Portfolio(s: " & vbLf
             Dim tmpResult As String = ""
+
+            If Not inclExplanation Then
+                initMSg = ""
+            End If
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In _allConstellations
 
