@@ -3341,6 +3341,37 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' wird nur in AllianzIstDaten Import benötigt- soll die bereits durch vorherige Istdaten Importe entstandenen Team-MEmber Werte, die jetzt auf Nul gesetzt sind 
+    ''' rausnehmen, um das nicht extrem unübersichtlich werden zu lassen 
+    ''' </summary>
+    Public Sub deleteTeamMembersWithNull()
+
+        For Each cphase As clsPhase In AllPhases
+            Dim delTeamRoles As New Collection
+            For Each role As clsRolle In cphase.rollenListe
+                Try
+                    If role.teamID > -1 Or RoleDefinitions.getRoleDefByID(role.uid).getSubRoleCount = 0 Then
+                        If role.Xwerte.Sum = 0 Then
+                            delTeamRoles.Add(role.getNameID)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            If delTeamRoles.Count > 0 Then
+                For Each nameID As String In delTeamRoles
+                    cphase.removeRoleByNameID(nameID)
+                Next
+            End If
+        Next
+
+        ' jetzt müssen die 
+    End Sub
+
+    ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
     ''' </summary>

@@ -9364,43 +9364,57 @@ Public Module agm2
     Private Function getAllianzTeamNameFromCell(ByVal excelCell As Excel.Range) As String
         Dim tmpResult As String = ""
 
-        If Not IsNothing(excelCell) Then
-            If Not IsNothing(excelCell.Value) Then
-                Dim cellValue As String = CStr(excelCell.Value).Trim
-                If cellValue.StartsWith("#") Then
+        Try
+            If Not IsNothing(excelCell) Then
+                If Not IsNothing(excelCell.Value) Then
+                    Dim cellValue As String = CStr(excelCell.Value).Trim
+                    If cellValue.StartsWith("#") Then
+                        ' 1. Versuch
+                        Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-"), CChar("_"), CChar(" ")})
 
-                    Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                        If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                    If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
-
-                        If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
-                            tmpResult = tmpStr1(0).Trim
+                            If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                                tmpResult = tmpStr1(0).Trim
+                            End If
                         End If
 
-                    Else
-                        Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                        If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
 
-                            If RoleDefinitions.getRoledef(tmpStr2(0).Trim).isTeam Then
-                                tmpResult = tmpStr2(0).Trim
+                        If tmpResult = "" Then
+                            ' 2. Versuch
+                            Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                            If tmpStr2.Length > 1 Then
+                                Dim tmpName As String = "#" & tmpStr2(1).Trim
+                                If RoleDefinitions.containsName(tmpName) Then
+                                    If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                        tmpResult = tmpName
+                                    End If
+                                End If
                             End If
 
-                        Else
-                            Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
-                            If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-
-                                If RoleDefinitions.getRoledef(tmpstr3(0).Trim).isTeam Then
-                                    tmpResult = tmpstr3(0).Trim
+                            If tmpResult = "" Then
+                                ' 3. Versuch
+                                Dim tmpstr4() As String = cellValue.Split(New Char() {CChar("("), CChar(")")})
+                                If tmpstr4.Length > 1 Then
+                                    Dim tmpName As String = "#" & tmpstr4(1).Trim
+                                    If RoleDefinitions.containsName(tmpName) Then
+                                        If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                            tmpResult = tmpName
+                                        End If
+                                    End If
                                 End If
 
                             End If
-                        End If
 
+                        End If
                     End If
                 End If
+
             End If
 
-        End If
+        Catch ex As Exception
+
+        End Try
 
 
 
@@ -10578,12 +10592,31 @@ Public Module agm2
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
                         Dim roleName As String = fullRoleName
+                        Dim rawTeamName As String = CStr(CType(.Cells(zeile, colActivity), Excel.Range).Value).Trim
 
                         If roleName.StartsWith("*") Then
                             roleName = roleName.Substring(1)
                         End If
 
                         Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
+
+                        If rawTeamName.StartsWith("#") And teamName = "" Then
+                            CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+
+                            outPutLine = "ggf. wurde ein Team nicht erkannt ... " & rawTeamName
+                            outputCollection.Add(outPutLine)
+
+                            ReDim logArray(5)
+                            logArray(0) = "ggf. wurde ein Team nicht erkannt ... "
+                            logArray(1) = ""
+                            logArray(2) = ""
+                            logArray(3) = rawTeamName
+                            logArray(4) = ""
+                            logArray(5) = ""
+
+                            Call logfileSchreiben(logArray)
+                        End If
+
                         Dim roleNameID As String = ""
                         Dim parentReferat As String = ""
                         Dim weitermachen As Boolean = False
@@ -11056,6 +11089,15 @@ Public Module agm2
                             .variantDescription = ""
                         End With
 
+                        ' tk 18.7.19 
+                        ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
+                        Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
+                        Call newProj.deleteTeamMembersWithNull()
+
+                        If chckVorher <> newProj.getAllPersonalKosten.Sum Then
+                            outPutLine = "PErsonalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
+                            outputCollection.Add(outPutLine)
+                        End If
 
                         ' jetzt in die Import-Projekte eintragen 
                         updatedProjects = updatedProjects + 1

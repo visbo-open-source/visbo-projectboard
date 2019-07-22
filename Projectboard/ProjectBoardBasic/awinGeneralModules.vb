@@ -4019,46 +4019,55 @@ Public Module awinGeneralModules
     Public Sub deleteCompleteProjectFromDB(ByRef outputCollection As Collection,
                                            ByVal pname As String)
 
-        Dim result As Boolean = True
+        Dim deleteIsAllowed As Boolean = True
         Dim err As New clsErrorCodeMsg
         Dim outputline As String = ""
 
-        '' Test, ob Standardvariante in einem Portfolio referenziert wird
-        'If notReferencedByAnyPortfolio(pname, "") Then
-        '    result = result And True
-        'Else
-        '    outputline = ("Projekt '" & pname & "' kann nicht gelöscht werden - es wird in einem Portfolio referenziert")
-        '    outputCollection.Add(outputline)
-        '    result = False
-        'End If
 
+        ' Liste der Scenarios, die irgendeine Variante referenzieren ... 
+        ' leerer Sting, wenn es keine Referenzen gibt .. 
+        outputline = projectConstellations.getSzenarioNamesWith(pname, "$ALL", False)
 
-        Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
-        'hinzufügen der Standardvariante
-        variantListe.Add("", "")
+        ' wenn es keine Referenzen gibt, ist der Delete erlaubt 
+        deleteIsAllowed = (outputline = "")
 
-        If Not IsNothing(variantListe) Then
+        ''Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
+        ''hinzufügen der Standardvariante
+        ''variantListe.Add("", "")
 
-            For Each vname In variantListe
-                If notReferencedByAnyPortfolio(pname, vname) Then
-                    result = result And True
-                Else
-                    outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
-                    outputCollection.Add(outputline)
-                    result = False
-                    Exit For
-                End If
-            Next
-        Else
-            result = True
+        ''If Not IsNothing(variantListe) Then
 
-        End If
+        ''    For Each vname In variantListe
+        ''        If notReferencedByAnyPortfolio(pname, vname) Then
+        ''            deleteIsAllowed = deleteIsAllowed And True
+        ''        Else
+        ''            outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
+        ''            outputCollection.Add(outputline)
+        ''            deleteIsAllowed = False
+        ''            Exit For
+        ''        End If
+        ''    Next
+        ''Else
+        ''    deleteIsAllowed = True
 
-        If result Then
+        ''End If
+
+        If deleteIsAllowed Then
             If CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err) Then
-                outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                If awinSettings.englishLanguage Then
+                    outputline = ("Project  '" & pname & "'  : deleted ")
+                Else
+                    outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                End If
                 outputCollection.Add(outputline)
             End If
+        Else
+            If awinSettings.englishLanguage Then
+                outputline = "Delete denied: " & pname & " referenced by portfolios:" & vbLf & "   " & outputline
+            Else
+                outputline = "Delete nicht möglich: " & pname & " enthalten in Portfolios:" & vbLf & "   " & outputline
+            End If
+            outputCollection.Add(outputline)
         End If
 
     End Sub
@@ -4259,7 +4268,8 @@ Public Module awinGeneralModules
                         End If
 
                     End If
-                    outputLine = outputLine & projectConstellations.getSzenarioNamesWith(pname, variantName)
+                    ' false: ohne den Zusatztext : referenced by Portfolio(s: 
+                    outputLine = outputLine & projectConstellations.getSzenarioNamesWith(pname, variantName, False)
                     outputCollection.Add(outputLine)
                 End If
 

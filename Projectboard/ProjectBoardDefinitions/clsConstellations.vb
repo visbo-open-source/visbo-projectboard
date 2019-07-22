@@ -94,23 +94,41 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSzenarioNamesWith(ByVal pname As String, ByVal vname As String) As String
+    Public ReadOnly Property getSzenarioNamesWith(ByVal pname As String, ByVal vname As String,
+                                                  Optional ByVal inclExplanation As Boolean = True) As String
         Get
+
+            Dim initMSg As String = "referenced by Portfolio(s: " & vbLf
             Dim tmpResult As String = ""
+
+            If Not inclExplanation Then
+                initMSg = ""
+            End If
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In _allConstellations
 
                 If kvp.Key = "Last" Or kvp.Key = "Session" Then
                     ' nichts tun, sind systembedingt 
                 Else
-                    Dim tmpKey As String = calcProjektKey(pname, vname)
-                    If kvp.Value.contains(tmpKey, False) Then
-                        If tmpResult = "" Then
-                            tmpResult = kvp.Key
-                        Else
-                            tmpResult = tmpResult & "; " & kvp.Key
+                    If vname = "$ALL" Then
+                        If kvp.Value.containsProject(pname) Then
+                            If tmpResult = "" Then
+                                tmpResult = initMSg & kvp.Key
+                            Else
+                                tmpResult = tmpResult & "; " & kvp.Key
+                            End If
+                        End If
+                    Else
+                        Dim tmpKey As String = calcProjektKey(pname, vname)
+                        If kvp.Value.contains(tmpKey, False) Then
+                            If tmpResult = "" Then
+                                tmpResult = initMSg & kvp.Key
+                            Else
+                                tmpResult = tmpResult & "; " & kvp.Key
+                            End If
                         End If
                     End If
+
                 End If
             Next
 
