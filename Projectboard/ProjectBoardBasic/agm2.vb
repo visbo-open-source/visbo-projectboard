@@ -17611,21 +17611,156 @@ Public Module agm2
                 ' Aufbauen der Darstellungsklassen  
                 Call aufbauenAppearanceDefinitions(wsName7810)
 
-                ' Auslesen der BusinessUnit Definitionen
-                Call readBusinessUnitDefinitions(wsName4)
 
-                ' Auslesen der Phasen Definitionen 
-                Call readPhaseDefinitions(wsName4)
+                ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
+                ' so aus dem Customization-File lesen und in die DB speichern
+                Dim customizations As New clsCustomization
 
-                ' Auslesen der Meilenstein Definitionen 
-                Call readMilestoneDefinitions(wsName4)
+                customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readMilestoneDefinitions")
+                If IsNothing(customizations) Then
+
+
+                    ' Auslesen der BusinessUnit Definitionen
+                    Call readBusinessUnitDefinitions(wsName4)
+
+                    ' Auslesen der Phasen Definitionen 
+                    Call readPhaseDefinitions(wsName4)
+
+                    ' Auslesen der Meilenstein Definitionen 
+                    Call readMilestoneDefinitions(wsName4)
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("readMilestoneDefinitions")
+                    End If
+
+                    ' auslesen der anderen Informationen 
+                    Call readOtherDefinitions(wsName4)
+
+
+                    customizations = New clsCustomization
+
+                    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                    'Next
+                    customizations.businessUnitDefinitions = businessUnitDefinitions
+
+                    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                    '    customizations.phaseDefinitions.Add(kvp.Value)
+                    'Next
+                    customizations.phaseDefinitions = PhaseDefinitions
+
+                    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                    'Next
+                    customizations.milestoneDefinitions = MilestoneDefinitions
+
+                    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                    customizations.showtimezone_color = showtimezone_color
+                    customizations.noshowtimezone_color = noshowtimezone_color
+                    customizations.calendarFontColor = calendarFontColor
+                    customizations.nrOfDaysMonth = nrOfDaysMonth
+                    customizations.farbeInternOP = farbeInternOP
+                    customizations.farbeExterne = farbeExterne
+                    customizations.iProjektFarbe = iProjektFarbe
+                    customizations.iWertFarbe = iWertFarbe
+                    customizations.vergleichsfarbe0 = vergleichsfarbe0
+                    customizations.vergleichsfarbe1 = vergleichsfarbe1
+                    'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                    customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
+                    customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
+                    customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
+                    customizations.AmpelGruen = awinSettings.AmpelGruen
+                    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                    customizations.AmpelGelb = awinSettings.AmpelGelb
+                    customizations.AmpelRot = awinSettings.AmpelRot
+                    customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+                    customizations.glowColor = awinSettings.glowColor
+
+                    customizations.timeSpanColor = awinSettings.timeSpanColor
+                    customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+
+                    customizations.gridLineColor = awinSettings.gridLineColor
+
+                    customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
+
+                    customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+
+                    customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+                    customizations.actualDataMonth = awinSettings.actualDataMonth
+                    customizations.ergebnisfarbe1 = ergebnisfarbe1
+                    customizations.ergebnisfarbe2 = ergebnisfarbe2
+                    customizations.weightStrategicFit = weightStrategicFit
+                    customizations.kalenderStart = awinSettings.kalenderStart
+                    customizations.zeitEinheit = awinSettings.zeitEinheit
+                    customizations.kapaEinheit = awinSettings.kapaEinheit
+                    customizations.offsetEinheit = awinSettings.offsetEinheit
+                    customizations.EinzelRessExport = awinSettings.EinzelRessExport
+                    customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
+                    customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
+                    customizations.spaltenbreite = awinSettings.spaltenbreite
+                    customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+                    customizations.propAnpassRess = awinSettings.propAnpassRess
+                    customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
+
+                    customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+                    customizations.fullProtocol = awinSettings.fullProtocol
+                    customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+                    customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+                    customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
+                    customizations.importUnknownNames = awinSettings.importUnknownNames
+                    customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+
+                    customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+                    customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+                    customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+                    customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+
+                    customizations.importTyp = awinSettings.importTyp
+
+                    customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+
+                    customizations.englishLanguage = awinSettings.englishLanguage
+
+                    customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+                    customizations.considerRiskFee = awinSettings.considerRiskFee
+
+
+                    Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
+                                                                                                CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                                "Customization",
+                                                                                                Date.Now, err)
+
+                Else
+                    ' alle awinSettings... mit den customizations... besetzen
+
+                    ' noch zu tun, sonst in readOtherdefinitions
+                    StartofCalendar = awinSettings.kalenderStart
+                    'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                    historicDate = StartofCalendar
+                    Try
+                        If awinSettings.englishLanguage Then
+                            menuCult = ReportLang(PTSprache.englisch)
+                            repCult = menuCult
+                            awinSettings.kapaEinheit = "PD"
+                        Else
+                            awinSettings.kapaEinheit = "PT"
+                            menuCult = ReportLang(PTSprache.deutsch)
+                            repCult = menuCult
+                        End If
+                    Catch ex As Exception
+                        awinSettings.englishLanguage = False
+                        awinSettings.kapaEinheit = "PT"
+                        menuCult = ReportLang(PTSprache.deutsch)
+                        repCult = menuCult
+                    End Try
+
                 End If
 
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
 
                 If awinSettings.visboDebug Then
                     Call MsgBox("readOtherDefinitions")

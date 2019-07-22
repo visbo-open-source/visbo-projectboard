@@ -2181,6 +2181,66 @@ Public Class Request
 
         retrieveCustomFieldsFromDB = result
     End Function
+
+
+    Public Function retrieveCustomizationFromDB(ByVal name As String, ByVal timestamp As Date,
+                                                ByVal refnext As Boolean,
+                                                ByRef err As clsErrorCodeMsg) As clsCustomization
+
+        Dim result As clsCustomization = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
+
+                    If Not IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                result = Nothing
+                err.errorCode = 403
+                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                                vbLf & "und können daher nicht von der DB gelesen werden"
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveCustomizationFromDB = result
+    End Function
+    'Public Function retrieveCustomizationFromDB(ByVal name As String,
+    '                                     ByVal timestamp As Date,
+    '                                     ByVal refnext As Boolean,
+    '                                     ByRef err As clsErrorCodeMsg) As clsCustomizationWeb
+
+
+    'End Function
     Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 
         Dim result As New List(Of String)

@@ -283,4 +283,16 @@ Public Class clsMeilensteine
         _allMilestones.Clear()
     End Sub
 
+
+    ''' <summary>
+    ''' gibt die komplette Liste zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property liste() As SortedList(Of String, clsMeilensteinDefinition)
+        Get
+            liste = _allMilestones
+        End Get
+    End Property
+
+
 End Class

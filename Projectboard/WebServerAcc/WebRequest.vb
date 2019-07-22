@@ -2388,7 +2388,26 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customization)
 
                     Dim listofCustomWeb As New clsCustomizationWeb
-                    listofCustomWeb = listofSetting
+                    listofCustomWeb.copyFrom(listofSetting)
+
+                    ' der Unique-Key für customroles besteht aus: name, type
+
+                    newsetting = New clsVCSettingCustomization
+                    CType(newsetting, clsVCSettingCustomization).name = name         ' Customization '
+                    CType(newsetting, clsVCSettingCustomization).timestamp = timestamp
+                    CType(newsetting, clsVCSettingCustomization).userId = ""
+                    CType(newsetting, clsVCSettingCustomization).vcid = aktVCid
+                    CType(newsetting, clsVCSettingCustomization).type = type
+                    CType(newsetting, clsVCSettingCustomization).value = listofCustomWeb
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customization), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customization), newsetting, err)
+                    End If
 
 
             End Select
@@ -2599,13 +2618,13 @@ Public Class Request
     Public Function retrieveCustomizationFromDB(ByVal name As String,
                                          ByVal timestamp As Date,
                                          ByVal refnext As Boolean,
-                                         ByRef err As clsErrorCodeMsg) As clsCustomizationWeb
+                                         ByRef err As clsErrorCodeMsg) As clsCustomization
 
-        Dim result As New clsCustomizationWeb
+        Dim result As clsCustomization = Nothing
         Dim setting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
-        Dim type As String = settingTypes(ptSettingTypes.organisation)
+        Dim type As String = settingTypes(ptSettingTypes.customization)
 
         timestamp = timestamp.ToUniversalTime
 
@@ -2625,7 +2644,7 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)._id
                             webCustomization = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0).value
-
+                            webCustomization.copyTo(result)
                         Else
                             ' Fehler: es gibt nur eine Customization pro VC
 
@@ -4728,6 +4747,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.organisation)
                     result = CType(result, clsVCSettingOrganisation)
 
+                Case settingTypes(ptSettingTypes.customization)
+                    result = CType(result, clsVCSettingCustomization)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -4794,6 +4816,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.organisation)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation))
+                        Case settingTypes(ptSettingTypes.customization)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization))
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -4848,6 +4873,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
+                Case settingTypes(ptSettingTypes.customization)
+                    setting = CType(setting, clsVCSettingCustomization)
+
+
                 Case Else
                     Call MsgBox("Fehler: settingType = " & type & " íst nicht definiert")
             End Select
@@ -4881,6 +4910,8 @@ Public Class Request
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
                         Case settingTypes(ptSettingTypes.organisation)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                        Case settingTypes(ptSettingTypes.customization)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -4936,6 +4967,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
+                Case settingTypes(ptSettingTypes.customization)
+                    setting = CType(setting, clsVCSettingCustomization)
+
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -4972,6 +5007,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.organisation)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
                             setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.customization)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization)).ElementAt(0)
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select

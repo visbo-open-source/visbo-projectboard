@@ -190,6 +190,15 @@ Public Class clsPhasen
 
     End Sub
 
+    ''' <summary>
+    ''' gibt die komplette Liste zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property liste() As SortedList(Of String, clsPhasenDefinition)
+        Get
+            liste = _allPhasen
+        End Get
+    End Property
 
     Public Sub New()
 
@@ -197,4 +206,5 @@ Public Class clsPhasen
 
 
     End Sub
+
 End Class

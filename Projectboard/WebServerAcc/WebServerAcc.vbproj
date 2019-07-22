@@ -102,6 +102,7 @@
     <Compile Include="clsVCSetting.vb" />
     <Compile Include="clsVCSettingTypeClasses.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
+    <Compile Include="clsWebVCSettingCustomization.vb" />
     <Compile Include="clsWebVCSettingCustomroles.vb" />
     <Compile Include="clsVPf.vb" />
     <Compile Include="clsVPLock.vb" />

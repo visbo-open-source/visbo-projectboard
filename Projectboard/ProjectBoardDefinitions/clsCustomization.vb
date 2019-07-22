@@ -1,10 +1,9 @@
-﻿Imports ProjectBoardDefinitions
-Public Class clsCustomizationWeb
+﻿Public Class clsCustomization
 
 
-    Public businessUnitDefinitions As List(Of clsBusinessUnit)
-    Public phaseDefinitions As List(Of clsPhasenDefinition)
-    Public milestoneDefinitions As List(Of clsMeilensteinDefinition)
+    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+    Public phaseDefinitions As clsPhasen
+    Public milestoneDefinitions As clsMeilensteine
 
     Private _showtimezone_color As Long
     Private _noshowtimezone_color As Long
@@ -749,190 +748,10 @@ Public Class clsCustomizationWeb
             End If
         End Set
     End Property
-
-    Public Sub copyTo(ByVal customDef As clsCustomization)
-
-        With customDef
-
-            Dim index As Integer
-            For index = 1 To Me.businessUnitDefinitions.Count
-                .businessUnitDefinitions.Add(index, Me.businessUnitDefinitions.ElementAt(index))
-            Next
-
-            For Each phasedef As clsPhasenDefinition In Me.phaseDefinitions
-                customDef.phaseDefinitions.Add(phasedef)
-            Next
-            For Each msdef As clsMeilensteinDefinition In Me.milestoneDefinitions
-                Me.milestoneDefinitions.Add(msdef)
-            Next
-
-            .showtimezone_color = Me.showtimezone_color
-            .noshowtimezone_color = Me.noshowtimezone_color
-            .calendarFontColor = Me.calendarFontColor
-            .nrOfDaysMonth = Me.nrOfDaysMonth
-            .farbeInternOP = Me.farbeInternOP
-            .farbeExterne = Me.farbeExterne
-            .iProjektFarbe = Me.iProjektFarbe
-            .iWertFarbe = Me.iWertFarbe
-            .vergleichsfarbe0 = Me.vergleichsfarbe0
-            .vergleichsfarbe1 = Me.vergleichsfarbe1
-            'customizations.vergleichsfarbe2 = vergleichsfarbe2
-
-            .SollIstFarbeB = Me.SollIstFarbeB
-            .SollIstFarbeL = Me.SollIstFarbeL
-            .SollIstFarbeC = Me.SollIstFarbeC
-            .AmpelGruen = Me.AmpelGruen
-            'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-            .AmpelGelb = Me.AmpelGelb
-            .AmpelRot = Me.AmpelRot
-            .AmpelNichtBewertet = Me.AmpelNichtBewertet
-            .glowColor = Me.glowColor
-
-            .timeSpanColor = Me.timeSpanColor
-            .showTimeSpanInPT = Me.showTimeSpanInPT
-
-            .gridLineColor = Me.gridLineColor
-
-            .missingDefinitionColor = Me.missingDefinitionColor
-
-            .allianzIstDatenReferate = Me.allianzIstDatenReferate
-
-            .autoSetActualDataDate = Me.autoSetActualDataDate
-
-            .actualDataMonth = Me.actualDataMonth
-            .ergebnisfarbe1 = Me.ergebnisfarbe1
-            .ergebnisfarbe2 = Me.ergebnisfarbe2
-            .weightStrategicFit = Me.weightStrategicFit
-            .kalenderStart = Me.kalenderStart
-            .zeitEinheit = Me.zeitEinheit
-            .kapaEinheit = Me.kapaEinheit
-            .offsetEinheit = Me.offsetEinheit
-            .EinzelRessExport = Me.EinzelRessExport
-            .zeilenhoehe1 = Me.zeilenhoehe1
-            .zeilenhoehe2 = Me.zeilenhoehe2
-            .spaltenbreite = Me.spaltenbreite
-            .autoCorrectBedarfe = Me.autoCorrectBedarfe
-            .propAnpassRess = Me.propAnpassRess
-            .showValuesOfSelected = Me.showValuesOfSelected
-
-            .mppProjectsWithNoMPmayPass = Me.mppProjectsWithNoMPmayPass
-            .fullProtocol = Me.fullProtocol
-            .addMissingPhaseMilestoneDef = Me.addMissingPhaseMilestoneDef
-            .alwaysAcceptTemplateNames = Me.alwaysAcceptTemplateNames
-            .eliminateDuplicates = Me.eliminateDuplicates
-            .importUnknownNames = Me.importUnknownNames
-            .createUniqueSiblingNames = Me.createUniqueSiblingNames
-
-            .readWriteMissingDefinitions = Me.readWriteMissingDefinitions
-            .meExtendedColumnsView = Me.meExtendedColumnsView
-            .meDontAskWhenAutoReduce = Me.meDontAskWhenAutoReduce
-            .readCostRolesFromDB = Me.readCostRolesFromDB
-
-            .importTyp = Me.importTyp
-
-            .meAuslastungIsInclExt = Me.meAuslastungIsInclExt
-
-            .englishLanguage = Me.englishLanguage
-
-            .showPlaceholderAndAssigned = Me.showPlaceholderAndAssigned
-            .considerRiskFee = Me.considerRiskFee
-
-
-        End With
-    End Sub
-
-    Public Sub copyFrom(ByVal customDef As clsCustomization)
-
-        With customDef
-
-            For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In customDef.businessUnitDefinitions
-                Me.businessUnitDefinitions.Add(kvp.Value)
-            Next
-            For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In customDef.phaseDefinitions.liste
-                Me.phaseDefinitions.Add(kvp.Value)
-            Next
-            For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In customDef.milestoneDefinitions.liste
-                Me.milestoneDefinitions.Add(kvp.Value)
-            Next
-            Me.showtimezone_color = .showtimezone_color
-            Me.noshowtimezone_color = .noshowtimezone_color
-            Me.calendarFontColor = .calendarFontColor
-            Me.nrOfDaysMonth = .nrOfDaysMonth
-            Me.farbeInternOP = .farbeInternOP
-            Me.farbeExterne = .farbeExterne
-            Me.iProjektFarbe = .iProjektFarbe
-            Me.iWertFarbe = .iWertFarbe
-            Me.vergleichsfarbe0 = .vergleichsfarbe0
-            Me.vergleichsfarbe1 = .vergleichsfarbe1
-            'customizations.vergleichsfarbe2 = vergleichsfarbe2
-
-            Me.SollIstFarbeB = .SollIstFarbeB
-            Me.SollIstFarbeL = .SollIstFarbeL
-            Me.SollIstFarbeC = .SollIstFarbeC
-            Me.AmpelGruen = .AmpelGruen
-            'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-            Me.AmpelGelb = .AmpelGelb
-            Me.AmpelRot = .AmpelRot
-            Me.AmpelNichtBewertet = .AmpelNichtBewertet
-            Me.glowColor = .glowColor
-
-            Me.timeSpanColor = .timeSpanColor
-            Me.showTimeSpanInPT = .showTimeSpanInPT
-
-            Me.gridLineColor = .gridLineColor
-
-            Me.missingDefinitionColor = .missingDefinitionColor
-
-            Me.allianzIstDatenReferate = .allianzIstDatenReferate
-
-            Me.autoSetActualDataDate = .autoSetActualDataDate
-
-            Me.actualDataMonth = .actualDataMonth
-            Me.ergebnisfarbe1 = .ergebnisfarbe1
-            Me.ergebnisfarbe2 = .ergebnisfarbe2
-            Me.weightStrategicFit = .weightStrategicFit
-            Me.kalenderStart = .kalenderStart
-            Me.zeitEinheit = .zeitEinheit
-            Me.kapaEinheit = .kapaEinheit
-            Me.offsetEinheit = .offsetEinheit
-            Me.EinzelRessExport = .EinzelRessExport
-            Me.zeilenhoehe1 = .zeilenhoehe1
-            Me.zeilenhoehe2 = .zeilenhoehe2
-            Me.spaltenbreite = .spaltenbreite
-            Me.autoCorrectBedarfe = .autoCorrectBedarfe
-            Me.propAnpassRess = .propAnpassRess
-            Me.showValuesOfSelected = .showValuesOfSelected
-
-            Me.mppProjectsWithNoMPmayPass = .mppProjectsWithNoMPmayPass
-            Me.fullProtocol = .fullProtocol
-            Me.addMissingPhaseMilestoneDef = .addMissingPhaseMilestoneDef
-            Me.alwaysAcceptTemplateNames = .alwaysAcceptTemplateNames
-            Me.eliminateDuplicates = .eliminateDuplicates
-            Me.importUnknownNames = .importUnknownNames
-            Me.createUniqueSiblingNames = .createUniqueSiblingNames
-
-            Me.readWriteMissingDefinitions = .readWriteMissingDefinitions
-            Me.meExtendedColumnsView = .meExtendedColumnsView
-            Me.meDontAskWhenAutoReduce = .meDontAskWhenAutoReduce
-            Me.readCostRolesFromDB = .readCostRolesFromDB
-
-            Me.importTyp = .importTyp
-
-            Me.meAuslastungIsInclExt = .meAuslastungIsInclExt
-
-            Me.englishLanguage = .englishLanguage
-
-            Me.showPlaceholderAndAssigned = .showPlaceholderAndAssigned
-            Me.considerRiskFee = .considerRiskFee
-
-        End With
-    End Sub
-
     Public Sub New()
-
-        businessUnitDefinitions = New List(Of clsBusinessUnit)
-        phaseDefinitions = New List(Of clsPhasenDefinition)
-        milestoneDefinitions = New List(Of clsMeilensteinDefinition)
+        businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
+        phaseDefinitions = New clsPhasen
+        milestoneDefinitions = New clsMeilensteine
 
         showtimezone_color = 0
         noshowtimezone_color = 0
@@ -1035,5 +854,4 @@ Public Class clsCustomizationWeb
         ' sollen die Risiko Kennzahlen bei der Berechnung der Portfolio / Projekt-Ergebnisse mitgerechnet werden ?  
         considerRiskFee = False
     End Sub
-
 End Class
