@@ -3343,7 +3343,8 @@ Public Module awinGeneralModules
                                   ByVal clearBoard As Boolean,
                                   ByVal clearSession As Boolean,
                                   ByVal storedAtOrBefore As Date,
-                                  Optional ByVal showSummaryProject As Boolean = False)
+                                  Optional ByVal showSummaryProject As Boolean = False,
+                                  Optional ByVal onlySessionLoad As Boolean = False)
 
         Dim err As New clsErrorCodeMsg
 
@@ -3382,7 +3383,15 @@ Public Module awinGeneralModules
                 Dim vorgabeBudget As Double = -1
                 ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
 
-                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
+                Dim variantName As String = ptVariantFixNames.pfv.ToString
+                ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
+                ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
+                ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
+                If onlySessionLoad And Not awinSettings.loadPFV Then
+                    variantName = ""
+                End If
+
+                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                 If Not IsNothing(curSummaryProjVorgabe) Then
                     vorgabeBudget = curSummaryProjVorgabe.Erloes
                 End If
