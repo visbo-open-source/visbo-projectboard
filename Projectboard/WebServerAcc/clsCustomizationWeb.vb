@@ -755,15 +755,15 @@ Public Class clsCustomizationWeb
         With customDef
 
             Dim index As Integer
-            For index = 1 To Me.businessUnitDefinitions.Count
-                .businessUnitDefinitions.Add(index, Me.businessUnitDefinitions.ElementAt(index))
+            For index = 0 To Me.businessUnitDefinitions.Count - 1
+                customDef.businessUnitDefinitions.Add(index, Me.businessUnitDefinitions.ElementAt(index))
             Next
 
             For Each phasedef As clsPhasenDefinition In Me.phaseDefinitions
                 customDef.phaseDefinitions.Add(phasedef)
             Next
             For Each msdef As clsMeilensteinDefinition In Me.milestoneDefinitions
-                Me.milestoneDefinitions.Add(msdef)
+                customDef.milestoneDefinitions.Add(msdef)
             Next
 
             .showtimezone_color = Me.showtimezone_color

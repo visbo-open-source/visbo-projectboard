@@ -2242,7 +2242,7 @@ Public Class Request
         Dim timestamp As String = ""
 
         If ts > Date.MinValue Then
-            ts = ts.ToUniversalTime.Date.AddDays(1)
+            ts = ts.ToUniversalTime.AddSeconds(2)
             'ts = ts.ToUniversalTime
         End If
 
@@ -2295,6 +2295,7 @@ Public Class Request
             End Select
 
             If ts > Date.MinValue Then
+                ts = ts.ToUniversalTime.AddSeconds(-2)
                 timestamp = DateTimeToISODate(ts)
             Else
                 timestamp = DateTimeToISODate(Date.Now.ToUniversalTime())
@@ -2641,7 +2642,7 @@ Public Class Request
 
                     If anzSetting > 0 Then
                         If anzSetting = 1 Then
-
+                            result = New clsCustomization
                             settingID = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)._id
                             webCustomization = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0).value
                             webCustomization.copyTo(result)

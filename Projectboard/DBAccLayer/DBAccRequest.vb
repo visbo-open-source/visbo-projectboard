@@ -2194,7 +2194,7 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
 
-                    If Not IsNothing(result) Then
+                    If IsNothing(result) Then
 
                         Select Case err.errorCode
 

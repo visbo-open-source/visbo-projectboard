@@ -17732,10 +17732,96 @@ Public Module agm2
                     Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
                                                                                                 CStr(settingTypes(ptSettingTypes.customization)),
                                                                                                 "Customization",
-                                                                                                Date.Now, err)
+                                                                                                Nothing, err)
 
                 Else
                     ' alle awinSettings... mit den customizations... besetzen
+                    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                    'Next
+                    businessUnitDefinitions = customizations.businessUnitDefinitions
+
+                    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                    '    customizations.phaseDefinitions.Add(kvp.Value)
+                    'Next
+                    PhaseDefinitions = customizations.phaseDefinitions
+
+                    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                    'Next
+                    MilestoneDefinitions = customizations.milestoneDefinitions
+                    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                    showtimezone_color = customizations.showtimezone_color
+                    noshowtimezone_color = customizations.noshowtimezone_color
+                    calendarFontColor = customizations.calendarFontColor
+                    nrOfDaysMonth = customizations.nrOfDaysMonth
+                    farbeInternOP = customizations.farbeInternOP
+                    farbeExterne = customizations.farbeExterne
+                    iProjektFarbe = customizations.iProjektFarbe
+                    iWertFarbe = customizations.iWertFarbe
+                    vergleichsfarbe0 = customizations.vergleichsfarbe0
+                    vergleichsfarbe1 = customizations.vergleichsfarbe1
+                    'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                    awinSettings.AmpelGruen = customizations.AmpelGruen
+                    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                    awinSettings.AmpelGelb = customizations.AmpelGelb
+                    awinSettings.AmpelRot = customizations.AmpelRot
+                    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                    awinSettings.glowColor = customizations.glowColor
+
+                    awinSettings.timeSpanColor = customizations.timeSpanColor
+                    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+                    awinSettings.gridLineColor = customizations.gridLineColor
+
+                    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+                    awinSettings.allianzIstDatenReferate = customizations.allianzIstDatenReferate
+
+                    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+                    awinSettings.actualDataMonth = customizations.actualDataMonth
+                    ergebnisfarbe1 = customizations.ergebnisfarbe1
+                    ergebnisfarbe2 = customizations.ergebnisfarbe2
+                    weightStrategicFit = customizations.weightStrategicFit
+                    awinSettings.kalenderStart = customizations.kalenderStart
+                    awinSettings.zeitEinheit = customizations.zeitEinheit
+                    awinSettings.kapaEinheit = customizations.kapaEinheit
+                    awinSettings.offsetEinheit = customizations.offsetEinheit
+                    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                    awinSettings.spaltenbreite = customizations.spaltenbreite
+                    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                    awinSettings.propAnpassRess = customizations.propAnpassRess
+                    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+                    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                    awinSettings.fullProtocol = customizations.fullProtocol
+                    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                    awinSettings.importUnknownNames = customizations.importUnknownNames
+                    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+                    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+                    awinSettings.importTyp = customizations.importTyp
+
+                    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+                    awinSettings.englishLanguage = customizations.englishLanguage
+
+                    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                    awinSettings.considerRiskFee = customizations.considerRiskFee
 
                     ' noch zu tun, sonst in readOtherdefinitions
                     StartofCalendar = awinSettings.kalenderStart
