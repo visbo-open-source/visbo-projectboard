@@ -80,7 +80,7 @@ Public Class frmSelectPPTTempl
         'Dim pName As String, variantName As String
         Dim vorlagenDateiName As String = ""
         Dim dirName As String
-
+        Dim msgtxt As String = ""
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -89,67 +89,82 @@ Public Class frmSelectPPTTempl
 
         enableOnUpdate = False
 
-        ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
-        If calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
-            dirName = awinPath & RepPortfolioVorOrdner
-            vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
-            Try
-                createReport.Enabled = False
-                RepVorlagenDropbox.Enabled = False
-                Me.Cursor = Cursors.WaitCursor
 
-                'Call PPTstarten()
+        If RepVorlagenDropbox.Text = "" Then
 
-                BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
-
-            Catch ex As Exception
-                Call MsgBox(ex.Message)
-            End Try
+            If awinSettings.englishLanguage Then
+                msgtxt = " Please, select a template for the report"
+            Else
+                msgtxt = " Bitte, wählen Sie eine Reportvorlage aus!"
+            End If
+            Call MsgBox(msgtxt)
 
         Else
-            dirName = awinPath & RepProjectVorOrdner
-            vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
+            ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
+            If calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
+                dirName = awinPath & RepPortfolioVorOrdner
+                vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
+                Try
+                    createReport.Enabled = False
+                    RepVorlagenDropbox.Enabled = False
+                    Me.Cursor = Cursors.WaitCursor
 
-            'awinSettings.eppExtendedMode = True
+                    'Call PPTstarten()
 
-            Try
-                If selectedProjekte.Count <= 0 Then
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                    For Each tmpname In awinSelection
-                        Try
-                            selectedProjekte.Add(ShowProjekte.getProject(tmpname), False)
-                        Catch ex As Exception
+                    BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
-                        End Try
-                    Next
-                End If
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
 
-            Catch ex As Exception
-                awinSelection = Nothing
-                selectedProjekte.Clear(False)
-            End Try
+            Else
+                dirName = awinPath & RepProjectVorOrdner
+                vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
 
-            Try
-                createReport.Enabled = False
-                RepVorlagenDropbox.Enabled = False
-                Me.Cursor = Cursors.WaitCursor
+                'awinSettings.eppExtendedMode = True
 
-                'Call PPTstarten()
+                Try
+                    If selectedProjekte.Count <= 0 Then
+                        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                        For Each tmpname In awinSelection
+                            Try
+                                selectedProjekte.Add(ShowProjekte.getProject(tmpname), False)
+                            Catch ex As Exception
 
-                BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
+                            End Try
+                        Next
+                    End If
+
+                Catch ex As Exception
+                    awinSelection = Nothing
+                    selectedProjekte.Clear(False)
+                End Try
+
+                Try
+                    createReport.Enabled = False
+                    RepVorlagenDropbox.Enabled = False
+                    Me.Cursor = Cursors.WaitCursor
+
+                    'Call PPTstarten()
+
+                    BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
 
 
-            Catch ex As Exception
-                Call MsgBox(ex.Message)
-            End Try
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+            End If
 
         End If
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
         'MyBase.Close()
     End Sub
+
 
     Private Sub SelectAbbruch_Click(sender As Object, e As EventArgs) Handles SelectAbbruch.Click
 
@@ -252,13 +267,13 @@ Public Class frmSelectPPTTempl
 
             End With
 
-            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                   tmpCollection, tmpCollection, _
-                                                   tmpCollection, tmpCollection, _
-                                                   tmpCollection, tmpCollection, True, _
+            Call createPPTSlidesFromConstellation(vorlagenDateiName,
+                                                   tmpCollection, tmpCollection,
+                                                   tmpCollection, tmpCollection,
+                                                   tmpCollection, tmpCollection, True,
                                                    worker, e)
 
- 
+
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
             Call MsgBox(" in BAckground Worker ...")
@@ -305,7 +320,7 @@ Public Class frmSelectPPTTempl
 
         currentReportProfil.CalendarVonDate = StartofCalendar
 
-        
+
         Try
             'currentReportProfil.calcRepVonBis(vonDate, bisDate)
             currentReportProfil.calcRepVonBis(StartofCalendar, StartofCalendar)
@@ -353,10 +368,10 @@ Public Class frmSelectPPTTempl
             End With
 
 
-            Call createPPTReportFromProjects(vorlagenDateiName, _
-                                             tmpCollection, tmpCollection, _
-                                             tmpCollection, tmpCollection, _
-                                             tmpCollection, tmpCollection, _
+            Call createPPTReportFromProjects(vorlagenDateiName,
+                                             tmpCollection, tmpCollection,
+                                             tmpCollection, tmpCollection,
+                                             tmpCollection, tmpCollection,
                                              worker, e)
 
         Catch ex As Exception
@@ -385,7 +400,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
-    Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs) Handles statusNotification.TextChanged
+    Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs)
 
     End Sub
 

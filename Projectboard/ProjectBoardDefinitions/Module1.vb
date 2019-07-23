@@ -1562,7 +1562,7 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
+    ''' prüft, ob es sich um eine Aggregations-Rolle handelt, bei Portfolio Mgr, Team-Manager und Internal Viewer relevant;
     ''' in diesem Fall kann in der Hierarchie nicht weiter runtergegangen werden
     ''' </summary>
     ''' <param name="role"></param>
@@ -1579,15 +1579,20 @@ Public Module Module1
                 If Not IsNothing(idArray) Then
                     tmpResult = idArray.Contains(role.UID)
                 End If
-                'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                '    ' dieser ElseIF Zweig wird aktuell nur für den Allianz Proof of Concept benötigt 
-                '    tmpResult = role.isTeam
+
             ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
                 ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
                 ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
                 tmpResult = role.isTeam
 
+            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
+                Dim teamID As Integer = -1
+                Dim specRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID)
+                Dim idArray As SortedList(Of Integer, Double) = specRole.getSubRoleIDs()
+                If Not IsNothing(idArray) Then
+                    tmpResult = idArray.ContainsKey(role.UID)
+                End If
             End If
         End If
 
@@ -6848,11 +6853,15 @@ Public Module Module1
 
             Case PTwindows.mpt
                 Dim outputmsg As String = ""
+                Dim vcName As String = awinSettings.databaseName & ": "
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                     Dim teamID As Integer = -1
-                    roleName = roleName & " " & RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+                    'roleName = roleName & " " & RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+                    roleName = roleName & " " & myCustomUserRole.specificsName
+
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                 End If
@@ -6863,12 +6872,10 @@ Public Module Module1
                     outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
                 End If
 
-                tmpResult = roleName & outputmsg & "objects"
-
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Projectboard ( " & roleName & " ) " & outputmsg & "objects"
+                    tmpResult = "Projectboard ( " & vcName & roleName & " ) " & outputmsg & "objects"
                 Else
-                    tmpResult = "Projectboard ( " & roleName & " ) " & outputmsg & "Objekte"
+                    tmpResult = "Projectboard ( " & vcName & roleName & " ) " & outputmsg & "Objekte"
                 End If
 
             Case PTwindows.massEdit

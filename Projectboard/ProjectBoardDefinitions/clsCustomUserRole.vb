@@ -83,9 +83,11 @@ Public Class clsCustomUserRole
                 ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
             Case ptCustomUserRoles.InternalViewer
 
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTedit",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
+                                 "PT2G1M2B1", "PT2G1M2B8", "PT2G1M2B2", "PT2G2B5", "PT2G1M1B3",
                                  "PT4G1M",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
+                                 "PT5G2split", "PT5G2", "PT5G2M",
                                  "PT4G1M1B2",
                                  "PTneu",
                                  "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
@@ -145,7 +147,7 @@ Public Class clsCustomUserRole
                     End If
 
 
-                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or _customUserRole = ptCustomUserRoles.InternalViewer Then
                     isAllowed = True
                 End If
             End If
@@ -201,6 +203,27 @@ Public Class clsCustomUserRole
 
 
     End Sub
+    ''' <summary>
+    ''' gibt den Namen des Referats bzw. des Internal-Viewers zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property specificsName() As String
+        Get
+            Dim tmpResult As String = ""
+            Dim teamID As Integer = -1
+            If _customUserRole = ptCustomUserRoles.RessourceManager Or
+                    _customUserRole = ptCustomUserRoles.TeamManager Or
+                    customUserRole = ptCustomUserRoles.InternalViewer Then
+
+                tmpResult = RoleDefinitions.getRoleDefByIDKennung(_specifics, teamID).name
+
+            Else
+                tmpResult = ""
+            End If
+
+            specificsName = tmpResult
+        End Get
+    End Property
 
     Public Property userName As String
         Get

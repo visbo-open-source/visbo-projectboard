@@ -2725,6 +2725,13 @@ Imports System.Web
                     tmpLabel = "Projects/Variants"
                 End If
 
+            Case "PT2G2M" 'Projekte/Varianten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte/Varianten"
+                Else
+                    tmpLabel = "Projects/Variants"
+                End If
+
             Case "PT2G2oa" 'Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekte/Varianten"
@@ -10152,7 +10159,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
@@ -10189,7 +10196,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If

@@ -67,6 +67,7 @@
 
     ''' <summary>
     ''' Voraussetzung: hier wurde bereits gecheckt, ob der userName existiert und welche ID er hat ...
+    ''' ein Add funktioniert nur, wenn es nicht konkurrierende Rollen gibt - z.B ist das bei Ressourcen-MAnagern und Team-Managern mit der gleichen Specifics der Fall 
     ''' </summary>
     ''' <param name="userName"></param>
     ''' <param name="userID"></param>
@@ -74,10 +75,26 @@
     ''' <param name="specifics"></param>
     Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String)
 
+
         Dim key As String = calcCurKey(userName, customRoleType, specifics)
+        Dim chckkey As String = ""
+
+        ' bestimme den sich ausschließenden Key ... 
+        If customRoleType = ptCustomUserRoles.RessourceManager Then
+            chckkey = calcCurKey(userName, ptCustomUserRoles.TeamManager, specifics)
+        ElseIf customRoleType = ptCustomUserRoles.TeamManager Then
+            chckkey = calcCurKey(userName, ptCustomUserRoles.RessourceManager, specifics)
+        End If
+
         If _customUserRoles.ContainsKey(key) Then
             ' nichts tun, ist ja schon drin ... 
         Else
+            If chckkey <> "" Then
+                If _customUserRoles.ContainsKey(chckkey) Then
+                    ' nicht erlaubt .. 
+                    Throw New ArgumentException("Team-Manager and Ressourcen Manager for same department are not allowed ..")
+                End If
+            End If
             ' jetzt ist sichergestellt, dass der key noch nicht  existiert ..
             Dim newCustomUserRole As New clsCustomUserRole
             With newCustomUserRole
