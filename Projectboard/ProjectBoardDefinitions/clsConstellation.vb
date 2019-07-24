@@ -1066,11 +1066,11 @@
     ''' <returns></returns>
     Public Function hasAnyConflictsWith(ByVal otherConstellation As clsConstellation) As Boolean
 
-        Dim listOfCurrent As SortedList(Of String, Boolean) = getBasicProjectIDs
-        Dim listOFOther As SortedList(Of String, Boolean) = otherConstellation.getBasicProjectIDs
+        Dim listOfCurrent As SortedList(Of String, String) = getProjectNames
+        Dim listOFOther As SortedList(Of String, String) = otherConstellation.getProjectNames
 
-        Dim smallerList As SortedList(Of String, Boolean) = Nothing
-        Dim largerList As SortedList(Of String, Boolean) = Nothing
+        Dim smallerList As SortedList(Of String, String) = Nothing
+        Dim largerList As SortedList(Of String, String) = Nothing
 
 
         Dim found As Boolean = False

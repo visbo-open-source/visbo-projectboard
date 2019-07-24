@@ -81,7 +81,7 @@ Public Class frmEinstellungen
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 loadPFV.Text = "immer Vorgabe laden"
             Else
-                loadPFV.Text = "Vorgabe filtern und Planungs-Version laden"
+                loadPFV.Text = "auf Vorgaben filtern und als Planungs-Version laden"
             End If
             chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
             chkboxAmpel.Text = "Ampel anzeigen"
