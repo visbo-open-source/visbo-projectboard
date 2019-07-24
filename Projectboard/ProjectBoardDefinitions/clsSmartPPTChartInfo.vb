@@ -78,16 +78,20 @@
     Private _prPF As ptPRPFType
     Public Property prPF As ptPRPFType
         Get
-            If Not IsNothing(_hproj) Then
-                prPF = CType(hproj.projectType, ptPRPFType)
-            Else
-                prPF = _prPF
-            End If
+            ' tk 22.7.19 das muss zugewiesen werden können , andernfalls können keine summary Projekte angezeigt werden ... 
+            'If Not IsNothing(_hproj) Then
+            '    prPF = CType(hproj.projectType, ptPRPFType)
+            'Else
+            '    prPF = _prPF
+            'End If
+            prPF = _prPF
         End Get
         Set(value As ptPRPFType)
-            If IsNothing(_hproj) Then
-                _prPF = value
-            End If
+            ' tk 22.7.19 das muss zugewiesen werden können , andernfalls können keine summary Projekte angezeigt werden ... 
+            'If IsNothing(_hproj) Then
+            '    _prPF = value
+            'End If
+            _prPF = value
         End Set
     End Property
 

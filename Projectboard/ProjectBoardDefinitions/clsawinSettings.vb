@@ -256,6 +256,9 @@ Public Class clsawinSettings
     ' Voreinstellung ist Plan
     Public Property loadPFV As Boolean
 
+    ' tk 24.7.19 Variable steuert, ob beim Filtern in frmPortfolioAdmin die pfv Variante zugrundegelegt werden soll 
+    Public Property filterPFV As Boolean
+
 
     ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
@@ -424,6 +427,7 @@ Public Class clsawinSettings
 
         '_isRestrictedToOrgUnit = ""
         _loadPFV = False
+        _filterPFV = False
 
         _visboDebug = False
         _visboServer = False

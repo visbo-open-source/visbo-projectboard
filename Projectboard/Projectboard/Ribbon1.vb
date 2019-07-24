@@ -417,7 +417,7 @@ Imports System.Web
                     Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
 
                     ' tmpname ist nicht mehr in der Session geladen
-                    If IsNothing(checkconst) Then
+                    If IsNothing(checkconst) And Not loadFromSession Then
                         ' hole Portfolio (tmpname) aus den dbConstellations-liste
                         checkconst = dbConstellations.getConstellation(tmpName)
                         If Not IsNothing(checkconst) Then
@@ -439,7 +439,7 @@ Imports System.Web
                             ok = True
                         Else
                             ' tk 22.7. 19 war vorher:  
-                            'If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            'If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
                             '
                             If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
                                 ok = True
@@ -452,13 +452,26 @@ Imports System.Web
 
                             If Not IsNothing(constellation) Then
                                 If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                    constellationsToDo.Add(constellation)
+                                    If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                        constellationsToDo.Add(constellation)
+                                    Else
+                                        Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                        constellation.constellationName)
+                                    End If
+
                                 End If
-                            Else
+
+                            ElseIf Not loadFromSession Then
                                 constellation = dbConstellations.getConstellation(tmpName)
                                 If Not IsNothing(constellation) Then
                                     If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                        constellationsToDo.Add(constellation)
+                                        If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                            constellationsToDo.Add(constellation)
+                                        Else
+                                            Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                        constellation.constellationName)
+                                        End If
+
                                     End If
                                     projectConstellations.Add(constellation)
                                 End If

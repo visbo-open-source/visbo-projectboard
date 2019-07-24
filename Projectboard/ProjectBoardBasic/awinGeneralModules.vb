@@ -2827,7 +2827,7 @@ Public Module awinGeneralModules
             End If
         End If
 
-        If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumbis, storedGestern, storedHeute, True, err)
         Else
@@ -3993,6 +3993,14 @@ Public Module awinGeneralModules
             If Not IsNothing(hproj) Then
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+
+                ' wenn jetzt gefiltert wurde und der Varianten-Name ofv ist, dann umsetzen 
+                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                    hproj.variantName = ""
+                    vName = ""
+                    key = calcProjektKey(pName, "")
+                End If
+
                 If AlleProjekte.Containskey(key) Then
                     AlleProjekte.Remove(key)
                 End If

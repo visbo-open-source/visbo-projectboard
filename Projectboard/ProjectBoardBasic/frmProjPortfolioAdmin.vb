@@ -658,7 +658,12 @@ Public Class frmProjPortfolioAdmin
                 pvNamesListRaw = buildPvNamesList(storedAtOrBefore, False)
             End If
 
-            pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
+            If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
+                pvNamesList = reduceRawListTo(pvNamesListRaw, True)
+            Else
+                pvNamesList = reduceRawListTo(pvNamesListRaw, False)
+            End If
+
             quickList = True
 
             If pvNamesList.Count = 0 Then
@@ -2508,7 +2513,7 @@ Public Class frmProjPortfolioAdmin
 
 
                             Dim variantNameLookingFor As String = ""
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                            If (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV) Or awinSettings.filterPFV Then
                                 variantNameLookingFor = ptVariantFixNames.pfv.ToString
                             End If
 
@@ -2606,7 +2611,13 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                     ' laden der Projekt-Variante 
+                                    ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
                                     Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
+
+                                    ' in load wird das pfv als Basis-Variante abgespeichert , deswegen muss jetzt variantName der Basis-Varianten-Name sein
+                                    If awinSettings.filterPFV And variantName = ptVariantFixNames.pfv.ToString Then
+                                        variantName = ""
+                                    End If
 
                                     If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
                                         ' nichts tun , ist schon drin 
@@ -3541,6 +3552,7 @@ Public Class frmProjPortfolioAdmin
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
 
+
         awinSettings.useHierarchy = True
 
         If currentConstellationName <> calcLastSessionScenarioName() Then
@@ -3597,12 +3609,11 @@ Public Class frmProjPortfolioAdmin
                 browserAlleProjekte.Clear(False)
             End If
 
-            If awinSettings.loadPFV Then
+            If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
                 variantName = ptVariantFixNames.pfv.ToString
             End If
             browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True, err)
-            ' das darf hier nicht auf false gesetzt werden .... 
-            'quickList = False
+
 
         Else
             ' browserAlleProjekte bestimmen  

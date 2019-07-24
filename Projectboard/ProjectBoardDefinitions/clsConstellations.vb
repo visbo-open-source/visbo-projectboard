@@ -136,6 +136,28 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zurück, ob eine der Constellations in der Collection einen Konflikt mit der angegebenen Constellation hat
+    ''' Konflikt heisst: gleiches Projekt referenziert, egal welche Variante 
+    ''' </summary>
+    ''' <param name="otherConstellation"></param>
+    ''' <returns></returns>
+    Public Function hasAnyConflictsWith(ByVal otherConstellation As clsConstellation) As Boolean
+        Dim i As Integer = 0
+        Dim hasConflict As Boolean = False
+
+        Do While i < Count And Not hasConflict
+            Dim aktConst As clsConstellation = _allConstellations.ElementAt(i).Value
+            If aktConst.hasAnyConflictsWith(otherConstellation) Then
+                hasConflict = True
+            Else
+                i = i + 1
+            End If
+        Loop
+
+        hasAnyConflictsWith = hasConflict
+    End Function
     Public ReadOnly Property Liste As SortedList(Of String, clsConstellation)
 
         Get
