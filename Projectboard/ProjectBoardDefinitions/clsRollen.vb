@@ -758,7 +758,7 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleIDs"></param>
     ''' <returns></returns>
-    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As String
+    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer, ByVal includingVirtualChilds As Boolean) As String
         Dim tmpResult As String = ""
 
         Dim teamID As Integer = -1
@@ -771,7 +771,7 @@ Public Class clsRollen
 
         Else
             For Each summaryRoleID As Integer In summaryRoleIDs
-                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds)
                 If chckRelation = True Then
                     tmpResult = RoleDefinitions.getRoleDefByID(summaryRoleID).name
                     Exit For

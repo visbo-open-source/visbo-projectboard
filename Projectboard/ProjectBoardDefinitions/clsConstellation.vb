@@ -995,7 +995,10 @@
 
             With copyResult
                 .constellationName = cName
+                .vpID = Me.vpID
+
                 .timestamp = Me.timestamp
+
 
                 'If prepareForDB Then
                 '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
@@ -1053,6 +1056,47 @@
         End If
 
     End Sub
+
+
+    ''' <summary>
+    ''' gibt true zurück, wenn die aktuelle Constellation keinerlei Konflikte mit der angegebenen Constellation hat
+    ''' einb Konflikt liegt vor, wenn ein Projekt in beiden vorkommt  
+    ''' </summary>
+    ''' <param name="otherConstellation">die andere Constellation</param>
+    ''' <returns></returns>
+    Public Function hasAnyConflictsWith(ByVal otherConstellation As clsConstellation) As Boolean
+
+        Dim listOfCurrent As SortedList(Of String, String) = getProjectNames
+        Dim listOFOther As SortedList(Of String, String) = otherConstellation.getProjectNames
+
+        Dim smallerList As SortedList(Of String, String) = Nothing
+        Dim largerList As SortedList(Of String, String) = Nothing
+
+
+        Dim found As Boolean = False
+
+        If listOfCurrent.Count < listOFOther.Count Then
+            smallerList = listOfCurrent
+            largerList = listOFOther
+        Else
+            smallerList = listOFOther
+            largerList = listOfCurrent
+        End If
+
+        Dim i As Integer = 0
+        Do While Not found And i < smallerList.Count
+            If largerList.ContainsKey(smallerList.ElementAt(i).Key) Then
+                found = True
+            Else
+                i = i + 1
+            End If
+        Loop
+
+        hasAnyConflictsWith = found
+
+    End Function
+
+
     ''' <summary>
     ''' fügt ein clsConstellationItem hinzu und aktualisiert auch die Sortlist entsprechend ... 
     ''' Voraussetzung, wenn UpdateSortlist passieren soll und Sortkey nicht alphabet und nicht Position ist  : in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
@@ -1524,7 +1568,7 @@
         _sortType = skey
         _timestamp = Date.Now
 
-        ' tk 11.5.19 , wenn vpfID = Nothing: existiert noch nicht in Datenbank 
+        ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
 
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)

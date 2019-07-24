@@ -22,7 +22,7 @@ Imports DBAccLayer
 
 Module oneClickGeneralModules
 
-    Public pseudoappInstance As Microsoft.Office.Interop.Excel.Application
+    Public pseudoappInstance As Microsoft.Office.Interop.Excel.Application = Nothing
 
     Public Sub speichereProjektToDB(ByVal hproj As clsProjekt,
                                     Optional ByVal messageZeigen As Boolean = False)

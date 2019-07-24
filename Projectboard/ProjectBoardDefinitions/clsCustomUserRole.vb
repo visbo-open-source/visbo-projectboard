@@ -41,7 +41,7 @@ Public Class clsCustomUserRole
                                  "PTview",
                                  "PTfilter", "PTsort", "PT0G1s9",
                                  "PTOPTB1", "PTreport",
-                                 "PTeinst", "PThelp", "PTWebServer"}
+                                 "PThelp", "PTWebServer"}
 
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
@@ -65,9 +65,33 @@ Public Class clsCustomUserRole
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
-                                 "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
 
+                ' Team-Manager und Ressourcen-Manager solten die gleichen Funktionen sehen / nicht sehen 
+            Case ptCustomUserRoles.TeamManager
+
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
+                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B11",
+                                 "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
+                                 "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
+                                 "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
+                                 "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
+                                 "PTWebServer"}
+
+                ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
+            Case ptCustomUserRoles.InternalViewer
+
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
+                                 "PT2G1M2B1", "PT2G1M2B8", "PT2G1M2B2", "PT2G2B5", "PT2G1M1B3",
+                                 "PT4G1M",
+                                 "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
+                                 "PT5G2split", "PT5G2", "PT5G2M",
+                                 "PT4G1M1B2",
+                                 "PTneu",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
+                                 "PTWebServer"}
             Case Else
                 _nonAllowance = {""}
         End Select
@@ -98,7 +122,7 @@ Public Class clsCustomUserRole
 
                 Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
 
-                If _customUserRole = ptCustomUserRoles.RessourceManager Then
+                If _customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     Dim prntTeamID As Integer = -1
                     Dim parentRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(specifics, prntTeamID).UID
                     isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID, includingVirtualChilds:=includingVirtualChilds)
@@ -123,7 +147,7 @@ Public Class clsCustomUserRole
                     End If
 
 
-                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or _customUserRole = ptCustomUserRoles.InternalViewer Then
                     isAllowed = True
                 End If
             End If
@@ -153,7 +177,7 @@ Public Class clsCustomUserRole
         Get
             Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
             Dim encryptedUserRole As String = ""
-            If _customUserRole = ptCustomUserRoles.RessourceManager Then
+            If _customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                 encryptedUserRole = visboCrypto.EncryptData(CInt(customUserRole).ToString & "#" & specifics)
             Else
                 encryptedUserRole = visboCrypto.EncryptData(CInt(customUserRole).ToString & "#" & "XYZ")
@@ -173,12 +197,33 @@ Public Class clsCustomUserRole
         Dim decryptedText As String = visboCrypto.DecryptData(encryptedText)
         Dim tmpstr() As String = decryptedText.Split(New Char() {CChar("#")})
         customUserRole = CType(tmpstr(0), ptCustomUserRoles)
-        If customUserRole = ptCustomUserRoles.RessourceManager Then
+        If customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             specifics = CStr(tmpstr(1))
         End If
 
 
     End Sub
+    ''' <summary>
+    ''' gibt den Namen des Referats bzw. des Internal-Viewers zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property specificsName() As String
+        Get
+            Dim tmpResult As String = ""
+            Dim teamID As Integer = -1
+            If _customUserRole = ptCustomUserRoles.RessourceManager Or
+                    _customUserRole = ptCustomUserRoles.TeamManager Or
+                    customUserRole = ptCustomUserRoles.InternalViewer Then
+
+                tmpResult = RoleDefinitions.getRoleDefByIDKennung(_specifics, teamID).name
+
+            Else
+                tmpResult = ""
+            End If
+
+            specificsName = tmpResult
+        End Get
+    End Property
 
     Public Property userName As String
         Get

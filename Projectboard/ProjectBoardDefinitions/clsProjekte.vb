@@ -95,6 +95,135 @@ Public Class clsProjekte
     End Property
 
 
+    ''' <summary>
+    ''' gibt true zurück, wenn es in ShowProjekte-Instanz und Constellation gemeinsame Projekte gibt 
+    ''' anders als n AlleProjekte.hasAnyConflictsWith tritt hier bereits ein Konflikt auf, wenn der pName gleich ist; 
+    ''' in ShowProjekte darf von jedem Projekt nur höchstens eine Variante sein. 
+    ''' </summary>
+    ''' <param name="pvName">der Name des neuen Objekts, Projekt oder Summary Projekt </param>
+    ''' <param name="isConstellation">gibt an , ob es sich um ein Summary Projekt / Constellation handelt </param>
+    ''' <returns></returns>
+    Public Function hasAnyConflictsWith(ByVal pvName As String, ByVal isConstellation As Boolean) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        Dim sortedListSession As New SortedList(Of String, Boolean)
+        Dim sortedListInQuestion As New SortedList(Of String, Boolean)
+
+
+        ' alles untersuchen 
+        ' Aufbau aller in ShowProjekte referenzierten PRojekte und Summary Projekte 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+            If kvp.Value.projectType = ptPRPFType.portfolio Then
+                ' hier müssen die Projekte mit ihrem pName eingetragen werden, die in der entsprechenden Constellation verzeichnet sind ... 
+                Try
+                    ' das Element selber eintragen ...
+                    If Not sortedListSession.ContainsKey(kvp.Key) Then
+                        sortedListSession.Add(kvp.Key, True)
+                    End If
+
+                    Dim curConstellation As clsConstellation = projectConstellations.getConstellation(kvp.Value.name)
+                    Dim teilergebnisListe As SortedList(Of String, Boolean) = curConstellation.getBasicProjectIDs
+
+                    For Each teKvP As KeyValuePair(Of String, Boolean) In teilergebnisListe
+                        If sortedListSession.ContainsKey(teKvP.Key) Then
+                            ' nichts tun, ist schon drin 
+                        Else
+                            sortedListSession.Add(teKvP.Key, teKvP.Value)
+                        End If
+
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+            Else
+                ' einfach nur den pvname eintragen 
+                If Not sortedListSession.ContainsKey(kvp.Key) Then
+                    sortedListSession.Add(kvp.Key, True)
+                End If
+            End If
+        Next
+
+
+        ' Aufbau der inQuestion Sorted Liste 
+        If isConstellation Then
+            Dim tmpconstellation As clsConstellation = projectConstellations.getConstellation(pvName)
+            ' anders als in AlleProjekte-Methonde nur den Namen verwenden ..
+            'Dim summaryName As String = calcProjektKey(pvName, "")
+            Dim summaryName As String = pvName
+
+            ' tk 22.7.19 wenn loadPFV , dann muss der Varianten
+
+            If Not sortedListInQuestion.ContainsKey(summaryName) Then
+                sortedListInQuestion.Add(summaryName, True)
+            End If
+
+            If Not IsNothing(tmpconstellation) Then
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In tmpconstellation.Liste
+                    ' tk 28.12. reasontoExclude wurde umbenannt / umgewidmet in projectTyp 
+                    If kvp.Value.projectTyp = ptPRPFType.portfolio.ToString Then
+                        Try
+                            If sortedListInQuestion.ContainsKey(kvp.Value.projectName) Then
+                                ' nichts tun, ist schon drin 
+                            Else
+                                sortedListInQuestion.Add(kvp.Value.projectName, kvp.Value.show)
+                            End If
+                            Dim teilErgebnisListe As SortedList(Of String, Boolean) = tmpconstellation.getBasicProjectIDs
+
+                            For Each teKvP As KeyValuePair(Of String, Boolean) In teilErgebnisListe
+                                Dim pName As String = getPnameFromKey(teKvP.Key)
+                                If sortedListInQuestion.ContainsKey(pName) Then
+                                    ' nichts tun, ist schon drin 
+                                Else
+                                    sortedListInQuestion.Add(pName, teKvP.Value)
+                                End If
+
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+                    Else
+                        Dim pName As String = kvp.Value.projectName
+                        If Not sortedListInQuestion.ContainsKey(pName) Then
+                            sortedListInQuestion.Add(pName, kvp.Value.show)
+                        End If
+
+                    End If
+                Next
+            End If
+
+
+        Else
+            sortedListInQuestion.Add(pvName, True)
+        End If
+
+        ' und jetzt kommt die Prüfung ..
+        Dim checkList1 As SortedList(Of String, Boolean)
+        Dim checklist2 As SortedList(Of String, Boolean)
+
+        If sortedListSession.Count < sortedListInQuestion.Count Then
+            checkList1 = sortedListSession
+            checklist2 = sortedListInQuestion
+        Else
+            checkList1 = sortedListInQuestion
+            checklist2 = sortedListSession
+        End If
+
+        For Each checkKvP As KeyValuePair(Of String, Boolean) In checkList1
+            If checklist2.ContainsKey(checkKvP.Key) Then
+                tmpResult = True
+                Exit For
+            End If
+        Next
+
+        hasAnyConflictsWith = tmpResult
+    End Function
+
+
+
 
     ''' <summary>
     ''' trägt die Zuordnung Shape/Projekt in die AllShape Liste ein 

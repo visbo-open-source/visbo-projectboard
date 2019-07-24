@@ -217,7 +217,6 @@ Public Class clsProjekteAlle
         Next
 
 
-
         ' Aufbau der inQuestion Sorted Liste 
         If isConstellation Then
             Dim tmpconstellation As clsConstellation = projectConstellations.getConstellation(pvName)

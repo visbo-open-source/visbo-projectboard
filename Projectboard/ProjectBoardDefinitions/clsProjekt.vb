@@ -581,14 +581,27 @@ Public Class clsProjekt
                         ' String CustomFields
                         Dim ix As Integer = 0
                         Do While stillOK And ix <= Me.customStringFields.Count - 1
+
                             Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
                             Dim cFVgl As KeyValuePair(Of Integer, String) = vProj.customStringFields.ElementAt(ix)
 
-                            If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
-                                ix = ix + 1
+                            If Not IsNothing(cFMe.Value) And Not IsNothing(cFVgl.Value) Then
+                                Try
+                                    If cFMe.Key = cFVgl.Key And cFMe.Value.Trim = cFVgl.Value.Trim Then
+                                        ix = ix + 1
+                                    Else
+                                        stillOK = False
+                                    End If
+                                Catch ex As Exception
+                                    stillOK = False
+                                End Try
+                            ElseIf IsNothing(cFMe.Value) And IsNothing(cFVgl.Value) Then
+                                ' unverändert lassen 
                             Else
+                                ' eines is Nothing , eines ist nicht Nothing, also unterscheidelich 
                                 stillOK = False
                             End If
+
                         Loop
 
 
@@ -2622,6 +2635,7 @@ Public Class clsProjekt
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
             .kundenNummer = Me.kundenNummer
+            .vpID = Me.vpID
 
             Try
                 .movable = _movable
@@ -2975,7 +2989,9 @@ Public Class clsProjekt
             If variantName = "" Then
                 variantName = getDefaultVariantNameAccordingUserRole()
             End If
-        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        Else
+            ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
+            'ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             If variantName = ptVariantFixNames.pfv.ToString Then
                 variantName = getDefaultVariantNameAccordingUserRole()
             End If
@@ -3323,6 +3339,37 @@ Public Class clsProjekt
 
         unionizeWith = newProj
     End Function
+
+    ''' <summary>
+    ''' wird nur in AllianzIstDaten Import benötigt- soll die bereits durch vorherige Istdaten Importe entstandenen Team-MEmber Werte, die jetzt auf Nul gesetzt sind 
+    ''' rausnehmen, um das nicht extrem unübersichtlich werden zu lassen 
+    ''' </summary>
+    Public Sub deleteTeamMembersWithNull()
+
+        For Each cphase As clsPhase In AllPhases
+            Dim delTeamRoles As New Collection
+            For Each role As clsRolle In cphase.rollenListe
+                Try
+                    If role.teamID > -1 Or RoleDefinitions.getRoleDefByID(role.uid).getSubRoleCount = 0 Then
+                        If role.Xwerte.Sum = 0 Then
+                            delTeamRoles.Add(role.getNameID)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            If delTeamRoles.Count > 0 Then
+                For Each nameID As String In delTeamRoles
+                    cphase.removeRoleByNameID(nameID)
+                Next
+            End If
+        Next
+
+        ' jetzt müssen die 
+    End Sub
 
     ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 

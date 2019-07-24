@@ -10,8 +10,11 @@ Public Class clsPPTTimeMachine
 
     Private _visboCenter As String
 
-    ' die Liste der Projekte mit ihren versionierten Ständen 
+    ' die Liste der Projekte (sortiert nach pvName) mit ihren versionierten Ständen 
     Private _projectTimeStamps As SortedList(Of String, clsProjektHistorie)
+
+    ' die Liste der Projekte (sortiert nach vpid/vName) mit ihren versionierten Ständen 
+    Private _projectTSvpid As SortedList(Of String, clsProjektHistorie)
 
     ' enthält aktuell immer nur zwei Datums - nämlich das kleineste auftretende und das größe auftretende 
     Private _minmaxTimeStamps(1) As Date
@@ -22,16 +25,34 @@ Public Class clsPPTTimeMachine
     ''' false, sonst
     ''' </summary>
     ''' <param name="pVName"></param>
+    ''' <param name="vpid"></param>
     ''' <returns></returns>
-    Public ReadOnly Property containsProject(ByVal pVName As String) As Boolean
+    Public ReadOnly Property containsProject(ByVal pVName As String, ByVal vpid As String) As Boolean
         Get
-            containsProject = _projectTimeStamps.ContainsKey(pVName)
+            If Not IsNothing(vpid) Then
+                If vpid = "" Then
+                    containsProject = _projectTimeStamps.ContainsKey(pVName)
+                Else
+                    Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pVName))
+                    Dim key As String = hkey.vpid & hkey.vname
+
+                    containsProject = _projectTSvpid.ContainsKey(key)
+                End If
+            Else
+                containsProject = False
+            End If
+
+            'containsProject = _projectTimeStamps.ContainsKey(pVName)
         End Get
     End Property
 
-    Public ReadOnly Property count() As Integer
+    Public ReadOnly Property count(ByVal vpid As String) As Integer
         Get
-            count = _projectTimeStamps.Count
+            If vpid = "" Then
+                count = _projectTimeStamps.Count
+            Else
+                count = _projectTSvpid.Count
+            End If
         End Get
     End Property
 
@@ -54,28 +75,62 @@ Public Class clsPPTTimeMachine
 
             For i As Integer = 1 To smartSlideLists.countProjects
                 Dim pvName As String = smartSlideLists.getPVName(i)
-                If _projectTimeStamps.ContainsKey(pvName) Then
-                    Dim phistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+                Dim vpid As String = smartSlideLists.getvpID(i)
 
-                    If Not IsNothing(phistory) Then
-                        If phistory.Count > 0 Then
+                If vpid = "" Then
+                    If _projectTimeStamps.ContainsKey(pvName) Then
+                        Dim phistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
-                            Dim minTS As Date = phistory.First.timeStamp
-                            Dim maxTs As Date = phistory.Last.timeStamp
+                        If Not IsNothing(phistory) Then
+                            If phistory.Count > 0 Then
 
-                            If _minmaxTimeStamps(0) > minTS Then
-                                _minmaxTimeStamps(0) = minTS
+                                Dim minTS As Date = phistory.First.timeStamp
+                                Dim maxTs As Date = phistory.Last.timeStamp
+
+                                If _minmaxTimeStamps(0) > minTS Then
+                                    _minmaxTimeStamps(0) = minTS
+                                End If
+
+                                If _minmaxTimeStamps(1) < maxTs Then
+                                    _minmaxTimeStamps(1) = maxTs
+                                End If
+
+                                defaultSettingNecessary = False
+
                             End If
-
-                            If _minmaxTimeStamps(1) < maxTs Then
-                                _minmaxTimeStamps(1) = maxTs
-                            End If
-
-                            defaultSettingNecessary = False
 
                         End If
-
                     End If
+
+                Else
+
+                    Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+                    Dim key As String = hkey.vpid & hkey.vname
+
+                    If _projectTSvpid.Count > 0 Then
+                        Dim phistory As clsProjektHistorie = _projectTSvpid.Item(key)
+
+                        If Not IsNothing(phistory) Then
+                            If phistory.Count > 0 Then
+
+                                Dim minTS As Date = phistory.First.timeStamp
+                                Dim maxTs As Date = phistory.Last.timeStamp
+
+                                If _minmaxTimeStamps(0) > minTS Then
+                                    _minmaxTimeStamps(0) = minTS
+                                End If
+
+                                If _minmaxTimeStamps(1) < maxTs Then
+                                    _minmaxTimeStamps(1) = maxTs
+                                End If
+
+                                defaultSettingNecessary = False
+
+                            End If
+
+                        End If
+                    End If
+
                 End If
 
             Next
@@ -95,6 +150,7 @@ Public Class clsPPTTimeMachine
 
 
                 Dim pfName As String = smartSlideLists.getPfName(i)
+                Dim vpid As String = smartSlideLists.getPFvpID(i)
 
                 If pfName.Contains("_last") Then
                     If awinSettings.englishLanguage Then
@@ -105,7 +161,7 @@ Public Class clsPPTTimeMachine
                     End If
                 Else
 
-                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName,
+                    Dim portfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveFirstVersionOfOneConstellationFromDB(pfName, vpid,
                                                                                                                                         minTS, err,
                                                                                                                                         Date.MinValue.AddDays(1))
 
@@ -139,50 +195,126 @@ Public Class clsPPTTimeMachine
     ''' fügt ein Projekt incl Nothing-ProjektHistorie als Platzhalter hinzu 
     ''' </summary>
     ''' <param name="pvName"></param>
-    Public Sub addProject(ByVal pvName As String)
+    ''' <param name="vpid"></param>
+    Public Sub addProject(ByVal pvName As String, Optional ByVal vpid As String = "")
 
-        If Not _projectTimeStamps.ContainsKey(pvName) Then
-            _projectTimeStamps.Add(pvName, Nothing)
+        If vpid = "" Then
+            If Not _projectTimeStamps.ContainsKey(pvName) Then
+                _projectTimeStamps.Add(pvName, Nothing)
+            Else
+                ' nichts tun , ist schon drin ... 
+            End If
         Else
-            ' nichts tun , ist schon drin ... 
+            Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+            Dim key As String = hkey.vpid & hkey.vname
+
+            If Not _projectTSvpid.ContainsKey(key) Then
+                _projectTSvpid.Add(key, Nothing)
+            Else
+                ' nichts tun , ist schon drin ... 
+            End If
         End If
+
 
     End Sub
 
-    Public ReadOnly Property historyExists(ByVal pvName As String) As Boolean
+    ''' <summary>
+    ''' sieht nach, ob bereits eine Historie des Projektes mit pvName/vpid in clsPPTTimeMachine existiert
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="vpid"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property historyExists(ByVal pvName As String, Optional ByVal vpid As String = "") As Boolean
         Get
             Dim tmpResult As Boolean
-            If Not _projectTimeStamps.ContainsKey(pvName) Then
-                tmpResult = False
+            If vpid = "" Then
+                If Not _projectTimeStamps.ContainsKey(pvName) Then
+                    tmpResult = False
+                Else
+                    tmpResult = Not IsNothing(_projectTimeStamps.Item(pvName))
+                End If
             Else
-                tmpResult = Not IsNothing(_projectTimeStamps.Item(pvName))
+                Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+                Dim key As String = hkey.vpid & hkey.vname
+
+                If Not _projectTSvpid.ContainsKey(key) Then
+                    tmpResult = False
+                Else
+                    tmpResult = Not IsNothing(_projectTSvpid.Item(key))
+                End If
             End If
+
             historyExists = tmpResult
         End Get
     End Property
 
-    Public ReadOnly Property getProjectVersion(ByVal pvName As String, ByVal refDate As Date) As clsProjekt
+    Public ReadOnly Property getProjectVersion(ByVal pvName As String, ByVal refDate As Date, Optional ByVal vpid As String = "") As clsProjekt
         Get
             Dim result As clsProjekt = Nothing
             Dim err As New clsErrorCodeMsg
+            If vpid = "" Then
+                If _projectTimeStamps.ContainsKey(pvName) Then
+                    Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
-            If _projectTimeStamps.ContainsKey(pvName) Then
-                Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+                    If IsNothing(myHistory) Then
 
-                If IsNothing(myHistory) Then
+                        ' ProjektHistorie von Cache oder Datenbank holen 
+                        Dim pName As String = getPnameFromKey(pvName)
+                        Dim vName As String = getVariantnameFromKey(pvName)
 
-                    ' ProjektHistorie von Cache oder Datenbank holen 
-                    Dim pName As String = getPnameFromKey(pvName)
-                    Dim vName As String = getVariantnameFromKey(pvName)
+                        _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                        myHistory = _projectTimeStamps.Item(pvName)
 
-                    _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
-                    myHistory = _projectTimeStamps.Item(pvName)
+                    End If
 
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.ElementAtorBefore(refDate)
+                    End If
                 End If
+            Else
+                Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+                Dim key As String = hkey.vpid & hkey.vname
 
-                ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
-                If Not IsNothing(myHistory) Then
-                    result = myHistory.ElementAtorBefore(refDate)
+                If _projectTSvpid.ContainsKey(key) Then
+                    Dim myHistory As clsProjektHistorie = _projectTSvpid.Item(key)
+                    If IsNothing(myHistory) Then
+
+                        ' von Cache oder Datenbank holen 
+                        Dim vName As String = getVariantnameFromKey(pvName)
+
+                        ' ProjektHistorie von Cache oder Datenbank holen
+                        _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                        myHistory = _projectTSvpid.Item(key)
+
+                    End If
+
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.ElementAtorBefore(refDate)
+                    End If
+
+                Else   ' ist unter pvname gespeichert
+
+                    If _projectTimeStamps.ContainsKey(pvName) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+
+                        If IsNothing(myHistory) Then
+
+                            ' ProjektHistorie von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vName As String = getVariantnameFromKey(pvName)
+
+                            _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvName)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.ElementAtorBefore(refDate)
+                        End If
+                    End If
                 End If
             End If
 
@@ -191,57 +323,149 @@ Public Class clsPPTTimeMachine
         End Get
     End Property
 
-    Public ReadOnly Property getFirstContractedVersion(ByVal pvname As String) As clsProjekt
+    Public ReadOnly Property getFirstContractedVersion(ByVal pvname As String, Optional ByVal vpid As String = "") As clsProjekt
         Get
             Dim result As clsProjekt = Nothing
             Dim err As New clsErrorCodeMsg
 
-            If _projectTimeStamps.ContainsKey(pvname) Then
-                Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvname)
+            If vpid = "" Then
+                If _projectTimeStamps.ContainsKey(pvname) Then
+                    Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvname)
 
-                If IsNothing(myHistory) Then
-                    ' von Cache oder Datenbank holen 
-                    Dim pName As String = getPnameFromKey(pvname)
-                    Dim vName As String = getVariantnameFromKey(pvname)
+                    If IsNothing(myHistory) Then
+                        ' von Cache oder Datenbank holen 
+                        Dim pName As String = getPnameFromKey(pvname)
+                        Dim vName As String = getVariantnameFromKey(pvname)
 
-                    _projectTimeStamps.Item(pvname) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
-                    myHistory = _projectTimeStamps.Item(pvname)
+                        _projectTimeStamps.Item(pvname) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                        myHistory = _projectTimeStamps.Item(pvname)
 
+                    End If
+
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.beauftragung
+                    End If
                 End If
+            Else
+                Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvname))
+                Dim key As String = hkey.vpid & hkey.vname
 
-                ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
-                If Not IsNothing(myHistory) Then
-                    result = myHistory.beauftragung
+                If _projectTSvpid.ContainsKey(key) Then
+                    Dim myHistory As clsProjektHistorie = _projectTSvpid.Item(key)
+
+                    If IsNothing(myHistory) Then
+
+                        ' von Cache oder Datenbank holen 
+                        Dim vName As String = getVariantnameFromKey(pvname)
+
+                        _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                        myHistory = _projectTSvpid.Item(key)
+
+                    End If
+
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.beauftragung
+                    End If
+
+                Else   ' Versuch mit Liste sortiert nach pvname
+
+                    If _projectTimeStamps.ContainsKey(pvname) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvname)
+
+                        If IsNothing(myHistory) Then
+                            ' von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvname)
+                            Dim vName As String = getVariantnameFromKey(pvname)
+
+                            _projectTimeStamps.Item(pvname) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvname)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.beauftragung
+                        End If
+                    End If
+
                 End If
             End If
+
 
             getFirstContractedVersion = result
         End Get
     End Property
 
-    Public ReadOnly Property getLastContractedVersion(ByVal pvName As String, ByVal refdate As Date) As clsProjekt
+    Public ReadOnly Property getLastContractedVersion(ByVal pvName As String, ByVal refdate As Date, Optional ByVal vpid As String = "") As clsProjekt
         Get
             Dim result As clsProjekt = Nothing
             Dim err As New clsErrorCodeMsg
+            If vpid = "" Then
+                If _projectTimeStamps.ContainsKey(pvName) Then
+                    Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
-            If _projectTimeStamps.ContainsKey(pvName) Then
-                Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+                    If IsNothing(myHistory) Then
+                        ' von Cache oder Datenbank holen 
+                        Dim pName As String = getPnameFromKey(pvName)
+                        Dim vName As String = getVariantnameFromKey(pvName)
 
-                If IsNothing(myHistory) Then
-                    ' von Cache oder Datenbank holen 
-                    Dim pName As String = getPnameFromKey(pvName)
-                    Dim vName As String = getVariantnameFromKey(pvName)
+                        _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                        myHistory = _projectTimeStamps.Item(pvName)
 
-                    _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
-                    myHistory = _projectTimeStamps.Item(pvName)
+                    End If
 
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.lastBeauftragung(refdate)
+                    End If
                 End If
+            Else
+                Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+                Dim key As String = hkey.vpid & hkey.vname
 
-                ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
-                If Not IsNothing(myHistory) Then
-                    result = myHistory.lastBeauftragung(refdate)
+                If _projectTSvpid.ContainsKey(key) Then
+                    Dim myHistory As clsProjektHistorie = _projectTSvpid.Item(key)
+
+                    If IsNothing(myHistory) Then
+
+                        ' von Cache oder Datenbank holen 
+                        Dim vName As String = getVariantnameFromKey(pvName)
+
+                        _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                        myHistory = _projectTSvpid.Item(key)
+
+                    End If
+
+                    ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                    If Not IsNothing(myHistory) Then
+                        result = myHistory.lastBeauftragung(refdate)
+                    End If
+
+                Else   'Versuch aus Liste sortiert nach pvname zu erhalten
+
+                    If _projectTimeStamps.ContainsKey(pvName) Then
+                        Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+
+                        If IsNothing(myHistory) Then
+                            ' von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vName As String = getVariantnameFromKey(pvName)
+
+                            _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvName)
+
+                        End If
+
+                        ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
+                        If Not IsNothing(myHistory) Then
+                            result = myHistory.lastBeauftragung(refdate)
+                        End If
+                    End If
                 End If
             End If
+
 
             getLastContractedVersion = result
         End Get
@@ -267,111 +491,148 @@ Public Class clsPPTTimeMachine
         Dim jetzt As Date = Date.Now
 
         If smartSlideLists.countProjects > 0 Then
-            'Dim tmpTM As clsPPTTimeMachine = Nothing
-            If _projectTimeStamps.Count > 0 Then
 
-                ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
-                ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist 
-                If _minmaxTimeStamps(1) = Date.MinValue Then
-                    ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
-                    For i As Integer = 0 To _projectTimeStamps.Count - 1
+            If Not smartSlideLists.projectsWithVPid() Then
 
-                        Dim pHistory As clsProjektHistorie = _projectTimeStamps.ElementAt(i).Value
-                        Dim key As String = _projectTimeStamps.ElementAt(i).Key
-                        Dim pName As String = getPnameFromKey(key)
-                        Dim vName As String = getVariantnameFromKey(key)
+                'Dim tmpTM As clsPPTTimeMachine = Nothing
+                If _projectTimeStamps.Count > 0 Then
 
-                        If IsNothing(pHistory) Then
+                    ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
+                    ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist 
+                    If _minmaxTimeStamps(1) = Date.MinValue Then
+                        ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
+                        For i As Integer = 0 To _projectTimeStamps.Count - 1
 
-                            _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            Dim pHistory As clsProjektHistorie = _projectTimeStamps.ElementAt(i).Value
+                            Dim key As String = _projectTimeStamps.ElementAt(i).Key
+                            Dim pName As String = getPnameFromKey(key)
+                            Dim vName As String = getVariantnameFromKey(key)
 
-                        ElseIf pHistory.Count = 0 Then
+                            If IsNothing(pHistory) Then
 
-                            _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                                _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
 
-                        End If
+                            ElseIf pHistory.Count = 0 Then
 
-                    Next
+                                _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+
+                            End If
+
+                        Next
+                    End If
+
+                End If
+
+            Else   ' es sind VPId angegeben
+                'Dim tmpTM As clsPPTTimeMachine = Nothing
+                If _projectTSvpid.Count > 0 Then
+
+                    ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
+                    ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist
+
+                    If _minmaxTimeStamps(1) = Date.MinValue Then
+                        ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
+                        For i As Integer = 0 To _projectTSvpid.Count - 1
+
+                            Dim pHistory As clsProjektHistorie = _projectTSvpid.ElementAt(i).Value
+
+                            Dim hkey As clsvpidVN = getVPIDVNfromString(_projectTSvpid.ElementAt(i).Key)
+                            Dim vpid As String = getPnameFromKey(hkey.vpid)
+                            Dim vName As String = getVariantnameFromKey(hkey.vname)
+                            Dim key As String = vpid & vName
+
+                            If IsNothing(pHistory) Then
+
+                                _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+
+                            ElseIf pHistory.Count = 0 Then
+
+                                _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+
+                            End If
+
+                        Next
+                    End If
+
                 End If
 
             End If
 
         End If
 
-
         ' jetzt müssen minmax-Werte an die aktuelle Slide angepasst werden 
         ' jetzt noch minmax-Timestamps anpassen 
         Call adjustMinMaxToCurrentSlide()
 
         Select Case kennung
-                Case ptNavigationButtons.nachher
+            Case ptNavigationButtons.nachher
 
 
-                    If currentTimestamp.AddMonths(1) <= jetzt Then
-                        tmpDate = currentTimestamp.AddMonths(1)
-                    Else
-                        tmpDate = jetzt
-                    End If
+                If currentTimestamp.AddMonths(1) <= jetzt Then
+                    tmpDate = currentTimestamp.AddMonths(1)
+                Else
+                    tmpDate = jetzt
+                End If
 
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-
-                Case ptNavigationButtons.vorher
-
-                    If currentTimestamp.AddMonths(-1) > _minmaxTimeStamps(0) Then
-                        tmpDate = currentTimestamp.AddMonths(-1)
-                    Else
-                        tmpDate = _minmaxTimeStamps(0)
-                    End If
-
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
 
-                Case ptNavigationButtons.erster
+            Case ptNavigationButtons.vorher
 
+                If currentTimestamp.AddMonths(-1) > _minmaxTimeStamps(0) Then
+                    tmpDate = currentTimestamp.AddMonths(-1)
+                Else
                     tmpDate = _minmaxTimeStamps(0)
+                End If
+
+                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
 
-                Case ptNavigationButtons.letzter
+            Case ptNavigationButtons.erster
 
-                    'ur: 20190513: letzter Stand ist gleich Stand jetzt
-                    'tmpDate = _minmaxTimeStamps(1)
-                    tmpDate = jetzt
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-                Case ptNavigationButtons.update
-
-                    tmpDate = jetzt
-                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-                Case ptNavigationButtons.individual
-
-                    If specDate > _minmaxTimeStamps(0) And specDate < jetzt Then
-                        tmpDate = specDate
-                    Else
-                        If specDate > jetzt Then
-                            tmpDate = jetzt
-                        ElseIf specDate < _minmaxTimeStamps(0) Then
-                            tmpDate = _minmaxTimeStamps(0)
-                        End If
-
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-                    End If
+                tmpDate = _minmaxTimeStamps(0)
 
 
+            Case ptNavigationButtons.letzter
 
-                Case ptNavigationButtons.previous
+                'ur: 20190513: letzter Stand ist gleich Stand jetzt
+                'tmpDate = _minmaxTimeStamps(1)
+                tmpDate = jetzt
+                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
 
-                    If smartSlideLists.prevDate >= _minmaxTimeStamps(0) Then
-                        tmpDate = smartSlideLists.prevDate
-                    Else
+            Case ptNavigationButtons.update
+
+                tmpDate = jetzt
+                tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+
+            Case ptNavigationButtons.individual
+
+                If specDate > _minmaxTimeStamps(0) And specDate < jetzt Then
+                    tmpDate = specDate
+                Else
+                    If specDate > jetzt Then
+                        tmpDate = jetzt
+                    ElseIf specDate < _minmaxTimeStamps(0) Then
                         tmpDate = _minmaxTimeStamps(0)
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                     End If
 
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                End If
 
 
-            End Select
+
+            Case ptNavigationButtons.previous
+
+                If smartSlideLists.prevDate >= _minmaxTimeStamps(0) Then
+                    tmpDate = smartSlideLists.prevDate
+                Else
+                    tmpDate = _minmaxTimeStamps(0)
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                End If
+
+
+
+        End Select
 
         'If Not justForInformation Then
         '    tmpTM.timeStampsIndex = tmpIndex
@@ -392,6 +653,7 @@ Public Class clsPPTTimeMachine
         _minmaxTimeStamps(0) = Date.Now
         _minmaxTimeStamps(1) = Date.MinValue
         _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
+        _projectTSvpid = New SortedList(Of String, clsProjektHistorie)
         _visboCenter = ""
     End Sub
 
@@ -589,4 +851,14 @@ Public Class clsPPTTimeMachine
 
 
     'End Sub
+
+End Class
+Public Class clsvpidVN
+    Public vpid As String
+    Public vname As String
+
+    Sub New(ByVal id As String, ByVal vn As String)
+        vpid = id
+        vname = vn
+    End Sub
 End Class

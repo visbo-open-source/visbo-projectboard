@@ -1111,7 +1111,7 @@ Public Class Tabelle2
 
                             Else
                                 ' es wurde die Business Unit selektiert ..
-
+                                Target.Cells(1, 1).value = visboZustaende.oldValue
                             End If
 
                         End If
@@ -2006,7 +2006,7 @@ Public Class Tabelle2
         Dim teamID As Integer = -1
 
         ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
             Dim parentCollection As New Collection
 
             'parentCollection.Add(myCustomUserRole.specifics)
@@ -2209,6 +2209,76 @@ Public Class Tabelle2
 
     End Sub
 
+    ''' <summary>
+    ''' markiert die angegebene Zeile, z.B zeichnet einen Rahmen drum herum 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    Private Sub markZeile(ByVal zeile As Integer)
+
+        Dim zRange As Excel.Range = Nothing
+
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            zRange = CType(.Range(.Cells(zeile, 1), .Cells(zeile, columnEndData)), Excel.Range)
+        End With
+
+        With zRange
+            .Borders(XlBordersIndex.xlInsideVertical).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+
+            .Borders(XlBordersIndex.xlEdgeLeft).LineStyle = XlLineStyle.xlContinuous
+            .Borders(XlBordersIndex.xlEdgeLeft).Color = visboFarbeNone
+            .Borders(XlBordersIndex.xlEdgeLeft).TintAndShade = 0
+            .Borders(XlBordersIndex.xlEdgeLeft).Weight = XlBorderWeight.xlMedium
+
+            .Borders(XlBordersIndex.xlEdgeRight).LineStyle = XlLineStyle.xlContinuous
+            .Borders(XlBordersIndex.xlEdgeRight).Color = visboFarbeNone
+            .Borders(XlBordersIndex.xlEdgeRight).TintAndShade = 0
+            .Borders(XlBordersIndex.xlEdgeRight).Weight = XlBorderWeight.xlMedium
+
+            .Borders(XlBordersIndex.xlEdgeTop).LineStyle = XlLineStyle.xlContinuous
+            .Borders(XlBordersIndex.xlEdgeTop).Color = visboFarbeNone
+            .Borders(XlBordersIndex.xlEdgeTop).TintAndShade = 0
+            .Borders(XlBordersIndex.xlEdgeTop).Weight = XlBorderWeight.xlMedium
+
+            .Borders(XlBordersIndex.xlEdgeBottom).LineStyle = XlLineStyle.xlContinuous
+            .Borders(XlBordersIndex.xlEdgeBottom).Color = visboFarbeNone
+            .Borders(XlBordersIndex.xlEdgeBottom).TintAndShade = 0
+            .Borders(XlBordersIndex.xlEdgeBottom).Weight = XlBorderWeight.xlMedium
+
+        End With
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' nimmt die Markeirung der Zeile wieder zurück 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    Private Sub unMarkZeile(ByVal zeile As Integer)
+        Dim zRange As Excel.Range = Nothing
+
+        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            zRange = CType(.Range(.Cells(zeile, 1), .Cells(zeile, columnEndData)), Excel.Range)
+        End With
+
+        With zRange
+            .Borders(XlBordersIndex.xlInsideVertical).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+
+            .Borders(XlBordersIndex.xlEdgeLeft).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlEdgeRight).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlEdgeTop).LineStyle = XlLineStyle.xlLineStyleNone
+            .Borders(XlBordersIndex.xlEdgeBottom).LineStyle = XlLineStyle.xlLineStyleNone
+        End With
+
+
+    End Sub
 
     ''' <summary>
     ''' prüft den Input, setzt, wenn ok, den neuen Wert und die Differenz zum alten Wert 

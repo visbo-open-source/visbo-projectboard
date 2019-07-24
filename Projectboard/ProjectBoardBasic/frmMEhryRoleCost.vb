@@ -47,8 +47,8 @@ Public Class frmMEhryRoleCost
     ' der ggf dazugehörende Team-Name 
     Public teamName As String
 
-    ' tk 19.5.19 wird für Allianz Team / Hierarchie Prototypen benötigt ...
-    Private showTeamsOnly As Boolean = True
+    ' tk 7.7.19 Sicht Team-Manager 
+    Private showTeamsOnly As Boolean = myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager
 
 
 
@@ -231,7 +231,8 @@ Public Class frmMEhryRoleCost
             If RoleDefinitions.Count > 0 Then
                 Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+                    myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                     If myCustomUserRole.specifics.Length > 0 Then
                         If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
@@ -242,7 +243,6 @@ Public Class frmMEhryRoleCost
 
                         End If
                     End If
-
                 End If
 
                 For i = 0 To topNodes.Count - 1
@@ -311,7 +311,7 @@ Public Class frmMEhryRoleCost
                 Next
             End If
 
-            If Not myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
                 If CostDefinitions.Count > 1 Then
 
                     For i = 1 To CostDefinitions.Count - 1
@@ -566,7 +566,7 @@ Public Class frmMEhryRoleCost
                     Dim teamID As Integer
                     Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                    If showTeamsOnly And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And Not curRole.isTeam Then
+                    If showTeamsOnly And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
                         ' Allianz Proof of Concept : wenn es sich zunächst um einen Ressourcen Manager oder einen Projektleiter handelt , dann sollen die virtuellen Childs der aktuellen Rolle auch angezeigt werden ... 
                         Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
 

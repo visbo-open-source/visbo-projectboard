@@ -115,6 +115,8 @@ Public Class ThisWorkbook
 
             End If
 
+
+
             ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
             If My.Settings.rememberUserPWD Then
