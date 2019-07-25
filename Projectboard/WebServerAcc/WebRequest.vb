@@ -2643,6 +2643,8 @@ Public Class Request
         retrieveCustomFieldsFromDB = result
     End Function
 
+
+
     Public Function retrieveCustomizationFromDB(ByVal name As String,
                                          ByVal timestamp As Date,
                                          ByVal refnext As Boolean,

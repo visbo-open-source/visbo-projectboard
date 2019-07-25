@@ -45,9 +45,11 @@
     ''' <remarks></remarks>
     Public ReadOnly Property farbe As Long
         Get
-            
+
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                'ur:190722
+                '_arbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
             Else
 
                 _farbe = awinSettings.missingDefinitionColor
@@ -110,7 +112,9 @@
 
         Try
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                'ur:190722
+                '_farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
             End If
         Catch ex As Exception
             _farbe = CLng(RGB(120, 120, 120))

@@ -50,7 +50,9 @@
         Get
 
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                'ur: 19022
+                'farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
             Else
                 _farbe = awinSettings.AmpelNichtBewertet
             End If

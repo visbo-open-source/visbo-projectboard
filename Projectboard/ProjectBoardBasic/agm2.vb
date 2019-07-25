@@ -450,9 +450,20 @@ Public Module agm2
 
         With ws
 
-            For Each shp As Excel.Shape In .Shapes
+            For Each shp As Excel.Shape In ws.Shapes
                 appDefinition = New clsAppearance
                 With appDefinition
+
+                    .FGcolor = shp.Fill.ForeColor.RGB
+                    .BGcolor = shp.Fill.BackColor.RGB
+                    .Glowcolor = shp.Glow.Color.RGB
+                    .Glowradius = shp.Glow.Radius
+                    .ShadowFG = shp.Shadow.ForeColor.RGB
+                    .ShadowTransp = shp.Shadow.Transparency
+
+                    .shpType = shp.AutoShapeType
+                    .width = shp.Width
+                    .height = shp.Height
 
                     If shp.Title <> "" Then
 
@@ -462,7 +473,7 @@ Public Module agm2
                         Else
                             .isMilestone = False
                         End If
-                        .form = shp
+                        '.form = shp
 
                         Try
                             appearanceDefinitions.Add(.name, appDefinition)
@@ -17682,24 +17693,28 @@ Public Module agm2
                 loginErfolgreich = logInToMongoDB(True)
 
 
-                ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+                If loginErfolgreich Then
+                    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                If listOfVCs.Count > 1 Then
-                    Dim chooseVC As New frmSelectOneItem
-                    chooseVC.itemsCollection = listOfVCs
-                    If chooseVC.ShowDialog = DialogResult.OK Then
-                        ' alles ok 
-                        awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
-                        If Not changeOK Then
-                            Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                    If listOfVCs.Count > 1 Then
+                        Dim chooseVC As New frmSelectOneItem
+                        chooseVC.itemsCollection = listOfVCs
+                        If chooseVC.ShowDialog = DialogResult.OK Then
+                            ' alles ok 
+                            awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                            If Not changeOK Then
+                                Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                            End If
+                        Else
+                            Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
                         End If
-                    Else
-                        Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+
                     End If
 
                 End If
+
 
                 ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
                 '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
