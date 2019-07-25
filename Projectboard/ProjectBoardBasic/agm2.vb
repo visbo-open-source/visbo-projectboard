@@ -8724,7 +8724,7 @@ Public Module agm2
 
                             Else
                                 ok = False
-                                ' jetzt muss geschaut werden, ob es sich um eine 1-er Konstellation handelt, dann soll 
+                                ' jetzt muss geschaut werden, ob es sich um eine Programmlinie handelt, dann soll 
                                 ' ein neues Portfolio aufgemacht werden .. 
                                 If pgmlinie.Contains(itemType) Then
                                     ' die bisherige Constellation wegschreiben ...
@@ -8741,66 +8741,68 @@ Public Module agm2
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
+                                            ' 
+                                            ' tk das soll Stand 21.7.19 nicht mehr gemacht werden, weil ein Programm auch über die Angaben der Excel Datei angelegt wird ...  ... 
                                             ' jetzt das union-Projekt erstellen ; 
-                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                                            'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                                            Try
-                                                ' Test, ob das Budget auch ausreicht
-                                                ' wenn nein, einfach Warning ausgeben 
-                                                Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                                                If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                            'Try
+                                            '    ' Test, ob das Budget auch ausreicht
+                                            '    ' wenn nein, einfach Warning ausgeben 
+                                            '    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                                            '    If unionProj.Erloes - tmpGesamtCost < 0 Then
 
-                                                    Dim goOn As Boolean = True
-                                                    If unionProj.Erloes > 0 Then
-                                                        goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                                    End If
+                                            '        Dim goOn As Boolean = True
+                                            '        If unionProj.Erloes > 0 Then
+                                            '            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                                            '        End If
 
-                                                    If goOn Then
-                                                        outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                                        outputCollection.Add(outPutLine)
+                                            '        If goOn Then
+                                            '            outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            '            outputCollection.Add(outPutLine)
 
-                                                        Dim logtxt(2) As String
-                                                        logtxt(0) = "Budget-Überschreitung"
-                                                        logtxt(1) = "Programmlinie"
-                                                        logtxt(2) = unionProj.name
-                                                        Dim values(2) As Double
-                                                        values(0) = unionProj.Erloes
-                                                        values(1) = tmpGesamtCost
-                                                        If values(0) > 0 Then
-                                                            values(2) = tmpGesamtCost / unionProj.Erloes
-                                                        Else
-                                                            values(2) = 9999999999
-                                                        End If
-                                                        Call logfileSchreiben(logtxt, values)
-                                                    End If
+                                            '            Dim logtxt(2) As String
+                                            '            logtxt(0) = "Budget-Überschreitung"
+                                            '            logtxt(1) = "Programmlinie"
+                                            '            logtxt(2) = unionProj.name
+                                            '            Dim values(2) As Double
+                                            '            values(0) = unionProj.Erloes
+                                            '            values(1) = tmpGesamtCost
+                                            '            If values(0) > 0 Then
+                                            '                values(2) = tmpGesamtCost / unionProj.Erloes
+                                            '            Else
+                                            '                values(2) = 9999999999
+                                            '            End If
+                                            '            Call logfileSchreiben(logtxt, values)
+                                            '        End If
 
-                                                End If
+                                            '    End If
 
-                                            Catch ex As Exception
+                                            'Catch ex As Exception
 
-                                            End Try
+                                            'End Try
 
                                             ' Status gleich auf 1: beauftragt setzen 
-                                            unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                            'unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
-                                            If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
-                                                ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                                            End If
+                                            'If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                                            '    ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                                            'End If
 
-                                            ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
-                                            ' test
-                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                            If Not everythingOK Then
-                                                outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                                                outputCollection.Add(outPutLine)
+                                            'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
+                                            '' test
+                                            'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            'If Not everythingOK Then
+                                            '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                            '    outputCollection.Add(outPutLine)
 
-                                                ReDim logmsg(2)
-                                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                                logmsg(1) = ""
-                                                logmsg(2) = current1program.constellationName
-                                                Call logfileSchreiben(logmsg)
-                                            End If
-                                            ' ende test
+                                            '    ReDim logmsg(2)
+                                            '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                            '    logmsg(1) = ""
+                                            '    logmsg(2) = current1program.constellationName
+                                            '    Call logfileSchreiben(logmsg)
+                                            'End If
+                                            '' ende tk Änderung 21.7.19 
                                         Else
                                             emptyPrograms = emptyPrograms + 1
                                         End If
@@ -8845,7 +8847,7 @@ Public Module agm2
                                         ' jetzt wird sichergestellt, dass diese Programm-Linie jetzt als Projekt angelegt wird ..
                                         ok = True
                                         projVorhabensBudget = last1Budget
-                                    ElseIf tmpZ > lastRow Then
+                                    ElseIf kidItemfound And tmpZ <= lastRow Then
                                         ok = True
                                         projVorhabensBudget = last1Budget
                                     End If
@@ -9062,6 +9064,13 @@ Public Module agm2
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
                                                                  zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, False)
 
+                            ' tk 21.7.19 es wird ein Summary Projekt für die Programm-Linie angelegt  
+                            If pgmlinie.Contains(itemType) Then
+                                pName = itemType.ToString & " - " & pName
+                                hproj.name = pName
+                                hproj.projectType = ptPRPFType.portfolio
+                            End If
+
                             Try
                                 ' Test, ob das Budget auch ausreicht
                                 ' wenn nein, einfach Warning ausgeben 
@@ -9074,13 +9083,19 @@ Public Module agm2
                                     End If
 
                                     If goOn Then
-                                        outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                        outputCollection.Add(outPutLine)
-
                                         Dim logtxt(2) As String
                                         logtxt(0) = "Budget-Überschreitung"
-                                        logtxt(1) = "Projekt"
+                                        If pgmlinie.Contains(itemType) Then
+                                            outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            logtxt(1) = "Programm-Linie"
+                                        Else
+                                            outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            logtxt(1) = "Projekt"
+                                        End If
+
+                                        outputCollection.Add(outPutLine)
                                         logtxt(2) = pName
+
                                         Dim values(2) As Double
                                         values(0) = hproj.Erloes
                                         values(1) = tmpGesamtCost
@@ -9157,21 +9172,25 @@ Public Module agm2
                                             outPutLine = "Name existiert mehrfach: " & pName
                                             outputCollection.Add(outPutLine)
                                         Else
-                                            createdProjects = createdProjects + 1
                                             ImportProjekte.Add(hproj, False)
+                                            If projektvorhaben.Contains(itemType) Then
+                                                createdProjects = createdProjects + 1
 
-                                            ' jetzt soll das in die Constellation 
-                                            Dim cItem As New clsConstellationItem
-                                            With cItem
-                                                .projectName = hproj.name
-                                                .variantName = hproj.variantName
-                                                .show = True
-                                                .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
-                                                .zeile = lfdNr1program
-                                            End With
 
-                                            current1program.add(cItem)
-                                            lfdNr1program = lfdNr1program + 1
+                                                ' jetzt soll das in die Constellation 
+                                                Dim cItem As New clsConstellationItem
+                                                With cItem
+                                                    .projectName = hproj.name
+                                                    .variantName = hproj.variantName
+                                                    .show = True
+                                                    .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
+                                                    .zeile = lfdNr1program
+                                                End With
+
+                                                current1program.add(cItem)
+                                                lfdNr1program = lfdNr1program + 1
+                                            End If
+
                                         End If
 
                                     Catch ex As Exception
@@ -9184,7 +9203,12 @@ Public Module agm2
 
                             Else
                                 ok = False
-                                outPutLine = "Fehler beim Erzeugen des Projektes " & pName
+                                If pgmlinie.Contains(itemType) Then
+                                    outPutLine = "Fehler beim Erzeugen der Programm-Linie " & pName
+                                Else
+                                    outPutLine = "Fehler beim Erzeugen des Projektes " & pName
+                                End If
+
                                 outputCollection.Add(outPutLine)
                             End If
 
@@ -9211,67 +9235,68 @@ Public Module agm2
                         createdPrograms = createdPrograms + 1
                         projectConstellations.Add(current1program)
 
+                        ' tk 21.7.19 soll jetzt nicht mehr gemacht werden .. 
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                        'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                        Try
-                            ' Test, ob das Budget auch ausreicht
-                            ' wenn nein, einfach Warning ausgeben 
-                            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                            If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                Dim goOn As Boolean = True
-                                If unionProj.Erloes > 0 Then
-                                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                End If
+                        'Try
+                        '    ' Test, ob das Budget auch ausreicht
+                        '    ' wenn nein, einfach Warning ausgeben 
+                        '    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                        '    If unionProj.Erloes - tmpGesamtCost < 0 Then
+                        '        Dim goOn As Boolean = True
+                        '        If unionProj.Erloes > 0 Then
+                        '            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                        '        End If
 
-                                If goOn Then
-                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                    outputCollection.Add(outPutLine)
+                        '        If goOn Then
+                        '            outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                        '            outputCollection.Add(outPutLine)
 
-                                    Dim logtxt(2) As String
-                                    logtxt(0) = "Budget-Überschreitung"
-                                    logtxt(1) = "Programmlinie"
-                                    logtxt(2) = unionProj.name
-                                    Dim values(2) As Double
-                                    values(0) = unionProj.Erloes
-                                    values(1) = tmpGesamtCost
-                                    If values(0) > 0 Then
-                                        values(2) = tmpGesamtCost / unionProj.Erloes
-                                    Else
-                                        values(2) = 9999999999
-                                    End If
-                                    Call logfileSchreiben(logtxt, values)
-                                End If
+                        '            Dim logtxt(2) As String
+                        '            logtxt(0) = "Budget-Überschreitung"
+                        '            logtxt(1) = "Programmlinie"
+                        '            logtxt(2) = unionProj.name
+                        '            Dim values(2) As Double
+                        '            values(0) = unionProj.Erloes
+                        '            values(1) = tmpGesamtCost
+                        '            If values(0) > 0 Then
+                        '                values(2) = tmpGesamtCost / unionProj.Erloes
+                        '            Else
+                        '                values(2) = 9999999999
+                        '            End If
+                        '            Call logfileSchreiben(logtxt, values)
+                        '        End If
 
-                            End If
+                        '    End If
 
-                        Catch ex As Exception
+                        'Catch ex As Exception
 
-                        End Try
+                        'End Try
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
-                        unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                        'unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
-                        If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
-                            ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                        End If
+                        'If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                        '    ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                        'End If
 
-                        ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
+                        'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
 
-                        ' test
-                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                        If Not everythingOK Then
+                        '' test
+                        'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        'If Not everythingOK Then
 
-                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                            outputCollection.Add(outPutLine)
+                        '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                        '    outputCollection.Add(outPutLine)
 
-                            ReDim logmsg(2)
-                            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                            logmsg(1) = ""
-                            logmsg(2) = current1program.constellationName
-                            Call logfileSchreiben(logmsg)
+                        '    ReDim logmsg(2)
+                        '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                        '    logmsg(1) = ""
+                        '    logmsg(2) = current1program.constellationName
+                        '    Call logfileSchreiben(logmsg)
 
-                        End If
+                        'End If
                         ' ende test
                     Else
                         emptyPrograms = emptyPrograms + 1
@@ -9364,35 +9389,57 @@ Public Module agm2
     Private Function getAllianzTeamNameFromCell(ByVal excelCell As Excel.Range) As String
         Dim tmpResult As String = ""
 
-        If Not IsNothing(excelCell) Then
-            If Not IsNothing(excelCell.Value) Then
-                Dim cellValue As String = CStr(excelCell.Value).Trim
-                If cellValue.StartsWith("#") Then
+        Try
+            If Not IsNothing(excelCell) Then
+                If Not IsNothing(excelCell.Value) Then
+                    Dim cellValue As String = CStr(excelCell.Value).Trim
+                    If cellValue.StartsWith("#") Then
+                        ' 1. Versuch
+                        Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-"), CChar("_"), CChar(" ")})
 
-                    Dim tmpStr1() As String = cellValue.Split(New Char() {CChar("-")})
+                        If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                    If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
-
-                        If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
-                            tmpResult = tmpStr1(0).Trim
-                        End If
-
-                    Else
-                        Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
-                        If RoleDefinitions.containsName(tmpStr2(0).Trim) Then
-                            tmpResult = tmpStr2(0).Trim
-                        Else
-                            Dim tmpstr3() As String = cellValue.Split(New Char() {CChar("_")})
-                            If RoleDefinitions.containsName(tmpstr3(0).Trim) Then
-                                tmpResult = tmpstr3(0).Trim
+                            If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                                tmpResult = tmpStr1(0).Trim
                             End If
                         End If
 
+
+                        If tmpResult = "" Then
+                            ' 2. Versuch
+                            Dim tmpStr2() As String = cellValue.Split(New Char() {CChar(" ")})
+                            If tmpStr2.Length > 1 Then
+                                Dim tmpName As String = "#" & tmpStr2(1).Trim
+                                If RoleDefinitions.containsName(tmpName) Then
+                                    If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                        tmpResult = tmpName
+                                    End If
+                                End If
+                            End If
+
+                            If tmpResult = "" Then
+                                ' 3. Versuch
+                                Dim tmpstr4() As String = cellValue.Split(New Char() {CChar("("), CChar(")")})
+                                If tmpstr4.Length > 1 Then
+                                    Dim tmpName As String = "#" & tmpstr4(1).Trim
+                                    If RoleDefinitions.containsName(tmpName) Then
+                                        If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                            tmpResult = tmpName
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+
+                        End If
                     End If
                 End If
+
             End If
 
-        End If
+        Catch ex As Exception
+
+        End Try
 
 
 
@@ -9815,7 +9862,7 @@ Public Module agm2
                             If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameOrID(roleNameID) Then
                                 Dim curDelRole As String = ""
 
-                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
+                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList, True)
                                 If curDelRole.Length > 0 Then
                                     If Not deleteRoles.Contains(curDelRole) Then
                                         deleteRoles.Add(curDelRole, curDelRole)
@@ -10570,21 +10617,102 @@ Public Module agm2
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
                         Dim roleName As String = fullRoleName
+                        Dim rawTeamName As String = CStr(CType(.Cells(zeile, colActivity), Excel.Range).Value).Trim
 
                         If roleName.StartsWith("*") Then
                             roleName = roleName.Substring(1)
                         End If
 
                         Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
+
+                        If rawTeamName.StartsWith("#") And teamName = "" Then
+                            CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+
+                            outPutLine = "ggf. wurde ein Team nicht erkannt ... " & rawTeamName
+                            outputCollection.Add(outPutLine)
+
+                            ReDim logArray(5)
+                            logArray(0) = "ggf. wurde ein Team nicht erkannt ... "
+                            logArray(1) = ""
+                            logArray(2) = ""
+                            logArray(3) = rawTeamName
+                            logArray(4) = ""
+                            logArray(5) = ""
+
+                            Call logfileSchreiben(logArray)
+                        End If
+
                         Dim roleNameID As String = ""
                         Dim parentReferat As String = ""
                         Dim weitermachen As Boolean = False
 
                         ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
                         ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
-                        If RoleDefinitions.containsNameOrID(roleName) Then
 
-                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
+                        ' Abfrage #1 : ist es ein Team, dann dem Team zuordnen, nicht der dort angegebenen Person 
+                        ' dann, wenn kein Team bekannt: ist es eine bekannte Person, wenn nein: wer ist das Referat ... 
+                        If teamName.Length > 0 Then
+                            ' dann ist bereits sichergestellt, dass es sich um ein Team handelt ... 
+
+                            ' jetzt muss geprüft werden, ob die Rolle bekannt ist
+                            ' wenn nein, darf sie nicht aufgenommen werden, weil andernfalls eine Rolle auf das Team kontiert, aber eben keine Kapa dazu beiträgt
+
+                            If RoleDefinitions.containsNameOrID(roleName) Then
+                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste, True)
+
+                                If parentReferat.Length > 0 Then
+                                    ' alles in Ordnung 
+                                    roleName = teamName
+                                    teamName = ""
+                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
+                                    weitermachen = True
+                                Else
+                                    ' Parent Referat nicht gefunden - 
+                                    ' Fehlermeldung ... 
+                                    weitermachen = False
+                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+
+                                    outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
+                                    outputCollection.Add(outPutLine)
+
+                                    ReDim logArray(5)
+                                    logArray(0) = "Rolle hat kein Ist-Daten Referat "
+                                    logArray(1) = ""
+                                    logArray(2) = ""
+                                    logArray(3) = fullRoleName
+                                    logArray(4) = ""
+                                    logArray(5) = ""
+
+                                    Call logfileSchreiben(logArray)
+
+                                End If
+
+                            Else
+                                ' Rolle nicht gefunden , Wert darf / sollte nicht aufgenommen werden
+                                weitermachen = False
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+
+                                outPutLine = "Rolle nicht bekannt: " & roleName
+                                outputCollection.Add(outPutLine)
+
+                                ReDim logArray(5)
+                                logArray(0) = "unbekannte Rolle "
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = ""
+                                logArray(5) = ""
+
+                                Call logfileSchreiben(logArray)
+                            End If
+
+
+
+
+                        ElseIf RoleDefinitions.containsNameOrID(roleName) Then
+
+                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste, True)
 
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
@@ -10618,109 +10746,48 @@ Public Module agm2
                             Dim protocolEntryWritten As Boolean = False
 
                             ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
-                            If teamName.Length > 0 Then
-                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
 
-                                If parentReferat.Length > 0 Then
-                                    ' 2. Beste Alternative 
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-                                    weitermachen = True
-                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                    roleName = teamName
-                                    teamName = ""
+                            ' es muss als letzte Alternative das Referat genommen werden ... 
+                            If tmpReferat = "D-BITSV-KB" Then
+                                tmpReferat = "D-BITSV-KB0"
+                            End If
+                            parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste, True)
 
-                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                Else
-                                    ' es muss als letzte Bastion das Referat genommen werden ... 
-                                    If tmpReferat = "D-BITSV-KB" Then
-                                        tmpReferat = "D-BITSV-KB0"
-                                    End If
+                            If parentReferat.Length > 0 Then
+                                ' 3. Beste Alternative 
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
+                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
+                                weitermachen = True
+                                ' IN Folge sollen die Werte dem Team zugeordnet werden 
+                                roleName = parentReferat
+                                teamName = ""
 
-                                    parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
-
-                                    If parentReferat.Length > 0 Then
-                                        ' 3. Beste Alternative 
-                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-
-                                        weitermachen = True
-                                        ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                        roleName = parentReferat
-                                        teamName = ""
-
-                                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                    Else
-                                        ' Fehlermeldung 
-                                        ' 
-                                        weitermachen = False
-                                        CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                        CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                        CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-
-                                        outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
-                                        outputCollection.Add(outPutLine)
-
-                                        ReDim logArray(5)
-                                        logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        logArray(4) = teamName
-                                        logArray(5) = parentReferat
-
-                                        Call logfileSchreiben(logArray)
-                                        protocolEntryWritten = True
-
-
-                                    End If
-
-
-                                End If
+                                roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
                             Else
-                                ' es muss als letzte Alternative das Referat genommen werden ... 
-                                If tmpReferat = "D-BITSV-KB" Then
-                                    tmpReferat = "D-BITSV-KB0"
-                                End If
-                                parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
+                                ' Fehlermeldung 
+                                ' 
+                                weitermachen = False
+                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
-                                If parentReferat.Length > 0 Then
-                                    ' 3. Beste Alternative 
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-                                    weitermachen = True
-                                    ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                    roleName = parentReferat
-                                    teamName = ""
+                                outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
+                                outputCollection.Add(outPutLine)
 
-                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                                Else
-                                    ' Fehlermeldung 
-                                    ' 
-                                    weitermachen = False
-                                    CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                    CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                    CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                                ReDim logArray(5)
+                                logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = fullRoleName
+                                logArray(4) = teamName
+                                logArray(5) = parentReferat
 
-                                    outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
-                                    outputCollection.Add(outPutLine)
-
-                                    ReDim logArray(5)
-                                    logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                    logArray(1) = ""
-                                    logArray(2) = ""
-                                    logArray(3) = fullRoleName
-                                    logArray(4) = teamName
-                                    logArray(5) = parentReferat
-
-                                    Call logfileSchreiben(logArray)
-                                    protocolEntryWritten = True
-
-                                End If
+                                Call logfileSchreiben(logArray)
+                                protocolEntryWritten = True
 
                             End If
+
 
                             If Not protocolEntryWritten Then
                                 ReDim logArray(5)
@@ -11047,6 +11114,15 @@ Public Module agm2
                             .variantDescription = ""
                         End With
 
+                        ' tk 18.7.19 
+                        ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
+                        Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
+                        Call newProj.deleteTeamMembersWithNull()
+
+                        If chckVorher <> newProj.getAllPersonalKosten.Sum Then
+                            outPutLine = "PErsonalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
+                            outputCollection.Add(outPutLine)
+                        End If
 
                         ' jetzt in die Import-Projekte eintragen 
                         updatedProjects = updatedProjects + 1

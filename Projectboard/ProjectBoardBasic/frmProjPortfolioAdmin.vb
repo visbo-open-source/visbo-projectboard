@@ -551,6 +551,8 @@ Public Class frmProjPortfolioAdmin
         ' was sollen die ToolTipps zeigen ? 
         If aKtionskennung = PTTvActions.setWriteProtection Then
             toolTippsAreShowing = ptPPAtooltipps.protectedBy
+        ElseIf aKtionskennung = PTTvActions.delFromDB Then
+            toolTippsAreShowing = ptPPAtooltipps.scenarioReferences
         Else
             toolTippsAreShowing = ptPPAtooltipps.description
         End If
@@ -656,7 +658,12 @@ Public Class frmProjPortfolioAdmin
                 pvNamesListRaw = buildPvNamesList(storedAtOrBefore, False)
             End If
 
-            pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
+            If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
+                pvNamesList = reduceRawListTo(pvNamesListRaw, True)
+            Else
+                pvNamesList = reduceRawListTo(pvNamesListRaw, False)
+            End If
+
             quickList = True
 
             If pvNamesList.Count = 0 Then
@@ -1875,11 +1882,13 @@ Public Class frmProjPortfolioAdmin
             hproj = AlleProjekte.getProject(projectName, variantName)
 
             If Not IsNothing(hproj) Then
-                toolTippText = getToolTippText(hproj, treeLevel, variantNames.Count)
+                toolTippText = getToolTippText(hproj, "", "", treeLevel, variantNames.Count)
 
                 ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                 'Call aktualisierePMSForms(hproj)
                 Call aktualisiereCharts(hproj, True)
+            Else
+                toolTippText = getToolTippText(Nothing, projectName, variantName, treeLevel, variantNames.Count)
             End If
 
 
@@ -1893,12 +1902,14 @@ Public Class frmProjPortfolioAdmin
 
                 If Not IsNothing(hproj) Then
 
-                    toolTippText = getToolTippText(hproj, treeLevel, 0)
+                    toolTippText = getToolTippText(hproj, "", "", treeLevel, 0)
 
                     ' Anzeige der aktualisierten Charts und Phasen- bzw Milestone Infor Formulare 
                     'Call aktualisierePMSForms(hproj)
                     Call aktualisiereCharts(hproj, True)
 
+                Else
+                    toolTippText = getToolTippText(Nothing, projectName, variantName, treeLevel, 1)
                 End If
 
             End If
@@ -1917,75 +1928,82 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="anzahlVariants"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function getToolTippText(ByVal hproj As clsProjekt,
+    Private Function getToolTippText(ByVal hproj As clsProjekt, ByVal pName As String, ByVal vName As String,
                                      ByVal level As Integer, ByVal anzahlVariants As Integer) As String
 
         Dim tmpText As String = ""
         Dim allowedLength As Integer = 70
 
         If Not IsNothing(hproj) Then
+            pName = hproj.name
+            vName = hproj.variantName
+        End If
 
-            Dim pName As String = hproj.name
-            Dim vName As String = hproj.variantName
+        ' Projekt-Stufe
+        If level = 0 Then
 
-            ' Projekt-Stufe
-            If level = 0 Then
+            If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
+                tmpText = allDependencies.getDependencyInfos(pName)
 
-                If allDependencies.projectCount > 0 And toolTippsAreShowing = ptPPAtooltipps.dependencies Then
-                    tmpText = allDependencies.getDependencyInfos(pName)
+            ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
 
-                ElseIf toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+                If anzahlVariants = 1 Then
+                    Dim pvName As String = calcProjektKey(pName, vName)
+                    tmpText = writeProtections.getProtectionText(pvName)
+                Else
+                    tmpText = ""
+                End If
 
-                    If anzahlVariants = 1 Then
-                        Dim pvName As String = calcProjektKey(pName, vName)
-                        tmpText = writeProtections.getProtectionText(pvName)
+            ElseIf toolTippsAreShowing = ptPPAtooltipps.scenarioReferences Then
+                tmpText = projectConstellations.getSzenarioNamesWith(pName, "$ALL")
+
+            ElseIf Not IsNothing(hproj) Then
+                If hproj.description.Length > 0 Then
+                    tmpText = hproj.description
+                    If tmpText.Length > allowedLength Then
+                        tmpText = tmpText.Substring(0, allowedLength) & "..."
+                    End If
+                End If
+            End If
+
+
+        ElseIf level = 1 Then
+            ' Varianten-Level
+
+            If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+
+                Dim pvName As String = calcProjektKey(pName, vName)
+
+                Dim lastUser As String = ""
+                Dim zeitpunkt As Date
+                lastUser = writeProtections.lastModifiedBy(pvName)
+                zeitpunkt = writeProtections.changeDate(pvName)
+
+                If writeProtections.isProtected(pvName) Then
+                    Dim permanent As String = ""
+                    If writeProtections.isPermanentProtected(pvName) Then
+                        permanent = "permanent "
+                    End If
+                    If awinSettings.englishLanguage Then
+                        tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
                     Else
-                        tmpText = ""
+                        tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
                     End If
 
-
                 Else
-                    If hproj.description.Length > 0 Then
-                        tmpText = hproj.description
-                        If tmpText.Length > allowedLength Then
-                            tmpText = tmpText.Substring(0, allowedLength) & "..."
-                        End If
+                    If awinSettings.englishLanguage Then
+                        tmpText = "no protection"
+                    Else
+                        tmpText = "nicht geschützt"
                     End If
                 End If
 
-            ElseIf level = 1 Then
+            ElseIf toolTippsAreShowing = ptPPAtooltipps.scenarioReferences Then
+                tmpText = projectConstellations.getSzenarioNamesWith(pName, vName)
 
-                If toolTippsAreShowing = ptPPAtooltipps.protectedBy Then
+            ElseIf Not IsNothing(hproj) Then
 
-                    Dim pvName As String = calcProjektKey(pName, vName)
-
-                    Dim lastUser As String = ""
-                    Dim zeitpunkt As Date
-                    lastUser = writeProtections.lastModifiedBy(pvName)
-                    zeitpunkt = writeProtections.changeDate(pvName)
-
-                    If writeProtections.isProtected(pvName) Then
-                        Dim permanent As String = ""
-                        If writeProtections.isPermanentProtected(pvName) Then
-                            permanent = "permanent "
-                        End If
-                        If awinSettings.englishLanguage Then
-                            tmpText = permanent & "protected by: " & lastUser & ", at: " & zeitpunkt.ToString
-                        Else
-                            tmpText = permanent & "geschützt von: " & lastUser & ", am: " & zeitpunkt.ToString
-                        End If
-
-                    Else
-                        If awinSettings.englishLanguage Then
-                            tmpText = "no protection"
-                        Else
-                            tmpText = "nicht geschützt"
-                        End If
-                    End If
-
-
-                Else
-                    If hproj.variantDescription.Length > 0 Then
+                If hproj.variantDescription.Length > 0 Then
                         tmpText = hproj.variantDescription
                         If tmpText.Length > allowedLength Then
                             tmpText = tmpText.Substring(0, allowedLength) & "..."
@@ -1997,9 +2015,9 @@ Public Class frmProjPortfolioAdmin
                 ' noch kein ToolTippText verfügbar
             End If
 
-        End If
 
-        getToolTippText = tmpText
+
+            getToolTippText = tmpText
 
     End Function
 
@@ -2495,7 +2513,7 @@ Public Class frmProjPortfolioAdmin
 
 
                             Dim variantNameLookingFor As String = ""
-                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                            If (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV) Or awinSettings.filterPFV Then
                                 variantNameLookingFor = ptVariantFixNames.pfv.ToString
                             End If
 
@@ -2593,7 +2611,13 @@ Public Class frmProjPortfolioAdmin
                                     End If
 
                                     ' laden der Projekt-Variante 
+                                    ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
                                     Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
+
+                                    ' in load wird das pfv als Basis-Variante abgespeichert , deswegen muss jetzt variantName der Basis-Varianten-Name sein
+                                    If awinSettings.filterPFV And variantName = ptVariantFixNames.pfv.ToString Then
+                                        variantName = ""
+                                    End If
 
                                     If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
                                         ' nichts tun , ist schon drin 
@@ -3528,6 +3552,7 @@ Public Class frmProjPortfolioAdmin
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
 
+
         awinSettings.useHierarchy = True
 
         If currentConstellationName <> calcLastSessionScenarioName() Then
@@ -3584,12 +3609,11 @@ Public Class frmProjPortfolioAdmin
                 browserAlleProjekte.Clear(False)
             End If
 
-            If awinSettings.loadPFV Then
+            If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
                 variantName = ptVariantFixNames.pfv.ToString
             End If
             browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True, err)
-            ' das darf hier nicht auf false gesetzt werden .... 
-            'quickList = False
+
 
         Else
             ' browserAlleProjekte bestimmen  
@@ -4015,9 +4039,7 @@ Public Class frmProjPortfolioAdmin
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
-    Private Sub ToolTipStand_Popup(sender As Object, e As PopupEventArgs) Handles ToolTipStand.Popup
 
-    End Sub
 
     ''' <summary>
     ''' reduziert die Constellation auf alle Projekt-Varianten mit Attribut Show 
@@ -4875,5 +4897,6 @@ Public Class frmProjPortfolioAdmin
         End If
 
     End Sub
+
 
 End Class

@@ -74,8 +74,15 @@
     End Sub
 
     Private Sub ListBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
+        ' tk 22.7.19 vorbereitet, um nur zulässige Constelaltions aufzunehmen ... 
+        'Dim anzSelected As Integer = ListBox1.SelectedItems.Count
+        'If anzSelected > 1 Then
+        '    ' prüfen, ob zulässig - wenn nein, dann Meldung ... 
+        '    Dim newItemName As String = CStr(ListBox1.SelectedItems.Item(anzSelected - 1))
 
-        
+        'Else
+        '    Call MsgBox("bitte einen Eintrag selektieren")
+        'End If
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -131,6 +138,10 @@
         Else
             ' nichts tun ...
         End If
+
+    End Sub
+
+    Private Sub ListBox1_Click(sender As Object, e As EventArgs) Handles ListBox1.Click
 
     End Sub
 End Class

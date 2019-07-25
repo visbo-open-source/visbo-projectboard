@@ -2827,7 +2827,7 @@ Public Module awinGeneralModules
             End If
         End If
 
-        If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumbis, storedGestern, storedHeute, True, err)
         Else
@@ -3343,7 +3343,8 @@ Public Module awinGeneralModules
                                   ByVal clearBoard As Boolean,
                                   ByVal clearSession As Boolean,
                                   ByVal storedAtOrBefore As Date,
-                                  Optional ByVal showSummaryProject As Boolean = False)
+                                  Optional ByVal showSummaryProject As Boolean = False,
+                                  Optional ByVal onlySessionLoad As Boolean = False)
 
         Dim err As New clsErrorCodeMsg
 
@@ -3382,7 +3383,15 @@ Public Module awinGeneralModules
                 Dim vorgabeBudget As Double = -1
                 ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
 
-                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
+                Dim variantName As String = ptVariantFixNames.pfv.ToString
+                ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
+                ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
+                ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
+                If onlySessionLoad And Not awinSettings.loadPFV Then
+                    variantName = ""
+                End If
+
+                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                 If Not IsNothing(curSummaryProjVorgabe) Then
                     vorgabeBudget = curSummaryProjVorgabe.Erloes
                 End If
@@ -3984,6 +3993,14 @@ Public Module awinGeneralModules
             If Not IsNothing(hproj) Then
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+
+                ' wenn jetzt gefiltert wurde und der Varianten-Name ofv ist, dann umsetzen 
+                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                    hproj.variantName = ""
+                    vName = ""
+                    key = calcProjektKey(pName, "")
+                End If
+
                 If AlleProjekte.Containskey(key) Then
                     AlleProjekte.Remove(key)
                 End If
@@ -4019,46 +4036,55 @@ Public Module awinGeneralModules
     Public Sub deleteCompleteProjectFromDB(ByRef outputCollection As Collection,
                                            ByVal pname As String)
 
-        Dim result As Boolean = True
+        Dim deleteIsAllowed As Boolean = True
         Dim err As New clsErrorCodeMsg
         Dim outputline As String = ""
 
-        '' Test, ob Standardvariante in einem Portfolio referenziert wird
-        'If notReferencedByAnyPortfolio(pname, "") Then
-        '    result = result And True
-        'Else
-        '    outputline = ("Projekt '" & pname & "' kann nicht gelöscht werden - es wird in einem Portfolio referenziert")
-        '    outputCollection.Add(outputline)
-        '    result = False
-        'End If
 
+        ' Liste der Scenarios, die irgendeine Variante referenzieren ... 
+        ' leerer Sting, wenn es keine Referenzen gibt .. 
+        outputline = projectConstellations.getSzenarioNamesWith(pname, "$ALL", False)
 
-        Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
-        'hinzufügen der Standardvariante
-        variantListe.Add("", "")
+        ' wenn es keine Referenzen gibt, ist der Delete erlaubt 
+        deleteIsAllowed = (outputline = "")
 
-        If Not IsNothing(variantListe) Then
+        ''Dim variantListe As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pname, err)
+        ''hinzufügen der Standardvariante
+        ''variantListe.Add("", "")
 
-            For Each vname In variantListe
-                If notReferencedByAnyPortfolio(pname, vname) Then
-                    result = result And True
-                Else
-                    outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
-                    outputCollection.Add(outputline)
-                    result = False
-                    Exit For
-                End If
-            Next
-        Else
-            result = True
+        ''If Not IsNothing(variantListe) Then
 
-        End If
+        ''    For Each vname In variantListe
+        ''        If notReferencedByAnyPortfolio(pname, vname) Then
+        ''            deleteIsAllowed = deleteIsAllowed And True
+        ''        Else
+        ''            outputline = ("Projekt  '" & pname & "'  : nicht gelöscht - es wird in einem Portfolio referenziert")
+        ''            outputCollection.Add(outputline)
+        ''            deleteIsAllowed = False
+        ''            Exit For
+        ''        End If
+        ''    Next
+        ''Else
+        ''    deleteIsAllowed = True
 
-        If result Then
+        ''End If
+
+        If deleteIsAllowed Then
             If CType(databaseAcc, DBAccLayer.Request).removeCompleteProjectFromDB(pname, err) Then
-                outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                If awinSettings.englishLanguage Then
+                    outputline = ("Project  '" & pname & "'  : deleted ")
+                Else
+                    outputline = ("Projekt  '" & pname & "'  : gelöscht ")
+                End If
                 outputCollection.Add(outputline)
             End If
+        Else
+            If awinSettings.englishLanguage Then
+                outputline = "Delete denied: " & pname & " referenced by portfolios:" & vbLf & "   " & outputline
+            Else
+                outputline = "Delete nicht möglich: " & pname & " enthalten in Portfolios:" & vbLf & "   " & outputline
+            End If
+            outputCollection.Add(outputline)
         End If
 
     End Sub
@@ -4259,7 +4285,8 @@ Public Module awinGeneralModules
                         End If
 
                     End If
-                    outputLine = outputLine & projectConstellations.getSzenarioNamesWith(pname, variantName)
+                    ' false: ohne den Zusatztext : referenced by Portfolio(s: 
+                    outputLine = outputLine & projectConstellations.getSzenarioNamesWith(pname, variantName, False)
                     outputCollection.Add(outputLine)
                 End If
 
@@ -7109,7 +7136,7 @@ Public Module awinGeneralModules
                                     If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
                                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                                         If Not IsNothing(potentialParents) Then
-                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents)
+                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
                                             If tmpParentName <> "" Then
                                                 scInfo.q2 = tmpParentName
                                             End If

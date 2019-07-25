@@ -289,12 +289,14 @@ Imports System.Web
         Dim load1FromDatenbank As String = "PT5G1B1"
         Dim load2FromDatenbank As String = "PT5G1"
         Dim loadConstellationFrm As New frmLoadConstellation
-        Dim storedAtOrBefore As Date = Date.Now
+        Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
         Dim ControlID As String = control.Id
         Dim timeStampsCollection As New Collection
         Dim dbConstellations As New clsConstellations
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
+
+        Dim loadFromSession As Boolean = (control.Id = "PT2G2B2")
 
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
@@ -365,26 +367,30 @@ Imports System.Web
 
             appInstance.ScreenUpdating = False
 
-            If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
-                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
-            Else
-                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
-            End If
+            If Not loadFromSession Then
 
-            dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
-
-            'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
-            ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
-            For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
-
-                If projectConstellations.Contains(kvp.Key) Then
-                    projectConstellations.Remove(kvp.Key)
-                    projectConstellations.Add(kvp.Value)
+                If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
+                    storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
                 Else
-                    projectConstellations.Add(kvp.Value)
+                    storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
                 End If
 
-            Next
+                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
+
+                'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
+                ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
+                For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
+
+                    If projectConstellations.Contains(kvp.Key) Then
+                        projectConstellations.Remove(kvp.Key)
+                        projectConstellations.Add(kvp.Value)
+                    Else
+                        projectConstellations.Add(kvp.Value)
+                    End If
+
+                Next
+
+            End If
 
 
             Dim constellationsToDo As New clsConstellations
@@ -393,8 +399,13 @@ Imports System.Web
             Cursor.Current = Cursors.WaitCursor
 
             If clearBoard Then
-                'currentSessionConstellation.Liste.Clear()
-                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                ' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
+                If loadFromSession Then
+                    currentSessionConstellation.Liste.Clear()
+                Else
+                    AlleProjekte.Clear(updateCurrentConstellation:=True)
+                End If
+
                 projectConstellations.clearLoadedPortfolios()
             End If
 
@@ -406,7 +417,7 @@ Imports System.Web
                     Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
 
                     ' tmpname ist nicht mehr in der Session geladen
-                    If IsNothing(checkconst) Then
+                    If IsNothing(checkconst) And Not loadFromSession Then
                         ' hole Portfolio (tmpname) aus den dbConstellations-liste
                         checkconst = dbConstellations.getConstellation(tmpName)
                         If Not IsNothing(checkconst) Then
@@ -427,7 +438,10 @@ Imports System.Web
                             ' alles in Ordnung 
                             ok = True
                         Else
-                            If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            ' tk 22.7. 19 war vorher:  
+                            'If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            '
+                            If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
                                 ok = True
                             End If
                         End If
@@ -438,13 +452,26 @@ Imports System.Web
 
                             If Not IsNothing(constellation) Then
                                 If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                    constellationsToDo.Add(constellation)
+                                    If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                        constellationsToDo.Add(constellation)
+                                    Else
+                                        Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                        constellation.constellationName)
+                                    End If
+
                                 End If
-                            Else
+
+                            ElseIf Not loadFromSession Then
                                 constellation = dbConstellations.getConstellation(tmpName)
                                 If Not IsNothing(constellation) Then
                                     If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                        constellationsToDo.Add(constellation)
+                                        If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                            constellationsToDo.Add(constellation)
+                                        Else
+                                            Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                        constellation.constellationName)
+                                        End If
+
                                     End If
                                     projectConstellations.Add(constellation)
                                 End If
@@ -495,13 +522,16 @@ Imports System.Web
             'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
-                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProject:=showSummaryProjects, onlySessionLoad:=loadFromSession)
+
+                ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
+                ' aber nur, wenn es nicht nur von der Session geholt wird  
+                If Not noDB And Not loadFromSession Then
+                    writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+                End If
             End If
 
-            ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
-            If Not noDB Then
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
-            End If
+
 
             appInstance.ScreenUpdating = True
 
@@ -5120,7 +5150,8 @@ Imports System.Web
                         Dim isAllianzImport1 As Boolean = False
 
                         Try
-                            If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                            'If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                            If scenarioNameP.StartsWith("Rupi-Liste") Then
                                 ' das muss noch abgefragt werden ... 
 
                                 Dim startdate As Date = CDate("1.1.2019")
@@ -5218,8 +5249,15 @@ Imports System.Web
                                 projectConstellations.Remove(scenarioNameP)
                             End If
 
+                            If projectConstellations.Contains(scenarioNameS) Then
+                                projectConstellations.Remove(scenarioNameS)
+                            End If
+
+                            ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
                             projectConstellations.Add(sessionConstellationP)
+                            projectConstellations.Add(sessionConstellationS)
                             ' jetzt auf Projekt-Tafel anzeigen 
+
                             Call loadSessionConstellation(scenarioNameP, False, True)
 
                             '' tk 8.5.19 auskommentiert 
@@ -10159,7 +10197,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
@@ -10196,7 +10234,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If

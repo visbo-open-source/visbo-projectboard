@@ -41,7 +41,7 @@ Public Class clsCustomUserRole
                                  "PTview",
                                  "PTfilter", "PTsort", "PT0G1s9",
                                  "PTOPTB1", "PTreport",
-                                 "PTeinst", "PThelp", "PTWebServer"}
+                                 "PThelp", "PTWebServer"}
 
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
@@ -65,7 +65,7 @@ Public Class clsCustomUserRole
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
-                                 "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
 
                 ' Team-Manager und Ressourcen-Manager solten die gleichen Funktionen sehen / nicht sehen 
@@ -77,7 +77,7 @@ Public Class clsCustomUserRole
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
-                                 "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
 
                 ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
@@ -90,7 +90,7 @@ Public Class clsCustomUserRole
                                  "PT5G2split", "PT5G2", "PT5G2M",
                                  "PT4G1M1B2",
                                  "PTneu",
-                                 "PTview", "PTsort", "PTfilter", "PTeinst", "PThelp", "PT1G1B6",
+                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
             Case Else
                 _nonAllowance = {""}

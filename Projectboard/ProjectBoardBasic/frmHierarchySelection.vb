@@ -5136,18 +5136,6 @@ Public Class frmHierarchySelection
                     .rdbMilestones.Checked = False
                     .pictureMilestones.Visible = False
 
-                    '.rdbBU.Visible = False
-                    '.pictureBU.Visible = False
-
-                    '.rdbTyp.Visible = False
-                    '.pictureTyp.Visible = False
-
-                    '.rdbRoles.Visible = True
-                    '.pictureRoles.Visible = True
-
-                    '.rdbCosts.Visible = True
-                    '.pictureCosts.Visible = True
-
                     .rdbPhaseMilest.Visible = True
                     .picturePhaseMilest.Visible = True
 
@@ -5314,95 +5302,9 @@ Public Class frmHierarchySelection
             currentNode.Checked = True
         End If
 
-        'For i = 0 To childIds.Count - 1
-
-        '    nrTag = New nodeRoleTag
-        '    nrTag.pTag = 
-
-        '    childNode = currentNode.Nodes.Add("-")
-        '    CType(childNode.Tag, nodeRoleTag).pTag = "P"
-
-        '    Call buildRoleSubTreeView(currentNode, childIds.ElementAt(i).Key)
-
-        'Next
-        'End If
 
     End Sub
 
-    Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
-
-    End Sub
-
-
-
-
-    ' ''' <summary>
-    ' ''' old _ deprecated
-    ' ''' </summary>
-    ' ''' <param name="topNode"></param>
-    ' ''' <param name="nodeList"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub buildRoleSubTreeView(ByRef topNode As TreeNode, ByRef nodeList As List(Of Integer))
-
-    '    Dim anzChilds As Integer
-    '    Dim child As clsRollenDefinition
-    '    Dim childChildList As New List(Of Integer)
-    '    Dim childChildExist As Boolean = False
-
-    '    Dim nodeLevel0 As TreeNode
-    '    Dim nodeLevel1 As TreeNode
-
-
-    '    anzChilds = nodeList.Count
-
-    '    With topNode
-
-    '        For i As Integer = 0 To anzChilds - 1
-
-    '            child = RoleDefinitions.getRoledef(nodeList(i))
-    '            Dim childName As String = child.name
-    '            Dim childID As Integer = child.UID
-
-    '            If allRoles.Contains(childName) Then
-
-    '                nodeLevel0 = .Nodes.Add(childName)
-    '                nodeLevel0.Name = childID.ToString
-    '                nodeLevel0.Text = childName
-
-
-    '                If selectedRoles.Contains(childName) Then
-    '                    nodeLevel0.Checked = True
-    '                End If
-
-
-    '                If RoleDefinitions.hierarchy.nodeItem(childID).childs.Count > 0 Then
-
-    '                    childChildList = RoleDefinitions.hierarchy.nodeItem(childID).childs
-    '                    ' prüfen, ob role childName ein Kind hat, das in allRoles enthalten ist
-    '                    Dim k As Integer = 0
-    '                    While (k <= childChildList.Count - 1) And Not childChildExist
-    '                        childChildExist = childChildExist Or allRoles.Contains(RoleDefinitions.getRoledef(childChildList(k)).name)
-    '                        k = k + 1
-    '                    End While
-    '                    If childChildExist Then
-    '                        nodeLevel0.Tag = "P"
-
-
-    '                        nodeLevel1 = nodeLevel0.Nodes.Add("-")
-    '                        nodeLevel1.Tag = "P"
-    '                    Else
-    '                        nodeLevel0.Tag = "X"
-    '                    End If
-
-    '                End If
-    '            End If
-
-    '        Next
-
-    '    End With
-
-
-    'End Sub
 
 
 
