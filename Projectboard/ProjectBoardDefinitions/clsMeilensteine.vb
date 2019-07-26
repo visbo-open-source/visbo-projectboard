@@ -219,6 +219,11 @@ Public Class clsMeilensteine
             ' jetzt ist in der AppearanceID was drin ... 
             getShape = appearanceDefinitions.Item(appearanceID).form
 
+            'ur:190725
+            'Dim appear As clsAppearance = appearanceDefinitions.Item(appearanceID)
+            'getShape = CType(appInstance.Worksheets(arrWsNames(ptTables.MPT)),
+            '    Microsoft.Office.Interop.Excel.Worksheet).Shapes.AddShape(appear.shpType, 0, 0, appear.width, appear.height)
+
         End Get
     End Property
 

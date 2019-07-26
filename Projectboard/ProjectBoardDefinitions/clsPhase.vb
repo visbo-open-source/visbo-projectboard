@@ -614,38 +614,38 @@ Public Class clsPhase
         End Set
     End Property
 
-    ''' <summary>
-    ''' gibt das Shape für die Phase zurück
-    ''' falls es keine explizite Definition gibt: die Form der ersten Phase in der AppearnceDefinitions-Liste 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
-        Get
+    '''' <summary>
+    '''' gibt das Shape für die Phase zurück
+    '''' falls es keine explizite Definition gibt: die Form der ersten Phase in der AppearnceDefinitions-Liste 
+    '''' </summary>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
+    '    Get
 
-            Dim tmpClass As String
-            Dim found As Boolean = True
+    '        Dim tmpClass As String
+    '        Dim found As Boolean = True
 
-            If PhaseDefinitions.Contains(Me.name) Then
-                tmpClass = PhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
+    '        If PhaseDefinitions.Contains(Me.name) Then
+    '            tmpClass = PhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
 
-            ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
-                tmpClass = missingPhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
+    '        ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
+    '            tmpClass = missingPhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
 
-            Else
-                tmpClass = _appearance
-                found = False
-            End If
+    '        Else
+    '            tmpClass = _appearance
+    '            found = False
+    '        End If
 
-            getShape = appearanceDefinitions.Item(tmpClass).form
+    '        getShape = appearanceDefinitions.Item(tmpClass).form
 
-            If Not found Then
-                getShape.Fill.ForeColor.RGB = _color
-            End If
+    '        If Not found Then
+    '            getShape.Fill.ForeColor.RGB = _color
+    '        End If
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
 
     ''' <summary>
@@ -1182,7 +1182,9 @@ Public Class clsPhase
                 Dim phName As String = elemNameOfElemID(_nameID)
 
                 If PhaseDefinitions.Contains(phName) Or missingPhaseDefinitions.Contains(phName) Then
-                    farbe = Me.getShape.Fill.ForeColor.RGB
+                    'ur:190725
+                    'farbe = Me.getShape.Fill.ForeColor.RGB
+                    farbe = appearanceDefinitions.Item(Me.appearance).FGcolor
                 Else
                     farbe = _color
                 End If

@@ -458,8 +458,12 @@ Public Module agm2
                     .BGcolor = shp.Fill.BackColor.RGB
                     .Glowcolor = shp.Glow.Color.RGB
                     .Glowradius = shp.Glow.Radius
+                    .Rotation = shp.Rotation
                     .ShadowFG = shp.Shadow.ForeColor.RGB
                     .ShadowTransp = shp.Shadow.Transparency
+                    .LineBGColor = shp.Line.BackColor.RGB
+                    .LineFGColor = shp.Line.ForeColor.RGB
+                    .LineWeight = shp.Line.Weight
 
                     .shpType = shp.AutoShapeType
                     .width = shp.Width
