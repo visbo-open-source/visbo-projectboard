@@ -1664,7 +1664,9 @@ Imports System.Web
                                 ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
                                 key = calcProjektKey(hproj.name, "")
                                 AlleProjekte.Remove(key)
+                                ShowProjekte.Remove(hproj.name)
 
+                                Dim bisherigeBaseVariant As clsProjekt = getProjektFromSessionOrDB(hproj.name, "", AlleProjekte, Date.Now, hproj.kundenNummer)
 
                                 ' wenn es sich um einen Ressourcen-Manager handelt, dann muss das, was er geändert hat in die bisherige Basis Variante gemerged werden 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
@@ -1672,8 +1674,6 @@ Imports System.Web
                                     Dim mergedProj As clsProjekt = Nothing
                                     Dim summaryRoleIDs As New Collection
                                     summaryRoleIDs.Add(myCustomUserRole.specifics)
-
-                                    Dim bisherigeBaseVariant As clsProjekt = getProjektFromSessionOrDB(hproj.name, "", AlleProjekte, Date.Now, hproj.kundenNummer)
 
                                     If Not IsNothing(bisherigeBaseVariant) Then
 
@@ -1685,19 +1685,24 @@ Imports System.Web
 
                                     End If
 
-                                    ShowProjekte.Remove(hproj.name)
-                                    hproj.variantName = ""
 
-                                    ShowProjekte.Add(hproj)
                                 End If
 
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
+                                ' notwendig, um den Speicher-Conflic 409 zu vermeinden 
+                                hproj.updatedAt = bisherigeBaseVariant.updatedAt
                                 hproj.timeStamp = Date.Now
 
-                                ' die "neue" Standard Variante in AlleProjekte aufnehmen 
+                                ' tk 25.7.19 
+                                If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
+                                    hproj.marker = True
+                                End If
+
+                                ' die "neue" Standard Variante in AlleProjekte und ShowProjekte aufnehmen 
                                 AlleProjekte.Add(hproj)
+                                ShowProjekte.Add(hproj)
 
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
