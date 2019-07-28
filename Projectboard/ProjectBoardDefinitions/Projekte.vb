@@ -25442,9 +25442,15 @@ Public Module Projekte
     ''' <param name="specifics"></param>
     ''' <returns></returns>
     Public Function calcCurKey(ByVal userName As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String) As String
+
         Dim key As String = userName.Trim & CInt(customRoleType).ToString.Trim
-        If customRoleType = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+        If customRoleType = ptCustomUserRoles.RessourceManager Or
+           customRoleType = ptCustomUserRoles.TeamManager Or
+           customRoleType = ptCustomUserRoles.InternalViewer Or
+           customRoleType = ptCustomUserRoles.ExternalViewer Then
+
             key = key & specifics
+
         End If
 
         calcCurKey = key
@@ -28300,7 +28306,7 @@ Public Module Projekte
         ' bestimme die Menge an vorkommenden Role-NameIDs in hproj, lproj, bproj
         ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
         Dim resultCollection As New Collection
-        Dim tmpRListe As New SortedList(Of String, String)
+        Dim tmpRListe As New SortedList(Of Integer, String)
         Dim includingVirtualChilds As Boolean = False
 
         'Dim onlyConsiderTeamMembers As Boolean = False
@@ -28330,8 +28336,9 @@ Public Module Projekte
             For Each tmpRNameID As String In sRoles
 
                 If myCustomUserRole.isAllowedToSee(tmpRNameID, includingVirtualChilds:=includingVirtualChilds) Then
-                    If Not tmpRListe.ContainsKey(tmpRNameID) Then
-                        tmpRListe.Add(tmpRNameID, tmpRNameID)
+                    Dim posIX As Integer = RoleDefinitions.getPositionIndex(tmpRNameID)
+                    If Not tmpRListe.ContainsKey(posIX) Then
+                        tmpRListe.Add(posIX, tmpRNameID)
                     End If
                 End If
 
@@ -28344,11 +28351,14 @@ Public Module Projekte
         Next
 
         ' jetzt muss umkopiert werden - das war alles notwendig, um die Sortierung in der Collection zu behalten 
-        For Each kvp As KeyValuePair(Of String, String) In tmpRListe
+        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
 
-            If Not resultCollection.Contains(kvp.Key) Then
-                resultCollection.Add(kvp.Key, kvp.Key)
-            End If
+            'If Not resultCollection.Contains(kvp.Key) Then
+            '    resultCollection.Add(kvp.Key, kvp.Key)
+            'End If
+            ' tk 25.7.19
+            ' damit wird jetzt die Reihenfolge erhalten 
+            resultCollection.Add(kvp.Value)
 
         Next
 

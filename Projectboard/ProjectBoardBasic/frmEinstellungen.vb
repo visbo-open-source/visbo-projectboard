@@ -24,7 +24,7 @@ Public Class frmEinstellungen
         End If
         dontFire = False
 
-        Dim xxx As String = awinSettings.ReportLanguage
+        'Dim xxx As String = awinSettings.ReportLanguage
 
         If awinSettings.englishLanguage Then
             SprachAusw.Items.Add("German")
