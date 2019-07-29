@@ -39,18 +39,18 @@ Partial Class frmRemoveConstellation
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.ListBox1)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(493, 331)
+        Me.Panel1.Size = New System.Drawing.Size(394, 265)
         Me.Panel1.TabIndex = 0
         '
         'Abbrechen
         '
         Me.Abbrechen.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Abbrechen.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.Abbrechen.Location = New System.Drawing.Point(272, 279)
-        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4)
+        Me.Abbrechen.Location = New System.Drawing.Point(218, 223)
         Me.Abbrechen.Name = "Abbrechen"
-        Me.Abbrechen.Size = New System.Drawing.Size(100, 28)
+        Me.Abbrechen.Size = New System.Drawing.Size(80, 22)
         Me.Abbrechen.TabIndex = 6
         Me.Abbrechen.Text = "Abbrechen"
         Me.Abbrechen.UseVisualStyleBackColor = True
@@ -59,10 +59,9 @@ Partial Class frmRemoveConstellation
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(88, 279)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Location = New System.Drawing.Point(70, 223)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 5
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -75,19 +74,19 @@ Partial Class frmRemoveConstellation
         Me.ListBox1.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.HorizontalScrollbar = True
-        Me.ListBox1.ItemHeight = 19
-        Me.ListBox1.Location = New System.Drawing.Point(13, 13)
-        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
+        Me.ListBox1.ItemHeight = 16
+        Me.ListBox1.Location = New System.Drawing.Point(10, 10)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(466, 251)
+        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+        Me.ListBox1.Size = New System.Drawing.Size(374, 196)
         Me.ListBox1.Sorted = True
         Me.ListBox1.TabIndex = 4
         '
         'frmRemoveConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(492, 328)
+        Me.ClientSize = New System.Drawing.Size(394, 262)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
