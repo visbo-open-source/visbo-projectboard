@@ -19,6 +19,10 @@ Public Class clsRollen
     ' im key ist die ID der Organisationseinheit, in der Liste sind die IDs der Teams, die virtuell zu dieser Orga-Einheit gehören 
     Private _orgaTeamChilds As SortedList(Of Integer, List(Of Integer))
 
+    ' tk 25.7.19 in welcher relativen Position im Baum sind die einzelnen IDs
+    ' Key = NameID, value = relative Position
+    Private _positionIndices As SortedList(Of String, Integer)
+
     ''' <summary>
     ''' wird aktuell nur in ImportMSProject benötigt .. wird gebraucht, um eine unbekannte Rolel in RoleDefinitions aufzunehmen ..
     ''' </summary>
@@ -405,6 +409,128 @@ Public Class clsRollen
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' bestimmt die relativen Psoitions-Indizes der einzelnen Rollen 
+    ''' wird benötigt, um sie in Reports, Tabellen, MassEdit in der erwarteten Reihenfolge darzustellen
+    ''' </summary>
+    Private Sub setRelativePositionIndicesOfRoles()
+        Dim topLevelNodes As List(Of Integer) = getTopLevelNodeIDs
+        Dim posIX As Integer = 1
+
+        If Not IsNothing(topLevelNodes) Then
+
+            For Each topLevelNodeID As Integer In topLevelNodes
+
+                Call setrelativeIndicesOFParentNode(topLevelNodeID, -1, posIX)
+
+            Next
+
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="nodeID">ID des Top Knotens dessen Baum analysiert werden soll </param>
+    ''' <param name="teamID">ID des Teams </param>
+    ''' <param name="posIX">byref übergebener PositionsIndex</param>
+    Private Sub setrelativeIndicesOFParentNode(ByVal nodeID As Integer, ByVal teamID As Integer, ByRef posIX As Integer)
+
+        Dim roleNameID As String = bestimmeRoleNameID(nodeID, teamID)
+
+        If Not _positionIndices.ContainsKey(roleNameID) Then
+            _positionIndices.Add(roleNameID, posIX)
+            posIX = posIX + 1
+
+            Dim parentrole As clsRollenDefinition = getRoleDefByID(nodeID)
+            If parentrole.isTeam Then
+                teamID = parentrole.UID
+            Else
+                teamID = -1
+            End If
+
+            For ci As Integer = 1 To parentrole.getSubRoleCount
+                Dim childrole As clsRollenDefinition = getRoleDefByID(parentrole.getSubRoleIDs.ElementAt(ci - 1).Key)
+                If childrole.getSubRoleCount = 0 Then
+
+                    roleNameID = bestimmeRoleNameID(childrole.UID, teamID)
+
+                    If Not _positionIndices.ContainsKey(roleNameID) Then
+                        _positionIndices.Add(roleNameID, posIX)
+                        posIX = posIX + 1
+                    Else
+                        ' darf eigentlich nicht sein 
+                        Call MsgBox("Fehler: Positionsbestimmung " & childrole.name & " (" & roleNameID & ")")
+                    End If
+                Else
+                    Call setrelativeIndicesOFParentNode(childrole.UID, teamID, posIX)
+                End If
+
+            Next
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Positions-Indices zurück 
+    ''' im Fehlerfall werden die ids als Sortier-Kriterium verwnedte 
+    ''' </summary>
+    ''' <param name="NameIDListe"></param>
+    ''' <returns></returns>
+    Public Function getPositionIndices(ByVal NameIDListe As String()) As SortedList(Of Integer, String)
+        Dim tmpResult As New SortedList(Of Integer, String)
+        Dim errorPos As Integer = 999999
+
+        Dim errorOccurred As Boolean = False
+        Try
+            For Each tmpID As String In NameIDListe
+                If _positionIndices.ContainsKey(tmpID) Then
+                    Dim posIX As Integer = _positionIndices.Item(tmpID)
+                    Do While tmpResult.ContainsKey(posIX)
+                        posIX = posIX + 1
+                    Loop
+                    tmpResult.Add(posIX, tmpID)
+                Else
+                    errorPos = errorPos + 1
+                    Do While tmpResult.ContainsKey(errorPos)
+                        errorPos = errorPos + 1
+                    Loop
+                    tmpResult.Add(errorPos, tmpID)
+                End If
+
+            Next
+        Catch ex As Exception
+            errorOccurred = True
+
+        End Try
+
+        getPositionIndices = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' gibt die Position im Orga-Baum als Positions-Index zurück. 
+    ''' dient dazu eine für den Anwender nachvollziehbare, weil am Organisations-Baum orientierte Reihenfolge herzustellen  
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <returns></returns>
+    Public Function getPositionIndex(ByVal nameID As String) As Integer
+        Dim posIX As Integer
+
+        Try
+            If _positionIndices.ContainsKey(nameID) Then
+                posIX = _positionIndices.Item(nameID)
+            Else
+                posIX = -1
+            End If
+
+        Catch ex As Exception
+            posIX = -1
+        End Try
+
+        getPositionIndex = posIX
+    End Function
 
     ''' <summary>
     ''' gibt die Toplevel NodeIds zurück ...
@@ -1691,6 +1817,7 @@ Public Class clsRollen
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
         _allNames = New SortedList(Of String, Integer)
         _topLevelNodeIDs = New List(Of Integer)
+        _positionIndices = New SortedList(Of String, Integer)
 
         ' wird erst in buildOrgaTeamChilds initialisiert und aufgebaut 
         _orgaTeamChilds = Nothing
@@ -1736,6 +1863,15 @@ Public Class clsRollen
             i = i + 1
 
         End While
+
+        '
+        ' tk 25.7.19
+        ' jetzt werden noch die relativen Indices aufgebaut ... 
+        Try
+            Call setRelativePositionIndicesOfRoles()
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 

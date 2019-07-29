@@ -82,8 +82,10 @@
         ' bestimme den sich ausschließenden Key ... 
         If customRoleType = ptCustomUserRoles.RessourceManager Then
             chckkey = calcCurKey(userName, ptCustomUserRoles.TeamManager, specifics)
+
         ElseIf customRoleType = ptCustomUserRoles.TeamManager Then
             chckkey = calcCurKey(userName, ptCustomUserRoles.RessourceManager, specifics)
+
         End If
 
         If _customUserRoles.ContainsKey(key) Then

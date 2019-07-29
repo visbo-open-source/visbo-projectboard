@@ -364,21 +364,21 @@ Public Class Request
 
     End Function
 
-
     ''' <summary>
     '''  liest entweder alle Projekte im angegebenen Zeitraum 
     '''  oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster
     ''' </summary>
     ''' <param name="projectname"></param>
     ''' <param name="variantName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="zeitraumStart"></param>
     ''' <param name="zeitraumEnde"></param>
     ''' <param name="storedEarliest"></param>
     ''' <param name="storedLatest"></param>
     ''' <param name="onlyLatest"></param>
+    ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsFromDB(ByVal vpid As String,
-                                           ByVal projectname As String, ByVal variantName As String,
+    Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String, ByVal vpid As String,
                                                ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
                                                ByVal onlyLatest As Boolean,
@@ -392,7 +392,7 @@ Public Class Request
             If usedWebServer Then
 
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName, vpid,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
 
@@ -405,7 +405,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(vpid, projectname, variantName,
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName, vpid,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
                                 End If
@@ -481,13 +481,16 @@ Public Class Request
 
     End Function
 
+
     ''' <summary>
     ''' liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
     ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
     ''' </summary>
-    '''  <param name="projectname"></param>
+    ''' <param name="projectname"></param>
     ''' <param name="variantname"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="err"></param>
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,

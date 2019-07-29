@@ -434,20 +434,22 @@ Public Class Request
     End Function
 
 
+
     ''' <summary>
     '''  liest entweder alle Projekte im angegebenen Zeitraum 
     '''  oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster
     ''' </summary>
     ''' <param name="projectname"></param>
     ''' <param name="variantName"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="zeitraumStart"></param>
     ''' <param name="zeitraumEnde"></param>
     ''' <param name="storedEarliest"></param>
     ''' <param name="storedLatest"></param>
     ''' <param name="onlyLatest"></param>
+    ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectsFromDB(ByVal vpid As String,
-                                           ByVal projectname As String, ByVal variantName As String,
+    Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String, ByVal vpid As String,
                                            ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
                                                ByVal onlyLatest As Boolean, ByRef err As clsErrorCodeMsg) _
@@ -596,14 +598,15 @@ Public Class Request
 
     End Function
 
-
     ''' <summary>
     ''' liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
     ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
     ''' </summary>
-    '''  <param name="projectname"></param>
+    ''' <param name="projectname"></param>
     ''' <param name="variantname"></param>
+    ''' <param name="vpid"></param>
     ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="err"></param>
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,
@@ -939,7 +942,7 @@ Public Class Request
                                     Dim summaryRoleIDs As New Collection
                                     summaryRoleIDs.Add(myCustomUserRole.specifics)
 
-                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.vpID, projekt.name, projekt.variantName, Date.Now, errNew)
+                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, projekt.vpID, Date.Now, errNew)
 
                                     If Not IsNothing(newproj) Then
                                         If Not newproj.isIdenticalTo(projekt) Then

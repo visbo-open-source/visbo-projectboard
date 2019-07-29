@@ -1747,6 +1747,8 @@ Public Class clsPhase
             End If
 
             If tmpRCvalue > 0 Then
+                ' whenexisting sollte immer dazu addiert werden ... ! 
+                'Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
                 Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
             End If
 
@@ -1756,6 +1758,8 @@ Public Class clsPhase
             tmpRCvalue = prozentSatz * costValues(c)
             tmpRCnameID = costNames(c)
             If tmpRCvalue > 0 Then
+                ' wenn existing sollte immer dazu addiert werden 
+                'Me.addCostRole(tmpRCnameID, tmpRCvalue, False, False)
                 Me.addCostRole(tmpRCnameID, tmpRCvalue, False, False)
             End If
         Next

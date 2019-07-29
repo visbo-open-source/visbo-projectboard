@@ -8739,7 +8739,7 @@ Public Module agm2
 
                             Else
                                 ok = False
-                                ' jetzt muss geschaut werden, ob es sich um eine 1-er Konstellation handelt, dann soll 
+                                ' jetzt muss geschaut werden, ob es sich um eine Programmlinie handelt, dann soll 
                                 ' ein neues Portfolio aufgemacht werden .. 
                                 If pgmlinie.Contains(itemType) Then
                                     ' die bisherige Constellation wegschreiben ...
@@ -8756,66 +8756,68 @@ Public Module agm2
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
+                                            ' 
+                                            ' tk das soll Stand 21.7.19 nicht mehr gemacht werden, weil ein Programm auch über die Angaben der Excel Datei angelegt wird ...  ... 
                                             ' jetzt das union-Projekt erstellen ; 
-                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                                            'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                                            Try
-                                                ' Test, ob das Budget auch ausreicht
-                                                ' wenn nein, einfach Warning ausgeben 
-                                                Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                                                If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                            'Try
+                                            '    ' Test, ob das Budget auch ausreicht
+                                            '    ' wenn nein, einfach Warning ausgeben 
+                                            '    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                                            '    If unionProj.Erloes - tmpGesamtCost < 0 Then
 
-                                                    Dim goOn As Boolean = True
-                                                    If unionProj.Erloes > 0 Then
-                                                        goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                                    End If
+                                            '        Dim goOn As Boolean = True
+                                            '        If unionProj.Erloes > 0 Then
+                                            '            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                                            '        End If
 
-                                                    If goOn Then
-                                                        outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                                        outputCollection.Add(outPutLine)
+                                            '        If goOn Then
+                                            '            outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            '            outputCollection.Add(outPutLine)
 
-                                                        Dim logtxt(2) As String
-                                                        logtxt(0) = "Budget-Überschreitung"
-                                                        logtxt(1) = "Programmlinie"
-                                                        logtxt(2) = unionProj.name
-                                                        Dim values(2) As Double
-                                                        values(0) = unionProj.Erloes
-                                                        values(1) = tmpGesamtCost
-                                                        If values(0) > 0 Then
-                                                            values(2) = tmpGesamtCost / unionProj.Erloes
-                                                        Else
-                                                            values(2) = 9999999999
-                                                        End If
-                                                        Call logfileSchreiben(logtxt, values)
-                                                    End If
+                                            '            Dim logtxt(2) As String
+                                            '            logtxt(0) = "Budget-Überschreitung"
+                                            '            logtxt(1) = "Programmlinie"
+                                            '            logtxt(2) = unionProj.name
+                                            '            Dim values(2) As Double
+                                            '            values(0) = unionProj.Erloes
+                                            '            values(1) = tmpGesamtCost
+                                            '            If values(0) > 0 Then
+                                            '                values(2) = tmpGesamtCost / unionProj.Erloes
+                                            '            Else
+                                            '                values(2) = 9999999999
+                                            '            End If
+                                            '            Call logfileSchreiben(logtxt, values)
+                                            '        End If
 
-                                                End If
+                                            '    End If
 
-                                            Catch ex As Exception
+                                            'Catch ex As Exception
 
-                                            End Try
+                                            'End Try
 
                                             ' Status gleich auf 1: beauftragt setzen 
-                                            unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                            'unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
-                                            If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
-                                                ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                                            End If
+                                            'If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                                            '    ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                                            'End If
 
-                                            ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
-                                            ' test
-                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                            If Not everythingOK Then
-                                                outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                                                outputCollection.Add(outPutLine)
+                                            'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
+                                            '' test
+                                            'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            'If Not everythingOK Then
+                                            '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                            '    outputCollection.Add(outPutLine)
 
-                                                ReDim logmsg(2)
-                                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                                logmsg(1) = ""
-                                                logmsg(2) = current1program.constellationName
-                                                Call logfileSchreiben(logmsg)
-                                            End If
-                                            ' ende test
+                                            '    ReDim logmsg(2)
+                                            '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                            '    logmsg(1) = ""
+                                            '    logmsg(2) = current1program.constellationName
+                                            '    Call logfileSchreiben(logmsg)
+                                            'End If
+                                            '' ende tk Änderung 21.7.19 
                                         Else
                                             emptyPrograms = emptyPrograms + 1
                                         End If
@@ -8860,7 +8862,7 @@ Public Module agm2
                                         ' jetzt wird sichergestellt, dass diese Programm-Linie jetzt als Projekt angelegt wird ..
                                         ok = True
                                         projVorhabensBudget = last1Budget
-                                    ElseIf tmpZ > lastRow Then
+                                    ElseIf kidItemfound And tmpZ <= lastRow Then
                                         ok = True
                                         projVorhabensBudget = last1Budget
                                     End If
@@ -9077,6 +9079,13 @@ Public Module agm2
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
                                                                  zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, False)
 
+                            ' tk 21.7.19 es wird ein Summary Projekt für die Programm-Linie angelegt  
+                            If pgmlinie.Contains(itemType) Then
+                                pName = itemType.ToString & " - " & pName
+                                hproj.name = pName
+                                hproj.projectType = ptPRPFType.portfolio
+                            End If
+
                             Try
                                 ' Test, ob das Budget auch ausreicht
                                 ' wenn nein, einfach Warning ausgeben 
@@ -9089,13 +9098,19 @@ Public Module agm2
                                     End If
 
                                     If goOn Then
-                                        outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                        outputCollection.Add(outPutLine)
-
                                         Dim logtxt(2) As String
                                         logtxt(0) = "Budget-Überschreitung"
-                                        logtxt(1) = "Projekt"
+                                        If pgmlinie.Contains(itemType) Then
+                                            outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            logtxt(1) = "Programm-Linie"
+                                        Else
+                                            outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                            logtxt(1) = "Projekt"
+                                        End If
+
+                                        outputCollection.Add(outPutLine)
                                         logtxt(2) = pName
+
                                         Dim values(2) As Double
                                         values(0) = hproj.Erloes
                                         values(1) = tmpGesamtCost
@@ -9172,21 +9187,25 @@ Public Module agm2
                                             outPutLine = "Name existiert mehrfach: " & pName
                                             outputCollection.Add(outPutLine)
                                         Else
-                                            createdProjects = createdProjects + 1
                                             ImportProjekte.Add(hproj, False)
+                                            If projektvorhaben.Contains(itemType) Then
+                                                createdProjects = createdProjects + 1
 
-                                            ' jetzt soll das in die Constellation 
-                                            Dim cItem As New clsConstellationItem
-                                            With cItem
-                                                .projectName = hproj.name
-                                                .variantName = hproj.variantName
-                                                .show = True
-                                                .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
-                                                .zeile = lfdNr1program
-                                            End With
 
-                                            current1program.add(cItem)
-                                            lfdNr1program = lfdNr1program + 1
+                                                ' jetzt soll das in die Constellation 
+                                                Dim cItem As New clsConstellationItem
+                                                With cItem
+                                                    .projectName = hproj.name
+                                                    .variantName = hproj.variantName
+                                                    .show = True
+                                                    .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
+                                                    .zeile = lfdNr1program
+                                                End With
+
+                                                current1program.add(cItem)
+                                                lfdNr1program = lfdNr1program + 1
+                                            End If
+
                                         End If
 
                                     Catch ex As Exception
@@ -9199,7 +9218,12 @@ Public Module agm2
 
                             Else
                                 ok = False
-                                outPutLine = "Fehler beim Erzeugen des Projektes " & pName
+                                If pgmlinie.Contains(itemType) Then
+                                    outPutLine = "Fehler beim Erzeugen der Programm-Linie " & pName
+                                Else
+                                    outPutLine = "Fehler beim Erzeugen des Projektes " & pName
+                                End If
+
                                 outputCollection.Add(outPutLine)
                             End If
 
@@ -9226,67 +9250,68 @@ Public Module agm2
                         createdPrograms = createdPrograms + 1
                         projectConstellations.Add(current1program)
 
+                        ' tk 21.7.19 soll jetzt nicht mehr gemacht werden .. 
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                        'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
-                        Try
-                            ' Test, ob das Budget auch ausreicht
-                            ' wenn nein, einfach Warning ausgeben 
-                            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
-                            If unionProj.Erloes - tmpGesamtCost < 0 Then
-                                Dim goOn As Boolean = True
-                                If unionProj.Erloes > 0 Then
-                                    goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
-                                End If
+                        'Try
+                        '    ' Test, ob das Budget auch ausreicht
+                        '    ' wenn nein, einfach Warning ausgeben 
+                        '    Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                        '    If unionProj.Erloes - tmpGesamtCost < 0 Then
+                        '        Dim goOn As Boolean = True
+                        '        If unionProj.Erloes > 0 Then
+                        '            goOn = (tmpGesamtCost - unionProj.Erloes) / unionProj.Erloes > 0.05
+                        '        End If
 
-                                If goOn Then
-                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
-                                    outputCollection.Add(outPutLine)
+                        '        If goOn Then
+                        '            outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                        '            outputCollection.Add(outPutLine)
 
-                                    Dim logtxt(2) As String
-                                    logtxt(0) = "Budget-Überschreitung"
-                                    logtxt(1) = "Programmlinie"
-                                    logtxt(2) = unionProj.name
-                                    Dim values(2) As Double
-                                    values(0) = unionProj.Erloes
-                                    values(1) = tmpGesamtCost
-                                    If values(0) > 0 Then
-                                        values(2) = tmpGesamtCost / unionProj.Erloes
-                                    Else
-                                        values(2) = 9999999999
-                                    End If
-                                    Call logfileSchreiben(logtxt, values)
-                                End If
+                        '            Dim logtxt(2) As String
+                        '            logtxt(0) = "Budget-Überschreitung"
+                        '            logtxt(1) = "Programmlinie"
+                        '            logtxt(2) = unionProj.name
+                        '            Dim values(2) As Double
+                        '            values(0) = unionProj.Erloes
+                        '            values(1) = tmpGesamtCost
+                        '            If values(0) > 0 Then
+                        '                values(2) = tmpGesamtCost / unionProj.Erloes
+                        '            Else
+                        '                values(2) = 9999999999
+                        '            End If
+                        '            Call logfileSchreiben(logtxt, values)
+                        '        End If
 
-                            End If
+                        '    End If
 
-                        Catch ex As Exception
+                        'Catch ex As Exception
 
-                        End Try
+                        'End Try
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
-                        unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                        'unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
-                        If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
-                            ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                        End If
+                        'If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                        '    ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                        'End If
 
-                        ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
+                        'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
 
-                        ' test
-                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                        If Not everythingOK Then
+                        '' test
+                        'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        'If Not everythingOK Then
 
-                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                            outputCollection.Add(outPutLine)
+                        '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                        '    outputCollection.Add(outPutLine)
 
-                            ReDim logmsg(2)
-                            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                            logmsg(1) = ""
-                            logmsg(2) = current1program.constellationName
-                            Call logfileSchreiben(logmsg)
+                        '    ReDim logmsg(2)
+                        '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                        '    logmsg(1) = ""
+                        '    logmsg(2) = current1program.constellationName
+                        '    Call logfileSchreiben(logmsg)
 
-                        End If
+                        'End If
                         ' ende test
                     Else
                         emptyPrograms = emptyPrograms + 1
@@ -15702,10 +15727,14 @@ Public Module agm2
 
                             Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
 
-
+                            Dim validRoles As New SortedList(Of Integer, clsRolle)
+                            Dim posIX As Integer = 1
+                            Dim lastIX As Integer = 1
                             For r = 1 To cphase.countRoles
 
                                 Dim role As clsRolle = cphase.getRole(r)
+                                ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
+                                ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
 
                                 Dim roleName As String = role.name
                                 Dim roleUID As Integer = role.uid
@@ -15734,80 +15763,101 @@ Public Module agm2
 
 
                                 If validRole Then
-                                    Dim xValues() As Double = role.Xwerte
-
-                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                    zeilensumme = schnittmenge.Sum
-
-                                    ' ggf Schreibschutz setzen für die Zeile setzen
-                                    Dim lockZeile As Boolean = False
-                                    Dim lockText As String = ""
-                                    If isProtectedbyOthers Then
-                                        lockZeile = True
-                                        lockText = protectionText
-                                    ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                                        ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
-                                        lockZeile = True
-                                        If awinSettings.englishLanguage Then
-                                            lockText = "Ressourcen-Manager darf Teams nicht editieren"
-                                        Else
-                                            lockText = "Ressourcen-Manager may not edit Teams"
-                                        End If
-
-                                    ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                        ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
-                                        Try
-                                            If restrictedTopRole.UID <> roleUID Then
-                                                lockZeile = True
-                                                If awinSettings.englishLanguage Then
-                                                    lockText = "Team-Manager darf Personen nicht editieren"
-                                                Else
-                                                    lockText = "Team-Manager may not edit persons"
-                                                End If
-                                            End If
-                                        Catch ex As Exception
-
-                                        End Try
-
-
-
+                                    posIX = RoleDefinitions.getPositionIndex(roleNameID)
+                                    If posIX = -1 Then
+                                        posIX = lastIX
                                     End If
-
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
-                                                                            lockText, von, bis,
-                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
-
-                                    If ok Then
-
-                                        With currentWS
-                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                        End With
-
-                                        If schnittmenge.Sum > 0 Then
-                                            For l As Integer = 0 To bis - von
-
-                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                                Else
-                                                    editRange.Cells(1, l + 1).value = ""
-                                                End If
-
-                                            Next
-                                        Else
-                                            editRange.Value = ""
-                                        End If
-
-                                        atLeastOne = True
-
-                                        zeile = zeile + 1
-                                    Else
-                                        Call MsgBox("not ok")
-                                    End If
+                                    validRoles.Add(posIX, role)
+                                    lastIX = posIX + 1
                                 End If
 
                             Next r
+
+                            ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
+
+                                Dim roleName As String = kvp.Value.name
+                                Dim roleUID As Integer = kvp.Value.uid
+                                Dim teamID As Integer = kvp.Value.teamID
+
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+
+
+                                Dim xValues() As Double = kvp.Value.Xwerte
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                ' ggf Schreibschutz setzen für die Zeile setzen
+                                Dim lockZeile As Boolean = False
+                                Dim lockText As String = ""
+                                If isProtectedbyOthers Then
+                                    lockZeile = True
+                                    lockText = protectionText
+                                    ' tk 25.7.19 beide können wechselseitig ihr Zuordnungen überschreiben 
+                                    'ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                    '    ' dem Ressourcen Manager soll es erlaubt sein , Team-Bedarfe zu editieren und zu löschen , aber nicht einzufügen ...  
+                                    '    lockZeile = False
+                                    '    If awinSettings.englishLanguage Then
+                                    '        lockText = "Ressourcen-Manager darf Teams nicht editieren"
+                                    '    Else
+                                    '        lockText = "Ressourcen-Manager may not edit Teams"
+                                    '    End If
+
+                                    'ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                                    '    ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
+                                    '    Try
+                                    '        If restrictedTopRole.UID <> roleUID Then
+                                    '            lockZeile = False
+                                    '            If awinSettings.englishLanguage Then
+                                    '                lockText = "Team-Manager darf Personen nicht editieren"
+                                    '            Else
+                                    '                lockText = "Team-Manager may not edit persons"
+                                    '            End If
+                                    '        End If
+                                    '    Catch ex As Exception
+
+                                    '    End Try
+
+
+
+                                End If
+
+                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                        lockText, von, bis,
+                                                                        actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+
+                                If ok Then
+
+                                    With currentWS
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                    End With
+
+                                    If schnittmenge.Sum > 0 Then
+                                        For l As Integer = 0 To bis - von
+
+                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                            Else
+                                                editRange.Cells(1, l + 1).value = ""
+                                            End If
+
+                                        Next
+                                    Else
+                                        editRange.Value = ""
+                                    End If
+
+                                    atLeastOne = True
+
+                                    zeile = zeile + 1
+                                Else
+                                    Call MsgBox("not ok")
+                                End If
+
+                            Next kvp
 
                             ' jetzt kommt die Behandlung der Kostenarten
 

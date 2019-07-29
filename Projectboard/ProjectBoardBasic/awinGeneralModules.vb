@@ -2827,7 +2827,7 @@ Public Module awinGeneralModules
             End If
         End If
 
-        If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, "", zeitraumVon, zeitraumbis, storedGestern, storedHeute, True, err)
         Else
@@ -3343,7 +3343,8 @@ Public Module awinGeneralModules
                                   ByVal clearBoard As Boolean,
                                   ByVal clearSession As Boolean,
                                   ByVal storedAtOrBefore As Date,
-                                  Optional ByVal showSummaryProject As Boolean = False)
+                                  Optional ByVal showSummaryProject As Boolean = False,
+                                  Optional ByVal onlySessionLoad As Boolean = False)
 
         Dim err As New clsErrorCodeMsg
 
@@ -3382,7 +3383,15 @@ Public Module awinGeneralModules
                 Dim vorgabeBudget As Double = -1
                 ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
 
-                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, ptVariantFixNames.pfv.ToString, AlleProjekte, storedAtOrBefore)
+                Dim variantName As String = ptVariantFixNames.pfv.ToString
+                ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
+                ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
+                ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
+                If onlySessionLoad And Not awinSettings.loadPFV Then
+                    variantName = ""
+                End If
+
+                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
                 If Not IsNothing(curSummaryProjVorgabe) Then
                     vorgabeBudget = curSummaryProjVorgabe.Erloes
                 End If
@@ -3984,6 +3993,23 @@ Public Module awinGeneralModules
             If Not IsNothing(hproj) Then
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+
+                ' wenn jetzt gefiltert wurde und der Varianten-Name pfv ist, dann umsetzen 
+                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                    hproj.variantName = ""
+                    vName = ""
+                    key = calcProjektKey(pName, "")
+
+                    ' tk um nachher auch speichern zu können , muss die Planungs-Variante jetzt auch gelesen werden ... 
+                    Dim dummyProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
+                    hproj.updatedAt = dummyProj.updatedAt
+
+                    If Not hproj.isIdenticalTo(dummyProj) Then
+                        hproj.marker = True
+                    End If
+
+                End If
+
                 If AlleProjekte.Containskey(key) Then
                     AlleProjekte.Remove(key)
                 End If

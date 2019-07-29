@@ -9,6 +9,8 @@ Public Class frmEinstellungen
     Private Sub frmEinstellungen_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
+        Call languageSettings()
+
         'chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
@@ -22,10 +24,16 @@ Public Class frmEinstellungen
         End If
         dontFire = False
 
-        Dim xxx As String = awinSettings.ReportLanguage
+        'Dim xxx As String = awinSettings.ReportLanguage
 
-        SprachAusw.Items.Add("Deutsch")
-        SprachAusw.Items.Add("Englisch")
+        If awinSettings.englishLanguage Then
+            SprachAusw.Items.Add("German")
+            SprachAusw.Items.Add("English")
+        Else
+            SprachAusw.Items.Add("Deutsch")
+            SprachAusw.Items.Add("Englisch")
+        End If
+
         ' ''SprachAusw.Items.Add("Französisch")
         ' ''SprachAusw.Items.Add("Spanisch")
 
@@ -49,21 +57,39 @@ Public Class frmEinstellungen
         statusLabel.Text = ""
     End Sub
 
-    Private Sub setVisibility()
-        loadPFV.Visible = myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
-        Label1.Visible = False
-        SprachAusw.Visible = False
+    ''' <summary>
+    ''' setzt die Texte der Buttons, auch in Abhängigleit von der Rolle 
+    ''' </summary>
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            GroupBox1.Text = "Version to compare"
+            rdbFirst.Text = "First"
+            rdbLast.Text = "Last"
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                loadPFV.Text = "always load baseline(s"
+            Else
+                loadPFV.Text = "filter by baseline(s and load as planning version"
+            End If
+            chkboxPropAnpass.Text = "adjust ressource needs proportionally"
+            chkboxAmpel.Text = "show traffic lights"
+            Label1.Text = "Language for Reports"
+        Else
+            GroupBox1.Text = "Vergleich mit welcher Version"
+            rdbFirst.Text = "Erster"
+            rdbLast.Text = "Letzter"
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                loadPFV.Text = "immer Vorgabe laden"
+            Else
+                loadPFV.Text = "auf Vorgaben filtern und als Planungs-Version laden"
+            End If
+            chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
+            chkboxAmpel.Text = "Ampel anzeigen"
+            Label1.Text = "Sprache für Reports"
+        End If
+
     End Sub
 
-    'Private Sub chkboxMassEdit_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxMassEdit.CheckedChanged
-
-    '    If chkboxMassEdit.Checked Then
-    '        awinSettings.meExtendedColumnsView = True
-    '    Else
-    '        awinSettings.meExtendedColumnsView = False
-    '    End If
-
-    'End Sub
 
     Private Sub chkboxPropAnpass_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxPropAnpass.CheckedChanged
 
@@ -124,6 +150,11 @@ Public Class frmEinstellungen
     End Sub
 
     Private Sub loadPFV_CheckedChanged(sender As Object, e As EventArgs) Handles loadPFV.CheckedChanged
-        awinSettings.loadPFV = loadPFV.Checked
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            awinSettings.loadPFV = loadPFV.Checked
+        Else
+            awinSettings.filterPFV = loadPFV.Checked
+        End If
+
     End Sub
 End Class
