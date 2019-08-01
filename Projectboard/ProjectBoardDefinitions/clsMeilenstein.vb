@@ -785,11 +785,11 @@ Public Class clsMeilenstein
 
         Try
             _color = XlRgbColor.rgbAquamarine
-            If appearanceDefinitions.ContainsKey(_appearance) Then
-                If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
-                    _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
-                End If
-            End If
+            'If appearanceDefinitions.ContainsKey(_appearance) Then
+            '    If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
+            '        _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
+            '    End If
+            'End If
         Catch ex As Exception
 
         End Try

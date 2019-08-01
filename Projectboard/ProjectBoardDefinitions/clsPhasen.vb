@@ -116,15 +116,47 @@ Public Class clsPhasen
         End Get
     End Property
 
+    '''' <summary>
+    '''' gibt die Shape Definition für die angegebene Phase zurück
+    '''' wenn es die Definition für name nicht gibt, wird die Default Phasen Klasse verwendet   
+    '''' </summary>
+    '''' <param name="name"></param>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
+    '    Get
+    '        Dim appearanceID As String
+    '        Dim defaultPhaseAppearance As String = "Phasen Default"
+
+
+    '        If _allPhasen.ContainsKey(name) Then
+
+    '            appearanceID = CType(_allPhasen.Item(name), clsPhasenDefinition).darstellungsKlasse
+    '            If appearanceID = "" Then
+    '                appearanceID = defaultPhaseAppearance
+    '            End If
+
+    '        Else
+
+    '            appearanceID = defaultPhaseAppearance
+
+    '        End If
+
+    '        getShape = appearanceDefinitions.Item(appearanceID).form
+
+    '    End Get
+    'End Property
+
     ''' <summary>
-    ''' gibt die Shape Definition für die angegebene Phase zurück
+    ''' gibt die Shape Appearance Definition für die angegebene Phase zurück
     ''' wenn es die Definition für name nicht gibt, wird die Default Phasen Klasse verwendet   
     ''' </summary>
     ''' <param name="name"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
+    Public ReadOnly Property getShapeApp(ByVal name As String) As clsAppearance
         Get
             Dim appearanceID As String
             Dim defaultPhaseAppearance As String = "Phasen Default"
@@ -143,25 +175,9 @@ Public Class clsPhasen
 
             End If
 
-            ' ''Dim ok As Boolean = False
-            ' ''While Not ok
-            ' ''    Try
-            ' ''        ' jetzt ist in der AppearanceID was drin ... 
-            ' ''        getShape = appearanceDefinitions.Item(appearanceID).form
-            ' ''        If Not IsNothing(getShape) Then
-            ' ''            ok = True
-            ' ''        Else
-            ' ''            Call MsgBox("nothing")
-            ' ''        End If
-            ' ''    Catch ex As Exception
-            ' ''        Call MsgBox("getshape fehlerhaft")
-            ' ''        getShape = Nothing
-            ' ''    End Try
+            ' jetzt ist in der AppearanceID was drin ...
 
-            ' ''End While
-
-            ' jetzt ist in der AppearanceID was drin ... 
-            getShape = appearanceDefinitions.Item(appearanceID).form
+            getShapeApp = appearanceDefinitions.Item(appearanceID)
 
         End Get
     End Property

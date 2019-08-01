@@ -469,6 +469,24 @@ Public Module agm2
                     .width = shp.Width
                     .height = shp.Height
 
+                    Try
+                        'If shp.TextFrame2.HasText Then
+                        .TextMarginLeft = shp.TextFrame2.MarginLeft
+                        .TextMarginRight = shp.TextFrame2.MarginRight
+                        .TextMarginBottom = shp.TextFrame2.MarginBottom
+                        .TextMarginTop = shp.TextFrame2.MarginTop
+                        .TextWordWrap = shp.TextFrame2.WordWrap
+                        .TextVerticalAnchor = shp.TextFrame2.VerticalAnchor
+                        .TextHorizontalAnchor = shp.TextFrame2.HorizontalAnchor
+                        .TextRangeText = shp.TextFrame2.TextRange.Text
+                        .TextRangeFontSize = shp.TextFrame2.TextRange.Font.Size
+                        .TextRangeFontFillFGColor = shp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                        'End If
+                    Catch ex As Exception
+
+                    End Try
+
+
                     If shp.Title <> "" Then
 
                         .name = shp.Title
@@ -477,6 +495,7 @@ Public Module agm2
                         Else
                             .isMilestone = False
                         End If
+                        ' ur: muss dann weg
                         '.form = shp
 
                         Try

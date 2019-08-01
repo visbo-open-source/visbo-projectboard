@@ -20869,6 +20869,7 @@ Public Module Projekte
         Dim alreadyGroup As Boolean = False
         Dim shpElement As xlNS.Shape
         Dim vorlagenshape As xlNS.Shape
+        Dim appear As clsAppearance
         Dim shpName As String
         Dim todoListe As New Collection
         Dim realNameList As New Collection
@@ -20968,11 +20969,11 @@ Public Module Projekte
 
                         ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                         If PhaseDefinitions.Contains(cphase.name) Then
-                            vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-
+                            'vorlagenshape = PhaseDefinitions.getShape(cphase.name)
+                            appear = PhaseDefinitions.getShapeapp(cphase.name)
                         Else
-                            vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-
+                            'vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
+                            appear = missingPhaseDefinitions.getShapeApp(cphase.name)
                         End If
 
 
@@ -21002,11 +21003,12 @@ Public Module Projekte
 
                                 'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
 
-                                phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
+                                'phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
+                                '                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                'vorlagenshape.PickUp()
+                                'phasenShape.Apply()
+                                phasenShape = .Shapes.AddShape(Type:=appear.shpType,
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                vorlagenshape.PickUp()
-                                phasenShape.Apply()
-
                                 With phasenShape
                                     .Name = shpName
                                     .Title = cphase.nameID
