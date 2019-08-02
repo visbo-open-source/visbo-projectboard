@@ -17720,16 +17720,18 @@ Public Module agm2
                 Call MsgBox("wsName4 angesprochen")
             End If
 
-            'If special = "ProjectBoard" Then
 
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                    noDB = False
+                noDB = False
 
                 '' ur: 23.01.2015: Abfragen der Login-Informationen
                 'loginErfolgreich = loginProzedur()
 
                 loginErfolgreich = logInToMongoDB(True)
+
+                ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
+
 
 
                 ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
@@ -17765,21 +17767,19 @@ Public Module agm2
 
                 If Not loginErfolgreich Then
 
-                        ' Customization-File wird geschlossen
-                        xlsCustomization.Close(SaveChanges:=False)
-                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                        Call logfileSchliessen()
-                        If awinSettings.englishLanguage Then
-                            Throw New ArgumentException("LOGIN cancelled ...")
-                        Else
-                            Throw New ArgumentException("LOGIN abgebrochen ...")
-                        End If
-
+                    ' Customization-File wird geschlossen
+                    xlsCustomization.Close(SaveChanges:=False)
+                    Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                    Call logfileSchliessen()
+                    If awinSettings.englishLanguage Then
+                        Throw New ArgumentException("LOGIN cancelled ...")
+                    Else
+                        Throw New ArgumentException("LOGIN abgebrochen ...")
                     End If
 
                 End If
 
-            'End If 'if special="ProjectBoard"
+            End If
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -18055,6 +18055,7 @@ Public Module agm2
                     Dim meldungen As Collection = New Collection
 
                     '' jetzt werden die Rollen besetzt 
+
                     If awinSettings.readCostRolesFromDB Then
                         Try
                             Call setUserRoles(meldungen)
@@ -18078,13 +18079,26 @@ Public Module agm2
 
 
                     Else
-                        myCustomUserRole = New clsCustomUserRole
+                        If awinSettings.visboServer = True Then
+                            myCustomUserRole = New clsCustomUserRole
 
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                        Else
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                ' tk 29.7.19
+                                ' damit der mal eine Vorgabe erstellen kann ... 
+                                .customUserRole = ptCustomUserRoles.Alles
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                        End If
+
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole
                         Call myCustomUserRole.setNonAllowances()
                     End If

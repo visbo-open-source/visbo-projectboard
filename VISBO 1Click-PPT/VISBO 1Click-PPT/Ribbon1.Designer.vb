@@ -92,9 +92,8 @@
         'DBspeichern
         '
         Me.DBspeichern.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.DBspeichern.Enabled = False
         Me.DBspeichern.Image = CType(resources.GetObject("DBspeichern.Image"), System.Drawing.Image)
-        Me.DBspeichern.Label = "Speichern in DB"
+        Me.DBspeichern.Label = "Publish in VISBO"
         Me.DBspeichern.Name = "DBspeichern"
         Me.DBspeichern.ShowImage = True
         '
