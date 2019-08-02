@@ -15712,10 +15712,14 @@ Public Module agm2
 
                             Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
 
-
+                            Dim validRoles As New SortedList(Of Integer, clsRolle)
+                            Dim posIX As Integer = 1
+                            Dim lastIX As Integer = 1
                             For r = 1 To cphase.countRoles
 
                                 Dim role As clsRolle = cphase.getRole(r)
+                                ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
+                                ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
 
                                 Dim roleName As String = role.name
                                 Dim roleUID As Integer = role.uid
@@ -15744,80 +15748,101 @@ Public Module agm2
 
 
                                 If validRole Then
-                                    Dim xValues() As Double = role.Xwerte
-
-                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                    zeilensumme = schnittmenge.Sum
-
-                                    ' ggf Schreibschutz setzen für die Zeile setzen
-                                    Dim lockZeile As Boolean = False
-                                    Dim lockText As String = ""
-                                    If isProtectedbyOthers Then
-                                        lockZeile = True
-                                        lockText = protectionText
-                                    ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                                        ' bei Rollen sollen auch alle virtuellen Kinder als schreibgeschützt dargestellt werden 
-                                        lockZeile = True
-                                        If awinSettings.englishLanguage Then
-                                            lockText = "Ressourcen-Manager darf Teams nicht editieren"
-                                        Else
-                                            lockText = "Ressourcen-Manager may not edit Teams"
-                                        End If
-
-                                    ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                        ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
-                                        Try
-                                            If restrictedTopRole.UID <> roleUID Then
-                                                lockZeile = True
-                                                If awinSettings.englishLanguage Then
-                                                    lockText = "Team-Manager darf Personen nicht editieren"
-                                                Else
-                                                    lockText = "Team-Manager may not edit persons"
-                                                End If
-                                            End If
-                                        Catch ex As Exception
-
-                                        End Try
-
-
-
+                                    posIX = RoleDefinitions.getPositionIndex(roleNameID)
+                                    If posIX = -1 Then
+                                        posIX = lastIX
                                     End If
-
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
-                                                                            lockText, von, bis,
-                                                                            actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
-
-                                    If ok Then
-
-                                        With currentWS
-                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                        End With
-
-                                        If schnittmenge.Sum > 0 Then
-                                            For l As Integer = 0 To bis - von
-
-                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                                Else
-                                                    editRange.Cells(1, l + 1).value = ""
-                                                End If
-
-                                            Next
-                                        Else
-                                            editRange.Value = ""
-                                        End If
-
-                                        atLeastOne = True
-
-                                        zeile = zeile + 1
-                                    Else
-                                        Call MsgBox("not ok")
-                                    End If
+                                    validRoles.Add(posIX, role)
+                                    lastIX = posIX + 1
                                 End If
 
                             Next r
+
+                            ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
+
+                            For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
+
+                                Dim roleName As String = kvp.Value.name
+                                Dim roleUID As Integer = kvp.Value.uid
+                                Dim teamID As Integer = kvp.Value.teamID
+
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+
+
+                                Dim xValues() As Double = kvp.Value.Xwerte
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                ' ggf Schreibschutz setzen für die Zeile setzen
+                                Dim lockZeile As Boolean = False
+                                Dim lockText As String = ""
+                                If isProtectedbyOthers Then
+                                    lockZeile = True
+                                    lockText = protectionText
+                                    ' tk 25.7.19 beide können wechselseitig ihr Zuordnungen überschreiben 
+                                    'ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                    '    ' dem Ressourcen Manager soll es erlaubt sein , Team-Bedarfe zu editieren und zu löschen , aber nicht einzufügen ...  
+                                    '    lockZeile = False
+                                    '    If awinSettings.englishLanguage Then
+                                    '        lockText = "Ressourcen-Manager darf Teams nicht editieren"
+                                    '    Else
+                                    '        lockText = "Ressourcen-Manager may not edit Teams"
+                                    '    End If
+
+                                    'ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                                    '    ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
+                                    '    Try
+                                    '        If restrictedTopRole.UID <> roleUID Then
+                                    '            lockZeile = False
+                                    '            If awinSettings.englishLanguage Then
+                                    '                lockText = "Team-Manager darf Personen nicht editieren"
+                                    '            Else
+                                    '                lockText = "Team-Manager may not edit persons"
+                                    '            End If
+                                    '        End If
+                                    '    Catch ex As Exception
+
+                                    '    End Try
+
+
+
+                                End If
+
+                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                        lockText, von, bis,
+                                                                        actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+
+                                If ok Then
+
+                                    With currentWS
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                    End With
+
+                                    If schnittmenge.Sum > 0 Then
+                                        For l As Integer = 0 To bis - von
+
+                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                            Else
+                                                editRange.Cells(1, l + 1).value = ""
+                                            End If
+
+                                        Next
+                                    Else
+                                        editRange.Value = ""
+                                    End If
+
+                                    atLeastOne = True
+
+                                    zeile = zeile + 1
+                                Else
+                                    Call MsgBox("not ok")
+                                End If
+
+                            Next kvp
 
                             ' jetzt kommt die Behandlung der Kostenarten
 
@@ -17695,16 +17720,18 @@ Public Module agm2
                 Call MsgBox("wsName4 angesprochen")
             End If
 
-            'If special = "ProjectBoard" Then
 
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                    noDB = False
+                noDB = False
 
                 '' ur: 23.01.2015: Abfragen der Login-Informationen
                 'loginErfolgreich = loginProzedur()
 
                 loginErfolgreich = logInToMongoDB(True)
+
+                ' das folgende darf nur gemacht werden, wenn auch awinsetting.visboserver gilt ... 
+
 
 
                 ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
@@ -17740,21 +17767,19 @@ Public Module agm2
 
                 If Not loginErfolgreich Then
 
-                        ' Customization-File wird geschlossen
-                        xlsCustomization.Close(SaveChanges:=False)
-                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                        Call logfileSchliessen()
-                        If awinSettings.englishLanguage Then
-                            Throw New ArgumentException("LOGIN cancelled ...")
-                        Else
-                            Throw New ArgumentException("LOGIN abgebrochen ...")
-                        End If
-
+                    ' Customization-File wird geschlossen
+                    xlsCustomization.Close(SaveChanges:=False)
+                    Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                    Call logfileSchliessen()
+                    If awinSettings.englishLanguage Then
+                        Throw New ArgumentException("LOGIN cancelled ...")
+                    Else
+                        Throw New ArgumentException("LOGIN abgebrochen ...")
                     End If
 
                 End If
 
-            'End If 'if special="ProjectBoard"
+            End If
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -18030,6 +18055,7 @@ Public Module agm2
                     Dim meldungen As Collection = New Collection
 
                     '' jetzt werden die Rollen besetzt 
+
                     If awinSettings.readCostRolesFromDB Then
                         Try
                             Call setUserRoles(meldungen)
@@ -18053,13 +18079,26 @@ Public Module agm2
 
 
                     Else
-                        myCustomUserRole = New clsCustomUserRole
+                        If awinSettings.visboServer = True Then
+                            myCustomUserRole = New clsCustomUserRole
 
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                        Else
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                ' tk 29.7.19
+                                ' damit der mal eine Vorgabe erstellen kann ... 
+                                .customUserRole = ptCustomUserRoles.Alles
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                        End If
+
                         ' jetzt gibt es eine currentUserRole: myCustomUserRole
                         Call myCustomUserRole.setNonAllowances()
                     End If

@@ -457,14 +457,23 @@ Module Module1
                 End Try
 
                 ' CustomUserRoles holen 
-                Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
-                allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
+                ' aber nur wenn es sich um eine Visbo-Server Version handelt ... 
+                If awinSettings.visboServer = True Then
+                    Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+                    allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
-                ' Behandeln der myUserRole 
+                    ' Behandeln der myUserRole 
+                    ' jetzt wird die für die Slide passende Rolle gesucht 
+                    myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
 
+                Else
+                    With myCustomUserRole
+                        .userName = dbUsername
+                        .customUserRole = ptCustomUserRoles.Alles
+                        .specifics = ""
+                    End With
+                End If
 
-                ' jetzt wird die für die Slide passende Rolle gesucht 
-                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
 
                 If meldungen.Count > 0 Then
                     Call MsgBox(meldungen.Item(1))
@@ -534,14 +543,19 @@ Module Module1
 
         Else
             ' jetzt wird die für die Slide passende Rolle gesucht 
-            myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
-            If IsNothing(myCustomUserRole) Then
+            If awinSettings.visboServer = True Then
+                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                If IsNothing(myCustomUserRole) Then
 
-                msg = "Error: Keine Berechtigung"
-                tmpResult = False
+                    msg = "Error: Keine Berechtigung"
+                    tmpResult = False
+                Else
+                    tmpResult = True
+                End If
             Else
                 tmpResult = True
             End If
+
         End If
 
 

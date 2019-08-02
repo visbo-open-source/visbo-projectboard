@@ -3994,11 +3994,20 @@ Public Module awinGeneralModules
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
 
-                ' wenn jetzt gefiltert wurde und der Varianten-Name ofv ist, dann umsetzen 
+                ' wenn jetzt gefiltert wurde und der Varianten-Name pfv ist, dann umsetzen 
                 If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
                     hproj.variantName = ""
                     vName = ""
                     key = calcProjektKey(pName, "")
+
+                    ' tk um nachher auch speichern zu können , muss die Planungs-Variante jetzt auch gelesen werden ... 
+                    Dim dummyProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
+                    hproj.updatedAt = dummyProj.updatedAt
+
+                    If Not hproj.isIdenticalTo(dummyProj) Then
+                        hproj.marker = True
+                    End If
+
                 End If
 
                 If AlleProjekte.Containskey(key) Then

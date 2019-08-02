@@ -1367,36 +1367,36 @@ Public Class clsProjekt
         End Try
     End Sub
 
-    ''' <summary>
-    ''' fügt dem aktuellen Projekt Me  , der existierenden Phase nameID die Rolle bzw Kostenart zu;
-    ''' wenn addWhenexisting true, wird addiert, andernfalls replaced 
-    ''' Vorbedingung: alle Plausibilitätsbedingungen wurden im Vorfeld abgeklärt, also Phase existiert, Rolle/Kostenart existiert und Summe ist positiv 
-    ''' </summary>
-    ''' <param name="phaseNameID"></param>
-    ''' <param name="rcNameID">wenn Rolle: uid.tostring; teamID.tostring oder roleUid.tostring</param>(
-    ''' <param name="summe"></param>
-    ''' <param name="addWhenExisting"></param>
-    Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcNameID As String, ByVal summe As Double,
-                              ByVal isrole As Boolean,
-                              ByVal addWhenExisting As Boolean)
+    '''' <summary>
+    '''' fügt dem aktuellen Projekt Me  , der existierenden Phase nameID die Rolle bzw Kostenart zu;
+    '''' wenn addWhenexisting true, wird addiert, andernfalls replaced 
+    '''' Vorbedingung: alle Plausibilitätsbedingungen wurden im Vorfeld abgeklärt, also Phase existiert, Rolle/Kostenart existiert und Summe ist positiv 
+    '''' </summary>
+    '''' <param name="phaseNameID"></param>
+    '''' <param name="rcNameID">wenn Rolle: uid.tostring; teamID.tostring oder roleUid.tostring</param>(
+    '''' <param name="summe"></param>
+    '''' <param name="addWhenExisting"></param>
+    'Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcNameID As String, ByVal summe As Double,
+    '                          ByVal isrole As Boolean,
+    '                          ByVal addWhenExisting As Boolean)
 
-        ' es werden die Plausibilitätsprüfungen gemacht 
-        Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
+    '    ' es werden die Plausibilitätsprüfungen gemacht 
+    '    Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
 
-        If Not IsNothing(cphase) Then
-            If isrole Then
-                ' eine Rolle wird hinzugefügt 
-                Call cphase.AddRole(rcNameID, summe, addWhenExisting)
+    '    If Not IsNothing(cphase) Then
+    '        If isrole Then
+    '            ' eine Rolle wird hinzugefügt 
+    '            Call cphase.AddRole(rcNameID, summe, addWhenExisting)
 
-            Else
-                ' eine Kostenart wird hinzugefügt
-                Call cphase.AddCost(rcNameID, summe, addWhenExisting)
-            End If
-        Else
+    '        Else
+    '            ' eine Kostenart wird hinzugefügt
+    '            Call cphase.AddCost(rcNameID, summe, addWhenExisting)
+    '        End If
+    '    Else
 
-        End If
+    '    End If
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' löscht in allen Phasen alle vorkommenden Rollen und Kosten

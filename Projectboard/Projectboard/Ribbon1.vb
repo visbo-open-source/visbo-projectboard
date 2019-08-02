@@ -158,24 +158,44 @@ Imports System.Web
 
         End While
 
+        Dim outputCollection As New Collection
+        Dim outputLine As String = ""
 
         If returnValue = DialogResult.OK Then
             If ControlID = deleteDatenbank Or
                 ControlID = deleteFromSession Then
 
-                constFilterName = removeConstFilterFrm.ListBox1.Text
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
-                Call awinRemoveConstellation(constFilterName, removeFromDB)
-                Call MsgBox(constFilterName & " wurde gelöscht ...")
+                For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
+                    constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
+                    Call awinRemoveConstellation(constFilterName, removeFromDB)
 
-                If constFilterName = currentConstellationName Then
+                    If awinSettings.englishLanguage Then
+                        outputLine = constFilterName & " deleted ..."
+                    Else
+                        outputLine = constFilterName & " wurde gelöscht ..."
+                    End If
+                    outputCollection.Add(outputLine)
+                Next
 
-                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                    'Call storeSessionConstellation("Last")
-                    'currentConstellationName = "Last"
-                Else
-                    ' aktuelle Konstellation bleibt unverändert
-                End If
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
+
+                ' tk 28.7.19 soll jetzt auch Mehrfach-Löschung von Portfolios zulassen
+                'constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                'Call awinRemoveConstellation(constFilterName, removeFromDB)
+                'Call MsgBox(constFilterName & " wurde gelöscht ...")
+
+                'If constFilterName = currentConstellationName Then
+
+                '    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                '    'Call storeSessionConstellation("Last")
+                '    'currentConstellationName = "Last"
+                'Else
+                '    ' aktuelle Konstellation bleibt unverändert
+                'End If
 
 
             End If
@@ -210,6 +230,14 @@ Imports System.Web
 
         End If
         enableOnUpdate = True
+        ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
+        If outputCollection.Count > 0 Then
+            Dim header As String = "Löschen von Portfolios"
+            If awinSettings.englishLanguage Then
+                header = "Delete Portfolios"
+            End If
+            Call showOutPut(outputCollection, header:=header, explanation:="")
+        End If
 
     End Sub
 
@@ -1664,7 +1692,9 @@ Imports System.Web
                                 ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
                                 key = calcProjektKey(hproj.name, "")
                                 AlleProjekte.Remove(key)
+                                ShowProjekte.Remove(hproj.name)
 
+                                Dim bisherigeBaseVariant As clsProjekt = getProjektFromSessionOrDB(hproj.name, "", AlleProjekte, Date.Now, hproj.kundenNummer)
 
                                 ' wenn es sich um einen Ressourcen-Manager handelt, dann muss das, was er geändert hat in die bisherige Basis Variante gemerged werden 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
@@ -1672,8 +1702,6 @@ Imports System.Web
                                     Dim mergedProj As clsProjekt = Nothing
                                     Dim summaryRoleIDs As New Collection
                                     summaryRoleIDs.Add(myCustomUserRole.specifics)
-
-                                    Dim bisherigeBaseVariant As clsProjekt = getProjektFromSessionOrDB(hproj.name, "", AlleProjekte, Date.Now, hproj.kundenNummer)
 
                                     If Not IsNothing(bisherigeBaseVariant) Then
 
@@ -1685,19 +1713,24 @@ Imports System.Web
 
                                     End If
 
-                                    ShowProjekte.Remove(hproj.name)
-                                    hproj.variantName = ""
 
-                                    ShowProjekte.Add(hproj)
                                 End If
 
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
+                                ' notwendig, um den Speicher-Conflic 409 zu vermeinden 
+                                hproj.updatedAt = bisherigeBaseVariant.updatedAt
                                 hproj.timeStamp = Date.Now
 
-                                ' die "neue" Standard Variante in AlleProjekte aufnehmen 
+                                ' tk 25.7.19 
+                                If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
+                                    hproj.marker = True
+                                End If
+
+                                ' die "neue" Standard Variante in AlleProjekte und ShowProjekte aufnehmen 
                                 AlleProjekte.Add(hproj)
+                                ShowProjekte.Add(hproj)
 
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
