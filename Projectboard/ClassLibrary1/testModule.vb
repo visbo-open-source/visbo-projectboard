@@ -18048,9 +18048,21 @@ Public Module testModule
         milestoneTypShape = pptslide.Shapes.AddShape(msAppear.shpType, left, top, width, height)
 
         If awinSettings.mppKwInMilestone Then
+
             Call defineMsPPTAppearance(milestoneTypShape, msAppear, 1)
+
+            Dim msKwText As String = ""
+            Dim sizeFaktor As Double = rds.milestoneVorlagenShape.Height / msAppear.height
+            msKwText = calcKW(msdate).ToString("0#")
+            If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
+                milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * msAppear.TextRangeFontSize)
+                milestoneTypShape.TextFrame2.TextRange.Text = msKwText
+            End If
+
         Else
+
             Call defineMsPPTAppearance(milestoneTypShape, msAppear)
+
         End If
 
         With milestoneTypShape
@@ -18060,19 +18072,6 @@ Public Module testModule
                 If .Glow.Radius = 0 Then
                     .Glow.Radius = 2
                 End If
-            End If
-
-            Dim msKwText As String = ""
-            If awinSettings.mppKwInMilestone Then
-
-                Dim sizeFaktor As Double = rds.milestoneVorlagenShape.Height / msAppear.height
-                msKwText = calcKW(msdate).ToString("0#")
-                If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
-                    milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * msAppear.TextRangeFontSize)
-                    milestoneTypShape.TextFrame2.TextRange.Text = msKwText
-
-                End If
-
             End If
 
             Try
@@ -18608,7 +18607,23 @@ Public Module testModule
 
                 milestoneTypShape = rds.pptSlide.Shapes.AddShape(milestoneTypApp.shpType, left, top, width, height)
 
-                Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp)
+                If awinSettings.mppKwInMilestone Then
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp, 1)
+
+                    Dim msKwText As String = ""
+                    msKwText = calcKW(msDate).ToString("0#")
+                    If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
+                        milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * milestoneTypApp.TextRangeFontSize)
+                        milestoneTypShape.TextFrame2.TextRange.Text = msKwText
+                    End If
+
+                Else
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp)
+
+                End If
+
 
                 With milestoneTypShape
 
@@ -18625,18 +18640,8 @@ Public Module testModule
                         End If
                     End If
 
-                    Dim msKwText As String = ""
-                    If awinSettings.mppKwInMilestone Then
-
-                        msKwText = calcKW(msDate).ToString("0#")
-                        If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
-                            .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
-                            .TextFrame2.TextRange.Text = msKwText
-                        End If
-
-                    End If
-
                     shapeNames.Add(.Name)
+
                 End With
 
                 If awinSettings.mppEnableSmartPPT Then
