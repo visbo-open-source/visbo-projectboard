@@ -2322,6 +2322,16 @@ Public Class Request
                         settingID = ""
                     End If
 
+                Case settingTypes(ptSettingTypes.appearance)
+                    setting = New List(Of clsVCSettingAppearance)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingAppearance)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingAppearance)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
+
             End Select
 
             If ts > Date.MinValue Then
@@ -2421,7 +2431,7 @@ Public Class Request
                     Dim listofCustomWeb As New clsCustomizationWeb
                     listofCustomWeb.copyFrom(listofSetting)
 
-                    ' der Unique-Key für customroles besteht aus: name, type
+                    ' der Unique-Key für customization besteht aus: name, type
 
                     newsetting = New clsVCSettingCustomization
                     CType(newsetting, clsVCSettingCustomization).name = name         ' Customization '
@@ -2433,11 +2443,35 @@ Public Class Request
 
                     If anzSetting = 1 Then
                         newsetting._id = settingID
-                        ' Update der customroles - Setting
+                        ' Update der customization - Setting
                         result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customization), newsetting, err)
                     Else
-                        ' Create der customroles - Setting
+                        ' Create der customization - Setting
                         result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customization), newsetting, err)
+                    End If
+
+                Case settingTypes(ptSettingTypes.appearance)
+
+                    Dim listofAppearances As New clsAppearanceWeb
+                    listofAppearances.copyFrom(listofSetting)
+
+                    ' der Unique-Key für Appearance besteht aus: name, type
+
+                    newsetting = New clsVCSettingAppearance
+                    CType(newsetting, clsVCSettingAppearance).name = name         ' Appearance '
+                    CType(newsetting, clsVCSettingAppearance).timestamp = timestamp
+                    CType(newsetting, clsVCSettingAppearance).userId = ""
+                    CType(newsetting, clsVCSettingAppearance).vcid = aktVCid
+                    CType(newsetting, clsVCSettingAppearance).type = type
+                    CType(newsetting, clsVCSettingAppearance).value = listofAppearances
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der appearance - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.appearance), newsetting, err)
+                    Else
+                        ' Create der appearance - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.appearance), newsetting, err)
                     End If
 
 
@@ -2648,6 +2682,14 @@ Public Class Request
 
 
 
+    ''' <summary>
+    ''' holt für das aktuelle VC die Kundeneinstellungen aus der DB
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="timestamp"></param>
+    ''' <param name="refnext"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
     Public Function retrieveCustomizationFromDB(ByVal name As String,
                                          ByVal timestamp As Date,
                                          ByVal refnext As Boolean,
@@ -2708,6 +2750,79 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
         retrieveCustomizationFromDB = result
+    End Function
+
+
+
+    ''' <summary>
+    ''' holt für das aktuelle VC die Darstellungsklassen aus der DB
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="timestamp"></param>
+    ''' <param name="refnext"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveAppearancesFromDB(ByVal name As String,
+                                         ByVal timestamp As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As SortedList(Of String, clsAppearance)
+
+        Dim result As SortedList(Of String, clsAppearance) = Nothing
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.appearance)
+
+        timestamp = timestamp.ToUniversalTime
+
+        Dim webappearance As New clsAppearanceWeb
+        Try
+
+            setting = New List(Of clsVCSettingAppearance)
+            setting = GETOneVCsetting(aktVCid, type, name, timestamp, "", err, refnext)
+
+            If err.errorCode = 200 Then
+                If Not IsNothing(setting) Then
+
+                    anzSetting = CType(setting, List(Of clsVCSettingAppearance)).Count
+
+                    If anzSetting > 0 Then
+                        If anzSetting = 1 Then
+                            result = New SortedList(Of String, clsAppearance)
+                            settingID = CType(setting, List(Of clsVCSettingAppearance)).ElementAt(0)._id
+                            webappearance = CType(setting, List(Of clsVCSettingAppearance)).ElementAt(0).value
+                            webappearance.copyto(result)
+
+                        Else
+                            ' Fehler: es gibt nur eine Appearance pro VC
+
+
+                        End If
+
+                    Else
+                        If err.errorCode = 403 Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                        settingID = ""
+
+                    End If
+                Else
+                    Call MsgBox(err.errorMsg)
+
+                End If
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+        retrieveAppearancesFromDB = result
     End Function
 
     ''' <summary>
@@ -4788,6 +4903,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customization)
                     result = CType(result, clsVCSettingCustomization)
 
+                Case settingTypes(ptSettingTypes.appearance)
+                    result = CType(result, clsVCSettingAppearance)
+
                 Case Else
                     Call MsgBox("settingType = " & type)
             End Select
@@ -4857,6 +4975,9 @@ Public Class Request
                         Case settingTypes(ptSettingTypes.customization)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
                             result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization))
+                        Case settingTypes(ptSettingTypes.appearance)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance))
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -4914,6 +5035,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customization)
                     setting = CType(setting, clsVCSettingCustomization)
 
+                Case settingTypes(ptSettingTypes.appearance)
+                    setting = CType(setting, clsVCSettingAppearance)
+
 
                 Case Else
                     Call MsgBox("Fehler: settingType = " & type & " íst nicht definiert")
@@ -4950,6 +5074,8 @@ Public Class Request
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
                         Case settingTypes(ptSettingTypes.customization)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
+                        Case settingTypes(ptSettingTypes.appearance)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
@@ -5008,6 +5134,9 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customization)
                     setting = CType(setting, clsVCSettingCustomization)
 
+                Case settingTypes(ptSettingTypes.appearance)
+                    setting = CType(setting, clsVCSettingAppearance)
+
 
                 Case Else
                     Call MsgBox("settingType = " & type)
@@ -5047,6 +5176,9 @@ Public Class Request
                             setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation)).ElementAt(0)
                         Case settingTypes(ptSettingTypes.customization)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomization)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.appearance)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
                             setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization)).ElementAt(0)
                         Case Else
                             Call MsgBox("settingType = " & type)

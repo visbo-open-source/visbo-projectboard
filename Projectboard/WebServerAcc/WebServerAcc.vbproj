@@ -75,6 +75,7 @@
     <Import Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsAppearanceWeb.vb" />
     <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
     <Compile Include="clsCustomFieldDefinitionsWeb.vb" />
@@ -101,6 +102,7 @@
     <Compile Include="clsVCrole.vb" />
     <Compile Include="clsVCSetting.vb" />
     <Compile Include="clsVCSettingTypeClasses.vb" />
+    <Compile Include="clsWebVCSettingAppearance.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
     <Compile Include="clsWebVCSettingCustomization.vb" />
     <Compile Include="clsWebVCSettingCustomroles.vb" />

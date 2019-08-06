@@ -8219,6 +8219,31 @@ Public Module agm2
     End Function
 
     ''' <summary>
+    ''' importiert die Darstellungsklassen für Phasen und Meilensteine 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportAppearances(ByRef outputCollection As Collection) As SortedList(Of String, clsAppearance)
+
+        Dim err As New clsErrorCodeMsg
+
+
+        Dim appearancesSheet As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)),
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        Try
+            ' Auslesen der Darstellungsklassen und Aufbau der Liste 'appearanceDefinitions'
+            Call aufbauenAppearanceDefinitions(appearancesSheet)
+
+        Catch ex As Exception
+            Dim resultMessage As String = ex.Message
+            outputCollection.Add(resultMessage)
+        End Try
+
+        ImportAppearances = appearanceDefinitions
+    End Function
+
+    ''' <summary>
     ''' importiert alle Custom User Roles 
     ''' </summary>
     ''' <param name="outputCollection"></param>
@@ -8281,6 +8306,147 @@ Public Module agm2
         End Try
 
         ImportCustomUserRoles = importedUserRoles
+    End Function
+
+    ''' <summary>
+    ''' importiert die Custom-Einstellungen 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportCustomization(ByRef outputCollection As Collection) As clsCustomization
+
+        Dim err As New clsErrorCodeMsg
+        Dim importedCustomization As New clsCustomization
+
+        Dim customizationSheet As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)),
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        Try
+
+            ' Auslesen der BusinessUnit Definitionen
+            Call readBusinessUnitDefinitions(customizationSheet)
+
+            ' Auslesen der Phasen Definitionen 
+            Call readPhaseDefinitions(customizationSheet)
+
+            ' Auslesen der Meilenstein Definitionen 
+            Call readMilestoneDefinitions(customizationSheet)
+
+            If awinSettings.visboDebug Then
+                Call MsgBox("readMilestoneDefinitions")
+            End If
+
+            ' auslesen der anderen Informationen 
+            Call readOtherDefinitions(customizationSheet)
+
+
+            'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+            '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+            'Next
+            importedCustomization.businessUnitDefinitions = businessUnitDefinitions
+
+            'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+            '    customizations.phaseDefinitions.Add(kvp.Value)
+            'Next
+            importedCustomization.phaseDefinitions = PhaseDefinitions
+
+            'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+            '    customizations.milestoneDefinitions.Add(kvp.Value)
+            'Next
+            importedCustomization.milestoneDefinitions = MilestoneDefinitions
+
+            ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+            importedCustomization.showtimezone_color = showtimezone_color
+            importedCustomization.noshowtimezone_color = noshowtimezone_color
+            importedCustomization.calendarFontColor = calendarFontColor
+            importedCustomization.nrOfDaysMonth = nrOfDaysMonth
+            importedCustomization.farbeInternOP = farbeInternOP
+            importedCustomization.farbeExterne = farbeExterne
+            importedCustomization.iProjektFarbe = iProjektFarbe
+            importedCustomization.iWertFarbe = iWertFarbe
+            importedCustomization.vergleichsfarbe0 = vergleichsfarbe0
+            importedCustomization.vergleichsfarbe1 = vergleichsfarbe1
+            'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+            importedCustomization.SollIstFarbeB = awinSettings.SollIstFarbeB
+            importedCustomization.SollIstFarbeL = awinSettings.SollIstFarbeL
+            importedCustomization.SollIstFarbeC = awinSettings.SollIstFarbeC
+            importedCustomization.AmpelGruen = awinSettings.AmpelGruen
+            'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+            importedCustomization.AmpelGelb = awinSettings.AmpelGelb
+            importedCustomization.AmpelRot = awinSettings.AmpelRot
+            importedCustomization.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+            importedCustomization.glowColor = awinSettings.glowColor
+
+            importedCustomization.timeSpanColor = awinSettings.timeSpanColor
+            importedCustomization.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+
+            importedCustomization.gridLineColor = awinSettings.gridLineColor
+
+            importedCustomization.missingDefinitionColor = awinSettings.missingDefinitionColor
+
+            importedCustomization.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+
+            importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+            importedCustomization.actualDataMonth = awinSettings.actualDataMonth
+            importedCustomization.ergebnisfarbe1 = ergebnisfarbe1
+            importedCustomization.ergebnisfarbe2 = ergebnisfarbe2
+            importedCustomization.weightStrategicFit = weightStrategicFit
+            importedCustomization.kalenderStart = awinSettings.kalenderStart
+            importedCustomization.zeitEinheit = awinSettings.zeitEinheit
+            importedCustomization.kapaEinheit = awinSettings.kapaEinheit
+            importedCustomization.offsetEinheit = awinSettings.offsetEinheit
+            importedCustomization.EinzelRessExport = awinSettings.EinzelRessExport
+            importedCustomization.zeilenhoehe1 = awinSettings.zeilenhoehe1
+            importedCustomization.zeilenhoehe2 = awinSettings.zeilenhoehe2
+            importedCustomization.spaltenbreite = awinSettings.spaltenbreite
+            importedCustomization.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+            importedCustomization.propAnpassRess = awinSettings.propAnpassRess
+            importedCustomization.showValuesOfSelected = awinSettings.showValuesOfSelected
+
+            importedCustomization.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+            importedCustomization.fullProtocol = awinSettings.fullProtocol
+            importedCustomization.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+            importedCustomization.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+            importedCustomization.eliminateDuplicates = awinSettings.eliminateDuplicates
+            importedCustomization.importUnknownNames = awinSettings.importUnknownNames
+            importedCustomization.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+
+            importedCustomization.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+            importedCustomization.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+            importedCustomization.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+            importedCustomization.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+
+            importedCustomization.importTyp = awinSettings.importTyp
+
+            importedCustomization.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+
+            importedCustomization.englishLanguage = awinSettings.englishLanguage
+
+            importedCustomization.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+            importedCustomization.considerRiskFee = awinSettings.considerRiskFee
+
+
+            ''Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedCustomization,
+            ''                                                                                CStr(settingTypes(ptSettingTypes.customization)),
+            ''                                                                                "Customization",
+            ''                                                                                Nothing, err)
+            ''If Not store_ok Then
+            ''    If awinSettings.englishLanguage Then
+            ''        Call MsgBox("Customizations couldn't be written to the database!" & vbCrLf & err.errorMsg)
+            ''    Else
+            ''        Call MsgBox("Kundeneinstellungen konnten nicht in die Datenbank geschrieben werden!" & vbCrLf & err.errorMsg)
+            ''    End If
+            ''End If
+
+        Catch ex As Exception
+            Dim resultMessage As String = ex.Message
+            outputCollection.Add(resultMessage)
+        End Try
+
+        ImportCustomization = importedCustomization
     End Function
 
     ''' <summary>
@@ -17832,8 +17998,43 @@ Public Module agm2
             End If
 
             Try
-                ' Aufbauen der Darstellungsklassen  
-                Call aufbauenAppearanceDefinitions(wsName7810)
+
+                appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+
+                If IsNothing(appearanceDefinitions) Then
+
+                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
+
+                    ' Aufbauen der Darstellungsklassen  aus Customizationfile
+                    Call aufbauenAppearanceDefinitions(wsName7810)
+                    Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
+                                                                                               CStr(settingTypes(ptSettingTypes.appearance)),
+                                                                                               "Appearance",
+                                                                                               Nothing, err)
+                    If Not store_ok Then
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("You don't have any appearances for your phases and milestones in your system!")
+                        Else
+                            Call MsgBox("Es existieren keine Darstellungsklassen für Phasen und Meilensteine im System!")
+                        End If
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Fehler beim Speichern: aktueller User hat das Recht dazu nicht! " & vbCrLf & err.errorMsg)
+                        End If
+
+                    End If
+
+                    'ElseIf appearanceDefinitions.Count = 0 Then
+                    '    ' Aufbauen der Darstellungsklassen  aus Customizationfile
+                    '    Call aufbauenAppearanceDefinitions(wsName7810)
+                    '    Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
+                    '                                                                        CStr(settingTypes(ptSettingTypes.appearance)),
+                    '                                                                        "Appearance",
+                    '                                                                        Nothing, err)
+                End If
+
+
 
 
                 ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 

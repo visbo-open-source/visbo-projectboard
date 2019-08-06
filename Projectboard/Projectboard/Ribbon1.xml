@@ -85,6 +85,10 @@
                 <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
                 <!--label="Custom User Roles"-->
                 <button id="PT4G1B11" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
+                <!--label="Appearances"-->
+                <button id="PT4G1B15" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportAppearances" supertip ="Es werden die möglichen Darstellungsklassen der Phasen und Meilensteine importiert "/>
+                <!--label="Customization"-->
+                <button id="PT4G1B16" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomization" supertip ="Es werden die Kundenspezifischen Einstellungen importiert "/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
                 <!--label="Offline Erfassung"-->

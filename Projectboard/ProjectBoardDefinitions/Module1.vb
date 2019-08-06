@@ -272,17 +272,18 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
 
     Public Enum ptSettingTypes
         customfields = 0
         customroles = 1
         organisation = 2
         customization = 3
-        phasemilestonedefs = 4
-        reportprofiles = 5
-        ppttemplates = 6
-        generalexcelcharts = 7
+        appearance = 4
+        phasemilestonedefs = 5
+        reportprofiles = 6
+        ppttemplates = 7
+        generalexcelcharts = 8
     End Enum
 
     Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
@@ -865,6 +866,8 @@ Public Module Module1
         customUserRoles = 11
         actualData = 12
         offlineData = 13
+        customization = 14
+        appearances = 15
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

@@ -47,7 +47,7 @@ Public Class clsVCSettingOrganisation
 End Class
 
 ''' <summary>
-''' Definitionen, die ursprünglich im Customization-File gespeichert waren
+''' Definitionen, die ursprünglich im Customization-File (Einstellungen) gespeichert waren
 ''' z.B. StartOfCalendar, Farben für rote, gelbe, grüne Ampel, Farbe für vieles mehr
 ''' Arbeitstage pro Monat, RollenKostenDefinition aus DB lesen, Zeiteinheit, Kapzitätseinheit, Zeilenhöhe, Spaltenbreite, unbekannte Phase/Meilensteine Definitionen auto aufnehmen,
 ''' Duplikate eliminieren, Sprachen englisch, ...
@@ -59,6 +59,19 @@ Public Class clsVCSettingCustomization
 
     Sub New()
         _value = New clsCustomizationWeb
+    End Sub
+
+End Class
+''' <summary>
+''' Definitionen, die ursprünglich im Customization-File (Darstellungsklassen) gespeichert waren
+''' </summary>
+Public Class clsVCSettingAppearance
+
+    Inherits clsVCSetting
+    Public Property value As clsAppearanceWeb
+
+    Sub New()
+        _value = New clsAppearanceWeb
     End Sub
 
 End Class

@@ -1929,6 +1929,18 @@ Imports System.Web
                 Else
                     tmpLabel = "Offline Resource Assignments"
                 End If
+            Case "PT4G1B15"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Darstellungsklassen"
+                Else
+                    tmpLabel = "Appearances"
+                End If
+            Case "PT4G1B16"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "kundenspez. Einstellungen"
+                Else
+                    tmpLabel = "Customization"
+                End If
 
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -6426,6 +6438,222 @@ Imports System.Web
         With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             .Activate()
         End With
+        appInstance.ScreenUpdating = True
+
+    End Sub
+    ''' <summary>
+    ''' importiert und speichert die Custom-Einstellungen
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportCustomization(control As IRibbonControl)
+
+        Dim selectedWB As String = ""
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+
+        'Dim dirname As String = importOrdnerNames(PTImpExp.customization)
+
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board*customization*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
+        ElseIf anzFiles > 1 Then
+            Dim getCustomizationFile As New frmSelectImportFiles
+            getCustomizationFile.menueAswhl = PTImpExp.customization
+            Dim returnValue As DialogResult = getCustomizationFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = CStr(getCustomizationFile.selImportFiles.Item(1))
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Dateien vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss diesen Teilstring enthalten: '" & "Customization'")
+        End If
+
+        If weiterMachen Then
+
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+
+                ' Öffnen des Customization-Files
+                appInstance.Workbooks.Open(dateiname)
+
+                Dim outputCollection As New Collection
+                Dim importedCustomization As clsCustomization = ImportCustomization(outputCollection)
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des CustomUser Role-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                If outputCollection.Count > 0 Then
+                    Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
+                    outputCollection.Add(errmsg)
+                    Call showOutPut(outputCollection, "User Role Import", "")
+
+                    Call logfileSchreiben(outputCollection)
+
+                ElseIf Not IsNothing(importedCustomization) Then
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    ' alles ok 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedCustomization,
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    Nothing,
+                                                                                    err)
+
+                    If result = True Then
+                        Call MsgBox("ok, Customizations stored ...")
+                        Call logfileSchreiben("Customizations stored ...", selectedWB, -1)
+                    Else
+                        Call MsgBox("Error when writing Customizations")
+                        Call logfileSchreiben("Error when writing Customizations ...", selectedWB, -1)
+                    End If
+                Else
+                    Call MsgBox("no customizations found ...")
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
+
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+    ''' <summary>
+    ''' importiert und speichert die Darstellungsklassen
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportAppearances(control As IRibbonControl)
+
+        Dim selectedWB As String = ""
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+
+        'Dim dirname As String = importOrdnerNames(PTImpExp.customization)
+
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*customization*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
+        ElseIf anzFiles > 1 Then
+            Dim getAppearanceFile As New frmSelectImportFiles
+            getAppearanceFile.menueAswhl = PTImpExp.customization
+            Dim returnValue As DialogResult = getAppearanceFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = CStr(getAppearanceFile.selImportFiles.Item(1))
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Dateien vorhanden ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss diesen Teilstring enthalten: '" & "Customization'")
+        End If
+
+        If weiterMachen Then
+
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+
+                ' Öffnen des Customization-Files
+                appInstance.Workbooks.Open(dateiname)
+
+                Dim outputCollection As New Collection
+                Dim importedAppearances As SortedList(Of String, clsAppearance) = ImportAppearances(outputCollection)
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des CustomUser Role-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                If outputCollection.Count > 0 Then
+                    Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
+                    outputCollection.Add(errmsg)
+                    Call showOutPut(outputCollection, "Appearances Import", "")
+
+                    Call logfileSchreiben(outputCollection)
+
+                ElseIf Not IsNothing(importedAppearances) Then
+                    ' jetzt wird die Appearances als Setting weggespeichert ... 
+                    ' alles ok 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedAppearances,
+                                                                                    CStr(settingTypes(ptSettingTypes.appearance)),
+                                                                                    CStr(settingTypes(ptSettingTypes.appearance)),
+                                                                                    Nothing,
+                                                                                    err)
+
+                    If result = True Then
+                        Call MsgBox("ok, appearances stored ...")
+                        Call logfileSchreiben("appearances stored ...", selectedWB, -1)
+                    Else
+                        Call MsgBox("Error when writing appearances")
+                        Call logfileSchreiben("Error when writing appearances ...", selectedWB, -1)
+                    End If
+                Else
+                    Call MsgBox("no appearances found ...")
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
+
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
 
     End Sub

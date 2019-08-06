@@ -48,6 +48,10 @@ Public Class frmSelectImportFiles
                             If dateiName.Contains("roles") Then
                                 ListImportFiles.Items.Add(dateiName)
                             End If
+                        ElseIf menueAswhl = PTImpExp.customization Then
+                            If dateiName.Contains("Customization") Then
+                                ListImportFiles.Items.Add(dateiName)
+                            End If
 
                         ElseIf menueAswhl = PTImpExp.actualData Then
                             If dateiName.Contains("Istdaten") Then

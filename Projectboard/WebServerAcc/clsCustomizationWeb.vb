@@ -750,7 +750,7 @@ Public Class clsCustomizationWeb
         End Set
     End Property
 
-    Public Sub copyTo(ByVal customDef As clsCustomization)
+    Public Sub copyTo(ByRef customDef As clsCustomization)
 
         With customDef
 
