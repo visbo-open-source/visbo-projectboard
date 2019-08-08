@@ -2285,6 +2285,7 @@ Public Class Request
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
                     If anzSetting > 0 Then
+                        oldsetting = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)
                         settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
                     Else
                         settingID = ""
@@ -2295,6 +2296,7 @@ Public Class Request
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
                     If anzSetting > 0 Then
+                        oldsetting = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)
                         settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
                     Else
                         settingID = ""
@@ -2317,6 +2319,7 @@ Public Class Request
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingCustomization)).Count
                     If anzSetting > 0 Then
+                        oldsetting = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)
                         settingID = CType(setting, List(Of clsVCSettingCustomization)).ElementAt(0)._id
                     Else
                         settingID = ""
@@ -2327,6 +2330,7 @@ Public Class Request
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
                     anzSetting = CType(setting, List(Of clsVCSettingAppearance)).Count
                     If anzSetting > 0 Then
+                        oldsetting = CType(setting, List(Of clsVCSettingAppearance)).ElementAt(0)
                         settingID = CType(setting, List(Of clsVCSettingAppearance)).ElementAt(0)._id
                     Else
                         settingID = ""
@@ -2334,7 +2338,7 @@ Public Class Request
 
             End Select
 
-            If ts > Date.MinValue Then
+            If ts > "1.1.1900" Then
                 ts = ts.ToUniversalTime.AddSeconds(-2)
                 timestamp = DateTimeToISODate(ts)
             Else
@@ -2386,6 +2390,7 @@ Public Class Request
                     If anzSetting = 1 Then
                         newsetting._id = settingID
                         ' Update der customroles - Setting
+                        CType(newsetting, clsVCSettingCustomfields).timestamp = oldsetting.timestamp
                         result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
                     Else
                         ' Create der customroles - Setting

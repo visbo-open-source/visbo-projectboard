@@ -6452,7 +6452,7 @@ Imports System.Web
 
         'Dim dirname As String = importOrdnerNames(PTImpExp.customization)
 
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board*customization*.xls*")
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board Customization*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
@@ -6560,7 +6560,7 @@ Imports System.Web
 
         'Dim dirname As String = importOrdnerNames(PTImpExp.customization)
 
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*customization*.xls*")
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board Customization*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""

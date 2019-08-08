@@ -17,7 +17,7 @@ Public Class clsCustomUserRole
     Public Sub New()
         _userName = ""
         _userID = ""
-        _customUserRole = ptCustomUserRoles.Alles
+        _customUserRole = ptCustomUserRoles.OrgaAdmin
         _specifics = ""
         _nonAllowance = {""}
     End Sub
@@ -265,6 +265,7 @@ Public Class clsCustomUserRole
             specifics = _specifics
         End Get
         Set(value As String)
+
             If Not IsNothing(value) Then
                 _specifics = value
             Else
