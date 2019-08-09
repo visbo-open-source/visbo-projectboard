@@ -257,19 +257,30 @@ Public Class clsPPTTimeMachine
                     Dim myHistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
 
                     If IsNothing(myHistory) Then
-
                         ' ProjektHistorie von Cache oder Datenbank holen 
                         Dim pName As String = getPnameFromKey(pvName)
                         Dim vName As String = getVariantnameFromKey(pvName)
 
                         _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
                         myHistory = _projectTimeStamps.Item(pvName)
+                    Else
+                        If myHistory.Count = 0 Then
+                            ' versuchen ProjektHistorie von Cache oder Datenbank holen 
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vName As String = getVariantnameFromKey(pvName)
 
+                            _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                            myHistory = _projectTimeStamps.Item(pvName)
+                        End If
                     End If
 
                     ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
                     If Not IsNothing(myHistory) Then
-                        result = myHistory.ElementAtorBefore(refDate)
+                        If myHistory.Count > 0 Then
+                            result = myHistory.ElementAtorBefore(refDate)
+
+                        End If
+
                     End If
                 End If
             Else

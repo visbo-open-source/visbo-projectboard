@@ -252,7 +252,7 @@ Public Class clsSmartSlideListen
     ''' die Project TimeStampListe kann Nothing sein ... 
     ''' </summary>
     ''' <param name="pvName"></param>
-    ''' <param name="vpid">gibt an, ob Projekt oder Portfolio Projekt</param>
+    ''' <param name="vpid">ObjectID in der DB-Collection visboProject</param>
     ''' <remarks></remarks>
     Public Sub addProject(ByVal pvName As String, Optional ByVal vpid As String = "")
 
@@ -318,6 +318,23 @@ Public Class clsSmartSlideListen
                 getvpID = _projectList.ElementAt(index - 1).Value
             Else
                 getvpID = Nothing
+            End If
+
+        End Get
+    End Property
+    ''' <summary>
+    '''
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getvpID(ByVal name As String) As String
+        Get
+            If _projectList.ContainsKey(name) Then
+                getvpID = _projectList.Item(name)
+            Else
+                getvpID = ""
             End If
 
         End Get
