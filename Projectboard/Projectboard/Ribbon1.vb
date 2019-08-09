@@ -158,24 +158,44 @@ Imports System.Web
 
         End While
 
+        Dim outputCollection As New Collection
+        Dim outputLine As String = ""
 
         If returnValue = DialogResult.OK Then
             If ControlID = deleteDatenbank Or
                 ControlID = deleteFromSession Then
 
-                constFilterName = removeConstFilterFrm.ListBox1.Text
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
-                Call awinRemoveConstellation(constFilterName, removeFromDB)
-                Call MsgBox(constFilterName & " wurde gelöscht ...")
+                For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
+                    constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
+                    Call awinRemoveConstellation(constFilterName, removeFromDB)
 
-                If constFilterName = currentConstellationName Then
+                    If awinSettings.englishLanguage Then
+                        outputLine = constFilterName & " deleted ..."
+                    Else
+                        outputLine = constFilterName & " wurde gelöscht ..."
+                    End If
+                    outputCollection.Add(outputLine)
+                Next
 
-                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                    'Call storeSessionConstellation("Last")
-                    'currentConstellationName = "Last"
-                Else
-                    ' aktuelle Konstellation bleibt unverändert
-                End If
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
+
+                ' tk 28.7.19 soll jetzt auch Mehrfach-Löschung von Portfolios zulassen
+                'constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                'Call awinRemoveConstellation(constFilterName, removeFromDB)
+                'Call MsgBox(constFilterName & " wurde gelöscht ...")
+
+                'If constFilterName = currentConstellationName Then
+
+                '    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                '    'Call storeSessionConstellation("Last")
+                '    'currentConstellationName = "Last"
+                'Else
+                '    ' aktuelle Konstellation bleibt unverändert
+                'End If
 
 
             End If
@@ -210,6 +230,14 @@ Imports System.Web
 
         End If
         enableOnUpdate = True
+        ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
+        If outputCollection.Count > 0 Then
+            Dim header As String = "Löschen von Portfolios"
+            If awinSettings.englishLanguage Then
+                header = "Delete Portfolios"
+            End If
+            Call showOutPut(outputCollection, header:=header, explanation:="")
+        End If
 
     End Sub
 
