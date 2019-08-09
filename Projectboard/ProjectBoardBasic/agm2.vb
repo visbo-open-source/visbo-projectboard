@@ -499,6 +499,11 @@ Public Module agm2
                         '.form = shp
 
                         Try
+
+                            If appearanceDefinitions.ContainsKey(.name) Then
+                                appearanceDefinitions.Remove(.name)
+                            End If
+
                             appearanceDefinitions.Add(.name, appDefinition)
 
                             If .isMilestone And firstMilestone Then
@@ -17999,6 +18004,8 @@ Public Module agm2
             ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
 
+
+
             Dim wsName7810 As Excel.Worksheet = Nothing
 
             If Not IsNothing(xlsCustomization) Then
@@ -18013,6 +18020,109 @@ Public Module agm2
             End If
 
 
+            Try
+                ' jetzt die CurrentOrga definieren
+                Dim currentOrga As New clsOrganisation
+
+                ' jetzt werden die ORganisation ausgelesen 
+                ' wenn es keine Organisation gibt , d
+
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                If currentOrga.count > 0 Then
+
+                    If currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                    End If
+
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
+
+
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                    Try
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                        If IsNothing(customFieldDefinitions) Then
+                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
+                        ElseIf customFieldDefinitions.count = 0 Then
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
+                Else
+                    awinSettings.readCostRolesFromDB = False
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You don't have any organization in your system!")
+                    Else
+                        Call MsgBox("Es existiert keine Organisation im System!")
+                    End If
+
+
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+
+                ' das kann nicht unmittelbar nach Login gemacht werden 
+                Dim meldungen As Collection = New Collection
+
+                '' jetzt werden die Rollen besetzt 
+                If awinSettings.readCostRolesFromDB Then
+
+                    Try
+                        Call setUserRoles(meldungen)
+                    Catch ex As Exception
+                        If meldungen.Count > 0 Then
+                            Call showOutPut(meldungen, "Error: setUserRoles", "")
+                            Call logfileSchreiben(meldungen)
+                        End If
+
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
+                    End Try
+
+
+
+                Else
+                    myCustomUserRole = New clsCustomUserRole
+
+                    With myCustomUserRole
+                        .customUserRole = ptCustomUserRoles.OrgaAdmin
+                        .specifics = ""
+                        .userName = dbUsername
+                    End With
+                    ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                    Call myCustomUserRole.setNonAllowances()
+                End If
+
+            Catch ex As Exception
+
+            End Try
 
             Try
 
@@ -18319,64 +18429,64 @@ Public Module agm2
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB
 
-                ' jetzt die CurrentOrga definieren
-                Dim currentOrga As New clsOrganisation
+                '' jetzt die CurrentOrga definieren
+                'Dim currentOrga As New clsOrganisation
 
-                ' jetzt werden die ORganisation ausgelesen 
-                ' wenn es keine Organisation gibt , d
+                '' jetzt werden die ORganisation ausgelesen 
+                '' wenn es keine Organisation gibt , d
 
-                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+                'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                If currentOrga.count > 0 Then
+                'If currentOrga.count > 0 Then
 
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
+                '    If currentOrga.count > 0 Then
+                '        validOrganisations.addOrga(currentOrga)
+                '    End If
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
-
-
-                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                    Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-                        If IsNothing(customFieldDefinitions) Then
-                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        ElseIf customFieldDefinitions.count = 0 Then
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-                    Catch ex As Exception
-
-                    End Try
+                '    CostDefinitions = currentOrga.allCosts
+                '    RoleDefinitions = currentOrga.allRoles
 
 
-                Else
-                    awinSettings.readCostRolesFromDB = False
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("You don't have any organization in your system!")
-                    Else
-                        Call MsgBox("Es existiert keine Organisation im System!")
-                    End If
+                '    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                '    Try
+                '        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                '        If IsNothing(customFieldDefinitions) Then
+                '            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                '            Try
+                '                Call readCustomFieldDefinitions(wsName4)
+                '            Catch ex As Exception
+
+                '            End Try
+                '        ElseIf customFieldDefinitions.count = 0 Then
+                '            Try
+                '                Call readCustomFieldDefinitions(wsName4)
+                '            Catch ex As Exception
+
+                '            End Try
+                '        End If
+                '    Catch ex As Exception
+
+                '    End Try
 
 
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
+                'Else
+                '    awinSettings.readCostRolesFromDB = False
+                '    If awinSettings.englishLanguage Then
+                '        Call MsgBox("You don't have any organization in your system!")
+                '    Else
+                '        Call MsgBox("Es existiert keine Organisation im System!")
+                '    End If
 
-                    End Try
 
-                End If
+                '    ' Auslesen der Custom Field Definitions aus Customization-File
+                '    Try
+                '        Call readCustomFieldDefinitions(wsName4)
+                '    Catch ex As Exception
+
+                '    End Try
+
+                'End If
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -18559,44 +18669,44 @@ Public Module agm2
 
                     End If
 
-                    ' das kann nicht unmittelbar nach Login gemacht werden 
-                    Dim meldungen As Collection = New Collection
+                    '' ' das kann nicht unmittelbar nach Login gemacht werden 
+                    ''Dim meldungen As Collection = New Collection
 
-                    '' jetzt werden die Rollen besetzt 
-                    If awinSettings.readCostRolesFromDB Then
+                    '''' jetzt werden die Rollen besetzt 
+                    ''If awinSettings.readCostRolesFromDB Then
 
-                        Try
-                            Call setUserRoles(meldungen)
-                        Catch ex As Exception
-                            If meldungen.Count > 0 Then
-                                Call showOutPut(meldungen, "Error: setUserRoles", "")
-                                Call logfileSchreiben(meldungen)
-                            End If
+                    ''    Try
+                    ''        Call setUserRoles(meldungen)
+                    ''    Catch ex As Exception
+                    ''        If meldungen.Count > 0 Then
+                    ''            Call showOutPut(meldungen, "Error: setUserRoles", "")
+                    ''            Call logfileSchreiben(meldungen)
+                    ''        End If
 
-                            myCustomUserRole = New clsCustomUserRole
+                    ''        myCustomUserRole = New clsCustomUserRole
 
-                            With myCustomUserRole
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                                .specifics = ""
-                                .userName = dbUsername
-                            End With
-                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                            Call myCustomUserRole.setNonAllowances()
-                        End Try
+                    ''        With myCustomUserRole
+                    ''            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                    ''            .specifics = ""
+                    ''            .userName = dbUsername
+                    ''        End With
+                    ''        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                    ''        Call myCustomUserRole.setNonAllowances()
+                    ''    End Try
 
 
 
-                    Else
-                        myCustomUserRole = New clsCustomUserRole
+                    ''Else
+                    ''    myCustomUserRole = New clsCustomUserRole
 
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
-                    End If
+                    ''    With myCustomUserRole
+                    ''        .customUserRole = ptCustomUserRoles.OrgaAdmin
+                    ''        .specifics = ""
+                    ''        .userName = dbUsername
+                    ''    End With
+                    ''    ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                    ''    Call myCustomUserRole.setNonAllowances()
+                    ''End If
 
                     ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
                     ' ohne Abhängigkeit von Rolle Portfolio Manager , das brauchen ja alle Rollen 
