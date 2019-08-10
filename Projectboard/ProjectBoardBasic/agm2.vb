@@ -8373,6 +8373,7 @@ Public Module agm2
 
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
+
         Dim last1Budget As Double = 0.0
         Dim lfdNr1program As Integer = 2
 
@@ -8614,12 +8615,13 @@ Public Module agm2
                     projektvorhaben(0) = 4
                 Else
                     ReDim pgmlinie(0)
-                    ReDim projektvorhaben(2)
+                    ' nach Relco mit Rupi am 8.8.19 so entschieden
+                    ReDim projektvorhaben(0)
 
                     pgmlinie(0) = 2
-                    projektvorhaben(0) = 5
-                    projektvorhaben(1) = 6
-                    projektvorhaben(2) = 7
+                    projektvorhaben(0) = 4
+                    'projektvorhaben(1) = 6
+                    'projektvorhaben(2) = 7
                 End If
 
                 ' jetzt müssen die Dimensionen gesetzt werden 
@@ -8742,9 +8744,9 @@ Public Module agm2
                                             projectConstellations.Add(current1program)
 
                                             ' 
-                                            ' tk das soll Stand 21.7.19 nicht mehr gemacht werden, weil ein Programm auch über die Angaben der Excel Datei angelegt wird ...  ... 
+                                            ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
                                             ' jetzt das union-Projekt erstellen ; 
-                                            'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             'Try
                                             '    ' Test, ob das Budget auch ausreicht
@@ -8791,17 +8793,17 @@ Public Module agm2
 
                                             'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
                                             '' test
-                                            'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                            'If Not everythingOK Then
-                                            '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                                            '    outputCollection.Add(outPutLine)
+                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            If Not everythingOK Then
+                                                outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                                outputCollection.Add(outPutLine)
 
-                                            '    ReDim logmsg(2)
-                                            '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                            '    logmsg(1) = ""
-                                            '    logmsg(2) = current1program.constellationName
-                                            '    Call logfileSchreiben(logmsg)
-                                            'End If
+                                                ReDim logmsg(2)
+                                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                                logmsg(1) = ""
+                                                logmsg(2) = current1program.constellationName
+                                                Call logfileSchreiben(logmsg)
+                                            End If
                                             '' ende tk Änderung 21.7.19 
                                         Else
                                             emptyPrograms = emptyPrograms + 1
@@ -9058,7 +9060,7 @@ Public Module agm2
                             ' #####################################################################
                             ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
                             '
-
+                            pName = itemType.ToString & " - " & pName
                             ' lege ein Allianz IT - Projekt an
                             hproj = erstelleProjektausParametern(pName, variantName, vorlageName, startdate, endDate, budget, sFit, risk, allianzProjektNummer,
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
@@ -9066,8 +9068,8 @@ Public Module agm2
 
                             ' tk 21.7.19 es wird ein Summary Projekt für die Programm-Linie angelegt  
                             If pgmlinie.Contains(itemType) Then
-                                pName = itemType.ToString & " - " & pName
-                                hproj.name = pName
+                                'pName = itemType.ToString & " - " & pName
+                                'hproj.name = pName
                                 hproj.projectType = ptPRPFType.portfolio
                             End If
 
@@ -9235,9 +9237,9 @@ Public Module agm2
                         createdPrograms = createdPrograms + 1
                         projectConstellations.Add(current1program)
 
-                        ' tk 21.7.19 soll jetzt nicht mehr gemacht werden .. 
+                        ' tk 10.8.19 das wird jetzt wieder gemacht , aber nur um zu überprüfen ob Summe(POBs) <= lastProgramProj
                         ' jetzt das union-Projekt erstellen 
-                        'Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                         'Try
                         '    ' Test, ob das Budget auch ausreicht
@@ -9284,19 +9286,19 @@ Public Module agm2
                         'ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
 
                         '' test
-                        'Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                        'If Not everythingOK Then
+                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        If Not everythingOK Then
 
-                        '    outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
-                        '    outputCollection.Add(outPutLine)
+                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                            outputCollection.Add(outPutLine)
 
-                        '    ReDim logmsg(2)
-                        '    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                        '    logmsg(1) = ""
-                        '    logmsg(2) = current1program.constellationName
-                        '    Call logfileSchreiben(logmsg)
+                            ReDim logmsg(2)
+                            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                            logmsg(1) = ""
+                            logmsg(2) = current1program.constellationName
+                            Call logfileSchreiben(logmsg)
 
-                        'End If
+                        End If
                         ' ende test
                     Else
                         emptyPrograms = emptyPrograms + 1
