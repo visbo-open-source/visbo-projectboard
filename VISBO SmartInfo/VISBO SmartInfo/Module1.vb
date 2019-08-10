@@ -1411,7 +1411,7 @@ Module Module1
             For i As Integer = 1 To smartSlideLists.countProjects
 
                 Dim pvName As String = smartSlideLists.getPVName(i)
-                vpid = smartSlideLists.getvpID(i)
+                vpid = smartSlideLists.getvpID(pvName)
 
                 If Not timeMachine.containsProject(pvName, vpid) Then
                     timeMachine.addProject(pvName, vpid)
@@ -2033,8 +2033,9 @@ Module Module1
             pvName = getPVnameFromShpName(tmpShape.Name)
         End If
 
-
-        If pvName <> "" And vpid <> "" Then
+        'ur: 9.8.2019
+        'If pvName <> "" Or vpid <> "" Then
+        If pvName <> "" Then
             If smartSlideLists.containsProject(pvName) Then
                 ' nichts tun, ist schon drin ..
             Else
@@ -2244,24 +2245,28 @@ Module Module1
             ' denn nur die können Resourcen und Kostenbedarfe haben 
             If Not noDBAccessInPPT And Not isMilestone Then
                 Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
-                Dim vpid As String = smartSlideLists.getvpID(1)
+                Dim vpid As String = smartSlideLists.getvpID(pvName)
 
                 If pvName <> "" Then
                     'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
                     Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp, vpid)
-                    Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
-                    Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
-                    Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
-                    Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
 
-                    Try
-                        Call smartSlideLists.addRoleAndCostInfos(roleInformations,
-                                                                 costInformations,
-                                                                 shapeName,
-                                                                 isMilestone)
-                    Catch ex As Exception
+                    If Not IsNothing(hproj) Then
+                        Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
+                        Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+                        Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                        Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
 
-                    End Try
+                        Try
+                            Call smartSlideLists.addRoleAndCostInfos(roleInformations,
+                                                                     costInformations,
+                                                                     shapeName,
+                                                                     isMilestone)
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
                 End If
 
 
@@ -2918,6 +2923,8 @@ Module Module1
                                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
 
                                 Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+                            Else
+
 
                             End If
                         End If
@@ -2951,35 +2958,47 @@ Module Module1
 
                                     Select Case cftype
                                         Case ptCustomFields.Str
-                                            Dim wert As String = hproj.getCustomSField(uid)
-                                            If Not IsNothing(wert) Then
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                            Dim wert As String = Nothing
+                                            If Not IsNothing(hproj) Then
+                                                wert = hproj.getCustomSField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert
+                                                Else
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
                                             End If
 
                                         Case ptCustomFields.Dbl
-                                            Dim wert As Double = hproj.getCustomDField(uid)
-                                            If Not IsNothing(wert) Then
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                            Dim wert As Double = Nothing
+                                            If Not IsNothing(hproj) Then
+                                                wert = hproj.getCustomDField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                                Else
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
                                             End If
 
                                         Case ptCustomFields.bool
-                                            Dim wert As Boolean = hproj.getCustomBField(uid)
+                                            Dim wert As Boolean = Nothing
 
-                                            If Not IsNothing(wert) Then
-                                                If wert Then
-                                                    ' Sprache !
-                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                            If Not IsNothing(hproj) Then
+                                                wert = hproj.getCustomBField(uid)
+
+                                                If Not IsNothing(wert) Then
+                                                    If wert Then
+                                                        ' Sprache !
+                                                        pptShape.TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                    Else
+                                                        ' Sprache !
+                                                        pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    End If
+
                                                 Else
-                                                    ' Sprache !
-                                                    pptShape.TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
                                                 End If
 
-                                            Else
-                                                pptShape.TextFrame2.TextRange.Text = qualifier & " : n.a"
                                             End If
 
                                     End Select
@@ -6563,6 +6582,14 @@ Module Module1
                 Else
                     ' es hat zu diesem Zeitpunkt noch nicht existiert und muss unsichtbar gemacht werden 
                     tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
+                    Dim explanation As New clsChangeItem
+                    Dim projVarName As String = getPVnameFromShpName(tmpShape.Name)
+                    explanation.pName = getPnameFromKey(projVarName)
+                    explanation.vName = getVariantnameFromKey(projVarName)
+                    explanation.bestElemName = "nicht aktualisierbar"
+
+                    changeliste.addToChangeList(projVarName, explanation)
                 End If
 
             End If
