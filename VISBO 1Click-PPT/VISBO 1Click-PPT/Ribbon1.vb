@@ -4,6 +4,7 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
+Imports DBAccLayer
 
 Public Class Ribbon1
 
@@ -40,6 +41,17 @@ Public Class Ribbon1
         '    Call awinsetTypen("BHTC")
 
         '    StartofCalendar = StartofCalendar.AddMonths(-12)
+
+
+        If awinSettings.englishLanguage Then
+            DBspeichern.Label = "Publish to VISBO"
+            EinzelprojektReport.Label = "Report of one Project"
+            Einstellung.Label = "Settings"
+        Else
+            DBspeichern.Label = "Publizieren in VISBO"
+            EinzelprojektReport.Label = "Einzelprojekt Report"
+            Einstellung.Label = "Einstellungen"
+        End If
 
 
         '    If awinSettings.englishLanguage Then
@@ -162,7 +174,7 @@ Public Class Ribbon1
 
                     'Call MsgBox("EPReport_Click")
 
-                    Call MsgBox("Laden des aktuell in MSProject geöffneten Projektes")
+                    'Call MsgBox("Laden des aktuell in MSProject geöffneten Projektes")
 
                     Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
 

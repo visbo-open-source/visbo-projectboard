@@ -842,9 +842,9 @@ Public Module PBBModules
 
         Dim errMsg As String = ""
         If awinSettings.englishLanguage Then
-            errMsg = "no summary projects allowed ..."
+            errMsg = "no summary projects allowed (Exception: Portfolio Manager)..."
         Else
-            errMsg = "keine Summary Projekte zugelassen ..."
+            errMsg = "keine Summary Projekte zugelassen (ausser für Portfolio Manager)..."
         End If
 
         Try
@@ -860,7 +860,7 @@ Public Module PBBModules
 
                 Try
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    If hproj.projectType = ptPRPFType.portfolio Then
+                    If hproj.projectType = ptPRPFType.portfolio And Not myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                         tmpResult = False
                         Call MsgBox(errMsg)
                         Exit For
