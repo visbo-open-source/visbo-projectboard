@@ -3491,22 +3491,26 @@ Public Module awinGeneralModules
                     End If
 
                 End If
-                ' jetzt den Sortier-Modus anpassen 
 
+                ' jetzt den Sortier-Modus anpassen 
                 Call visualizeConstellation(kvp.Value, storedAtOrBefore, awinSettings.loadPFV)
 
             Next
 
             If constellationsToShow.Count = 1 Then
 
-                'ur: 2019-07-08: notwendig um die vpid zu retten
-                currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
+
                 If clearSession Or sessionWasEmpty Or
                     clearBoard Or boardWasEmpty Then
+                    'ur: 2019-07-08: notwendig um die vpid zu retten
+                    currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
                     currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
                 Else
                     currentConstellationName = calcLastSessionScenarioName()
                     ' hier muss jetzt der sortType auf CustomTF gesetzt werden 
+
+                    'ur:2019-07-08: es sind mehrere Portfolios in einer currentSessionConstellation
+                    currentSessionConstellation.vpID = ""
 
                     If Not IsNothing(currentSessionConstellation) Then
                         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
