@@ -5299,8 +5299,9 @@ Imports System.Web
                             End If
 
                             ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
+                            ' tk 12.8.19 diese beiden Constellations sollen nicht mehr eingetragen werden , nur noch die Rupi-Liste 
                             projectConstellations.Add(sessionConstellationP)
-                            projectConstellations.Add(sessionConstellationS)
+                            'projectConstellations.Add(sessionConstellationS)
                             ' jetzt auf Projekt-Tafel anzeigen 
 
                             Call loadSessionConstellation(scenarioNameP, False, True)
