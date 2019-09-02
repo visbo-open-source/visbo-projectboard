@@ -18013,12 +18013,20 @@ Public Module agm2
 
             If Not IsNothing(xlsCustomization) Then
 
-                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(7)),
-                                                 Global.Microsoft.Office.Interop.Excel.Worksheet
-                                                 )
-                If awinSettings.visboDebug Then
-                    Call MsgBox("wsName7810 angesprochen")
-                End If
+                Try
+                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(7)),
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet
+                                              )
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("wsName7810 angesprochen")
+                    End If
+
+                Catch ex As Exception
+
+                    wsName7810 = Nothing
+
+                End Try
+
 
             End If
 
@@ -18159,7 +18167,13 @@ Public Module agm2
 
                         'End If
 
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
+                        Else
+                            Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
 
+                        End If
                     End If
                 End If
 
@@ -18200,93 +18214,95 @@ Public Module agm2
 
                         customizations = New clsCustomization
 
-                        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
-                        'Next
-                        customizations.businessUnitDefinitions = businessUnitDefinitions
+                        customizations = get_customSettings()
 
-                        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
-                        '    customizations.phaseDefinitions.Add(kvp.Value)
-                        'Next
-                        customizations.phaseDefinitions = PhaseDefinitions
+                        ''For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                        ''    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                        ''Next
+                        'customizations.businessUnitDefinitions = businessUnitDefinitions
 
-                        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
-                        '    customizations.milestoneDefinitions.Add(kvp.Value)
-                        'Next
-                        customizations.milestoneDefinitions = MilestoneDefinitions
+                        ''For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                        ''    customizations.phaseDefinitions.Add(kvp.Value)
+                        ''Next
+                        'customizations.phaseDefinitions = PhaseDefinitions
 
-                        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+                        ''For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                        ''    customizations.milestoneDefinitions.Add(kvp.Value)
+                        ''Next
+                        'customizations.milestoneDefinitions = MilestoneDefinitions
 
-                        customizations.showtimezone_color = showtimezone_color
-                        customizations.noshowtimezone_color = noshowtimezone_color
-                        customizations.calendarFontColor = calendarFontColor
-                        customizations.nrOfDaysMonth = nrOfDaysMonth
-                        customizations.farbeInternOP = farbeInternOP
-                        customizations.farbeExterne = farbeExterne
-                        customizations.iProjektFarbe = iProjektFarbe
-                        customizations.iWertFarbe = iWertFarbe
-                        customizations.vergleichsfarbe0 = vergleichsfarbe0
-                        customizations.vergleichsfarbe1 = vergleichsfarbe1
-                        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+                        '' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
 
-                        customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
-                        customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
-                        customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
-                        customizations.AmpelGruen = awinSettings.AmpelGruen
-                        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-                        customizations.AmpelGelb = awinSettings.AmpelGelb
-                        customizations.AmpelRot = awinSettings.AmpelRot
-                        customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
-                        customizations.glowColor = awinSettings.glowColor
+                        'customizations.showtimezone_color = showtimezone_color
+                        'customizations.noshowtimezone_color = noshowtimezone_color
+                        'customizations.calendarFontColor = calendarFontColor
+                        'customizations.nrOfDaysMonth = nrOfDaysMonth
+                        'customizations.farbeInternOP = farbeInternOP
+                        'customizations.farbeExterne = farbeExterne
+                        'customizations.iProjektFarbe = iProjektFarbe
+                        'customizations.iWertFarbe = iWertFarbe
+                        'customizations.vergleichsfarbe0 = vergleichsfarbe0
+                        'customizations.vergleichsfarbe1 = vergleichsfarbe1
+                        ''customizations.vergleichsfarbe2 = vergleichsfarbe2
 
-                        customizations.timeSpanColor = awinSettings.timeSpanColor
-                        customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+                        'customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
+                        'customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
+                        'customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
+                        'customizations.AmpelGruen = awinSettings.AmpelGruen
+                        ''tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                        'customizations.AmpelGelb = awinSettings.AmpelGelb
+                        'customizations.AmpelRot = awinSettings.AmpelRot
+                        'customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+                        'customizations.glowColor = awinSettings.glowColor
 
-                        customizations.gridLineColor = awinSettings.gridLineColor
+                        'customizations.timeSpanColor = awinSettings.timeSpanColor
+                        'customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
 
-                        customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
+                        'customizations.gridLineColor = awinSettings.gridLineColor
 
-                        customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+                        'customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
 
-                        customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+                        'customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
 
-                        customizations.actualDataMonth = awinSettings.actualDataMonth
-                        customizations.ergebnisfarbe1 = ergebnisfarbe1
-                        customizations.ergebnisfarbe2 = ergebnisfarbe2
-                        customizations.weightStrategicFit = weightStrategicFit
-                        customizations.kalenderStart = awinSettings.kalenderStart
-                        customizations.zeitEinheit = awinSettings.zeitEinheit
-                        customizations.kapaEinheit = awinSettings.kapaEinheit
-                        customizations.offsetEinheit = awinSettings.offsetEinheit
-                        customizations.EinzelRessExport = awinSettings.EinzelRessExport
-                        customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
-                        customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
-                        customizations.spaltenbreite = awinSettings.spaltenbreite
-                        customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
-                        customizations.propAnpassRess = awinSettings.propAnpassRess
-                        customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
+                        'customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
-                        customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
-                        customizations.fullProtocol = awinSettings.fullProtocol
-                        customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
-                        customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
-                        customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
-                        customizations.importUnknownNames = awinSettings.importUnknownNames
-                        customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+                        'customizations.actualDataMonth = awinSettings.actualDataMonth
+                        'customizations.ergebnisfarbe1 = ergebnisfarbe1
+                        'customizations.ergebnisfarbe2 = ergebnisfarbe2
+                        'customizations.weightStrategicFit = weightStrategicFit
+                        'customizations.kalenderStart = awinSettings.kalenderStart
+                        'customizations.zeitEinheit = awinSettings.zeitEinheit
+                        'customizations.kapaEinheit = awinSettings.kapaEinheit
+                        'customizations.offsetEinheit = awinSettings.offsetEinheit
+                        'customizations.EinzelRessExport = awinSettings.EinzelRessExport
+                        'customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
+                        'customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
+                        'customizations.spaltenbreite = awinSettings.spaltenbreite
+                        'customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+                        'customizations.propAnpassRess = awinSettings.propAnpassRess
+                        'customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
 
-                        customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
-                        customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
-                        customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
-                        customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+                        'customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+                        'customizations.fullProtocol = awinSettings.fullProtocol
+                        'customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+                        'customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+                        'customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
+                        'customizations.importUnknownNames = awinSettings.importUnknownNames
+                        'customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
 
-                        customizations.importTyp = awinSettings.importTyp
+                        'customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+                        'customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+                        'customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+                        'customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
 
-                        customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+                        'customizations.importTyp = awinSettings.importTyp
 
-                        customizations.englishLanguage = awinSettings.englishLanguage
+                        'customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
 
-                        customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
-                        customizations.considerRiskFee = awinSettings.considerRiskFee
+                        'customizations.englishLanguage = awinSettings.englishLanguage
+
+                        'customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+                        'customizations.considerRiskFee = awinSettings.considerRiskFee
 
 
                         'Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
@@ -19313,8 +19329,6 @@ Public Module agm2
             End Try
 
         Next ix
-
-
 
         '
         ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
@@ -21144,6 +21158,133 @@ Public Module agm2
 
     End Sub
 
+    ''' <summary>
+    ''' alle kundenspez. Settings (die in verschiedenen globalen Variablen enthalten sind)
+    ''' werden in die dafür vorgesehene Struktur übernommen, sodass dann das VCSetting 'Customization' in die DB
+    ''' geschrieben werden kann
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function get_customSettings() As clsCustomization
 
+        Dim customizations As New clsCustomization
 
+        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+        'Next
+        customizations.businessUnitDefinitions = businessUnitDefinitions
+
+        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+        '    customizations.phaseDefinitions.Add(kvp.Value)
+        'Next
+        customizations.phaseDefinitions = PhaseDefinitions
+
+        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+        '    customizations.milestoneDefinitions.Add(kvp.Value)
+        'Next
+        customizations.milestoneDefinitions = MilestoneDefinitions
+
+        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+        customizations.showtimezone_color = showtimezone_color
+        customizations.noshowtimezone_color = noshowtimezone_color
+        customizations.calendarFontColor = calendarFontColor
+        customizations.nrOfDaysMonth = nrOfDaysMonth
+        customizations.farbeInternOP = farbeInternOP
+        customizations.farbeExterne = farbeExterne
+        customizations.iProjektFarbe = iProjektFarbe
+        customizations.iWertFarbe = iWertFarbe
+        customizations.vergleichsfarbe0 = vergleichsfarbe0
+        customizations.vergleichsfarbe1 = vergleichsfarbe1
+        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+        customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
+        customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
+        customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
+        customizations.AmpelGruen = awinSettings.AmpelGruen
+        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+        customizations.AmpelGelb = awinSettings.AmpelGelb
+        customizations.AmpelRot = awinSettings.AmpelRot
+        customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+        customizations.glowColor = awinSettings.glowColor
+
+        customizations.timeSpanColor = awinSettings.timeSpanColor
+        customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+
+        customizations.gridLineColor = awinSettings.gridLineColor
+
+        customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
+
+        customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+
+        customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+        customizations.actualDataMonth = awinSettings.actualDataMonth
+        customizations.ergebnisfarbe1 = ergebnisfarbe1
+        customizations.ergebnisfarbe2 = ergebnisfarbe2
+        customizations.weightStrategicFit = weightStrategicFit
+        customizations.kalenderStart = awinSettings.kalenderStart
+        customizations.zeitEinheit = awinSettings.zeitEinheit
+        customizations.kapaEinheit = awinSettings.kapaEinheit
+        customizations.offsetEinheit = awinSettings.offsetEinheit
+        customizations.EinzelRessExport = awinSettings.EinzelRessExport
+        customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
+        customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
+        customizations.spaltenbreite = awinSettings.spaltenbreite
+        customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+        customizations.propAnpassRess = awinSettings.propAnpassRess
+        customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
+
+        customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+        customizations.fullProtocol = awinSettings.fullProtocol
+        customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+        customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+        customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
+        customizations.importUnknownNames = awinSettings.importUnknownNames
+        customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+
+        customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+        customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+        customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+        customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+
+        customizations.importTyp = awinSettings.importTyp
+
+        customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+
+        customizations.englishLanguage = awinSettings.englishLanguage
+
+        customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+        customizations.considerRiskFee = awinSettings.considerRiskFee
+
+        get_customSettings = customizations
+    End Function
+    ''' <summary>
+    ''' hiermit werden die missingMilestoneDefinitions zu den MilestoneDefinitions und 
+    ''' die missingPhaseDefinitions zu den PhaseDefinitions hinzugefügt
+    ''' </summary>
+    Public Sub addMissingDefs2Defs()
+
+        For ix As Integer = 1 To missingPhaseDefinitions.Count
+            Try
+                PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        missingPhaseDefinitions.Clear()
+
+        ' jetzt die Meilensteine
+        For ix As Integer = 1 To missingMilestoneDefinitions.Count
+            Try
+                MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        missingMilestoneDefinitions.Clear()
+    End Sub
 End Module

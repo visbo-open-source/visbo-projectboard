@@ -147,6 +147,7 @@ Public Module Module1
     Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
+    Public MilestoneDefsAndPhaseDefsAdded As Boolean = False
 
 
     Public CostDefinitions As New clsKostenarten

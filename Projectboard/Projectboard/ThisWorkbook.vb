@@ -316,16 +316,60 @@ Public Class ThisWorkbook
             Else
                 ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
                 If awinSettings.readWriteMissingDefinitions Then
+
                     appInstance.ScreenUpdating = False
-                    ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+
+                    ' hier sollen jetzt noch die Phasen und Meilensteine, die hinzugefügt wurden, weggeschrieben werden 
                     Try
-                        'Call awinWritePhaseDefinitions()
-                        Call awinWritePhaseMilestoneDefinitions()
+
+                        Dim msgResult As New MsgBoxResult
+
+                        If MilestoneDefsAndPhaseDefsAdded And
+                         myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            If awinSettings.englishLanguage Then
+                                msgResult = MsgBox("You want to save the added phases and milestone in the DB ?", vbYesNo)
+
+                            Else
+                                msgResult = MsgBox("Sollen die hinzugefügten Phasen und Meilensteine in der DB gespeichert werden?", vbYesNo)
+
+                            End If
+
+                            If msgResult = MsgBoxResult.Yes Then
+
+
+                                ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
+                                ' jetzt wird geprüft, ob die missingMilestoneDefinitions in MilestoneDefinitions übertragen werden 
+                                If awinSettings.addMissingPhaseMilestoneDef Then
+
+                                    Call addMissingDefs2Defs()
+
+                                End If
+                                'ur: 2019-09-02: nicht mehr in Customization file zurückschreiben, sondern in DB
+                                'Call awinWritePhaseMilestoneDefinitions()
+
+                                Dim customizations As clsCustomization = get_customSettings()
+                                    Dim result As Boolean = False
+                                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    Nothing,
+                                                                                    err)
+                                    If result = False Then
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox("Error when writing Customizations to DB ")
+                                        Else
+                                            Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("Error when writing Projectboard Customization File")
+                            Call MsgBox("Error when writing Customizations to DB ")
                         Else
-                            Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                            Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
                         End If
 
                     End Try
