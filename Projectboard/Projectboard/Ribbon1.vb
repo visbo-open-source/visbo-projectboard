@@ -1939,9 +1939,9 @@ Imports System.Web
                 End If
             Case "PT4G1B12"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ist-Daten"
+                    tmpLabel = "Import Ist-Daten"
                 Else
-                    tmpLabel = "Actual Data"
+                    tmpLabel = "Import Actual Data"
                 End If
 
             Case "PT4G1B13"

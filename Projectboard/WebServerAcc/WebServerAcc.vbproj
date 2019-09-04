@@ -113,6 +113,7 @@
     <Compile Include="clsVPfItem.vb" />
     <Compile Include="clsWebVCcost.vb" />
     <Compile Include="clsWebVCrole.vb" />
+    <Compile Include="clsWebVCSettingEverything.vb" />
     <Compile Include="clsWebVCSettingOrganisation.vb" />
     <Compile Include="clsWebVPf.vb" />
     <Compile Include="clsWebVPlock.vb" />

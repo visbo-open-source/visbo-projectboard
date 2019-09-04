@@ -18214,101 +18214,9 @@ Public Module agm2
 
                         customizations = New clsCustomization
 
+                        ' Einstellungen aus CustomizationFile und awinSettings übernehmen in customizations
                         customizations = get_customSettings()
 
-                        ''For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                        ''    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
-                        ''Next
-                        'customizations.businessUnitDefinitions = businessUnitDefinitions
-
-                        ''For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
-                        ''    customizations.phaseDefinitions.Add(kvp.Value)
-                        ''Next
-                        'customizations.phaseDefinitions = PhaseDefinitions
-
-                        ''For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
-                        ''    customizations.milestoneDefinitions.Add(kvp.Value)
-                        ''Next
-                        'customizations.milestoneDefinitions = MilestoneDefinitions
-
-                        '' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
-
-                        'customizations.showtimezone_color = showtimezone_color
-                        'customizations.noshowtimezone_color = noshowtimezone_color
-                        'customizations.calendarFontColor = calendarFontColor
-                        'customizations.nrOfDaysMonth = nrOfDaysMonth
-                        'customizations.farbeInternOP = farbeInternOP
-                        'customizations.farbeExterne = farbeExterne
-                        'customizations.iProjektFarbe = iProjektFarbe
-                        'customizations.iWertFarbe = iWertFarbe
-                        'customizations.vergleichsfarbe0 = vergleichsfarbe0
-                        'customizations.vergleichsfarbe1 = vergleichsfarbe1
-                        ''customizations.vergleichsfarbe2 = vergleichsfarbe2
-
-                        'customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
-                        'customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
-                        'customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
-                        'customizations.AmpelGruen = awinSettings.AmpelGruen
-                        ''tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
-                        'customizations.AmpelGelb = awinSettings.AmpelGelb
-                        'customizations.AmpelRot = awinSettings.AmpelRot
-                        'customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
-                        'customizations.glowColor = awinSettings.glowColor
-
-                        'customizations.timeSpanColor = awinSettings.timeSpanColor
-                        'customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
-
-                        'customizations.gridLineColor = awinSettings.gridLineColor
-
-                        'customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
-
-                        'customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
-
-                        'customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
-
-                        'customizations.actualDataMonth = awinSettings.actualDataMonth
-                        'customizations.ergebnisfarbe1 = ergebnisfarbe1
-                        'customizations.ergebnisfarbe2 = ergebnisfarbe2
-                        'customizations.weightStrategicFit = weightStrategicFit
-                        'customizations.kalenderStart = awinSettings.kalenderStart
-                        'customizations.zeitEinheit = awinSettings.zeitEinheit
-                        'customizations.kapaEinheit = awinSettings.kapaEinheit
-                        'customizations.offsetEinheit = awinSettings.offsetEinheit
-                        'customizations.EinzelRessExport = awinSettings.EinzelRessExport
-                        'customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
-                        'customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
-                        'customizations.spaltenbreite = awinSettings.spaltenbreite
-                        'customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
-                        'customizations.propAnpassRess = awinSettings.propAnpassRess
-                        'customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
-
-                        'customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
-                        'customizations.fullProtocol = awinSettings.fullProtocol
-                        'customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
-                        'customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
-                        'customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
-                        'customizations.importUnknownNames = awinSettings.importUnknownNames
-                        'customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
-
-                        'customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
-                        'customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
-                        'customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
-                        'customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
-
-                        'customizations.importTyp = awinSettings.importTyp
-
-                        'customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
-
-                        'customizations.englishLanguage = awinSettings.englishLanguage
-
-                        'customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
-                        'customizations.considerRiskFee = awinSettings.considerRiskFee
-
-
-                        'Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
-                        '                                                                        CStr(settingTypes(ptSettingTypes.customization)),
-                        '                                                                        "Customization",
-                        '                                                                        Nothing, err)
                     Else
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You do not have the rights setting up a new Visbo Center")
@@ -18445,67 +18353,7 @@ Public Module agm2
                 End If
 
 
-                ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
-                ' sonst von der DB
 
-                '' jetzt die CurrentOrga definieren
-                'Dim currentOrga As New clsOrganisation
-
-                '' jetzt werden die ORganisation ausgelesen 
-                '' wenn es keine Organisation gibt , d
-
-                'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                'If currentOrga.count > 0 Then
-
-                '    If currentOrga.count > 0 Then
-                '        validOrganisations.addOrga(currentOrga)
-                '    End If
-
-                '    CostDefinitions = currentOrga.allCosts
-                '    RoleDefinitions = currentOrga.allRoles
-
-
-                '    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                '    Try
-                '        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-                '        If IsNothing(customFieldDefinitions) Then
-                '            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                '            Try
-                '                Call readCustomFieldDefinitions(wsName4)
-                '            Catch ex As Exception
-
-                '            End Try
-                '        ElseIf customFieldDefinitions.count = 0 Then
-                '            Try
-                '                Call readCustomFieldDefinitions(wsName4)
-                '            Catch ex As Exception
-
-                '            End Try
-                '        End If
-                '    Catch ex As Exception
-
-                '    End Try
-
-
-                'Else
-                '    awinSettings.readCostRolesFromDB = False
-                '    If awinSettings.englishLanguage Then
-                '        Call MsgBox("You don't have any organization in your system!")
-                '    Else
-                '        Call MsgBox("Es existiert keine Organisation im System!")
-                '    End If
-
-
-                '    ' Auslesen der Custom Field Definitions aus Customization-File
-                '    Try
-                '        Call readCustomFieldDefinitions(wsName4)
-                '    Catch ex As Exception
-
-                '    End Try
-
-                'End If
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -18688,42 +18536,7 @@ Public Module agm2
 
                     End If
 
-                    '' ' das kann nicht unmittelbar nach Login gemacht werden 
-                    ''Dim meldungen As Collection = New Collection
 
-                    '''' jetzt werden die Rollen besetzt 
-                    ''If awinSettings.readCostRolesFromDB Then
-
-                    ''    Try
-                    ''        Call setUserRoles(meldungen)
-                    ''    Catch ex As Exception
-                    ''        If meldungen.Count > 0 Then
-                    ''            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                    ''            Call logfileSchreiben(meldungen)
-                    ''        End If
-
-                    ''        myCustomUserRole = New clsCustomUserRole
-
-                    ''        With myCustomUserRole
-                    ''            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                    ''            .specifics = ""
-                    ''            .userName = dbUsername
-                    ''        End With
-                    ''        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                    ''        Call myCustomUserRole.setNonAllowances()
-                    ''    End Try
-
-                    ''Else
-                    ''    myCustomUserRole = New clsCustomUserRole
-
-                    ''    With myCustomUserRole
-                    ''        .customUserRole = ptCustomUserRoles.OrgaAdmin
-                    ''        .specifics = ""
-                    ''        .userName = dbUsername
-                    ''    End With
-                    ''    ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                    ''    Call myCustomUserRole.setNonAllowances()
-                    ''End If
 
 
                     ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
@@ -18746,7 +18559,7 @@ Public Module agm2
                 appInstance.EnableEvents = True
                 Throw New ArgumentException(ex.Message)
             End Try
-
+            
             If Not IsNothing(xlsCustomization) Then
                 ' jetzt wird das Customization-File geschlossen
                 xlsCustomization.Close(SaveChanges:=False)

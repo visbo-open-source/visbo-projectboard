@@ -2086,6 +2086,70 @@ Public Class Request
         storeVCSettingsToDB = result
 
     End Function
+
+
+    Public Function retrieveAllVCSettingFromDB(ByRef err As clsErrorCodeMsg,
+                                               ByRef appearanceResult As SortedList(Of String, clsAppearance),
+                                               ByRef customfieldsResult As clsCustomFieldDefinitions,
+                                               ByRef customizationResult As clsCustomization,
+                                               ByRef customrolesResult As clsCustomUserRoles,
+                                               ByRef organisationResult As clsOrganisation
+                                               ) As Object
+
+        Dim result As New List(Of Object)
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveAllVCSettingFromDB(err,
+                                                                                           appearanceResult,
+                                                                                           customfieldsResult,
+                                                                                           customizationResult,
+                                                                                           customrolesResult,
+                                                                                           organisationResult)
+
+
+                    If Not IsNothing(result) Then
+
+                        If result.Count <= 0 Then
+
+                            Select Case err.errorCode
+
+                                Case 200 ' success
+                                     ' nothing to do
+
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveAllVCSettingFromDB(err,
+                                                                                           appearanceResult,
+                                                                                           customfieldsResult,
+                                                                                           customizationResult,
+                                                                                           customrolesResult,
+                                                                                           organisationResult)
+                                    End If
+
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' nothing can be done for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        retrieveAllVCSettingFromDB = result
+    End Function
     Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles

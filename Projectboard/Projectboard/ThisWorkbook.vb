@@ -309,11 +309,29 @@ Public Class ThisWorkbook
 
             End Try
 
+            Dim testresult As New Object
 
+            Dim appResult As New SortedList(Of String, clsAppearance)
+            Dim custfieldsResult As New clsCustomFieldDefinitions
+            Dim customizeResult As New clsCustomization
+            Dim customrolesResult As New clsCustomUserRoles
+            Dim organisationResult As New clsOrganisation
 
             If cancelAbbruch Then
                 Cancel = True
             Else
+                Try
+
+                    testresult = CType(databaseAcc, DBAccLayer.Request).retrieveAllVCSettingFromDB(err,
+                                                                                           appResult,
+                                                                                           custfieldsResult,
+                                                                                           customizeResult,
+                                                                                           customrolesResult,
+                                                                                           organisationResult)
+                Catch ex As Exception
+
+                End Try
+
                 ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
                 If awinSettings.readWriteMissingDefinitions Then
 
@@ -345,25 +363,25 @@ Public Class ThisWorkbook
 
                                 End If
                                 'ur: 2019-09-02: nicht mehr in Customization file zurückschreiben, sondern in DB
-                                'Call awinWritePhaseMilestoneDefinitions()
+                                Call awinWritePhaseMilestoneDefinitions()
 
                                 Dim customizations As clsCustomization = get_customSettings()
-                                    Dim result As Boolean = False
-                                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
+                                Dim result As Boolean = False
+                                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
                                                                                     Nothing,
                                                                                     err)
-                                    If result = False Then
-                                        If awinSettings.englishLanguage Then
-                                            Call MsgBox("Error when writing Customizations to DB ")
-                                        Else
-                                            Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
-                                        End If
+                                If result = False Then
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("Error when writing Customizations to DB ")
+                                    Else
+                                        Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
                                     End If
                                 End If
-
                             End If
+
+                        End If
 
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then

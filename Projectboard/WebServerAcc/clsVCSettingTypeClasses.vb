@@ -45,6 +45,18 @@ Public Class clsVCSettingOrganisation
     End Sub
 
 End Class
+''' <summary>
+''' 
+''' </summary>
+Public Class clsVCSettingEverything
+
+    Inherits clsVCSetting
+    Public Property value As Object
+
+    Sub New()
+        _value = New Object
+    End Sub
+End Class
 
 ''' <summary>
 ''' Definitionen, die ursprünglich im Customization-File (Einstellungen) gespeichert waren
