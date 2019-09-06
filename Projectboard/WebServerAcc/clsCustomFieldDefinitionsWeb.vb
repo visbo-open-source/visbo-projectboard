@@ -27,7 +27,7 @@ Public Class clsCustomFieldDefinitionsWeb
 
         End With
     End Sub
-    Public Sub copyTo(ByVal custFieldDef As clsCustomFieldDefinitions)
+    Public Sub copyTo(ByRef custFieldDef As clsCustomFieldDefinitions)
 
         With custFieldDef
 

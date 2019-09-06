@@ -260,31 +260,35 @@ Public Class clsMeilenstein
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
-        Get
+    'Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
+    '    Get
 
-            Dim tmpClass As String
-            Dim found As Boolean = True
+    '        Dim tmpClass As String
+    '        Dim found As Boolean = True
+    '        Dim appear As New clsAppearance
 
-            If MilestoneDefinitions.Contains(Me.name) Then
-                tmpClass = MilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
+    '        If MilestoneDefinitions.Contains(Me.name) Then
+    '            tmpClass = MilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
 
-            ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
-                tmpClass = missingMilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
+    '        ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
+    '            tmpClass = missingMilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
 
-            Else
-                tmpClass = _appearance
-                found = False
-            End If
+    '        Else
+    '            tmpClass = _appearance
+    '            found = False
+    '        End If
 
-            getShape = appearanceDefinitions.Item(tmpClass).form
+    '        'getShape = appearanceDefinitions.Item(tmpClass).form
+    '        appear = appearanceDefinitions.Item(tmpClass)
+    '        getShape = CType(appInstance.Worksheets(arrWsNames(ptTables.MPT)),
+    '            Microsoft.Office.Interop.Excel.Worksheet).Shapes.AddShape(appear.shpType, 0, 0, appear.width, appear.height)
 
-            If Not found Then
-                getShape.Fill.ForeColor.RGB = _color
-            End If
+    '        If Not found Then
+    '            getShape.Fill.ForeColor.RGB = _color
+    '        End If
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' liest/schreibt den Ampel-Status, das ist die 1. Bewertung
@@ -389,7 +393,9 @@ Public Class clsMeilenstein
                 Dim msName As String = elemNameOfElemID(_nameID)
 
                 If MilestoneDefinitions.Contains(msName) Or missingMilestoneDefinitions.Contains(msName) Then
-                    farbe = Me.getShape.Fill.ForeColor.RGB
+                    'ur:190725
+                    'farbe = Me.getShape.Fill.ForeColor.RGB
+                    farbe = appearanceDefinitions.Item(Me.appearance).FGcolor
                 Else
                     farbe = _color
                 End If
@@ -779,11 +785,11 @@ Public Class clsMeilenstein
 
         Try
             _color = XlRgbColor.rgbAquamarine
-            If appearanceDefinitions.ContainsKey(_appearance) Then
-                If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
-                    _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
-                End If
-            End If
+            'If appearanceDefinitions.ContainsKey(_appearance) Then
+            '    If Not IsNothing(appearanceDefinitions.Item(_appearance).form) Then
+            '        _color = appearanceDefinitions.Item(_appearance).form.Fill.ForeColor.RGB
+            '    End If
+            'End If
         Catch ex As Exception
 
         End Try

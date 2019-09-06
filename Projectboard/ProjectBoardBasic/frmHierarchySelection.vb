@@ -1004,6 +1004,7 @@ Public Class frmHierarchySelection
         selectedNode = hryTreeView.SelectedNode
 
 
+
         If Me.rdbNameList.Checked Then
 
             ' hier muss jetzt noch der aktuelle rdb ausgelesen werden ..

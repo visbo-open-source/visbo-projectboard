@@ -17,7 +17,7 @@ Public Class clsCustomUserRole
     Public Sub New()
         _userName = ""
         _userID = ""
-        _customUserRole = ptCustomUserRoles.Alles
+        _customUserRole = ptCustomUserRoles.OrgaAdmin
         _specifics = ""
         _nonAllowance = {""}
     End Sub
@@ -46,13 +46,13 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.PortfolioManager
                 '_nonAllowance = {"PT4G1M1-1", "PT4G1M1-2",
                 '                 "PTview", "PTfilter", "PTWebServer"}
-                _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G1M0B2", "PTeditoa", "PTfilter",
+                _nonAllowance = {"PT4G1M1-1", "PT4G1M1-2", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1M0B2", "PTeditoa", "PTfilter",
                                  "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTview", "PTWebServer", "PThelp"}
 
             Case ptCustomUserRoles.ProjektLeitung
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1", "PTeditoa",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1M1-1", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PTeditoa",
                                  "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PTsort", "PThelp",
                                  "PTWebServer"}
 
@@ -60,7 +60,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.RessourceManager
 
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
-                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B11",
+                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
@@ -72,7 +72,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.TeamManager
 
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
-                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B11",
+                                 "PT4G1M1-1", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
@@ -83,7 +83,7 @@ Public Class clsCustomUserRole
                 ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
             Case ptCustomUserRoles.InternalViewer
 
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PTeditoa",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PTeditoa",
                                  "PT2G1M2B1", "PT2G1M2B8", "PT2G1M2B2", "PT2G2B5", "PT2G1M1B3",
                                  "PT4G1M",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
@@ -265,6 +265,7 @@ Public Class clsCustomUserRole
             specifics = _specifics
         End Get
         Set(value As String)
+
             If Not IsNothing(value) Then
                 _specifics = value
             Else

@@ -81,15 +81,20 @@
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
                 <button id="PT4G1B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
-                <!--label="Ist-Daten"-->
-                <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
-                <!--label="Custom User Roles"-->
-                <button id="PT4G1B11" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
-                <!--label="Offline Erfassung"-->
-                <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>
-              </menu>
+                <!--label="Custom User Roles"-->
+                <button id="PT4G1B11" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
+                <!--label="Appearances"-->
+                <button id="PT4G1B15" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportAppearances" supertip ="Es werden die möglichen Darstellungsklassen der Phasen und Meilensteine importiert "/>
+                <!--label="Customization"-->
+                <button id="PT4G1B16" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomization" supertip ="Es werden die Kundenspezifischen Einstellungen importiert "/>
+              </menu> 
+              <!--label="Ist-Daten"-->
+              <button id="PT4G1B12" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
+              <!--label="Offline Erfassung"-->
+              <!--
+              <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>-->
               <menu id="PT4G1M1-2" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="VISBO-Steckbriefe"-->
                 <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>

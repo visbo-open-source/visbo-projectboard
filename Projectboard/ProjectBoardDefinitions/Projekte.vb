@@ -19241,20 +19241,34 @@ Public Module Projekte
 
                         Else
 
+                            'Dim tmpName As String = elemNameOfElemID(phasenNameID)
+                            'If PhaseDefinitions.Contains(tmpName) Then
+                            '    vorlagenShape = PhaseDefinitions.getShape(tmpName)
+                            'Else
+                            '    vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
+                            'End If
+
+
+                            'phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
+                            '    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                            'vorlagenShape.PickUp()
+                            'phaseShape.Apply()
+
+                            'ur:190725
+                            Dim appear As New clsAppearance
                             Dim tmpName As String = elemNameOfElemID(phasenNameID)
                             If PhaseDefinitions.Contains(tmpName) Then
-                                vorlagenShape = PhaseDefinitions.getShape(tmpName)
+
+                                appear = appearanceDefinitions(PhaseDefinitions.getAppearance(tmpName))
                             Else
-                                vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
+                                appear = appearanceDefinitions(missingPhaseDefinitions.getAppearance(tmpName))
                             End If
 
+                            phaseShape = worksheetShapes.AddShape(Type:=appear.shpType,
+                              Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
 
-                            phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
-                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                            vorlagenShape.PickUp()
-                            phaseShape.Apply()
+
                         End If
-
 
 
                     Catch ex As Exception
@@ -19268,6 +19282,8 @@ Public Module Projekte
                         .Title = phasenNameID
                         .AlternativeText = CInt(PTshty.phaseE).ToString
                     End With
+
+
 
                     If i = 1 Then
                         Call defineShapeAppearance(hproj, phaseShape)
@@ -19303,14 +19319,22 @@ Public Module Projekte
                             isMissingMilestoneDefinition = Not MilestoneDefinitions.Contains(cMilestone.name)
 
                             ' Änderung tk 26.11.15
+                            'If MilestoneDefinitions.Contains(cMilestone.name) Then
+                            '    vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                            'Else
+                            '    vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+                            'End If
+                            'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
+
+                            'ur:190725
+                            Dim appear As New clsAppearance
                             If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                                appear = appearanceDefinitions(cMilestone.appearance)
                             Else
-                                vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+                                appear = appearanceDefinitions(cMilestone.appearance)
                             End If
+                            Dim factorB2H As Double = appear.width / appear.height
 
-
-                            Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                             hproj.calculateMilestoneCoord(cMilestone.getDate, zeilenOffset, factorB2H, top, left, width, height)
 
@@ -19326,12 +19350,13 @@ Public Module Projekte
                             If msShape Is Nothing Then
 
 
-                                'msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
-                                '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                msShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
+                                msShape = worksheetShapes.AddShape(Type:=appear.shpType,
                                                                 Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                vorlagenShape.PickUp()
-                                msShape.Apply()
+                                'ur:190725
+                                'msShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
+                                '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                'vorlagenShape.PickUp()
+                                'msShape.Apply()
 
                                 With msShape
                                     .Name = msName
@@ -19345,9 +19370,8 @@ Public Module Projekte
                                     msShapeNames.Add(msName, msName)
                                 End If
 
-                                msShape.Rotation = vorlagenShape.Rotation
-
-                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingMilestoneDefinition, cMilestone.farbe)
+                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingMilestoneDefinition,
+                                                            cMilestone.farbe, appear)
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(msShape)
@@ -20014,16 +20038,25 @@ Public Module Projekte
                                 ' hier die übergeordnete Phase holen ...
 
                                 ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
+                                'If MilestoneDefinitions.Contains(cMilestone.name) Then
+                                '    vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+
+                                'Else
+                                '    vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+
+                                'End If
+
+
+                                'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
+                                'ur:190725
+                                Dim appear As New clsAppearance
                                 If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                    vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
-
+                                    appear = appearanceDefinitions(cMilestone.appearance)
                                 Else
-                                    vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
-
+                                    appear = appearanceDefinitions(cMilestone.appearance)
                                 End If
+                                Dim factorB2H As Double = appear.width / appear.height
 
-
-                                Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                                 hproj.calculateMilestoneCoord(cMilestone.getDate, zeilenoffset, factorB2H, top, left, width, height)
                                 'hproj.calculateResultCoord(cResult.getDate, zeilenoffset, top, left, width, height)
@@ -20043,44 +20076,70 @@ Public Module Projekte
                                         top = top - boxWidth
                                     End If
 
-                                    ' Alt - Start 
-                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType,
-                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    vorlagenShape.PickUp()
-                                    resultShape.Apply()
+                                    '' Alt - Start 
+                                    'resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType,
+                                    '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    'vorlagenShape.PickUp()
+                                    'resultShape.Apply()
 
-                                    resultShape.Rotation = vorlagenShape.Rotation
+                                    'resultShape.Rotation = vorlagenShape.Rotation
 
-                                    With resultShape
-                                        .Name = shpName
-                                        .Title = cMilestone.nameID
-                                        .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    End With
-                                    ' Alt - Ende
+                                    'With resultShape
+                                    '    .Name = shpName
+                                    '    .Title = cMilestone.nameID
+                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
+                                    'End With
+                                    '' Alt - Ende
+                                    'Neu - Start
+                                    Try
+                                        resultShape = worksheetShapes.Item(shpName)
+                                    Catch ex As Exception
+                                        resultShape = Nothing
+                                    End Try
+
+                                    If resultShape Is Nothing Then
+
+
+                                        resultShape = worksheetShapes.AddShape(Type:=appear.shpType,
+                                                                        Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                        'ur:190725
+                                        'msShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
+                                        '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                        'vorlagenShape.PickUp()
+                                        'msShape.Apply()
+
+                                        resultShape.Rotation = appear.Rotation
+                                        With resultShape
+                                            .Name = shpName
+                                            .Title = cMilestone.nameID
+                                            .AlternativeText = CInt(PTshty.milestoneE).ToString
+                                        End With
+
+                                        ' Neu - Ende
 
 
 
-                                    msNumber = msNumber + 1
-                                    If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
+                                        msNumber = msNumber + 1
+                                        If numberIt Then
+                                            Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
 
-                                    Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
+                                        Else
+                                            Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
+                                        End If
+
+                                        ' jetzt der Liste der ProjectboardShapes hinzufügen
+                                        projectboardShapes.add(resultShape)
+
+                                        ' jetzt der Liste von Shapes hinzufügen, die dann nachher zum ProjektShape gruppiert werden sollen 
+                                        listOFShapes.Add(resultShape.Name)
+
                                     End If
 
-                                    ' jetzt der Liste der ProjectboardShapes hinzufügen
-                                    projectboardShapes.add(resultShape)
-
-                                    ' jetzt der Liste von Shapes hinzufügen, die dann nachher zum ProjektShape gruppiert werden sollen 
-                                    listOFShapes.Add(resultShape.Name)
-
                                 End If
-
                             End If
                         End If
+
                     End If
-
-
 
                 Next
 
@@ -20810,6 +20869,7 @@ Public Module Projekte
         Dim alreadyGroup As Boolean = False
         Dim shpElement As xlNS.Shape
         Dim vorlagenshape As xlNS.Shape
+        Dim appear As clsAppearance
         Dim shpName As String
         Dim todoListe As New Collection
         Dim realNameList As New Collection
@@ -20909,11 +20969,11 @@ Public Module Projekte
 
                         ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                         If PhaseDefinitions.Contains(cphase.name) Then
-                            vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-
+                            'vorlagenshape = PhaseDefinitions.getShape(cphase.name)
+                            appear = PhaseDefinitions.getShapeapp(cphase.name)
                         Else
-                            vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-
+                            'vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
+                            appear = missingPhaseDefinitions.getShapeApp(cphase.name)
                         End If
 
 
@@ -20943,11 +21003,12 @@ Public Module Projekte
 
                                 'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
 
-                                phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
+                                'phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
+                                '                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                'vorlagenshape.PickUp()
+                                'phasenShape.Apply()
+                                phasenShape = .Shapes.AddShape(Type:=appear.shpType,
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                vorlagenshape.PickUp()
-                                phasenShape.Apply()
-
                                 With phasenShape
                                     .Name = shpName
                                     .Title = cphase.nameID
@@ -21101,8 +21162,21 @@ Public Module Projekte
                     .Line.Transparency = 0
                     .Line.Weight = 2
                     .Fill.ForeColor.RGB = CInt(myphase.farbe)
-                End If
 
+
+                End If
+            Else
+                Dim appear As clsAppearance = appearanceDefinitions(PhaseDefinitions.getAppearance(myphase.name))
+                myShape.Rotation = appear.Rotation
+                myShape.Fill.BackColor.RGB = appear.BGcolor
+                myShape.Fill.ForeColor.RGB = appear.FGcolor
+                myShape.Glow.Color.RGB = appear.Glowcolor
+                myShape.Glow.Radius = appear.Glowradius
+                myShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                'myShape.Shadow.Transparency = appear.ShadowTransp
+                myShape.Line.BackColor.RGB = appear.LineBGColor
+                myShape.Line.ForeColor.RGB = appear.LineFGColor
+                myShape.Line.Weight = appear.LineWeight
             End If
 
         End With
@@ -21122,7 +21196,7 @@ Public Module Projekte
     ''' <param name="isMissingDefinition"></param>
     ''' <remarks></remarks>
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung,
-                                          ByVal isMissingDefinition As Boolean, ByVal farbe As Long)
+                                          ByVal isMissingDefinition As Boolean, ByVal farbe As Long, Optional ByVal appear As clsAppearance = Nothing)
 
 
 
@@ -21140,6 +21214,20 @@ Public Module Projekte
                     .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
                     .Line.Weight = 2
                     .Fill.ForeColor.RGB = CInt(farbe)
+                End If
+            Else
+                If Not IsNothing(appear) Then
+                    resultShape.Rotation = appear.Rotation
+                    resultShape.Fill.BackColor.RGB = appear.BGcolor
+                    resultShape.Fill.ForeColor.RGB = appear.FGcolor
+                    resultShape.Glow.Color.RGB = appear.Glowcolor
+                    resultShape.Glow.Radius = appear.Glowradius
+                    resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                    'resultShape.Shadow.Transparency = appear.ShadowTransp
+                    resultShape.Line.BackColor.RGB = appear.LineBGColor
+                    resultShape.Line.ForeColor.RGB = appear.LineFGColor
+                    resultShape.Line.Weight = appear.LineWeight
+
                 End If
 
             End If

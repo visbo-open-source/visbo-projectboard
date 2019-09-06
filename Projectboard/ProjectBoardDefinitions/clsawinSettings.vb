@@ -310,7 +310,7 @@ Public Class clsawinSettings
 
         ' Settings für Grundeinstellungen
         _nullDatum = #6/23/1914#
-        _kalenderStart = #1/1/2012#
+        _kalenderStart = #1/1/2015#
         _kapaEinheit = "PT"
         _zeitEinheit = "PM"
         _databaseName = ""

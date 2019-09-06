@@ -147,6 +147,7 @@ Public Module Module1
     Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
+    Public MilestoneDefsAndPhaseDefsAdded As Boolean = False
 
 
     Public CostDefinitions As New clsKostenarten
@@ -272,17 +273,18 @@ Public Module Module1
         acd = 1 ' ggf später für ActualData 
     End Enum
 
-    Public settingTypes() = {"customfields", "customroles", "organisation", "clientsettings", "phasemilestonedefs", "reportprofiles", "reportprofiles", "generalexcelcharts"}
+    Public settingTypes() = {"customfields", "customroles", "organisation", "customization", "appearance", "phasemilestonedefs", "reportprofiles", "ppttemplates", "generalexcelcharts"}
 
     Public Enum ptSettingTypes
         customfields = 0
         customroles = 1
         organisation = 2
-        clientsettings = 3
-        phasemilestonedefs = 4
-        reportprofiles = 5
-        ppttemplates = 6
-        generalexcelcharts = 7
+        customization = 3
+        appearance = 4
+        phasemilestonedefs = 5
+        reportprofiles = 6
+        ppttemplates = 7
+        generalexcelcharts = 8
     End Enum
 
     Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
@@ -865,6 +867,8 @@ Public Module Module1
         customUserRoles = 11
         actualData = 12
         offlineData = 13
+        customization = 14
+        appearances = 15
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

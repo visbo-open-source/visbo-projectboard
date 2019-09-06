@@ -76,7 +76,7 @@ Public Class clsOrganisationWeb
         End With
     End Sub
 
-    Public Sub copyTo(ByVal orgaDef As clsOrganisation)
+    Public Sub copyTo(ByRef orgaDef As clsOrganisation)
 
         With orgaDef
 

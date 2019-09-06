@@ -399,7 +399,9 @@ Public Module awinDiagrams
                             Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
                             If IsNothing(tmpPhaseDef) Then
                                 If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                                    objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                    'ur: 20190722
+                                    'objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                    objektFarbe = appearanceDefinitions.Item("Phasen Default").FGcolor
                                 Else
                                     objektFarbe = awinSettings.AmpelNichtBewertet
                                 End If
@@ -415,7 +417,9 @@ Public Module awinDiagrams
                             einheit = " "
 
                             If appearanceDefinitions.ContainsKey(prcName) Then
-                                objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                                'ur: 20190722
+                                'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                                objektFarbe = appearanceDefinitions.Item(prcName).FGcolor
                             Else
                                 objektFarbe = awinSettings.AmpelNichtBewertet
                             End If
@@ -521,7 +525,9 @@ Public Module awinDiagrams
                             Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
                             If IsNothing(tmpMilestoneDef) Then
                                 If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
-                                    objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                    'ur: 20190722
+                                    'objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                    objektFarbe = appearanceDefinitions.Item("Meielnstein Default").FGcolor
                                 Else
                                     objektFarbe = awinSettings.AmpelNichtBewertet
                                 End If
@@ -537,7 +543,9 @@ Public Module awinDiagrams
                             einheit = " "
 
                             If appearanceDefinitions.ContainsKey(prcName) Then
-                                objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                                'ur: 20190722
+                                'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                                objektFarbe = appearanceDefinitions.Item(prcName).FGcolor
                             Else
                                 objektFarbe = awinSettings.AmpelNichtBewertet
                             End If
@@ -1308,7 +1316,9 @@ Public Module awinDiagrams
 
                     If IsNothing(tmpPhaseDef) Then
                         If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                            objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                            ' ur: 190722
+                            'objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                            objektFarbe = appearanceDefinitions.Item("Phasen Default").FGcolor
                         Else
                             objektFarbe = awinSettings.AmpelNichtBewertet
                         End If
@@ -1334,7 +1344,9 @@ Public Module awinDiagrams
                     einheit = " "
 
                     If appearanceDefinitions.ContainsKey(prcName) Then
-                        objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                        'ur:190722
+                        'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                        objektFarbe = appearanceDefinitions.Item(prcName).FGcolor
                     Else
                         objektFarbe = awinSettings.AmpelNichtBewertet
                     End If
@@ -1465,7 +1477,9 @@ Public Module awinDiagrams
                     Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
                     If IsNothing(tmpMilestoneDef) Then
                         If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
-                            objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                            'ur: 190722
+                            'objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                            objektFarbe = appearanceDefinitions.Item("Meilenstein Default").FGcolor
                         Else
                             objektFarbe = awinSettings.AmpelNichtBewertet
                         End If
@@ -1480,7 +1494,9 @@ Public Module awinDiagrams
                     einheit = " "
 
                     If appearanceDefinitions.ContainsKey(prcName) Then
-                        objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                        'ur: 190722
+                        'objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                        objektFarbe = appearanceDefinitions.Item(prcName).FGcolor
                     Else
                         objektFarbe = awinSettings.AmpelNichtBewertet
                     End If
@@ -7197,8 +7213,11 @@ Public Module awinDiagrams
                     Case ptElementTypen.phases
                         Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(scInfo.q2)
                         If IsNothing(tmpPhaseDef) Then
+
                             If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                                balkenFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                'ur: 190722
+                                'balkenFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                balkenFarbe = appearanceDefinitions.Item("Phasen Default").FGcolor
                             Else
                                 balkenFarbe = CInt(awinSettings.AmpelNichtBewertet)
                             End If
@@ -7212,7 +7231,9 @@ Public Module awinDiagrams
                             Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(scInfo.q2)
                             If IsNothing(tmpMilestoneDef) Then
                                 If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
-                                    balkenFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                    ' ur:190722
+                                    'balkenFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                    balkenFarbe = appearanceDefinitions.Item("Meilenstein Default").FGcolor
                                 Else
                                     balkenFarbe = CInt(awinSettings.AmpelNichtBewertet)
                                 End If

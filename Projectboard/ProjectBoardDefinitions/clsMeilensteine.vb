@@ -174,6 +174,59 @@ Public Class clsMeilensteine
         End Get
     End Property
 
+    '''' <summary>
+    '''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
+    '''' wenn es den nicht gibt, wird die Default Milestone Klasse verwendet 
+    '''' </summary>
+    '''' <param name="name"></param>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
+    '    Get
+    '        Dim appearanceID As String
+    '        Dim defaultMilestoneAppearance As String = "Meilenstein Default"
+
+    '        'Dim key As String = calcKey(name, belongsTo)
+
+    '        If _allMilestones.ContainsKey(name) Then
+    '            appearanceID = _allMilestones.Item(name).darstellungsKlasse
+    '            If appearanceID = "" Then
+    '                appearanceID = defaultMilestoneAppearance
+    '            End If
+    '        Else
+    '            appearanceID = defaultMilestoneAppearance
+    '        End If
+
+    '        '' ''Dim ok As Boolean = False
+    '        '' ''While Not ok
+    '        '' ''    Try
+    '        '' ''        ' jetzt ist in der AppearanceID was drin ... 
+    '        '' ''        getShape = appearanceDefinitions.Item(appearanceID).form
+    '        '' ''        If Not IsNothing(getShape) Then
+    '        '' ''            ok = True
+    '        '' ''        Else
+    '        '' ''            Call MsgBox("nothing")
+    '        '' ''        End If
+    '        '' ''    Catch ex As Exception
+    '        '' ''        Call MsgBox("getshape fehlerhaft")
+    '        '' ''        getShape = Nothing
+    '        '' ''    End Try
+
+    '        '' ''End While
+
+
+    '        ' jetzt ist in der AppearanceID was drin ... 
+    '        getShape = appearanceDefinitions.Item(appearanceID).form
+
+    '        'ur:190725
+    '        'Dim appear As clsAppearance = appearanceDefinitions.Item(appearanceID)
+    '        'getShape = CType(appInstance.Worksheets(arrWsNames(ptTables.MPT)),
+    '        '    Microsoft.Office.Interop.Excel.Worksheet).Shapes.AddShape(appear.shpType, 0, 0, appear.width, appear.height)
+
+    '    End Get
+    'End Property
+
     ''' <summary>
     ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
     ''' wenn es den nicht gibt, wird die Default Milestone Klasse verwendet 
@@ -182,7 +235,7 @@ Public Class clsMeilensteine
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
+    Public ReadOnly Property getShapeApp(ByVal name As String) As clsAppearance
         Get
             Dim appearanceID As String
             Dim defaultMilestoneAppearance As String = "Meilenstein Default"
@@ -217,7 +270,8 @@ Public Class clsMeilensteine
 
 
             ' jetzt ist in der AppearanceID was drin ... 
-            getShape = appearanceDefinitions.Item(appearanceID).form
+            getShapeApp = appearanceDefinitions.Item(appearanceID)
+
 
         End Get
     End Property
@@ -282,5 +336,17 @@ Public Class clsMeilensteine
     Public Sub Clear()
         _allMilestones.Clear()
     End Sub
+
+
+    ''' <summary>
+    ''' gibt die komplette Liste zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property liste() As SortedList(Of String, clsMeilensteinDefinition)
+        Get
+            liste = _allMilestones
+        End Get
+    End Property
+
 
 End Class
