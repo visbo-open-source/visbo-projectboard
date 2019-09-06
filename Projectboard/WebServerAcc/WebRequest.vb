@@ -5416,7 +5416,7 @@ Public Class Request
                             setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization)).ElementAt(0)
                         Case settingTypes(ptSettingTypes.appearance)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingAppearance)(Antwort)
-                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomization)).ElementAt(0)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingAppearance)).ElementAt(0)
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select

@@ -6365,8 +6365,6 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportKapas(control As IRibbonControl)
 
-        'Call projektTafelInit()
-
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -6386,15 +6384,6 @@ Imports System.Web
                 RoleDefinitions = changedOrga.allRoles
                 CostDefinitions = changedOrga.allCosts
 
-                ' Einlesen der Kapas
-                ' immer die Externen Datei lesen .. wesentlich besser und einfacher strukturiert ...
-                'If awinSettings.allianzIstDatenReferate.Length > 0 Then
-                '    ' Allianz Externe Verträge
-                '    Call readMonthlyExternKapasEV(outputCollection)
-                'Else
-                '    ' VISBO Externe Kapazitäts-Dateien 
-                '    Call readMonthlyExternKapas(outputCollection)
-                'End If
 
                 ' wenn es gibt - lesen der Modifier Kapas, wo interne wie externe angegeben sein können ..
                 Call readMonthlyModifierKapas(outputCollection)
@@ -6479,7 +6468,6 @@ Imports System.Web
         Dim selectedWB As String = ""
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
 
-        'Dim dirname As String = importOrdnerNames(PTImpExp.customization)
 
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board Customization*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
@@ -6488,7 +6476,6 @@ Imports System.Web
 
         Dim weiterMachen As Boolean = False
 
-        'Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -6521,7 +6508,7 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+                Call logfileSchreiben("Beginn Import kundenspezifischer Einstellungen", selectedWB, -1)
 
                 ' Öffnen des Customization-Files
                 appInstance.Workbooks.Open(dateiname)
@@ -6531,18 +6518,18 @@ Imports System.Web
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
-                ' Schliessen des CustomUser Role-Files
+                ' Schliessen des Customizations-Files
                 appInstance.Workbooks(wbName).Close(SaveChanges:=True)
 
                 If outputCollection.Count > 0 Then
                     Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
                     outputCollection.Add(errmsg)
-                    Call showOutPut(outputCollection, "User Role Import", "")
+                    Call showOutPut(outputCollection, "Einstellungen Import", "")
 
                     Call logfileSchreiben(outputCollection)
 
                 ElseIf Not IsNothing(importedCustomization) Then
-                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    ' jetzt werden die Einstellungen als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
                     Dim result As Boolean = False
@@ -6563,7 +6550,9 @@ Imports System.Web
                     Call MsgBox("no customizations found ...")
                 End If
             Catch ex As Exception
-
+                Dim resultMessage As String = ex.Message
+                Call MsgBox(resultMessage)
+                Call logfileSchreiben("Error when writing Customizations ...", resultMessage, -1)
             End Try
         End If
 
@@ -6629,12 +6618,13 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+                Call logfileSchreiben("Beginn Import Appearances", selectedWB, -1)
 
                 ' Öffnen des Customization-Files
                 appInstance.Workbooks.Open(dateiname)
 
                 Dim outputCollection As New Collection
+                '' ??? sollen die appearances von grund auf aufgebaut werden, oder nur verändert?
                 Dim importedAppearances As SortedList(Of String, clsAppearance) = ImportAppearances(outputCollection)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
@@ -6649,7 +6639,7 @@ Imports System.Web
 
                     Call logfileSchreiben(outputCollection)
 
-                ElseIf Not IsNothing(importedAppearances) Then
+                ElseIf Not IsNothing(importedAppearances) And ImportedAppearances.count > 0 Then
                     ' jetzt wird die Appearances als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
