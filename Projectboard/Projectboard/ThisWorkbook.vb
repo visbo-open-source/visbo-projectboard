@@ -320,17 +320,17 @@ Public Class ThisWorkbook
             If cancelAbbruch Then
                 Cancel = True
             Else
-                Try
+                ''Try
 
-                    testresult = CType(databaseAcc, DBAccLayer.Request).retrieveAllVCSettingFromDB(err,
-                                                                                           appResult,
-                                                                                           custfieldsResult,
-                                                                                           customizeResult,
-                                                                                           customrolesResult,
-                                                                                           organisationResult)
-                Catch ex As Exception
+                ''    testresult = CType(databaseAcc, DBAccLayer.Request).retrieveAllVCSettingFromDB(err,
+                ''                                                                           appResult,
+                ''                                                                        custfieldsResult,
+                ''                                                                           customizeResult,
+                ''                                                                           customrolesResult,
+                ''                                                                           organisationResult)
+                ''Catch ex As Exception
 
-                End Try
+                ''End Try
 
                 ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
                 If awinSettings.readWriteMissingDefinitions Then

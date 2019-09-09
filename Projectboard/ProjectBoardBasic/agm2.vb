@@ -19805,7 +19805,17 @@ Public Module agm2
                                 If missingDefinitions Then
                                     missingMilestoneDefinitions.Add(hMilestone)
                                 Else
-                                    MilestoneDefinitions.Add(hMilestone)
+                                    ' ur:20190909: Meilensteindefinition 
+                                    ' kann sich ändern und muss daher, wenn schon vorhanden,
+                                    ' entfernt werden und die neue eingefügt werden
+
+                                    If MilestoneDefinitions.Contains(hMilestone.name) Then
+                                        MilestoneDefinitions.remove(hMilestone.name)
+                                        MilestoneDefinitions.Add(hMilestone)
+                                    Else
+                                        MilestoneDefinitions.Add(hMilestone)
+                                    End If
+
                                 End If
 
                             Catch ex As Exception
@@ -20423,8 +20433,17 @@ Public Module agm2
                                     missingPhaseDefinitions.Add(hphase)
 
                                 Else
+                                    ' ur: 20190909: 
+                                    ' erweitert, da zuvor nur etwas gemacht wurde mit der Phasedefinition, wenn nicht schon vorhanden
 
-                                    PhaseDefinitions.Add(hphase)
+                                    If PhaseDefinitions.Contains(hphase.name) Then
+
+                                        PhaseDefinitions.remove(hphase.name)
+                                        PhaseDefinitions.Add(hphase)
+
+                                    Else
+                                        PhaseDefinitions.Add(hphase)
+                                    End If
 
                                 End If
 

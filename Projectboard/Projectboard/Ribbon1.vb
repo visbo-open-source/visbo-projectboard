@@ -6639,7 +6639,7 @@ Imports System.Web
 
                     Call logfileSchreiben(outputCollection)
 
-                ElseIf Not IsNothing(importedAppearances) And ImportedAppearances.count > 0 Then
+                ElseIf Not IsNothing(importedAppearances) And importedAppearances.count > 0 Then
                     ' jetzt wird die Appearances als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
