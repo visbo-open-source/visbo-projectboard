@@ -239,6 +239,19 @@ Public Class frmSelectImportFiles
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
             Me.alleButton.Visible = True
 
+        ElseIf menueAswhl = PTImpExp.customization Then
+
+            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            'dirName = importOrdnerNames(PTImpExp.customization)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select customization file"
+            Else
+                Me.Text = "Datei mit kundenspezifischen Einstellungen auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+
         ElseIf menueAswhl = PTImpExp.actualData Then
 
             'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
@@ -313,6 +326,10 @@ Public Class frmSelectImportFiles
             'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
             dirName = importOrdnerNames(PTImpExp.Kapas)
 
+        ElseIf menueAswhl = PTImpExp.customization Then
+            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            'dirName = importOrdnerNames(PTImpExp.customization)
+
         ElseIf menueAswhl = PTImpExp.actualData Then
             'dirName = importOrdnerNames(PTImpExp.scenariodefs)
             dirName = importOrdnerNames(PTImpExp.actualData)
@@ -355,7 +372,13 @@ Public Class frmSelectImportFiles
         Dim dirName As String = ""
 
         Try
-            dirName = importOrdnerNames(menueAswhl)
+            If menueAswhl = PTImpExp.customization Then
+
+                dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            Else
+                dirName = importOrdnerNames(menueAswhl)
+            End If
+
 
             For i = 1 To Me.ListImportFiles.SelectedItems.Count
                 element = Me.ListImportFiles.SelectedItems.Item(i - 1)
