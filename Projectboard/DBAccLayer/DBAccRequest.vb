@@ -86,6 +86,54 @@ Public Class Request
 
     End Function
 
+
+
+
+    ''' <summary>
+    '''  'Verbindung mit der Datenbank abbauen (invalidate token)
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function logout(ByRef err As clsErrorCodeMsg) As Boolean
+
+
+        Dim logoutOK As Boolean = False
+
+        Try
+            If usedWebServer Then
+
+
+                logoutOK = CType(DBAcc, WebServerAcc.Request).logout(err)
+                If logoutOK Then
+                    DBAcc = Nothing
+                    uname = Nothing
+                    pwd = Nothing
+                Else
+                    If err.errorCode = 500 Then   ' internal Server Error
+                        ' try is once more
+                        logoutOK = CType(DBAcc, WebServerAcc.Request).logout(err)
+                        If logoutOK Then
+                            DBAcc = Nothing
+                            uname = Nothing
+                            pwd = Nothing
+                        End If
+                    End If
+
+                End If
+
+            Else  'es wird eine MongoDB direkt adressiert
+
+                ' logout - Funktion gibt es hier nicht
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DBAccRequest-Logout" & ex.Message)
+        End Try
+
+        logout = logoutOK
+
+    End Function
+
     ''' <summary>
     ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. token vorhanden
     ''' </summary>

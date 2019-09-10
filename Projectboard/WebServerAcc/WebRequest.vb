@@ -164,6 +164,85 @@ Public Class Request
 
 
     ''' <summary>
+    ''' 'Verbindung mit der Datenbank abbauen (invalidate token)
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function logout(ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim typeRequest As String = "/user/logout"
+        Dim logoutOK As Boolean = False
+        Dim errcode As Integer = 0
+        Dim errmsg As String = ""
+
+
+        Try
+            Dim serverUriString As String
+
+
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim logoutAntwort As New clsWebOutput
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+
+            End Using
+
+
+            If awinSettings.visboDebug Then
+                Call MsgBox(logoutAntwort.message)
+            End If
+
+            If errcode = 200 Then
+
+                logoutAntwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+
+                logoutOK = True
+
+
+                token = ""
+                VRScache.Clear()
+                aktUser = Nothing
+                VCs.Clear()
+
+
+                err.errorCode = errcode
+                err.errorMsg = logoutAntwort.message
+
+            Else
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("( " & CType(errcode, Integer).ToString & ") : " & errmsg & " : " & logoutAntwort.message)
+                End If
+
+                err.errorCode = errcode
+                err.errorMsg = "Logout" & " : " & errmsg & " : " & logoutAntwort.message
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("Logout", errcode, errmsg & " : " & logoutAntwort.message)
+
+            End If
+
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in Logout" & typeRequest & ": " & ex.Message)
+        End Try
+
+        logout = logoutOK
+
+    End Function
+
+    ''' <summary>
     ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. gültiger token vorhanden
     ''' </summary>
     ''' <returns></returns>
