@@ -17923,23 +17923,26 @@ Public Module agm2
 
                 appInstance = New Excel.Application
 
+                ' ur:12.09.2019 !!! Es soll kein Customization File mehr notwendig sein
+
                 ' hier muss jetzt das Customization File aufgemacht werden ...
-                Try
-                    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
-                    myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                    Call logfileOpen()
+                ''Try
+                ''    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                ''    myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+                ''    Call logfileOpen()
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Windows-User: " & myWindowsName)
-                    End If
+                ''    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
+                ''    If awinSettings.visboDebug Then
+                ''        Call MsgBox("Windows-User: " & myWindowsName)
+                ''    End If
 
-                Catch ex As Exception
-                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-                End Try
+                ''Catch ex As Exception
+                ''    Call msgbox("Customization File nicht gefunden - Abbruch")
+                ''    'Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+                ''End Try
 
             ElseIf special = "ProjectBoard" Then
 
