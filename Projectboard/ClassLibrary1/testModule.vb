@@ -18452,7 +18452,7 @@ Public Module testModule
         Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames,
                                                              awinSettings.mppUseAbbreviation, swimlaneID)
 
-        ' eigentlih muss es das sein ..
+        ' eigentlich muss es das sein ..
         Try
             milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
         Catch ex As Exception
@@ -18597,7 +18597,7 @@ Public Module testModule
 
                 ''    shapeNames.Add(.Name)
                 ''End With
-                copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
+                'copiedShape = pptCopypptPaste(milestoneTypShape, rds.pptSlide)
 
 
                 Dim height As Single = sizeFaktor * milestoneTypApp.height

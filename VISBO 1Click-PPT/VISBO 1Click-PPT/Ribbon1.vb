@@ -277,9 +277,7 @@ Public Class Ribbon1
                     awinSettings.visboServer = My.Settings.VISBOServer
                     awinSettings.proxyURL = My.Settings.proxyServerURL
                     awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-                    If awinSettings.rememberUserPwd Then
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
-                    End If
+
 
                     dbUsername = ""
                     dbPasswort = ""
@@ -289,6 +287,10 @@ Public Class Ribbon1
 
                     StartofCalendar = StartofCalendar.AddMonths(-12)
 
+                    ' UserName - Password merken
+                    If awinSettings.rememberUserPwd Then
+                        awinSettings.userNamePWD = My.Settings.userNamePWD
+                    End If
 
                 Catch ex As Exception
 
