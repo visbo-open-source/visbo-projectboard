@@ -89,6 +89,22 @@ Public Class ThisAddIn
                 End If
                 My.Settings.Save()
 
+
+                Dim err As New clsErrorCodeMsg
+
+                Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
+
+                If logoutErfolgreich Then
+                    If awinSettings.visboDebug Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
+                        Else
+                            Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
+                        End If
+                    End If
+
+                End If
+
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 

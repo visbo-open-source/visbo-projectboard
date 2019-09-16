@@ -1,6 +1,6 @@
 ﻿Public Class clsKostenarten
 
-    'Private _allKostenarten As Collection
+    'sortiert nach UID
     Private _allKostenarten As SortedList(Of Integer, clsKostenartDefinition)
 
 

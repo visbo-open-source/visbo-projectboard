@@ -1,6 +1,6 @@
 ﻿Public Class clsPhasenDefinition
 
-    Private uuid As Long
+    Private uuid As Long            ' ur: 16.09.2019: wird aktuell nirgends berücksichtigt, auch keine Sortierung
     Private _farbe As Long
     Private _darstellungsKlasse As String
     Private Const defaultName As String = "Phasen Default"

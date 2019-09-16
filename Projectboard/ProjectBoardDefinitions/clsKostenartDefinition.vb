@@ -4,7 +4,7 @@
     Public farbe As Object
 
     Private _budget() As Double
-    Private _uuid As Integer
+    Private _uuid As Integer            ' muss eindeutig sein, da in der Liste allKostenarten danach sortiert
 
     Public Property UID() As Integer
         Get
