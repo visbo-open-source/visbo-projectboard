@@ -18549,6 +18549,7 @@ Public Module testModule
                         .AlternativeText = ""
 
                         shapeNames.Add(.Name)
+
                     End With
 
                 End If

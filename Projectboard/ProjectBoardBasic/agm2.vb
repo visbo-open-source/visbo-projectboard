@@ -4927,7 +4927,8 @@ Public Module agm2
 
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
                                                             Try
-                                                                newRoleDef.UID = missingRoleDefinitions.getFreeRoleID
+                                                                'ur: 13.09.2019: nicht von Missing nehmen
+                                                                newRoleDef.UID = RoleDefinitions.getFreeRoleID
                                                                 missingRoleDefinitions.Add(newRoleDef)
                                                             Catch ex As Exception
                                                                 Dim a As Integer = 1
