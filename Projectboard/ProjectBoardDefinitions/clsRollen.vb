@@ -6,7 +6,7 @@
 ''' <remarks></remarks>
 Public Class clsRollen
 
-
+    ' Liste ist nach UID sortiert
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
 
     ' ist eine sortierte Liste von Namen der Rollen und ihrer zugehörigen ID 

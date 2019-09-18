@@ -1,6 +1,7 @@
 ﻿Imports xlNS = Microsoft.Office.Interop.Excel
 Public Class clsPhasen
 
+    ' Liste ist nach PhasenNamen sortiert
     Private _allPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
