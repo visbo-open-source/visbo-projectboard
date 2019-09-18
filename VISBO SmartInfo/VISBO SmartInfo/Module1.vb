@@ -10116,10 +10116,7 @@ Module Module1
                 slideIDList.Add(sl.SlideID, sl.SlideID)
             Next
 
-            'For Each sldID As KeyValuePair(Of Integer, Integer) In slideIDList
 
-            'Dim sld As PowerPoint.Slide = pres.Slides.FindBySlideID(sldID.Key)
-            'Dim sld As PowerPoint.Slide = pres.Slides.FindBySlideID(slideIDList.ElementAt(2).Key)
             Dim sld As PowerPoint.Slide = currentSlide
 
 
@@ -10129,7 +10126,7 @@ Module Module1
             If Not IsNothing(sld) Then
                 If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
 
-                    If userIsEntitled(errmsg, sld) Then
+                    If userIsEntitled(errmsg, sld) Then    ' User ist bereits eingeloggt 
 
                         currentTimestamp = getCurrentTimeStampFromSlide(sld)
                         Call pptAPP_AufbauSmartSlideLists(sld)
@@ -10307,7 +10304,7 @@ Module Module1
                     Try
                         If currentSlide.Tags.Item("SMART") = "visbo" Then
 
-                            ' Aufbau SmartSlieLists muss immer ohne DB erfolgen können ! 
+                            ' Aufbau SmartSlideLists muss immer ohne DB erfolgen können ! 
 
                             ' die HomeButtonRelevanz setzen 
                             homeButtonRelevance = False
@@ -10343,7 +10340,7 @@ Module Module1
 
                             Call buildSmartSlideLists()
 
-                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                            ' jetzt merken, wie die Settings für homeButton und changedButton waren ..
                             initialHomeButtonRelevance = homeButtonRelevance
                             initialChangedButtonRelevance = changedButtonRelevance
 
@@ -10383,7 +10380,7 @@ Module Module1
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler in pptAPP_UpdateOneSlide")
+            Call MsgBox("Fehler in pptAPP_AufbauSmartSlideLists")
         End Try
     End Sub
 

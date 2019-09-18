@@ -645,15 +645,6 @@ Public Class clsPPTTimeMachine
 
         End Select
 
-        'If Not justForInformation Then
-        '    tmpTM.timeStampsIndex = tmpIndex
-        'End If
-
-        'Else
-        '    ' nichts tun ...
-        '    tmpDate = jetzt
-        'End If
-
 
 
         getNextNavigationDate = tmpDate
