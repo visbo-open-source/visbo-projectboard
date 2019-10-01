@@ -7649,6 +7649,118 @@ Imports System.Web
 
     End Sub
 
+    Sub PTTestAPI_Client(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+
+        Dim clientValues As Double()
+        Dim APIvalues As Double()
+
+        Dim outputString As String = ""
+        Dim outPutCollection As New Collection
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                Try
+                    ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
+                    appInstance.Workbooks.Open(awinPath & projektAustausch)
+
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
+                    With singleShp
+                        If isProjectType(shapeArt) Then
+
+                            Try
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
+
+                                ' jetzt wird dieses Projekt exportiert ... 
+                                Try
+                                    ' hier muss nun die Berechnung der Personalkosten im Client aufgerufen werden
+                                    clientValues = hproj.getAllPersonalKosten
+
+                                    ' hier muss nun die Berechnung der Personaltkosten im Server aufgerufen werden
+                                    'APIvalues = 
+
+                                    ' die beiden werden nun verglichen
+
+                                    outputString = hproj.getShapeText & " erfolgreich .."
+                                    outPutCollection.Add(outputString)
+                                Catch ex As Exception
+                                    outputString = hproj.getShapeText & " nicht erfolgreich .."
+                                    outPutCollection.Add(outputString)
+                                End Try
+
+
+
+                            Catch ex As Exception
+                                outputString = singleShp.Name & " nicht gefunden ..."
+                                outPutCollection.Add(outputString)
+                            End Try
+
+                        End If
+                    End With
+                    Try
+                        ' Schließen der Datei ProjektSteckbrief ohne abspeichern der Änderungen, original Zustand bleibt erhalten
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False, Filename:=awinPath & projektAustausch)
+                    Catch ex As Exception
+
+                        outputString = "Fehler beim Schließen der Projektaustausch Vorlage"
+                        outPutCollection.Add(outputString)
+
+                    End Try
+                Catch ex As Exception
+
+                    outputString = "Fehler beim Öffnen der Projektaustausch Vorlage"
+                    outPutCollection.Add(outputString)
+
+                End Try
+
+
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection,
+                                 "Exportieren Steckbriefe",
+                                 "erfolgreich exportierte Dateien liegen in " & vbLf &
+                                 exportOrdnerNames(PTImpExp.visbo))
+            End If
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+
+    End Sub
+
 
     Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
 
