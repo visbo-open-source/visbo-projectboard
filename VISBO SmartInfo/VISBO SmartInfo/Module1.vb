@@ -10196,6 +10196,7 @@ Module Module1
             'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
             'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
 
+            pres.Application.Activate()
 
 
         Catch ex As Exception
