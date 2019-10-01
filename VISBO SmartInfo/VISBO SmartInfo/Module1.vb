@@ -4100,11 +4100,14 @@ Module Module1
     ''' <param name="pptShape"></param>
     Public Sub updateProjectChartInPPT(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
 
+        Dim xx As Date = currentTimestamp
+
+        Dim pptChart As PowerPoint.Chart = Nothing
+        Dim pptChartData As PowerPoint.ChartData = Nothing
+        Dim pptChartDataWB As Excel.Workbook = Nothing
 
 
-        Dim pptChart As PowerPoint.Chart
-        Dim pptChartData As PowerPoint.ChartData
-        Dim xlApp As xlNS.Application
+        ' ur:2019-09-19 TestDim xlApp As xlNS.Application
 
         If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
             Exit Sub
@@ -4112,9 +4115,23 @@ Module Module1
 
         pptChart = pptShape.Chart
         pptChartData = pptChart.ChartData
+
+        'ur:2019-09-19 Test: funktionsfähig
         If Not IsNothing(pptChartData.Workbook) Then
-            'pptChartData.ActivateChartDataWindow()
-            pptChartData.Activate()
+
+            If Not pptChartData.IsLinked Then
+                With pptChartData
+                    .Activate()
+                    '.ActivateChartDataWindow()
+                    .Workbook.Application.Visible = smartChartsAreEditable
+                    .Workbook.Application.Width = 50
+                    .Workbook.Application.Height = 15
+                    .Workbook.Application.Top = 10
+                    .Workbook.Application.Left = -120
+                    ' .Workbook.Application.WindowState = -4140 '## Minimize Excel
+                End With
+            End If
+
         End If
 
 
@@ -4423,7 +4440,7 @@ Module Module1
         End With
 
 
-        xlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
+        ' ur:2019-09-19 TestxlApp = CType(CType(pptChart.ChartData.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
         'xlApp.Visible = smartChartsAreEditable
@@ -4432,34 +4449,36 @@ Module Module1
 
 
         'Try
+        ' ur:2019-09-19 Test
+        'If Not IsNothing(xlApp.ActiveWindow) Then
 
-        If Not IsNothing(xlApp.ActiveWindow) Then
+        '    With xlApp.ActiveWindow
+        '        .Visible = smartChartsAreEditable
+        '        '.Caption = "VISBO Smart Diagram"
+        '        '.DisplayHeadings = False
+        '        '.DisplayWorkbookTabs = False
 
-            With xlApp.ActiveWindow
-                .Visible = smartChartsAreEditable
-                '.Caption = "VISBO Smart Diagram"
-                '.DisplayHeadings = False
-                '.DisplayWorkbookTabs = False
+        '        .Width = 50
+        '        .Height = 15
+        '        .Top = 10
+        '        .Left = -120
 
-                .Width = 50
-                .Height = 15
-                .Top = 10
-                .Left = -120
+        '    End With
+        'End If
 
-            End With
-        End If
+        ''Catch ex As Exception
 
-        'Catch ex As Exception
-
-        'End Try
+        ''End Try
 
 
         pptChart.Refresh()
         ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
         On Error Resume Next
         On Error GoTo 0
-        pptChartData = Nothing
-        pptChart = Nothing
+        'pptChartData = Nothing
+        'pptChart = Nothing
+        pptChartData.BreakLink()
+
 
 
         'If xlApp.Workbooks.Count = 1 Then
