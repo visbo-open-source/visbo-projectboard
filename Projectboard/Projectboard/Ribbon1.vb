@@ -7655,10 +7655,12 @@ Imports System.Web
         Dim hproj As clsProjekt
 
         Dim clientValues As Double()
-        Dim APIvalues As Double()
+        Dim APIvalues As List(Of Double)
 
         Dim outputString As String = ""
         Dim outPutCollection As New Collection
+
+        Dim err As New clsErrorCodeMsg
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -7682,8 +7684,6 @@ Imports System.Web
 
             For Each singleShp In awinSelection
                 Try
-                    ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
-                    appInstance.Workbooks.Open(awinPath & projektAustausch)
 
                     Dim shapeArt As Integer
                     shapeArt = kindOfShape(singleShp)
@@ -7700,12 +7700,24 @@ Imports System.Web
                                     clientValues = hproj.getAllPersonalKosten
 
                                     ' hier muss nun die Berechnung der Personaltkosten im Server aufgerufen werden
-                                    'APIvalues = 
+                                    APIvalues = CType(databaseAcc, DBAccLayer.Request).evaluateCostsOfProject(hproj.name, hproj.variantName, Date.Now, dbUsername, err)
 
                                     ' die beiden werden nun verglichen
 
                                     outputString = hproj.getShapeText & " erfolgreich .."
                                     outPutCollection.Add(outputString)
+
+                                    outputString = "Vergleich API - Client"
+                                    outPutCollection.Add(outputString)
+
+                                    ' Ausgabe des Ergebnisses
+                                    Dim i As Integer = 0
+                                    For Each apival As Double In APIvalues
+                                        outputString = apival.ToString & "   -   " & clientValues(i)
+                                        outPutCollection.Add(outputString)
+                                        i = i + 1
+                                    Next
+
                                 Catch ex As Exception
                                     outputString = hproj.getShapeText & " nicht erfolgreich .."
                                     outPutCollection.Add(outputString)
@@ -7720,18 +7732,10 @@ Imports System.Web
 
                         End If
                     End With
-                    Try
-                        ' Schließen der Datei ProjektSteckbrief ohne abspeichern der Änderungen, original Zustand bleibt erhalten
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=False, Filename:=awinPath & projektAustausch)
-                    Catch ex As Exception
 
-                        outputString = "Fehler beim Schließen der Projektaustausch Vorlage"
-                        outPutCollection.Add(outputString)
-
-                    End Try
                 Catch ex As Exception
 
-                    outputString = "Fehler beim Öffnen der Projektaustausch Vorlage"
+                    outputString = "Fehler in TestAPI_Client"
                     outPutCollection.Add(outputString)
 
                 End Try
@@ -7741,9 +7745,8 @@ Imports System.Web
 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection,
-                                 "Exportieren Steckbriefe",
-                                 "erfolgreich exportierte Dateien liegen in " & vbLf &
-                                 exportOrdnerNames(PTImpExp.visbo))
+                                 "Berechnung Kosten API - Client",
+                                 "berechnete Werte im Vergleich im Folgenden")
             End If
 
         Else

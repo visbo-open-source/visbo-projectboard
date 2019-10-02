@@ -2508,6 +2508,54 @@ Public Class Request
         retrieveVCsForUser = result
     End Function
 
+
+    Public Function evaluateCostsOfProject(ByVal projectname As String, ByVal variantName As String,
+                                           ByVal stored As DateTime, ByVal userName As String,
+                                           ByRef err As clsErrorCodeMsg) As List(Of Double)
+
+
+        Dim result As New List(Of Double)
+
+        Try
+            If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).evaluateCostsOfProject(projectname,
+                                                                               variantName,
+                                                                               stored,
+                                                                               userName, err)
+            Else
+                If result.Count = 0 Then
+
+                    Select Case err.errorCode
+
+                        Case 200 ' success
+                                     ' nothing to do
+
+                        Case 401 ' Token is expired
+
+                            loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                            If loginErfolgreich Then
+                                result = CType(DBAcc, WebServerAcc.Request).evaluateCostsOfProject(projectname,
+                                                                               variantName,
+                                                                               stored,
+                                                                               userName, err)
+                            End If
+
+                        Case Else ' all others
+                            Throw New ArgumentException(err.errorMsg)
+                    End Select
+
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        evaluateCostsOfProject = result
+
+    End Function
+
+
     Public Function updateActualVC(ByVal vcName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
