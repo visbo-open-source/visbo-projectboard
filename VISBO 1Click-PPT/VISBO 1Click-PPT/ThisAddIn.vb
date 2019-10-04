@@ -57,22 +57,30 @@ Public Class ThisAddIn
         Try
             If Not fehlerBeimLoad Then
 
-                If Not IsNothing(appInstance.Workbooks(myCustomizationFile)) Then
-                    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                Try
+                    If Not IsNothing(appInstance.Workbooks(myCustomizationFile)) Then
+                        ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl Missing-Milestones: " & missingMilestoneDefinitions.Count & vbLf &
-                               "Anzahl Missing-Phasen: " & missingPhaseDefinitions.Count)
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Anzahl Missing-Milestones: " & missingMilestoneDefinitions.Count & vbLf &
+                                   "Anzahl Missing-Phasen: " & missingPhaseDefinitions.Count)
+                        End If
+
+                        appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                     End If
+                Catch ex As Exception
 
-                    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
-                End If
+                End Try
+                Try
+                    If Not IsNothing(appInstance.Workbooks(myLogfile)) Then
+                        ' Schließen des LogFiles
+                        Call logfileSchliessen()
+                    End If
+                Catch ex As Exception
 
-                If Not IsNothing(appInstance.Workbooks(myLogfile)) Then
-                    ' Schließen des LogFiles
-                    Call logfileSchliessen()
-                End If
+                End Try
 
+                ' Merken von UserName-Password
                 My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                 If awinSettings.rememberUserPwd Then
                     My.Settings.userNamePWD = awinSettings.userNamePWD
@@ -80,6 +88,22 @@ Public Class ThisAddIn
                     My.Settings.userNamePWD = ""
                 End If
                 My.Settings.Save()
+
+
+                Dim err As New clsErrorCodeMsg
+
+                Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
+
+                If logoutErfolgreich Then
+                    If awinSettings.visboDebug Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
+                        Else
+                            Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
+                        End If
+                    End If
+
+                End If
 
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()

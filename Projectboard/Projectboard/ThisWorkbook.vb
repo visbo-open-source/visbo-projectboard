@@ -309,23 +309,85 @@ Public Class ThisWorkbook
 
             End Try
 
+            Dim testresult As New Object
 
+            Dim appResult As New SortedList(Of String, clsAppearance)
+            Dim custfieldsResult As New clsCustomFieldDefinitions
+            Dim customizeResult As New clsCustomization
+            Dim customrolesResult As New clsCustomUserRoles
+            Dim organisationResult As New clsOrganisation
 
             If cancelAbbruch Then
                 Cancel = True
             Else
+                ''Try
+
+                ''    testresult = CType(databaseAcc, DBAccLayer.Request).retrieveAllVCSettingFromDB(err,
+                ''                                                                           appResult,
+                ''                                                                        custfieldsResult,
+                ''                                                                           customizeResult,
+                ''                                                                           customrolesResult,
+                ''                                                                           organisationResult)
+                ''Catch ex As Exception
+
+                ''End Try
+
                 ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
                 If awinSettings.readWriteMissingDefinitions Then
+
                     appInstance.ScreenUpdating = False
-                    ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+
+                    ' hier sollen jetzt noch die Phasen und Meilensteine, die hinzugefügt wurden, weggeschrieben werden 
                     Try
-                        'Call awinWritePhaseDefinitions()
-                        Call awinWritePhaseMilestoneDefinitions()
+
+                        Dim msgResult As New MsgBoxResult
+
+                        If MilestoneDefsAndPhaseDefsAdded And
+                         myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            If awinSettings.englishLanguage Then
+                                msgResult = MsgBox("You want to save the added phases and milestone in the DB ?", vbYesNo)
+
+                            Else
+                                msgResult = MsgBox("Sollen die hinzugefügten Phasen und Meilensteine in der DB gespeichert werden?", vbYesNo)
+
+                            End If
+
+                            If msgResult = MsgBoxResult.Yes Then
+
+
+                                ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
+                                ' jetzt wird geprüft, ob die missingMilestoneDefinitions in MilestoneDefinitions übertragen werden 
+                                If awinSettings.addMissingPhaseMilestoneDef Then
+
+                                    Call addMissingDefs2Defs()
+
+                                End If
+                                'ur: 2019-09-02: nicht mehr in Customization file zurückschreiben, sondern in DB
+                                Call awinWritePhaseMilestoneDefinitions()
+
+                                Dim customizations As clsCustomization = get_customSettings()
+                                Dim result As Boolean = False
+                                result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                    Nothing,
+                                                                                    err)
+                                If result = False Then
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("Error when writing Customizations to DB ")
+                                    Else
+                                        Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
+                                    End If
+                                End If
+                            End If
+
+                        End If
+
                     Catch ex As Exception
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("Error when writing Projectboard Customization File")
+                            Call MsgBox("Error when writing Customizations to DB ")
                         Else
-                            Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                            Call MsgBox("Fehler bei Speichern der Customizations in die DB ")
                         End If
 
                     End Try
@@ -429,6 +491,22 @@ Public Class ThisWorkbook
 
             'Dim anzWindows As Integer = appInstance.Windows.Count
 
+            Dim err As New clsErrorCodeMsg
+
+            Dim logoutErfolgreich As Boolean = CType(databaseAcc, DBAccLayer.Request).logout(err)
+
+            If logoutErfolgreich Then
+                If awinSettings.visboDebug Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox(err.errorMsg & vbCrLf & "User don't have access to a VisboCenter any longer!")
+                    Else
+                        Call MsgBox(err.errorMsg & vbCrLf & "User hat keinen Zugriff mehr zu einem VisboCenter!")
+                    End If
+                End If
+
+            End If
+
+
 
             appInstance.ScreenUpdating = True
 
@@ -436,6 +514,8 @@ Public Class ThisWorkbook
                 Dim a As Integer = Application.Workbooks.Count
                 'Dim name asstring = Application.Workbooks(1).name
             End If
+
+
 
         Catch ex As Exception
 

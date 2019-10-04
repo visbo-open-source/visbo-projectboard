@@ -86,6 +86,54 @@ Public Class Request
 
     End Function
 
+
+
+
+    ''' <summary>
+    '''  'Verbindung mit der Datenbank abbauen (invalidate token)
+    ''' </summary>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function logout(ByRef err As clsErrorCodeMsg) As Boolean
+
+
+        Dim logoutOK As Boolean = False
+
+        Try
+            If usedWebServer Then
+
+
+                logoutOK = CType(DBAcc, WebServerAcc.Request).logout(err)
+                If logoutOK Then
+                    DBAcc = Nothing
+                    uname = Nothing
+                    pwd = Nothing
+                Else
+                    If err.errorCode = 500 Then   ' internal Server Error
+                        ' try is once more
+                        logoutOK = CType(DBAcc, WebServerAcc.Request).logout(err)
+                        If logoutOK Then
+                            DBAcc = Nothing
+                            uname = Nothing
+                            pwd = Nothing
+                        End If
+                    End If
+
+                End If
+
+            Else  'es wird eine MongoDB direkt adressiert
+
+                ' logout - Funktion gibt es hier nicht
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DBAccRequest-Logout" & ex.Message)
+        End Try
+
+        logout = logoutOK
+
+    End Function
+
     ''' <summary>
     ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. token vorhanden
     ''' </summary>
@@ -2086,6 +2134,70 @@ Public Class Request
         storeVCSettingsToDB = result
 
     End Function
+
+
+    Public Function retrieveAllVCSettingFromDB(ByRef err As clsErrorCodeMsg,
+                                               ByRef appearanceResult As SortedList(Of String, clsAppearance),
+                                               ByRef customfieldsResult As clsCustomFieldDefinitions,
+                                               ByRef customizationResult As clsCustomization,
+                                               ByRef customrolesResult As clsCustomUserRoles,
+                                               ByRef organisationResult As clsOrganisation
+                                               ) As Object
+
+        Dim result As New List(Of Object)
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveAllVCSettingFromDB(err,
+                                                                                           appearanceResult,
+                                                                                           customfieldsResult,
+                                                                                           customizationResult,
+                                                                                           customrolesResult,
+                                                                                           organisationResult)
+
+
+                    If Not IsNothing(result) Then
+
+                        If result.Count <= 0 Then
+
+                            Select Case err.errorCode
+
+                                Case 200 ' success
+                                     ' nothing to do
+
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveAllVCSettingFromDB(err,
+                                                                                           appearanceResult,
+                                                                                           customfieldsResult,
+                                                                                           customizationResult,
+                                                                                           customrolesResult,
+                                                                                           organisationResult)
+                                    End If
+
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' nothing can be done for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        retrieveAllVCSettingFromDB = result
+    End Function
     Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles
@@ -2234,6 +2346,126 @@ Public Class Request
         End Try
 
         retrieveCustomFieldsFromDB = result
+    End Function
+
+
+    ''' <summary>
+    ''' holt die Kundeneinstellungen des aktuellen VC von der Datenbank
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="timestamp"></param>
+    ''' <param name="refnext"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveCustomizationFromDB(ByVal name As String, ByVal timestamp As Date,
+                                                ByVal refnext As Boolean,
+                                                ByRef err As clsErrorCodeMsg) As clsCustomization
+
+        Dim result As clsCustomization = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                result = Nothing
+                err.errorCode = 403
+                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                                vbLf & "und können daher nicht von der DB gelesen werden"
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveCustomizationFromDB = result
+    End Function
+    ''' <summary>
+    ''' holt die Darstellungsklasse des aktuellen VC von der Datenbank
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="timestamp"></param>
+    ''' <param name="refnext"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveAppearancesFromDB(ByVal name As String, ByVal timestamp As Date,
+                                                ByVal refnext As Boolean,
+                                                ByRef err As clsErrorCodeMsg) As SortedList(Of String, clsAppearance)
+
+        Dim result As SortedList(Of String, clsAppearance) = Nothing
+
+        Try
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveAppearancesFromDB(name, timestamp, refnext, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveAppearancesFromDB(name, timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+            Else
+                ' to do for direct MongoAccess
+                result = Nothing
+                err.errorCode = 403
+                err.errorMsg = "Fehler: Darstellungsklasse sind im Customization-File gespeichert " &
+                                vbLf & "und können daher nicht von der DB gelesen werden"
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveAppearancesFromDB = result
     End Function
     Public Function retrieveVCsForUser(ByRef err As clsErrorCodeMsg) As List(Of String)
 

@@ -448,48 +448,92 @@ Public Module agm2
         Dim firstMilestone As Boolean = True
         Dim firstPhase As Boolean = True
 
-        With ws
+        If Not IsNothing(ws) Then
+            With ws
 
-            For Each shp As Excel.Shape In .Shapes
-                appDefinition = New clsAppearance
-                With appDefinition
+                For Each shp As Excel.Shape In ws.Shapes
+                    appDefinition = New clsAppearance
+                    With appDefinition
 
-                    If shp.Title <> "" Then
+                        .FGcolor = shp.Fill.ForeColor.RGB
+                        .BGcolor = shp.Fill.BackColor.RGB
+                        .Glowcolor = shp.Glow.Color.RGB
+                        .Glowradius = shp.Glow.Radius
+                        .Rotation = shp.Rotation
+                        .ShadowFG = shp.Shadow.ForeColor.RGB
+                        .ShadowTransp = shp.Shadow.Transparency
+                        .LineBGColor = shp.Line.BackColor.RGB
+                        .LineFGColor = shp.Line.ForeColor.RGB
+                        .LineWeight = shp.Line.Weight
 
-                        .name = shp.Title
-                        If shp.AlternativeText = "1" Then
-                            .isMilestone = True
-                        Else
-                            .isMilestone = False
-                        End If
-                        .form = shp
+                        .shpType = shp.AutoShapeType
+                        .width = shp.Width
+                        .height = shp.Height
 
                         Try
-                            appearanceDefinitions.Add(.name, appDefinition)
-
-                            If .isMilestone And firstMilestone Then
-                                awinSettings.defaultMilestoneClass = .name
-                                firstMilestone = False
-
-                            ElseIf Not .isMilestone And firstPhase Then
-                                awinSettings.defaultPhaseClass = .name
-                                firstPhase = False
-                            End If
+                            'If shp.TextFrame2.HasText Then
+                            .TextMarginLeft = shp.TextFrame2.MarginLeft
+                            .TextMarginRight = shp.TextFrame2.MarginRight
+                            .TextMarginBottom = shp.TextFrame2.MarginBottom
+                            .TextMarginTop = shp.TextFrame2.MarginTop
+                            .TextWordWrap = shp.TextFrame2.WordWrap
+                            .TextVerticalAnchor = shp.TextFrame2.VerticalAnchor
+                            .TextHorizontalAnchor = shp.TextFrame2.HorizontalAnchor
+                            .TextRangeText = shp.TextFrame2.TextRange.Text
+                            .TextRangeFontSize = shp.TextFrame2.TextRange.Font.Size
+                            .TextRangeFontFillFGColor = shp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
+                            'End If
                         Catch ex As Exception
-                            errMsg = "Mehrfach Definition in den Darstellungsklassen ... " & vbLf &
-                                         "bitte korrigieren"
-                            Throw New Exception(errMsg)
+
                         End Try
 
 
-                    End If
+                        If shp.Title <> "" Then
 
-                End With
+                            .name = shp.Title
+                            If shp.AlternativeText = "1" Then
+                                .isMilestone = True
+                            Else
+                                .isMilestone = False
+                            End If
+                            ' ur: muss dann weg
+                            '.form = shp
+
+                            Try
+
+                                If appearanceDefinitions.ContainsKey(.name) Then
+                                    appearanceDefinitions.Remove(.name)
+                                End If
+
+                                appearanceDefinitions.Add(.name, appDefinition)
+
+                                If .isMilestone And firstMilestone Then
+                                    awinSettings.defaultMilestoneClass = .name
+                                    firstMilestone = False
+
+                                ElseIf Not .isMilestone And firstPhase Then
+                                    awinSettings.defaultPhaseClass = .name
+                                    firstPhase = False
+                                End If
+                            Catch ex As Exception
+                                errMsg = "Mehrfach Definition in den Darstellungsklassen ... " & vbLf &
+                                             "bitte korrigieren"
+                                Throw New Exception(errMsg)
+                            End Try
 
 
-            Next
+                        End If
 
-        End With
+                    End With
+
+
+                Next
+
+            End With
+        Else
+            'Call MsgBox("Tabellenblatt 'Darstellungsklassen' in Datei '" & dateiname & " nicht enthalten")
+        End If
+
 
     End Sub
 
@@ -4883,7 +4927,8 @@ Public Module agm2
 
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
                                                             Try
-                                                                newRoleDef.UID = missingRoleDefinitions.getFreeRoleID
+                                                                'ur: 13.09.2019: nicht von Missing nehmen
+                                                                newRoleDef.UID = RoleDefinitions.getFreeRoleID
                                                                 missingRoleDefinitions.Add(newRoleDef)
                                                             Catch ex As Exception
                                                                 Dim a As Integer = 1
@@ -8185,6 +8230,41 @@ Public Module agm2
     End Function
 
     ''' <summary>
+    ''' importiert die Darstellungsklassen für Phasen und Meilensteine 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportAppearances(ByRef outputCollection As Collection) As SortedList(Of String, clsAppearance)
+
+        Dim err As New clsErrorCodeMsg
+        Dim appearancesSheet As Excel.Worksheet = Nothing
+        Dim updatedAppearanceDef As SortedList(Of String, clsAppearance) = Nothing
+
+        Try
+            appearancesSheet = CType(appInstance.Worksheets(arrWsNames(7)),
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet)
+        Catch ex As Exception
+
+        End Try
+
+        If Not IsNothing(appearancesSheet) Then
+            Try
+                ' Auslesen der Darstellungsklassen und Aufbau der Liste 'appearanceDefinitions'
+                Call aufbauenAppearanceDefinitions(appearancesSheet)
+                updatedAppearanceDef = appearanceDefinitions
+            Catch ex As Exception
+                Dim resultMessage As String = ex.Message
+                outputCollection.Add(resultMessage)
+
+            End Try
+        Else
+            outputCollection.Add("Tabellenblatt 'Darstellungsklassen' ist nicht vorhanden! ")
+        End If
+
+        ImportAppearances = updatedAppearanceDef
+    End Function
+
+    ''' <summary>
     ''' importiert alle Custom User Roles 
     ''' </summary>
     ''' <param name="outputCollection"></param>
@@ -8247,6 +8327,158 @@ Public Module agm2
         End Try
 
         ImportCustomUserRoles = importedUserRoles
+    End Function
+
+    ''' <summary>
+    ''' importiert die Custom-Einstellungen 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportCustomization(ByRef outputCollection As Collection) As clsCustomization
+
+        Dim err As New clsErrorCodeMsg
+        Dim importedCustomization As New clsCustomization
+        Dim customizationSheet As Excel.Worksheet = Nothing
+
+        Try
+            customizationSheet = CType(appInstance.Worksheets(arrWsNames(4)),
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+        Catch ex As Exception
+
+        End Try
+
+        If Not IsNothing(customizationSheet) Then
+            Try
+
+                ' Auslesen der BusinessUnit Definitionen
+                Call readBusinessUnitDefinitions(customizationSheet)
+
+                ' Auslesen der Phasen Definitionen 
+                Call readPhaseDefinitions(customizationSheet)
+
+                ' Auslesen der Meilenstein Definitionen 
+                Call readMilestoneDefinitions(customizationSheet)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readMilestoneDefinitions")
+                End If
+
+                ' auslesen der anderen Informationen 
+                Call readOtherDefinitions(customizationSheet)
+
+
+                'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                'Next
+                importedCustomization.businessUnitDefinitions = businessUnitDefinitions
+
+                'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                '    customizations.phaseDefinitions.Add(kvp.Value)
+                'Next
+                importedCustomization.phaseDefinitions = PhaseDefinitions
+
+                'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                '    customizations.milestoneDefinitions.Add(kvp.Value)
+                'Next
+                importedCustomization.milestoneDefinitions = MilestoneDefinitions
+
+                ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                importedCustomization.showtimezone_color = showtimezone_color
+                importedCustomization.noshowtimezone_color = noshowtimezone_color
+                importedCustomization.calendarFontColor = calendarFontColor
+                importedCustomization.nrOfDaysMonth = nrOfDaysMonth
+                importedCustomization.farbeInternOP = farbeInternOP
+                importedCustomization.farbeExterne = farbeExterne
+                importedCustomization.iProjektFarbe = iProjektFarbe
+                importedCustomization.iWertFarbe = iWertFarbe
+                importedCustomization.vergleichsfarbe0 = vergleichsfarbe0
+                importedCustomization.vergleichsfarbe1 = vergleichsfarbe1
+                'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                importedCustomization.SollIstFarbeB = awinSettings.SollIstFarbeB
+                importedCustomization.SollIstFarbeL = awinSettings.SollIstFarbeL
+                importedCustomization.SollIstFarbeC = awinSettings.SollIstFarbeC
+                importedCustomization.AmpelGruen = awinSettings.AmpelGruen
+                'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                importedCustomization.AmpelGelb = awinSettings.AmpelGelb
+                importedCustomization.AmpelRot = awinSettings.AmpelRot
+                importedCustomization.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+                importedCustomization.glowColor = awinSettings.glowColor
+
+                importedCustomization.timeSpanColor = awinSettings.timeSpanColor
+                importedCustomization.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+
+                importedCustomization.gridLineColor = awinSettings.gridLineColor
+
+                importedCustomization.missingDefinitionColor = awinSettings.missingDefinitionColor
+
+                importedCustomization.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+
+                importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+                importedCustomization.actualDataMonth = awinSettings.actualDataMonth
+                importedCustomization.ergebnisfarbe1 = ergebnisfarbe1
+                importedCustomization.ergebnisfarbe2 = ergebnisfarbe2
+                importedCustomization.weightStrategicFit = weightStrategicFit
+                importedCustomization.kalenderStart = awinSettings.kalenderStart
+                importedCustomization.zeitEinheit = awinSettings.zeitEinheit
+                importedCustomization.kapaEinheit = awinSettings.kapaEinheit
+                importedCustomization.offsetEinheit = awinSettings.offsetEinheit
+                importedCustomization.EinzelRessExport = awinSettings.EinzelRessExport
+                importedCustomization.zeilenhoehe1 = awinSettings.zeilenhoehe1
+                importedCustomization.zeilenhoehe2 = awinSettings.zeilenhoehe2
+                importedCustomization.spaltenbreite = awinSettings.spaltenbreite
+                importedCustomization.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+                importedCustomization.propAnpassRess = awinSettings.propAnpassRess
+                importedCustomization.showValuesOfSelected = awinSettings.showValuesOfSelected
+
+                importedCustomization.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+                importedCustomization.fullProtocol = awinSettings.fullProtocol
+                importedCustomization.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+                importedCustomization.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+                importedCustomization.eliminateDuplicates = awinSettings.eliminateDuplicates
+                importedCustomization.importUnknownNames = awinSettings.importUnknownNames
+                importedCustomization.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+
+                importedCustomization.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+                importedCustomization.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+                importedCustomization.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+                importedCustomization.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+
+                importedCustomization.importTyp = awinSettings.importTyp
+
+                importedCustomization.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+
+                importedCustomization.englishLanguage = awinSettings.englishLanguage
+
+                importedCustomization.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+                importedCustomization.considerRiskFee = awinSettings.considerRiskFee
+
+
+                ''Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedCustomization,
+                ''                                                                                CStr(settingTypes(ptSettingTypes.customization)),
+                ''                                                                                "Customization",
+                ''                                                                                Nothing, err)
+                ''If Not store_ok Then
+                ''    If awinSettings.englishLanguage Then
+                ''        Call MsgBox("Customizations couldn't be written to the database!" & vbCrLf & err.errorMsg)
+                ''    Else
+                ''        Call MsgBox("Kundeneinstellungen konnten nicht in die Datenbank geschrieben werden!" & vbCrLf & err.errorMsg)
+                ''    End If
+                ''End If
+
+            Catch ex As Exception
+                Dim resultMessage As String = ex.Message
+                outputCollection.Add(resultMessage)
+            End Try
+        Else
+            outputCollection.Add("Tabellenblatt 'Einstellungen' ist nicht vorhanden! ")
+            importedCustomization = Nothing
+        End If
+
+
+        ImportCustomization = importedCustomization
     End Function
 
     ''' <summary>
@@ -11784,127 +12016,134 @@ Public Module agm2
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
 
-            For i = 0 To listOfImportfiles.Count - 1
+            If listOfImportfiles.Count > 0 Then
 
-                Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+                For i = 0 To listOfImportfiles.Count - 1
 
-                If Not IsNothing(dateiName) Then
+                    Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
+                    If Not IsNothing(dateiName) Then
 
-                        errMsg = "Reading external Capacities " & dateiName
-                        Call logfileSchreiben(errMsg, "", anzFehler)
+                        If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
 
-                        Try
-                            appInstance.Workbooks.Open(dateiName)
-                            ok = True
+                            errMsg = "Reading external Capacities " & dateiName
+                            Call logfileSchreiben(errMsg, "", anzFehler)
 
                             Try
+                                appInstance.Workbooks.Open(dateiName)
+                                ok = True
 
-                                currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                Try
 
-                                Dim colRessource As Integer = 8
-                                Dim colBeginn As Integer = 9
-                                Dim colEnde As Integer = 10
-                                Dim colVV As Integer = 15
+                                    currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                                Dim lastRow As Integer = CType(currentWS.Cells(16000, "H"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                                    Dim colRessource As Integer = 8
+                                    Dim colBeginn As Integer = 9
+                                    Dim colEnde As Integer = 10
+                                    Dim colVV As Integer = 15
 
-                                ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+                                    Dim lastRow As Integer = CType(currentWS.Cells(16000, "H"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
-                                aktzeile = 3
-                                Do While aktzeile <= lastRow
+                                    ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
-                                    Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
+                                    aktzeile = 3
+                                    Do While aktzeile <= lastRow
 
-                                    If Not IsNothing(subRoleName) Then
-                                        subRoleName = subRoleName.Trim
-                                        If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+                                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
 
-                                            Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+                                        If Not IsNothing(subRoleName) Then
+                                            subRoleName = subRoleName.Trim
+                                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
-                                            ' nur weiter machen, wenn es keine SummenRolle ist ... und es ausserdem einen Tagessatz gibt ..
-                                            ' weil andernfalls Dividion durch Null passieren würde 
-                                            If Not subRole.isCombinedRole And subRole.tagessatzIntern > 0 Then
+                                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
 
-                                                ' lese das Vertragsvolumen
-                                                Try
-                                                    Dim vertragsVolumen As Double = 0.0
-                                                    If Not IsNothing(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value) Then
-                                                        vertragsVolumen = CDbl(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value)
+                                                ' nur weiter machen, wenn es keine SummenRolle ist ... und es ausserdem einen Tagessatz gibt ..
+                                                ' weil andernfalls Dividion durch Null passieren würde 
+                                                If Not subRole.isCombinedRole And subRole.tagessatzIntern > 0 Then
+
+                                                    ' lese das Vertragsvolumen
+                                                    Try
+                                                        Dim vertragsVolumen As Double = 0.0
+                                                        If Not IsNothing(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value) Then
+                                                            vertragsVolumen = CDbl(CType(currentWS.Cells(aktzeile, colVV), Excel.Range).Value)
+                                                        End If
+
+                                                        Dim startDate As Date = CDate(CType(currentWS.Cells(aktzeile, colBeginn), Excel.Range).Value)
+                                                        Dim endeDate As Date = CDate(CType(currentWS.Cells(aktzeile, colEnde), Excel.Range).Value)
+
+                                                        If vertragsVolumen >= 0 Then
+                                                            Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
+                                                            Dim vorgabeArray(0) As Double
+                                                            vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
+                                                            Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
+
+                                                            Dim startCol As Integer = getColumnOfDate(startDate)
+                                                            For ix As Integer = 0 To volumenArray.Length - 1
+                                                                If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
+                                                                    subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                                End If
+                                                            Next
+
+                                                        End If
+                                                    Catch ex As Exception
+
+                                                    End Try
+
+
+                                                Else
+                                                    If subRole.isCombinedRole Then
+                                                        errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                        meldungen.Add(errMsg)
+                                                    ElseIf subRole.tagessatzIntern <= 0 Then
+                                                        errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
+                                                        meldungen.Add(errMsg)
                                                     End If
 
-                                                    Dim startDate As Date = CDate(CType(currentWS.Cells(aktzeile, colBeginn), Excel.Range).Value)
-                                                    Dim endeDate As Date = CDate(CType(currentWS.Cells(aktzeile, colEnde), Excel.Range).Value)
-
-                                                    If vertragsVolumen >= 0 Then
-                                                        Dim dimension As Integer = getColumnOfDate(endeDate) - getColumnOfDate(startDate)
-                                                        Dim vorgabeArray(0) As Double
-                                                        vorgabeArray(0) = vertragsVolumen / subRole.tagessatzIntern
-                                                        Dim volumenArray() As Double = calcVerteilungAufMonate(startDate, endeDate, vorgabeArray, 1.0)
-
-                                                        Dim startCol As Integer = getColumnOfDate(startDate)
-                                                        For ix As Integer = 0 To volumenArray.Length - 1
-                                                            If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
-                                                                subRole.kapazitaet(ix + startCol) = volumenArray(ix)
-                                                            End If
-                                                        Next
-
-                                                    End If
-                                                Catch ex As Exception
-
-                                                End Try
-
-
-                                            Else
-                                                If subRole.isCombinedRole Then
-                                                    errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                    meldungen.Add(errMsg)
-                                                ElseIf subRole.tagessatzIntern <= 0 Then
-                                                    errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
-                                                    meldungen.Add(errMsg)
+                                                    Call logfileSchreiben(errMsg, "", anzFehler)
                                                 End If
+                                            Else
+                                                If subRoleName.Length > 0 Then
+                                                    errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                    meldungen.Add(errMsg)
+                                                    Call logfileSchreiben(errMsg, "", anzFehler)
+                                                End If
+                                            End If
 
-                                                Call logfileSchreiben(errMsg, "", anzFehler)
-                                            End If
-                                        Else
-                                            If subRoleName.Length > 0 Then
-                                                errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                meldungen.Add(errMsg)
-                                                Call logfileSchreiben(errMsg, "", anzFehler)
-                                            End If
                                         End If
 
+                                        aktzeile = aktzeile + 1
+                                        ' jetzt spalte wieder auf 2 setzen 
+                                        spalte = 2
+                                    Loop
+
+                                Catch ex2 As Exception
+                                    errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
+                                    meldungen.Add(errMsg)
+                                    Call logfileSchreiben(errMsg, "", anzFehler)
+
+                                    If Not IsNothing(currentWS) Then
+                                        CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                        saveNeeded = True
                                     End If
 
-                                    aktzeile = aktzeile + 1
-                                    ' jetzt spalte wieder auf 2 setzen 
-                                    spalte = 2
-                                Loop
+                                End Try
 
-                            Catch ex2 As Exception
-                                errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
-                                meldungen.Add(errMsg)
-                                Call logfileSchreiben(errMsg, "", anzFehler)
-
-                                If Not IsNothing(currentWS) Then
-                                    CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                    saveNeeded = True
-                                End If
-
+                                appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
+                            Catch ex As Exception
+                                appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
                             End Try
 
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
-                        Catch ex As Exception
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
-                        End Try
+                        End If
 
                     End If
 
-                End If
 
+                Next i
 
-            Next i
+            Else
+                meldungen.Add("Keine Datei mit Kapazitäten der externen Verträge vorhanden ! ")
+            End If
+
 
         Catch ex As Exception
 
@@ -11966,129 +12205,135 @@ Public Module agm2
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
 
-            For i = 0 To listOfImportfiles.Count - 1
+            If listOfImportfiles.Count > 0 Then
 
-                Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
-                endeZeile = 0
+                For i = 0 To listOfImportfiles.Count - 1
 
-                If Not IsNothing(dateiName) Then
+                    Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+                    endeZeile = 0
 
-                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
+                    If Not IsNothing(dateiName) Then
 
-                        Try
-                            appInstance.Workbooks.Open(dateiName)
-                            ok = True
+                        If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") And dateiName.Contains("Modifier") Then
 
                             Try
-
-                                currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                appInstance.Workbooks.Open(dateiName)
+                                ok = True
 
                                 Try
-                                    endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
-                                Catch ex As Exception
-                                    endeZeile = 0
-                                End Try
+
+                                    currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                                    Try
+                                        endeZeile = CType(currentWS.Cells(12000, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
+                                    Catch ex As Exception
+                                        endeZeile = 0
+                                    End Try
 
 
-                                If endeZeile > 0 Then
+                                    If endeZeile > 0 Then
 
-                                    lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                                        lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
-                                    ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+                                        ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
-                                    Dim aktzeile As Integer = 2
-                                    Do While aktzeile < endeZeile
+                                        Dim aktzeile As Integer = 2
+                                        Do While aktzeile < endeZeile
 
-                                        Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
+                                            Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
 
-                                        If Not IsNothing(subRoleName) Then
-                                            subRoleName = subRoleName.Trim
-                                            If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+                                            If Not IsNothing(subRoleName) Then
+                                                subRoleName = subRoleName.Trim
+                                                If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
 
-                                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+                                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
 
-                                                ' nur weiter machen, wenn es keine SummenRolle ist ...
-                                                If Not subRole.isCombinedRole Then
+                                                    ' nur weiter machen, wenn es keine SummenRolle ist ...
+                                                    If Not subRole.isCombinedRole Then
 
-                                                    Try
-                                                        spalte = 2
-                                                        tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                        Try
+                                                            spalte = 2
+                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
-                                                        ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
+                                                            ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
 
-                                                        Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
-                                                            Try
-                                                                spalte = spalte + 1
-                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                            Catch ex As Exception
+                                                            Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                                                Try
+                                                                    spalte = spalte + 1
+                                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                                Catch ex As Exception
 
-                                                            End Try
-                                                        Loop
+                                                                End Try
+                                                            Loop
 
-                                                        Do While spalte < 241 And spalte <= lastSpalte
+                                                            Do While spalte < 241 And spalte <= lastSpalte
 
-                                                            Try
-                                                                index = getColumnOfDate(tmpDate)
-                                                                If index >= 1 Then
-                                                                    tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+                                                                Try
+                                                                    index = getColumnOfDate(tmpDate)
+                                                                    If index >= 1 Then
+                                                                        tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
 
-                                                                    If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                        subRole.kapazitaet(index) = tmpKapa
+                                                                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                                            subRole.kapazitaet(index) = tmpKapa
+                                                                        End If
                                                                     End If
-                                                                End If
 
-                                                                spalte = spalte + 1
-                                                                tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
-                                                            Catch ex As Exception
-                                                                errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
-                                                                meldungen.Add(errMsg)
-                                                            End Try
+                                                                    spalte = spalte + 1
+                                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                                Catch ex As Exception
+                                                                    errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                                    meldungen.Add(errMsg)
+                                                                End Try
 
 
-                                                        Loop
+                                                            Loop
 
-                                                    Catch ex As Exception
+                                                        Catch ex As Exception
 
-                                                    End Try
+                                                        End Try
+                                                    Else
+                                                        errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                        meldungen.Add(errMsg)
+                                                    End If
                                                 Else
-                                                    errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
-                                                    meldungen.Add(errMsg)
+                                                    If subRoleName.Length > 0 Then
+                                                        errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                        meldungen.Add(errMsg)
+                                                    End If
                                                 End If
-                                            Else
-                                                If subRoleName.Length > 0 Then
-                                                    errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
-                                                    meldungen.Add(errMsg)
-                                                End If
+
                                             End If
 
-                                        End If
+                                            aktzeile = aktzeile + 1
+                                            ' jetzt spalte wieder auf 2 setzen 
+                                            spalte = 2
+                                        Loop
 
-                                        aktzeile = aktzeile + 1
-                                        ' jetzt spalte wieder auf 2 setzen 
-                                        spalte = 2
-                                    Loop
+                                    Else
+                                        errMsg = "File " & dateiName & " does not contain data in column A ..."
+                                        meldungen.Add(errMsg)
+                                    End If
 
-                                Else
-                                    errMsg = "File " & dateiName & " does not contain data in column A ..."
+                                Catch ex2 As Exception
+                                    errMsg = "File " & dateiName & ": unidentified error ... "
                                     meldungen.Add(errMsg)
-                                End If
+                                End Try
 
-                            Catch ex2 As Exception
-                                errMsg = "File " & dateiName & ": unidentified error ... "
-                                meldungen.Add(errMsg)
+                                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            Catch ex As Exception
+                                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                             End Try
 
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        Catch ex As Exception
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                        End Try
+                        End If
 
                     End If
 
-                End If
 
+                Next i
+            Else
+                meldungen.Add("Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ")
+            End If
 
-            Next i
 
         Catch ex As Exception
 
@@ -17682,23 +17927,26 @@ Public Module agm2
 
                 appInstance = New Excel.Application
 
+                ' ur:12.09.2019 !!! Es soll kein Customization File mehr notwendig sein
+
                 ' hier muss jetzt das Customization File aufgemacht werden ...
-                Try
-                    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
-                    myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                    Call logfileOpen()
+                ''Try
+                ''    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                ''    myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+                ''    Call logfileOpen()
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Windows-User: " & myWindowsName)
-                    End If
+                ''    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
+                ''    If awinSettings.visboDebug Then
+                ''        Call MsgBox("Windows-User: " & myWindowsName)
+                ''    End If
 
-                Catch ex As Exception
-                    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-                End Try
+                ''Catch ex As Exception
+                ''    Call msgbox("Customization File nicht gefunden - Abbruch")
+                ''    'Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+                ''End Try
 
             ElseIf special = "ProjectBoard" Then
 
@@ -17718,12 +17966,18 @@ Public Module agm2
             'Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
             '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)),
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet
-                                                    )
-            If awinSettings.visboDebug Then
-                Call MsgBox("wsName4 angesprochen")
-            End If
+            Dim wsName4 As Excel.Worksheet = Nothing
+            Try
+                wsName4 = CType(xlsCustomization.Worksheets(arrWsNames(4)),
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet
+                                              )
+                If awinSettings.visboDebug Then
+                    Call MsgBox("wsName4 angesprochen")
+                End If
+            Catch ex As Exception
+
+            End Try
+
 
 
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -17739,24 +17993,28 @@ Public Module agm2
 
 
 
-                ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
+                If loginErfolgreich Then
+                    ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                If listOfVCs.Count > 1 Then
-                    Dim chooseVC As New frmSelectOneItem
-                    chooseVC.itemsCollection = listOfVCs
-                    If chooseVC.ShowDialog = DialogResult.OK Then
-                        ' alles ok 
-                        awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
-                        If Not changeOK Then
-                            Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                    If listOfVCs.Count > 1 Then
+                        Dim chooseVC As New frmSelectOneItem
+                        chooseVC.itemsCollection = listOfVCs
+                        If chooseVC.ShowDialog = DialogResult.OK Then
+                            ' alles ok 
+                            awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                            If Not changeOK Then
+                                Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                            End If
+                        Else
+                            Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
                         End If
-                    Else
-                        Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+
                     End If
 
                 End If
+
 
                 ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
                 '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
@@ -17772,8 +18030,12 @@ Public Module agm2
 
                 If Not loginErfolgreich Then
 
-                    ' Customization-File wird geschlossen
-                    xlsCustomization.Close(SaveChanges:=False)
+
+                    If Not IsNothing(xlsCustomization) Then
+                        ' Customization-File wird geschlossen
+                        xlsCustomization.Close(SaveChanges:=False)
+                    End If
+
                     Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                     Call logfileSchliessen()
                     If awinSettings.englishLanguage Then
@@ -17790,42 +18052,32 @@ Public Module agm2
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
             ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim wsName7810 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(7)),
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet
-                                                    )
 
-            If awinSettings.visboDebug Then
-                Call MsgBox("wsName7810 angesprochen")
+
+
+            Dim wsName7810 As Excel.Worksheet = Nothing
+
+            If Not IsNothing(xlsCustomization) Then
+
+                Try
+                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(7)),
+                                              Global.Microsoft.Office.Interop.Excel.Worksheet
+                                              )
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("wsName7810 angesprochen")
+                    End If
+
+                Catch ex As Exception
+
+                    wsName7810 = Nothing
+
+                End Try
+
+
             End If
 
+
             Try
-                ' Aufbauen der Darstellungsklassen  
-                Call aufbauenAppearanceDefinitions(wsName7810)
-
-                ' Auslesen der BusinessUnit Definitionen
-                Call readBusinessUnitDefinitions(wsName4)
-
-                ' Auslesen der Phasen Definitionen 
-                Call readPhaseDefinitions(wsName4)
-
-                ' Auslesen der Meilenstein Definitionen 
-                Call readMilestoneDefinitions(wsName4)
-
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readMilestoneDefinitions")
-                End If
-
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
-
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readOtherDefinitions")
-                End If
-
-
-                ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
-                ' sonst von der DB
-
                 ' jetzt die CurrentOrga definieren
                 Dim currentOrga As New clsOrganisation
 
@@ -17884,6 +18136,270 @@ Public Module agm2
                     End Try
 
                 End If
+
+
+                ' das kann nicht unmittelbar nach Login gemacht werden 
+                Dim meldungen As Collection = New Collection
+
+                '' jetzt werden die Rollen besetzt 
+                If awinSettings.readCostRolesFromDB Then
+
+                    Try
+                        Call setUserRoles(meldungen)
+                    Catch ex As Exception
+                        If meldungen.Count > 0 Then
+                            Call showOutPut(meldungen, "Error: setUserRoles", "")
+                            Call logfileSchreiben(meldungen)
+                        End If
+
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
+                    End Try
+
+
+
+                Else
+                    myCustomUserRole = New clsCustomUserRole
+
+                    With myCustomUserRole
+                        .customUserRole = ptCustomUserRoles.OrgaAdmin
+                        .specifics = ""
+                        .userName = dbUsername
+                    End With
+                    ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                    Call myCustomUserRole.setNonAllowances()
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            Try
+
+                appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+
+                If IsNothing(appearanceDefinitions) Then
+
+                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
+
+                    If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
+
+                        ' Aufbauen der Darstellungsklassen  aus Customizationfile
+                        Call aufbauenAppearanceDefinitions(wsName7810)
+
+                        ' sollte nur gelesen, nicht gespeichert werden
+                        'Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
+                        '                                                                       CStr(settingTypes(ptSettingTypes.appearance)),
+                        '                                                                       "Appearance",
+                        '                                                                       Nothing, err)
+                        'If Not store_ok Then
+
+                        '    If awinSettings.englishLanguage Then
+                        '        Call MsgBox("You don't have any appearances for your phases and milestones in your system!")
+                        '    Else
+                        '        Call MsgBox("Es existieren keine Darstellungsklassen für Phasen und Meilensteine im System!")
+                        '    End If
+
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("Fehler beim Speichern: aktueller User hat das Recht dazu nicht! " & vbCrLf & err.errorMsg)
+                        '    End If
+
+                        'End If
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
+                        Else
+                            Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                        End If
+                    End If
+                End If
+
+
+
+
+
+                ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
+                ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
+
+                Dim noCustomizationFound As Boolean = False   ' zeigt an, dass keine Einstellungen, entweder in DB oder auf Platte, gefunden wurden
+                Dim customizations As New clsCustomization
+
+
+                customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+
+                If IsNothing(customizations) And Not IsNothing(wsName4) Then
+
+                    ' nur wenn der User Orga-Admin ist, kann das Customization-File gelesen werden
+                    If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin) Then
+
+                        ' Auslesen der BusinessUnit Definitionen
+                        Call readBusinessUnitDefinitions(wsName4)
+
+                        ' Auslesen der Phasen Definitionen 
+                        Call readPhaseDefinitions(wsName4)
+
+                        ' Auslesen der Meilenstein Definitionen 
+                        Call readMilestoneDefinitions(wsName4)
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("readMilestoneDefinitions")
+                        End If
+
+                        ' auslesen der anderen Informationen 
+                        Call readOtherDefinitions(wsName4)
+
+
+                        customizations = New clsCustomization
+
+                        ' Einstellungen aus CustomizationFile und awinSettings übernehmen in customizations
+                        customizations = get_customSettings()
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("You do not have the rights setting up a new Visbo Center")
+                        Else
+                            Call MsgBox("Nur der OrgaAdmin kann ein VC initialisieren")
+                        End If
+                    End If
+
+                Else
+                    If Not IsNothing(customizations) Then
+                        ' alle awinSettings... mit den customizations... besetzen
+                        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                        'Next
+                        businessUnitDefinitions = customizations.businessUnitDefinitions
+
+                        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                        '    customizations.phaseDefinitions.Add(kvp.Value)
+                        'Next
+                        PhaseDefinitions = customizations.phaseDefinitions
+
+                        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                        '    customizations.milestoneDefinitions.Add(kvp.Value)
+                        'Next
+                        MilestoneDefinitions = customizations.milestoneDefinitions
+                        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                        showtimezone_color = customizations.showtimezone_color
+                        noshowtimezone_color = customizations.noshowtimezone_color
+                        calendarFontColor = customizations.calendarFontColor
+                        nrOfDaysMonth = customizations.nrOfDaysMonth
+                        farbeInternOP = customizations.farbeInternOP
+                        farbeExterne = customizations.farbeExterne
+                        iProjektFarbe = customizations.iProjektFarbe
+                        iWertFarbe = customizations.iWertFarbe
+                        vergleichsfarbe0 = customizations.vergleichsfarbe0
+                        vergleichsfarbe1 = customizations.vergleichsfarbe1
+                        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                        awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                        awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                        awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                        awinSettings.AmpelGruen = customizations.AmpelGruen
+                        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                        awinSettings.AmpelGelb = customizations.AmpelGelb
+                        awinSettings.AmpelRot = customizations.AmpelRot
+                        awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                        awinSettings.glowColor = customizations.glowColor
+
+                        awinSettings.timeSpanColor = customizations.timeSpanColor
+                        awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+                        awinSettings.gridLineColor = customizations.gridLineColor
+
+                        awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+                        awinSettings.allianzIstDatenReferate = customizations.allianzIstDatenReferate
+
+                        awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+                        awinSettings.actualDataMonth = customizations.actualDataMonth
+                        ergebnisfarbe1 = customizations.ergebnisfarbe1
+                        ergebnisfarbe2 = customizations.ergebnisfarbe2
+                        weightStrategicFit = customizations.weightStrategicFit
+                        awinSettings.kalenderStart = customizations.kalenderStart
+                        awinSettings.zeitEinheit = customizations.zeitEinheit
+                        awinSettings.kapaEinheit = customizations.kapaEinheit
+                        awinSettings.offsetEinheit = customizations.offsetEinheit
+                        awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                        awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                        awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                        awinSettings.spaltenbreite = customizations.spaltenbreite
+                        awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                        awinSettings.propAnpassRess = customizations.propAnpassRess
+                        awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+                        awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                        awinSettings.fullProtocol = customizations.fullProtocol
+                        awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                        awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                        awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                        awinSettings.importUnknownNames = customizations.importUnknownNames
+                        awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+                        awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                        awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                        awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                        awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+                        awinSettings.importTyp = customizations.importTyp
+
+                        awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+                        awinSettings.englishLanguage = customizations.englishLanguage
+
+                        awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                        awinSettings.considerRiskFee = customizations.considerRiskFee
+
+                        ' noch zu tun, sonst in readOtherdefinitions
+                        StartofCalendar = awinSettings.kalenderStart
+                        'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                        historicDate = StartofCalendar
+                        Try
+                            If awinSettings.englishLanguage Then
+                                menuCult = ReportLang(PTSprache.englisch)
+                                repCult = menuCult
+                                awinSettings.kapaEinheit = "PD"
+                            Else
+                                awinSettings.kapaEinheit = "PT"
+                                menuCult = ReportLang(PTSprache.deutsch)
+                                repCult = menuCult
+                            End If
+                        Catch ex As Exception
+                            awinSettings.englishLanguage = False
+                            awinSettings.kapaEinheit = "PT"
+                            menuCult = ReportLang(PTSprache.deutsch)
+                            repCult = menuCult
+                        End Try
+                    Else
+                        noCustomizationFound = True
+                    End If
+
+
+                End If
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("readOtherDefinitions")
+                End If
+
+                If noCustomizationFound Then
+                    Throw New ArgumentException("Aktuell sind keine Einstellungen vorhanden." & vbCrLf &
+                                                "Bitte kontaktieren Sie ihren Administator!")
+                End If
+
+
+
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
@@ -17958,31 +18474,39 @@ Public Module agm2
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
                 ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
                 ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)),
+                Try
+                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)),
                                                         Global.Microsoft.Office.Interop.Excel.Worksheet
                                                         )
 
-                Call readNameMappings(wsName7810, phaseMappings)
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readNameMappings Phases")
-                End If
+                    Call readNameMappings(wsName7810, phaseMappings)
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("readNameMappings Phases")
+                    End If
+                Catch ex As Exception
+
+                End Try
+
 
 
 
                 ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
                 'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
                 '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)),
+                Try
+                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)),
                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
                                                        )
 
-                Call readNameMappings(wsName7810, milestoneMappings)
+                    Call readNameMappings(wsName7810, milestoneMappings)
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readNameMappings Milestones")
-                End If
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("readNameMappings Milestones")
+                    End If
+                Catch ex As Exception
+
+                End Try
+
 
                 ' hier werden nur für VISBO 1-Click PPT die vorlagen gelesen
                 If special = "BHTC" Then
@@ -17994,29 +18518,30 @@ Public Module agm2
 
                 If special = "ProjectBoard" Then
 
-                    ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-                    appInstance.EnableEvents = False
-                    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)),
-                    Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
+                    '    ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
+                    '    appInstance.EnableEvents = False
+                    '    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)),
+                    'Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
 
-                    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
-                    appInstance.EnableEvents = True
+                    '    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    '    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
+                    '    appInstance.EnableEvents = True
 
 
-                    ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-                    appearanceDefinitions.Clear()
-                    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)),
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
-                    Call aufbauenAppearanceDefinitions(wsName7810)
+                    '    ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+                    '    appearanceDefinitions.Clear()
+                    '    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)),
+                    '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    '    Call aufbauenAppearanceDefinitions(wsName7810)
 
-                    '
-                    ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
+                    '    '
+                    '    ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
-                        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                    End If
+                    '    If awinSettings.visboDebug Then
+                    '        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
+                    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
+                    '    End If
+
 
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
@@ -18037,6 +18562,7 @@ Public Module agm2
                         Call MsgBox("prepareProjektTafel , ok")
                     End If
 
+
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
 
@@ -18056,57 +18582,8 @@ Public Module agm2
 
                     End If
 
-                    ' das kann nicht unmiitelbar nach Login gemacht werden 
-                    Dim meldungen As Collection = New Collection
-
-                    '' jetzt werden die Rollen besetzt 
-
-                    If awinSettings.readCostRolesFromDB Then
-                        Try
-                            Call setUserRoles(meldungen)
-                        Catch ex As Exception
-                            If meldungen.Count > 0 Then
-                                Call showOutPut(meldungen, "Error: setUserRoles", "")
-                                Call logfileSchreiben(meldungen)
-                            End If
-
-                            myCustomUserRole = New clsCustomUserRole
-
-                            With myCustomUserRole
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                                .specifics = ""
-                                .userName = dbUsername
-                            End With
-                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                            Call myCustomUserRole.setNonAllowances()
-                        End Try
 
 
-
-                    Else
-                        If awinSettings.visboServer = True Then
-                            myCustomUserRole = New clsCustomUserRole
-
-                            With myCustomUserRole
-                                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                                .specifics = ""
-                                .userName = dbUsername
-                            End With
-                        Else
-                            myCustomUserRole = New clsCustomUserRole
-
-                            With myCustomUserRole
-                                ' tk 29.7.19
-                                ' damit der mal eine Vorgabe erstellen kann ... 
-                                .customUserRole = ptCustomUserRoles.Alles
-                                .specifics = ""
-                                .userName = dbUsername
-                            End With
-                        End If
-
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
-                    End If
 
                     ' tk 13.5.19 wird  schon in webRequest.retrieveOrganisationFromDB gemacht ..
                     ' ohne Abhängigkeit von Rolle Portfolio Manager , das brauchen ja alle Rollen 
@@ -18128,6 +18605,11 @@ Public Module agm2
                 appInstance.EnableEvents = True
                 Throw New ArgumentException(ex.Message)
             End Try
+            
+            If Not IsNothing(xlsCustomization) Then
+                ' jetzt wird das Customization-File geschlossen
+                xlsCustomization.Close(SaveChanges:=False)
+            End If
 
             ' jetzt werden die windowNames noch gesetzt 
 
@@ -18707,8 +19189,6 @@ Public Module agm2
 
         Next ix
 
-
-
         '
         ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
     End Sub
@@ -19195,7 +19675,7 @@ Public Module agm2
                                                                                            ts,
                                                                                            err)
             If Not result Then
-                Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)
+                Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & vbCrLf & err.errorMsg)
             End If
 
 
@@ -19332,7 +19812,17 @@ Public Module agm2
                                 If missingDefinitions Then
                                     missingMilestoneDefinitions.Add(hMilestone)
                                 Else
-                                    MilestoneDefinitions.Add(hMilestone)
+                                    ' ur:20190909: Meilensteindefinition 
+                                    ' kann sich ändern und muss daher, wenn schon vorhanden,
+                                    ' entfernt werden und die neue eingefügt werden
+
+                                    If MilestoneDefinitions.Contains(hMilestone.name) Then
+                                        MilestoneDefinitions.remove(hMilestone.name)
+                                        MilestoneDefinitions.Add(hMilestone)
+                                    Else
+                                        MilestoneDefinitions.Add(hMilestone)
+                                    End If
+
                                 End If
 
                             Catch ex As Exception
@@ -19950,8 +20440,17 @@ Public Module agm2
                                     missingPhaseDefinitions.Add(hphase)
 
                                 Else
+                                    ' ur: 20190909: 
+                                    ' erweitert, da zuvor nur etwas gemacht wurde mit der Phasedefinition, wenn nicht schon vorhanden
 
-                                    PhaseDefinitions.Add(hphase)
+                                    If PhaseDefinitions.Contains(hphase.name) Then
+
+                                        PhaseDefinitions.remove(hphase.name)
+                                        PhaseDefinitions.Add(hphase)
+
+                                    Else
+                                        PhaseDefinitions.Add(hphase)
+                                    End If
 
                                 End If
 
@@ -20300,6 +20799,7 @@ Public Module agm2
 
             ' das sollte nicht dazu führen, dass nichts gemacht wird 
             'meldungen.Add(errMsg)
+            Call MsgBox(errMsg)
 
             Call logfileSchreiben(errMsg, "", anzFehler)
         End If
@@ -20537,6 +21037,133 @@ Public Module agm2
 
     End Sub
 
+    ''' <summary>
+    ''' alle kundenspez. Settings (die in verschiedenen globalen Variablen enthalten sind)
+    ''' werden in die dafür vorgesehene Struktur übernommen, sodass dann das VCSetting 'Customization' in die DB
+    ''' geschrieben werden kann
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function get_customSettings() As clsCustomization
 
+        Dim customizations As New clsCustomization
 
+        'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+        '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+        'Next
+        customizations.businessUnitDefinitions = businessUnitDefinitions
+
+        'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+        '    customizations.phaseDefinitions.Add(kvp.Value)
+        'Next
+        customizations.phaseDefinitions = PhaseDefinitions
+
+        'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+        '    customizations.milestoneDefinitions.Add(kvp.Value)
+        'Next
+        customizations.milestoneDefinitions = MilestoneDefinitions
+
+        ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+        customizations.showtimezone_color = showtimezone_color
+        customizations.noshowtimezone_color = noshowtimezone_color
+        customizations.calendarFontColor = calendarFontColor
+        customizations.nrOfDaysMonth = nrOfDaysMonth
+        customizations.farbeInternOP = farbeInternOP
+        customizations.farbeExterne = farbeExterne
+        customizations.iProjektFarbe = iProjektFarbe
+        customizations.iWertFarbe = iWertFarbe
+        customizations.vergleichsfarbe0 = vergleichsfarbe0
+        customizations.vergleichsfarbe1 = vergleichsfarbe1
+        'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+        customizations.SollIstFarbeB = awinSettings.SollIstFarbeB
+        customizations.SollIstFarbeL = awinSettings.SollIstFarbeL
+        customizations.SollIstFarbeC = awinSettings.SollIstFarbeC
+        customizations.AmpelGruen = awinSettings.AmpelGruen
+        'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+        customizations.AmpelGelb = awinSettings.AmpelGelb
+        customizations.AmpelRot = awinSettings.AmpelRot
+        customizations.AmpelNichtBewertet = awinSettings.AmpelNichtBewertet
+        customizations.glowColor = awinSettings.glowColor
+
+        customizations.timeSpanColor = awinSettings.timeSpanColor
+        customizations.showTimeSpanInPT = awinSettings.showTimeSpanInPT
+
+        customizations.gridLineColor = awinSettings.gridLineColor
+
+        customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
+
+        customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+
+        customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
+
+        customizations.actualDataMonth = awinSettings.actualDataMonth
+        customizations.ergebnisfarbe1 = ergebnisfarbe1
+        customizations.ergebnisfarbe2 = ergebnisfarbe2
+        customizations.weightStrategicFit = weightStrategicFit
+        customizations.kalenderStart = awinSettings.kalenderStart
+        customizations.zeitEinheit = awinSettings.zeitEinheit
+        customizations.kapaEinheit = awinSettings.kapaEinheit
+        customizations.offsetEinheit = awinSettings.offsetEinheit
+        customizations.EinzelRessExport = awinSettings.EinzelRessExport
+        customizations.zeilenhoehe1 = awinSettings.zeilenhoehe1
+        customizations.zeilenhoehe2 = awinSettings.zeilenhoehe2
+        customizations.spaltenbreite = awinSettings.spaltenbreite
+        customizations.autoCorrectBedarfe = awinSettings.autoCorrectBedarfe
+        customizations.propAnpassRess = awinSettings.propAnpassRess
+        customizations.showValuesOfSelected = awinSettings.showValuesOfSelected
+
+        customizations.mppProjectsWithNoMPmayPass = awinSettings.mppProjectsWithNoMPmayPass
+        customizations.fullProtocol = awinSettings.fullProtocol
+        customizations.addMissingPhaseMilestoneDef = awinSettings.addMissingPhaseMilestoneDef
+        customizations.alwaysAcceptTemplateNames = awinSettings.alwaysAcceptTemplateNames
+        customizations.eliminateDuplicates = awinSettings.eliminateDuplicates
+        customizations.importUnknownNames = awinSettings.importUnknownNames
+        customizations.createUniqueSiblingNames = awinSettings.createUniqueSiblingNames
+
+        customizations.readWriteMissingDefinitions = awinSettings.readWriteMissingDefinitions
+        customizations.meExtendedColumnsView = awinSettings.meExtendedColumnsView
+        customizations.meDontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+        customizations.readCostRolesFromDB = awinSettings.readCostRolesFromDB
+
+        customizations.importTyp = awinSettings.importTyp
+
+        customizations.meAuslastungIsInclExt = awinSettings.meAuslastungIsInclExt
+
+        customizations.englishLanguage = awinSettings.englishLanguage
+
+        customizations.showPlaceholderAndAssigned = awinSettings.showPlaceholderAndAssigned
+        customizations.considerRiskFee = awinSettings.considerRiskFee
+
+        get_customSettings = customizations
+    End Function
+    ''' <summary>
+    ''' hiermit werden die missingMilestoneDefinitions zu den MilestoneDefinitions und 
+    ''' die missingPhaseDefinitions zu den PhaseDefinitions hinzugefügt
+    ''' </summary>
+    Public Sub addMissingDefs2Defs()
+
+        For ix As Integer = 1 To missingPhaseDefinitions.Count
+            Try
+                PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        missingPhaseDefinitions.Clear()
+
+        ' jetzt die Meilensteine
+        For ix As Integer = 1 To missingMilestoneDefinitions.Count
+            Try
+                MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
+            Catch ex As Exception
+
+            End Try
+
+        Next
+
+        missingMilestoneDefinitions.Clear()
+    End Sub
 End Module

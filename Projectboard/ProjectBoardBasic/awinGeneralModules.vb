@@ -6947,12 +6947,16 @@ Public Module awinGeneralModules
             If (isVorlage And awinSettings.alwaysAcceptTemplateNames) Or
                 awinSettings.addMissingPhaseMilestoneDef Then
                 ' in die Milestone-Definitions aufnehmen 
+                checkResult = True
                 Try
                     If Not MilestoneDefinitions.Contains(hMilestoneDef.name) Then
                         MilestoneDefinitions.Add(hMilestoneDef)
+                        ' wird gesetzt, damit am Ende klar ist, ob irgendwelche Phasen hinzugefügt wurden
+                        ' somit kann der OrgaAdmin gefragt werden, ob die in der VCSetting-Customization in der DB gespeichert werden sollen
+                        MilestoneDefsAndPhaseDefsAdded = True
                     End If
-
                 Catch ex As Exception
+                    checkResult = False
                 End Try
 
             Else
@@ -6995,6 +6999,9 @@ Public Module awinGeneralModules
                 Try
                     If Not PhaseDefinitions.Contains(hphaseDef.name) Then
                         PhaseDefinitions.Add(hphaseDef)
+                        ' wird gesetzt, damit am Ende klar ist, ob irgendwelche Phasen hinzugefügt wurden
+                        ' somit kann der OrgaAdmin gefragt werden, ob die in der VCSetting-Customization in der DB gespeichert werden sollen
+                        MilestoneDefsAndPhaseDefsAdded = True
                     End If
                 Catch ex As Exception
                     checkResult = False

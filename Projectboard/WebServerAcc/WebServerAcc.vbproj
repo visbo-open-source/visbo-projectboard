@@ -75,9 +75,11 @@
     <Import Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsAppearanceWeb.vb" />
     <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
     <Compile Include="clsCustomFieldDefinitionsWeb.vb" />
+    <Compile Include="clsCustomizationWeb.vb" />
     <Compile Include="clsCustomUserRolesWeb.vb" />
     <Compile Include="clsCustomUserRoleWeb.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
@@ -100,7 +102,9 @@
     <Compile Include="clsVCrole.vb" />
     <Compile Include="clsVCSetting.vb" />
     <Compile Include="clsVCSettingTypeClasses.vb" />
+    <Compile Include="clsWebVCSettingAppearance.vb" />
     <Compile Include="clsWebVCSettingCustomfields.vb" />
+    <Compile Include="clsWebVCSettingCustomization.vb" />
     <Compile Include="clsWebVCSettingCustomroles.vb" />
     <Compile Include="clsVPf.vb" />
     <Compile Include="clsVPLock.vb" />
@@ -109,6 +113,7 @@
     <Compile Include="clsVPfItem.vb" />
     <Compile Include="clsWebVCcost.vb" />
     <Compile Include="clsWebVCrole.vb" />
+    <Compile Include="clsWebVCSettingEverything.vb" />
     <Compile Include="clsWebVCSettingOrganisation.vb" />
     <Compile Include="clsWebVPf.vb" />
     <Compile Include="clsWebVPlock.vb" />

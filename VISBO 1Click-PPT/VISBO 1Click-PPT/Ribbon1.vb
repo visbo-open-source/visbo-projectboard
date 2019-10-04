@@ -196,6 +196,7 @@ Public Class Ribbon1
                     '' Set cursor as default
                     Cursor.Current = Cursors.Default
 
+
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
                             Try
@@ -208,23 +209,70 @@ Public Class Ribbon1
                                 End If
                             End Try
                         End If
+                    End If
 
-                        reportAuswahl.calledFrom = "MS Project"
-                        reportAuswahl.hproj = mapProj
-                        reportAuswahl.calledFrom = "MS Project"
-                        returnvalue = reportAuswahl.ShowDialog
-                    Else
-                        If Not IsNothing(hproj) Then
+                    ' Zwischenbericht an Nutzer, dass es unbekannte Rollen und Kosten gibt
+                    Dim outputline As String = ""
+                    Dim outPutCollection As New Collection
 
-                            reportAuswahl.calledFrom = "MS Project"
-                            reportAuswahl.hproj = hproj
-                            reportAuswahl.calledFrom = "MS Project"
-                            returnvalue = reportAuswahl.ShowDialog
+                    If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
+
+                        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In missingRoleDefinitions.liste
+                            If awinSettings.englishLanguage Then
+                                outputline = "unknown Role: " & kvp.Value.name
+                            Else
+                                outputline = "unbekannte Rolle: " & kvp.Value.name
+                            End If
+
+                            outPutCollection.Add(outputline)
+                        Next
+
+                        For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In missingCostDefinitions.liste
+                            If awinSettings.englishLanguage Then
+                                outputline = "unknown Cost: " & kvp.Value.name
+                            Else
+                                outputline = "unbekannte Kostenart: " & kvp.Value.name
+                            End If
+
+                            outPutCollection.Add(outputline)
+                        Next
+                        outputline = ""
+                        outPutCollection.Add(outputline)
+                        If awinSettings.englishLanguage Then
+                            outputline = "The project doesn't include anything about the unkown elements ! "
+                        Else
+                            outputline = "Das aktuelle Projekt enthält daher keine Angaben über die jeweiligen unbekannten Elemente !"
+                        End If
+
+                        outPutCollection.Add(outputline)
+
+                        If awinSettings.englishLanguage Then
+                            Call showOutPut(outPutCollection, "unknown Elements:", "please modify organisation-file or input ...")
+                        Else
+                            Call showOutPut(outPutCollection, "Unbekannte Elemente:", "bitte in Organisations-Datei korrigieren")
                         End If
                     End If
 
-                Else
-                    If awinSettings.englishLanguage Then
+
+                    If Not IsNothing(mapProj) Then
+
+                            reportAuswahl.calledFrom = "MS Project"
+                            reportAuswahl.hproj = mapProj
+                            reportAuswahl.calledFrom = "MS Project"
+                            returnvalue = reportAuswahl.ShowDialog
+
+                        Else
+                            If Not IsNothing(hproj) Then
+
+                                reportAuswahl.calledFrom = "MS Project"
+                                reportAuswahl.hproj = hproj
+                                reportAuswahl.calledFrom = "MS Project"
+                                returnvalue = reportAuswahl.ShowDialog
+                            End If
+                        End If
+
+                    Else
+                        If awinSettings.englishLanguage Then
                         Call MsgBox("User " & myWindowsName & " doesn't have any License!" _
                                     & vbLf & " Please, contact your system administrator")
                     Else
@@ -277,9 +325,7 @@ Public Class Ribbon1
                     awinSettings.visboServer = My.Settings.VISBOServer
                     awinSettings.proxyURL = My.Settings.proxyServerURL
                     awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-                    If awinSettings.rememberUserPwd Then
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
-                    End If
+
 
                     dbUsername = ""
                     dbPasswort = ""
@@ -289,6 +335,10 @@ Public Class Ribbon1
 
                     StartofCalendar = StartofCalendar.AddMonths(-12)
 
+                    ' UserName - Password merken
+                    If awinSettings.rememberUserPwd Then
+                        awinSettings.userNamePWD = My.Settings.userNamePWD
+                    End If
 
                 Catch ex As Exception
 

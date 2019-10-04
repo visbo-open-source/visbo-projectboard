@@ -74,6 +74,7 @@
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsCustomization.vb" />
     <Compile Include="clsCustomUserRole.vb" />
     <Compile Include="clsCustomUserRoles.vb" />
     <Compile Include="clsDocuments.vb" />

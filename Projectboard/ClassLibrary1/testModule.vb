@@ -4482,6 +4482,8 @@ Public Module testModule
                                     End If
 
                                     ' hier werden die Milestones gezeichnet 
+
+                                    ' roter Meilenstein
                                     If qualifier = "Milestones R" Then
                                         Call awinDeleteProjectChildShapes(0)
 
@@ -4489,7 +4491,7 @@ Public Module testModule
                                         Call awinZeichneMilestones(nameList, farbtyp, True, False)
 
 
-
+                                        ' grüner Meilenstein
                                     ElseIf qualifier = "Milestones GR" Then
                                         Call awinDeleteProjectChildShapes(0)
 
@@ -4498,6 +4500,7 @@ Public Module testModule
                                         farbtyp = 3
                                         Call awinZeichneMilestones(nameList, farbtyp, False, False)
 
+                                        ' Meilenstein grün/gelb/rot d.h. alles außer undefiniert-grau
                                     ElseIf qualifier = "Milestones GGR" Then
                                         Call awinDeleteProjectChildShapes(0)
 
@@ -4508,6 +4511,7 @@ Public Module testModule
                                         farbtyp = 3
                                         Call awinZeichneMilestones(nameList, farbtyp, False, False)
 
+                                        ' alles Meilensteine
                                     ElseIf qualifier = "Milestones ALL" Then
                                         Call awinDeleteProjectChildShapes(0)
 
@@ -7987,11 +7991,16 @@ Public Module testModule
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        Dim phaseShape As xlNS.Shape = Nothing
-        Dim milestoneShape As xlNS.Shape = Nothing
-        Dim phaseName As String = ""
+        'Dim phaseShape As xlNS.Shape = Nothing
+        Dim phaseShape As pptNS.Shape = Nothing
+        Dim phaseApp As New clsAppearance
+        'Dim milestoneShape As xlNS.Shape = Nothing
+        Dim milestoneShape As pptNS.Shape = Nothing
+        Dim milestoneApp As New clsAppearance
 
+        Dim phaseName As String = ""
         Dim milestoneName As String = ""
+
         Dim breadcrumbMS As String = ""
         Dim shortName As String = ""
         Dim factor As Double
@@ -8077,16 +8086,19 @@ Public Module testModule
 
             If namesAreCategories Then
                 If appearanceDefinitions.ContainsKey(phaseName) Then
-                    phaseShape = appearanceDefinitions.Item(phaseName).form
+                    'phaseShape = appearanceDefinitions.Item(phaseName).form
+                    phaseApp = appearanceDefinitions.Item(phaseName)
                     shortName = ""
                 End If
             Else
                 If PhaseDefinitions.Contains(phaseName) Then
-                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                    'phaseShape = PhaseDefinitions.getShape(phaseName)
+                    phaseApp = PhaseDefinitions.getShapeApp(phaseName)
                     shortName = PhaseDefinitions.getAbbrev(phaseName)
                     isMissingDefinition = False
                 Else
-                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                    'phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                    phaseApp = missingPhaseDefinitions.getShapeApp(phaseName)
                     shortName = missingPhaseDefinitions.getAbbrev(phaseName)
                     isMissingDefinition = True
                 End If
@@ -8097,20 +8109,30 @@ Public Module testModule
             ' Phasen-Shape 
             ''phaseShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+            ''copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-            With copiedShape(1)
+            ''With copiedShape(1)
 
-                .Height = legendPhaseVorlage.Height
-                .Width = legendPhaseVorlage.Width
-                .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
-                .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
+            ''    .Height = legendPhaseVorlage.Height
+            ''    .Width = legendPhaseVorlage.Width
+            ''    .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
+            ''    .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
-                If .Top > pptslide.CustomLayout.Height Then
-                    ''Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
-                    Throw New Exception(repMessages.getmsg(6))
-                End If
-            End With
+            ''    If .Top > pptslide.CustomLayout.Height Then
+            ''        ''Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+            ''        Throw New Exception(repMessages.getmsg(6))
+            ''    End If
+            ''End With
+
+            Dim width As Single = legendPhaseVorlage.Width
+            Dim height As Single = legendPhaseVorlage.Height
+            Dim top As Single = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - height) * 0.5
+            phaseShape = pptslide.Shapes.AddShape(phaseApp.shpType,
+                                                  tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - width) * 0.5,
+                                                  top,
+                                                  width,
+                                                  height)
+            Call definePhPPTAppearance(phaseShape, phaseApp)
 
             ' jetzt den Abkürzungstext eintragen 
             CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
@@ -8141,15 +8163,18 @@ Public Module testModule
             ' Änderung tk 3.12.17 
             If namesAreCategories Then
                 If appearanceDefinitions.ContainsKey(milestoneName) Then
-                    milestoneShape = appearanceDefinitions.Item(milestoneName).form
+                    'milestoneShape = appearanceDefinitions.Item(milestoneName).form
+                    milestoneApp = appearanceDefinitions.Item(milestoneName)
                     shortName = ""
                 End If
             Else
                 If MilestoneDefinitions.Contains(milestoneName) Then
-                    milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+                    'milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+                    milestoneApp = MilestoneDefinitions.getShapeApp(milestoneName)
                     shortName = MilestoneDefinitions.getAbbrev(milestoneName)
                 Else
-                    milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                    'milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                    milestoneApp = missingMilestoneDefinitions.getShapeApp(milestoneName)
                     shortName = missingMilestoneDefinitions.getAbbrev(milestoneName)
                 End If
 
@@ -8158,26 +8183,40 @@ Public Module testModule
 
 
 
-            factor = milestoneShape.Width / milestoneShape.Height
+            factor = milestoneApp.width / milestoneApp.height
 
             ' Meilenstein-Shape 
             ''milestoneShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(milestoneShape, pptslide)
+            ''copiedShape = xlnsCopypptPaste(milestoneShape, pptslide)
 
-            With copiedShape(1)
+            ''With copiedShape(1)
 
-                .Height = legendMilestoneVorlage.Height
-                .Width = factor * .Height
-                .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
-                .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
+            ''    .Height = legendMilestoneVorlage.Height
+            ''    .Width = factor * .Height
+            ''    .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
+            ''    .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
 
-                If .Top > pptslide.CustomLayout.Height Then
-                    '' Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
-                    Throw New Exception(repMessages.getmsg(6))
-                End If
-            End With
+            ''    If .Top > pptslide.CustomLayout.Height Then
+            ''        '' Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+            ''        Throw New Exception(repMessages.getmsg(6))
+            ''    End If
+            ''End With
 
+            Dim height As Single = legendMilestoneVorlage.Height
+            Dim width As Single = factor * height
+            Dim top As Single = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - height) * 0.5
+            milestoneShape = pptslide.Shapes.AddShape(milestoneApp.shpType,
+                                                  tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - width) * 0.5,
+                                                  top,
+                                                  width,
+                                                  height)
+            Call defineMsPPTAppearance(milestoneShape, milestoneApp)
+
+            If top > pptslide.CustomLayout.Height Then
+                '' Throw New Exception("Die LegendenTabelle wird zu groß für eine Seite." & vbLf & "Tabelle muss anders definiert werden .... ")
+                Throw New Exception(repMessages.getmsg(6))
+            End If
             ' jetzt den Abkürzungstext eintragen 
             CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendMilestoneVorlage.TextFrame2.TextRange.Font.Size
             CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
@@ -16612,7 +16651,8 @@ Public Module testModule
         Dim fullName As String
         Dim hproj As clsProjekt
 
-        Dim phaseShape As xlNS.Shape
+        Dim phaseShape As pptNS.Shape
+        Dim appear As clsAppearance
         Dim currentProjektIndex As Integer
 
         ' notwendig für das Positionieren des Duration Pfeils bzw. des DurationTextes
@@ -17151,9 +17191,11 @@ Public Module testModule
 
                                 ' Änderung tk 26.11 
                                 If PhaseDefinitions.Contains(phaseName) Then
-                                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                                    'phaseShape = PhaseDefinitions.getShape(phaseName)
+                                    appear = PhaseDefinitions.getShapeApp(phaseName)
                                 Else
-                                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                                    'phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                                    appear = missingPhaseDefinitions.getShapeApp(phaseName)
                                 End If
 
                                 ' Ergänzung 19.4.16
@@ -17273,7 +17315,7 @@ Public Module testModule
 
                                     With copiedShape(1)
 
-                                        .Height = 1.3 * phaseShape.Height
+                                        .Height = 1.3 * appear.height
                                         .Top = CSng(phasenGrafikYPos)
                                         .Left = CSng(x1) - .Width * 0.5
                                         .Name = .Name & .Id
@@ -17287,7 +17329,7 @@ Public Module testModule
 
                                     With copiedShape(1)
 
-                                        .Height = 1.3 * phaseShape.Height
+                                        .Height = 1.3 * appear.height
                                         .Top = CSng(phasenGrafikYPos)
                                         .Left = CSng(x2) + .Width * 0.5
                                         .Name = .Name & .Id
@@ -17297,14 +17339,37 @@ Public Module testModule
                                 End If
 
 
-                                copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+                                ''copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-                                With copiedShape(1)
-                                    .Top = CSng(phasenGrafikYPos)
-                                    .Left = CSng(x1)
-                                    .Width = CSng(x2 - x1)
-                                    .Height = rds.phaseVorlagenShape.Height
-                                    '.Name = .Name & .Id
+                                ''With copiedShape(1)
+                                ''    .Top = CSng(phasenGrafikYPos)
+                                ''    .Left = CSng(x1)
+                                ''    .Width = CSng(x2 - x1)
+                                ''    .Height = rds.phaseVorlagenShape.Height
+                                ''    '.Name = .Name & .Id
+                                ''    Try
+                                ''        .Name = phShapeName
+                                ''    Catch ex As Exception
+
+                                ''    End Try
+
+                                ''    '.Title = phaseName
+                                ''    '.AlternativeText = phDateText
+
+                                ''    If missingPhaseDefinition Then
+                                ''        .Fill.ForeColor.RGB = cphase.farbe
+                                ''    End If
+
+                                ''End With
+                                phaseShape = pptslide.Shapes.AddShape(appear.shpType,
+                                                                      CSng(x1),
+                                                                      CSng(phasenGrafikYPos),
+                                                                      CSng(x2 - x1),
+                                                                      rds.phaseVorlagenShape.Height)
+                                Call definePhPPTAppearance(phaseShape, appear)
+
+                                With phaseShape
+
                                     Try
                                         .Name = phShapeName
                                     Catch ex As Exception
@@ -17338,7 +17403,7 @@ Public Module testModule
                                         originalName = Nothing
                                     End If
 
-                                    Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
+                                    Call addSmartPPTMsPhInfo(phaseShape, hproj,
                                                                 fullBreadCrumb, cphase.name, shortText, originalName,
                                                                 bestShortName, bestLongName,
                                                                 phaseStart, phaseEnd,
@@ -17346,7 +17411,7 @@ Public Module testModule
                                                                 cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
                                 End If
 
-                                phShapeNames.Add(copiedShape(1).Name)
+                                phShapeNames.Add(phaseShape.Name)
 
                                 '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
                                 '  kann, ob diese überlappt
@@ -17885,9 +17950,11 @@ Public Module testModule
                                                      ByVal milestoneGrafikYPos As Double,
                                                      ByVal rds As clsPPTShapes)
 
-        Dim milestoneTypShape As xlNS.Shape
+        Dim milestoneTypShape As pptNS.Shape
+        ''Dim milestoneTypShape1 As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
 
+        Dim msAppear As New clsAppearance
         Dim msShapeName As String = calcPPTShapeName(hproj, MS.nameID)
         Dim msBeschriftung As String = hproj.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames,
                                                              awinSettings.mppUseAbbreviation)
@@ -17901,18 +17968,22 @@ Public Module testModule
         ' Änderung tk 26.11.15
 
         If MilestoneDefinitions.Contains(MS.name) Then
-            milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
+            ''milestoneTypShape1 = MilestoneDefinitions.getShape(MS.name)
+            msAppear = MilestoneDefinitions.getShapeApp(MS.name)
         Else
-            milestoneTypShape = missingMilestoneDefinitions.getShape(MS.name)
+            ''milestoneTypShape1 = missingMilestoneDefinitions.getShape(MS.name)
+            msAppear = missingMilestoneDefinitions.getShapeApp(MS.name)
         End If
 
 
         Dim msdate As Date = MS.getDate
 
         Dim seitenverhaeltnis As Double
-        With milestoneTypShape
-            seitenverhaeltnis = .Height / .Width
-        End With
+        seitenverhaeltnis = msAppear.height / msAppear.width
+
+        ''With milestoneTypShape1
+        ''    seitenverhaeltnis = .Height / .Width
+        ''End With
 
 
         Call rds.calculatePPTx1x2(msdate, msdate, x1, x2)
@@ -17990,14 +18061,62 @@ Public Module testModule
 
 
         ' Erst jetzt wird der Meilenstein gezeichnet 
-        copiedShape = xlnsCopypptPaste(milestoneTypShape, pptslide)
+        '' ur: 2019.07.29
+        'copiedShape = xlnsCopypptPaste(milestoneTypShape1, pptslide)
+        'With copiedShape.Item(1)
+        '    .Top = CSng(milestoneGrafikYPos)
+        '    .Height = rds.milestoneVorlagenShape.Height
+        '    .Width = .Height / seitenverhaeltnis
+        '    .Left = CSng(x1) - .Width / 2
+        '    '.Name = .Name & .Id
 
-        With copiedShape.Item(1)
-            .Top = CSng(milestoneGrafikYPos)
-            .Height = rds.milestoneVorlagenShape.Height
-            .Width = .Height / seitenverhaeltnis
-            .Left = CSng(x1) - .Width / 2
-            '.Name = .Name & .Id
+        '    If awinSettings.mppShowAmpel Then
+        '        .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
+        '        If .Glow.Radius = 0 Then
+
+        '            .Glow.Radius = 2
+        '        End If
+        '    End If
+        '    Try
+        '        .Name = msShapeName
+        '    Catch ex As Exception
+
+        '    End Try
+
+        '.Title = MS.name
+        '.AlternativeText = MS.getDate.ToShortDateString
+
+
+        'End With
+
+
+
+        Dim top As Single = CSng(milestoneGrafikYPos)
+        Dim height As Single = rds.milestoneVorlagenShape.Height
+        Dim width As Single = height / seitenverhaeltnis
+        Dim left As Single = CSng(x1) - width / 2
+
+        milestoneTypShape = pptslide.Shapes.AddShape(msAppear.shpType, left, top, width, height)
+
+        If awinSettings.mppKwInMilestone Then
+
+            Call defineMsPPTAppearance(milestoneTypShape, msAppear, 1)
+
+            Dim msKwText As String = ""
+            Dim sizeFaktor As Double = rds.milestoneVorlagenShape.Height / msAppear.height
+            msKwText = calcKW(msdate).ToString("0#")
+            If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
+                milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * msAppear.TextRangeFontSize)
+                milestoneTypShape.TextFrame2.TextRange.Text = msKwText
+            End If
+
+        Else
+
+            Call defineMsPPTAppearance(milestoneTypShape, msAppear)
+
+        End If
+
+        With milestoneTypShape
 
             If awinSettings.mppShowAmpel Then
                 .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
@@ -18005,17 +18124,15 @@ Public Module testModule
                     .Glow.Radius = 2
                 End If
             End If
+
             Try
                 .Name = msShapeName
             Catch ex As Exception
 
             End Try
 
-            '.Title = MS.name
-            '.AlternativeText = MS.getDate.ToShortDateString
-
-
         End With
+
 
         If awinSettings.mppEnableSmartPPT Then
             'Dim longText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, False)
@@ -18034,7 +18151,7 @@ Public Module testModule
             End If
 
             Dim lieferumfaenge As String = MS.getAllDeliverables("#")
-            Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
+            Call addSmartPPTMsPhInfo(milestoneTypShape, hproj,
                                         fullBreadCrumb, MS.name, shortText, originalName,
                                         bestShortName, bestLongName,
                                         Nothing, msdate,
@@ -18042,7 +18159,7 @@ Public Module testModule
                                         lieferumfaenge, MS.verantwortlich, MS.percentDone, MS.DocURL)
         End If
 
-        msShapeNames.Add(copiedShape.Item(1).Name)
+        msShapeNames.Add(milestoneTypShape.Name)
 
 
     End Sub
@@ -18102,7 +18219,8 @@ Public Module testModule
 
         Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
-        Dim phaseTypShape As xlNS.Shape = Nothing
+        Dim phaseTypShape As pptNS.Shape = Nothing
+        Dim phaseTypApp As New clsAppearance
         Dim copiedShape As pptNS.ShapeRange
         Dim phaseName As String = elemNameOfElemID(phaseID)
         Dim cphase As clsPhase = hproj.getPhaseByID(phaseID)
@@ -18121,20 +18239,13 @@ Public Module testModule
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
         Try
-            phaseTypShape = appearanceDefinitions.Item(cphase.appearance).form
+            phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
         Catch ex As Exception
 
         End Try
-        If IsNothing(phaseTypShape) Then
+        If IsNothing(phaseTypApp) Then
             Exit Sub
         End If
-
-        ' tk 7.12.17, obige Zuweisung ist besser 
-        'If PhaseDefinitions.Contains(phaseName) Then
-        '    phaseTypShape = PhaseDefinitions.getShape(phaseName)
-        'Else
-        '    phaseTypShape = missingPhaseDefinitions.getShape(phaseName)
-        'End If
 
 
         ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
@@ -18144,14 +18255,16 @@ Public Module testModule
 
             ' ''phaseTypShape.Copy()
             ' ''copiedShape = rds.pptSlide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
+            'copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
 
-            With copiedShape
-                If .Height > 0.0 Then
-                    sizeFaktor = rds.phaseVorlagenShape.Height / .Height
-                End If
-                .Delete()
-            End With
+            'With copiedShape
+            '    If .Height > 0.0 Then
+            '        sizeFaktor = rds.phaseVorlagenShape.Height / .Height
+            '    End If
+            '    .Delete()
+            'End With
+
+            sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
 
         End If
 
@@ -18246,23 +18359,60 @@ Public Module testModule
             ' Erst jetzt wird die Phase gezeichnet 
             ' ''phaseTypShape.Copy()
             ' ''copiedShape = rds.pptSlide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
 
-            With copiedShape.Item(1)
-                .Top = CSng(yPosition + rds.YPhase)
-                .Height = rds.phaseVorlagenShape.Height
-                .Width = CSng(x2 - x1)
-                .Left = CSng(x1)
-                '.Name = .Name & .Id
+            '' ur: 1.8.2019
+            ''copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
 
+            ''With copiedShape.Item(1)
+            ''    .Top = CSng(yPosition + rds.YPhase)
+            ''    .Height = rds.phaseVorlagenShape.Height
+            ''    .Width = CSng(x2 - x1)
+            ''    .Left = CSng(x1)
+            ''    '.Name = .Name & .Id
+
+            ''    Try
+            ''        .Name = phShapeName
+            ''    Catch ex As Exception
+
+            ''    End Try
+
+            ''    '.Title = phaseName
+            ''    '.AlternativeText = phDateText
+
+            ''    ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
+            ''    If awinSettings.mppUseInnerText Then
+
+            ''        If awinSettings.mppShowPhDate Then
+            ''            phDescription = phDescription & " " & phDateText
+            ''        End If
+
+            ''        If sizeFaktor * .TextFrame2.TextRange.Font.Size * sizeFaktor > 3.0 Then
+            ''            .TextFrame2.TextRange.Text = phDescription
+            ''            .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * sizeFaktor)
+            ''        End If
+            ''    End If
+
+
+            ''    shapeNames.Add(.Name)
+
+
+            ''End With
+            Dim top As Single = CSng(yPosition + rds.YPhase)
+            Dim heigth As Single = rds.phaseVorlagenShape.Height
+            Dim width As Single = CSng(x2 - x1)
+            Dim left As Single = CSng(x1)
+
+            phaseTypShape = rds.pptSlide.Shapes.AddShape(phaseTypApp.shpType, left, top, width, heigth)
+
+            definePhPPTAppearance(phaseTypShape, phaseTypApp)
+
+            With phaseTypShape
                 Try
                     .Name = phShapeName
                 Catch ex As Exception
 
                 End Try
 
-                '.Title = phaseName
-                '.AlternativeText = phDateText
 
                 ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
                 If awinSettings.mppUseInnerText Then
@@ -18301,7 +18451,7 @@ Public Module testModule
                     originalName = Nothing
                 End If
 
-                Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
+                Call addSmartPPTMsPhInfo(phaseTypShape, hproj,
                                             fullBreadCrumb, cphase.name, shortText, originalName,
                                             bestShortName, bestLongName,
                                             phStartDate, phEndDate,
@@ -18332,7 +18482,8 @@ Public Module testModule
                                                ByVal milestoneID As String,
                                                ByVal yPosition As Double)
 
-        Dim milestoneTypShape As xlNS.Shape = Nothing
+        Dim milestoneTypShape As pptNS.Shape = Nothing
+        Dim milestoneTypApp As New clsAppearance
         Dim copiedShape As pptNS.ShapeRange
         Dim milestoneName As String = elemNameOfElemID(milestoneID)
         Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
@@ -18352,42 +18503,34 @@ Public Module testModule
         Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames,
                                                              awinSettings.mppUseAbbreviation, swimlaneID)
 
-        ' eigentlih muss es das sein ..
+        ' eigentlich muss es das sein ..
         Try
-            milestoneTypShape = appearanceDefinitions.Item(cMilestone.appearance).form
+            milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
         Catch ex As Exception
 
         End Try
 
         ' Exit , wenn nichts gefunden  
-        If IsNothing(milestoneTypShape) Then
+        If IsNothing(milestoneTypApp) Then
             Exit Sub
         End If
-
-
-        ' tk, Änderung 7.12.17 obige Zuweisung ist besser ... 
-        ''If MilestoneDefinitions.Contains(milestoneName) Then
-        ''    milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
-        ''Else
-        ''    milestoneTypShape = missingMilestoneDefinitions.getShape(milestoneName)
-        ''End If
 
         Dim sizeFaktor As Double
 
         ' ''milestoneTypShape.Copy()
         ' ''copiedShape = rds.pptSlide.Shapes.Paste()
-        copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
+        'copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
 
-        With copiedShape
-            If .Height <= 0.0 Then
-                sizeFaktor = 1.0
-            Else
-                sizeFaktor = rds.milestoneVorlagenShape.Height / .Height
-            End If
-            .Delete()
-        End With
+        'With copiedShape
+        '    If .Height <= 0.0 Then
+        '        sizeFaktor = 1.0
+        '    Else
+        '        sizeFaktor = rds.milestoneVorlagenShape.Height / .Height
+        '    End If
+        '    .Delete()
+        'End With
 
-
+        sizeFaktor = rds.milestoneVorlagenShape.Height / milestoneTypApp.height
 
         Dim msDate As Date = cMilestone.getDate
 
@@ -18457,6 +18600,7 @@ Public Module testModule
                         .AlternativeText = ""
 
                         shapeNames.Add(.Name)
+
                     End With
 
                 End If
@@ -18465,25 +18609,81 @@ Public Module testModule
                 ' Erst jetzt wird der Meilenstein gezeichnet 
                 '' ''milestoneTypShape.Copy()
                 '' ''copiedShape = rds.pptSlide.Shapes.Paste()
-                copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
+                ''copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
 
-                With copiedShape.Item(1)
-                    .Height = sizeFaktor * .Height
-                    .Width = sizeFaktor * .Width
-                    .Top = CSng(yPosition + rds.YMilestone)
-                    .Left = CSng(x1) - .Width / 2
+                ''With copiedShape.Item(1)
+                ''    .Height = sizeFaktor * .Height
+                ''    .Width = sizeFaktor * .Width
+                ''    .Top = CSng(yPosition + rds.YMilestone)
+                ''    .Left = CSng(x1) - .Width / 2
 
-                    '.Name = .Name & .Id
-                    '.Title = milestoneName
-                    '.AlternativeText = msDate.ToShortDateString
+                ''    '.Name = .Name & .Id
+                ''    '.Title = milestoneName
+                ''    '.AlternativeText = msDate.ToShortDateString
+                ''    Try
+                ''        .Name = msShapeName
+                ''    Catch ex As Exception
+
+                ''    End Try
+
+                ''    '.Title = milestoneName
+                ''    '.AlternativeText = msDate.ToShortDateString
+
+                ''    If awinSettings.mppShowAmpel Then
+                ''        .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
+                ''        If .Glow.Radius = 0 Then
+                ''            .Glow.Radius = 2
+                ''        End If
+                ''    End If
+
+                ''    Dim msKwText As String = ""
+                ''    If awinSettings.mppKwInMilestone Then
+
+                ''        msKwText = calcKW(msDate).ToString("0#")
+                ''        If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
+                ''            .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
+                ''            .TextFrame2.TextRange.Text = msKwText
+                ''        End If
+
+                ''    End If
+
+                ''    shapeNames.Add(.Name)
+                ''End With
+                'copiedShape = pptCopypptPaste(milestoneTypShape, rds.pptSlide)
+
+
+                Dim height As Single = sizeFaktor * milestoneTypApp.height
+                Dim width As Single = sizeFaktor * milestoneTypApp.width
+                Dim top As Single = CSng(yPosition + rds.YMilestone)
+                Dim left As Single = CSng(x1) - width / 2
+
+                milestoneTypShape = rds.pptSlide.Shapes.AddShape(milestoneTypApp.shpType, left, top, width, height)
+
+                If awinSettings.mppKwInMilestone Then
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp, 1)
+
+                    Dim msKwText As String = ""
+                    msKwText = calcKW(msDate).ToString("0#")
+                    If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
+                        milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * milestoneTypApp.TextRangeFontSize)
+                        milestoneTypShape.TextFrame2.TextRange.Text = msKwText
+                    End If
+
+                Else
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp)
+
+                End If
+
+
+                With milestoneTypShape
+
                     Try
                         .Name = msShapeName
                     Catch ex As Exception
 
                     End Try
-
-                    '.Title = milestoneName
-                    '.AlternativeText = msDate.ToShortDateString
 
                     If awinSettings.mppShowAmpel Then
                         .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
@@ -18492,44 +18692,37 @@ Public Module testModule
                         End If
                     End If
 
-                    Dim msKwText As String = ""
-                    If awinSettings.mppKwInMilestone Then
+                    shapeNames.Add(.Name)
 
-                        msKwText = calcKW(msDate).ToString("0#")
-                        If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
-                            .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
-                            .TextFrame2.TextRange.Text = msKwText
-                        End If
+                End With
 
-                    End If
+                If awinSettings.mppEnableSmartPPT Then
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    'Dim originalName As String = cMilestone.originalName
 
-                    If awinSettings.mppEnableSmartPPT Then
-                        'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
-                        'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
-                        'Dim originalName As String = cMilestone.originalName
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
+                    Dim shortText As String = cMilestone.shortName
+                    Dim originalName As String = cMilestone.originalName
 
-                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
-                        Dim shortText As String = cMilestone.shortName
-                        Dim originalName As String = cMilestone.originalName
+                    Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
+                    Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
 
-                        Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
-                        Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
-
-                        If originalName = cMilestone.name Then
+                    If originalName = cMilestone.name Then
                             originalName = Nothing
                         End If
 
                         Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
-                        Call addSmartPPTMsPhInfo(copiedShape.Item(1), hproj,
+                    Call addSmartPPTMsPhInfo(milestoneTypShape, hproj,
                                                     fullBreadCrumb, cMilestone.name, shortText, originalName,
                                                     bestShortName, bestLongName,
                                                     Nothing, msDate,
                                                     cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                     lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
-                    End If
+                End If
 
-                    shapeNames.Add(.Name)
-                End With
+
+
             Catch ex As Exception
                 Call MsgBox("fehler in zeichneMeilenstein;" & vbLf & ex.Message)
             End Try
@@ -18836,7 +19029,9 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Phasen-Legende zeichnen 
-        Dim phaseShape As xlNS.Shape = Nothing
+        'Dim phaseShape As xlNS.Shape = Nothing
+        Dim phaseShape As pptNS.Shape = Nothing
+        Dim phaseApp As New clsAppearance
         Dim phaseOrCategoryName As String = ""
         Dim maxBreite As Double = 0.0
 
@@ -18886,16 +19081,19 @@ Public Module testModule
                 ' Änderung tk 3.12.17
                 If namesAreCategories Then
                     If appearanceDefinitions.ContainsKey(phaseOrCategoryName) Then
-                        phaseShape = appearanceDefinitions.Item(phaseOrCategoryName).form
+                        'phaseShape = appearanceDefinitions.Item(phaseOrCategoryName).form
+                        phaseApp = appearanceDefinitions.Item(phaseOrCategoryName)
                         phShortname = ""
                     End If
                 Else
                     ' Änderung tk 26.11.15
                     If PhaseDefinitions.Contains(phaseOrCategoryName) Then
-                        phaseShape = PhaseDefinitions.getShape(phaseOrCategoryName)
+                        'phaseShape = PhaseDefinitions.getShape(phaseOrCategoryName)
+                        phaseApp = PhaseDefinitions.getShapeApp(phaseOrCategoryName)
                         phShortname = PhaseDefinitions.getAbbrev(phaseOrCategoryName)
                     Else
-                        phaseShape = missingPhaseDefinitions.getShape(phaseOrCategoryName)
+                        'phaseShape = missingPhaseDefinitions.getShape(phaseOrCategoryName)
+                        phaseApp = missingPhaseDefinitions.getShapeApp(phaseOrCategoryName)
                         phShortname = missingPhaseDefinitions.getAbbrev(phaseOrCategoryName)
                     End If
                 End If
@@ -18904,16 +19102,24 @@ Public Module testModule
                 ' Phasen-Shape 
                 ''phaseShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
+                'copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-                With copiedShape(1)
+                'With copiedShape(1)
 
-                    .Height = legendPhaseVorlagenShape.Height
-                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                    .Left = xCursor
-                    .Width = legendPhaseVorlagenShape.Width
+                '    .Height = legendPhaseVorlagenShape.Height
+                '    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                '    .Left = xCursor
+                '    .Width = legendPhaseVorlagenShape.Width
 
-                End With
+                'End With
+                Dim height As Single = legendPhaseVorlagenShape.Height
+                Dim top As Single = CSng(yCursor + 0.5 * (zeilenHoehe - height))
+                Dim left As Single = xCursor
+                Dim width As Single = legendPhaseVorlagenShape.Width
+
+                phaseShape = pptslide.Shapes.AddShape(phaseApp.shpType, left, top, width, height)
+
+                Call definePhPPTAppearance(phaseShape, phaseApp)
 
                 ' Phasen-Text
                 ''legendTextVorlagenShape.Copy()
@@ -18981,7 +19187,9 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Meilenstein-Legende zeichnen 
-        Dim meilensteinShape As xlNS.Shape = Nothing
+        'Dim meilensteinShape As xlNS.Shape = Nothing
+        Dim meilensteinShape As pptNS.Shape = Nothing
+        Dim meilensteinApp As New clsAppearance
         Dim msShortname As String = ""
         maxBreite = 0.0
 
@@ -19025,17 +19233,20 @@ Public Module testModule
 
                 If namesAreCategories Then
                     If appearanceDefinitions.ContainsKey(msOrCategoryName) Then
-                        meilensteinShape = appearanceDefinitions.Item(msOrCategoryName).form
+                        'meilensteinShape = appearanceDefinitions.Item(msOrCategoryName).form
+                        meilensteinApp = appearanceDefinitions.Item(msOrCategoryName)
                         msShortname = ""
                     End If
 
                 Else
                     ' Änderung tk 26.11.15
                     If MilestoneDefinitions.Contains(msOrCategoryName) Then
-                        meilensteinShape = MilestoneDefinitions.getShape(msOrCategoryName)
+                        'meilensteinShape = MilestoneDefinitions.getShape(msOrCategoryName)
+                        meilensteinApp = MilestoneDefinitions.getShapeApp(msOrCategoryName)
                         msShortname = MilestoneDefinitions.getAbbrev(msOrCategoryName)
                     Else
-                        meilensteinShape = missingMilestoneDefinitions.getShape(msOrCategoryName)
+                        'meilensteinShape = missingMilestoneDefinitions.getShape(msOrCategoryName)
+                        meilensteinApp = missingMilestoneDefinitions.getShapeApp(msOrCategoryName)
                         msShortname = missingMilestoneDefinitions.getAbbrev(msOrCategoryName)
                     End If
                 End If
@@ -19043,14 +19254,23 @@ Public Module testModule
                 ' Meilenstein-Shape 
                 ''meilensteinShape.Copy()
                 ''copiedShape = pptslide.Shapes.Paste()
-                copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
+                'copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
 
-                With copiedShape(1)
-                    .Left = xCursor
-                    .Height = legendMilestoneVorlagenShape.Height
-                    .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
-                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                End With
+                'With copiedShape(1)
+                '    .Left = xCursor
+                '    .Height = legendMilestoneVorlagenShape.Height
+                '    .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
+                '    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                'End With
+                Dim left As Single = xCursor
+                Dim height As Single = legendMilestoneVorlagenShape.Height
+                Dim width As Single = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * height
+                Dim top As Single = CSng(yCursor + 0.5 * (zeilenHoehe - height))
+
+                meilensteinShape = pptslide.Shapes.AddShape(meilensteinApp.shpType,
+                                                            left, top, width, height)
+
+                defineMsPPTAppearance(meilensteinShape, meilensteinApp,)
 
                 ' Meilenstein-Text
                 ''legendTextVorlagenShape.Copy()
@@ -22137,6 +22357,169 @@ Public Module testModule
         ' Ende neu 
 
     End Sub
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="resultShape"></param>
+    ''' <param name="appear"></param>
+    ''' <param name="Number"></param>
+    Public Sub defineMsPPTAppearance(ByRef resultShape As pptNS.Shape, ByVal appear As clsAppearance, Optional ByVal Number As Integer = 0)
+        With resultShape
 
+            'If awinSettings.mppShowAmpel = True Then
+            '    .Glow.Radius = 5
+            '    .Glow.Color.RGB = CInt(bewertung.color)
+            'End If
+
+            'If isMissingDefinition Then
+
+            '    If awinSettings.missingDefinitionColor <> pptNS.XlRgbColor.rgbWhite Then
+            '        .Line.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+            '        .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+            '        .Line.Weight = 2
+            '        .Fill.ForeColor.RGB = CInt(farbe)
+            '    End If
+            'Else
+            If Not IsNothing(appear) Then
+
+                resultShape.Rotation = appear.Rotation
+                resultShape.Fill.BackColor.RGB = appear.BGcolor
+                resultShape.Fill.ForeColor.RGB = appear.FGcolor
+                resultShape.Glow.Color.RGB = appear.Glowcolor
+                resultShape.Glow.Radius = appear.Glowradius
+                resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                'resultShape.Shadow.Transparency = appear.ShadowTransp
+                resultShape.Line.BackColor.RGB = appear.LineBGColor
+                resultShape.Line.ForeColor.RGB = appear.LineFGColor
+                resultShape.Line.Weight = appear.LineWeight
+
+                If appear.hasText Then
+                    Try
+                        resultShape.TextFrame2.MarginLeft = appear.TextMarginLeft
+                        resultShape.TextFrame2.MarginRight = appear.TextMarginRight
+                        resultShape.TextFrame2.MarginBottom = appear.TextMarginBottom   '
+                        resultShape.TextFrame2.MarginTop = appear.TextMarginTop     '
+                        resultShape.TextFrame2.WordWrap = appear.TextWordWrap       '
+                        resultShape.TextFrame2.VerticalAnchor = appear.TextVerticalAnchor   '
+                        resultShape.TextFrame2.HorizontalAnchor = appear.TextHorizontalAnchor  '
+                        resultShape.TextFrame2.TextRange.Text = appear.TextRangeText         '
+                        resultShape.TextFrame2.TextRange.Font.Size = appear.TextRangeFontSize   '
+                        resultShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = appear.TextRangeFontFillFGColor
+                    Catch ex As Exception
+
+                    End Try
+                End If
+            End If
+
+
+                Try
+                    If appear.hasText <> Microsoft.Office.Core.MsoTriState.msoFalse Then
+                        .TextFrame2.TextRange.Text = ""
+                    End If
+
+                    If Number > 0 Then
+
+                    With .TextFrame2
+                        .MarginLeft = 0
+                        .MarginRight = 0
+                        .MarginBottom = 0
+                        .MarginTop = 0
+                        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                        .VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = Microsoft.Office.Core.MsoHorizontalAnchor.msoAnchorCenter
+                        .TextRange.Text = Number.ToString
+                        .TextRange.Font.Size = awinSettings.fontsizeLegend
+                        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    End With
+
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+        End With
+    End Sub
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="resultShape"></param>
+    ''' <param name="appear"></param>
+    ''' <param name="Number"></param>
+    Public Sub definePhPPTAppearance(ByRef resultShape As pptNS.Shape, ByVal appear As clsAppearance, Optional ByVal Number As Integer = 0)
+
+        With resultShape
+
+            'If awinSettings.missingDefinitionColor <> xlNS.XlRgbColor.rgbWhite Then
+            '    .Line.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+            '    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+            '    .Line.Transparency = 0
+            '    .Line.Weight = 2
+            '    .Fill.ForeColor.RGB = CInt(appear.FGcolor)
+            'Else
+            If Not IsNothing(appear) Then
+
+                    resultShape.Rotation = appear.Rotation
+                    resultShape.Fill.BackColor.RGB = appear.BGcolor
+                    resultShape.Fill.ForeColor.RGB = appear.FGcolor
+                    resultShape.Glow.Color.RGB = appear.Glowcolor
+                    resultShape.Glow.Radius = appear.Glowradius
+                    resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                    'resultShape.Shadow.Transparency = appear.ShadowTransp
+                    resultShape.Line.BackColor.RGB = appear.LineBGColor
+                    resultShape.Line.ForeColor.RGB = appear.LineFGColor
+                resultShape.Line.Weight = appear.LineWeight
+
+                If appear.hasText Then
+                    Try
+                        resultShape.TextFrame2.MarginLeft = appear.TextMarginLeft
+                        resultShape.TextFrame2.MarginRight = appear.TextMarginRight
+                        resultShape.TextFrame2.MarginBottom = appear.TextMarginBottom   '
+                        resultShape.TextFrame2.MarginTop = appear.TextMarginTop     '
+                        resultShape.TextFrame2.WordWrap = appear.TextWordWrap       '
+                        resultShape.TextFrame2.VerticalAnchor = appear.TextVerticalAnchor   '
+                        resultShape.TextFrame2.HorizontalAnchor = appear.TextHorizontalAnchor  '
+                        resultShape.TextFrame2.TextRange.Text = appear.TextRangeText         '
+                        resultShape.TextFrame2.TextRange.Font.Size = appear.TextRangeFontSize   '
+                        resultShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = appear.TextRangeFontFillFGColor
+                    Catch ex As Exception
+
+                    End Try
+                End If
+
+            End If
+
+
+            Try
+                If appear.hasText <> Microsoft.Office.Core.MsoTriState.msoFalse Then
+                    .TextFrame2.TextRange.Text = ""
+                End If
+
+                If Number > 0 Then
+                    With .TextFrame2
+                        .MarginLeft = 0
+                        .MarginRight = 0
+                        .MarginBottom = 0
+                        .MarginTop = 0
+                        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                        .VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = Microsoft.Office.Core.MsoHorizontalAnchor.msoAnchorCenter
+                        .TextRange.Text = Number.ToString
+                        .TextRange.Font.Size = awinSettings.fontsizeLegend
+                        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    End With
+
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+        End With
+    End Sub
 
 End Module
