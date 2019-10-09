@@ -68,7 +68,7 @@ Public Class frmProjPortfolioAdmin
     End Enum
 
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
-    Friend aKtionskennung As Integer
+    Public aKtionskennung As Integer
 
 
 
@@ -438,6 +438,43 @@ Public Class frmProjPortfolioAdmin
                 storeToDBasWell.Visible = False
                 chkbxPermanent.Visible = False
 
+            ElseIf aKtionskennung = PTTvActions.loadPVinPPT Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekt bzw. Projekt-Variante wählen"
+                Else
+                    .Text = "Select project / project-variant"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = True
+                .deleteFilterIcon.Visible = True
+
+                .dropboxScenarioNames.Visible = False
+
+
+                .OKButton.Visible = True
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .OKButton.Text = "Report erstellen"
+                Else
+                    .OKButton.Text = "Create Report"
+                End If
+
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                storeToDBasWell.Visible = False
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.loadPVS Then
 
@@ -560,6 +597,7 @@ Public Class frmProjPortfolioAdmin
 
         ' bestimmen, ob es sich um quicklist handelt ...
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
             aKtionskennung = PTTvActions.delAllExceptFromDB Then
             quickList = True
@@ -647,6 +685,7 @@ Public Class frmProjPortfolioAdmin
 
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
         If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadPVInPPT Or
             aKtionskennung = PTTvActions.delFromDB Or
             aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
@@ -660,6 +699,8 @@ Public Class frmProjPortfolioAdmin
 
             If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
                 pvNamesList = reduceRawListTo(pvNamesListRaw, True)
+            ElseIf aKtionskennung = PTTvActions.loadPVInPPT Then
+                pvNamesList = pvNamesListRaw
             Else
                 pvNamesList = reduceRawListTo(pvNamesListRaw, False)
             End If
@@ -938,6 +979,11 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
 
+        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Then
+
+            stopRecursion = True
+            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+            stopRecursion = False
 
         ElseIf aKtionskennung = PTTvActions.delFromSession Or
               aKtionskennung = PTTvActions.deleteV Then
@@ -1541,6 +1587,82 @@ Public Class frmProjPortfolioAdmin
                     Dim variantNode As TreeNode = node
 
                     If variantNode.Checked = True Then
+                        If projektNode.Checked = False Then
+                            projektNode.Checked = True
+                        End If
+                    Else
+                        ' wenn es die letzte Variante war, die unchecked wurde 
+                        Dim anzVariantsChecked As Integer = 0
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If projektNode.Nodes.Item(i).Checked = True Then
+                                anzVariantsChecked = anzVariantsChecked + 1
+                            End If
+                        Next
+                        If anzVariantsChecked = 0 Then
+                            ' den Projekt-Knoten auch wieder zurücksetzen
+                            projektNode.Checked = False
+                        End If
+                    End If
+
+            End Select
+
+        ElseIf actionCode = PTTvActions.loadPVInPPT Then
+            ' hier muss lediglich sichergestellt sein, dass immer nur ein Item selektiert sein kann  
+
+            Select Case TreeLevel
+                Case 0 ' Project Node was checked / unchecked 
+                    Dim projektNode As TreeNode = node
+
+
+                    If projektNode.Checked = True Then
+
+                        ' alle anderen Knoten de-selektieren 
+                        Call deSelectNodes(projektNode.FullPath)
+
+                        ' eine muss gechecked werden
+                        Dim variantNameLookingFor As String = ""
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                            variantNameLookingFor = ptVariantFixNames.pfv.ToString
+                        Else
+                            variantNameLookingFor = ""
+                        End If
+
+                        Dim found As Boolean = False
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text) = variantNameLookingFor Then
+                                projektNode.Nodes.Item(i).Checked = True
+                                found = True
+                            Else
+                                projektNode.Nodes.Item(i).Checked = False
+                            End If
+                        Next
+
+                        If Not found Then
+                            ' einfach die erste Variante auf checked setzen 
+                            If projektNode.Nodes.Count > 0 Then
+                                projektNode.Nodes.Item(0).Checked = True
+                            End If
+
+                        End If
+
+                    Else
+                        ' alle Varianten müssen unchecked werden 
+                        ' alle anderen Varianten auf Unchecked setzen 
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            projektNode.Nodes.Item(i).Checked = False
+                        Next
+                    End If
+
+                Case 1 ' Variant Node was checked / unchecked 
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim variantNode As TreeNode = node
+
+                    If variantNode.Checked = True Then
+
+                        ' alle anderen Knoten de-selektieren 
+                        Call deSelectNodes(variantNode.FullPath)
+
                         If projektNode.Checked = False Then
                             projektNode.Checked = True
                         End If
@@ -2354,7 +2476,10 @@ Public Class frmProjPortfolioAdmin
         Dim anzahlProjekte As Integer
         Dim anzahlVarianten As Integer
         Dim anzahlTimeStamps As Integer
-        Dim pname As String, variantName As String, timestamp As Date
+        Dim pname As String = "", variantName As String = "", timestamp As Date
+        ' nimmt den Namen auf , der in Powerpoint selektiert wird 
+        Dim pptPname As String = ""
+        Dim pptVname As String = ""
         'Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
         Dim storedAtOrBefore As Date
@@ -2363,6 +2488,8 @@ Public Class frmProjPortfolioAdmin
         Dim outPutCollection As New Collection
         Dim outPutHeader As String = ""
         Dim outPutExplanation As String = ""
+
+        Dim calledFromPPT As Boolean = (aKtionskennung = PTTvActions.loadPVInPPT)
 
         ' Cursor auf Wait-Cursor setzen ... 
         Me.Cursor = Cursors.WaitCursor
@@ -2418,6 +2545,16 @@ Public Class frmProjPortfolioAdmin
                 outPutExplanation = "Messages"
             End If
 
+        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Selektieren Sie ein Projekt oder eine Projekt-Variante "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Select a project or project-variant from Database"
+                outPutExplanation = "Messages"
+            End If
+
         End If
 
 
@@ -2429,7 +2566,8 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delAllExceptFromDB Or
             aKtionskennung = PTTvActions.delFromSession Or
             aKtionskennung = PTTvActions.deleteV Or
-            aKtionskennung = PTTvActions.loadPV Then
+            aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.loadPVInPPT Then
 
             ' alle anderen Aktionen wie Projekte aus Datenbank löschen , aus Session löschen, aus Datenbank laden  ... 
             With TreeViewProjekte
@@ -2498,7 +2636,7 @@ Public Class frmProjPortfolioAdmin
                             'Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPV Then
+                        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVinPPT Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -2506,6 +2644,7 @@ Public Class frmProjPortfolioAdmin
                                     hproj = ShowProjekte.getProject(pname)
                                 End If
                             End If
+
 
                             ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
                             currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
@@ -2612,12 +2751,20 @@ Public Class frmProjPortfolioAdmin
 
                                     ' laden der Projekt-Variante 
                                     ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
-                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
 
-                                    ' in load wird das pfv als Basis-Variante abgespeichert , deswegen muss jetzt variantName der Basis-Varianten-Name sein
-                                    If awinSettings.filterPFV And variantName = ptVariantFixNames.pfv.ToString Then
-                                        variantName = ""
+                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+
+                                    ' das für Powerpoint ausgewählte Projekt 
+                                    If aKtionskennung = PTTvActions.loadPVInPPT Then
+                                        pptPname = pname
+                                        pptVname = variantName
+                                    Else
+                                        ' in load wird das pfv als Basis-Variante abgespeichert , deswegen muss jetzt variantName der Basis-Varianten-Name sein
+                                        If awinSettings.filterPFV And variantName = ptVariantFixNames.pfv.ToString Then
+                                            variantName = ""
+                                        End If
                                     End If
+
 
                                     If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
                                         ' nichts tun , ist schon drin 
@@ -2688,13 +2835,20 @@ Public Class frmProjPortfolioAdmin
                                     currentBrowserConstellation.remove(tmpKey)
 
 
-                                ElseIf aKtionskennung = PTTvActions.loadPV Then
+                                ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = pttvActions.loadPVInPPT Then
 
                                     ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
                                     currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
                                     currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
-                                    Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore)
+                                    Call loadProjectfromDB(outPutCollection, pname, variantName, first, storedAtOrBefore, calledFromPPT)
+
+                                    ' das für Powerpoint ausgewählte Projekt 
+                                    If aKtionskennung = PTTvActions.loadPVInPPT Then
+                                        pptPname = pname
+                                        pptVname = variantName
+                                    End If
+
                                     first = False
 
                                     If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
@@ -2747,16 +2901,21 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
-                If aKtionskennung = PTTvActions.loadPV Or
-                    aKtionskennung = PTTvActions.delFromSession Then
-                    Call awinNeuZeichnenDiagramme(2)
-                End If
+
+                ' tk 7.10.19
+                ' damit dieses Formular weiderverwendbar ist, müssen die Projectboard spezifischen Sachen raus. 
+
+                'If aKtionskennung = PTTvActions.loadPV Or
+                '    aKtionskennung = PTTvActions.delFromSession Then
+                '    Call awinNeuZeichnenDiagramme(2)
+                'End If
 
             End With
 
             ' bei Aktionen loadPV, delFromSession muss der currentConstellationName aktualisiert werden 
             If aKtionskennung = PTTvActions.delFromSession Or
                 aKtionskennung = PTTvActions.loadPV Or
+                aKtionskennung = PTTvActions.loadPVInPPT Or
                 aKtionskennung = PTTvActions.deleteV Then
                 If currentConstellationName <> calcLastSessionScenarioName() Then
                     currentConstellationName = calcLastSessionScenarioName()
@@ -2903,14 +3062,29 @@ Public Class frmProjPortfolioAdmin
 
         End If
 
-        ' jetzt muss die Caption neu gesetzt werden ...
-        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-            Try
-                projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt)
-            Catch ex As Exception
+        ' jetzt muss das für Projectboard bzw. Aufruf von Powerpoint gestezt werden 
 
-            End Try
+        If aKtionskennung = PTTvActions.loadPVInPPT Then
+            ' selectedProjekte setzen, die werden nämlich dann in PPT abgefragt
+            selectedProjekte.Clear(False)
+            Dim hproj As clsProjekt = AlleProjekte.getProject(pptPname, pptVname)
+
+            If Not IsNothing(hproj) Then
+                selectedProjekte.Add(hproj, False)
+            End If
+
+        Else
+            ' jetzt muss die Caption neu gesetzt werden ...
+            If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+                Try
+                    projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt)
+                Catch ex As Exception
+
+                End Try
+            End If
         End If
+
+
 
         ' Cursor auf Normal-Cursor setzen ... 
         Me.Cursor = Cursors.Arrow
@@ -3488,18 +3662,19 @@ Public Class frmProjPortfolioAdmin
 
             Else
                 ' auch in den Fällen deleteV
-                ' in allen anderen Fällen: loadPV, loadPVS, delFromDB, delAllExceptFromDB, delFromSession
+                ' in allen anderen Fällen: loadPV, loadPViInPPTloadPVS, delFromDB, delAllExceptFromDB, delFromSession
+                ' alle de-selektieren; h 
+                Call deSelectNodes()
+                'For i As Integer = 1 To .Nodes.Count
+                '    projectNode = .Nodes.Item(i - 1)
+                '    If projectNode.Checked Then
+                '        projectNode.Checked = False
+                '    End If
 
-                For i As Integer = 1 To .Nodes.Count
-                    projectNode = .Nodes.Item(i - 1)
-                    If projectNode.Checked Then
-                        projectNode.Checked = False
-                    End If
-
-                    If projectNode.Nodes.Count > 0 Then
-                        Call unCheck(projectNode)
-                    End If
-                Next
+                '    If projectNode.Nodes.Count > 0 Then
+                '        Call unCheck(projectNode)
+                '    End If
+                'Next
 
             End If
 
@@ -3526,7 +3701,51 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    ''' <summary>
+    ''' de-selektiert alle Knoten 
+    ''' ausser dem Knoten, dessen node.fullpath angegeben ist ; 
+    ''' optional werden alle auf unchecked gesetzt
+    ''' </summary>
+    Private Sub deSelectNodes(ByVal Optional exceptNodeFullPath As String = "")
 
+        Dim formerStopRecursion As Boolean = stopRecursion
+        stopRecursion = True
+        Dim projectNode As TreeNode
+
+        With TreeViewProjekte
+
+            If exceptNodeFullPath = "" Then
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+
+                    If projectNode.Checked Then
+                        projectNode.Checked = False
+                    End If
+
+                    If projectNode.Nodes.Count > 0 Then
+                        Call unCheck(projectNode)
+                    End If
+                Next
+            Else
+                For i As Integer = 1 To .Nodes.Count
+                    projectNode = .Nodes.Item(i - 1)
+
+                    If projectNode.Checked And projectNode.FullPath <> exceptNodeFullPath Then
+                        projectNode.Checked = False
+                    End If
+
+                    If projectNode.Nodes.Count > 0 Then
+                        Call unCheck(projectNode)
+                    End If
+
+                Next
+            End If
+
+        End With
+
+        stopRecursion = formerStopRecursion
+
+    End Sub
 
 
     ''' <summary>

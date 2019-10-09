@@ -12,6 +12,17 @@
     End Property
 
     ''' <summary>
+    ''' returns number of loaded portfolios
+    ''' 0 , if no portfolio has been loaded so far
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property CountLoadedPortfolios As Integer
+        Get
+            CountLoadedPortfolios = _listOfLoadedSessionPortfolios.Count
+        End Get
+    End Property
+
+    ''' <summary>
     ''' fügt der Liste an loadedSessionPortfolios ein Portfolio hinzu 
     ''' wenn zum Portfolio noch kein Summary Projekt existiert, wird es erstellt 
     ''' </summary>

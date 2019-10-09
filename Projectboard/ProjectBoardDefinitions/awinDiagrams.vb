@@ -1940,7 +1940,12 @@ Public Module awinDiagrams
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
         'budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
-        budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
+        If projectConstellations.CountLoadedPortfolios > 0 Then
+            budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
+        Else
+            budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        End If
+
         pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
@@ -4505,7 +4510,14 @@ Public Module awinDiagrams
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
         'budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
-        budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
+
+        ' wenn noch kein Portfolio geladen wurde, müssen die anteiligen Projekt-Budgets verwendet werden 
+        If projectConstellations.CountLoadedPortfolios > 0 Then
+            budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
+        Else
+            budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        End If
+
         pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 

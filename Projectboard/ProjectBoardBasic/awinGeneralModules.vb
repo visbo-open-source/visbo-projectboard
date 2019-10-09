@@ -3985,7 +3985,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub loadProjectfromDB(ByRef outputCollection As Collection,
                                  ByVal pName As String, vName As String, ByVal show As Boolean,
-                                 ByVal storedAtORBefore As Date)
+                                 ByVal storedAtORBefore As Date,
+                                 ByVal calledFromPPT As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
@@ -4008,7 +4009,8 @@ Public Module awinGeneralModules
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
 
                 ' wenn jetzt gefiltert wurde und der Varianten-Name pfv ist, dann umsetzen 
-                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                ' das muss aber nur gemacht werden, wenn nicht von Powerpoint , nur lesend aufgerufen ...
+                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString And Not calledFromPPT Then
                     hproj.variantName = ""
                     vName = ""
                     key = calcProjektKey(pName, "")
@@ -4029,18 +4031,23 @@ Public Module awinGeneralModules
 
                 AlleProjekte.Add(hproj)
 
-                ' jetzt die writeProtections aktualisieren 
-                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                writeProtections.upsert(wpItem)
+                ' nur machen, wenn nicht von PPT aufgerufen 
+                If Not calledFromPPT Then
+                    ' jetzt die writeProtections aktualisieren 
+                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                    writeProtections.upsert(wpItem)
 
-                If show Then
-                    ' prüfen, ob es bereits in der Showprojekt enthalten ist
-                    ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-                    ' replaceProjectVariant
+                    If show Then
+                        ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                        ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                        ' replaceProjectVariant
 
-                    Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+                        Call replaceProjectVariant(pName, vName, False, True, freieZeile)
 
+                    End If
                 End If
+
+
             Else
                 Dim outputLine As String = "existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString
                 outputCollection.Add(outputLine)
@@ -4126,6 +4133,9 @@ Public Module awinGeneralModules
 
         Dim outputLine As String = ""
 
+        ' tk 7.10.19 calledFromPPT nur true, wenn kennung = PTtvActions.loadPVinPPT
+        Dim calledFromPPT As Boolean = (kennung = PTTvActions.loadPVInPPT)
+
         Dim anzTests As Integer = 0
         Dim anzDeleted As Integer = 0
         If kennung = PTTvActions.delFromDB Or
@@ -4151,13 +4161,13 @@ Public Module awinGeneralModules
                     Dim keyB As String = calcProjektKey(pname, "")
 
                     If Not AlleProjekte.Containskey(keyV) Then
-                        Call loadProjectfromDB(oCollection, pname, variantName, False, Date.Now)
+                        Call loadProjectfromDB(oCollection, pname, variantName, False, Date.Now, calledFromPPT)
                     Else
                         vExisted = True
                     End If
 
                     If Not AlleProjekte.Containskey(keyB) Then
-                        Call loadProjectfromDB(oCollection, pname, "", False, Date.Now)
+                        Call loadProjectfromDB(oCollection, pname, "", False, Date.Now, calledFromPPT)
                     Else
                         bExisted = True
                     End If

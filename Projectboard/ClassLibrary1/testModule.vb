@@ -3496,6 +3496,7 @@ Public Module testModule
         End If
 
     End Sub
+
     ''' <summary>
     ''' übersetzt eine Collection von RoleNAmeIDs der Form roleID;teamID oder RoleId in eine Colelction mit den entsprechenden RoleNames
     ''' </summary>
@@ -3529,7 +3530,7 @@ Public Module testModule
     ''' <param name="qualifier2"></param>
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
-    Private Function bestimmeCostQ2(ByVal qualifier2 As String, ByVal selectedCosts As Collection) As String
+    Public Function bestimmeCostQ2(ByVal qualifier2 As String, ByVal selectedCosts As Collection) As String
 
         If qualifier2 <> "" Then
             If qualifier2 = "%1" And selectedCosts.Count > 0 Then
@@ -3554,7 +3555,7 @@ Public Module testModule
     ''' <param name="qualifier2"></param>
     ''' <param name="selectedRoles"></param>
     ''' <returns></returns>
-    Private Function bestimmeRoleQ2(ByVal qualifier2 As String, ByVal selectedRoles As Collection) As String
+    Public Function bestimmeRoleQ2(ByVal qualifier2 As String, ByVal selectedRoles As Collection) As String
 
 
         If qualifier2 = "" Then

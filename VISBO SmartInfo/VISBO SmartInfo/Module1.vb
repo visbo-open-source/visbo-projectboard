@@ -10529,12 +10529,12 @@ Module Module1
                         End If       'Ende ob SlideIDs ungleich sind
                     End If
                 Else
-                    'ur: ???
-                    'currentSlide = Nothing
+                    'tk 8.10.19 es muss immer eine Slide geben 
+                    currentSlide = Sld
                 End If
             Else
-                'ur: ???
-                'currentSlide = Nothing
+                'tk 8.10.19 es muss immer eine Slide geben 
+                currentSlide = Sld
             End If ' if currentPresHasVisboElements
         Else
             'nichts tun

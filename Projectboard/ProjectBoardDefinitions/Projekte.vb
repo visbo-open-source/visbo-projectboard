@@ -19033,7 +19033,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
-        Dim vorlagenShape As xlNS.Shape
+        'Dim vorlagenShape As xlNS.Shape
         Dim isMissingPhaseDefinition As Boolean = False
         Dim isMissingMilestoneDefinition As Boolean = False
 
@@ -19943,7 +19943,7 @@ Public Module Projekte
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
         Dim showOnlyWithinTimeFrame As Boolean
-        Dim vorlagenShape As xlNS.Shape
+        'Dim vorlagenShape As xlNS.Shape
         Dim realNameList As New Collection
 
         Try

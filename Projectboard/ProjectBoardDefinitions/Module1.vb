@@ -845,6 +845,7 @@ Public Module Module1
         chgInSession = 8
         delAllExceptFromDB = 9
         setWriteProtection = 10
+        loadPVInPPT = 11
     End Enum
 
     ''' <summary>
