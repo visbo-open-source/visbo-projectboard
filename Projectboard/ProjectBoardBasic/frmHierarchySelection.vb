@@ -2601,6 +2601,7 @@ Public Class frmHierarchySelection
         Else
             ' nichts tun ...
         End If
+
     End Sub
 
     ''' <summary>
@@ -5305,8 +5306,6 @@ Public Class frmHierarchySelection
 
 
     End Sub
-
-
 
 
 End Class
