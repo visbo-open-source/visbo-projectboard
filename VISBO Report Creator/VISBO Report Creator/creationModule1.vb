@@ -179,6 +179,19 @@ Module creationModule1
             Dim newShapeRange2 As PowerPoint.ShapeRange = Nothing
             Dim newShape As PowerPoint.Shape = Nothing
 
+            ' müssen Phasen, Meilensteine gewählt werden ?
+            ' (0) = true : es wird eine Selection benötigt 
+            ' (1) = true : die Selection hat bereits stattgefunden
+            Dim phMSSelNeeded(1) As Boolean
+            phMSSelNeeded(0) = False
+            phMSSelNeeded(1) = False
+
+            ' müssen Rollen, Kostenarten gewählt werden ?
+            ' (0) = true : es wird eine Selection benötigt 
+            ' (1) = true : die Selection hat bereits stattgefunden
+            Dim roleCostSelNeeded(1) As Boolean
+            roleCostSelNeeded(0) = False
+            roleCostSelNeeded(1) = False
 
             ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
             For i = 1 To anzShapes
@@ -305,7 +318,43 @@ Module creationModule1
 
 
                 End With
+
+                If kennzeichnung = "Einzelprojektsicht" Or
+                        kennzeichnung = "Swimlanes" Or
+                        kennzeichnung = "Swimlanes2" Or
+                        kennzeichnung = "MilestoneCategories" Or
+                        kennzeichnung = "Meilenstein Trendanalyse" Or
+                        kennzeichnung = "TableMilestoneAPVCV" Then
+
+                    phMSSelNeeded(0) = True
+
+                ElseIf kennzeichnung = "TableBudgetCostAPVCV" Or
+                    kennzeichnung = "ProjektBedarfsChart" Then
+
+                    roleCostSelNeeded(0) = True
+                End If
+
+
             Next
+
+            ' je nachdem, welche Komponenten jetzt erstellt werden sollen 
+            ' muss hier noch die Auswahl der selectedPhases passieren 
+
+            If phMSSelNeeded(0) = True And Not phMSSelNeeded(1) = True Then
+                Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+                If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
+                    selectedPhases = frmSelectionPhMs.selectedPhases
+                    selectedMilestones = frmSelectionPhMs.selectedMilestones
+
+                Else
+                    selectedPhases = New Collection
+                    selectedMilestones = New Collection
+                End If
+
+                phMSSelNeeded(1) = True
+
+            End If
+
 
 
             For Each tmpShape As PowerPoint.Shape In listofShapes
