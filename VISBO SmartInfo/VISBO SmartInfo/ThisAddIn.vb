@@ -236,4 +236,8 @@ Public Class ThisAddIn
         ' Es wird noch pptApp_PresentationBeforeSave aufgerufen
         Dim a As Integer = 0
     End Sub
+
+    Private Sub ThisAddIn_BindingContextChanged(sender As Object, e As EventArgs) Handles Me.BindingContextChanged
+
+    End Sub
 End Class

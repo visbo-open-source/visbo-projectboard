@@ -3502,7 +3502,7 @@ Public Module testModule
     ''' </summary>
     ''' <param name="roleNameIDs"></param>
     ''' <returns></returns>
-    Private Function translateToRoleNames(ByVal roleNameIDs As Collection) As Collection
+    Public Function translateToRoleNames(ByVal roleNameIDs As Collection) As Collection
         Dim tmpResult As New Collection
         Dim tmpName As String = ""
 
@@ -17932,7 +17932,7 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' Zeichnet den Meilenstein MS im PPTslide an Position MilestoneGrafikYPOs
+    ''' Zeichnet den Meilenste in MS im PPTslide an Position MilestoneGrafikYPOs
     ''' </summary>
     ''' <param name="pptslide"></param>
     ''' <param name="msShapeNames"></param>
@@ -17943,7 +17943,7 @@ Public Module testModule
     ''' <param name="milestoneGrafikYPos"></param>
     ''' <param name="rds"></param>
     ''' <remarks></remarks>
-    Private Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide,
+    Public Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide,
                                                      ByRef msShapeNames As Collection,
                                                      ByRef minX1 As Double, ByRef maxX2 As Double,
                                                      ByVal MS As clsMeilenstein,
@@ -18172,7 +18172,7 @@ Public Module testModule
     ''' <param name="rds">enthält sowohl slide als auch die Hilfs-Shapes </param>
     ''' <param name="curYPosition">gibt die aktuelle Y-Position wieder , ab der gezeichnet werden kann; ist am Ende wieder auf der nächsten freien Zeile  </param>
     ''' <remarks></remarks>
-    Private Sub zeichneSwlSegmentinAktZeile(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, ByVal segmentPhaseID As String,
+    Public Sub zeichneSwlSegmentinAktZeile(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, ByVal segmentPhaseID As String,
                                      Optional ByVal modus As Integer = 0, Optional ByVal hproj As clsProjekt = Nothing)
 
         Dim copiedShape As pptNS.ShapeRange

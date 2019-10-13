@@ -8400,7 +8400,7 @@ Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function isVisboShape(ByVal curShape As PowerPoint.Shape) As Boolean
-        If isRelevantMSPHShape(curShape) Or isCommentShape(curShape) Or isOtherVisboComponent(curShape) Then
+        If isRelevantMSPHShape(curShape) Or isCommentShape(curShape) Or isOtherVisboComponent(curShape) Or isAnnotationShape(curShape) Then
             isVisboShape = True
         Else
             isVisboShape = False

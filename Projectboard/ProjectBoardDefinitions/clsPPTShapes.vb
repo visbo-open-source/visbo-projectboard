@@ -1669,10 +1669,6 @@ Public Class clsPPTShapes
 
         _legendAreaLeft = _drawingAreaLeft
 
-
-
-
-
     End Sub
     ' bestimmt Schriftart, Farbe, Größe der Projekt-Namen bzw. Swimlane-Beschriftung 
     ' bestimmt ausserdem den linken Rand der Text-Beschriftung
