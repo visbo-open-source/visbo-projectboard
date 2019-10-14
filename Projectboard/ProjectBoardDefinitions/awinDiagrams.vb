@@ -6915,10 +6915,10 @@ Public Module awinDiagrams
 
 
                             If weitermachen Then
-                                tmpTdatenreihe = scInfo.hproj.getKostenBedarfNew(scInfo.q2)
+                                tmpTdatenreihe = scInfo.hproj.getKostenBedarf(scInfo.q2)
 
                                 If Not IsNothing(scInfo.vglProj) Then
-                                    tmpVdatenreihe = scInfo.vglProj.getKostenBedarfNew(scInfo.q2)
+                                    tmpVdatenreihe = scInfo.vglProj.getKostenBedarf(scInfo.q2)
                                 End If
                             End If
 

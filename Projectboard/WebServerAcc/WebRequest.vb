@@ -3026,6 +3026,67 @@ Public Class Request
         retrieveVCsForUser = result
     End Function
 
+    Public Function evaluateCostsOfProject(ByVal projectname As String, ByVal variantName As String,
+                                           ByVal stored As DateTime, ByVal userName As String,
+                                           ByRef err As clsErrorCodeMsg) As List(Of Double)
+
+        Dim result As New List(Of Double)
+
+        Try
+
+            If aktUser.email = userName Then
+
+                stored = stored.ToUniversalTime.AddSeconds(1)
+
+                Try
+                    Dim vpid As String = ""
+
+                    Dim vp As clsVP = GETvpid(projectname, err)
+                    ' VPID zu Projekt projectName holen vom WebServer/DB
+                    vpid = vp._id
+
+                    If vpid <> "" Then
+                        ' gewünschte Variante vom Server anfordern
+                        Dim allVPv As New List(Of clsProjektWebShort)
+                        allVPv = GETallVPvShort(vpid:=vpid, err:=err,
+                                            vpvid:="",
+                                            status:="", refNext:=False,
+                                            variantName:=variantName,
+                                            storedAtorBefore:=stored,
+                                            fromReST:=False)
+                        If allVPv.Count >= 0 Then
+                            If allVPv.Count = 1 Then
+                                result = GETCostsOfOneVPV(allVPv.Item(0)._id, err)
+                            Else
+                                Call MsgBox("Fehler, darf nun eine vpvid herauskommen")
+                                'For Each vpv As clsProjektWebShort In allVPv
+                                '    If vpv.variantName = variantName Then
+                                '        result = result And DELETEOneVPv(vpv._id, err)
+                                '    End If
+                                'Next
+                            End If
+
+                        End If
+
+                    End If
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+            Else
+
+                Call MsgBox("Fehler in evaluateCostofProject: User '" & userName & "' darf nicht berechnen")
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        evaluateCostsOfProject = result
+
+    End Function
+
+
     ' ------------------------------------------------------------------------------------------
     '  Interne Funktionen für VisboRestServer - zugriff
     ' --------------------------------------------------------------------------------------------
@@ -4552,6 +4613,65 @@ Public Class Request
 
 
         GETallVPvOfOneVPf = result
+
+    End Function
+    ''' <summary>
+    ''' berechnet die Kosten des Projektes
+    ''' </summary>
+    ''' <param name="vpvid"></param>
+    ''' <returns>liste aller Kosten über die Monate</returns>
+    Private Function GETCostsOfOneVPV(ByVal vpvid As String, ByRef err As clsErrorCodeMsg) As List(Of Double)
+
+        Dim result As New List(Of Double)
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            ' URL zusammensetzen
+            Dim typeRequest As String = "/vpv"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            If vpvid <> "" Then
+                serverUriString = serverUriString & "/" & vpvid
+            End If
+
+            serverUriString = serverUriString & "?calcCost=1"
+
+            Dim serverUri As New Uri(serverUriString)
+
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            ' Request absetzen
+            Dim Antwort As String
+            Dim webantwort As clsWebCostVPv = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webantwort = JsonConvert.DeserializeObject(Of clsWebCostVPv)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = webantwort.cost
+
+            Else
+                Dim statError As Boolean = errorHandling_withBreak("GETCostsOfOneVPV", errcode, errmsg & " : " & webantwort.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "GETCostsOfOneVPV" & " : " & errmsg & " : " & webantwort.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETCostsOfOneVPV = result
 
     End Function
 

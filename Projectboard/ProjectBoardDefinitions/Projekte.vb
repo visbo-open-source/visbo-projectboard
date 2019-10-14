@@ -4717,10 +4717,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getKostenBedarfNew(qualifier)
+                        werteB = vProj.getKostenBedarf(qualifier)
                     End If
 
-                    werteC = hproj.getKostenBedarfNew(qualifier)
+                    werteC = hproj.getKostenBedarf(qualifier)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
