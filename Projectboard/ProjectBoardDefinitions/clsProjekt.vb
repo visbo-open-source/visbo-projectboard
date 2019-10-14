@@ -3255,7 +3255,7 @@ Public Class clsProjekt
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getKostenBedarfNew(tmpCost)
+            Dim myValues() As Double = Me.getKostenBedarf(tmpCost)
             Dim newCost As New clsKostenart(newLength - 1)
 
             With newCost
@@ -3320,7 +3320,7 @@ Public Class clsProjekt
 
             newValues = newCost.Xwerte
 
-            Dim otherValues() As Double = otherProj.getKostenBedarfNew(tmpCost)
+            Dim otherValues() As Double = otherProj.getKostenBedarf(tmpCost)
 
             With newCost
                 .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
@@ -3727,12 +3727,12 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getKostenBedarfNew(itemName)
+                            valueArray = Me.getKostenBedarf(itemName)
 
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getKostenBedarfNew(itemName)
+                                tempArray = Me.getKostenBedarf(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next

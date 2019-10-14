@@ -14838,8 +14838,8 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            budget = budget + vorgabeProj.getKostenBedarf(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                         ' welcher Planungs-Stand ist das ? 
@@ -14855,7 +14855,7 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                     End If

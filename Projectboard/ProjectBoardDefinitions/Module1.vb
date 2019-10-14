@@ -5981,16 +5981,16 @@ Public Module Module1
 
                             If isCost Then
 
-                                curValue = hproj.getKostenBedarfNew(curItem).Sum
+                                curValue = hproj.getKostenBedarf(curItem).Sum
 
                                 If considerLapr Then
-                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    laprValue = lproj.getKostenBedarf(curItem).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
+                                    faprValue = bproj.getKostenBedarf(curItem).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
