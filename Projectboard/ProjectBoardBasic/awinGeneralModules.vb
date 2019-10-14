@@ -3207,6 +3207,9 @@ Public Module awinGeneralModules
         Dim projektListe As clsProjekteAlle = AlleProjekte
         'Dim outPutListe As clsProjekteAlle = AlleProjektSummaries
 
+        ' der Planungs-stand des unionized PRojektes ist das spätesteste Datum, das eines der Projekte im Portfolio hat  
+        Dim timeStampOfUnionizedProject As Date = Date.MinValue
+
         ' das budget 
         If budget >= 0 Then
             gesamtbudget = budget
@@ -3252,6 +3255,10 @@ Public Module awinGeneralModules
 
                     If Not IsNothing(hproj) Then
 
+                        If timeStampOfUnionizedProject < hproj.timeStamp Then
+                            timeStampOfUnionizedProject = hproj.timeStamp
+                        End If
+
                         If isFirstProj Then
 
                             Dim startdate As Date = hproj.startDate
@@ -3296,10 +3303,12 @@ Public Module awinGeneralModules
                         .actualDataUntil = maxActualDate
                     End If
 
-                    If Date.Now < storedAtOrBefore Then
+                    ' tk geändert 
+                    ' If Date.Now < storedAtOrBefore Then
+                    If Date.Now < timeStampOfUnionizedProject Then
                         .timeStamp = Date.Now
                     Else
-                        .timeStamp = storedAtOrBefore
+                        .timeStamp = timeStampOfUnionizedProject
                     End If
                 End With
 

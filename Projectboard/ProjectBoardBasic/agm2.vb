@@ -14749,7 +14749,7 @@ Public Module agm2
                     CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
                     CType(.Cells(1, 12), Excel.Range).Value = "Profit/Loss [T€]"
                 Else
-                    CType(.Cells(1, 9), Excel.Range).Value = "First Version [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "last baseline [T€]"
                     CType(.Cells(1, 12), Excel.Range).Value = "Difference [T€]"
                 End If
 
@@ -14774,7 +14774,7 @@ Public Module agm2
                     CType(.Cells(1, 9), Excel.Range).Value = "Budget [T€]"
                     CType(.Cells(1, 12), Excel.Range).Value = "Gewinn/Verlust [T€]"
                 Else
-                    CType(.Cells(1, 9), Excel.Range).Value = "Erste Planung [T€]"
+                    CType(.Cells(1, 9), Excel.Range).Value = "letzte Beauftragung [T€]"
                     CType(.Cells(1, 12), Excel.Range).Value = "Differenz [T€]"
                 End If
 
@@ -14809,6 +14809,7 @@ Public Module agm2
         'End Try
 
         zeile = 2
+        Dim heute As Date = Date.Now
         Dim hproj As clsProjekt = Nothing
         Try
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -14823,7 +14824,9 @@ Public Module agm2
                 Else
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
                     Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, vorgabeVariantName, err)
+
+                    ' hole jetzt die letzte Beauftragung, dann man will ja wissen, wieviel man reduzieren muss / erhöhen kann 
+                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(kvp.Value.name, vorgabeVariantName, heute, err)
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0

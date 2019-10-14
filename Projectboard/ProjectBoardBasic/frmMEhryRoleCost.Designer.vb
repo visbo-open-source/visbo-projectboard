@@ -30,6 +30,9 @@ Partial Class frmMEhryRoleCost
         '
         'hryRoleCost
         '
+        Me.hryRoleCost.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.hryRoleCost.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryRoleCost.Location = New System.Drawing.Point(0, 0)
         Me.hryRoleCost.Name = "hryRoleCost"
@@ -38,6 +41,7 @@ Partial Class frmMEhryRoleCost
         '
         'OKButton
         '
+        Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.OKButton.Location = New System.Drawing.Point(12, 359)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(132, 23)
@@ -47,6 +51,7 @@ Partial Class frmMEhryRoleCost
         '
         'AbbrButton
         '
+        Me.AbbrButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.AbbrButton.Location = New System.Drawing.Point(430, 359)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(129, 23)

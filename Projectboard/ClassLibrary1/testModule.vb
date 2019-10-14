@@ -44,7 +44,7 @@ Public Module testModule
         ' ur:4.7.2016: an Stelle verschoben, wo genötigt:
         ' Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt = Nothing
         Dim vglName As String = " "
         Dim pName As String, variantName As String
         Dim vorlagenDateiName As String = pptTemplate
@@ -63,29 +63,67 @@ Public Module testModule
             ' hier wird bestimmt, welches der ausgewählten Projekte dasjenige ist, das im Extended Mode den meisten Platz beim Report benötigt.
             ' Der Report dieses Projektes soll dann zuerst erstellt werden, denn somit wird das Format der PowerPointPräsentation danach ausgewählt.
 
-            Dim maxProj As clsProjekt = Nothing
+            ' damit das einen Namen ha, der nachher referenziert werdne kann ... 
+            Dim maxProj As New clsProjekt
             Dim maxZeilen As Integer = 0
 
+            ' tk 19.9.19 jetzt muss die Reihenfolge auf dem Board behalten werden, 
+            ' Reports sollen nicht nach Alphabet erstellt werden, sondern nach ihrer Reihenfolge auf dem Board
+            Dim tmpSortList As New SortedList(Of Double, String)
+            Dim sortKey As Double = 0.0
+
             For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+
+                sortKey = kvp.Value.tfZeile
+                Dim erstesAuftreten As Boolean = True
+                Do While tmpSortList.ContainsKey(sortKey)
+
+                    If erstesAuftreten Then
+                        sortKey = sortKey + kvp.Value.tfspalte / 10000 + 0.00001
+                    Else
+                        sortKey = sortKey + 0.00001
+                    End If
+                    erstesAuftreten = False
+                Loop
+
+                ' jetzt ist der sortkey eindeutig
+                tmpSortList.Add(sortKey, kvp.Value.name)
+
+            Next
+
+            ' tk 19.9.19 geändert , damit Reihenfolge behalten wird wie auf Board
+            '  For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+
+            ' tk das wird hier jetzt erst mal ausser Kraft gesetzt 
+            ' andernfalls kann keine Reihenfolge eingehalten werden 
+            Dim keepOrder As Boolean = True
+
+            For Each kvp As KeyValuePair(Of Double, String) In tmpSortList
 
                 With kvp
 
                     Try
-                        hproj = kvp.Value
+                        ' hproj = kvp.Value
+                        hproj = selectedProjekte.getProject(kvp.Value)
+
+                        Dim tmpKey As Double = hproj.tfZeile
                         todoListe.Add(hproj.name)
                     Catch ex As Exception
-                        msgTxt = kvp.Value.name & " nicht gefunden ..."
+                        msgTxt = kvp.Value & " nicht gefunden ..."
                         If awinSettings.englishLanguage Then
-                            msgTxt = kvp.Value.name & " not found ..."
+                            msgTxt = kvp.Value & " not found ..."
                         End If
                         Call MsgBox(msgTxt)
                         Exit Sub
                     End Try
-                    If hproj.calcNeededLines() > maxZeilen Then
-                        maxProj = hproj
-                        maxZeilen = hproj.calcNeededLines()
 
+                    If Not keepOrder Then
+                        If hproj.calcNeededLines() > maxZeilen Then
+                            maxProj = hproj
+                            maxZeilen = hproj.calcNeededLines()
+                        End If
                     End If
+
 
                 End With
 
@@ -94,64 +132,77 @@ Public Module testModule
 
             ' Erstelle Report für das größte Projekt "maxProj"
 
+
             If Not projekthistorie Is Nothing Then
                 If projekthistorie.Count > 0 Then
                     vglName = projekthistorie.First.getShapeText
                 End If
             End If
 
-            With maxProj
-                pName = .name
-                variantName = .variantName
-            End With
+            If keepOrder Then
+                With hproj
+                    pName = .name
+                    variantName = .variantName
+                End With
+            Else
+                With maxProj
+                    pName = .name
+                    variantName = .variantName
+                End With
+            End If
 
-            If Not noDB Then
+            ' nur machen, wenn das unbedingt nögig ist; also das größte Projekte erstmal gezeichnet wird  
+            ' dann muss keepOrder irgendwo in Parameter übergeben werden 
+            If Not keepOrder Then
+                If Not noDB Then
 
-                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If vglName <> maxProj.getShapeText Then
-                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                        Try
-                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                    If vglName <> maxProj.getShapeText Then
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                            Try
+                                projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
-                            projekthistorie.Add(Date.Now, maxProj)
-                        Catch ex As Exception
-                            projekthistorie.clear()
-                        End Try
+                                projekthistorie.Add(Date.Now, maxProj)
+                            Catch ex As Exception
+                                projekthistorie.clear()
+                            End Try
+                        Else
+                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                        End If
+
+
                     Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+                        Dim lastElem As Integer = projekthistorie.Count - 1
+                        projekthistorie.RemoveAt(lastElem)
+                        projekthistorie.Add(Date.Now, maxProj)
                     End If
 
-
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, maxProj)
                 End If
 
-            End If
-
-            msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
-            If awinSettings.englishLanguage Then
-                msgTxt = " creating Report for project '" & maxProj.getShapeText
-            End If
-            e.Result = msgTxt
-            worker.ReportProgress(0, e)
+                msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+                If awinSettings.englishLanguage Then
+                    msgTxt = " creating Report for project '" & maxProj.getShapeText
+                End If
+                e.Result = msgTxt
+                worker.ReportProgress(0, e)
 
 
-            Call createPPTSlidesFromProject(maxProj, vorlagenDateiName,
+                Call createPPTSlidesFromProject(maxProj, vorlagenDateiName,
                                             selectedPhases, selectedMilestones,
                                             selectedRoles, selectedCosts,
                                             selectedBUs, selectedTyps, True,
                                             (selectedProjekte.Count = tatsErstellt + 1), zeilenhoehe,
                                             legendFontSize,
                                             worker, e)
+
+
+                tatsErstellt = tatsErstellt + 1
+
+            End If
+
             Dim err1 As New clsErrorCodeMsg
-
-            tatsErstellt = tatsErstellt + 1
-
-
 
             For Each singleItem As String In todoListe
 
@@ -203,9 +254,9 @@ Public Module testModule
 
                     End If
 
-                    msgTxt = " Report für Projekt '" & maxProj.getShapeText & "' wird erstellt !"
+                    msgTxt = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     If awinSettings.englishLanguage Then
-                        msgTxt = " creating Report for project '" & maxProj.getShapeText
+                        msgTxt = " creating Report for project '" & hproj.getShapeText
                     End If
                     e.Result = msgTxt
 
