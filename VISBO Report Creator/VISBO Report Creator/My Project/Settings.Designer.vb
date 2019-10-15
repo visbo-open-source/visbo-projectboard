@@ -67,7 +67,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public Property rememberUserPWD() As Boolean
         Get
             Return CType(Me("rememberUserPWD"),Boolean)
@@ -122,6 +122,18 @@ Partial Friend NotInheritable Class MySettings
         End Get
         Set
             Me("mongoDBSSL") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Demo Visbo Center")>  _
+    Public Property dbName() As String
+        Get
+            Return CType(Me("dbName"),String)
+        End Get
+        Set
+            Me("dbName") = value
         End Set
     End Property
 End Class

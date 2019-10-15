@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="dbURL" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://my.visbo.net/api</Value>
@@ -19,6 +19,9 @@
     </Setting>
     <Setting Name="mongoDBSSL" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="dbName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Demo Visbo Center</Value>
     </Setting>
   </Settings>
 </SettingsFile>

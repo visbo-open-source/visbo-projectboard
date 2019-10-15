@@ -9,6 +9,8 @@ Public Class frmSelectPhasesMilestones
     Public selectedMilestones As New Collection
     Public selectedPhases As New Collection
 
+
+    Private dontFire As Boolean = False
     Dim hryStufenValue As Integer = 50
     Private Sub frmSelectPhasesMilestones_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -20,8 +22,6 @@ Public Class frmSelectPhasesMilestones
             Me.Top = 60
             Me.Left = 100
         End If
-
-        Cursor = Cursors.WaitCursor
 
 
         ' Button Visibility und Texte definieren 
@@ -311,46 +311,49 @@ Public Class frmSelectPhasesMilestones
         Dim hnode As TreeNode
         Dim anzCheckedNodes As Integer = 0
 
-        oNode = e.Node
+        If Not dontFire Then
+            oNode = e.Node
 
 
-        If oNode.Level = 0 Then
+            If oNode.Level = 0 Then
 
-            If Not oNode.Checked Then
-                Call unCheck(oNode)
-            End If
-
-        Else
-            hnode = oNode
-
-            ' finde den obersten Node
-            While Not IsNothing(hnode.Parent)
-                hnode = hnode.Parent
-            End While
-
-            If oNode.Checked Then
-
-                ' Wenn oberster Node nicht gecheckt, dann check ihn
-                If hnode.Level = 0 And Not hnode.Checked Then
-                    hnode.Checked = True
+                If Not oNode.Checked Then
+                    Call unCheck(oNode)
                 End If
 
-            Else ' not oNode.checked 
+            Else
+                hnode = oNode
 
-                Dim allUnselected As Boolean
+                ' finde den obersten Node
+                While Not IsNothing(hnode.Parent)
+                    hnode = hnode.Parent
+                End While
 
-                If hnode.Level = 0 And hnode.Checked Then
+                If oNode.Checked Then
 
-                    allUnselected = Not subNodesSelected(hnode)
-                    'If Not subNodesSelected(hnode) Then
-                    If allUnselected Then
-                        hnode.Checked = False
+                    ' Wenn oberster Node nicht gecheckt, dann check ihn
+                    If hnode.Level = 0 And Not hnode.Checked Then
+                        hnode.Checked = True
                     End If
+
+                Else ' not oNode.checked 
+
+                    Dim allUnselected As Boolean
+
+                    If hnode.Level = 0 And hnode.Checked Then
+
+                        allUnselected = Not subNodesSelected(hnode)
+                        'If Not subNodesSelected(hnode) Then
+                        If allUnselected Then
+                            hnode.Checked = False
+                        End If
+                    End If
+
                 End If
 
             End If
-
         End If
+
 
     End Sub
 
@@ -378,22 +381,50 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
+
+    ''' <summary>
+    ''' setzt alle Knoten im TreeView auf checked
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Private Sub Check(ByRef node As TreeNode)
+        Dim curNode As TreeNode
+
+        With node
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If Not curNode.Checked Then
+                    curNode.Checked = True
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call Check(curNode)
+                End If
+            Next
+
+        End With
+
+    End Sub
+
     Private Sub TreeViewProjects_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TreeViewProjects.KeyPress
 
         Dim initialNode As TreeNode = TreeViewProjects.SelectedNode
-        Dim newMode As Boolean
+        Dim checkMode As Boolean
+
+        dontFire = True
         Try
             If e.KeyChar = "a" Or e.KeyChar = "A" Then
-                ' Selektiere alle Unter-Knoten 
+                ' nur unmittelbare Kind-Knoten werden checked / unchecked 
                 With TreeViewProjects.SelectedNode
-                    .Expand()
-                    newMode = Not .Nodes.Item(0).Checked
-                    For i As Integer = 1 To .Nodes.Count
-                        .Nodes.Item(i - 1).Checked = newMode
-                    Next
-                End With
+                    '.Expand()
+                    If .Nodes.Count > 0 Then
+                        checkMode = Not .Nodes.Item(0).Checked
+                        For i As Integer = 1 To .Nodes.Count
+                            .Nodes.Item(i - 1).Checked = checkMode
+                        Next
+                    End If
 
-                'hryTreeView.SelectedNode = initialNode
+                End With
 
             ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
                 ' selektiere/de-selektiere Meilensteine  
@@ -403,10 +434,10 @@ Public Class frmSelectPhasesMilestones
                     Dim fertig As Boolean = False
                     While ix <= .Nodes.Count And Not fertig
                         If elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
-                            newMode = Not .Nodes.Item(ix - 1).Checked
+                            checkMode = Not .Nodes.Item(ix - 1).Checked
                             For i As Integer = ix To .Nodes.Count
                                 If elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
-                                    .Nodes.Item(i - 1).Checked = newMode
+                                    .Nodes.Item(i - 1).Checked = checkMode
                                 End If
                             Next
                             fertig = True
@@ -426,10 +457,10 @@ Public Class frmSelectPhasesMilestones
                     Dim fertig As Boolean = False
                     While ix <= .Nodes.Count And Not fertig
                         If Not elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
-                            newMode = Not .Nodes.Item(ix - 1).Checked
+                            checkMode = Not .Nodes.Item(ix - 1).Checked
                             For i As Integer = ix To .Nodes.Count
                                 If Not elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
-                                    .Nodes.Item(i - 1).Checked = newMode
+                                    .Nodes.Item(i - 1).Checked = checkMode
                                 End If
                             Next
                             fertig = True
@@ -440,9 +471,10 @@ Public Class frmSelectPhasesMilestones
                 End With
             End If
         Catch ex As Exception
-
+            dontFire = False
         End Try
 
+        dontFire = False
 
         ' kennzeichnen, daß keine weitere Behandlung , insbesondere nicht die Standard-Behandlung notwendig ist 
         e.Handled = True
@@ -756,5 +788,85 @@ Public Class frmSelectPhasesMilestones
 
     End Function
 
+    ''' <summary>
+    ''' setzt alle Knoten auf Selected
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub SelectionSet_Click(sender As Object, e As EventArgs) Handles SelectionSet.Click
 
+
+        Dim curNode As TreeNode
+        With TreeViewProjects
+
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If Not curNode.Checked Then
+                    curNode.Checked = True
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call Check(curNode)
+                End If
+            Next
+
+
+        End With
+
+    End Sub
+
+
+    ''' <summary>
+    ''' setzt alle Knoten auf unselected 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub resetSelections_Click(sender As Object, e As EventArgs) Handles resetSelections.Click
+
+        Dim curNode As TreeNode
+        With TreeViewProjects
+
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If curNode.Checked Then
+                    curNode.Checked = False
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call unCheck(curNode)
+                End If
+            Next
+
+
+        End With
+    End Sub
+
+    ''' <summary>
+    ''' minimiert die TreeView Struktur, faltet sie zusammen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub collapseTree_Click(sender As Object, e As EventArgs) Handles collapseTree.Click
+
+        With TreeViewProjects
+            .CollapseAll()
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' entfaltet den Baum vollständig
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub expandTree_Click(sender As Object, e As EventArgs) Handles expandTree.Click
+        
+        With TreeViewProjects
+            .ExpandAll()
+        End With
+    End Sub
+
+    Private Sub TreeViewProjects_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjects.AfterSelect
+
+    End Sub
 End Class

@@ -45,8 +45,7 @@ Public Class Ribbon
         Dim errMsg As String = ""
 
         Dim loadProjectsForm As New frmProjPortfolioAdmin
-        Dim weitermachen As Boolean = noDBLoginPPT
-
+        Dim weitermachen As Boolean = True
         If noDBLoginPPT Then
             ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
             weitermachen = successfulLoginAndSetup(errMsg)
@@ -124,10 +123,12 @@ Public Class Ribbon
         Dim wasSuccessful As Boolean = False
         Dim err As New clsErrorCodeMsg
         awinSettings.databaseURL = My.Settings.dbURL
-        awinSettings.databaseName = "Demo Visbo Center"
+        awinSettings.databaseName = My.Settings.dbName
         awinSettings.visboServer = True
         awinSettings.proxyURL = My.Settings.proxyURL
         awinSettings.DBWithSSL = My.Settings.mongoDBSSL
+        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        awinSettings.userNamePWD = My.Settings.userNamePWD
 
         If logInToMongoDB(True) Then
             ' weitermachen ...

@@ -352,7 +352,13 @@ Public Class clsPPTShapes
         calcEndDate = tmpDate
     End Function
 
-    Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer, _
+    ''' <summary>
+    ''' bestimmt die Zeilenhöhe aus den aktuellen Definitionen für Phasen-Name, -Datum, Meilenstein-Name, Datum , etc. 
+    ''' </summary>
+    ''' <param name="anzphasen"></param>
+    ''' <param name="anzMeilensteine"></param>
+    ''' <param name="considerAll"></param>
+    Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer,
                                    ByVal considerAll As Boolean)
 
 
@@ -548,6 +554,38 @@ Public Class clsPPTShapes
 
 
     End Sub
+
+    ''' <summary>
+    ''' setzt die Zeilenhöhe absolut auf einen bestimmten Wert; der muss aber mindestens um 10% größer sein als max(Höhe Meilenstein, Höhe Phase)  
+    ''' </summary>
+    Public WriteOnly Property setZeilenhöhe() As Double
+        Set(value As Double)
+            If value > 0 Then
+
+                ' prüfen, ob wenigstens etwas größer wie das größere von Phasen-Höhe und Meilenstein Höhe 
+                If value >= 1.1 * System.Math.Max(milestoneVorlagenShape.Height, phaseVorlagenShape.Height) Then
+                    _zeilenHoehe = value
+                End If
+
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt die kleinste zugelassene Zeilenhöhe zurück
+    ''' entspricht dem 1,1-fachen der Höhe von Meilenstein bzw Phase (es wird das Größere der beiden zugrundegelegt)
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property minZeilenhöhe() As Double
+        Get
+            Try
+                minZeilenhöhe = 1.1 * System.Math.Max(milestoneVorlagenShape.Height, phaseVorlagenShape.Height)
+            Catch ex As Exception
+                minZeilenhöhe = _zeilenHoehe
+            End Try
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt eine Liste zurück, die die fehlenden Hilfs-Shape Elemente für Epp bzw Mpp enthält 

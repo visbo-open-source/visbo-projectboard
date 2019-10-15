@@ -4045,6 +4045,12 @@ Public Module awinGeneralModules
                         Call replaceProjectVariant(pName, vName, False, True, freieZeile)
 
                     End If
+                Else
+                    ' wenn es aus PPT aus aufgerufen wird, muss das Projekt auch in ShowPRojekte eingetragen werden, 
+                    ' sofern nicht schon ein PRojekt gleichen Namens drin ist. 
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    End If
                 End If
 
 

@@ -165,12 +165,7 @@ Module creationModule1
 
         ' tk 4.10 aktuell macht er das einfach nur für die aktuelle Slide auf der man sitzt 
         While folieIX <= 1
-            'For j = 1 To anzSlidesToAdd
 
-
-
-            ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
-            'Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
             Call addSmartPPTSlideBaseInfo(curSlide, reportCreationDate, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
@@ -3500,28 +3495,47 @@ Module creationModule1
             Dim gesamtAnzZeilen As Integer = 0
             Dim projekthoehe As Double = zeilenhoehe_sav
 
-            If awinSettings.mppExtendedMode Then
+            ' tk 14.10 das wird doch immer benötigt ... 
+            'If awinSettings.mppExtendedMode Then
 
-                ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
-                For Each kvp As KeyValuePair(Of Double, String) In projCollection
-                    Try
+            '    ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
+            '    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+            '        Try
 
-                        hproj = AlleProjekte.getProject(kvp.Value)
-                    Catch ex As Exception
+            '            hproj = AlleProjekte.getProject(kvp.Value)
+            '        Catch ex As Exception
 
-                    End Try
+            '        End Try
 
-                    anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+            '        anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
 
-                    maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
-                    gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
+            '        maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
+            '        gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
 
-                Next
+            '    Next
 
 
-            Else
-                projekthoehe = zeilenhoehe_sav
-            End If
+            'Else
+            '    projekthoehe = zeilenhoehe_sav
+            'End If
+
+            ' neu 14.10.19 
+            ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
+            For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                Try
+
+                    hproj = AlleProjekte.getProject(kvp.Value)
+                Catch ex As Exception
+
+                End Try
+
+                anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+
+                maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
+                gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
+
+            Next
+            ' Ende neu 14.10.19 
 
             '
             ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
@@ -3533,35 +3547,65 @@ Module creationModule1
             ' bestimme das Format  
 
             Dim neededSpace As Double
+            ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
+            neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+
+            'If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
+            '    ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
+            '    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+            '    'If awinSettings.mppOnePage Then
+            '    '    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+            '    'Else
+            '    '    neededSpace = maxZeilen * zeilenhoehe_sav
+            '    'End If
+            'Else
+            '    neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
+            'End If
 
 
-            If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
-                If awinSettings.mppOnePage Then
-                    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+
+            ' jetzt muss die Zeilenhöhe  reduziert werden, so dass alles reinpasst oder aber es gar nicht geht ... 
+            If neededSpace > rds.availableSpace Then
+                ' reduzieren der Zeilenhöhe 
+                Dim newHeight As Double = rds.availableSpace / neededSpace * zeilenhoehe_sav
+                If newHeight >= rds.minZeilenhöhe Then
+                    rds.setZeilenhöhe = newHeight
+                    zeilenhoehe_sav = rds.zeilenHoehe
+                    projekthoehe = rds.zeilenHoehe
+
                 Else
-                    neededSpace = maxZeilen * zeilenhoehe_sav
+                    newHeight = rds.minZeilenhöhe
+                    If awinSettings.mppExtendedMode Then
+                        ' alles in eine Zeile 
+                        awinSettings.mppExtendedMode = False
+                    End If
+                    rds.setZeilenhöhe = newHeight
+                    zeilenhoehe_sav = rds.zeilenHoehe
+                    projekthoehe = rds.zeilenHoehe
+
+                    neededSpace = projCollection.Count * zeilenhoehe_sav
+                    ' wenn es immer noch zu viel ist, dann Abbruch ... 
+                    If neededSpace > rds.availableSpace Then
+                        Dim msgTxt As String = "zu viele Projekte für den verfügbaren Platz "
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "projects do not fit into the available space ... creation of report-componentreport cancelled!"
+                        End If
+                        Call MsgBox("zu viele Projekte für den verfügbaren Platz - das Erzeugen der Report-Komponenten wurde abgebrochen ")
+                        Exit Sub
+                    End If
                 End If
-            Else
-                neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
+            ' tk 14.10.19 braucht man nicht mehr 
+            'Dim oldHeight As Double
+            'Dim oldwidth As Double
+
+            'oldHeight = curPresentation.PageSetup.SlideHeight
+            'oldwidth = curPresentation.PageSetup.SlideWidth
 
 
-            ' jetzt muss die Zeilenhöhe solange reduziert werden, bis alles reinpasst oder aber es gar nicht geht ... 
-            Do While neededSpace > rds.availableSpace
-                ' reduzieren der Zeilenhöhe 
-            Loop
-
-
-            Dim oldHeight As Double
-            Dim oldwidth As Double
-
-            oldHeight = curPresentation.PageSetup.SlideHeight
-            oldwidth = curPresentation.PageSetup.SlideWidth
-
-
-            Dim curHeight As Double = oldHeight
-            Dim curWidth As Double = oldwidth
+            'Dim curHeight As Double = oldHeight
+            'Dim curWidth As Double = oldwidth
 
 
 
@@ -3683,7 +3727,8 @@ Module creationModule1
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = rds.drawingAreaWidth
-        Dim drawingAreaHeight As Double = rds.drawingAreaBottom - rds.drawingAreaTop
+        'Dim drawingAreaHeight As Double = rds.drawingAreaBottom - rds.drawingAreaTop
+        Dim drawingAreaHeight As Double = rds.availableSpace
 
 
         'Dim tagesEinheit As Double
@@ -3705,7 +3750,7 @@ Module creationModule1
         Dim anzahlTage As Integer = DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
         If anzahlTage <= 0 Then
             ''Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
-            Throw New ArgumentException(repMessages.getmsg(9))
+            Throw New ArgumentException("Problems with PPT StartOfCalendar, EndOf Calendar")
         End If
 
 
@@ -3800,14 +3845,14 @@ Module creationModule1
                 ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
                 If awinSettings.mppExtendedMode Then
                     Dim neededSpace As Double = hproj.calcNeededLines(selectedPhases, selectedMilestones, True, Not awinSettings.mppShowAllIfOne) * rds.zeilenHoehe
-                    If neededSpace > drawingAreaHeight Then
+                    If neededSpace - drawingAreaHeight > 1 Then
 
                         ' Projekt kann nicht gezeichnet werden, da nicht alle Phasen auf eine Seite passen, 
                         ' trotzdem muss das Projekt weitergezählt werden, damit das nächste zu zeichnende Projekt angegangen wird
                         projDone = projDone + 1
                         ' zuwenig Platz auf der Seite
                         ''Throw New ArgumentException("Für Projekt '" & fullName & "' ist zuwenig Platz auf einer Seite")
-                        Throw New ArgumentException(repMessages.getmsg(10) & fullName)
+                        Throw New ArgumentException("not enough space for drawing " & fullName)
 
                     Else
 
@@ -4932,7 +4977,7 @@ Module creationModule1
             '                            currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
             '                            " Projekten gezeichnet werden ... " & vbLf & _
             '                            "bitte verwenden Sie ein anderes Vorlagen-Format")
-            Throw New ArgumentException(repMessages.getmsg(12) & currentProjektIndex.ToString & repMessages.getmsg(13) & projectsToDraw.ToString)
+            Throw New ArgumentException("not all projects could be drawn ... please use other setitngs")
         End If
 
 
