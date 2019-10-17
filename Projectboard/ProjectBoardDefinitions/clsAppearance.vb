@@ -21,7 +21,20 @@ Public Class clsAppearance
     Public Property height As Single            'shp.Height
     Public Property LineBGColor As Integer      'shp.Line.BackColor
     Public Property LineFGColor As Integer      'shp.Line.ForeColor
-    Public Property LineWeight As Single        'shp.Line.Weight
+
+    Private _LineWeight As Single
+    Public Property LineWeight As Single
+        Get
+            LineWeight = _LineWeight
+        End Get
+        Set(value As Single)
+            If value >= 0 Then
+                _LineWeight = value
+            Else
+                _LineWeight = 0.0
+            End If
+        End Set
+    End Property 'shp.Line.Weight
     Public Property hasText As Boolean          'shp.TextFrame2.hasText
     Public Property TextMarginLeft As Single    'shp.TextFrame2.MarginLeft
     Public Property TextMarginRight As Single   'shp.TextFrame2.MarginRight
