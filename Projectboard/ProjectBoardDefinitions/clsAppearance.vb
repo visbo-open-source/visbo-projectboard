@@ -11,17 +11,67 @@ Public Class clsAppearance
     'Public Property form As xlNS.Shape
     Public Property FGcolor As Integer          'shp.Fill.ForeColor.RGB
     Public Property BGcolor As Integer          'shp.Fill.BackColor.RGB
-    Public Property Rotation As Single
-    Public Property Glowcolor As Integer        'shp.Glow.Color.RGB
+    Public Property Rotation As Single          'shp.Rotation
+
+    Private _Glowcolor As Integer               'shp.Glow.Color.RGB
+    Public Property Glowcolor As Integer
+        Get
+            Glowcolor = _Glowcolor
+        End Get
+        Set(value As Integer)
+            If value >= 0 Then
+                _Glowcolor = value
+            Else
+                _Glowcolor = 0
+            End If
+        End Set
+    End Property
     Public Property Glowradius As Integer       'shp.Glow.Radius
-    Public Property ShadowFG As Integer         'shp.Shadow.ForeColor.RGB
-    Public Property ShadowTransp As Integer     'shp.Shadow.Transparency
+
+    Private _ShadowFG As Integer                'shp.Shadow.ForeColor.RGB
+    Public Property ShadowFG As Integer
+        Get
+            ShadowFG = _ShadowFG
+        End Get
+        Set(value As Integer)
+            If value >= 0 Then
+                _ShadowFG = value
+            Else
+                _ShadowFG = 0
+            End If
+        End Set
+    End Property
+    Private _ShadowTransp As Integer              'shp.Shadow.Transparency
+    Public Property ShadowTransp As Integer
+        Get
+            ShadowTransp = _ShadowTransp
+        End Get
+        Set(value As Integer)
+            If value >= 0 Then
+                _ShadowTransp = value
+            Else
+                _ShadowTransp = 0
+            End If
+        End Set
+    End Property
     Public Property shpType As Microsoft.Office.Core.MsoAutoShapeType 'shp.AutoShapeType
     Public Property width As Single             'shp.Width
     Public Property height As Single            'shp.Height
     Public Property LineBGColor As Integer      'shp.Line.BackColor
     Public Property LineFGColor As Integer      'shp.Line.ForeColor
-    Public Property LineWeight As Single        'shp.Line.Weight
+    Private _LineWeight As Single               'shp.Line.Weight
+    Public Property LineWeight As Single
+        Get
+            LineWeight = _LineWeight
+        End Get
+        Set(value As Single)
+            If value >= 0 Then
+                _LineWeight = value
+            Else
+                _LineWeight = 0
+            End If
+        End Set
+    End Property
     Public Property hasText As Boolean          'shp.TextFrame2.hasText
     Public Property TextMarginLeft As Single    'shp.TextFrame2.MarginLeft
     Public Property TextMarginRight As Single   'shp.TextFrame2.MarginRight
