@@ -220,6 +220,7 @@ Module creationModule1
                         kennzeichnung = "Soll-Ist & Prognose" Or
                         kennzeichnung = "Multivariantensicht" Or
                         kennzeichnung = "Einzelprojektsicht" Or
+                        kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "AllePlanElemente" Or
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
@@ -593,7 +594,7 @@ Module creationModule1
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
-                                                                      False, False, hproj, kennzeichnung, minCal)
+                                                                      True, False, hproj, kennzeichnung, minCal)
                                     .TextFrame2.TextRange.Text = ""
                                     '.ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -3456,7 +3457,9 @@ Module creationModule1
             Call calcStartEndePPTKalender(minDate, maxDate,
                                           pptStartofCalendar, pptEndOfCalendar)
 
+
             ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
 
             Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
 
@@ -3550,18 +3553,6 @@ Module creationModule1
             ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
             neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
 
-            'If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
-            '    ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
-            '    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
-            '    'If awinSettings.mppOnePage Then
-            '    '    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
-            '    'Else
-            '    '    neededSpace = maxZeilen * zeilenhoehe_sav
-            '    'End If
-            'Else
-            '    neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
-            'End If
-
 
 
             ' jetzt muss die Zeilenhöhe  reduziert werden, so dass alles reinpasst oder aber es gar nicht geht ... 
@@ -3596,21 +3587,7 @@ Module creationModule1
                 End If
             End If
 
-            ' tk 14.10.19 braucht man nicht mehr 
-            'Dim oldHeight As Double
-            'Dim oldwidth As Double
 
-            'oldHeight = curPresentation.PageSetup.SlideHeight
-            'oldwidth = curPresentation.PageSetup.SlideWidth
-
-
-            'Dim curHeight As Double = oldHeight
-            'Dim curWidth As Double = oldwidth
-
-
-
-            ' zeichne den Kalender
-            'Dim calendargroup As pptNS.Shape = Nothing
 
             Try
 
@@ -3680,16 +3657,16 @@ Module creationModule1
 
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            ''rds.errorVorlagenShape.Copy()
-            ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
+                ''rds.errorVorlagenShape.Copy()
+                ''errorShape = pptslide.Shapes.Paste
+                errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
 
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
-            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
-            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
+                'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+                Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
 
         ' jetzt werden alle Shapes invisible gesetzt  ... 
@@ -4873,21 +4850,33 @@ Module creationModule1
                 ' falls das nächste Projekt in der gleichen Zeile sein sollte, so werdendas ist in der Routine bestimmeMinMaxProjekte .. festgelegt; gezeichnet wird wie auf der PRojekt-Tafel dargestellt ... 
                 ' es können also auch zwei PRojekte (z.B Projekt und Nachfolger)  in einer Zeile sein ... 
                 If currentProjektIndex <= projectCollection.Count - 1 Then
-                    If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) < CInt(projectCollection.ElementAt(currentProjektIndex).Key) Then
 
-                        ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
-                        toggleRowDifferentiator = Not toggleRowDifferentiator
+                    ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
+                    toggleRowDifferentiator = Not toggleRowDifferentiator
 
-                        If Not awinSettings.mppExtendedMode Then
-                            rowYPos = rowYPos + rds.zeilenHoehe
-                        Else
-                            rowYPos = rowYPos + anzZeilenGezeichnet * rds.zeilenHoehe
-                        End If
-                        lastProjectNameShape = Nothing
+                    If Not awinSettings.mppExtendedMode Then
+                        rowYPos = rowYPos + rds.zeilenHoehe
                     Else
-                        ' rowYPos bleibt unverändert 
-                        lastProjectNameShape = projectNameShape
+                        rowYPos = rowYPos + anzZeilenGezeichnet * rds.zeilenHoehe
                     End If
+                    lastProjectNameShape = Nothing
+                    ' in PPT kann aktuell gar nicht bestimmt werden, dass es nebeneinander sein - die Preview Fuktion fehlt ja hier .. 
+                    'If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) < CInt(projectCollection.ElementAt(currentProjektIndex).Key) Then
+
+                    '    ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
+                    '    toggleRowDifferentiator = Not toggleRowDifferentiator
+
+                    '    If Not awinSettings.mppExtendedMode Then
+                    '        rowYPos = rowYPos + rds.zeilenHoehe
+                    '    Else
+                    '        rowYPos = rowYPos + anzZeilenGezeichnet * rds.zeilenHoehe
+                    '    End If
+                    '    lastProjectNameShape = Nothing
+
+                    'Else
+                    '    ' rowYPos bleibt unverändert 
+                    '    lastProjectNameShape = projectNameShape
+                    'End If
                 Else
                     ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
                     toggleRowDifferentiator = Not toggleRowDifferentiator

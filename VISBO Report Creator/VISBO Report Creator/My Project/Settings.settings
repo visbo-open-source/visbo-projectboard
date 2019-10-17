@@ -21,7 +21,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="dbName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Demo Visbo Center</Value>
+      <Value Profile="(Default)">MS Project</Value>
     </Setting>
   </Settings>
 </SettingsFile>

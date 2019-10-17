@@ -1540,7 +1540,8 @@ Public Class frmProjPortfolioAdmin
                 node.Checked = Not node.Checked
             End If
 
-        ElseIf actionCode = PTTvActions.loadPV Then
+        ElseIf actionCode = PTTvActions.loadPV Or actionCode = PTTvActions.loadPVInPPT Then
+
 
             Select Case TreeLevel
                 Case 0 ' Project Node was checked / unchecked 
@@ -1606,81 +1607,81 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-        ElseIf actionCode = PTTvActions.loadPVInPPT Then
-            ' hier muss lediglich sichergestellt sein, dass immer nur ein Item selektiert sein kann  
+            'ElseIf actionCode = PTTvActions.loadPVInPPT Then
+            '    ' hier muss lediglich sichergestellt sein, dass immer nur ein Item selektiert sein kann  
 
-            Select Case TreeLevel
-                Case 0 ' Project Node was checked / unchecked 
-                    Dim projektNode As TreeNode = node
+            '    Select Case TreeLevel
+            '        Case 0 ' Project Node was checked / unchecked 
+            '            Dim projektNode As TreeNode = node
 
 
-                    If projektNode.Checked = True Then
+            '            If projektNode.Checked = True Then
 
-                        ' alle anderen Knoten de-selektieren 
-                        Call deSelectNodes(projektNode.FullPath)
+            '                ' alle anderen Knoten de-selektieren 
+            '                Call deSelectNodes(projektNode.FullPath)
 
-                        ' eine muss gechecked werden
-                        Dim variantNameLookingFor As String = ""
+            '                ' eine muss gechecked werden
+            '                Dim variantNameLookingFor As String = ""
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                            variantNameLookingFor = ptVariantFixNames.pfv.ToString
-                        Else
-                            variantNameLookingFor = ""
-                        End If
+            '                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+            '                    variantNameLookingFor = ptVariantFixNames.pfv.ToString
+            '                Else
+            '                    variantNameLookingFor = ""
+            '                End If
 
-                        Dim found As Boolean = False
-                        For i = 0 To projektNode.Nodes.Count - 1
-                            If getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text) = variantNameLookingFor Then
-                                projektNode.Nodes.Item(i).Checked = True
-                                found = True
-                            Else
-                                projektNode.Nodes.Item(i).Checked = False
-                            End If
-                        Next
+            '                Dim found As Boolean = False
+            '                For i = 0 To projektNode.Nodes.Count - 1
+            '                    If getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text) = variantNameLookingFor Then
+            '                        projektNode.Nodes.Item(i).Checked = True
+            '                        found = True
+            '                    Else
+            '                        projektNode.Nodes.Item(i).Checked = False
+            '                    End If
+            '                Next
 
-                        If Not found Then
-                            ' einfach die erste Variante auf checked setzen 
-                            If projektNode.Nodes.Count > 0 Then
-                                projektNode.Nodes.Item(0).Checked = True
-                            End If
+            '                If Not found Then
+            '                    ' einfach die erste Variante auf checked setzen 
+            '                    If projektNode.Nodes.Count > 0 Then
+            '                        projektNode.Nodes.Item(0).Checked = True
+            '                    End If
 
-                        End If
+            '                End If
 
-                    Else
-                        ' alle Varianten müssen unchecked werden 
-                        ' alle anderen Varianten auf Unchecked setzen 
-                        For i = 0 To projektNode.Nodes.Count - 1
-                            projektNode.Nodes.Item(i).Checked = False
-                        Next
-                    End If
+            '            Else
+            '                ' alle Varianten müssen unchecked werden 
+            '                ' alle anderen Varianten auf Unchecked setzen 
+            '                For i = 0 To projektNode.Nodes.Count - 1
+            '                    projektNode.Nodes.Item(i).Checked = False
+            '                Next
+            '            End If
 
-                Case 1 ' Variant Node was checked / unchecked 
-                    Dim projektNode As TreeNode = node.Parent
-                    Dim variantNode As TreeNode = node
+            '        Case 1 ' Variant Node was checked / unchecked 
+            '            Dim projektNode As TreeNode = node.Parent
+            '            Dim variantNode As TreeNode = node
 
-                    If variantNode.Checked = True Then
+            '            If variantNode.Checked = True Then
 
-                        ' alle anderen Knoten de-selektieren 
-                        Call deSelectNodes(variantNode.FullPath)
+            '                ' alle anderen Knoten de-selektieren 
+            '                Call deSelectNodes(variantNode.FullPath)
 
-                        If projektNode.Checked = False Then
-                            projektNode.Checked = True
-                        End If
-                    Else
-                        ' wenn es die letzte Variante war, die unchecked wurde 
-                        Dim anzVariantsChecked As Integer = 0
-                        For i = 0 To projektNode.Nodes.Count - 1
-                            If projektNode.Nodes.Item(i).Checked = True Then
-                                anzVariantsChecked = anzVariantsChecked + 1
-                            End If
-                        Next
-                        If anzVariantsChecked = 0 Then
-                            ' den Projekt-Knoten auch wieder zurücksetzen
-                            projektNode.Checked = False
-                        End If
-                    End If
+            '                If projektNode.Checked = False Then
+            '                    projektNode.Checked = True
+            '                End If
+            '            Else
+            '                ' wenn es die letzte Variante war, die unchecked wurde 
+            '                Dim anzVariantsChecked As Integer = 0
+            '                For i = 0 To projektNode.Nodes.Count - 1
+            '                    If projektNode.Nodes.Item(i).Checked = True Then
+            '                        anzVariantsChecked = anzVariantsChecked + 1
+            '                    End If
+            '                Next
+            '                If anzVariantsChecked = 0 Then
+            '                    ' den Projekt-Knoten auch wieder zurücksetzen
+            '                    projektNode.Checked = False
+            '                End If
+            '            End If
 
-            End Select
+            '    End Select
 
         ElseIf actionCode = PTTvActions.activateV Then
 

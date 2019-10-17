@@ -13159,6 +13159,14 @@ Public Module testModule
         minDate = tmpMinimum
         maxDate = tmpMaximum
 
+        ' jetzt noch den Puffer aufsetzen ...
+        ' tk 16.10.19 hier nach hinten immer etwas Luft lassen 
+        Dim puffer As Integer = CInt(DateDiff(DateInterval.Month, minDate, maxDate) * 0.2)
+        If puffer = 0 Then
+            puffer = 1
+        End If
+        maxDate = maxDate.AddMonths(puffer)
+
     End Sub
 
 
@@ -22392,6 +22400,7 @@ Public Module testModule
                 'resultShape.Shadow.Transparency = appear.ShadowTransp
                 resultShape.Line.BackColor.RGB = appear.LineBGColor
                 resultShape.Line.ForeColor.RGB = appear.LineFGColor
+
                 resultShape.Line.Weight = appear.LineWeight
 
                 If appear.hasText Then
@@ -22462,15 +22471,16 @@ Public Module testModule
             'Else
             If Not IsNothing(appear) Then
 
-                    resultShape.Rotation = appear.Rotation
-                    resultShape.Fill.BackColor.RGB = appear.BGcolor
-                    resultShape.Fill.ForeColor.RGB = appear.FGcolor
-                    resultShape.Glow.Color.RGB = appear.Glowcolor
-                    resultShape.Glow.Radius = appear.Glowradius
-                    resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
-                    'resultShape.Shadow.Transparency = appear.ShadowTransp
-                    resultShape.Line.BackColor.RGB = appear.LineBGColor
-                    resultShape.Line.ForeColor.RGB = appear.LineFGColor
+                resultShape.Rotation = appear.Rotation
+                resultShape.Fill.BackColor.RGB = appear.BGcolor
+                resultShape.Fill.ForeColor.RGB = appear.FGcolor
+                resultShape.Glow.Color.RGB = appear.Glowcolor
+                resultShape.Glow.Radius = appear.Glowradius
+                resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                'resultShape.Shadow.Transparency = appear.ShadowTransp
+                resultShape.Line.BackColor.RGB = appear.LineBGColor
+                resultShape.Line.ForeColor.RGB = appear.LineFGColor
+
                 resultShape.Line.Weight = appear.LineWeight
 
                 If appear.hasText Then
