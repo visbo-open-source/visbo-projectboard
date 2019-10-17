@@ -3700,7 +3700,7 @@
     ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Meilensteine zurück 
     ''' </summary>
     ''' <value></value>
-    ''' <returns>nach Datum sortierte Liste der MEilensteine im Projekt </returns>
+    ''' <returns>nach Datum sortierte Liste der MEilenstein-IDs  </returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getMilestones As SortedList(Of Date, String)
         Get
@@ -3735,7 +3735,7 @@
     ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Phasen zurück
     ''' Sortierkriterium ist dabei das Phasen-Ende
     ''' </summary>
-    ''' <returns></returns>
+    ''' <returns>sortierte Liste der PhaseIDs, sortiert nach Phasen Ende</returns>
     Public ReadOnly Property getPhases As SortedList(Of Date, String)
         Get
 
@@ -3817,7 +3817,27 @@
 
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)
+                tmpNameID = cphase.nameID
 
+                For d = 1 To cphase.countDeliverables
+                    tmpDeliverable = cphase.getDeliverable(d)
+                    If tmpValues.ContainsKey(tmpDeliverable) Then
+                        tmpDeliverable = tmpDeliverable & "(" & tmpNameID & ")"
+                    Else
+                        ' nichts tun, Deliverable existiert noch nicht ...
+                    End If
+
+                    ' jetzt ist sichergestellt, dass das Deliverable noch nicht existiert 
+                    ' bzw. das Deliverable dieser NameID bereits aufgenommen ist 
+                    If Not tmpValues.ContainsKey(tmpDeliverable) Then
+                        tmpValues.Add(tmpDeliverable, tmpNameID)
+                    Else
+                        ' nichts mehr tun - Deliverable dieser NameID ist schon drin 
+
+                    End If
+                Next d
+
+                ' schleife über die Meilensteine der Phase cphase, um die Deliverables aufzusammeln
                 For r = 1 To cphase.countMilestones
                     cresult = cphase.getMilestone(r)
                     tmpNameID = cresult.nameID
@@ -4263,7 +4283,7 @@
 
 
     ''' <summary>
-    ''' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
+    ''' berechnet die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten, über die gesamte Projektdauer addiert
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -4342,6 +4362,7 @@
                 ReDim costValues(_Dauer - 1)
                 costValues = Me.getAllPersonalKosten
 
+                ' Aufsummieren der Personalkosten nur bis index-ten Monat
                 costSum = 0
                 For i = 0 To index
 
@@ -4361,6 +4382,8 @@
 
                     ReDim costValues(_Dauer - 1)
                     costValues = Me.getKostenBedarf(costname)
+
+                    ' Aufsummieren aller anderen Kosten nur bis index-ten Monat
                     For i = 0 To index
 
                         costSum = costSum + costValues(i)
@@ -4378,9 +4401,11 @@
 
     End Property
 
-    '
-    ' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
-    '
+
+    ''' <summary>
+    ''' berechnet die GesamtKosten einschl. aller Personalkosten in T€ über die gesamte Projektdauer/je Monat
+    ''' </summary>
+    ''' <returns>Array of Double</returns>
     Public ReadOnly Property getGesamtKostenBedarf() As Double()
 
         Get
@@ -4425,6 +4450,10 @@
     '
     ' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
     '
+    ''' <summary>
+    ''' berechnet die GesamtKosten ohne Personalkosten in T€ über die gesamte Projektdauer/je Monat
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property getGesamtAndereKosten() As Double()
 
         Get
@@ -4634,6 +4663,9 @@
         End Get
 
     End Property
+
+
+
 
     Public Overridable Property earliestStart() As Integer
 

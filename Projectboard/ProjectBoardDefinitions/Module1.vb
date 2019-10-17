@@ -4673,7 +4673,7 @@ Public Module Module1
                         If cphase.countMilestones > 0 Then
                             Dim milestone As clsMeilenstein = cphase.getMilestone(cphase.countMilestones)
                             If Not IsNothing(milestone) Then
-                                tmpStr = milestone.getAllDeliverables
+                                tmpStr = milestone.getAllDeliverables(vbLf)
                             End If
                         End If
                     Catch ex As Exception

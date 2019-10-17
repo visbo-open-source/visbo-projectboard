@@ -16733,7 +16733,7 @@ Public Module agm2
                                 ' Ampel-Erläuterung
                                 CType(.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
                                 ' Lieferumfänge
-                                CType(.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                                 ' wer ist verantwortlich
                                 CType(.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
                                 ' wieviel ist erledigt ? 

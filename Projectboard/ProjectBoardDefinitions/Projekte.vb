@@ -1606,7 +1606,7 @@ Public Module Projekte
 
                                 ' Lieferumfänge eintragen 
                                 tableCell = CType(.Cell(tabellenzeile, 4), PowerPoint.Cell).Shape
-                                tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables
+                                tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables(vbLf)
 
                                 ' Ampelbewertungen eintragen
                                 If anzSpalten >= 5 Then
@@ -23636,7 +23636,7 @@ Public Module Projekte
 
 
                 ' Änderung tk 2.11 Ergänzung um Deliverables 
-                tmpDeliverables = cphase.getAllDeliverables
+                tmpDeliverables = cphase.getAllDeliverables(vbLf)
                 .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                 .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
 
@@ -23705,7 +23705,7 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
-                    tmpDeliverables = cResult.getAllDeliverables
+                    tmpDeliverables = cResult.getAllDeliverables(vbLf)
                     .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
 
@@ -26300,7 +26300,7 @@ Public Module Projekte
                 farbe = System.Drawing.Color.FromArgb(CInt(hb.color))
 
                 explanation = hb.description
-                deliverables = cMilestone.getAllDeliverables
+                deliverables = cMilestone.getAllDeliverables(vbLf)
 
 
             Else
