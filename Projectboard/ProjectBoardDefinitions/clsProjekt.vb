@@ -2695,7 +2695,7 @@ Public Class clsProjekt
                     If Not IsNothing(ms) Then
                         currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
                         currentPrzDone = ms.percentDone
-                        isElemOfPast = (ms.getDate > bezugsdatum)
+                        isElemOfPast = (ms.getDate < bezugsdatum)
 
                         If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
                             If Total Then
@@ -2740,8 +2740,7 @@ Public Class clsProjekt
     ''' <param name="baseDeliverables"></param>
     ''' <returns></returns>
     Public ReadOnly Property getDeliverableCompletionMetric(ByVal baseDeliverables As SortedList(Of String, String),
-                                                            ByVal baseMs As SortedList(Of Date, String),
-                                                            ByVal basePhases As SortedList(Of Date, String)) As Double()
+                                                            Optional ByVal Total As Boolean = False) As Double()
         Get
             Dim deliverableCompletionValues() As Double
             Dim phase As clsPhase
@@ -2757,55 +2756,130 @@ Public Class clsProjekt
 
                 ReDim deliverableCompletionValues(_Dauer - 1)
 
-                ' Loop über alle Phasen der Beauftragung (basePhases)
+                ' Loop über alle Deliverables in der Beauftragung
 
                 For Each kvp As KeyValuePair(Of String, String) In baseDeliverables
 
-                    Dim phaseId As String = kvp.Value
+                    Dim elemId As String = kvp.Value
                     Dim baseDeliv As String = kvp.Key
 
-                    phase = Me.getPhaseByID(phaseId)
+                    If elemIDIstMeilenstein(elemId) Then
+                        ' Id des Meilenstein des beauftragten Projektes holen
 
-                    If Not IsNothing(phase) Then
-                        currentEndIndex = phase.relEnde - 1
-                        currentPrzDone = phase.percentDone
-                        isElemOfPast = (phase.getEndDate > bezugsDatum)
+                        ms = Me.getMilestoneByID(elemId)                ' mit der Id den Meilenstein dieses Projektes holen 
 
-                        If isElemOfPast And Not Me.variantName = ptVariantFixNames.pfv.ToString Then
-                            If phase.containsDeliverable(baseDeliv) Then
-                                deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                        If Not IsNothing(ms) Then
+                            Dim baseDelivName As String = ""
+                            Dim tmpstr() As String = Split(baseDeliv, "(", 2)
+
+                            If tmpstr.Length > 0 Then
+                                baseDelivName = tmpstr(0)
                             End If
+                            currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
+                            currentPrzDone = ms.percentDone
+                            isElemOfPast = (ms.getDate < bezugsDatum)
 
+                            If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+                                If Total Then
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    Else
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    End If
+                                End If
+
+                            Else
+                                If Total Then
+
+                                    If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                    End If
+
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                End If
+
+                            End If
                         Else
-                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+
                         End If
 
-                    End If
-
-                Next
-
-
-                ' Loop über alle Meilensteine der Beauftragung (baseMS)
-
-                For Each kvpMS As KeyValuePair(Of Date, String) In baseMs
-
-                    Dim msId As String = kvpMS.Value              ' Id des Meilenstein des beauftragten Projektes holen
-
-                    ms = Me.getMilestoneByID(msId)                ' mit der Id den Meilenstein dieses Projektes holen 
-
-                    currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
-                    currentPrzDone = ms.percentDone
-                    isElemOfPast = (ms.getDate > bezugsDatum)
-
-
-                    If isElemOfPast And Not Me.variantName = ptVariantFixNames.pfv.ToString Then
-                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
                     Else
-                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                        ' mit der elemID die Phase holen
+
+                        phase = Me.getPhaseByID(elemId)
+
+                        If Not IsNothing(phase) Then
+
+                            Dim baseDelivName As String = ""
+                            Dim tmpstr() As String = Split(baseDeliv, "(", 2)
+
+                            If tmpstr.Length > 0 Then
+                                baseDelivName = tmpstr(0)
+                            End If
+
+                            currentEndIndex = phase.relEnde - 1
+                            currentPrzDone = phase.percentDone
+                            isElemOfPast = (phase.getEndDate < bezugsDatum)
+
+                            If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+
+                                If Total Then
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    Else
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    End If
+                                End If
+
+                            Else
+                                If Total Then
+
+                                    If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                    End If
+
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+
+                        End If
                     End If
 
-                Next
 
+
+
+                Next
 
                 getDeliverableCompletionMetric = deliverableCompletionValues
 

@@ -7452,36 +7452,40 @@ Public Module awinGeneralModules
 
                     If hproj.variantName <> vorgabeVariantName Then
 
-                        Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                         '
                         ' hier muss die Berechnung der keyMetrics-Daten erfolgen
                         '
-                        If IsNothing(hproj.keyMetrics) Then
-                            hproj.keyMetrics = New clsKeyMetrics
-                        End If
+                        hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
+
+                        'Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+
+                        'If IsNothing(hproj.keyMetrics) Then
+                        '    hproj.keyMetrics = New clsKeyMetrics
+                        'End If
 
 
-                        hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
-                        hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
+                        'hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
+                        'hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
 
-                        Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
+                        'Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
 
-                        hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
-                        hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
+                        'hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
+                        'hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
 
-                        hproj.keyMetrics.endDateBaseLast = lproj.endeDate
-                        hproj.keyMetrics.endDateCurrent = hproj.endeDate
+                        'hproj.keyMetrics.endDateBaseLast = lproj.endeDate
+                        'hproj.keyMetrics.endDateCurrent = hproj.endeDate
 
-                        Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
-                        Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
-                        hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
-                        hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                        'Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
+                        'Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
+                        'hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                        'hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
 
-                        hproj.keyMetrics.deliverableBaseLastActual = 0.0
-                        hproj.keyMetrics.deliverableBaseLastTotal = 0.0
+                        'Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
+                        'hproj.keyMetrics.deliverableBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                        'hproj.keyMetrics.deliverableBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
-                        hproj.keyMetrics.deliverableCompletionCurrentActual = 0.0
-                        hproj.keyMetrics.deliverableCompletionCurrentTotal = 0.0
+                        'hproj.keyMetrics.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                        'hproj.keyMetrics.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
                     Else
                         ' hier ist noch zu überlegen, was zu tun ist.
@@ -7490,14 +7494,6 @@ Public Module awinGeneralModules
                     End If
 
 
-                    '' erst hier muss der Wert für hproj.timeStamp = heute gesetzt werden
-
-                    ' ur: 14.2.2019 zurückgändert
-                    'If demoModusHistory Then
-                    '    hproj.timeStamp = historicDate
-                    'Else
-                    '    hproj.timeStamp = jetzt
-                    'End If
 
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=kdNrToStore) Then
 
@@ -7720,36 +7716,42 @@ Public Module awinGeneralModules
 
                                 If hproj.variantName <> vorgabeVariantName Then
 
-                                    Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                                     '
                                     ' hier muss die Berechnung der keyMetrics-Daten erfolgen
                                     '
-                                    If IsNothing(hproj.keyMetrics) Then
-                                        hproj.keyMetrics = New clsKeyMetrics
-                                    End If
+                                    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
+
+                                    'Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                                    ''
+                                    '' hier muss die Berechnung der keyMetrics-Daten erfolgen
+                                    ''
+                                    'If IsNothing(hproj.keyMetrics) Then
+                                    '    hproj.keyMetrics = New clsKeyMetrics
+                                    'End If
 
 
-                                    hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
-                                    hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
+                                    'hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
+                                    'hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
 
-                                    Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
+                                    'Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
 
-                                    hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
-                                    hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
+                                    'hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
+                                    'hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
 
-                                    hproj.keyMetrics.endDateBaseLast = lproj.endeDate
-                                    hproj.keyMetrics.endDateCurrent = hproj.endeDate
+                                    'hproj.keyMetrics.endDateBaseLast = lproj.endeDate
+                                    'hproj.keyMetrics.endDateCurrent = hproj.endeDate
 
-                                    Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
-                                    Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
-                                    hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
-                                    hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                                    'Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
+                                    'Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
+                                    'hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                                    'hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
 
-                                    hproj.keyMetrics.deliverableBaseLastActual = 0.0
-                                    hproj.keyMetrics.deliverableBaseLastTotal = 0.0
+                                    'Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
+                                    'hproj.keyMetrics.deliverableBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                                    'hproj.keyMetrics.deliverableBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
-                                    hproj.keyMetrics.deliverableCompletionCurrentActual = 0.0
-                                    hproj.keyMetrics.deliverableCompletionCurrentTotal = 0.0
+                                    'hproj.keyMetrics.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                                    'hproj.keyMetrics.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
                                 Else
                                     ' hier ist noch zu überlegen, was zu tun ist.
@@ -7757,13 +7759,6 @@ Public Module awinGeneralModules
                                     hproj.keyMetrics = New clsKeyMetrics
                                 End If
 
-                                'ur: 14.2..2019: wieder zurückgeändert
-                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
-                                'If demoModusHistory Then
-                                '    hproj.timeStamp = historicDate
-                                'Else
-                                '    hproj.timeStamp = jetzt
-                                'End If
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
@@ -8077,6 +8072,10 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' speichert die selektierten Projekte
+    ''' </summary>
+    ''' <returns>Anzahl der erfolgreich gespeicherten Projekte</returns>
     Public Function StoreSelectedProjectsinDB() As Integer
 
         Dim err As New clsErrorCodeMsg
@@ -8186,56 +8185,53 @@ Public Module awinGeneralModules
 
                             If storeNeeded Then
 
-                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
                                 Dim mproj As clsProjekt = Nothing
+
+                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
 
                                 If hproj.variantName <> vorgabeVariantName Then
 
-                                    Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
-                                    '
-                                    ' hier muss die Berechnung der keyMetrics-Daten erfolgen
-                                    '
-                                    If IsNothing(hproj.keyMetrics) Then
-                                        hproj.keyMetrics = New clsKeyMetrics
-                                    End If
+                                    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
 
-                                    hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
-                                    hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
+                                    'Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                                    ''
+                                    '' hier muss die Berechnung der keyMetrics-Daten erfolgen
+                                    ''
+                                    'If IsNothing(hproj.keyMetrics) Then
+                                    '    hproj.keyMetrics = New clsKeyMetrics
+                                    'End If
 
-                                    Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
+                                    'hproj.keyMetrics.costBaseLastTotal = lproj.getSummeKosten()
+                                    'hproj.keyMetrics.costCurrentTotal = hproj.getSummeKosten()
 
-                                    hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
-                                    hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
+                                    'Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
 
-                                    hproj.keyMetrics.endDateBaseLast = lproj.endeDate
-                                    hproj.keyMetrics.endDateCurrent = hproj.endeDate
+                                    'hproj.keyMetrics.costBaseLastActual = lproj.getSummeKosten(index)
+                                    'hproj.keyMetrics.costCurrentActual = hproj.getSummeKosten(index)
 
-                                    Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
-                                    Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
-                                    hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
-                                    hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                                    'hproj.keyMetrics.endDateBaseLast = lproj.endeDate
+                                    'hproj.keyMetrics.endDateCurrent = hproj.endeDate
 
-                                    Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
-                                    hproj.keyMetrics.deliverableBaseLastActual = 0.0
-                                    hproj.keyMetrics.deliverableBaseLastTotal = 0.0
+                                    'Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
+                                    'Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
+                                    'hproj.keyMetrics.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+                                    'hproj.keyMetrics.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
 
-                                    hproj.keyMetrics.deliverableCompletionCurrentActual = 0.0
-                                    hproj.keyMetrics.deliverableCompletionCurrentTotal = 0.0
+                                    'Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
+                                    'hproj.keyMetrics.deliverableBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                                    'hproj.keyMetrics.deliverableBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
+
+                                    'hproj.keyMetrics.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+                                    'hproj.keyMetrics.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
                                 Else
                                     ' hier ist noch zu überlegen, was zu tun ist.
                                     ' z.B.  leere keyMetrics
+
                                     hproj.keyMetrics = New clsKeyMetrics
                                 End If
 
-                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
-                                ' ur:31.1.2019: erst hier muss der neue Timestamp gesetzt sein.
-                                ' ur: 14.2.2019: wieder zurückgeändert
-                                'If demoModusHistory Then
-                                '    hproj.timeStamp = historicDate
-                                'Else
-                                '    hproj.timeStamp = jetzt
-                                'End If
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
@@ -8380,6 +8376,60 @@ Public Module awinGeneralModules
         End If
 
         Return anzStoredProj
+
+    End Function
+
+
+    ''' <summary>
+    ''' Es wird die keyMetrics des Projekte berechnet und als result zurückgegeben
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    Public Function calcKeyMetricsOfProject(ByVal hproj As clsProjekt) As clsKeyMetrics
+
+
+        Dim result As New clsKeyMetrics
+        Dim err As New clsErrorCodeMsg
+
+        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+        Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
+
+        Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+        '
+        ' hier muss die Berechnung der keyMetrics-Daten erfolgen        '
+        '
+        If Not IsNothing(lproj) Then
+
+            result.costBaseLastTotal = lproj.getSummeKosten()
+            result.costCurrentTotal = hproj.getSummeKosten()
+
+            result.costBaseLastActual = lproj.getSummeKosten(index)
+            result.costCurrentActual = hproj.getSummeKosten(index)
+
+            result.endDateBaseLast = lproj.endeDate
+            result.endDateCurrent = hproj.endeDate
+
+            Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
+            Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
+            result.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+            result.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+
+            Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
+            result.deliverableBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+            result.deliverableBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
+
+            result.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+            result.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
+
+        Else
+
+            ' result bleibt nahezu leer, d.h. es werden nur costCurrentActual und costCurrentTotal und endDateCurrent besetzt
+            result.costCurrentTotal = hproj.getSummeKosten()
+            result.costCurrentActual = hproj.getSummeKosten(index)
+            result.endDateCurrent = hproj.endeDate
+        End If
+
+        calcKeyMetricsOfProject = result
 
     End Function
 End Module
