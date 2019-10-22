@@ -5511,6 +5511,13 @@ Public Module agm2
                     hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
 
 
+                    ' Projekt-Nummer auslesen, kein Problem, wenn nicht da ...
+                    Try
+                        hproj.kundenNummer = CType(.Range("Projekt_Nr").Value, String)
+                    Catch ex As Exception
+
+                    End Try
+
                     ' Kurzbeschreibung, kein Problem, wenn nicht da ...
                     Try
                         hproj.description = CType(.Range("ProjektBeschreibung").Value, String)
