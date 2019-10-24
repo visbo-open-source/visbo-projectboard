@@ -1784,7 +1784,7 @@ Public Class Request
     ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
-    ''' <returns></returns>
+    ''' <returns>clsConstellation, timestamp, err</returns>
     Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
@@ -1806,7 +1806,15 @@ Public Class Request
                 vpid = vp._id
             End If
 
+            If storedAtOrBefore > Date.MinValue Then
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+            End If
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+
+            If listOfPortfolios.Count < 1 Then
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+            End If
 
             If err.errorCode = 200 Then
 
@@ -4400,16 +4408,18 @@ Public Class Request
             ' URL zusammensetzen
             serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
 
-            If timestamp > Date.MinValue Then
+            Dim refDate As String = DateTimeToISODate(timestamp)
 
-                timestamp = timestamp.ToUniversalTime
-                Dim refDate As String = DateTimeToISODate(timestamp)
-
+            If timestamp <= Date.MinValue Then
+                serverUriString = serverUriString
+            Else
                 serverUriString = serverUriString & "?refDate=" & refDate
-                If refNext Then
-                    serverUriString = serverUriString & "&refNext=1"
-                End If
             End If
+
+            If refNext Then
+                serverUriString = serverUriString & "&refNext=1"
+            End If
+
 
             Dim serverUri As New Uri(serverUriString)
 

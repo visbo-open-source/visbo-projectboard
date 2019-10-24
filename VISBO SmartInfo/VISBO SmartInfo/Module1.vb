@@ -3276,8 +3276,22 @@ Module Module1
                     'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
                     scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp, scInfo.vpid)
 
-                    ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                    continueOperation = Not IsNothing(scInfo.hproj)
+                    ' hier unterscheiden, ob Summary-Projekt oder normales
+                    If scInfo.hproj.projectType = ptPRPFType.portfolio Then
+
+                        ' lade das Portfolio 
+                        Dim err As New clsErrorCodeMsg
+                        Dim realTimestamp As Date
+                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, Date.MinValue)
+
+                        Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
+                        scInfo.hproj = hproj
+                        continueOperation = Not IsNothing(scInfo.hproj)
+                    Else
+                        ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                        continueOperation = Not IsNothing(scInfo.hproj)
+                    End If
+
 
                 End If
 
@@ -4268,6 +4282,7 @@ Module Module1
 
             ''End Try
         End With
+
 
         ' jetzt die Farbe bestimme
         Dim balkenFarbe As Integer = bestimmeBalkenFarbe(scInfo)
