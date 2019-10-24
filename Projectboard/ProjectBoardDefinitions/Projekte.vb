@@ -22912,6 +22912,19 @@ Public Module Projekte
                 .range("Projekt_Name").interior.color = hproj.farbe
                 .range("Projekt_Name").font.size = hproj.Schrift
                 .range("Projekt_Name").font.color = hproj.Schriftfarbe
+                Try
+                    If hproj.kundenNummer <> "" Then
+                        .range("Projekt_Nr").value = hproj.kundenNummer
+                    Else
+
+                    End If
+                Catch ex As Exception
+                    Call MsgBox("Vorlage von VISBO-Steckbrief enthält den ExcelNamen 'Projekt_Nr' nicht!")
+
+                    appInstance.ActiveWorkbook.Names.Add(Name:="Projekt_Nr", RefersTo:="=Stammdaten!$C$8")
+                    .range("Projekt_Nr").value = hproj.kundenNummer
+                End Try
+
 
 
                 ' Start
