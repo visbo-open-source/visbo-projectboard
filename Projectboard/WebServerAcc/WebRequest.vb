@@ -2459,7 +2459,7 @@ Public Class Request
                     If anzSetting = 1 Then
                         newsetting._id = settingID
                         ' Update der customroles - Setting
-                        CType(newsetting, clsVCSettingCustomfields).timestamp = oldsetting.timestamp
+                        CType(newsetting, clsVCSettingCustomfields).timestamp = timestamp
                         result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
                     Else
                         ' Create der customroles - Setting
