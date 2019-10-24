@@ -251,9 +251,6 @@ Public Class frmAuthentication
         End If
     End Sub
 
-    Private Sub benutzer_TextChanged(sender As Object, e As EventArgs) Handles benutzer.TextChanged
-
-    End Sub
 
     Private Sub pwforgotten_Click(sender As Object, e As EventArgs) Handles pwforgotten.Click
         Try
@@ -300,7 +297,4 @@ Public Class frmAuthentication
 
     End Sub
 
-    Private Sub Label2_Click(sender As Object, e As EventArgs) Handles Label2.Click
-
-    End Sub
 End Class

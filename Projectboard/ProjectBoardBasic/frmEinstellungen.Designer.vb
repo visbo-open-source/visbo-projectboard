@@ -32,13 +32,14 @@ Partial Class frmEinstellungen
         Me.rdbLast = New System.Windows.Forms.RadioButton()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.loadPFV = New System.Windows.Forms.CheckBox()
+        Me.chkbxPhasesAnteilig = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
         'chkboxPropAnpass
         '
         Me.chkboxPropAnpass.AutoSize = True
-        Me.chkboxPropAnpass.Location = New System.Drawing.Point(27, 88)
+        Me.chkboxPropAnpass.Location = New System.Drawing.Point(16, 93)
         Me.chkboxPropAnpass.Name = "chkboxPropAnpass"
         Me.chkboxPropAnpass.Size = New System.Drawing.Size(230, 17)
         Me.chkboxPropAnpass.TabIndex = 1
@@ -48,7 +49,7 @@ Partial Class frmEinstellungen
         'chkboxAmpel
         '
         Me.chkboxAmpel.AutoSize = True
-        Me.chkboxAmpel.Location = New System.Drawing.Point(27, 111)
+        Me.chkboxAmpel.Location = New System.Drawing.Point(16, 137)
         Me.chkboxAmpel.Name = "chkboxAmpel"
         Me.chkboxAmpel.Size = New System.Drawing.Size(101, 17)
         Me.chkboxAmpel.TabIndex = 2
@@ -59,7 +60,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(24, 151)
+        Me.Label1.Location = New System.Drawing.Point(13, 175)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -69,7 +70,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 148)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 172)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -79,7 +80,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(24, 180)
+        Me.statusLabel.Location = New System.Drawing.Point(13, 204)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -123,18 +124,29 @@ Partial Class frmEinstellungen
         'loadPFV
         '
         Me.loadPFV.AutoSize = True
-        Me.loadPFV.Location = New System.Drawing.Point(27, 65)
+        Me.loadPFV.Location = New System.Drawing.Point(16, 71)
         Me.loadPFV.Name = "loadPFV"
         Me.loadPFV.Size = New System.Drawing.Size(125, 17)
         Me.loadPFV.TabIndex = 49
         Me.loadPFV.Text = "immer Vorgabe laden"
         Me.loadPFV.UseVisualStyleBackColor = True
         '
+        'chkbxPhasesAnteilig
+        '
+        Me.chkbxPhasesAnteilig.AutoSize = True
+        Me.chkbxPhasesAnteilig.Location = New System.Drawing.Point(16, 115)
+        Me.chkbxPhasesAnteilig.Name = "chkbxPhasesAnteilig"
+        Me.chkbxPhasesAnteilig.Size = New System.Drawing.Size(314, 17)
+        Me.chkbxPhasesAnteilig.TabIndex = 50
+        Me.chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
+        Me.chkbxPhasesAnteilig.UseVisualStyleBackColor = True
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(335, 207)
+        Me.ClientSize = New System.Drawing.Size(352, 250)
+        Me.Controls.Add(Me.chkbxPhasesAnteilig)
         Me.Controls.Add(Me.loadPFV)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.statusLabel)
@@ -160,4 +172,5 @@ Partial Class frmEinstellungen
     Friend WithEvents rdbLast As Windows.Forms.RadioButton
     Friend WithEvents GroupBox1 As Windows.Forms.GroupBox
     Friend WithEvents loadPFV As Windows.Forms.CheckBox
+    Friend WithEvents chkbxPhasesAnteilig As Windows.Forms.CheckBox
 End Class

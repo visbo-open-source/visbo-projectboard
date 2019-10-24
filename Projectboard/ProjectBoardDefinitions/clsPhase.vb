@@ -1453,6 +1453,7 @@ Public Class clsPhase
             Dim tfzeile As Integer = Me.parentProject.tfZeile
             Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
+            Dim faktor As Double = 0.4
 
             If startpunkt < 0 Then
                 Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
@@ -1466,10 +1467,12 @@ Public Class clsPhase
             If tfzeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
 
 
-                top = topOfMagicBoard + (tfzeile - 1) * boxHeight + 0.5 * (0.8 - 0.23) * boxHeight
+                'top = topOfMagicBoard + (tfzeile - 1) * boxHeight + 0.5 * (0.8 - 0.23) * boxHeight
+                top = topOfMagicBoard + (tfzeile - 1) * boxHeight + 0.5 * (0.8 - faktor) * boxHeight
                 left = (phasenStart / 365) * boxWidth * 12
                 width = ((phasenDauer) / 365) * boxWidth * 12
-                height = 0.23 * boxHeight
+                'height = 0.23 * boxHeight
+                height = faktor * boxHeight
 
             Else
                 Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.nameID)

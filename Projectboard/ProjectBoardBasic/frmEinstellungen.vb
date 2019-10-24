@@ -14,6 +14,7 @@ Public Class frmEinstellungen
         'chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
+        chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
         loadPFV.Checked = awinSettings.loadPFV
 
         dontFire = True
@@ -72,6 +73,7 @@ Public Class frmEinstellungen
                 loadPFV.Text = "filter by baseline(s and load as planning version"
             End If
             chkboxPropAnpass.Text = "adjust ressource needs proportionally"
+            chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
             chkboxAmpel.Text = "show traffic lights"
             Label1.Text = "Language for Reports"
         Else
@@ -84,12 +86,27 @@ Public Class frmEinstellungen
                 loadPFV.Text = "auf Vorgaben filtern und als Planungs-Version laden"
             End If
             chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
+            chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
             Label1.Text = "Sprache für Reports"
         End If
 
     End Sub
 
+    ''' <summary>
+    ''' steuert, wie die Phase in Häufigkeits-Digrammen gezählt wird
+    ''' true: wenn die Phase den Monat zu 10% überdeckt, wird 0,1 gerechnet, wenn sie den Monat zu 100% abdeckt wird 1 gezählt
+    ''' false: sobald die Phase den Monat auch nur ein kleines bisschen überdeckt wird , 1 gezählt 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub chkbxPhasesAnteilig_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxPhasesAnteilig.CheckedChanged
+        If chkbxPhasesAnteilig.Checked Then
+            awinSettings.phasesProzentual = True
+        Else
+            awinSettings.phasesProzentual = False
+        End If
+    End Sub
 
     Private Sub chkboxPropAnpass_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxPropAnpass.CheckedChanged
 
@@ -157,4 +174,6 @@ Public Class frmEinstellungen
         End If
 
     End Sub
+
+
 End Class
