@@ -19717,6 +19717,9 @@ Public Module testModule
         ElseIf IsNumeric(qualifier) Then
             explicit = False
             trennzeichen = "%"
+        ElseIf qualifier = "Alle" Then
+            explicit = False
+            trennzeichen = "#"
         Else
             explicit = True
             trennzeichen = "#"

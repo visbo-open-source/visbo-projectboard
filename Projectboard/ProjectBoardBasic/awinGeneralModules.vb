@@ -7584,9 +7584,9 @@ Public Module awinGeneralModules
             tmpResult = False
             ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
             If awinSettings.englishLanguage Then
-                outputline = "Conflict when saving: " & hproj.name & ", " & hproj.variantName
+                outputline = "Error when saving: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
             Else
-                outputline = "Konflikt beim Speichern: " & hproj.name & ", " & hproj.variantName
+                outputline = "Fehler beim Speichern: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
             End If
 
             outputCollection.Add(outputline)
@@ -7804,10 +7804,10 @@ Public Module awinGeneralModules
                     Catch ex As Exception
 
                         If awinSettings.englishLanguage Then
-                            outputline = "!! Error when writing to database ..." & vbLf & "Datenbase not up and running?"
+                            outputline = "!! Error when writing to database ..." & vbLf & ex.Message
                             outPutCollection.Add(outputline)
                         Else
-                            outputline = "!! Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?"
+                            outputline = "!! Fehler beim Speichern der Projekte in die Datenbank." & vbLf & ex.Message
                             outPutCollection.Add(outputline)
                         End If
                         ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
@@ -8213,9 +8213,9 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                             If awinSettings.englishLanguage Then
-                                outputline = "Conflict when saving: " & hproj.name & ", " & hproj.variantName
+                                outputline = "Error when saving: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
                             Else
-                                outputline = "Konflikt beim Speichern: " & hproj.name & ", " & hproj.variantName
+                                outputline = "Fehler beim Speichern: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
                             End If
 
                             outputCollection.Add(outputline)

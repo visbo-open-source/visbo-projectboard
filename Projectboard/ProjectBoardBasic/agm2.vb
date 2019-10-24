@@ -5511,6 +5511,13 @@ Public Module agm2
                     hproj.Schrift = CInt(.Range("Projekt_Name").Font.Size)
 
 
+                    ' Projekt-Nummer auslesen, kein Problem, wenn nicht da ...
+                    Try
+                        hproj.kundenNummer = CType(.Range("Projekt_Nr").Value, String)
+                    Catch ex As Exception
+
+                    End Try
+
                     ' Kurzbeschreibung, kein Problem, wenn nicht da ...
                     Try
                         hproj.description = CType(.Range("ProjektBeschreibung").Value, String)
@@ -8468,6 +8475,7 @@ Public Module agm2
                 ''    End If
                 ''End If
 
+
             Catch ex As Exception
                 Dim resultMessage As String = ex.Message
                 outputCollection.Add(resultMessage)
@@ -8479,6 +8487,43 @@ Public Module agm2
 
 
         ImportCustomization = importedCustomization
+    End Function
+
+
+    ''' <summary>
+    ''' importiert die Custom-Einstellungen 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportCustomFieldDefinitions(ByRef outputCollection As Collection) As clsCustomFieldDefinitions
+
+        Dim err As New clsErrorCodeMsg
+        Dim customizationSheet As Excel.Worksheet = Nothing
+
+        Try
+            customizationSheet = CType(appInstance.Worksheets(arrWsNames(4)),
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+        Catch ex As Exception
+
+        End Try
+
+        If Not IsNothing(customizationSheet) Then
+            Try
+                ' Auslesen der CustomField Definitionen
+                Call readCustomFieldDefinitions(customizationSheet)
+
+
+            Catch ex As Exception
+                Dim resultMessage As String = ex.Message
+                outputCollection.Add(resultMessage)
+            End Try
+        Else
+            outputCollection.Add("Tabellenblatt 'Einstellungen' ist nicht vorhanden! ")
+            ImportCustomFieldDefinitions = Nothing
+        End If
+
+
+        ImportCustomFieldDefinitions = customFieldDefinitions
     End Function
 
     ''' <summary>
@@ -19666,17 +19711,17 @@ Public Module agm2
             End With
 
 
-            Dim err As New clsErrorCodeMsg
-            Dim ts As Date = CDate("1.1.1900")
-            Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
-            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
-                                                                                           CStr(settingTypes(ptSettingTypes.customfields)),
-                                                                                           customFieldsName,
-                                                                                           ts,
-                                                                                           err)
-            If Not result Then
-                Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & vbCrLf & err.errorMsg)
-            End If
+            'Dim err As New clsErrorCodeMsg
+            'Dim ts As Date = CDate("1.1.1900")
+            'Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
+            'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
+            '                                                                               CStr(settingTypes(ptSettingTypes.customfields)),
+            '                                                                               customFieldsName,
+            '                                                                               ts,
+            '                                                                               err)
+            'If Not result Then
+            '    Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & vbCrLf & err.errorMsg)
+            'End If
 
 
         Catch ex As Exception

@@ -590,12 +590,17 @@ Public Module awinDiagrams
 
                         Else
                             Dim legendName As String = ""
-                            ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
-                            If awinSettings.englishLanguage Then
-                                legendName = "Sum over all projects"
+                            ' tk 22.10.19 wenn in einem Chart mehrere Items dargestellt werden, dann muss das in de rLegende ausgewiesen werden ... 
+                            If myCollection.Count = 1 Then
+                                If awinSettings.englishLanguage Then
+                                    legendName = "Sum over all projects"
+                                Else
+                                    legendName = "Summe über alle Projekte"
+                                End If
                             Else
-                                legendName = "Summe über alle Projekte"
+                                legendName = prcName
                             End If
+
                             'If repMessages.getmsg(275) <> "" Then
                             '    legendName = prcName & " " & repMessages.getmsg(275)
                             'Else
@@ -1589,10 +1594,15 @@ Public Module awinDiagrams
                         End If
 
                         Dim legendName As String = ""
-                        If awinSettings.englishLanguage Then
-                            legendName = "Sum over all projects"
+                        ' tk 22.10.19 wenn in einem Chart mehrere Items dargestellt werden, dann muss das in de rLegende ausgewiesen werden ... 
+                        If myCollection.Count = 1 Then
+                            If awinSettings.englishLanguage Then
+                                legendName = "Sum over all projects"
+                            Else
+                                legendName = "Summe über alle Projekte"
+                            End If
                         Else
-                            legendName = "Summe über alle Projekte"
+                            legendName = prcName
                         End If
 
                         With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
