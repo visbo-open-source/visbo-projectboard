@@ -4,7 +4,7 @@
         <tabs>
           <tab id="Tab2" label="VISBO Report Creator">
             <group id="groupCreation" label="Report Creation">
-              <button id="idcreateProjectReports" onAction="createProjectReports" label="Create Project Report" />
+              <button id="idcreateReports" onAction="createReports" label="Create Report" />
               <button id="idcreatePortfolioReports" onAction="createPortfolioReports" label="Create Portfolio Report" />
             </group>
             <group id="groupGeneral" label="General">

@@ -1,5 +1,6 @@
 ﻿Imports Microsoft.Office.Interop.PowerPoint
 Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 
 Public Class ThisAddIn
 
@@ -50,5 +51,14 @@ Public Class ThisAddIn
 
     Private Sub Application_WindowActivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowActivate
         curPresentation = Pres
+    End Sub
+
+    Private Sub Application_AfterPresentationOpen(Pres As Presentation) Handles Application.AfterPresentationOpen
+        ' tk 24.10.19 alle internen Datenstrukturen zurücksetezn
+        ' das kann später ggf geändert werden so dass die einmal geladenen Projekte auch anderen Report-Templates zur Verfügung stehen 
+        If ShowProjekte.Count > 0 Or AlleProjekte.Count > 0 Then
+            Call emptyAllVISBOStructures()
+        End If
+
     End Sub
 End Class

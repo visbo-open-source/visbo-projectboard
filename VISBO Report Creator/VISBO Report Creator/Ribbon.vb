@@ -39,7 +39,11 @@ Public Class Ribbon
         Me.ribbon.Invalidate()
     End Sub
 
-    Sub createProjectReports(control As Microsoft.Office.Core.IRibbonControl)
+    ''' <summary>
+    ''' kann sowohl Projekt wie auch Portfolio Reports erstellen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Sub createReports(control As Microsoft.Office.Core.IRibbonControl)
 
         Dim returnValue As Windows.Forms.DialogResult
         Dim errMsg As String = ""

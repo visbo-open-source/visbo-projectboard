@@ -270,20 +270,16 @@ Public Module awinGeneralModules
             Call MsgBox("Fehler beim Löschen der Shapes ...")
         End Try
 
-        ShowProjekte.Clear()
-        AlleProjekte.Clear()
-        writeProtections.Clear()
-        selectedProjekte.Clear(False)
-        ImportProjekte.Clear(False)
+        ' Hier werden die Datenstrukturen alle zurückgesetzt ... 
+        ' tk 24.10.19, die hier vorher stehenden Aufrufe wurden in emptyAllVISBOStructures  
+        Call emptyAllVISBOStructures()
+
+
+        ' spezifisch für Projectboard, also den Excel Add-In
         DiagramList.Clear()
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
-        projectConstellations.clearLoadedPortfolios()
-
-
-        ' es gibt ja nix mehr in der Session 
-        currentConstellationName = ""
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
 
@@ -324,17 +320,39 @@ Public Module awinGeneralModules
             Dim a As String = ex.Message
         End Try
 
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
+    ''' <summary>
+    ''' macht den Teil des ClearSession, der so ggf auch in Powerpoint, Project etc gemacht werden kann, um 
+    ''' alle Strukturen zurückzusetzen
+    ''' </summary>
+    Public Sub emptyAllVISBOStructures()
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        writeProtections.Clear()
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
+
+        ' die ProjectConstellations bleiben erhalten - aber sie sind einfach 
+        projectConstellations.clearLoadedPortfolios()
+
+
+        ' es gibt ja nix mehr in der Session 
+        currentConstellationName = ""
+
+        ' jetzt den Datenbank Cache Löschen 
         Dim clearOK As Boolean = False
         Try
             clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
         Catch ex As Exception
-
+            Call MsgBox("Error when clearing session: " & ex.Message)
         End Try
 
-        ' Session gelöscht
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
     End Sub
 
     ''' <summary>
