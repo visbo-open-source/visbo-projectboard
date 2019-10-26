@@ -1794,6 +1794,7 @@ Public Class Request
         Dim result As New clsConstellation
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim i As Integer = 0
 
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
@@ -1807,18 +1808,32 @@ Public Class Request
             End If
 
             If storedAtOrBefore > Date.MinValue Then
-                storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+                'ur:storedAtOrBefore = storedAtOrBefore.ToUniversalTime
             End If
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            'ur:listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
-            If listOfPortfolios.Count < 1 Then
-                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
-            End If
+            listOfPortfolios = GETallVPf(vpid, Date.MinValue, err)
+
+            'If listOfPortfolios.Count < 1 Then
+            '    listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+            'End If
+
+            For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
+
+                If pf.Key < storedAtOrBefore Then
+                    vpf = pf.Value
+                Else
+                    If i = 0 Then
+                        vpf = pf.Value
+                    End If
+                    Exit For
+                End If
+            Next
 
             If err.errorCode = 200 Then
 
-                vpf = listOfPortfolios.Last.Value
+                'vpf = listOfPortfolios.Last.Value
                 timestamp = CType(vpf.timestamp, Date).ToLocalTime
 
                 ' umwandeln von clsVPf in clsConstellation

@@ -3282,11 +3282,16 @@ Module Module1
                         ' lade das Portfolio 
                         Dim err As New clsErrorCodeMsg
                         Dim realTimestamp As Date
-                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, Date.MinValue)
+                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
 
                         Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
+                        Dim tproj As clsProjekt = calcUnionProject(aktConst, False, realTimestamp)
+
+                        Dim aP As Integer = AlleProjekte.Count
+
                         scInfo.hproj = hproj
                         continueOperation = Not IsNothing(scInfo.hproj)
+
                     Else
                         ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                         continueOperation = Not IsNothing(scInfo.hproj)

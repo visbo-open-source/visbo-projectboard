@@ -3843,7 +3843,8 @@ Public Module awinGeneralModules
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
 
-                    currentConstellation.timestamp = Date.Now
+                    ' ur: 26.10.2019: nicht mehr Date.now, da sonst das Summary-Projekt einen Timestamp hat, der vor dem Portfolio liegt, was unlogisch ist
+                    currentConstellation.timestamp = DBtimeStamp
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then
