@@ -3199,7 +3199,8 @@ Public Module awinGeneralModules
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
                                 Optional ByVal ampelbeschreibung As String = "",
-                                Optional ByVal responsible As String = "") As clsProjekt
+                                Optional ByVal responsible As String = "",
+                                Optional ByRef ProjListe As clsProjekteAlle = Nothing) As clsProjekt
 
         Dim calculateBudget As Boolean = (budget <= -0.99)
         Dim gesamtbudget As Double = budget
@@ -3317,6 +3318,8 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
         End Try
+
+        ProjListe = projektListe ' Liste an Projekte, aus der das SummaryProjekt entstanden ist
 
         calcUnionProject = unionProj
 

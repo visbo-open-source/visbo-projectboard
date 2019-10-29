@@ -684,7 +684,7 @@ Public Class Request
                                              ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
 
-        storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+        storedAtOrBefore = storedAtOrBefore.AddSeconds(1).ToUniversalTime
 
         Try
             Dim hproj As New clsProjekt
@@ -1808,16 +1808,18 @@ Public Class Request
             End If
 
             If storedAtOrBefore > Date.MinValue Then
-                'ur:storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime
             End If
 
-            'ur:listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
-            listOfPortfolios = GETallVPf(vpid, Date.MinValue, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
-            'If listOfPortfolios.Count < 1 Then
-            '    listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
-            'End If
+            'listOfPortfolios = GETallVPf(vpid, Date.MinValue, err)
+
+            If listOfPortfolios.Count = 0 Then
+
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+            End If
 
             For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
