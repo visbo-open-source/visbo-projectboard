@@ -804,7 +804,7 @@ Public Class clsPhase
 
             Else
                 '  
-                If _dauerInDays > 0 And dauer > 0 Then
+                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
                     faktor = dauer / _dauerInDays
                 Else
                     faktor = 1
@@ -914,7 +914,7 @@ Public Class clsPhase
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
-        Dim faktor As Double
+        Dim faktor As Double = 1.0
         Dim dimension As Integer
 
 
@@ -946,6 +946,12 @@ Public Class clsPhase
             Else
                 '  
 
+                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
+                    faktor = dauer / _dauerInDays
+                Else
+                    faktor = 1
+                End If
+
                 _startOffsetinDays = startOffset
                 _dauerInDays = dauer
 
@@ -963,25 +969,25 @@ Public Class clsPhase
                 If awinSettings.autoCorrectBedarfe Then
 
                     Dim newvalues() As Double
-                    Dim notYetDone As Boolean = True
+                    'Dim notYetDone As Boolean = True
 
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.countRoles > 0 Then
+                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
-                        notYetDone = False
+                        'notYetDone = False
 
                     End If
 
-                    If Me.countCosts > 0 And notYetDone Then
+                    'If Me.countCosts > 0 And notYetDone Then
 
-                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, 1)
+                    '    ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                    '    Call Me.calcNewXwerte(dimension, 1)
 
-                    End If
+                    'End If
 
                 End If
 

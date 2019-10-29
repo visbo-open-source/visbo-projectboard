@@ -5513,7 +5513,12 @@ Public Module agm2
 
                     ' Projekt-Nummer auslesen, kein Problem, wenn nicht da ...
                     Try
-                        hproj.kundenNummer = CType(.Range("Projekt_Nr").Value, String)
+                        ' macht keinen Sinn, wenn Vorlage; eine Vorlage kann keine Kunden-Nummer haben 
+                        ' macht erst dann wieder Sinn, wenn man vielleicht für jeden Projekt-Typ für jede Vorlage eine bestimmte Prefix Vorlagen-Nummer haben will. 
+                        If Not isTemplate Then
+                            hproj.kundenNummer = CType(.Range("Projekt_Nr").Value, String)
+                        End If
+
                     Catch ex As Exception
 
                     End Try
@@ -6906,6 +6911,7 @@ Public Module agm2
             projVorlage.farbe = hproj.farbe
             projVorlage.earliestStart = -6
             projVorlage.latestStart = 6
+            projVorlage.Erloes = hproj.Erloes
             projVorlage.AllPhases = hproj.AllPhases
             projVorlage.hierarchy = hproj.hierarchy
             hprojTemp = projVorlage

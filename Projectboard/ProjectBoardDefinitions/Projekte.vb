@@ -13652,6 +13652,7 @@ Public Module Projekte
             Else
                 If IsNumeric(profitUserAskedFor) Then
                     Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+                    'Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).erloes
                     If referenceBudget > 0 Then
                         'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
                         'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
@@ -13914,6 +13915,7 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
         Dim referenceBudget As Double = 0.0
+        Dim gesamtKostenVorlage As Double = 0.0
 
         '
         ' ein neues Projekt wird als Objekt angelegt ....
@@ -13925,8 +13927,11 @@ Public Module Projekte
         Try
             Dim zielrenditenVorgabe As Double
             Dim budgetVorgabe As Double = erloes
-            referenceBudget = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-            If referenceBudget > 0 Then
+            ' get Summe Kosten kann dann herangezogen werden, wenn 
+            gesamtKostenVorlage = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+            referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+            If referenceBudget > 0 And gesamtKostenVorlage > 0 And budgetVorgabe > 0 Then
+                ' nur wenn alle drei Bedingungen erfüllt sind, amcht es sinn , einen Plan zu erzeugen inkl Ressourcen Verteilung gemäß Vorlage und Budget
                 zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUSerAskedFor) / 100)) / referenceBudget
                 Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate, zielrenditenVorgabe)
             Else
@@ -20868,7 +20873,8 @@ Public Module Projekte
         Dim heute As Date = Date.Now
         Dim alreadyGroup As Boolean = False
         Dim shpElement As xlNS.Shape
-        Dim vorlagenshape As xlNS.Shape
+        ' vorlagenshape ist durch Ute's Umsetzung der Appearances ohne Excel Shapes unnötig geworden ... 
+        'Dim vorlagenshape As xlNS.Shape
         Dim appear As clsAppearance
         Dim shpName As String
         Dim todoListe As New Collection
@@ -28177,76 +28183,76 @@ Public Module Projekte
     End Sub
 
 
-    ''' <summary>
-    ''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
-    ''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
-    ''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
-    ''' es werden allerdings nur Phasen verlängert/verkürzt die
-    ''' noch nicht beendet sind 
-    ''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
-    ''' </summary>
-    ''' <param name="shorterPercentage"></param>
-    ''' <param name="longerPercentage"></param>
-    ''' <param name="heute"></param>
-    ''' <remarks></remarks>
-    Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
+    '''' <summary>
+    '''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
+    '''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
+    '''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
+    '''' es werden allerdings nur Phasen verlängert/verkürzt die
+    '''' noch nicht beendet sind 
+    '''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
+    '''' </summary>
+    '''' <param name="shorterPercentage"></param>
+    '''' <param name="longerPercentage"></param>
+    '''' <param name="heute"></param>
+    '''' <remarks></remarks>
+    'Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
 
-        Dim expl As String = "Erläuterung ..."
-        Dim redBaseValue As Double = 0.3
-        Dim yellowBaseValue As Double = 0.7
-        Dim zufall As New Random(10)
+    '    Dim expl As String = "Erläuterung ..."
+    '    Dim redBaseValue As Double = 0.3
+    '    Dim yellowBaseValue As Double = 0.7
+    '    Dim zufall As New Random(10)
 
-        Dim moveForward As Double = 0.1
-        Dim moveBackward As Double = 0.8
-        Dim makeItShorter As Double = 0.1
-        Dim makeItLonger As Double = 0.8
-        Dim currentValue As Double
+    '    Dim moveForward As Double = 0.1
+    '    Dim moveBackward As Double = 0.8
+    '    Dim makeItShorter As Double = 0.1
+    '    Dim makeItLonger As Double = 0.8
+    '    Dim currentValue As Double
 
-        Dim cphase As clsPhase
-        Dim previousSetting As Boolean = awinSettings.propAnpassRess
-        Dim startColumn As Integer, endColumn As Integer
-        Dim heuteColumn As Integer = getColumnOfDate(heute)
+    '    Dim cphase As clsPhase
+    '    Dim previousSetting As Boolean = awinSettings.propAnpassRess
+    '    Dim startColumn As Integer, endColumn As Integer
+    '    Dim heuteColumn As Integer = getColumnOfDate(heute)
 
-        ' bisheriges Setting merken 
-        awinSettings.propAnpassRess = True
+    '    ' bisheriges Setting merken 
+    '    awinSettings.propAnpassRess = True
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-            With kvp.Value
+    '        With kvp.Value
 
-                For pi As Integer = 1 To .CountPhases
-                    cphase = .getPhase(pi)
-                    startColumn = getColumnOfDate(cphase.getStartDate)
-                    endColumn = getColumnOfDate(cphase.getEndDate)
+    '            For pi As Integer = 1 To .CountPhases
+    '                cphase = .getPhase(pi)
+    '                startColumn = getColumnOfDate(cphase.getStartDate)
+    '                endColumn = getColumnOfDate(cphase.getEndDate)
 
-                    ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
-                    If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
-                        ' Start nach vorne bzw hinten verschieben
-                        currentValue = zufall.NextDouble
-                        If currentValue <= moveForward Then
-                            Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
-                            If anzahlTage > 0 Then
-                                Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
+    '                ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
+    '                If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
+    '                    ' Start nach vorne bzw hinten verschieben
+    '                    currentValue = zufall.NextDouble
+    '                    If currentValue <= moveForward Then
+    '                        Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
+    '                        If anzahlTage > 0 Then
+    '                            Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
 
-                            End If
+    '                        End If
 
 
-                        ElseIf currentValue >= moveBackward Then
+    '                    ElseIf currentValue >= moveBackward Then
 
-                        End If
-                    End If
+    '                    End If
+    '                End If
 
-                    ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
-                Next
+    '                ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
+    '            Next
 
-            End With
+    '        End With
 
-        Next
+    '    Next
 
-        ' altes Setting wiederherstellen 
-        awinSettings.propAnpassRess = previousSetting
+    '    ' altes Setting wiederherstellen 
+    '    awinSettings.propAnpassRess = previousSetting
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' Funktion, um die Kalenderwoche in aktuellen Länderset zu bestimmen 

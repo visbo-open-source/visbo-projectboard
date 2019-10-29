@@ -203,28 +203,7 @@ Public Class clsProjekt
         End Set
     End Property
 
-    Private _Erloes As Double = 0.0
-    Public Property Erloes As Double
-        Get
-            If Not IsNothing(_Erloes) Then
-                Erloes = _Erloes
-            Else
-                Erloes = 0.0
-            End If
-        End Get
-        Set(value As Double)
-            If Not IsNothing(value) Then
-                If value > 0 Then
-                    _Erloes = value
-                Else
-                    _Erloes = 0.0
-                End If
-            Else
-                _Erloes = 0.0
-            End If
-
-        End Set
-    End Property
+    ' hier war vorher die Property Erloes - wurde in clsProjektVorlage verschoben
 
     ''' <summary>
     ''' gibt die Budgetwerte des Projekts zurück
@@ -1357,7 +1336,7 @@ Public Class clsProjekt
             If tmpERG < 0 Then
                 neededBudget = -1 * tmpERG
             End If
-            Me.Erloes = neededBudget
+            Erloes = neededBudget
         Catch ex As Exception
 
             If awinSettings.visboDebug Then
@@ -2616,7 +2595,7 @@ Public Class clsProjekt
             .VorlagenName = VorlagenName
             .Risiko = _Risiko
             .StrategicFit = _StrategicFit
-            .Erloes = _Erloes
+            .Erloes = Erloes
             .description = _description
             .variantName = _variantName
             .variantDescription = _variantDescription
