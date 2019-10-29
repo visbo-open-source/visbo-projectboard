@@ -13651,8 +13651,8 @@ Public Module Projekte
                 ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
             Else
                 If IsNumeric(profitUserAskedFor) Then
-                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-                    'Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).erloes
+                    'Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).Erloes
                     If referenceBudget > 0 Then
                         'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
                         'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
