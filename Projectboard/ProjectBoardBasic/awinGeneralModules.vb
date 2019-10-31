@@ -3235,6 +3235,7 @@ Public Module awinGeneralModules
                 Dim isFirstProj As Boolean = True
                 Dim maxActualDate As Date = Date.MinValue
                 Dim unionVariantName As String = ""
+                ProjListe = New clsProjekteAlle
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
@@ -3253,6 +3254,8 @@ Public Module awinGeneralModules
                     End If
 
 
+                    ProjListe.Add(hproj, False)
+                    'projektListe.Add(hproj, False)
 
                     If Not IsNothing(hproj) Then
 
@@ -3319,7 +3322,7 @@ Public Module awinGeneralModules
 
         End Try
 
-        ProjListe = projektListe ' Liste an Projekte, aus der das SummaryProjekt entstanden ist
+        'ProjListe = projektListe ' Liste an Projekte, aus der das SummaryProjekt entstanden ist
 
         calcUnionProject = unionProj
 

@@ -2674,6 +2674,8 @@ Module Module1
                                     Call updatePPTProjektTabelleZiele(pptShape, tsProj)
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
+
+                                    Dim continueOperation As Boolean = False
                                     Try
                                         'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
                                         'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
@@ -2683,16 +2685,40 @@ Module Module1
                                         bProj = timeMachine.getFirstContractedVersion(pvName)
                                         lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
+                                        ' hier unterscheiden, ob Summary-Projekt oder normales
+                                        If tsProj.projectType = ptPRPFType.portfolio Then
 
-                                        Dim q1 As String = pptShape.Tags.Item("Q1")
-                                        Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        'Dim nids As String = pptShape.Tags.Item("NIDS")
+                                            ' lade das Portfolio 
+                                            Dim err As New clsErrorCodeMsg
+                                            Dim realTimestamp As Date
+                                            Dim projListe As clsProjekteAlle = Nothing
+                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, curTimeStamp)
 
-                                        'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
-                                        '                                 toDoCollection, q1, q2)
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
+                                            Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+
+                                            ' das neu berechnete SummaryProjekt hat den curTimeStamp
+                                            hproj.timeStamp = curTimeStamp
+
+                                            tsProj = hproj
+                                            continueOperation = Not IsNothing(tsProj)
+
+                                        Else
+                                            ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                                            continueOperation = Not IsNothing(tsProj)
+                                        End If
+
+                                        If continueOperation Then
+
+                                            Dim q1 As String = pptShape.Tags.Item("Q1")
+                                            Dim q2 As String = pptShape.Tags.Item("Q2")
+                                            'Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                            'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                            '                                 toDoCollection, q1, q2)
+                                            Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
 
 
+                                        End If
 
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
@@ -3282,12 +3308,18 @@ Module Module1
                         ' lade das Portfolio 
                         Dim err As New clsErrorCodeMsg
                         Dim realTimestamp As Date
+                        Dim hproj As clsProjekt
+                        Dim projListe As clsProjekteAlle = Nothing
                         Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
 
-                        Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
-                        Dim tproj As clsProjekt = calcUnionProject(aktConst, False, realTimestamp)
+                        If Not IsNothing(aktConst) Then
+                            hproj = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+                        Else
+                            hproj = Nothing
+                        End If
 
-                        Dim aP As Integer = AlleProjekte.Count
+                        ' das neu berechnete SummaryProjekt hat den curTimeStamp
+                        'hproj.timeStamp = curTimeStamp
 
                         scInfo.hproj = hproj
                         continueOperation = Not IsNothing(scInfo.hproj)

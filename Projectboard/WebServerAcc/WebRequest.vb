@@ -1798,7 +1798,7 @@ Public Class Request
 
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
-        Dim vpf As clsVPf
+        Dim vpf As clsVPf = Nothing
         Dim hproj As New clsProjekt
 
         Try
@@ -1814,32 +1814,41 @@ Public Class Request
 
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
 
-            'listOfPortfolios = GETallVPf(vpid, Date.MinValue, err)
-
             If listOfPortfolios.Count = 0 Then
 
                 listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
             End If
 
-            For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
-
-                If pf.Key < storedAtOrBefore Then
-                    vpf = pf.Value
-                Else
-                    If i = 0 Then
-                        vpf = pf.Value
-                    End If
-                    Exit For
-                End If
-            Next
 
             If err.errorCode = 200 Then
 
-                'vpf = listOfPortfolios.Last.Value
-                timestamp = CType(vpf.timestamp, Date).ToLocalTime
+                For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
-                ' umwandeln von clsVPf in clsConstellation
-                result = clsVPf2clsConstellation(vpf)
+                    If pf.Key < storedAtOrBefore Then
+                        If pf.value.variantName = "" Then
+                            vpf = pf.Value
+                        Else
+                        End If
+
+                    Else
+                        If i = 0 Then
+                            vpf = pf.Value
+                        End If
+                        Exit For
+                    End If
+                    i = i + 1
+                Next
+
+                If Not IsNothing(vpf) Then
+                    'vpf = listOfPortfolios.Last.Value
+                    timestamp = CType(vpf.timestamp, Date).ToLocalTime
+
+                    ' umwandeln von clsVPf in clsConstellation
+                    result = clsVPf2clsConstellation(vpf)
+                Else
+                    result = Nothing
+                End If
+
             End If
 
 
