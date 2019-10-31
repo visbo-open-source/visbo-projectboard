@@ -6516,6 +6516,8 @@ Imports System.Web
                 Dim outputCollection As New Collection
                 Dim importedCustomization As clsCustomization = ImportCustomization(outputCollection)
 
+                Dim customFieldDefs As clsCustomFieldDefinitions = ImportCustomFieldDefinitions(outputCollection)
+
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
                 ' Schliessen des Customizations-Files
@@ -6532,31 +6534,52 @@ Imports System.Web
                     ' jetzt werden die Einstellungen als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
+                    Dim ts As Date = CDate("1.1.1900")
                     Dim result As Boolean = False
+                    Dim result1 As Boolean = False
+
                     result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedCustomization,
                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
-                                                                                    Nothing,
+                                                                                    ts,
                                                                                     err)
 
-                    If result = True Then
-                        Call MsgBox("ok, Customizations stored ...")
-                        Call logfileSchreiben("Customizations stored ...", selectedWB, -1)
-                    Else
-                        Call MsgBox("Error when writing Customizations")
-                        Call logfileSchreiben("Error when writing Customizations ...", selectedWB, -1)
+
+                    If Not IsNothing(customFieldDefs) Then
+                        ' jetzt werden die Einstellungen als Setting weggespeichert ... 
+                        ' alles ok 
+                        Dim err1 As New clsErrorCodeMsg
+
+
+                        result1 = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefs,
+                                                                                        CStr(settingTypes(ptSettingTypes.customfields)),
+                                                                                        CStr(settingTypes(ptSettingTypes.customfields)),
+                                                                                        ts,
+                                                                                        err1)
                     End If
+
+                    If result And result1 Then
+                        Call MsgBox("ok, Customizations and CustomFieldDefinitions stored ...")
+                        Call logfileSchreiben("Customizations and CustomFieldDefinitions stored ...", selectedWB, -1)
+                    Else
+                        Call MsgBox("Error when writing Customizations or CustomfieldDefinitions")
+                        Call logfileSchreiben("Error when writing Customizations or Customfielddefinitions ...", selectedWB, -1)
+                    End If
+
+
                 Else
-                    Call MsgBox("no customizations found ...")
+                        Call MsgBox("no customizations found ...")
                 End If
+
+
+
+
             Catch ex As Exception
                 Dim resultMessage As String = ex.Message
                 Call MsgBox(resultMessage)
                 Call logfileSchreiben("Error when writing Customizations ...", resultMessage, -1)
             End Try
         End If
-
-
 
 
         ' Schließen des LogFiles

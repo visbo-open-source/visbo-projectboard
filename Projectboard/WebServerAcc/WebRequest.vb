@@ -684,7 +684,7 @@ Public Class Request
                                              ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
 
-        storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+        storedAtOrBefore = storedAtOrBefore.AddSeconds(1).ToUniversalTime
 
         Try
             Dim hproj As New clsProjekt
@@ -1784,7 +1784,7 @@ Public Class Request
     ''' <param name="timestamp"></param>
     ''' <param name="err"></param>
     ''' <param name="storedAtOrBefore"></param>
-    ''' <returns></returns>
+    ''' <returns>clsConstellation, timestamp, err</returns>
     Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String,
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
@@ -1794,10 +1794,11 @@ Public Class Request
         Dim result As New clsConstellation
         Dim intermediate As New List(Of clsProjektWebLong)
         Dim listOfPortfolios As New SortedList(Of Date, clsVPf)
+        Dim i As Integer = 0
 
         Dim vptype As Module1.ptPRPFType = ptPRPFType.portfolio
         Dim vp As clsVP
-        Dim vpf As clsVPf
+        Dim vpf As clsVPf = Nothing
         Dim hproj As New clsProjekt
 
         Try
@@ -1806,15 +1807,48 @@ Public Class Request
                 vpid = vp._id
             End If
 
+            If storedAtOrBefore > Date.MinValue Then
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime
+            End If
+
+
             listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+
+            If listOfPortfolios.Count = 0 Then
+
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+            End If
+
 
             If err.errorCode = 200 Then
 
-                vpf = listOfPortfolios.Last.Value
-                timestamp = CType(vpf.timestamp, Date).ToLocalTime
+                For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
-                ' umwandeln von clsVPf in clsConstellation
-                result = clsVPf2clsConstellation(vpf)
+                    If pf.Key < storedAtOrBefore Then
+                        If pf.value.variantName = "" Then
+                            vpf = pf.Value
+                        Else
+                        End If
+
+                    Else
+                        If i = 0 Then
+                            vpf = pf.Value
+                        End If
+                        Exit For
+                    End If
+                    i = i + 1
+                Next
+
+                If Not IsNothing(vpf) Then
+                    'vpf = listOfPortfolios.Last.Value
+                    timestamp = CType(vpf.timestamp, Date).ToLocalTime
+
+                    ' umwandeln von clsVPf in clsConstellation
+                    result = clsVPf2clsConstellation(vpf)
+                Else
+                    result = Nothing
+                End If
+
             End If
 
 
@@ -2459,7 +2493,7 @@ Public Class Request
                     If anzSetting = 1 Then
                         newsetting._id = settingID
                         ' Update der customroles - Setting
-                        CType(newsetting, clsVCSettingCustomfields).timestamp = oldsetting.timestamp
+                        CType(newsetting, clsVCSettingCustomfields).timestamp = timestamp
                         result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
                     Else
                         ' Create der customroles - Setting
@@ -4461,16 +4495,18 @@ Public Class Request
             ' URL zusammensetzen
             serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
 
-            If timestamp > Date.MinValue Then
+            Dim refDate As String = DateTimeToISODate(timestamp)
 
-                timestamp = timestamp.ToUniversalTime
-                Dim refDate As String = DateTimeToISODate(timestamp)
-
+            If timestamp <= Date.MinValue Then
+                serverUriString = serverUriString
+            Else
                 serverUriString = serverUriString & "?refDate=" & refDate
-                If refNext Then
-                    serverUriString = serverUriString & "&refNext=1"
-                End If
             End If
+
+            If refNext Then
+                serverUriString = serverUriString & "&refNext=1"
+            End If
+
 
             Dim serverUri As New Uri(serverUriString)
 

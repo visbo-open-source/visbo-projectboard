@@ -806,6 +806,10 @@ Public Class Tabelle2
 
                                     End If
 
+                                    ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
+                                    Call defineHeaderTitleOfRoleCost(Target.Row)
+
+
                                 Else
                                     Call MsgBox("nicht zugelassen ... ")
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
@@ -1834,12 +1838,136 @@ Public Class Tabelle2
 
     End Sub
 
+    ''' <summary>
+    ''' setzt die angegebene Zeile auf den High-Light Modus bzw. wieder auf den Normal-Modus 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    ''' <param name="highlight"></param>
+    Private Sub selectionMode(ByVal zeile As Integer, ByVal highlight As Boolean)
 
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        Dim aktuelleZeile As Excel.Range = meWS.Range(meWS.Cells(zeile, 1), meWS.Cells(zeile, visboZustaende.meColED))
+
+
+
+        If highlight Then
+            With aktuelleZeile
+                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+                With .Borders(XlBordersIndex.xlEdgeLeft)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeTop)
+                    .LineStyle = XlLineStyle.xlContinuous
+
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeBottom)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeRight)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+            End With
+        Else
+            With aktuelleZeile
+                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
+                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
+
+                With .Borders(XlBordersIndex.xlEdgeLeft)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeTop)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeBottom)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeRight)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlInsideHorizontal).ColorIndex = XlColorIndex.xlColorIndexNone
+            End With
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt in der Headerzeile an, ob es sich bei den Werten in der Zeile um Personentage oder oder um Tausend Euro handelt 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    Private Sub defineHeaderTitleOfRoleCost(ByVal zeile As Integer)
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        Dim headerPart As String = "Summe" & vbLf
+        Dim pdEinheit As String = "[PT]"
+
+        If awinSettings.englishLanguage Then
+            headerPart = "Sum" & vbLf
+            pdEinheit = "[PD]"
+        End If
+
+        Dim roleCost As String = CStr(CType(meWS.Cells(zeile, visboZustaende.meColRC), Excel.Range).Value)
+
+        If Not IsNothing(roleCost) Then
+            If roleCost = "" Then
+                CType(meWS.Cells(1, visboZustaende.meColRC + 1), Excel.Range).Value = headerPart
+
+            ElseIf RoleDefinitions.containsName(roleCost) Then
+                CType(meWS.Cells(1, visboZustaende.meColRC + 1), Excel.Range).Value = headerPart & pdEinheit
+
+            Else
+                CType(meWS.Cells(1, visboZustaende.meColRC + 1), Excel.Range).Value = headerPart & "[T€]"
+            End If
+        Else
+            CType(meWS.Cells(1, visboZustaende.meColRC + 1), Excel.Range).Value = headerPart
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird aufgerufen, wenn sich die Zeile ändert ...
+    ''' </summary>
+    ''' <param name="Target"></param>
     Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
 
         appInstance.EnableEvents = False
 
+
+
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+        If Target.Row <> oldRow Then
+            Call selectionMode(oldRow, False)
+            Call selectionMode(Target.Row, True)
+
+            ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
+            Call defineHeaderTitleOfRoleCost(Target.Row)
+
+        End If
+
+
         Dim pname As String = ""
         Dim rcName As String = ""
         Dim oldRCName As String = ""

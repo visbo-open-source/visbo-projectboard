@@ -267,13 +267,13 @@ Public Class clsMeilenstein
         End Set
     End Property
 
-    ''' <summary>
-    ''' gibt das Shape für den Meilenstein zurück
-    ''' falls es keine explizite Definition gibt: die Form des ersten Meilensteins in der AppearnceDefinitions-Liste 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
+    '''' <summary>
+    '''' gibt das Shape für den Meilenstein zurück
+    '''' falls es keine explizite Definition gibt: die Form des ersten Meilensteins in der AppearnceDefinitions-Liste 
+    '''' </summary>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
     'Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
     '    Get
 
