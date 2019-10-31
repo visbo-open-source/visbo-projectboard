@@ -3199,7 +3199,8 @@ Public Module awinGeneralModules
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
                                 Optional ByVal ampelbeschreibung As String = "",
-                                Optional ByVal responsible As String = "") As clsProjekt
+                                Optional ByVal responsible As String = "",
+                                Optional ByRef ProjListe As clsProjekteAlle = Nothing) As clsProjekt
 
         Dim calculateBudget As Boolean = (budget <= -0.99)
         Dim gesamtbudget As Double = budget
@@ -3234,6 +3235,7 @@ Public Module awinGeneralModules
                 Dim isFirstProj As Boolean = True
                 Dim maxActualDate As Date = Date.MinValue
                 Dim unionVariantName As String = ""
+                ProjListe = New clsProjekteAlle
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
@@ -3252,6 +3254,8 @@ Public Module awinGeneralModules
                     End If
 
 
+                    ProjListe.Add(hproj, False)
+                    'projektListe.Add(hproj, False)
 
                     If Not IsNothing(hproj) Then
 
@@ -3317,6 +3321,8 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
         End Try
+
+        'ProjListe = projektListe ' Liste an Projekte, aus der das SummaryProjekt entstanden ist
 
         calcUnionProject = unionProj
 
@@ -3843,7 +3849,8 @@ Public Module awinGeneralModules
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
 
-                    currentConstellation.timestamp = Date.Now
+                    ' ur: 26.10.2019: nicht mehr Date.now, da sonst das Summary-Projekt einen Timestamp hat, der vor dem Portfolio liegt, was unlogisch ist
+                    currentConstellation.timestamp = DBtimeStamp
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then
