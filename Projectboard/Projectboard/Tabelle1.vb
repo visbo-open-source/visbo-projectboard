@@ -32,8 +32,8 @@ Public Class Tabelle1
                 '    .SplitRow = 1
                 'End If
 
-                .GridlineColor = CInt(awinSettings.gridLineColor)
-                '.GridlineColor = RGB(220, 220, 220)
+                '.GridlineColor = CInt(awinSettings.gridLineColor)
+                .GridlineColor = RGB(220, 220, 220)
                 a = Application.ActiveWindow.Panes.Count
 
                 .FreezePanes = True
