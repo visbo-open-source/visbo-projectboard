@@ -2633,10 +2633,14 @@ Public Class clsProjekt
             Dim phase As clsPhase
             Dim ms As clsMeilenstein
 
-            Dim startIndex As Integer = Me.Start
+            Dim bezugsOffset As Long = DateDiff(DateInterval.Day, Me.startDate, bezugsdatum)
             Dim currentEndIndex As Integer
-            Dim currentPrzDone As Double
+            Dim reversePrzDone As Double
             Dim isElemOfPast As Boolean
+
+            Dim phaseEndOffset As Integer
+            Dim msOffset As Integer
+
 
             If _Dauer > 0 Then
 
@@ -2651,34 +2655,46 @@ Public Class clsProjekt
                     phase = Me.getPhaseByID(phaseId)
 
                     If Not IsNothing(phase) Then
+
+                        phaseEndOffset = phase.startOffsetinDays + phase.dauerInDays - 1
                         currentEndIndex = phase.relEnde - 1
-                        currentPrzDone = phase.percentDone
-                        isElemOfPast = (phase.getEndDate < bezugsdatum)
+                        If phase.percentDone <> 0 Then
+                            reversePrzDone = 1 / phase.percentDone
+                        Else
+                            reversePrzDone = 1 / 0.1                      ' da Division durch 0 nicht möglich
+                        End If
+
+                        'isElemOfPast = (phase.getEndDate < bezugsdatum)
+                        isElemOfPast = phaseEndOffset < bezugsOffset
 
                         If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
                             ' Planungsstand des Projektes
                             If Total Then
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset * reversePrzDone
                                 Else
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
                                 End If
                             Else
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset * reversePrzDone
                                 End If
                             End If
                         Else
                             ' beauftragtes Projekt
                             If Total Then
-                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
                             Else
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
                                 End If
                             End If
 
                         End If
+
+                    Else
+                        ' Phase ist nicht mehr im Projekt d.h. timeCompletion künstlich erhöhen um 10000
+                        timeCompletionValues(0) = timeCompletionValues(0) + 10000
                     End If
 
                 Next
@@ -2688,38 +2704,50 @@ Public Class clsProjekt
 
                 For Each kvpMS As KeyValuePair(Of Date, String) In baseMs
 
-                    Dim msId As String = kvpMS.Value              ' Id des Meilenstein des beauftragten Projektes holen
+                    Dim msId As String = kvpMS.Value                         ' Id des Meilenstein des beauftragten Projektes holen
 
-                    ms = Me.getMilestoneByID(msId)                ' mit der Id den Meilenstein dieses Projektes holen 
+                    ms = Me.getMilestoneByID(msId)                           ' mit der Id den Meilenstein dieses Projektes holen 
+
 
                     If Not IsNothing(ms) Then
+
+                        msOffset = ms.Parent.startOffsetinDays + CInt(ms.offset) 'Offset des ms in einem Projekt
                         currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
-                        currentPrzDone = ms.percentDone
-                        isElemOfPast = (ms.getDate < bezugsdatum)
+                        If ms.percentDone <> 0 Then
+                            reversePrzDone = 1 / ms.percentDone
+                        Else
+                            reversePrzDone = 1 / 0.1                            ' da Division durch 0 nicht möglich
+                        End If
+
+                        'isElemOfPast = (ms.getDate < bezugsdatum)
+                        isElemOfPast = msOffset < bezugsOffset
 
                         If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
                             If Total Then
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset * reversePrzDone
                                 Else
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
                                 End If
                             Else
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset * reversePrzDone
                                 End If
                             End If
                         Else
                             ' beauftragtes Projekt
                             If Total Then
-                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
                             Else
                                 If isElemOfPast Then
-                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + 1
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
                                 End If
                             End If
 
                         End If
+                    Else
+                        ' Meilenstein ist nicht mehr in dem Projekt d.h. timeCompletion künstlich erhöhen um 10000
+                        timeCompletionValues(0) = timeCompletionValues(0) + 10000
                     End If
                 Next
 

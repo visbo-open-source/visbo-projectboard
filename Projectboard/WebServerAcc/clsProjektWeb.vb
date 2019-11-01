@@ -193,14 +193,16 @@ Public Class clsProjektWeb
 
             Me.keyMetrics.timeCompletionCurrentActual = projekt.keyMetrics.timeCompletionCurrentActual
             Me.keyMetrics.timeCompletionBaseLastActual = projekt.keyMetrics.timeCompletionBaseLastActual
+            Me.keyMetrics.timeCompletionCurrentTotal = projekt.keyMetrics.timeCompletionCurrentTotal
+            Me.keyMetrics.timeCompletionBaseLastTotal = projekt.keyMetrics.timeCompletionBaseLastTotal
             Me.keyMetrics.endDateCurrent = projekt.keyMetrics.endDateCurrent.ToUniversalTime
             Me.keyMetrics.endDateBaseLast = projekt.keyMetrics.endDateBaseLast.ToUniversalTime
 
             Me.keyMetrics.deliverableCompletionCurrentActual = projekt.keyMetrics.deliverableCompletionCurrentActual
             Me.keyMetrics.deliverableCompletionCurrentTotal = projekt.keyMetrics.deliverableCompletionCurrentTotal
 
-            Me.keyMetrics.deliverableBaseLastActual = projekt.keyMetrics.deliverableBaseLastActual
-            Me.keyMetrics.deliverableBaseLastTotal = projekt.keyMetrics.deliverableBaseLastTotal
+            Me.keyMetrics.deliverableCompletionBaseLastActual = projekt.keyMetrics.deliverableCompletionBaseLastActual
+            Me.keyMetrics.deliverableCompletionBaseLastTotal = projekt.keyMetrics.deliverableCompletionBaseLastTotal
 
 
         End With
@@ -349,6 +351,8 @@ Public Class clsProjektWeb
             .keyMetrics.costBaseLastTotal = Me.keyMetrics.costBaseLastTotal
             .keyMetrics.timeCompletionCurrentActual = Me.keyMetrics.timeCompletionCurrentActual
             .keyMetrics.timeCompletionBaseLastActual = Me.keyMetrics.timeCompletionBaseLastActual
+            .keyMetrics.timeCompletionCurrentTotal = Me.keyMetrics.timeCompletionCurrentTotal
+            .keyMetrics.timeCompletionBaseLastTotal = Me.keyMetrics.timeCompletionBaseLastTotal
 
             If IsNothing(Me.keyMetrics.endDateCurrent) Then
                 .keyMetrics.endDateCurrent = Date.MinValue
@@ -363,8 +367,8 @@ Public Class clsProjektWeb
 
             .keyMetrics.deliverableCompletionCurrentActual = Me.keyMetrics.deliverableCompletionCurrentActual
             .keyMetrics.deliverableCompletionCurrentTotal = Me.keyMetrics.deliverableCompletionCurrentTotal
-            .keyMetrics.deliverableBaseLastActual = Me.keyMetrics.deliverableBaseLastActual
-            .keyMetrics.deliverableBaseLastTotal = Me.keyMetrics.deliverableBaseLastTotal
+            .keyMetrics.deliverableCompletionBaseLastActual = Me.keyMetrics.deliverableCompletionBaseLastActual
+            .keyMetrics.deliverableCompletionBaseLastTotal = Me.keyMetrics.deliverableCompletionBaseLastTotal
 
 
             If IsNothing(Me.actualDataUntil) Then

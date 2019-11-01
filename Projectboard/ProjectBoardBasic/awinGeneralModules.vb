@@ -8421,11 +8421,14 @@ Public Module awinGeneralModules
             Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
             Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
             result.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+            result.timeCompletionBaseLastTotal = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp, True).Sum
+
             result.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+            result.timeCompletionCurrentTotal = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp, True).Sum
 
             Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
-            result.deliverableBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
-            result.deliverableBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
+            result.deliverableCompletionBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables).Sum
+            result.deliverableCompletionBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
 
             result.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables).Sum
             result.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, True).Sum
