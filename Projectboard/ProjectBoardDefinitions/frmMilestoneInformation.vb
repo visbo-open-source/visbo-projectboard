@@ -55,7 +55,7 @@
 
                 ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
                 Dim tmpstr() As String
-                Dim tmpDeliverables As String = milestone.getAllDeliverables
+                Dim tmpDeliverables As String = milestone.getAllDeliverables(vbLf)
                 If rdbDeliverables.Checked Then
                     tmpstr = tmpDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
                 Else

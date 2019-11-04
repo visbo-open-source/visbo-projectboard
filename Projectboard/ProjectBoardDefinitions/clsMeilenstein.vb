@@ -212,19 +212,33 @@ Public Class clsMeilenstein
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables(Optional ByVal trennzeichen As String = vbLf) As String
+    Public ReadOnly Property getAllDeliverables(ByVal trennzeichen As String) As String
         Get
             Dim tmpDeliverables As String = ""
             For i As Integer = 1 To _deliverables.Count
                 If i = 1 Then
                     tmpDeliverables = _deliverables.Item(i - 1)
                 Else
-                    tmpDeliverables = tmpDeliverables & trennzeichen & _
+                    tmpDeliverables = tmpDeliverables & trennzeichen &
                         _deliverables.Item(i - 1)
                 End If
             Next
 
             getAllDeliverables = tmpDeliverables
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Liste der Deliverables eines Meilensteins 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllDeliverables() As List(Of String)
+        Get
+
+            getAllDeliverables = _deliverables
 
         End Get
     End Property

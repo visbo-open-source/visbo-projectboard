@@ -7672,6 +7672,121 @@ Imports System.Web
 
     End Sub
 
+    Sub PTTestAPI_Client(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+
+        Dim clientValues As Double()
+        Dim APIvalues As List(Of Double)
+
+        Dim outputString As String = ""
+        Dim outPutCollection As New Collection
+
+        Dim err As New clsErrorCodeMsg
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                Try
+
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
+                    With singleShp
+                        If isProjectType(shapeArt) Then
+
+                            Try
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
+
+                                ' jetzt wird dieses Projekt exportiert ... 
+                                Try
+                                    ' hier muss nun die Berechnung der Personalkosten im Client aufgerufen werden
+                                    clientValues = hproj.getAllPersonalKosten
+
+                                    ' hier muss nun die Berechnung der Personaltkosten im Server aufgerufen werden
+                                    APIvalues = CType(databaseAcc, DBAccLayer.Request).evaluateCostsOfProject(hproj.name, hproj.variantName, Date.Now, dbUsername, err)
+
+                                    ' die beiden werden nun verglichen
+
+                                    outputString = hproj.getShapeText & " erfolgreich .."
+                                    outPutCollection.Add(outputString)
+
+                                    outputString = "Vergleich API - Client"
+                                    outPutCollection.Add(outputString)
+
+                                    ' Ausgabe des Ergebnisses
+                                    Dim i As Integer = 0
+                                    For Each apival As Double In APIvalues
+                                        outputString = apival.ToString & "   -   " & clientValues(i)
+                                        outPutCollection.Add(outputString)
+                                        i = i + 1
+                                    Next
+
+                                Catch ex As Exception
+                                    outputString = hproj.getShapeText & " nicht erfolgreich .."
+                                    outPutCollection.Add(outputString)
+                                End Try
+
+
+
+                            Catch ex As Exception
+                                outputString = singleShp.Name & " nicht gefunden ..."
+                                outPutCollection.Add(outputString)
+                            End Try
+
+                        End If
+                    End With
+
+                Catch ex As Exception
+
+                    outputString = "Fehler in TestAPI_Client"
+                    outPutCollection.Add(outputString)
+
+                End Try
+
+
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection,
+                                 "Berechnung Kosten API - Client",
+                                 "berechnete Werte im Vergleich im Folgenden")
+            End If
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+
+    End Sub
+
 
     Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
 

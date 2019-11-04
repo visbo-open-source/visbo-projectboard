@@ -465,7 +465,26 @@ Public Class clsProjekt
             End If
         End Set
     End Property
-    ' 
+
+
+    ' ergänzt am 14.10.2019: keyMetrics wird beim Speichern berechnet und in der ProjektVersion immer gespeichert
+    'Private _keyMetrics As clsKeyMetrics
+    Public Property keyMetrics As clsKeyMetrics
+    '    Get
+    '        If Not IsNothing(_keyMetrics) Then
+    '            keyMetrics = _keyMetrics
+    '        Else
+    '            keyMetrics = New clsKeyMetrics
+    '        End If
+    '    End Get
+    '    Set(value As clsKeyMetrics)
+    '        If Not IsNothing(value) Then
+    '            _keyMetrics = value
+    '        Else
+    '            _keyMetrics = Nothing
+    '        End If
+    '    End Set
+    'End Property
 
     ''' <summary>
     ''' prüft, ob zwei Projekte die identische Kunden-Nummer haben 
@@ -2601,6 +2620,304 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' gibt die KeyMetric für TimeCompletion zurück auf die einzelnen Monate des Projektes
+    ''' Es werden nur die Phasen- und Meilenstein-EndDates betrachtet, die in der Beauftragung des Projektes enthalten sind
+    ''' </summary>
+    ''' <returns>Array mit den monatlichen TimeCompletion-Werten</returns>
+    Public ReadOnly Property getTimeCompletionMetric(ByVal baseMs As SortedList(Of Date, String),
+                                                     ByVal basePhases As SortedList(Of Date, String),
+                                                     ByVal bezugsdatum As Date,
+                                                     Optional ByVal Total As Boolean = False) As Double()
+        Get
+            Dim timeCompletionValues() As Double
+            Dim phase As clsPhase
+            Dim ms As clsMeilenstein
+
+            Dim bezugsOffset As Long = DateDiff(DateInterval.Day, Me.startDate, bezugsdatum)
+            Dim currentEndIndex As Integer
+            Dim reversePrzDone As Double
+            Dim isElemOfPast As Boolean
+
+            Dim phaseEndOffset As Integer
+            Dim msOffset As Integer
+
+
+            If _Dauer > 0 Then
+
+                ReDim timeCompletionValues(_Dauer - 1)
+
+                ' Loop über alle Phasen der Beauftragung (basePhases)
+
+                For Each kvp As KeyValuePair(Of Date, String) In basePhases
+
+                    Dim phaseId As String = kvp.Value
+
+                    phase = Me.getPhaseByID(phaseId)
+
+                    If Not IsNothing(phase) Then
+
+                        phaseEndOffset = phase.startOffsetinDays + phase.dauerInDays - 1
+                        currentEndIndex = phase.relEnde - 1
+                        If phase.percentDone <> 0 Then
+                            reversePrzDone = 1 / phase.percentDone
+                        Else
+                            reversePrzDone = 1 / 0.1                      ' da Division durch 0 nicht möglich
+                        End If
+
+                        'isElemOfPast = (phase.getEndDate < bezugsdatum)
+                        isElemOfPast = phaseEndOffset < bezugsOffset
+
+                        If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+                            ' Planungsstand des Projektes
+                            If Total Then
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset * reversePrzDone
+                                Else
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
+                                End If
+                            Else
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset * reversePrzDone
+                                End If
+                            End If
+                        Else
+                            ' beauftragtes Projekt
+                            If Total Then
+                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
+                            Else
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + phaseEndOffset
+                                End If
+                            End If
+
+                        End If
+
+                    Else
+                        ' Phase ist nicht mehr im Projekt d.h. timeCompletion künstlich erhöhen um 10000
+                        timeCompletionValues(0) = timeCompletionValues(0) + 10000
+                    End If
+
+                Next
+
+
+                ' Loop über alle Meilensteine der Beauftragung (baseMS)
+
+                For Each kvpMS As KeyValuePair(Of Date, String) In baseMs
+
+                    Dim msId As String = kvpMS.Value                         ' Id des Meilenstein des beauftragten Projektes holen
+
+                    ms = Me.getMilestoneByID(msId)                           ' mit der Id den Meilenstein dieses Projektes holen 
+
+
+                    If Not IsNothing(ms) Then
+
+                        msOffset = ms.Parent.startOffsetinDays + CInt(ms.offset) 'Offset des ms in einem Projekt
+                        currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
+                        If ms.percentDone <> 0 Then
+                            reversePrzDone = 1 / ms.percentDone
+                        Else
+                            reversePrzDone = 1 / 0.1                            ' da Division durch 0 nicht möglich
+                        End If
+
+                        'isElemOfPast = (ms.getDate < bezugsdatum)
+                        isElemOfPast = msOffset < bezugsOffset
+
+                        If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+                            If Total Then
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset * reversePrzDone
+                                Else
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
+                                End If
+                            Else
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset * reversePrzDone
+                                End If
+                            End If
+                        Else
+                            ' beauftragtes Projekt
+                            If Total Then
+                                timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
+                            Else
+                                If isElemOfPast Then
+                                    timeCompletionValues(currentEndIndex) = timeCompletionValues(currentEndIndex) + msOffset
+                                End If
+                            End If
+
+                        End If
+                    Else
+                        ' Meilenstein ist nicht mehr in dem Projekt d.h. timeCompletion künstlich erhöhen um 10000
+                        timeCompletionValues(0) = timeCompletionValues(0) + 10000
+                    End If
+                Next
+
+
+                getTimeCompletionMetric = timeCompletionValues
+
+            Else
+                Throw New ArgumentException("Projekt hat keine Dauer")
+            End If
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt die KeyMetric für TimeCompletion zurück auf die einzelnen Monate des Projektes
+    ''' Es werden nur die Phasen- und Meilenstein-EndDates betrachtet, die in der Beauftragung des Projektes enthalten sind
+    ''' </summary>
+    ''' <param name="baseDeliverables"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getDeliverableCompletionMetric(ByVal baseDeliverables As SortedList(Of String, String),
+                                                            Optional ByVal Total As Boolean = False) As Double()
+        Get
+            Dim deliverableCompletionValues() As Double
+            Dim phase As clsPhase
+            Dim ms As clsMeilenstein
+
+            Dim startIndex As Integer = Me.Start
+            Dim currentEndIndex As Integer
+            Dim currentPrzDone As Double
+            Dim bezugsDatum As Date = Me.timeStamp
+            Dim isElemOfPast As Boolean
+
+            If _Dauer > 0 Then
+
+                ReDim deliverableCompletionValues(_Dauer - 1)
+
+                ' Loop über alle Deliverables in der Beauftragung
+
+                For Each kvp As KeyValuePair(Of String, String) In baseDeliverables
+
+                    Dim elemId As String = kvp.Value
+                    Dim baseDeliv As String = kvp.Key
+
+                    If elemIDIstMeilenstein(elemId) Then
+                        ' Id des Meilenstein des beauftragten Projektes holen
+
+                        ms = Me.getMilestoneByID(elemId)                ' mit der Id den Meilenstein dieses Projektes holen 
+
+                        If Not IsNothing(ms) Then
+                            Dim baseDelivName As String = ""
+                            Dim tmpstr() As String = Split(baseDeliv, "(", 2)
+
+                            If tmpstr.Length > 0 Then
+                                baseDelivName = tmpstr(0)
+                            End If
+                            currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
+                            currentPrzDone = ms.percentDone
+                            isElemOfPast = (ms.getDate < bezugsDatum)
+
+                            If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+                                If Total Then
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    Else
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    End If
+                                End If
+
+                            Else
+                                If Total Then
+
+                                    If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                    End If
+
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And ms.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+                        Else
+
+                        End If
+
+                    Else
+                        ' mit der elemID die Phase holen
+
+                        phase = Me.getPhaseByID(elemId)
+
+                        If Not IsNothing(phase) Then
+
+                            Dim baseDelivName As String = ""
+                            Dim tmpstr() As String = Split(baseDeliv, "(", 2)
+
+                            If tmpstr.Length > 0 Then
+                                baseDelivName = tmpstr(0)
+                            End If
+
+                            currentEndIndex = phase.relEnde - 1
+                            currentPrzDone = phase.percentDone
+                            isElemOfPast = (phase.getEndDate < bezugsDatum)
+
+                            If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
+
+                                If Total Then
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    Else
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1 * currentPrzDone
+                                        End If
+                                    End If
+                                End If
+
+                            Else
+                                If Total Then
+
+                                    If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                        deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                    End If
+
+                                Else
+                                    If isElemOfPast Then
+                                        If baseDelivName <> "" And phase.containsDeliverable(baseDelivName) Then
+                                            deliverableCompletionValues(currentEndIndex) = deliverableCompletionValues(currentEndIndex) + 1
+                                        End If
+                                    End If
+                                End If
+
+                            End If
+
+                        End If
+                    End If
+
+
+
+
+                Next
+
+                getDeliverableCompletionMetric = deliverableCompletionValues
+
+            Else
+                Throw New ArgumentException("Projekt hat keine Dauer")
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
     ''' kopiert die Attribute eines Projektes in newproject;  bei der Quelle handelt es sich um 
     ''' ein normales Projekt 
     ''' </summary>
@@ -2988,6 +3305,7 @@ Public Class clsProjekt
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             If variantName = "" Then
                 variantName = getDefaultVariantNameAccordingUserRole()
+                Status = ProjektStatus(PTProjektStati.beauftragt)          ' ur: 2.11.2019: Projekt das Vorgaben bekommt ist autom. beauftragt
             End If
         Else
             ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
@@ -3255,7 +3573,7 @@ Public Class clsProjekt
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getKostenBedarfNew(tmpCost)
+            Dim myValues() As Double = Me.getKostenBedarf(tmpCost)
             Dim newCost As New clsKostenart(newLength - 1)
 
             With newCost
@@ -3320,7 +3638,7 @@ Public Class clsProjekt
 
             newValues = newCost.Xwerte
 
-            Dim otherValues() As Double = otherProj.getKostenBedarfNew(tmpCost)
+            Dim otherValues() As Double = otherProj.getKostenBedarf(tmpCost)
 
             With newCost
                 .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
@@ -3727,12 +4045,12 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getKostenBedarfNew(itemName)
+                            valueArray = Me.getKostenBedarf(itemName)
 
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getKostenBedarfNew(itemName)
+                                tempArray = Me.getKostenBedarf(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -6376,6 +6694,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        keyMetrics = New clsKeyMetrics
+
         _updatedAt = ""
 
     End Sub
@@ -6441,6 +6761,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        keyMetrics = New clsKeyMetrics
+
         _updatedAt = ""
 
     End Sub
@@ -6478,6 +6800,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        keyMetrics = New clsKeyMetrics
+
         _updatedAt = ""
 
     End Sub
@@ -6514,6 +6838,8 @@ Public Class clsProjekt
         _businessUnit = ""
         _complexity = 0.0
         _volume = 0.0
+
+        keyMetrics = New clsKeyMetrics
 
         _updatedAt = ""
 

@@ -4673,7 +4673,7 @@ Public Module Module1
                         If cphase.countMilestones > 0 Then
                             Dim milestone As clsMeilenstein = cphase.getMilestone(cphase.countMilestones)
                             If Not IsNothing(milestone) Then
-                                tmpStr = milestone.getAllDeliverables
+                                tmpStr = milestone.getAllDeliverables(vbLf)
                             End If
                         End If
                     Catch ex As Exception
@@ -5981,16 +5981,16 @@ Public Module Module1
 
                             If isCost Then
 
-                                curValue = hproj.getKostenBedarfNew(curItem).Sum
+                                curValue = hproj.getKostenBedarf(curItem).Sum
 
                                 If considerLapr Then
-                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    laprValue = lproj.getKostenBedarf(curItem).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
+                                    faprValue = bproj.getKostenBedarf(curItem).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
