@@ -8173,6 +8173,8 @@ Public Module awinGeneralModules
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
                                 Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
+
+
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)

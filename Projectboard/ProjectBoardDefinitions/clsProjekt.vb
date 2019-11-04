@@ -3305,6 +3305,7 @@ Public Class clsProjekt
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             If variantName = "" Then
                 variantName = getDefaultVariantNameAccordingUserRole()
+                Status = ProjektStatus(PTProjektStati.beauftragt)          ' ur: 2.11.2019: Projekt das Vorgaben bekommt ist autom. beauftragt
             End If
         Else
             ' tk 7.7 bei allen anderen darf der Varianten-Name nicht pfv sein 
