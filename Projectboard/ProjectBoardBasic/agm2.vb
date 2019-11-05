@@ -6061,7 +6061,9 @@ Public Module agm2
 
                                                         ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                         For ix As Integer = 1 To splitStr.Length
-                                                            .addDeliverable(splitStr(ix - 1))
+                                                            If splitStr(ix - 1) <> "" Then
+                                                                .addDeliverable(splitStr(ix - 1))
+                                                            End If
                                                         Next
                                                     End If
                                                 Catch ex As Exception
@@ -6277,7 +6279,9 @@ Public Module agm2
 
                                                     ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                     For ix As Integer = 1 To splitStr.Length
-                                                        cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        If splitStr(ix - 1) <> "" Then
+                                                            cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        End If
                                                     Next
                                                 End If
                                             Catch ex As Exception

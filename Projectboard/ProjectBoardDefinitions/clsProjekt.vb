@@ -2768,6 +2768,7 @@ Public Class clsProjekt
     ''' <param name="baseDeliverables"></param>
     ''' <returns></returns>
     Public ReadOnly Property getDeliverableCompletionMetric(ByVal baseDeliverables As SortedList(Of String, String),
+                                                            ByVal bezugsdatum As Date,
                                                             Optional ByVal Total As Boolean = False) As Double()
         Get
             Dim deliverableCompletionValues() As Double
@@ -2777,7 +2778,6 @@ Public Class clsProjekt
             Dim startIndex As Integer = Me.Start
             Dim currentEndIndex As Integer
             Dim currentPrzDone As Double
-            Dim bezugsDatum As Date = Me.timeStamp
             Dim isElemOfPast As Boolean
 
             If _Dauer > 0 Then
@@ -2805,7 +2805,7 @@ Public Class clsProjekt
                             End If
                             currentEndIndex = getColumnOfDate(ms.getDate) - Me.Start
                             currentPrzDone = ms.percentDone
-                            isElemOfPast = (ms.getDate < bezugsDatum)
+                            isElemOfPast = (ms.getDate < bezugsdatum)
 
                             If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
                                 If Total Then
@@ -2862,7 +2862,7 @@ Public Class clsProjekt
 
                             currentEndIndex = phase.relEnde - 1
                             currentPrzDone = phase.percentDone
-                            isElemOfPast = (phase.getEndDate < bezugsDatum)
+                            isElemOfPast = (phase.getEndDate < bezugsdatum)
 
                             If Not Me.variantName = ptVariantFixNames.pfv.ToString Then
 
