@@ -2494,6 +2494,9 @@ Module creationModule1
             Next
 
 
+
+
+
             ' jetzt muss die ListofShapes wieder geleert werden 
 
             listofShapes.Clear()
@@ -3008,8 +3011,18 @@ Module creationModule1
         Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
         Dim cphase As clsPhase
 
-        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt , sofern bereits vorhanden ..
+        ' das Ganze funktioniert also noch mit alten Vorlagen wie mit neuen ... 
         rds.pptSlide = curSlide
+
+
+        ' jetzt werden die noch fehlenden Shapes erstellt .. 
+        If rds.getMissingShpNames(kennzeichnung).Count > 0 Then
+            Dim msHeight As Single = 9.0
+            Dim phHeight As Single = 5.6
+            Call rds.createMandatoryDrawingShapes(kennzeichnung, msHeight, phHeight)
+        End If
+
 
 
         ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
@@ -3153,128 +3166,172 @@ Module creationModule1
             End If
 
             Dim neededSpace As Double
+            Dim anzSegments As Integer = 0
 
 
             If isSwimlanes2 Then
                 ' jetzt müssen noch die Segment Höhen  berechnet werden 
-
+                anzSegments = hproj.getSegmentsCount(considerAll, breadcrumbArray, isSwimlanes2)
                 neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isSwimlanes2) * rds.segmentHoehe
+                                    anzSegments * rds.segmentHoehe
             Else
                 neededSpace = anzZeilen * rds.zeilenHoehe
             End If
 
+            Dim weitermachen As Boolean = True
+
 
             ' jetzt muss die Zeilenhöhe solange reduziert werden, bis alles reinpasst oder aber es gar nicht geht ... 
-            Do While neededSpace > rds.availableSpace
+            If neededSpace > rds.availableSpace Then
                 ' reduzieren der Zeilenhöhe 
-            Loop
+                weitermachen = False
 
-
-            If pptFirstTime Then
-
-                ' jetzt erst mal den Kalender zeichnen 
-                ' zeichne den Kalender
-                'Dim calendargroup As pptNS.Shape = Nothing
-
-                Try
-
-                    With rds
-
-                        Call zeichne3RowsCalendar(rds, minCal)
-
+                ' zuerst die Beschriftungen raus nehmen 
+                If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
+                    With awinSettings
+                        .mppShowMsDate = False
+                        .mppShowMsName = False
+                        .mppShowPhDate = False
+                        .mppShowPhName = False
                     End With
+                End If
+
+                ' dann die Zeilenhöhe auf das Minimum 1: Platz für eine Beschriftung, oben oder unten   setzen ...
+
+                Call rds.setZeilenhöhe(absoluteMinimum:=False)
+
+                neededSpace = anzZeilen * rds.zeilenHoehe +
+                                    anzSegments * rds.segmentHoehe
 
 
+                ' immer noch zu viel Platz benötigt ? 
+                If neededSpace > rds.availableSpace Then
+                    ' auf Minimum 2 setzen 
 
-                Catch ex As Exception
+                    Call rds.setZeilenhöhe(absoluteMinimum:=True)
 
-                End Try
+                    neededSpace = anzZeilen * rds.zeilenHoehe +
+                                    anzSegments * rds.segmentHoehe
 
+                    If neededSpace > rds.availableSpace Then
+                        weitermachen = False
+                    Else
+                        ' alles in ORdnung 
+                        weitermachen = True
+                    End If
+                Else
+                    ' alles in Ordnung ...
+                    weitermachen = True
+                End If
 
-                Dim smartInfoCRD As Date = Date.MinValue
-                ' jetzt wird hier die Date Info eingetragen ... 
-                Try
-                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
-                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
-                        If Not IsNothing(tmpProj) Then
-                            If smartInfoCRD < tmpProj.timeStamp Then
-                                smartInfoCRD = tmpProj.timeStamp
-                            End If
-                        End If
-                    Next
-                Catch ex As Exception
-
-                End Try
-
-                ' 
-                ' jetzt wird das Slide gekennzeichnet als Smart Slide 
-                ' eigentlich müsste das ContainerShpae gezeichnet werden , nicht die Seite 
-                Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
             End If
 
+            If weitermachen Then
+                If pptFirstTime Then
+
+                    ' jetzt erst mal den Kalender zeichnen 
+                    ' zeichne den Kalender
+                    'Dim calendargroup As pptNS.Shape = Nothing
+
+                    Try
+
+                        With rds
+
+                            Call zeichne3RowsCalendar(rds, minCal)
+
+                        End With
 
 
-            ' hier ist die Schleife, die alle swimlanes von swimlanesdone+1 bis todo zeichnet 
-            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
 
-            Dim curYPosition As Double = rds.drawingAreaTop
-            Dim curSwl As clsPhase
-            Dim prevSwl As clsPhase = Nothing
+                    Catch ex As Exception
 
-            ' steuert im Wechsel, dass eine Zeilendifferenzierung gezeichnet wird / nicht gezeichnet wird 
-            ' hat nur dann einen Effekt, wenn rds.rowDifferentiator <> Nothing 
-
-            Dim toggleRow As Boolean = False
-
-            Dim curSwimlaneIndex As Integer = swimLanesDone + 1
-            curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
-            prevSwl = hproj.getSwimlane(curSwimlaneIndex - 1, considerAll, breadcrumbArray, isSwimlanes2)
+                    End Try
 
 
-            Dim curSegmentID As String = ""
+                    Dim smartInfoCRD As Date = Date.MinValue
+                    ' jetzt wird hier die Date Info eingetragen ... 
+                    Try
+                        For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                            Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                            If Not IsNothing(tmpProj) Then
+                                If smartInfoCRD < tmpProj.timeStamp Then
+                                    smartInfoCRD = tmpProj.timeStamp
+                                End If
+                            End If
+                        Next
+                    Catch ex As Exception
 
-            If Not IsNothing(curSwl) Then
-                ' wird weiter unten auch noch gebraucht 
-                Dim segmentChanged As Boolean = False
+                    End Try
 
-                If isSwimlanes2 Then
+                    ' 
+                    ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+                    ' eigentlich müsste das ContainerShpae gezeichnet werden , nicht die Seite 
+                    Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
-                    If hproj.isSegment(curSwl.nameID) Then
-                        curSegmentID = curSwl.nameID
-                    Else
-                        curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                    End If
-
-
-                    If Not IsNothing(prevSwl) Then
-                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
-                                            hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                    End If
-
-                    If swimLanesDone = 0 Or segmentChanged Then
-                        Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                        segmentChanged = False
-                    End If
                 End If
 
 
 
+                ' hier ist die Schleife, die alle swimlanes von swimlanesdone+1 bis todo zeichnet 
+                ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
 
-                ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
-                Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                Dim curYPosition As Double = rds.drawingAreaTop
+                Dim curSwl As clsPhase
+                Dim prevSwl As clsPhase = Nothing
+
+                ' steuert im Wechsel, dass eine Zeilendifferenzierung gezeichnet wird / nicht gezeichnet wird 
+                ' hat nur dann einen Effekt, wenn rds.rowDifferentiator <> Nothing 
+
+                Dim toggleRow As Boolean = False
+
+                Dim curSwimlaneIndex As Integer = swimLanesDone + 1
+                curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
+                prevSwl = hproj.getSwimlane(curSwimlaneIndex - 1, considerAll, breadcrumbArray, isSwimlanes2)
+
+
+                Dim curSegmentID As String = ""
+
+                If Not IsNothing(curSwl) Then
+                    ' wird weiter unten auch noch gebraucht 
+                    Dim segmentChanged As Boolean = False
+
+                    If isSwimlanes2 Then
+
+                        If hproj.isSegment(curSwl.nameID) Then
+                            curSegmentID = curSwl.nameID
+                        Else
+                            curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                        End If
+
+
+                        If Not IsNothing(prevSwl) Then
+                            segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
+                                            hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                        End If
+
+                        If swimLanesDone = 0 Or segmentChanged Then
+                            Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                            segmentChanged = False
+                        End If
+                    End If
+
+
+
+
+                    ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
+                    Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, curSegmentID)
 
-                Do While (curSwimlaneIndex <= swimLanesToDo) And
+                    Do While (curSwimlaneIndex <= swimLanesToDo) And
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
 
 
-                    ' jetzt die Swimlane zeichnen
-                    ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
-                    Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
+                        ' jetzt die Swimlane zeichnen
+                        ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
+                        Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
                                                   hproj, curSwl.nameID, considerAll,
                                                   breadcrumbArray,
                                                   considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
@@ -3282,82 +3339,87 @@ Module creationModule1
                                                   selectedRoles, selectedCosts,
                                                   swimLaneZeilen, curSegmentID)
 
-                    ' merken, ob die letzte gezeichnete Swimlane eigentlich die Meilensteine des Segments waren ...
-                    Dim lastSwimlaneWasSegment As Boolean = isSwimlanes2 And (curSwl.nameID = curSegmentID)
+                        ' merken, ob die letzte gezeichnete Swimlane eigentlich die Meilensteine des Segments waren ...
+                        Dim lastSwimlaneWasSegment As Boolean = isSwimlanes2 And (curSwl.nameID = curSegmentID)
 
 
-                    prevSwl = curSwl
+                        prevSwl = curSwl
 
-                    curSwimlaneIndex = curSwimlaneIndex + 1
-                    curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
+                        curSwimlaneIndex = curSwimlaneIndex + 1
+                        curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
 
-                    If Not IsNothing(curSwl) Then
+                        If Not IsNothing(curSwl) Then
 
-                        Dim segmentID As String = ""
-                        If isSwimlanes2 Then
-                            segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
+                            Dim segmentID As String = ""
+                            If isSwimlanes2 Then
+                                segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID) And Not lastSwimlaneWasSegment) Or
                                         (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
 
-                            If hproj.isSegment(curSwl.nameID) Then
-                                segmentID = curSwl.nameID
+                                If hproj.isSegment(curSwl.nameID) Then
+                                    segmentID = curSwl.nameID
+                                End If
                             End If
-                        End If
 
 
-                        swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                            swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, segmentID)
 
-                        If isSwimlanes2 Then
-                            If segmentChanged And
+                            If isSwimlanes2 Then
+                                If segmentChanged And
                                 (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
-                                If hproj.isSegment(curSwl.nameID) Then
-                                    curSegmentID = curSwl.nameID
-                                Else
-                                    curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                                End If
+                                    If hproj.isSegment(curSwl.nameID) Then
+                                        curSegmentID = curSwl.nameID
+                                    Else
+                                        curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                    End If
 
-                                Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                                segmentChanged = False
+                                    Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                                    segmentChanged = False
+                                End If
                             End If
+
+                        Else
+                            segmentChanged = False
                         End If
 
+
+                    Loop
+
+                    If curSwimlaneIndex = swimLanesDone + 1 Then
+                        ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
+                        ' Abbruch provoziere
+                        ' Zwischenbericht abgeben ...
+                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' could not be drawn: not enough space ...."
+                        End If
+
+                        Throw New ArgumentException(msgTxt)
+                        swimLanesDone = 0
+                        swimLanesToDo = 0
+
                     Else
-                        segmentChanged = False
+
+                        ' jetzt die Anzahl ..Done bestimmen
+                        swimLanesDone = curSwimlaneIndex - 1
+
                     End If
-
-
-                Loop
-
-                If curSwimlaneIndex = swimLanesDone + 1 Then
-                    ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
-                    ' Abbruch provoziere
-                    ' Zwischenbericht abgeben ...
-                    msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
-                    If awinSettings.englishLanguage Then
-                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' could not be drawn: not enough space ...."
-                    End If
-
-                    Throw New ArgumentException(msgTxt)
-                    swimLanesDone = 0
-                    swimLanesToDo = 0
-
-                Else
-
-                    ' jetzt die Anzahl ..Done bestimmen
-                    swimLanesDone = curSwimlaneIndex - 1
 
                 End If
 
+            Else
+                Call MsgBox("not enough space to draw elements  ... ")
             End If
 
+
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            ''rds.errorVorlagenShape.Copy()
-            ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
+                ''rds.errorVorlagenShape.Copy()
+                ''errorShape = pptslide.Shapes.Paste
+                errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
 
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
@@ -3367,6 +3429,9 @@ Module creationModule1
         ' jetzt werden alle für das Zeichnen notwendigen Hilfs-Shapes unsichtbar gemacht 
         ' sie können dann beim Ändern des Reports wieder verwendet werden 
         Call rds.setShapesInvisible()
+
+        ' jezt wird das containershape in den Hintergrund gesetzt 
+        Call rds.containerShape.ZOrder(MsoZOrderCmd.msoSendToBack)
 
 
     End Sub
@@ -3400,6 +3465,8 @@ Module creationModule1
                                              ByVal kennzeichnung As String,
                                              ByVal minCal As Boolean)
 
+
+
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
         awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
 
@@ -3418,10 +3485,22 @@ Module creationModule1
         Dim rds As New clsPPTShapes
         rds.pptSlide = curSlide
 
+        ' jetzt werden die Hilfs-Shapes erstellt .. 
+
+
+        If rds.getMissingShpNames(kennzeichnung).Count > 0 Then
+            Dim msHeight As Single = 9
+            Dim phHeight As Single = 5.6
+            Call rds.createMandatoryDrawingShapes(kennzeichnung, msHeight, phHeight)
+        End If
+
 
         ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
         'If completeMppDefinition.Sum = completeMppDefinition.Length Then
         Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+
+
+
         If missingShapes.Length = 0 Then
             ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
 
@@ -3543,6 +3622,7 @@ Module creationModule1
             '
             ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
             '
+            ' tk 2.11.19 hier muss es mit autoSet aufgerufen werden; siehe oben wenn die manadatory shapes alle gesetzt werden , müssen die relativen Distanzen, wo der Text das Datum gesetzt werden soll angegeben werden ... 
             Call rds.calcRelDisTxtToElm()
 
 
@@ -3553,125 +3633,143 @@ Module creationModule1
             ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
             neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
 
+            ' neu 
+            Dim weitermachen As Boolean = True
 
 
-            ' jetzt muss die Zeilenhöhe  reduziert werden, so dass alles reinpasst oder aber es gar nicht geht ... 
+            ' jetzt muss die Zeilenhöhe solange reduziert werden, bis alles reinpasst oder aber es gar nicht geht ... 
             If neededSpace > rds.availableSpace Then
                 ' reduzieren der Zeilenhöhe 
-                Dim newHeight As Double = rds.availableSpace / neededSpace * zeilenhoehe_sav
-                If newHeight >= rds.minZeilenhöhe Then
-                    rds.setZeilenhöhe = newHeight
-                    zeilenhoehe_sav = rds.zeilenHoehe
-                    projekthoehe = rds.zeilenHoehe
+                weitermachen = False
 
-                Else
-                    newHeight = rds.minZeilenhöhe
-                    If awinSettings.mppExtendedMode Then
-                        ' alles in eine Zeile 
-                        awinSettings.mppExtendedMode = False
-                    End If
-                    rds.setZeilenhöhe = newHeight
-                    zeilenhoehe_sav = rds.zeilenHoehe
-                    projekthoehe = rds.zeilenHoehe
-
-                    neededSpace = projCollection.Count * zeilenhoehe_sav
-                    ' wenn es immer noch zu viel ist, dann Abbruch ... 
-                    If neededSpace > rds.availableSpace Then
-                        Dim msgTxt As String = "zu viele Projekte für den verfügbaren Platz "
-                        If awinSettings.englishLanguage Then
-                            msgTxt = "projects do not fit into the available space ... creation of report-componentreport cancelled!"
-                        End If
-                        Call MsgBox("zu viele Projekte für den verfügbaren Platz - das Erzeugen der Report-Komponenten wurde abgebrochen ")
-                        Exit Sub
-                    End If
+                ' zuerst die Beschriftungen raus nehmen 
+                If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
+                    With awinSettings
+                        .mppShowMsDate = False
+                        .mppShowMsName = False
+                        .mppShowPhDate = False
+                        .mppShowPhName = False
+                    End With
                 End If
-            End If
+
+                ' dann die Zeilenhöhe auf das Minimum 1: Platz für eine Beschriftung, oben oder unten   setzen ...
+
+                Call rds.setZeilenhöhe(absoluteMinimum:=False)
+
+                neededSpace = gesamtAnzZeilen * rds.zeilenHoehe
 
 
+                ' immer noch zu viel Platz benötigt ? 
+                If neededSpace > rds.availableSpace Then
+                    ' auf Minimum 2 setzen 
+                    Call rds.setZeilenhöhe(absoluteMinimum:=True)
+                    neededSpace = gesamtAnzZeilen * rds.zeilenHoehe
 
-            Try
-
-                With rds
-
-                    ' das demnächst abändern auf 
-                    Call zeichne3RowsCalendar(rds, minCal)
-
-                End With
-
-
-
-            Catch ex As Exception
-
-            End Try
-
-
-            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
-            ' zeichne die Projekte 
-
-            ' jetzt wird das Slide gekennzeichnet als Smart Slide
-
-            ' jetzt wird hier die Date Info eingetragen ... 
-            Dim smartInfoCRD As Date = Date.MinValue
-            Try
-                For Each kvp As KeyValuePair(Of Double, String) In projCollection
-                    Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
-                    If Not IsNothing(tmpProj) Then
-                        If smartInfoCRD < tmpProj.timeStamp Then
-                            smartInfoCRD = tmpProj.timeStamp
-                        End If
+                    If neededSpace > rds.availableSpace Then
+                        weitermachen = False
+                    Else
+                        ' alles in ORdnung 
+                        weitermachen = True
                     End If
-                Next
-            Catch ex As Exception
+                Else
+                    ' alles in Ordnung ...
+                    weitermachen = True
+                End If
+                ' wenn es immer noch nicht reicht, auf Minimum 2, Höhe des Meilensteins *1,1  setzen 
 
-            End Try
+            End If
+            ' Ende neu 
+
+            If weitermachen Then
+
+                Try
+
+                    With rds
+
+                        ' das demnächst abändern auf 
+                        Call zeichne3RowsCalendar(rds, minCal)
+
+                    End With
 
 
-            Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
 
-            Try
+                Catch ex As Exception
+
+                End Try
+
+
+                ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+                ' zeichne die Projekte 
+
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide
+
+                ' jetzt wird hier die Date Info eingetragen ... 
+                Dim smartInfoCRD As Date = Date.MinValue
+                Try
+                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                        If Not IsNothing(tmpProj) Then
+                            If smartInfoCRD < tmpProj.timeStamp Then
+                                smartInfoCRD = tmpProj.timeStamp
+                            End If
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+                Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+
+                Try
 
 
 
-                Call zeichnePPTprojectsInPPT(projCollection, objectsDone,
+                    Call zeichnePPTprojectsInPPT(projCollection, objectsDone,
                                 rds, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
 
-            Catch ex As Exception
+                Catch ex As Exception
 
-                If Not IsNothing(rds.errorVorlagenShape) Then
-                    ''rds.errorVorlagenShape.Copy()
-                    ''errorShape = pptslide.Shapes.Paste
-                    errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
+                    If Not IsNothing(rds.errorVorlagenShape) Then
+                        ''rds.errorVorlagenShape.Copy()
+                        ''errorShape = pptslide.Shapes.Paste
+                        errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
 
-                    With errorShape.Item(1)
-                        .TextFrame2.TextRange.Text = ex.Message
-                    End With
-                Else
-                    ' erstmal sonst nichts 
-                End If
-
-
-            End Try
+                        With errorShape.Item(1)
+                            .TextFrame2.TextRange.Text = ex.Message
+                        End With
+                    Else
+                        ' erstmal sonst nichts 
+                    End If
 
 
+                End Try
+
+            Else
+                Call MsgBox("not enough space to draw elements  ... ")
+            End If
 
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-                ''rds.errorVorlagenShape.Copy()
-                ''errorShape = pptslide.Shapes.Paste
-                errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
+            ''rds.errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
 
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
-                'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
-                Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
+            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
+
 
         ' jetzt werden alle Shapes invisible gesetzt  ... 
         Call rds.setShapesInvisible()
 
+        ' jezt wird das containershape in den Hintergrund gesetzt 
+        Call rds.containerShape.ZOrder(MsoZOrderCmd.msoSendToBack)
 
     End Sub
 

@@ -19934,6 +19934,7 @@ Public Module testModule
         ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
         'If completeMppDefinition.Sum = completeMppDefinition.Length Then
         Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+
         If missingShapes.Length = 0 Then
             ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
 

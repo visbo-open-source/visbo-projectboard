@@ -54,6 +54,7 @@ Public Class clsPPTShapes
     Private _zeilenHoehe As Double = 0.0
 
     ' wo beginnen die Shapes relativ gesehen innerhalb einer Zeile, aufgeführt für Duration, ProjekctLine, Phase, Milestone
+
     Private _YDurationText As Double = 0.0
     Private _YDurationArrow As Double = 0.0
 
@@ -235,7 +236,7 @@ Public Class clsPPTShapes
                             durationTextShape = pptShape
 
                         Case "SegmentText"
-                            ' optional 
+                            ' mandatory für Swimlanes2 
                             segmentVorlagenShape = pptShape
 
                         Case Else
@@ -257,11 +258,13 @@ Public Class clsPPTShapes
     ''' <remarks></remarks>
     Public Sub calcRelDisTxtToElm()
 
+
         _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
         _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
 
         _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
         _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
+
 
     End Sub
 
@@ -467,6 +470,7 @@ Public Class clsPPTShapes
         ' und jetzt werden die relativen Offsets bestimmt 
         '
         '
+
         If Not IsNothing(projectNameVorlagenShape) Then
 
             With projectNameVorlagenShape
@@ -556,20 +560,25 @@ Public Class clsPPTShapes
     End Sub
 
     ''' <summary>
-    ''' setzt die Zeilenhöhe absolut auf einen bestimmten Wert; der muss aber mindestens um 10% größer sein als max(Höhe Meilenstein, Höhe Phase)  
+    ''' setzt die Zeilenhöhe auf ein Minimum bzw. auf ein absolutes Minimum. 
+    ''' beim Minimum bleibt Platz für eine Beschreibung, beim absoluten Minimum wird gewährleistet, dass sich Meilenstein bzw. Phasen aus zwei Zeilen noch nicht überlappen.  
     ''' </summary>
-    Public WriteOnly Property setZeilenhöhe() As Double
-        Set(value As Double)
-            If value > 0 Then
+    Public Sub setZeilenhöhe(ByVal absoluteMinimum As Boolean)
 
-                ' prüfen, ob wenigstens etwas größer wie das größere von Phasen-Höhe und Meilenstein Höhe 
-                If value >= 1.1 * System.Math.Max(milestoneVorlagenShape.Height, phaseVorlagenShape.Height) Then
-                    _zeilenHoehe = value
-                End If
+        If absoluteMinimum Then
 
-            End If
-        End Set
-    End Property
+            _zeilenHoehe = Me.minZeilenhöhe
+        Else
+            Dim heights(3) As Single
+            heights(0) = MsDescVorlagenShape.Height
+            heights(1) = MsDateVorlagenShape.Height
+            heights(2) = PhDescVorlagenShape.Height
+            heights(3) = PhDateVorlagenShape.Height
+
+            _zeilenHoehe = Me.minZeilenhöhe + heights.Max
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' gibt die kleinste zugelassene Zeilenhöhe zurück
@@ -587,10 +596,14 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+
     ''' <summary>
-    ''' erzeugt die für Multiprojekt-Sicht etc notwendigen Shapes 
+    ''' 
     ''' </summary>
-    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String)
+    ''' <param name="kennzeichnung">steuert, ob am linken Rand Projekt-Namen bzw. Swimlane-Namen ausgegeben werden </param>
+    ''' <param name="msHeight">gibt die Höhe und Breite eines Meilensteins an</param>
+    ''' <param name="phHeight">gibt die Höhe einer Phase an </param>
+    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String, ByVal msHeight As Single, ByVal phHeight As Single)
 
         Dim tmpErg As String = ""
         Dim tmpName As String = ""
@@ -601,13 +614,22 @@ Public Class clsPPTShapes
         Dim calYearSize As Integer = 12
         Dim calQtrMonSize As Integer = 8
         Dim pNameGanttSize As Integer = 12
-        Dim dateDescSize As Integer = 10
-        Dim msPhNameDateSize As Integer = 10
+        Dim dateDescSize As Integer = 8
+        Dim msPhNameDateSize As Integer = 8
         Dim segmentNameSize As Integer = 14
 
         Dim calendarLineStart As Integer = 90
         Dim buStart As Integer = 5
 
+
+        ' der Kalender-Start soll in Abhängigkeit von kennzeichneung weiter links oder weiter rechts begionnen 
+        If kennzeichnung = "Multiprojektsicht" Or
+            kennzeichnung.StartsWith("Swimlane") Then
+            ' hier wird ein linker Rand gebraucht 
+            calendarLineStart = 120
+        Else
+            calendarLineStart = 10
+        End If
 
         Dim positionPhMsPLine As Integer = 70
 
@@ -619,97 +641,10 @@ Public Class clsPPTShapes
                 kennzeichnung = "Einzelprojektsicht" Or
                 kennzeichnung.StartsWith("Swimlane") Then
 
-            If IsNothing(_MsDescVorlagenShape) Then
-
-                _MsDescVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDescVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
-                    .TextFrame2.MarginBottom = 0
-                    .TextFrame2.MarginTop = 0
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
-                    .Title = "MilestoneDescription"
-                End With
-
-            End If
-
-            If IsNothing(_MsDateVorlagenShape) Then
-                _MsDateVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDateVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
-                    .TextFrame2.MarginBottom = 0
-                    .TextFrame2.MarginTop = 0
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
-                    .Title = "MilestoneDate"
-                End With
-            End If
-
-            If IsNothing(_PhDescVorlagenShape) Then
-                _PhDescVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _PhDescVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
-                    .TextFrame2.MarginBottom = 0
-                    .TextFrame2.MarginTop = 0
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
-                    .Title = "PhaseDescription"
-                End With
-            End If
-
-            If IsNothing(_PhDateVorlagenShape) Then
-                _PhDateVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _PhDateVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
-                    .TextFrame2.MarginBottom = 0
-                    .TextFrame2.MarginTop = 0
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
-                    .Title = "PhaseDate"
-                End With
-            End If
-
-            If IsNothing(_projectNameVorlagenShape) Then
-                _projectNameVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _projectNameVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
-                    .TextFrame2.MarginBottom = 0
-                    .TextFrame2.MarginTop = 0
-                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .TextFrame2.TextRange.Font.Size = pNameGanttSize
-                    .Title = "ProjectName"
-                End With
-            End If
-
-            If IsNothing(_calendarLineShape) Then
-                Dim beginX As Single = _containerShape.Left + calendarLineStart
-                Dim beginY As Single = _containerShape.Top + 50
-
-                Dim endX As Single = beginX + _containerShape.Width - (calendarLineStart + 10)
-                If endX < beginX Then
-                    endX = beginX + 20
-                End If
-                Dim endY As Single = beginY
-
-                _calendarLineShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
-                _calendarLineShape.Title = "CalendarLine"
-
-            End If
-
             If IsNothing(_quarterMonthVorlagenShape) Then
                 _quarterMonthVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _quarterMonthVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
+                    .TextFrame2.TextRange.Text = "Mrz"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 0
@@ -723,7 +658,7 @@ Public Class clsPPTShapes
             If IsNothing(_yearVorlagenShape) Then
                 _yearVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _yearVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
+                    .TextFrame2.TextRange.Text = "2019"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 0
@@ -734,6 +669,30 @@ Public Class clsPPTShapes
                 End With
             End If
 
+            If IsNothing(_calendarHeightShape) Then
+
+                Dim beginX As Single = _containerShape.Left + 40
+                Dim beginY As Single = _containerShape.Top + 2
+
+                Dim laenge As Double = 1.05 * (_yearVorlagenShape.Height + 2 * _quarterMonthVorlagenShape.Height)
+                Dim endX As Single = beginX
+                Dim endY As Single = CSng(beginY + laenge)
+
+                _calendarHeightShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
+
+                With _calendarHeightShape
+                    .Title = "CalendarHeight"
+                    .Line.ForeColor.RGB = 5855577
+                    .Line.Weight = 1
+                    .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End With
+
+            End If
+
+            ' die Null-Linie wird bestimmt, an der sich Projekt-Name, Ampel, Projektlinie, Meilenstein, Phase, und Beschriftungs-Texte orientieren
+            Dim nullLinie As Single = _calendarHeightShape.Top + _calendarHeightShape.Height + 70
+
+            ' als erstes die Projekt-Linie zeichnen 
             If IsNothing(_projectVorlagenShape) Then
                 Dim beginX As Single = _containerShape.Left + 80
                 Dim beginY As Single = _containerShape.Top + 70
@@ -742,30 +701,162 @@ Public Class clsPPTShapes
                 Dim endY As Single = beginY
 
                 _projectVorlagenShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
-                _projectVorlagenShape.Title = "ProjectForm"
+
+                With _projectVorlagenShape
+                    .Title = "ProjectForm"
+                    .Line.ForeColor.RGB = 5855577
+                    .Line.Weight = 1.5
+                    .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineLongDash
+                    .Top = nullLinie - .Height / 2
+                End With
+
             End If
 
+
+            ' dann ProjektName
+            If IsNothing(_projectNameVorlagenShape) Then
+                _projectNameVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+
+                With _projectNameVorlagenShape
+                    .TextFrame2.TextRange.Text = "Project-Name"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 2
+                    .TextFrame2.MarginTop = 2
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = pNameGanttSize
+                    .Title = "ProjectName"
+
+                    .Top = nullLinie - .Height / 2
+                    .Left = CSng(_containerLeft + 10)
+                End With
+            End If
+
+            ' dann die Phase
             If IsNothing(_phaseVorlagenShape) Then
-                left = _containerShape.Left + calendarLineStart
+                left = _containerShape.Left + 70
                 top = _containerShape.Top + 70
 
                 width = 30
-                height = 4.25
+                height = phHeight
 
                 _phaseVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeRectangle, left, top, width, height)
-                _phaseVorlagenShape.Title = "PhaseForm"
+
+                With _phaseVorlagenShape
+                    .Title = "PhaseForm"
+                    .Top = nullLinie - .Height / 2
+                End With
+
+
             End If
 
+            ' dann den Meilenstein 
             If IsNothing(_milestoneVorlagenShape) Then
-                left = _containerShape.Left + calendarLineStart
+                left = _containerShape.Left + 70
                 top = _containerShape.Top + 70
 
-                width = 8.5
-                height = 8.5
+                width = msHeight
+                height = msHeight
 
                 _milestoneVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, left, top, width, height)
-                _milestoneVorlagenShape.Title = "MilestoneForm"
+
+                With _milestoneVorlagenShape
+                    .Title = "MilestoneForm"
+                    .Top = nullLinie - .Height / 2
+                End With
+
             End If
+
+            ' dann den Phtext, PhDatum
+            If IsNothing(_PhDescVorlagenShape) Then
+                _PhDescVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _PhDescVorlagenShape
+                    .TextFrame2.TextRange.Text = "Phase-Name"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
+                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
+                    .Title = "PhaseDescription"
+
+                    .Top = _phaseVorlagenShape.Top + _phaseVorlagenShape.Height + 2
+                End With
+            End If
+
+            If IsNothing(_PhDateVorlagenShape) Then
+                _PhDateVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _PhDateVorlagenShape
+                    .TextFrame2.TextRange.Text = "3.12.2019"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
+                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
+                    .Title = "PhaseDate"
+
+                    .Top = _phaseVorlagenShape.Top - (.Height + 2)
+                End With
+            End If
+
+
+
+            ' Meilenstein Beschriftung
+            If IsNothing(_MsDescVorlagenShape) Then
+
+                _MsDescVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _MsDescVorlagenShape
+                    .TextFrame2.TextRange.Text = "MS Desc"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
+                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
+                    .Title = "MilestoneDescription"
+
+                    .Top = _milestoneVorlagenShape.Top - (.Height + 2)
+                End With
+
+            End If
+
+            ' Meilenstein Datum
+            If IsNothing(_MsDateVorlagenShape) Then
+                _MsDateVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _MsDateVorlagenShape
+                    .TextFrame2.TextRange.Text = "3.12.2019"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
+                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize
+                    .Title = "MilestoneDate"
+
+                    .Top = _milestoneVorlagenShape.Top + _milestoneVorlagenShape.Height + 2
+                End With
+            End If
+
+            ' dann die Ampel
 
             If IsNothing(_ampelVorlagenShape) Then
                 left = _containerShape.Left + calendarLineStart
@@ -774,10 +865,42 @@ Public Class clsPPTShapes
                 width = 4.25
                 height = 4.25
 
-                _phaseVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval, left, top, width, height)
-                _phaseVorlagenShape.Title = "Ampel"
+                _ampelVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval, left, top, width, height)
+
+                With _ampelVorlagenShape
+                    .Title = "Ampel"
+                    .Top = nullLinie - .Height / 2
+                End With
+
 
             End If
+
+
+
+            If IsNothing(_calendarLineShape) Then
+                Dim beginX As Single = _containerShape.Left + calendarLineStart
+                Dim beginY As Single = _containerShape.Top + 50
+
+                Dim endX As Single = beginX + _containerShape.Width - (calendarLineStart + 10)
+                If endX < beginX Then
+                    endX = beginX + 20
+                End If
+                Dim endY As Single = beginY
+
+                _calendarLineShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
+
+                With _calendarLineShape
+                    .Top = _containerShape.Top + _calendarHeightShape.Height + 2
+                    .Title = "CalendarLine"
+                    .Line.ForeColor.RGB = 5855577
+                    .Line.Weight = 0.5
+                    .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End With
+
+
+            End If
+
+
 
             If IsNothing(_calendarYearSeparator) Then
                 Dim beginX As Single = _containerShape.Left + 30
@@ -791,7 +914,7 @@ Public Class clsPPTShapes
                 With _calendarYearSeparator
                     .Title = "Jahres-Trennstrich"
                     .Line.ForeColor.RGB = 5855577
-                    .Line.Weight = 1
+                    .Line.Weight = 0.5
                     .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
                 End With
 
@@ -815,62 +938,104 @@ Public Class clsPPTShapes
 
             End If
 
-            'If IsNothing(_legendLineShape) Then
-            '    ok = False
-            '    tmpName = "Legenden-Linie"
-            '    If firstTime Then
-            '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-            '        firstTime = False
-            '    Else
-            '        tmpErg = tmpErg & vbLf & tmpName
-            '    End If
-            'End If
+            ' die TodayLine
+            If IsNothing(_todayLineShape) Then
+                Dim beginX As Single = _containerShape.Left + 85
+                Dim beginY As Single = _containerShape.Top + 60
 
-            'If IsNothing(_legendStartShape) Then
-            '    ok = False
-            '    tmpName = "Legenden-Titel"
-            '    If firstTime Then
-            '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-            '        firstTime = False
-            '    Else
-            '        tmpErg = tmpErg & vbLf & tmpName
-            '    End If
-            'End If
+                Dim endX As Single = beginX
+                Dim endY As Single = beginY + 30
 
-            'If IsNothing(_legendTextVorlagenShape) Then
-            '    ok = False
-            '    tmpName = "Legenden-Textvorlage"
-            '    If firstTime Then
-            '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-            '        firstTime = False
-            '    Else
-            '        tmpErg = tmpErg & vbLf & tmpName
-            '    End If
-            'End If
+                _todayLineShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
 
-            'If IsNothing(_legendPhaseVorlagenShape) Then
-            '    ok = False
-            '    tmpName = "Legenden-Phasen-Vorlage"
-            '    If firstTime Then
-            '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-            '        firstTime = False
-            '    Else
-            '        tmpErg = tmpErg & vbLf & tmpName
-            '    End If
-            'End If
+                With _todayLineShape
+                    .Title = "TodayLine"
+                    .Line.ForeColor.RGB = visboFarbeBlau
+                    .Line.Weight = 2.0
+                    .Line.Transparency = 0.7
+                    .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                End With
 
-            'If IsNothing(_legendMilestoneVorlagenShape) Then
-            '    ok = False
-            '    tmpName = "Legenden-Meilenstein-Vorlage"
-            '    If firstTime Then
-            '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-            '        firstTime = False
-            '    Else
-            '        tmpErg = tmpErg & vbLf & tmpName
-            '    End If
-            'End If
+            End If
 
-            ' das muss ja immer existieren !!
+            ' das mit den Legenden-Shapes kann später mal ausgelassen werden ... 
+            If IsNothing(_legendLineShape) Then
+
+                Dim beginX As Single = _containerShape.Left + 30
+                Dim beginY As Single = CSng(_containerBottom + 50)
+
+                Dim endX As Single = beginX + _containerShape.Width - 35
+                If endX < beginX Then
+                    endX = beginX + 20
+                End If
+                Dim endY As Single = beginY
+
+                _legendLineShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
+                _legendLineShape.Title = "LegendLine"
+
+            End If
+
+            If IsNothing(_legendStartShape) Then
+
+                _legendStartShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _legendStartShape
+                    .TextFrame2.TextRange.Text = "Legende"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = pNameGanttSize - 2
+                    .Title = "LegendStart"
+                End With
+
+
+            End If
+
+            If IsNothing(_legendTextVorlagenShape) Then
+
+                _legendTextVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
+                With _legendTextVorlagenShape
+                    .TextFrame2.TextRange.Text = "Phase"
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.MarginTop = 0
+                    .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Font.Size = msPhNameDateSize - 2
+                    .Title = "LegendText"
+                End With
+
+            End If
+
+            If IsNothing(_legendPhaseVorlagenShape) Then
+
+                left = _containerShape.Left + 60
+                top = CSng(_containerBottom - 30)
+
+                width = 10
+                height = 2.25
+
+                _legendPhaseVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeRectangle, left, top, width, height)
+                _legendPhaseVorlagenShape.Title = "LegendPhase"
+
+
+            End If
+
+            If IsNothing(_legendMilestoneVorlagenShape) Then
+
+                left = _containerShape.Left + 70
+                top = CSng(_containerBottom - 30)
+
+                width = 4.25
+                height = 4.25
+
+                _legendMilestoneVorlagenShape = _pptSlide.Shapes.AddShape(Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, left, top, width, height)
+                _legendMilestoneVorlagenShape.Title = "LegendMilestone"
+
+            End If
+
+            'das muss ja immer existieren !!
             'If IsNothing(_containerShape) Then
             '    ok = False
             '    tmpName = "Container Shape"
@@ -882,24 +1047,7 @@ Public Class clsPPTShapes
             '    End If
             'End If
 
-            If IsNothing(_calendarHeightShape) Then
 
-                Dim beginX As Single = _containerShape.Left + 40
-                Dim beginY As Single = _containerShape.Top + 30
-
-                Dim endX As Single = beginX
-                Dim endY As Single = beginY + 28
-
-                _calendarHeightShape = _pptSlide.Shapes.AddLine(beginX, beginY, endX, endY)
-
-                With _calendarHeightShape
-                    .Title = "CalendarHeight"
-                    .Line.ForeColor.RGB = 5855577
-                    .Line.Weight = 1
-                    .Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                End With
-
-            End If
 
             If IsNothing(_calendarStepShape) Then
                 Dim beginX As Single = _containerShape.Left + 40
@@ -937,7 +1085,7 @@ Public Class clsPPTShapes
             If IsNothing(_errorVorlagenShape) Then
                 _errorVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _MsDescVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
+                    .TextFrame2.TextRange.Text = "Error-Message"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 0
@@ -962,6 +1110,7 @@ Public Class clsPPTShapes
                     .Title = "rowDifferentiator"
                     .Fill.Transparency = 0.7
                     .Fill.ForeColor.RGB = 16051931
+                    .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                 End With
             End If
 
@@ -986,7 +1135,7 @@ Public Class clsPPTShapes
             If IsNothing(_segmentVorlagenShape) Then
                 _segmentVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _MsDescVorlagenShape
-                    .TextFrame2.TextRange.Text = ""
+                    .TextFrame2.TextRange.Text = "Segment-Name"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 2
@@ -2098,8 +2247,10 @@ Public Class clsPPTShapes
         ' bestimme Drawing Area
         _drawingAreaLeft = _calendarLeft
         _drawingAreaRight = _calendarRight
-        '_drawingAreaTop = _calendarBottom + 2
-        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 2
+
+
+        ' bestimme den Anfang , wo gezeichnet wird 
+        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 5
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then
