@@ -5595,9 +5595,9 @@ Public Module Projekte
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRed, lengthRed, calledFromMassEdit:=calledFromMassEdit)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen, calledFromMassEdit:=calledFromMassEdit)
 
 
 
@@ -5753,9 +5753,16 @@ Public Module Projekte
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tDatenSumme < vDatensumme Then
+                        ' grün einfärben 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbGreen
+                    Else
+                        ' rot einfärben
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                    End If
                     ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed, lengthRed).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+
                 End If
 
             End With
@@ -6784,9 +6791,9 @@ Public Module Projekte
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRed, lengthRed, calledFromMassEdit)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen, calledFromMassEdit)
 
 
         With CType(chtobj.Chart, Excel.Chart)
@@ -6920,11 +6927,18 @@ Public Module Projekte
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                    lengthRed).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tDatenSumme < vDatensumme Then
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbGreen
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                    End If
                 End If
+
             End If
 
 

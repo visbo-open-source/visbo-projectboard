@@ -2673,9 +2673,9 @@ Module creationModule
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRed, lengthRed)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
         Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
@@ -2907,10 +2907,17 @@ Module creationModule
             .ChartTitle.Font.Size = titleFontSize
             .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
 
-            If startRed > 0 And lengthRed > 0 Then
-                ' die aktuelle Summe muss rot eingefärbt werden 
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                    lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+            If startRedGreen > 0 And lengthRedGreen > 0 Then
+                If tDatenSumme < vDatensumme Then
+                    ' die aktuelle Summe muss grün eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                Else
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                End If
+
             End If
 
         End With

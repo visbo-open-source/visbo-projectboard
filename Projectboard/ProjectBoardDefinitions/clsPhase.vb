@@ -299,15 +299,25 @@ Public Class clsPhase
                                         Me.originalName = vPhase.originalName And
                                         Me.verantwortlich = vPhase.verantwortlich Then
 
-                                    If Me.appearance = vPhase.appearance And
-                                            Me.individualColor = vPhase.individualColor And
-                                            Me.earliestStart = vPhase.earliestStart And
-                                            Me.latestStart = vPhase.latestStart And
-                                            Me.offset = vPhase.offset Then
+                                    ' tk 25.11.19 appearance und individualColor müssen nicht gecheckt werden
+
+                                    If Me.earliestStart = vPhase.earliestStart And
+                                           Me.latestStart = vPhase.latestStart And
+                                           Me.offset = vPhase.offset Then
 
                                         stillOK = True
 
                                     End If
+
+                                    'If Me.appearance = vPhase.appearance And
+                                    '        Me.individualColor = vPhase.individualColor And
+                                    '        Me.earliestStart = vPhase.earliestStart And
+                                    '        Me.latestStart = vPhase.latestStart And
+                                    '        Me.offset = vPhase.offset Then
+
+                                    '    stillOK = True
+
+                                    'End If
 
                                 End If
 
@@ -320,7 +330,8 @@ Public Class clsPhase
                 End If
 
                 ' jetzt die Deliverables prüfen  
-                Dim MeDelis As String = Me.getAllDeliverables("#")
+                If stillOK Then
+                    Dim MeDelis As String = Me.getAllDeliverables("#")
                     Dim vglDelis As String = vPhase.getAllDeliverables("#")
 
                     If MeDelis = vglDelis Then
@@ -335,12 +346,15 @@ Public Class clsPhase
                                 stillOK = False
                             End If
                         Loop
-
+                    Else
+                        stillOK = False
                     End If
 
+                End If
 
-                    ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
-                    If stillOK Then
+
+                ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
+                If stillOK Then
                         ' sind die Rollen identisch 
                         ix = 1
                         Do While stillOK And ix <= Me.countRoles
@@ -599,9 +613,11 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
-            ' tk 28.11.17
-            If PhaseDefinitions.Contains(Me.name) Then
-                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            ' tk 25.11.19 die erste if Abfrage eingeführt ..
+            If _appearance = "" Then
+                If PhaseDefinitions.Contains(Me.name) Then
+                    _appearance = PhaseDefinitions.getAppearance(Me.name)
+                End If
             End If
             appearance = _appearance
         End Get
@@ -1105,13 +1121,14 @@ Public Class clsPhase
             Dim abbrev As String = ""
             Dim tmpName As String = Me.name
 
+
             If PhaseDefinitions.Contains(tmpName) Then
-                abbrev = PhaseDefinitions.getAbbrev(tmpName)
-            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
-                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
-            Else
-                abbrev = _shortName
-            End If
+                    abbrev = PhaseDefinitions.getAbbrev(tmpName)
+                ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                    abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+                Else
+                    abbrev = ""
+                End If
 
             shortName = abbrev
 
@@ -2107,24 +2124,56 @@ Public Class clsPhase
 
         With newphase
 
-            .earliestStart = Me._earliestStart
-            .latestStart = Me._latestStart
-            .offset = Me._offset
+            ' tk 25.11.19 , das Auskommentierte führte zu Fehlern ...
+            ' insbesondere bei appearance und farbe 
+
+            ' korrekt 25.11.19 
+            .earliestStart = earliestStart
+            .latestStart = latestStart
+            .offset = offset
 
             ' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
             ' wird also bei Mapping nicht übernommen
             If Not mapping Then
-                .nameID = _nameID
+                .nameID = nameID
             End If
 
 
             ' sonstigen Elemente übernehmen 
-            .shortName = Me._shortName
-            .originalName = Me._originalName
-            .appearance = Me._appearance
-            .farbe = Me._color
-            .verantwortlich = Me._verantwortlich
-            .percentDone = Me._percentDone
+            .shortName = shortName
+            .originalName = originalName
+
+
+            .appearance = appearance
+            .farbe = farbe
+            .verantwortlich = verantwortlich
+            .percentDone = percentDone
+            '
+            ' Ende korrekt 25.11.19 
+
+            ' ---------------------------------------
+            ' fehlerhaft 25.11.19 , insbesondere bei appearance und farbe
+            '.earliestStart = Me._earliestStart
+            '.latestStart = Me._latestStart
+            '.offset = Me._offset
+
+            '' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
+            '' wird also bei Mapping nicht übernommen
+            'If Not mapping Then
+            '    .nameID = _nameID
+            'End If
+
+
+            '' sonstigen Elemente übernehmen 
+            '.shortName = Me._shortName
+            '.originalName = Me._originalName
+
+
+            '.appearance = Me._appearance
+            '.farbe = Me._color
+            '.verantwortlich = Me._verantwortlich
+            '.percentDone = Me._percentDone
+            ' Ende fehlerhaft 25.11.19 ---------------
 
             ' Rollen und kosten werden bei Mapping nicht übernommen
             If Not mapping Then
@@ -2236,6 +2285,17 @@ Public Class clsPhase
                 .nameID = newPhaseNameID
             End If
 
+            ' ergänzt am 25.11.19 
+            ' sonstigen Elemente übernehmen 
+            .shortName = shortName
+            .originalName = originalName
+
+
+            .appearance = appearance
+            .farbe = farbe
+            .verantwortlich = verantwortlich
+            .percentDone = percentDone
+            ' Ende ergänzt am 25.11 
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
@@ -2340,6 +2400,30 @@ Public Class clsPhase
                 End Try
 
             Next
+
+            ' 25.11.19 Bewertungen und Deliverables auch übernehmen
+            '_ das muss bei Projekten, die aus Dehnen, stauchen, Verschieben zustande kommen , so angepasst werden, dass Bewertungen aus der Vergangenheit 
+            ' übernommen werden, baer die Bewertungen der Zukunft nicht übernommen werden ! 
+            ' aktuell werden keine Bewertungen übernommen  
+
+            'For b As Integer = 1 To Me._bewertungen.Count
+            '    Dim newb As New clsBewertung
+            '    Me.getBewertung(b).copyto(newb)
+            '    Try
+            '        .addBewertung(newb)
+            '    Catch ex As Exception
+
+            '    End Try
+
+            'Next
+
+            ' Deliverables sollen immer übernommen werden ...
+            ' jetzt noch die Deliverables kopieren ... 
+            For i = 1 To Me.countDeliverables
+                Dim deli As String = Me.getDeliverable(i)
+                .addDeliverable(deli)
+            Next
+
 
         End With
 

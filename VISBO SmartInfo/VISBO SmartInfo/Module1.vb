@@ -4249,9 +4249,9 @@ Module Module1
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRedGreen, lengthRedGreen)
 
 
 
@@ -4430,10 +4430,17 @@ Module Module1
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tSum < vSum Then
+                        ' die aktuelle Summe muss grün eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                            lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                            lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                    End If
+
                 End If
             End If
 

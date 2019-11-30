@@ -1096,8 +1096,10 @@ Public Module awinGeneralModules
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
+    ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
+    ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
@@ -1136,6 +1138,8 @@ Public Module awinGeneralModules
         anzAktualisierungen = 0
         anzNeuProjekte = 0
 
+
+
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
@@ -1144,6 +1148,12 @@ Public Module awinGeneralModules
             Dim newVariantGenerated As Boolean = False
             fullName = kvp.Key
             hproj = kvp.Value
+
+            ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
+            If awinSettings.autoSetActualDataDate = True Then
+                ' das müssten den vorletzten Tag des Vormontas abgeben 
+                hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
+            End If
 
 
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
@@ -1242,7 +1252,7 @@ Public Module awinGeneralModules
                     ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
 
                     Try
-                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile)
+                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
                     End Try
@@ -1300,7 +1310,8 @@ Public Module awinGeneralModules
                                 ShowProjekte.Remove(hproj.name)
                             End If
 
-                        ElseIf existsInSession Then
+                            ' das muss auch gemacht werden, wenn hproj.marker = true
+                        ElseIf existsInSession Or hproj.marker = True Then
                             AlleProjekte.Remove(vglName, False)
                             If ShowProjekte.contains(hproj.name) Then
                                 ShowProjekte.Remove(hproj.name, False)
@@ -1312,12 +1323,6 @@ Public Module awinGeneralModules
                         Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
                     End Try
 
-                End If
-
-                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
-                If awinSettings.autoSetActualDataDate = True Then
-                    ' das müssten den vorletzten Tag des Vormontas abgeben 
-                    hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
                 End If
 
 
@@ -1423,10 +1428,14 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>
     ''' <param name="cproj"></param>
     ''' <param name="existsInSession"></param>
+    ''' <param name="importDate"></param>
+    ''' <param name="tafelZeile"></param>
+    ''' <param name="fileFrom3rdParty">gibt an, ob es sich um einen VISBO Steckbrief handelt (false) oder einen fremden Steckbrief</param>
     ''' <remarks></remarks>
     Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal cproj As clsProjekt,
                                                ByVal existsInSession As Boolean, ByVal importDate As Date,
-                                               ByRef tafelZeile As Integer)
+                                               ByRef tafelZeile As Integer,
+                                               ByVal fileFrom3rdParty As Boolean)
         ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
         Dim vglName As String = calcProjektKey(hproj)
 
@@ -1448,6 +1457,14 @@ Public Module awinGeneralModules
 
                 .StartOffset = 0
                 .Status = cproj.Status
+
+                ' 
+                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden  
+                If awinSettings.autoSetActualDataDate = False Then
+                    ' das müssten den vorletzten Tag des Vormontas abgeben 
+                    hproj.actualDataUntil = cproj.actualDataUntil
+                End If
+
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
@@ -1474,6 +1491,52 @@ Public Module awinGeneralModules
 
                 End If
 
+                If fileFrom3rdParty Then
+                    If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
+                        ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
+                        Try
+                            Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                            End If
+                        Catch ex As Exception
+                            Call MsgBox("resources from former version could not be copied ... ")
+                        End Try
+
+                    End If
+
+
+                    ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
+                    If hproj.leadPerson = "" And cproj.leadPerson <> "" Then
+                        hproj.leadPerson = cproj.leadPerson
+                    End If
+
+                    If hproj.Erloes = 0 And cproj.Erloes > 0 Then
+                        hproj.Erloes = cproj.Erloes
+                    End If
+
+                    If hproj.actualDataUntil = Date.MinValue And cproj.actualDataUntil > cproj.startDate Then
+                        hproj.actualDataUntil = cproj.actualDataUntil
+                    End If
+
+                    If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And cproj.ampelStatus > 0 Then
+                        hproj.ampelStatus = cproj.ampelStatus
+                        hproj.ampelErlaeuterung = cproj.ampelErlaeuterung
+                    End If
+
+                    If hproj.description = "" And cproj.description <> "" Then
+                        hproj.description = cproj.description
+                    End If
+
+                    If hproj.kundenNummer = "" And cproj.kundenNummer <> "" Then
+                        hproj.kundenNummer = cproj.kundenNummer
+                    End If
+
+                    hproj.Risiko = cproj.Risiko
+                    hproj.StrategicFit = cproj.StrategicFit
+                    hproj.projectType = cproj.projectType
+
+                End If
 
 
             End With

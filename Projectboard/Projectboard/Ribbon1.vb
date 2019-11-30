@@ -5531,7 +5531,7 @@ Imports System.Web
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, False)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5727,7 +5727,7 @@ Imports System.Web
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, True)
+                    Call importProjekteEintragen(importDate, True, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -5845,7 +5845,7 @@ Imports System.Web
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -6807,7 +6807,7 @@ Imports System.Web
 
 
             Try
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, False)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -6983,7 +6983,7 @@ Imports System.Web
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, True)
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
