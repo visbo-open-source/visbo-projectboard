@@ -13774,7 +13774,8 @@ Public Module Projekte
                                                  ByVal roleNames() As String, ByVal roleValues() As Double,
                                                  ByVal costNames() As String, ByVal costValues() As Double,
                                                  ByVal phNames() As String, ByVal przPhasenAnteile() As Double,
-                                                 ByVal combinedName As Boolean)
+                                                 ByVal combinedName As Boolean,
+                                                 Optional ByVal createBudget As Boolean = False)
 
         Dim hproj As clsProjekt = New clsProjekt
 
@@ -13808,9 +13809,14 @@ Public Module Projekte
 
                 If combinedName Then
                     If Not IsNothing(projectNummer) Then
-                        .name = projectNummer.Trim & "_" & pName
+                        If projectNummer <> "" Then
+                            .name = pName & "_" & projectNummer.Trim
+                        Else
+                            .name = pName
+                        End If
+
                     Else
-                        .name = "_" & pName
+                        .name = pName
                     End If
                 Else
                     .name = pName
@@ -13878,7 +13884,8 @@ Public Module Projekte
         hproj.addListOfCustomFields(listOfCustomFields)
 
         ' jetzt das Budget so setzen, wie es benötigt wird ... 
-        If budget <= 0 And atleastOneRC Then
+        ' NEIN - kein Budget automatisch erstellen ...
+        If budget <= 0 And atleastOneRC And createBudget Then
             hproj.setBudgetAsNeeded()
         End If
 
@@ -18235,36 +18242,6 @@ Public Module Projekte
 
     End Sub
 
-    ' ''' <summary>
-    ' ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
-    ' ''' </summary>
-    ' ''' <param name="nameList"></param>
-    ' ''' <param name="prcTyp"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
-
-    '    Dim tmpName As String = ""
-
-    '    If nameList.Count < 1 Then
-    '        tmpName = ""
-    '    ElseIf nameList.Count = 1 Then
-    '        tmpName = CStr(nameList.Item(1))
-    '    ElseIf nameList.Count > 1 Then
-    '        tmpName = "Collection"
-
-    '    End If
-
-    '    With roentgenBlick
-    '        If .isOn Then
-    '            'Call awinNoshowProjectNeeds()
-    '        End If
-    '        .isOn = True
-    '        .name = tmpName
-    '        .myCollection = nameList
-    '        .type = prcTyp
-    '        'Call awinShowProjectNeeds1(nameList, prcTyp)
-    '    End With
-    'End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -18448,184 +18425,75 @@ Public Module Projekte
 
     End Sub
 
+
     ''' <summary>
-    ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' zeichnet bei fromScratch = true: zuerst in Reihenfolge der Business Units, 
-    ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
-    ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' löscht das Projectboard und zeichnet dann die Constellation 
+    ''' zeichnet das Projectboard, baut es von Scratch an auf ... 
+    ''' in AlleProjekte sind die zu zeichnenden Projekte drin ...
     ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel_old(ByVal fromScratch As Boolean)
-
-        Dim todoListe As New SortedList(Of Double, String)
-        Dim key As Double
-        Dim pname As String
-
-        Dim lastZeileOld As Integer
-        Dim hproj As clsProjekt
-        Dim positionsKennzahl As Double
-
-        Dim notOK As Boolean = True
-        Dim tryExceptionCounts As Integer = 0
+    Public Sub awinZeichnePlanTafel(ByVal myConstellation As clsConstellation)
 
 
-        If fromScratch Then
-            Dim zeile As Integer
-            Dim lastBU As String = ""
+        ' wenn das nicht so aufgesetzt, dann werden alle aktuellen Constelaltions-Items im Attribut auf false gesetzt ...
+        Call clearProjectBoard(updateCurrentConstellation:=False)
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        ' wenn Nothing übergeben wird, dann wird die currentConstellation gezeichnet
 
-                notOK = True
+        Dim zeile As Integer = 2
+        Dim hproj As clsProjekt = Nothing
 
-                With kvp.Value
+        Dim listOfPnames As String() = myConstellation.sortListe.Values.ToArray
 
-                    'positionsKennzahl = calcKennziffer(kvp.Value)
-                    If projectConstellations.Contains(currentConstellationName) Then
-                        positionsKennzahl = projectConstellations.getConstellation(currentConstellationName).getBoardZeile(kvp.Key)
-                    Else
-                        positionsKennzahl = currentSessionConstellation.getBoardZeile(kvp.Key)
-                    End If
+        For Each tmpPname As String In listOfPnames
 
+            Dim cItem As clsConstellationItem = myConstellation.getShownItem(tmpPname)
 
-                    Do While notOK
-                        Try
-                            If todoListe.ContainsKey(positionsKennzahl) Then
-                                positionsKennzahl = positionsKennzahl + 0.00001
-                            Else
-                                todoListe.Add(positionsKennzahl, .name)
-                                notOK = False
-                            End If
-                        Catch ex As Exception
-                            positionsKennzahl = positionsKennzahl + 0.00001
-                            tryExceptionCounts = tryExceptionCounts + 1
-                        End Try
-                    Loop
-
-
-                End With
-
-            Next
-
-            zeile = 2
-            Dim i As Integer
-
-            For i = 1 To todoListe.Count
-
-                pname = todoListe.ElementAt(i - 1).Value
-
-                Try
-                    hproj = ShowProjekte.getProject(pname)
+            If Not IsNothing(cItem) Then
+                ' diese Abfrage ist eigentlich redundant, aber sicher ist sicher 
+                If cItem.show Then
+                    Dim key As String = calcProjektKey(cItem.projectName, cItem.variantName)
+                    hproj = AlleProjekte.getProject(key)
 
                     hproj.tfZeile = zeile
 
+                    ShowProjekte.Add(hproj)
+
                     Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, zeile, tmpCollection, tmpCollection)
 
                     ' zeile soviel weiterschalten, wie Platz benötigt wird ...
-                    zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
-
-                Catch ex As Exception
-                    tryExceptionCounts = tryExceptionCounts + 1
-                End Try
-
-            Next
+                    zeile = zeile + 1
 
 
-        Else
+                End If
 
-            Dim zeile As Integer, lastzeile As Integer, curzeile As Integer, max As Integer
-            ' so wurde es bisher gemacht ... bis zum 17.1.15
-            ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                Try
-                    With kvp.Value
-                        key = 10000 * .tfZeile + kvp.Value.Start
-                        Do While todoListe.ContainsKey(key)
-                            key = key + 0.000001
-                        Loop
-                        todoListe.Add(key, .name)
-                    End With
-                Catch ex As Exception
-
-                    tryExceptionCounts = tryExceptionCounts + 1
-                    'Call MsgBox("Fehler in awinZeichnePlanTafel")
-
-                End Try
+            End If
 
 
-            Next
+        Next
 
-            zeile = 2
-            lastzeile = 0
-
-
-            'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-            ' dann sollen die Projekte im extended mode gezeichnet werden 
-            ' jetzt erst mal die Konstellation "last" speichern
-            ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
-            ' Call storeSessionConstellation(ShowProjekte, "Last")
-
-            ' jetzt die todoListe abarbeiten
-            Dim i As Integer
-            For i = 1 To todoListe.Count
-                pname = todoListe.ElementAt(i - 1).Value
-
-                Try
-                    hproj = ShowProjekte.getProject(pname)
-
-                    If i = 1 Then
-                        curzeile = hproj.tfZeile
-                        lastZeileOld = hproj.tfZeile
-                        lastzeile = curzeile
-                        max = curzeile
-                    Else
-                        If lastZeileOld = hproj.tfZeile Then
-                            curzeile = lastzeile
-                        Else
-                            lastzeile = max
-                            lastZeileOld = hproj.tfZeile
-                        End If
-
-                    End If
-
-                    ' Änderung 9.10.14, damit die Spaces in einer 
-                    'If hproj.tfZeile >= curZeile + 1 Then
-                    '    curZeile = curZeile + 1
-                    'End If
-                    ' Ende Änderung
-                    hproj.tfZeile = curzeile
-                    lastzeile = curzeile
-                    'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curzeile, tmpCollection, tmpCollection)
-                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
-
-
-                    If curzeile > max Then
-                        max = curzeile
-                    End If
-                Catch ex As Exception
-                    tryExceptionCounts = tryExceptionCounts + 1
-                End Try
-
-
-
-            Next
-        End If
-
-        'If tryExceptionCounts > 0 Then
-        '    Call MsgBox("Anzahl: " & tryExceptionCounts)
-        'End If
-
-        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
 
     End Sub
 
-    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean,
-                                    Optional ByVal cstl As clsConstellation = Nothing)
+
+    ''' <summary>
+    ''' setzt alle angezeigten Projekte, also ShowProjekte,  zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearProjectBoard(Optional ByVal updateCurrentConstellation As Boolean = True)
+
+        Call awinClearPlanTafel()
+
+        ShowProjekte.Clear(updateCurrentConstellation)
+        projectboardShapes.clear()
+
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
+
+
+    End Sub
+
+    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean)
 
         Dim todoListe As New SortedList(Of Double, String)
         Dim key As Double
@@ -18972,49 +18840,6 @@ Public Module Projekte
 
     ''End Sub
 
-    ''' <summary>
-    ''' schnelles Zeichnen der Projekte von Scratch bzw. Update eines Projektes 
-    ''' ist aber eigentlich nicht notwendig, weil der Perfromance Gewinn gegenüber der awinzeichnePlanTafel marginal ist
-    ''' </summary>
-    ''' <param name="fromScratch"></param>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafelNeu(ByVal fromScratch As Boolean)
-
-
-        Dim pname As String
-        Dim hproj As clsProjekt
-
-
-        Dim notOK As Boolean = True
-        Dim tryExceptionCounts As Integer = 0
-
-        'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
-
-        If fromScratch Then
-            Dim zeile As Integer = 2
-            Dim lastBU As String = ""
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                pname = kvp.Value.name
-                hproj = kvp.Value
-
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
-
-                zeile = zeile + 1
-            Next
-
-        Else
-
-            Call MsgBox("noch nicht implementiert ")
-
-        End If
-
-
-        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
-
-    End Sub
 
 
     ''' <summary>

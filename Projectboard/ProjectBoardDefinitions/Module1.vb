@@ -321,6 +321,7 @@ Public Module Module1
         allianzIstDaten = 8
         visboMassRessourcenEdit = 9
         visboMPP = 10
+        allianzBOBImport = 11
     End Enum
 
     Public Enum ptImportSettings

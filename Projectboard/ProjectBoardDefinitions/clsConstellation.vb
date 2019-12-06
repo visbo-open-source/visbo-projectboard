@@ -916,7 +916,12 @@
     End Property
 
 
-    Public ReadOnly Property getItem(key As String) As clsConstellationItem
+    ''' <summary>
+    ''' gibt das ConstellationItem zurück mit dem Key pName#vname
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getItem(ByVal key As String) As clsConstellationItem
 
         Get
             If _allItems.ContainsKey(key) Then
@@ -926,6 +931,47 @@
             End If
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' gibt das clsConstellationItem zurück, das angezeigt wird. 
+    ''' pro Constelaltion können zwar mehrere Varianten vorkommen, aber nur eine kann das Attribut show haben 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getShownItem(ByVal pName As String) As clsConstellationItem
+        Get
+
+            Dim ergebnis As clsConstellationItem = Nothing
+            Dim found As Boolean = False
+            Dim i As Integer = 0
+            Do While Not found And i <= _allItems.Count - 1
+                If _allItems.ElementAt(i).Value.projectName = pName Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+            Loop
+
+            If found Then
+                Dim abbruch As Boolean = False
+                Do While Not abbruch And i <= _allItems.Count - 1
+                    If _allItems.ElementAt(i).Value.projectName = pName Then
+                        If _allItems.ElementAt(i).Value.show = True Then
+                            abbruch = True
+                            ergebnis = _allItems.ElementAt(i).Value
+                        Else
+                            i = i + 1
+                        End If
+                    Else
+                        abbruch = True
+                    End If
+
+                Loop
+            End If
+
+            getShownItem = ergebnis
+        End Get
     End Property
 
     Public ReadOnly Property count() As Integer

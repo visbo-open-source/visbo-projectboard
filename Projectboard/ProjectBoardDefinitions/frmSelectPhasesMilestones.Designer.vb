@@ -29,10 +29,14 @@ Partial Class frmSelectPhasesMilestones
         Me.resetSelections = New System.Windows.Forms.PictureBox()
         Me.collapseTree = New System.Windows.Forms.PictureBox()
         Me.expandTree = New System.Windows.Forms.PictureBox()
+        Me.Panel3 = New System.Windows.Forms.Panel()
+        Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
+        Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.resetSelections, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseTree, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandTree, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel3.SuspendLayout()
         Me.SuspendLayout()
         '
         'TreeViewProjects
@@ -41,9 +45,9 @@ Partial Class frmSelectPhasesMilestones
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TreeViewProjects.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TreeViewProjects.Location = New System.Drawing.Point(9, 12)
+        Me.TreeViewProjects.Location = New System.Drawing.Point(9, 35)
         Me.TreeViewProjects.Name = "TreeViewProjects"
-        Me.TreeViewProjects.Size = New System.Drawing.Size(471, 280)
+        Me.TreeViewProjects.Size = New System.Drawing.Size(471, 257)
         Me.TreeViewProjects.TabIndex = 0
         '
         'Ok_Button
@@ -110,11 +114,45 @@ Partial Class frmSelectPhasesMilestones
         Me.expandTree.TabIndex = 95
         Me.expandTree.TabStop = False
         '
+        'Panel3
+        '
+        Me.Panel3.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel3.Controls.Add(Me.rdbProjStruktTyp)
+        Me.Panel3.Controls.Add(Me.rdbProjStruktProj)
+        Me.Panel3.Location = New System.Drawing.Point(4, 4)
+        Me.Panel3.Name = "Panel3"
+        Me.Panel3.Size = New System.Drawing.Size(442, 25)
+        Me.Panel3.TabIndex = 97
+        '
+        'rdbProjStruktTyp
+        '
+        Me.rdbProjStruktTyp.AutoSize = True
+        Me.rdbProjStruktTyp.Location = New System.Drawing.Point(7, 3)
+        Me.rdbProjStruktTyp.Name = "rdbProjStruktTyp"
+        Me.rdbProjStruktTyp.Size = New System.Drawing.Size(125, 17)
+        Me.rdbProjStruktTyp.TabIndex = 68
+        Me.rdbProjStruktTyp.Text = "Projekt-Struktur (Typ)"
+        Me.rdbProjStruktTyp.UseVisualStyleBackColor = True
+        '
+        'rdbProjStruktProj
+        '
+        Me.rdbProjStruktProj.AutoSize = True
+        Me.rdbProjStruktProj.Checked = True
+        Me.rdbProjStruktProj.Location = New System.Drawing.Point(139, 3)
+        Me.rdbProjStruktProj.Name = "rdbProjStruktProj"
+        Me.rdbProjStruktProj.Size = New System.Drawing.Size(140, 17)
+        Me.rdbProjStruktProj.TabIndex = 67
+        Me.rdbProjStruktProj.TabStop = True
+        Me.rdbProjStruktProj.Text = "Projekt-Struktur (Projekt)"
+        Me.rdbProjStruktProj.UseVisualStyleBackColor = True
+        '
         'frmSelectPhasesMilestones
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(487, 347)
+        Me.Controls.Add(Me.Panel3)
         Me.Controls.Add(Me.collapseTree)
         Me.Controls.Add(Me.expandTree)
         Me.Controls.Add(Me.resetSelections)
@@ -127,6 +165,8 @@ Partial Class frmSelectPhasesMilestones
         CType(Me.resetSelections, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseTree, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandTree, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.Panel3.ResumeLayout(False)
+        Me.Panel3.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -137,4 +177,7 @@ Partial Class frmSelectPhasesMilestones
     Friend WithEvents resetSelections As Windows.Forms.PictureBox
     Friend WithEvents collapseTree As Windows.Forms.PictureBox
     Friend WithEvents expandTree As Windows.Forms.PictureBox
+    Friend WithEvents Panel3 As Windows.Forms.Panel
+    Friend WithEvents rdbProjStruktTyp As Windows.Forms.RadioButton
+    Friend WithEvents rdbProjStruktProj As Windows.Forms.RadioButton
 End Class
