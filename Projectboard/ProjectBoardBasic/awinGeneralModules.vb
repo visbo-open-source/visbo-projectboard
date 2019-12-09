@@ -4736,7 +4736,11 @@ Public Module awinGeneralModules
                     If Not IsNothing(baseVariantProj) Then
                         baseVariantStatus = baseVariantProj.Status
                     Else
-                        Call MsgBox("BasisVariante kann nicht gefunden werden")
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("BasisVariante kann nicht gefunden werden")
+                        End If
+
                     End If
 
                 End If

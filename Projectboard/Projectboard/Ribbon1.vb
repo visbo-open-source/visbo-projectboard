@@ -1719,14 +1719,19 @@ Imports System.Web
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
+
                                 ' notwendig, um den Speicher-Conflic 409 zu vermeinden 
-                                hproj.updatedAt = bisherigeBaseVariant.updatedAt
+                                If Not IsNothing(bisherigeBaseVariant) Then
+                                    hproj.updatedAt = bisherigeBaseVariant.updatedAt
+
+                                    '' tk 25.7.19 
+                                    'If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
+                                    '    hproj.marker = True
+                                    'End If
+                                End If
+
                                 hproj.timeStamp = Date.Now
 
-                                ' tk 25.7.19 
-                                If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
-                                    hproj.marker = True
-                                End If
 
                                 ' die "neue" Standard Variante in AlleProjekte und ShowProjekte aufnehmen 
                                 AlleProjekte.Add(hproj)
