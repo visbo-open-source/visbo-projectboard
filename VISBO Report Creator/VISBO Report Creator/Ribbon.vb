@@ -76,6 +76,7 @@ Public Class Ribbon
 
                     ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
                     Dim hproj As clsProjekt = Nothing
+                    Dim anzP As Integer = ShowProjekte.Count
                     If selectedProjekte.Count = 1 Then
                         hproj = selectedProjekte.getProject(1)
 

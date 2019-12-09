@@ -1719,14 +1719,19 @@ Imports System.Web
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
+
                                 ' notwendig, um den Speicher-Conflic 409 zu vermeinden 
-                                hproj.updatedAt = bisherigeBaseVariant.updatedAt
+                                If Not IsNothing(bisherigeBaseVariant) Then
+                                    hproj.updatedAt = bisherigeBaseVariant.updatedAt
+
+                                    '' tk 25.7.19 
+                                    'If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
+                                    '    hproj.marker = True
+                                    'End If
+                                End If
+
                                 hproj.timeStamp = Date.Now
 
-                                ' tk 25.7.19 
-                                If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
-                                    hproj.marker = True
-                                End If
 
                                 ' die "neue" Standard Variante in AlleProjekte und ShowProjekte aufnehmen 
                                 AlleProjekte.Add(hproj)
@@ -5212,6 +5217,14 @@ Imports System.Web
                                 isAllianzImport1 = True
                                 Call importAllianzType1(startdate, enddate)
 
+                            ElseIf scenarioNameP.StartsWith("BOBS") Then
+
+                                Dim startdate As Date = CDate("1.1.2020")
+                                Dim enddate As Date = CDate("31.12.2020")
+
+                                isAllianzImport1 = True
+                                Call importAllianzBOBS(startdate, enddate)
+
                             ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
 
                                 noScenarioCreation = True
@@ -5253,8 +5266,10 @@ Imports System.Web
 
                         If ohneFehler Then
                             'sessionConstellationP enthält alle Projekte aus dem Import 
-                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                            'Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=True, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
+
 
                             ' tk 8.5.19 das soll jetzt nicht mehr gemacht werden - immer alle Projekte zeigen, die importiert wurden und sich verändert haben 
                             If isAllianzImport1 Then
@@ -5300,11 +5315,18 @@ Imports System.Web
 
                             ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
                             ' tk 12.8.19 diese beiden Constellations sollen nicht mehr eingetragen werden , nur noch die Rupi-Liste 
+
+
                             projectConstellations.Add(sessionConstellationP)
-                            'projectConstellations.Add(sessionConstellationS)
+                            projectConstellations.Add(sessionConstellationS)
                             ' jetzt auf Projekt-Tafel anzeigen 
 
-                            Call loadSessionConstellation(scenarioNameP, False, True)
+                            currentConstellationName = sessionConstellationP.constellationName
+                            ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
+                            ' die andere kann dann über loadConstelaltion gezeichnet werden 
+                            Call awinZeichnePlanTafel(sessionConstellationP)
+
+                            'Call loadSessionConstellation(scenarioNameP, False, True)
 
                             '' tk 8.5.19 auskommentiert 
                             'If isAllianzImport1 Then
@@ -6516,6 +6538,10 @@ Imports System.Web
                 Dim outputCollection As New Collection
                 Dim importedCustomization As clsCustomization = ImportCustomization(outputCollection)
 
+                ' vorher zurücksetzen ...
+                If customFieldDefinitions.count > 0 Then
+                    customFieldDefinitions = New clsCustomFieldDefinitions
+                End If
                 Dim customFieldDefs As clsCustomFieldDefinitions = ImportCustomFieldDefinitions(outputCollection)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)

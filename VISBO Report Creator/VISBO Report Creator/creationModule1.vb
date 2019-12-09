@@ -320,6 +320,7 @@ Module creationModule1
                         kennzeichnung = "Swimlanes2" Or
                         kennzeichnung = "MilestoneCategories" Or
                         kennzeichnung = "Meilenstein Trendanalyse" Or
+                        kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "TableMilestoneAPVCV" Then
 
                     phMSSelNeeded(0) = True
@@ -580,6 +581,30 @@ Module creationModule1
                                     objectsDone = objectsToDo
 
                                 End Try
+
+                            Case "Multiprojektsicht"
+
+                                Try
+                                    Dim tmpProjekt As New clsProjekt
+
+                                    Dim minCal As Boolean = False
+                                    If pptShape.AlternativeText.Length > 0 Then
+                                        minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                    End If
+
+                                    Dim pptFirstTime As Boolean = True
+                                    Call zeichneMultiprojektSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
+                                                              selectedPhases, selectedMilestones,
+                                                              translateToRoleNames(selectedRoles), selectedCosts,
+                                                              selectedBUs, selectedTyps,
+                                                              True, False, tmpProjekt, kennzeichnung, minCal)
+                                    .TextFrame2.TextRange.Text = ""
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
+
 
                             Case "Einzelprojektsicht"
 
@@ -3726,7 +3751,7 @@ Module creationModule1
 
 
                     Call zeichnePPTprojectsInPPT(projCollection, objectsDone,
-                                rds, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                                rds, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, kennzeichnung)
 
 
                 Catch ex As Exception
@@ -3788,7 +3813,8 @@ Module creationModule1
     Sub zeichnePPTprojectsInPPT(ByRef projectCollection As SortedList(Of Double, String),
                                 ByRef projDone As Integer,
                                 ByVal rds As clsPPTShapes,
-                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection)
+                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
+                                ByVal kennzeichnung As String)
 
         Dim addOn As Double = 0.0
         Dim msgTxt As String = ""
@@ -3799,6 +3825,8 @@ Module creationModule1
             addOn = System.Math.Max(rds.durationArrowShape.Height, rds.durationTextShape.Height) ' tk Änderung 
 
         End If
+
+        Dim istEinzelProjektSicht As Boolean = (kennzeichnung = "Einzelprojektsicht" Or kennzeichnung = "AllePlanElemente")
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = rds.drawingAreaWidth
@@ -3940,30 +3968,54 @@ Module creationModule1
 
 
                 Dim severalProjectsInOneLine As Boolean = False
-                If currentProjektIndex > 1 Then
 
-                    If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) = CInt(projectCollection.ElementAt(currentProjektIndex - 2).Key) And
+                If Not istEinzelProjektSicht Then
+
+                    If currentProjektIndex > 1 Then
+
+                        If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) = CInt(projectCollection.ElementAt(currentProjektIndex - 2).Key) And
                         Not IsNothing(lastProjectNameShape) Then
-                        ' mehrere Projekte in einer Zeile 
-                        severalProjectsInOneLine = True
+                            ' mehrere Projekte in einer Zeile 
+                            severalProjectsInOneLine = True
+                        Else
+                            ' normal Mode ... nur 1 Projekt pro Zeile 
+                        End If
+
                     Else
                         ' normal Mode ... nur 1 Projekt pro Zeile 
                     End If
 
-                Else
-                    ' normal Mode ... nur 1 Projekt pro Zeile 
-                End If
+                    copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, curSlide)
 
-                copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, curSlide)
+                    ' wenn mehrere Projekte nacheinander in einer Zeile stehen 
+                    If severalProjectsInOneLine Then
 
-                ' wenn mehrere Projekte nacheinander in einer Zeile stehen 
-                If severalProjectsInOneLine Then
+                        ' zuerst das lastProjectNAmeShape die MArgin lösche nund ganz nach oben schieben .. 
+                        Dim offset As Double = projektNamenYrelPos
 
-                    ' zuerst das lastProjectNAmeShape die MArgin lösche nund ganz nach oben schieben .. 
-                    Dim offset As Double = projektNamenYrelPos
+                        If Not IsNothing(lastProjectNameShape) Then
+                            With lastProjectNameShape
+                                If .TextFrame2.MarginTop > 0 Then
+                                    .TextFrame2.MarginTop = 0
+                                End If
+                                If .TextFrame2.MarginBottom > 0 Then
+                                    .TextFrame2.MarginBottom = 0
+                                End If
 
-                    If Not IsNothing(lastProjectNameShape) Then
-                        With lastProjectNameShape
+                                .Top = rowYPos + 2
+                            End With
+                        End If
+
+                        ' jetzt das eigentliche Shape zeichnen 
+                        With copiedShape(1)
+
+                            If currentProjektIndex > 1 And lastProjectName = hproj.name Then
+                                .TextFrame2.TextRange.Text = "+ ... " & hproj.variantName
+                            Else
+                                .TextFrame2.TextRange.Text = "+ " & hproj.getShapeText
+                            End If
+
+                            ' die Oben und unten -Marge auf Null setzen, so dass der Text möglichst gut in die Zeile passt 
                             If .TextFrame2.MarginTop > 0 Then
                                 .TextFrame2.MarginTop = 0
                             End If
@@ -3971,181 +4023,162 @@ Module creationModule1
                                 .TextFrame2.MarginBottom = 0
                             End If
 
-                            .Top = rowYPos + 2
+                            ' das jetzt so positionieren, dass es nach rechts versetzt und bündig unten mit dem Zeilenrand abschliesst 
+                            .Left = lastProjectNameShape.Left + 8
+                            If lastProjectNameShape.Top + lastProjectNameShape.Height + 2 + .Height > rowYPos + rds.zeilenHoehe Then
+                                .Top = rowYPos + rds.zeilenHoehe - .Height
+                            Else
+                                .Top = lastProjectNameShape.Top + lastProjectNameShape.Height + 2
+                            End If
+
+
+
+                            lastProjectName = hproj.name
+                            .Name = .Name & .Id
+
+                            If awinSettings.mppEnableSmartPPT Then
+
+                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
+                                                        Nothing, Nothing,
+                                                        hproj.startDate, hproj.endeDate,
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                            End If
+
+                        End With
+                    Else
+
+                        With copiedShape(1)
+                            .Top = CSng(projektNamenYPos)
+                            .Left = CSng(projektNamenXPos)
+                            If currentProjektIndex > 1 And lastProjectName = hproj.name Then
+                                .TextFrame2.TextRange.Text = "... " & hproj.variantName
+                            Else
+                                .TextFrame2.TextRange.Text = hproj.getShapeText
+                            End If
+
+                            lastProjectName = hproj.name
+                            .Name = .Name & .Id
+
+                            If awinSettings.mppEnableSmartPPT Then
+
+                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
+                                                        Nothing, Nothing,
+                                                        hproj.startDate, hproj.endeDate,
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                            End If
+
                         End With
                     End If
 
-                    ' jetzt das eigentliche Shape zeichnen 
-                    With copiedShape(1)
-
-                        If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                            .TextFrame2.TextRange.Text = "+ ... " & hproj.variantName
-                        Else
-                            .TextFrame2.TextRange.Text = "+ " & hproj.getShapeText
-                        End If
-
-                        ' die Oben und unten -Marge auf Null setzen, so dass der Text möglichst gut in die Zeile passt 
-                        If .TextFrame2.MarginTop > 0 Then
-                            .TextFrame2.MarginTop = 0
-                        End If
-                        If .TextFrame2.MarginBottom > 0 Then
-                            .TextFrame2.MarginBottom = 0
-                        End If
-
-                        ' das jetzt so positionieren, dass es nach rechts versetzt und bündig unten mit dem Zeilenrand abschliesst 
-                        .Left = lastProjectNameShape.Left + 8
-                        If lastProjectNameShape.Top + lastProjectNameShape.Height + 2 + .Height > rowYPos + rds.zeilenHoehe Then
-                            .Top = rowYPos + rds.zeilenHoehe - .Height
-                        Else
-                            .Top = lastProjectNameShape.Top + lastProjectNameShape.Height + 2
-                        End If
+                    Dim projectNameShape As PowerPoint.Shape = copiedShape(1)
 
 
+                    ' zeichne jetzt ggf die Projekt-Ampel 
+                    If awinSettings.mppShowAmpel And Not IsNothing(rds.ampelVorlagenShape) Then
+                        Dim statusColor As Long
+                        With hproj
+                            If .ampelStatus = 0 Then
+                                statusColor = awinSettings.AmpelNichtBewertet
+                            ElseIf .ampelStatus = 1 Then
+                                statusColor = awinSettings.AmpelGruen
+                            ElseIf .ampelStatus = 2 Then
+                                statusColor = awinSettings.AmpelGelb
+                            Else
+                                statusColor = awinSettings.AmpelRot
+                            End If
+                        End With
 
-                        lastProjectName = hproj.name
-                        .Name = .Name & .Id
+                        copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, curSlide)
 
-                        If awinSettings.mppEnableSmartPPT Then
-
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
-
-                        End If
-
-                    End With
-                Else
-
-                    With copiedShape(1)
-                        .Top = CSng(projektNamenYPos)
-                        .Left = CSng(projektNamenXPos)
-                        If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                            .TextFrame2.TextRange.Text = "... " & hproj.variantName
-                        Else
-                            .TextFrame2.TextRange.Text = hproj.getShapeText
-                        End If
-
-                        lastProjectName = hproj.name
-                        .Name = .Name & .Id
-
-                        If awinSettings.mppEnableSmartPPT Then
-
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
-
-                        End If
-
-                    End With
-                End If
-
-                Dim projectNameShape As PowerPoint.Shape = copiedShape(1)
-
-
-                ' zeichne jetzt ggf die Projekt-Ampel 
-                If awinSettings.mppShowAmpel And Not IsNothing(rds.ampelVorlagenShape) Then
-                    Dim statusColor As Long
-                    With hproj
-                        If .ampelStatus = 0 Then
-                            statusColor = awinSettings.AmpelNichtBewertet
-                        ElseIf .ampelStatus = 1 Then
-                            statusColor = awinSettings.AmpelGruen
-                        ElseIf .ampelStatus = 2 Then
-                            statusColor = awinSettings.AmpelGelb
-                        Else
-                            statusColor = awinSettings.AmpelRot
-                        End If
-                    End With
-
-                    copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, curSlide)
-
-                    With copiedShape(1)
-                        .Top = CSng(ampelGrafikYPos)
-                        If severalProjectsInOneLine Then
-                            .Left = CSng(rds.drawingAreaLeft - 3)
-                        Else
+                        With copiedShape(1)
+                            .Top = CSng(ampelGrafikYPos)
+                            If severalProjectsInOneLine Then
+                                .Left = CSng(rds.drawingAreaLeft - 3)
+                            Else
+                                .Left = CSng(rds.drawingAreaLeft - (.Width + 3))
+                            End If
                             .Left = CSng(rds.drawingAreaLeft - (.Width + 3))
+                            .Width = .Height
+                            .Line.ForeColor.RGB = CInt(statusColor)
+                            .Fill.ForeColor.RGB = CInt(statusColor)
+                            .Name = .Name & .Id
+                        End With
+
+                        ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+
+                    End If
+
+
+                    '
+                    ' zeichne jetzt das Projekt 
+                    Call rds.calculatePPTx1x2(hproj.startDate, hproj.endeDate, x1, x2)
+
+
+                    ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+                    With projectNameShape
+                        ' alternative Behandlung: der Projekt-Name wird umgebrochen 
+                        If .Left + .Width > x1 Then
+                            ' jetzt muss der Name entsprechend gekürzt werden 
+                            .TextFrame2.WordWrap = MsoTriState.msoTrue
+                            .Width = x1 - .Left
                         End If
-                        .Left = CSng(rds.drawingAreaLeft - (.Width + 3))
-                        .Width = .Height
-                        .Line.ForeColor.RGB = CInt(statusColor)
-                        .Fill.ForeColor.RGB = CInt(statusColor)
-                        .Name = .Name & .Id
+
+                        ' jetzt, wenn es in die nächste Zeile reingeht, so weit hochschieben, dass der Name nicht mehr in die nächste Zeile reicht 
+                        If .Top + .Height > rowYPos + rds.zeilenHoehe Then
+                            .Top = rowYPos + rds.zeilenHoehe - .Height
+                        End If
+
                     End With
 
-                    ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+                    ' hier ggf die ProjectLine zeichnen 
+                    If awinSettings.mppShowProjectLine Then
 
-                End If
+                        ''projectVorlagenForm.Copy()
+                        ''copiedShape = pptslide.Shapes.Paste()
+                        copiedShape = pptCopypptPaste(rds.projectVorlagenShape, curSlide)
 
+                        With copiedShape(1)
+                            .Top = CSng(projektGrafikYPos)
+                            .Left = CSng(x1)
+                            .Width = CSng(x2 - x1)
+                            .Name = .Name & .Id
 
-                '
-                ' zeichne jetzt das Projekt 
-                Call rds.calculatePPTx1x2(hproj.startDate, hproj.endeDate, x1, x2)
+                            '.Title = hproj.getShapeText
+                            '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
 
+                            If awinSettings.mppEnableSmartPPT Then
 
-                ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
-                With projectNameShape
-                    ' alternative Behandlung: der Projekt-Name wird umgebrochen 
-                    If .Left + .Width > x1 Then
-                        ' jetzt muss der Name entsprechend gekürzt werden 
-                        .TextFrame2.WordWrap = MsoTriState.msoTrue
-                        .Width = x1 - .Left
-                    End If
-
-                    ' jetzt, wenn es in die nächste Zeile reingeht, so weit hochschieben, dass der Name nicht mehr in die nächste Zeile reicht 
-                    If .Top + .Height > rowYPos + rds.zeilenHoehe Then
-                        .Top = rowYPos + rds.zeilenHoehe - .Height
-                    End If
-
-                End With
-
-                ' hier ggf die ProjectLine zeichnen 
-                If awinSettings.mppShowProjectLine Then
-
-                    ''projectVorlagenForm.Copy()
-                    ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.projectVorlagenShape, curSlide)
-
-                    With copiedShape(1)
-                        .Top = CSng(projektGrafikYPos)
-                        .Left = CSng(x1)
-                        .Width = CSng(x2 - x1)
-                        .Name = .Name & .Id
-
-                        '.Title = hproj.getShapeText
-                        '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
-
-                        If awinSettings.mppEnableSmartPPT Then
-
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
                                                    Nothing, hproj.getShapeText, Nothing, Nothing,
                                                    Nothing, Nothing,
                                                    hproj.startDate, hproj.endeDate,
                                                    hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
                                                    hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
-                        End If
+                            End If
 
 
-                        ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
-                        If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
-                            .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                        End If
+                            ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                            If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+                                .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                            End If
 
-                        ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
-                        If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
-                            .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                        End If
-                    End With
+                            ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                            If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+                                .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                            End If
+                        End With
+
+                    End If
+
 
                 End If
-
                 '
                 ' zeichne jetzt die Phasen 
                 '

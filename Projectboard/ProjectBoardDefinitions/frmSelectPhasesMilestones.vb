@@ -43,6 +43,14 @@ Public Class frmSelectPhasesMilestones
     ''' </summary>
     Private Sub defineFrmButtonVisibility()
 
+        If AlleProjekte.Count > 1 Then
+            rdbProjStruktProj.Visible = True
+            rdbProjStruktTyp.Visible = True
+        Else
+            rdbProjStruktProj.Visible = False
+            rdbProjStruktTyp.Visible = False
+        End If
+
         If awinSettings.englishLanguage Then
             Me.Text = "Selection of projects, phases, milestones"
             Me.Ok_Button.Text = "Confirm selection"
@@ -63,6 +71,7 @@ Public Class frmSelectPhasesMilestones
         Dim kennung As String ' V: für Vorlagen, P: für Projekte, C: für Kategorien/Darstellungsklassen
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
+        Dim projekteToLook As clsProjekte = ShowProjekte
 
         With TreeViewProjects
             .Nodes.Clear()
@@ -70,19 +79,75 @@ Public Class frmSelectPhasesMilestones
 
             ' aktuell wird nur auf Liste de rProjekte abgestellt ... 
             ' alle Projekte zeigen 
-            kennung = "P:"
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                If kvp.Value.hierarchy.count > 0 Then
-                    topLevel = .Nodes.Add(kvp.Key)
-                    topLevel.Name = kennung & kvp.Key
-                    topLevel.Text = kvp.Key
-                    hry = kvp.Value.hierarchy
+            If auswahl = PTItemType.vorlage Then
 
-                    Call buildProjectSubTreeViewInPPT(topLevel, hry)
-                End If
+                ' alle Templates zeigen 
+                kennung = "V:"
 
-            Next
+                For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
+
+                    If projekteToLook.getTypNames().Contains(kvp.Key) Then
+
+                        If kvp.Value.hierarchy.count > 0 Then
+                            topLevel = .Nodes.Add(kvp.Key)
+                            topLevel.Name = kennung & kvp.Key
+                            topLevel.Text = kvp.Key
+
+                            hry = kvp.Value.hierarchy
+
+                            Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
+                            Dim nodeToCheck As Boolean = False
+
+                            If selectedPhases.Count > 0 Then
+                                nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases)
+                            Else
+                                nodeToCheck = False
+                            End If
+
+                            If selectedMilestones.Count > 0 Then
+                                nodeToCheck = nodeToCheck Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
+                            Else
+                                nodeToCheck = nodeToCheck Or False
+                            End If
+
+                            If nodeToCheck Then
+                                topLevel.Checked = True
+                            End If
+
+                            Call buildProjectSubTreeViewInPPT(topLevel, hry)
+                        End If
+                    End If
+
+                Next
+
+            Else
+                kennung = "P:"
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    If kvp.Value.hierarchy.count > 0 Then
+                        topLevel = .Nodes.Add(kvp.Key)
+                        topLevel.Name = kennung & kvp.Key
+                        topLevel.Text = kvp.Key
+                        hry = kvp.Value.hierarchy
+
+                        If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
+                            ' überprüfen, ob das Projekt irgend eine der selektierten Phasen oder Meilensteine enthält
+                            Dim hproj As clsProjekt = projekteToLook.getProject(kvp.Key)
+                            Dim tmpcollection As New Collection
+                            Dim newFil As New clsFilter("tmp", tmpcollection, tmpcollection,
+                                                        selectedPhases, selectedMilestones, tmpcollection, tmpcollection)
+                            If newFil.doesNotBlock(hproj) Then
+                                topLevel.Checked = True
+                            End If
+                        End If
+
+                        Call buildProjectSubTreeViewInPPT(topLevel, hry)
+                    End If
+
+                Next
+            End If
+
 
             ' tk 13.10.19 in Projectboard : in buildHryTreeView kann in Abhängigkeit von auswahl gewählt werden 
             ' das fehlt hier ... 
@@ -869,4 +934,28 @@ Public Class frmSelectPhasesMilestones
     Private Sub TreeViewProjects_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjects.AfterSelect
 
     End Sub
+
+    Private Sub rdbProjStruktTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktTyp.CheckedChanged
+
+        If rdbProjStruktTyp.Checked Then
+            Call buildHryTreeViewInPPT(PTItemType.vorlage)
+        Else
+            selectedPhases.Clear()
+            selectedMilestones.Clear()
+        End If
+
+    End Sub
+
+    Private Sub rdbProjStruktProj_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktProj.CheckedChanged
+
+        If rdbProjStruktTyp.Checked Then
+            Call buildHryTreeViewInPPT(PTItemType.projekt)
+        Else
+            selectedPhases.Clear()
+            selectedMilestones.Clear()
+        End If
+
+    End Sub
+
+
 End Class

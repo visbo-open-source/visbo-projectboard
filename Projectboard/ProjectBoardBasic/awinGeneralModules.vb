@@ -227,22 +227,6 @@ Public Module awinGeneralModules
     End Function
 
 
-    ''' <summary>
-    ''' setzt alle angezeigten Projekte, also ShowProjekte,  zurück 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub clearProjectBoard()
-
-        Call awinClearPlanTafel()
-
-        ShowProjekte.Clear()
-        projectboardShapes.clear()
-
-        selectedProjekte.Clear(False)
-        ImportProjekte.Clear(False)
-
-
-    End Sub
 
     ''' <summary>
     ''' setzt die komplette Session zurück 
@@ -2067,13 +2051,8 @@ Public Module awinGeneralModules
             If collectionsAreDifferent(uRoles, GPRoles) Then
                 tmpResult = False
             Else
-                showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
-                showRangeRight = getColumnOfDate(CDate("31.12.2019"))
-
-                If awinSettings.databaseName.EndsWith("20") Then
-                    showRangeLeft = getColumnOfDate(CDate("1.1.2020"))
-                    showRangeRight = getColumnOfDate(CDate("31.12.2020"))
-                End If
+                showRangeLeft = getColumnOfDate(CDate("1.1.2020"))
+                showRangeRight = getColumnOfDate(CDate("31.12.2020"))
 
                 For Each tmpRoleNameID As String In uRoles
 
@@ -4757,7 +4736,11 @@ Public Module awinGeneralModules
                     If Not IsNothing(baseVariantProj) Then
                         baseVariantStatus = baseVariantProj.Status
                     Else
-                        Call MsgBox("BasisVariante kann nicht gefunden werden")
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("BasisVariante kann nicht gefunden werden")
+                        End If
+
                     End If
 
                 End If
