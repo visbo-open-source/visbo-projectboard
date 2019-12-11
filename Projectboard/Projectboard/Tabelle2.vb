@@ -1985,6 +1985,7 @@ Public Class Tabelle2
                 oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
             End If
 
+            ' das wirkt sich auf das aktualisieren der charts aus 
             changeBecauseProjektleitung = rcName <> oldRCName And
                                                             myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 

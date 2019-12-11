@@ -9530,10 +9530,14 @@ Public Module agm2
                                 ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
                                 '
                                 pName = itemType.ToString & " - " & pName
+                                Dim combinedName As Boolean = False
+                                If projektvorhaben.Contains(itemType) Then
+                                    combinedName = True
+                                End If
                                 ' lege ein Allianz IT - Projekt an
                                 hproj = erstelleProjektausParametern(pName, variantName, vorlageName, pStartDatum, pEndDatum, budget, sFit, risk, allianzProjektNummer,
                                                                      description, custFields, businessUnit, responsiblePerson, allianzStatus,
-                                                                     zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, True)
+                                                                     zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, combinedName)
 
                                 ' tk 21.7.19 es wird ein Summary Projekt für die Programm-Linie angelegt  
                                 If pgmlinie.Contains(itemType) Then
@@ -17909,6 +17913,7 @@ Public Module agm2
                     CType(.Cells(1, 9), Excel.Range).Value = "Deliverables"
                     CType(.Cells(1, 10), Excel.Range).Value = "Responsible"
                     CType(.Cells(1, 11), Excel.Range).Value = "% Done"
+                    CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
@@ -17922,6 +17927,7 @@ Public Module agm2
                     CType(.Cells(1, 9), Excel.Range).Value = "Lieferumfänge"
                     CType(.Cells(1, 10), Excel.Range).Value = "Verantwortlich"
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Link zum Dokument/Ordner"
                 End If
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  

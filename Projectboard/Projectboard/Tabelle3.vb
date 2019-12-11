@@ -4,11 +4,12 @@ Imports Microsoft.Office.Interop.Excel
 
 Public Class Tabelle3
 
-    Private columnStartData As Integer = 5
-    Private columnEndData As Integer = 11
-    Private columnTE As Integer = 5
-    Private oldColumn As Integer = 5
+    Private columnStartDate As Integer = 5
+    Private columnEndDate As Integer = 6
+
+    Private oldColumn As Integer = 6
     Private oldRow As Integer = 2
+
     Private columnName As Integer = 2
 
     Private Sub Tabelle3_ActivateEvent() Handles Me.ActivateEvent
@@ -34,12 +35,17 @@ Public Class Tabelle3
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
                 .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
-                .meColRC = 5
+                ' ist die Spalte für MSTask-Name 
+                .meColRC = 4
+                ' ist die Spalte für Startdate
                 .meColSD = 5
-                .meColED = 11
+                ' ist die Spalte für Ende-Date
+                .meColED = 6
+                ' ist die Spalte für den Projekt-Namen 
                 .meColpName = 2
-                columnStartData = .meColSD
-                columnEndData = .meColED
+
+                columnStartDate = .meColSD
+                columnEndDate = .meColED
             End With
 
         Catch ex As Exception
@@ -61,28 +67,21 @@ Public Class Tabelle3
         End Try
 
         Try
-            If awinSettings.meEnableSorting Then
-
-                With CType(meWS, Excel.Worksheet)
-                    ' braucht man nicht mehr - ist schon gemacht 
-                    '.Unprotect("x")
-                    .EnableSelection = XlEnableSelection.xlNoRestrictions
-                End With
-            Else
-                With meWS
-                    .Protect(Password:="x", UserInterfaceOnly:=True,
-                             AllowFormattingCells:=True,
-                             AllowFormattingColumns:=True,
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True,
-                             AllowDeletingColumns:=False,
-                             AllowDeletingRows:=True,
-                             AllowSorting:=True,
-                             AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
-                End With
-            End If
+            ' es dürfen keine Zeilen ergänzt werden, noch Spalten 
+            ' die dürfen auch nicht gelöscht werden 
+            With meWS
+                .Protect(Password:="x", UserInterfaceOnly:=True,
+                         AllowFormattingCells:=True,
+                         AllowFormattingColumns:=True,
+                         AllowInsertingColumns:=False,
+                         AllowInsertingRows:=False,
+                         AllowDeletingColumns:=False,
+                         AllowDeletingRows:=False,
+                         AllowSorting:=True,
+                         AllowFiltering:=True)
+                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableAutoFilter = True
+            End With
 
 
         Catch ex As Exception
@@ -94,45 +93,7 @@ Public Class Tabelle3
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
         End If
 
-
-        ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
-        Try
-            'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            ' jetzt auf die erste selektierbare Zeile gehen ... 
-            Dim cz As Integer = 2
-            Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
-            ' auf TE+1 = End-Datum platzieren, weil das immer zu editieren ist 
-            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnTE + 1), Excel.Range).Locked = True) And Not eof
-
-            Do While bedingung
-                cz = cz + 1
-                eof = (cz > visboZustaende.meMaxZeile)
-                bedingung = CBool(CType(meWS.Cells(cz, columnTE + 1), Excel.Range).Locked = True) And Not eof
-            Loop
-
-            If Not eof Then
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE + 1), Excel.Range).Select()
-
-                Dim pName As String = ""
-
-                With visboZustaende
-
-                    pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
-                    If ShowProjekte.contains(pName) Then
-                        .lastProject = ShowProjekte.getProject(pName)
-                        .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
-                    End If
-
-                End With
-            Else
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE), Excel.Range).Locked = False
-            End If
-
-            CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE), Excel.Range).Select()
-
-        Catch ex As Exception
-
-        End Try
+        ' es wird erst mal kein automatischer Select gemacht ... 
 
         Application.EnableEvents = formerEE
         If Application.ScreenUpdating = False Then
@@ -140,5 +101,36 @@ Public Class Tabelle3
         End If
 
 
+    End Sub
+
+    Private Sub Tabelle3_Change(Target As Range) Handles Me.Change
+
+        ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
+        appInstance.EnableEvents = False
+
+        Dim currentCell As Excel.Range = Target
+
+        Try
+            Dim datesWereChanged As Boolean = False
+
+            Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meTE)), Excel.Worksheet)
+
+
+            If Target.Cells.Count = 1 Then
+
+            Else
+                ' es darf nur eine Zelle selektiert werden 
+                'appInstance.Undo()
+                'Call MsgBox("bitte nur eine Zelle selektieren ...")
+                appInstance.Undo()
+                'Target.Cells(1, 1).value = visboZustaende.oldValue
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
     End Sub
 End Class
