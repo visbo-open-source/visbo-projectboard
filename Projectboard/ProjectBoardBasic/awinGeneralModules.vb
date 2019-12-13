@@ -3616,7 +3616,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub storeSingleConstellationToDB(ByRef outPutCollection As Collection,
                                             ByVal currentConstellation As clsConstellation,
-                                            ByVal dbConstellations As clsConstellations)
+                                            ByVal dbConstellations As SortedList(Of String, String))
 
         Dim err As New clsErrorCodeMsg
 
@@ -3624,7 +3624,7 @@ Public Module awinGeneralModules
         Dim anzahlChanged As Integer = 0
         Dim DBtimeStamp As Date = Date.Now
         Dim outputLine As String = ""
-
+        Dim ctimestamp As Date
 
         ' wenn HistoryMode aktiv ist ... 
         If demoModusHistory Then
@@ -3891,8 +3891,11 @@ Public Module awinGeneralModules
                     If dbConstellations.Count = 0 Then
                         storeRequired = True
                     Else
-                        If dbConstellations.Contains(currentConstellation.constellationName) Then
-                            Dim dbConstellation As clsConstellation = dbConstellations.getConstellation(currentConstellation.constellationName)
+                        If dbConstellations.ContainsKey(currentConstellation.constellationName) Then
+                            Dim dbConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(currentConstellation.constellationName,
+                                                                                                           dbConstellations(currentConstellation.constellationName),
+                                                                                                           cTimestamp, err,
+                                                                                                           DBtimeStamp)
                             storeRequired = Not currentConstellation.isIdentical(dbConstellation)
                         End If
                     End If
@@ -3980,34 +3983,34 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean)
+    Public Sub awinRemoveConstellation(ByVal constellationName As String, ByVal vpid As String, ByVal deleteDB As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
 
-
+        ' ur: 12.12.2019 entfernt, da kein readInitConstellations mehr gemacht wird
         ' prüfen, ob diese Constellation überhaupt existiert ..
-        Try
-            activeConstellation = projectConstellations.getConstellation(constellationName)
-        Catch ex As Exception
-            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
-            Exit Sub
-        End Try
+        'Try
+        '    activeConstellation = projectConstellations.getConstellation(constellationName)
+        'Catch ex As Exception
+        '    Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+        '    Exit Sub
+        'End Try
 
         If deleteDB Then
 
-            If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(activeConstellation, err)
+                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(constellationName, vpid, err)
                 If returnValue = False Then
-                    Call MsgBox("Fehler bei Löschen Portfolio : " & activeConstellation.constellationName)
+                    Call MsgBox("Fehler bei Löschen Portfolio : " & constellationName)
                 Else
                     ' jetzt muss die Planung wie die Beauftragung des Portfolio Projekts gelöscht werden ... 
-                    Dim planungsKey As String = calcProjektKey(activeConstellation.constellationName, "")
-                    Dim beauftragungskey As String = calcProjektKey(activeConstellation.constellationName, ptVariantFixNames.pfv.ToString)
+                    'Dim planungsKey As String = calcProjektKey(activeConstellation.constellationName, "")
+                    'Dim beauftragungskey As String = calcProjektKey(activeConstellation.constellationName, ptVariantFixNames.pfv.ToString)
 
                     'Dim returnValue2 As Boolean = CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB()
 
@@ -7892,14 +7895,19 @@ Public Module awinGeneralModules
                 If everythingElse Then
                     ' jetzt werden alle definierten Constellations weggeschrieben
                     Dim errMsg As New clsErrorCodeMsg
-                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+
+                    'ur: 13.12.2019: nur noch Portfolio Namen holen
+                    'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+                    Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
 
                     For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
                         If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
                             Try
-
-                                Call storeSingleConstellationToDB(outPutCollection, kvp.Value, dbConstellations)
+                                ' ur:13.12.2019: 
+                                Call storeSingleConstellationToDB(outPutCollection, kvp.Value, dbPortfolioNames)
+                                'Call storeSingleConstellationToDB(outPutCollection, kvp.Value, dbConstellations)
 
                             Catch ex As Exception
 

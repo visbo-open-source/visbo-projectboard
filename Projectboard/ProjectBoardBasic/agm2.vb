@@ -19839,21 +19839,22 @@ Public Module agm2
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
 
-                    If Not noDB And awinSettings.readCostRolesFromDB Then
+                    '' ur:12.12.2019: entfernt, da Portfolios nun anders geladen werden
+                    ''If Not noDB And awinSettings.readCostRolesFromDB Then
 
-                        ' ur: 31.08.2017: Initialisierung
-                        beforeFilterConstellation = Nothing
+                    ''    ' ur: 31.08.2017: Initialisierung
+                    ''    beforeFilterConstellation = Nothing
 
-                        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                        Call readInitConstellations()
+                    ''    ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                    ''    Call readInitConstellations()
 
-                        currentSessionConstellation.constellationName = calcLastSessionScenarioName()
+                    ''    currentSessionConstellation.constellationName = calcLastSessionScenarioName()
 
-                        If awinSettings.visboDebug Then
-                            Call MsgBox("readInitConstellations , ok")
-                        End If
+                    ''    If awinSettings.visboDebug Then
+                    ''        Call MsgBox("readInitConstellations , ok")
+                    ''    End If
 
-                    End If
+                    ''End If
 
 
 

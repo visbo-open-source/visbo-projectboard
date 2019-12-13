@@ -102,6 +102,7 @@
     <Compile Include="clsroleNode.vb" />
     <Compile Include="clsSmartPPTChartInfo.vb" />
     <Compile Include="clsSmartPPTCompInfo.vb" />
+    <Compile Include="clsStopWatch.vb" />
     <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />

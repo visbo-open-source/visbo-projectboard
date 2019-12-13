@@ -1524,6 +1524,58 @@ Public Class Request
 
 
     ''' <summary>
+    '''  Alle PortfolioNamen aus der Datenbank holen
+    '''  Das Ergebnis dieser Funktion ist eine sortierte Liste (Name, vpid) 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function retrievePortfolioNamesFromDB(ByVal storedAtOrBefore As Date, ByRef err As clsErrorCodeMsg) As SortedList(Of String, String)
+
+        Dim result As SortedList(Of String, String) = Nothing
+
+        Try
+
+            If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrievePortfolioNamesFromDB(storedAtOrBefore, err)
+
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrievePortfolioNamesFromDB(storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+
+
+            Else 'es wird eine MongoDB direkt adressiert
+
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("retrievePortfolioNamesFromDB: " & ex.Message)
+        End Try
+
+        retrievePortfolioNamesFromDB = result
+    End Function
+
+    ''' <summary>
     ''' Speichert ein Multiprojekt-Szenario in der Datenbank
     ''' </summary>
     ''' <param name="c"></param>
@@ -1582,7 +1634,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal c As clsConstellation, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1590,7 +1642,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
+                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
 
                     If result = False Then
 
@@ -1602,7 +1654,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
                                 End If
 
                             Case Else ' all others
@@ -1617,7 +1669,8 @@ Public Class Request
 
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).removeConstellationFromDB(c)
+                ' ur:12.12.2019 wird nicht mehr gemacht
+                'result = CType(DBAcc, MongoDbAccess.Request).removeConstellationFromDB(c)
             End If
 
         Catch ex As Exception

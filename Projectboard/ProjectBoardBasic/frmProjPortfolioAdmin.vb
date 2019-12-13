@@ -565,6 +565,8 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub frmDefineEditPortfolio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Dim err As New clsErrorCodeMsg
+
         ' erstmal den WaitCursor zeigen ... 
         Me.Cursor = Cursors.Default
         lastIndexChecked = -1
@@ -666,9 +668,18 @@ Public Class frmProjPortfolioAdmin
 
         If aKtionskennung = PTTvActions.chgInSession Then
 
-            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                If kvp.Key <> "Start" Then
-                    dropboxScenarioNames.Items.Add(kvp.Key)
+            Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
+
+            For Each kvp1 As KeyValuePair(Of String, String) In dbPortfolioNames
+                dropboxScenarioNames.Items.Add(kvp1.Key)
+            Next
+
+            For Each kvp2 As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                If kvp2.Key <> "Start" Then
+                    If Not dbPortfolioNames.ContainsKey(kvp2.Key) Then
+                        dropboxScenarioNames.Items.Add(kvp2.Key)
+                    End If
+
                 End If
             Next
         Else
@@ -2968,9 +2979,10 @@ Public Class frmProjPortfolioAdmin
                 Dim txtMsg2 As String = ""
                 If storeToDBasWell.Checked Then
                     Dim errMsg As New clsErrorCodeMsg
-                    Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+                    'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+                    Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
 
-                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, dbConstellations)
+                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, dbPortfolioNames)
 
                     ' jetzt ggf die Outputs anzeigen 
 
