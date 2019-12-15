@@ -2871,6 +2871,24 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' liefert den Index zurück, bis zu dem ActualData in der Phase existiert 
+    ''' -1 es existiert kein ActualData in der Phase 
+    ''' 0 .LE. x .LE. dimension-1  die Monate xwerte(0), xwerte(1), ..xwerte(x) sind ActualData Monate  
+    ''' relende-relstart .LE. x alles ist actual data    ''' 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getActualDataIndex As Integer
+        Get
+            Dim tmpResult As Integer = -1
+            If hasActualData Then
+                tmpResult = getColumnOfDate(_parentProject.actualDataUntil) - getColumnOfDate(getStartDate)
+            End If
+
+            getActualDataIndex = tmpResult
+        End Get
+    End Property
+
     Public ReadOnly Property parentProject() As clsProjekt
         Get
             parentProject = _parentProject
@@ -3165,7 +3183,7 @@ Public Class clsPhase
 
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
-    ''' soll nach Testphase die bisherige berechneBedarev ablösen
+    ''' berücksichtigt die ActualDataUntil
     ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
     ''' wie die MEthode vorher ja auch ... 
     ''' </summary>

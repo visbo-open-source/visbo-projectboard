@@ -241,65 +241,75 @@ Public Class Tabelle3
 
 
                     Select Case currentColumn
-                        ' Prüfuzng ob erlaubt notwendig 
+                        ' Prüfung ob erlaubt notwendig 
+
                         Case col(PTmeTe.startdate)
-                            If visboZustaende.currentZeileIsMilestone Then
-                                ' bei Meilensteinen dürfte er gar nicht reinkommen ...
-                                appInstance.Undo()
-                            Else
-                                ' erstmal prüfen, ob das neue Datum auch erlaubt ist, d.h innerhalb der zeitlichen Grenzen der Parent-Phase liegt 
-                                ' und vor dem Ende-Datum der Phase liegt
-                                Try
-                                    Dim newStartDate As Date = CDate(Target.Value)
-                                    If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
-                                        ' alles ok, bearbeiten ..
 
+                            ' hier kann es nur eine Phase sein 
+                            ' das ggf eingegebene Datum wird geprüft und das Formular aufgeschaltet ... 
 
-                                    Else
-                                        ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
-                                        Target.Value = visboZustaende.oldValue
-                                    End If
-                                Catch ex As Exception
+                            Try
+                                Dim newStartDate As Date = CDate(Target.Value)
+                                If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
+                                    ' alles ok, bearbeiten ..
+                                    Call MsgBox("alles ok, wird bearbeitet ...")
+
+                                Else
+                                    ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
                                     Target.Value = visboZustaende.oldValue
-                                End Try
+                                End If
 
-                            End If
+
+                            Catch ex As Exception
+                                Target.Value = visboZustaende.oldValue
+                            End Try
+
 
                         ' Prüfung ob erlaubt notwendig  
                         Case col(PTmeTe.endDate)
-                            ' erstmal prüfen, ob das neue Datum auch erlaubt ist, d.h innerhalb der zeitlichen Grenzen der Parent-Phase liegt 
+
+                            ' hier kann es eine Phase oder ein Meilenstein sein ... 
 
                             If visboZustaende.currentZeileIsMilestone Then
+                                ' Meilenstein 
                                 Try
-                                    Dim newEndeDate As Date = CDate(Target.Value)
-                                    If (newEndeDate.Date >= allowedLeftDate.Date And newEndeDate <= allowedRightDate) Then
+                                    Dim newEndDate As Date = CDate(Target.Value)
+                                    If (newEndDate >= allowedLeftDate.Date And newEndDate <= allowedRightDate) Then
                                         ' alles ok, bearbeiten ..
-                                        Call MsgBox("ok")
-
+                                        cMilestone.setDate = newEndDate
                                     Else
                                         ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
-                                        Call MsgBox("nicht ok")
                                         Target.Value = visboZustaende.oldValue
                                     End If
+
+
                                 Catch ex As Exception
                                     Target.Value = visboZustaende.oldValue
                                 End Try
+
+
                             Else
+                                ' Phase 
                                 Try
-                                    Dim newEndeDate As Date = CDate(Target.Value)
-                                    If (newEndeDate.Date >= allowedLeftDate.Date And newEndeDate <= allowedRightDate) And newEndeDate >= cphase.getStartDate Then
+                                    Dim newEndDate As Date = CDate(Target.Value)
+                                    If (newEndDate >= allowedLeftDate.Date And newEndDate <= allowedRightDate) And cphase.getStartDate <= newEndDate Then
                                         ' alles ok, bearbeiten ..
-                                        Call MsgBox("ok")
+
+                                        Call MsgBox("alles ok, wird bearbeitet ...")
 
                                     Else
                                         ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
-                                        Call MsgBox("nicht ok")
                                         Target.Value = visboZustaende.oldValue
                                     End If
+
+
                                 Catch ex As Exception
                                     Target.Value = visboZustaende.oldValue
                                 End Try
+
                             End If
+
+
 
                         ' Ampel-Status, inkl Prüfung
                         Case col(PTmeTe.trafficLight)
@@ -599,5 +609,134 @@ Public Class Tabelle3
 
         Application.DisplayFormulaBar = False
 
+    End Sub
+
+
+
+    Private Sub Tabelle3_BeforeRightClick(Target As Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
+
+        Dim hproj As clsProjekt = visboZustaende.currentProject
+        Dim cphase As clsPhase = Nothing
+        Dim cMilestone As clsMeilenstein = Nothing
+
+        Dim allowedLeftDate As Date = hproj.startDate
+        Dim allowedRightDate As Date = hproj.endeDate
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+        appInstance.EnableEvents = False
+
+        If Target.Cells.Count = 1 Then
+
+            Dim currentZeile As Integer = Target.Row
+            Dim currentColumn As Integer = Target.Column
+
+            Dim elemID As String = visboZustaende.currentElemID
+
+            ' jetzt bestimmen, ob es sich bei dem Eintrag in der Zeile um eine Phase oder einen Meilenstein handelt
+            Dim elemIsMilestone As Boolean = elemIDIstMeilenstein(elemID)
+            If elemIsMilestone Then
+                cMilestone = hproj.getMilestoneByID(elemID)
+                cphase = Nothing
+            Else
+                cMilestone = Nothing
+                cphase = hproj.getPhaseByID(elemID)
+            End If
+
+            ' dann die allowdLeft und RightDate berechnen
+            ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
+            Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
+            If Not IsNothing(parentPhase) Then
+                allowedLeftDate = parentPhase.getStartDate
+                allowedRightDate = parentPhase.getEndDate
+            End If
+
+
+            If Target.Column = col(PTmeTe.startdate) Then
+                ' hier kann es nur eine Phase sein ... 
+
+                Dim frmDateEdit As New frmEditDates
+
+
+                frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
+                frmDateEdit.startdatePicker.Value = CDate(Target.Value)
+                frmDateEdit.enddatePicker.Value = cphase.getEndDate
+                frmDateEdit.IsMilestone = False
+
+                frmDateEdit.allowedDateLeft = allowedLeftDate
+                frmDateEdit.allowedDateRight = allowedRightDate
+
+                If frmDateEdit.ShowDialog() = DialogResult.OK Then
+                    Target.Value = frmDateEdit.startdatePicker.Value
+
+                    ' das Ende Date ...
+                    meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
+                Else
+                    Target.Value = visboZustaende.oldValue
+                End If
+
+
+            ElseIf Target.Column = col(PTmeTe.endDate) Then
+                ' hier kann es beides sein .. 
+
+
+                If visboZustaende.currentZeileIsMilestone Then
+                    ' Meilenstein 
+
+
+                    ' in target.Value ist jetzt der neue Wert
+                    Dim frmDateEdit As New frmEditDates
+
+                    frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
+                    frmDateEdit.startdatePicker.Value = cMilestone.getDate
+                    frmDateEdit.startdatePicker.Enabled = False
+
+                    frmDateEdit.enddatePicker.Value = cMilestone.getDate
+                    frmDateEdit.IsMilestone = True
+
+                    frmDateEdit.allowedDateLeft = allowedLeftDate
+                    frmDateEdit.allowedDateRight = allowedRightDate
+
+                    If frmDateEdit.ShowDialog() = DialogResult.OK Then
+                        Target.Value = frmDateEdit.enddatePicker.Value
+                        cMilestone.setDate = CDate(Target.Value)
+                    Else
+                        Target.Value = visboZustaende.oldValue
+                    End If
+
+
+                Else
+                    ' Phase 
+
+                    ' in target.Value ist jetzt der neue Wert
+                    Dim frmDateEdit As New frmEditDates
+
+                    frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
+                    frmDateEdit.startdatePicker.Value = cphase.getStartDate
+                    frmDateEdit.startdatePicker.Enabled = True
+
+                    frmDateEdit.enddatePicker.Value = cphase.getEndDate
+                    frmDateEdit.IsMilestone = False
+
+                    frmDateEdit.allowedDateLeft = allowedLeftDate
+                    frmDateEdit.allowedDateRight = allowedRightDate
+
+                    If frmDateEdit.ShowDialog() = DialogResult.OK Then
+                        Target.Value = frmDateEdit.enddatePicker.Value
+                        ' das Start Date ...
+                        meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
+                    Else
+                        Target.Value = visboZustaende.oldValue
+                    End If
+                End If
+
+
+            End If
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        Cancel = True
     End Sub
 End Class

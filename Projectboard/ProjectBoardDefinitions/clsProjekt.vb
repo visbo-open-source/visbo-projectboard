@@ -2810,6 +2810,7 @@ Public Class clsProjekt
                     ' die Phase wurde gefunden, jetzt muss überprüft werden, ob es actualdataUntil gibt ... 
                     Dim considerActualPhaseData As Boolean = considerActualData And actualDataIX >= otherPhase.relStart - 1
                     Dim phaseActualIX As Integer = actualDataIX - otherPhase.relStart + 1
+
                     For Each role As clsRolle In otherPhase.rollenListe
                         ' gibt es für diese Rolle ActualData 
                         Dim sumActualValues As Double = 0
