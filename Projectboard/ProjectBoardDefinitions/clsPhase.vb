@@ -450,6 +450,13 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' löscht alle Deliverables des Meilensteines 
+    ''' </summary>
+    Public Sub clearDeliverables()
+        _deliverables.Clear()
+    End Sub
+
+    ''' <summary>
     ''' fügt das Deliverable Item der Liste hinzu; 
     ''' wenn das Item bereits in der Liste vorhanden ist, passiert nichts 
     ''' </summary>

@@ -1068,7 +1068,7 @@ Imports System.Web
             If IsNothing(formProjectInfo1) And .projectBoardMode = ptModus.massEditRessCost Then
 
                 formProjectInfo1 = New frmProjectInfo1
-                Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
+                Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
 
                 formProjectInfo1.Show()
             End If
@@ -6594,7 +6594,7 @@ Imports System.Web
 
 
                 Else
-                        Call MsgBox("no customizations found ...")
+                    Call MsgBox("no customizations found ...")
                 End If
 
 
@@ -6688,7 +6688,7 @@ Imports System.Web
 
                     Call logfileSchreiben(outputCollection)
 
-                ElseIf Not IsNothing(importedAppearances) And importedAppearances.count > 0 Then
+                ElseIf Not IsNothing(importedAppearances) And importedAppearances.Count > 0 Then
                     ' jetzt wird die Appearances als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
@@ -7786,7 +7786,7 @@ Imports System.Web
         visboZustaende.clearAuslastungsArray()
 
         ' jetzt müssen die Charts aktualisiert werden 
-        Call aktualisiereCharts(visboZustaende.lastProject, False)
+        Call aktualisiereCharts(visboZustaende.currentProject, False)
 
     End Sub
 

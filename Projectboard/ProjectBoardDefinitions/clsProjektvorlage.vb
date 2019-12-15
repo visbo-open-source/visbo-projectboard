@@ -956,18 +956,23 @@
             Dim phaseID As String
             Dim phIndex As Integer
 
-
-            currentNode = Me.hierarchy.nodeItem(elemID)
-
-            If Not IsNothing(currentNode) Then
-
-                phaseID = currentNode.parentNodeKey
-                phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
-                getParentPhaseByID = Me.getPhase(phIndex)
-
-            Else
+            If elemID = rootPhaseName Then
                 getParentPhaseByID = Nothing
+            Else
+                currentNode = Me.hierarchy.nodeItem(elemID)
+
+                If Not IsNothing(currentNode) Then
+
+                    phaseID = currentNode.parentNodeKey
+                    phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
+                    getParentPhaseByID = Me.getPhase(phIndex)
+
+                Else
+                    getParentPhaseByID = Nothing
+                End If
             End If
+
+
 
         End Get
     End Property

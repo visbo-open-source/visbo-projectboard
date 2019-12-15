@@ -187,6 +187,12 @@ Public Class clsMeilenstein
     End Sub
 
     ''' <summary>
+    ''' löscht alle Deliverables des Meilensteines 
+    ''' </summary>
+    Public Sub clearDeliverables()
+        _deliverables.Clear()
+    End Sub
+    ''' <summary>
     ''' gibt das Element an der bezeichneten Stelle zurück
     ''' index kann Werte zwischen 1 .. count annehmen 
     ''' </summary>
