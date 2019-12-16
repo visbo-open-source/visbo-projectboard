@@ -2524,12 +2524,17 @@ Public Class clsProjekt
 
 
 
+    ''' <summary>
+    ''' es werden alle Bewertungen gelöscht, auch die Phase(1), also Projekt-Bewertung
+    ''' </summary>
     Public Sub clearBewertungen()
         Dim cPhase As clsPhase
 
 
         For p = 1 To Me.CountPhases
             cPhase = Me.getPhase(p)
+            cPhase.clearBewertungen()
+
             For r = 1 To cPhase.countMilestones
                 With cPhase.getMilestone(r)
                     .clearBewertungen()
