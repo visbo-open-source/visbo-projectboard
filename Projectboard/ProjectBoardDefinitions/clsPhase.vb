@@ -2408,21 +2408,19 @@ Public Class clsPhase
 
             Next
 
-            ' 25.11.19 Bewertungen und Deliverables auch übernehmen
-            '_ das muss bei Projekten, die aus Dehnen, stauchen, Verschieben zustande kommen , so angepasst werden, dass Bewertungen aus der Vergangenheit 
-            ' übernommen werden, baer die Bewertungen der Zukunft nicht übernommen werden ! 
-            ' aktuell werden keine Bewertungen übernommen  
+            ' 16.12.19 Bewertungen auch übernehmen; in den Meilensteinen werden sie schon kängst übernommen ...
 
-            'For b As Integer = 1 To Me._bewertungen.Count
-            '    Dim newb As New clsBewertung
-            '    Me.getBewertung(b).copyto(newb)
-            '    Try
-            '        .addBewertung(newb)
-            '    Catch ex As Exception
 
-            '    End Try
+            For b As Integer = 1 To Me._bewertungen.Count
+                Dim newb As New clsBewertung
+                Me.getBewertung(b).copyto(newb)
+                Try
+                    .addBewertung(newb)
+                Catch ex As Exception
 
-            'Next
+                End Try
+
+            Next
 
             ' Deliverables sollen immer übernommen werden ...
             ' jetzt noch die Deliverables kopieren ... 
