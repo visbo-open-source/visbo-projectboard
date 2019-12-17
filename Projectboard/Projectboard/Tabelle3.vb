@@ -252,7 +252,14 @@ Public Class Tabelle3
                                 Dim newStartDate As Date = CDate(Target.Value)
                                 If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
                                     ' alles ok, bearbeiten ..
-                                    Call MsgBox("alles ok, wird bearbeitet ...")
+                                    'diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                                    Dim diffDaysOffset As Integer = cphase.startOffsetinDays + CInt(DateDiff(DateInterval.Day, cphase.getStartDate, newStartDate))
+                                    'dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+                                    'offsetinTagen = 0
+                                    If diffDaysOffset <> 0 Then
+                                        hproj.startDate = hproj.startDate.AddDays(diffDaysOffset)
+                                        Call hproj.syncXWertePhases()
+                                    End If
 
                                 Else
                                     ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
