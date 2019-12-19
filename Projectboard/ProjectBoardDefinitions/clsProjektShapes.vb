@@ -1083,7 +1083,7 @@ Public Class clsProjektShapes
 
                             If cphase.nameID = rootPhaseName Then
                                 ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
-                                ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
+                                ' Phase 1 verändert hat, müssen die Phasen 2 bis N in ihren Startoffsets neu berechnet werden 
                                 If curCoord(1) <> oldCoord(1) Then
                                     reDraw = True
                                     Call reCalcOffsetInPhases(hproj, diffDays)

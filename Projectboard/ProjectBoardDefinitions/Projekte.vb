@@ -27016,7 +27016,9 @@ Public Module Projekte
 
                 Try
                     If .AlternativeText.Length > 0 Then
-                        tmpValue = CInt(.AlternativeText)
+                        If IsNumeric(.AlternativeText) Then
+                            tmpValue = CInt(.AlternativeText)
+                        End If
                     End If
                 Catch ex As Exception
 

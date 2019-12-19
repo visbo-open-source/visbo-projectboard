@@ -16687,9 +16687,9 @@ Public Module agm2
                 Try
 
                     If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
+                        Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                     End If
-                    Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
+                    Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=currentRole.name)
                     Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
 
                 Catch ex As Exception
@@ -17829,6 +17829,9 @@ Public Module agm2
 
         Dim err As New clsErrorCodeMsg
 
+        ' wieviele Spalten werden hier angezeigt ... 
+        Dim anzSpalten As Integer = 12
+
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -17902,7 +17905,7 @@ Public Module agm2
 
 
                 If awinSettings.englishLanguage Then
-                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 1), Excel.Range).Value = "Project-Nr"
                     CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Element-Name"
@@ -17916,7 +17919,7 @@ Public Module agm2
                     CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
 
                 Else
-                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
                     CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Element-Name"
@@ -17984,101 +17987,192 @@ Public Module agm2
                         Dim cMilestone As clsMeilenstein = Nothing
                         Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
 
+
+                        ' unabhängig davon, ob es sich um einen Meilenstein oder eine Phase handelt .. 
+                        ' Business-Unit , Projekt-Name, Varianten-Name müssen geschrieben werden 
+                        ' Business-Unit
+                        CType(currentWS.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
+                        CType(currentWS.Cells(zeile, 1), Excel.Range).Locked = True
+
+                        ' 
+                        ' Projekt-Name
+                        CType(currentWS.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                        CType(currentWS.Cells(zeile, 2), Excel.Range).Locked = True
+
+                        ' geschützt oder nicht geschützt ? 
+                        Dim currentCell As Excel.Range = CType(currentWS.Cells(zeile, 2), Excel.Range)
+                        If isProtectedbyOthers Then
+
+                            If isProtectedbyOthers Then
+                                currentCell.Font.Color = awinSettings.protectedByOtherColor
+                            End If
+
+                            ' Kommentare löschen
+                            currentCell.ClearComments()
+
+                            currentCell.AddComment(Text:=protectionText)
+                            currentCell.Comment.Visible = False
+
+                        End If
+
+                        ' Varianten-Name
+                        CType(currentWS.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                        CType(currentWS.Cells(zeile, 3), Excel.Range).Locked = True
+
+                        ' 
+                        ' jetzt kommen die Milestone bzw Phase-abhängigen Elemente  
                         If isMilestone Then
+
+
                             cMilestone = hproj.getMilestoneByID(curElemID)
+                            Dim msName As String = cMilestone.name
+                            Dim msNameID As String = cMilestone.nameID
+
                             ' schreibe den Meilenstein
                             With CType(currentWS, Excel.Worksheet)
-                                ' Business-Unit
-                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
-                                ' Projekt-Name
-                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                ' Varianten-Name
-                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+
+
                                 ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
-                                CType(.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
-                                CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
+
+                                ' jetzt die Kommentare schreiben 
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
+
+                                ' jetzt muss die genaue ID reingeschrieben werden
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).AddComment(Text:=msNameID)
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+
                                 ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
-                                CType(.Cells(zeile, 5), Excel.Range).Value = ""
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+
                                 ' Ende-Datum 
-                                CType(.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                                If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
+                                    ' Sperren ...
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                End If
+
                                 ' Ampel-Farbe
-                                CType(.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
+
+                                If cMilestone.ampelStatus = 1 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
+                                ElseIf cMilestone.ampelStatus = 2 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
+                                ElseIf cMilestone.ampelStatus = 3 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
+                                Else
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                End If
+
                                 ' Ampel-Erläuterung
-                                CType(.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
+                                CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
+                                CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
+
                                 ' Lieferumfänge
-                                CType(.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
+
                                 ' wer ist verantwortlich
-                                CType(.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
+                                CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
+                                CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
+
                                 ' wieviel ist erledigt ? 
-                                CType(.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
+                                CType(currentWS.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
+                                CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
+
+                                ' der Dokumenten Link 
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+
                             End With
                         Else
+
                             cPhase = hproj.getPhaseByID(curElemID)
+                            Dim phName As String = cPhase.name
+                            Dim phNameID As String = cPhase.nameID
+
                             ' schreibe die Phase
                             With CType(currentWS, Excel.Worksheet)
-                                ' Business-Unit
-                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
-                                ' Projekt-Name
-                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                ' Varianten-Name
-                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+
                                 ' Element-Name Meilenstein bzw. Phase
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cPhase.name
                                 CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
+
+                                ' jetzt die Kommentare schreiben 
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
+
+                                ' jetzt muss die genaue ID reingeschrieben werden
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).AddComment(Text:=phNameID)
+                                CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+
+
                                 ' Startdatum 
                                 CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
+                                If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
+                                    ' Sperren ...
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
+                                End If
+
+
                                 ' Ende-Datum 
                                 CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
+                                If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
+                                    ' Sperren ...
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                End If
+
                                 ' Ampel-Farbe
                                 CType(.Cells(zeile, 7), Excel.Range).Value = cPhase.ampelStatus
+                                CType(.Cells(zeile, 7), Excel.Range).Locked = False
+
+                                If cPhase.ampelStatus = 1 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
+                                ElseIf cPhase.ampelStatus = 2 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
+                                ElseIf cPhase.ampelStatus = 3 Then
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
+                                Else
+                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                End If
+
+
                                 ' Ampel-Erläuterung
                                 CType(.Cells(zeile, 8), Excel.Range).Value = cPhase.ampelErlaeuterung
+                                CType(.Cells(zeile, 8), Excel.Range).Locked = False
+
                                 ' Lieferumfänge
                                 CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables
+                                CType(.Cells(zeile, 9), Excel.Range).Locked = False
+
                                 ' wer ist verantwortlich
                                 CType(.Cells(zeile, 10), Excel.Range).Value = cPhase.verantwortlich
+                                CType(.Cells(zeile, 10), Excel.Range).Locked = False
+
                                 ' wieviel ist erledigt ? 
                                 CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone.ToString("0#%")
+                                CType(.Cells(zeile, 11), Excel.Range).Locked = False
+
+                                ' der Dokumenten Link 
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cPhase.DocURL
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+
                             End With
                         End If
 
-                        ' jetzt müssen die locked Attribute gesetzt werden entsprechend der isProtectedbyOthers ...
-
-                        ' jetzt muss geprüft werden, ob es durch jdn anders geschützt wurde ... 
-                        If isProtectedbyOthers Then
-
-                            Dim kompletteZeile As Excel.Range = CType(currentWS.Rows(zeile), Excel.Range)
-
-                            With CType(currentWS, Excel.Worksheet)
-                                CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
-                                ' Kommentar einfügen 
-                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 2), Excel.Range).Comment
-                                If Not IsNothing(cellComment) Then
-                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
-                                End If
-                                CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
-                                CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
-                            End With
-
-                            kompletteZeile.Locked = True
-
-                        Else
-                            Dim protectArea As Excel.Range = Nothing
-                            Dim editArea As Excel.Range = Nothing
-                            If isMilestone Then
-                                With currentWS
-                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 5)), Excel.Range)
-                                    editArea = CType(.Range(.Cells(zeile, 6), .Cells(zeile, 11)), Excel.Range)
-                                End With
-                            Else
-                                With currentWS
-                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 4)), Excel.Range)
-                                    editArea = CType(.Range(.Cells(zeile, 5), .Cells(zeile, 11)), Excel.Range)
-                                End With
-                            End If
-                            protectArea.Locked = True
-                            editArea.Locked = False
-                        End If
 
                         ' Zeile eins weiter ... 
                         zeile = zeile + 1
@@ -18095,8 +18189,8 @@ Public Module agm2
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(11)), Excel.Range)
-                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, 11)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(12)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
@@ -18127,7 +18221,7 @@ Public Module agm2
                 If massColFontValues(1, 0) > 4 Then
                     ' diese Werte übernehmen 
                     infoDataBlock.Font.Size = CInt(massColFontValues(1, 0))
-                    For ik As Integer = 1 To 11
+                    For ik As Integer = 1 To 12
                         If massColFontValues(1, ik) > 0 Then
                             CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
                         End If
@@ -18160,32 +18254,11 @@ Public Module agm2
 
                     ' Werte setzen ...
                     massColFontValues(1, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
-                    For ik As Integer = 1 To 11
+                    For ik As Integer = 1 To 12
                         massColFontValues(1, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
                     Next
 
                 End If
-
-                ' jetzt noch die Spalte 7 bedingt formatieren .. 
-                Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 7), .Cells(zeile, 7)), Excel.Range)
-                With trafficLightRange
-                    .Interior.Color = visboFarbeNone
-
-                    Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
-
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
-
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
-
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
-                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
-
-                End With
 
             End With
 

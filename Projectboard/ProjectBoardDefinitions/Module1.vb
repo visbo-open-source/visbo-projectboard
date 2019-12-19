@@ -7982,6 +7982,33 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' schreibt im MassEdit den Meilenstein Namen als String, ggf inkl NameID als unsichtbarer Kommentar , wenn nötig
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="indentLevel"></param>
+    ''' <param name="msName"></param>
+    ''' <param name="msNameID"></param>
+    Public Sub writeMEcellWithMsNameID(ByRef currentCell As Excel.Range,
+                                       ByVal indentLevel As Integer,
+                                       ByVal msName As String,
+                                       ByVal msNameID As String)
+
+        ' Phasen-Name 
+        currentCell.Value = msName
+        '    Den Indent schreiben 
+        currentCell.IndentLevel = indentLevel
+        '    Kommentare alle löschen 
+        currentCell.ClearComments()
+
+        ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermittelt werden kann 
+        If calcHryElemKey(msName, True) <> msNameID Then
+            currentCell.AddComment(Text:=msNameID)
+            currentCell.Comment.Visible = False
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt in die angegebene MassenEdit Excel-Zelle den Phase-Name als String, 
     ''' die Phase-NameID , wenn nötig als unsichtbaren Kommentar  
     ''' </summary>

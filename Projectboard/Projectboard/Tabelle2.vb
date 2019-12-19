@@ -92,11 +92,7 @@ Public Class Tabelle2
 
         End Try
 
-
-        If Not IsNothing(appInstance.ActiveCell) Then
-            visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
-        End If
-
+        Application.EnableEvents = formerEE
 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
         Try
@@ -122,30 +118,34 @@ Public Class Tabelle2
 
                     pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If ShowProjekte.contains(pName) Then
-                        .lastProject = ShowProjekte.getProject(pName)
-                        .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))
+                        .currentProject = ShowProjekte.getProject(pName)
+                        .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
                     End If
 
                 End With
             Else
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
+                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
             End If
 
-            CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
+
 
         Catch ex As Exception
 
         End Try
 
         ' jetzt die Gridline zeigen
-
         With appInstance.ActiveWindow
             .DisplayGridlines = True
             .GridlineColor = Excel.XlRgbColor.rgbBlack
         End With
 
+        ' den alten Wert merken
+        If Not IsNothing(appInstance.ActiveCell) Then
+            visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
+        End If
 
-        Application.EnableEvents = formerEE
+
         If Application.ScreenUpdating = False Then
             Application.ScreenUpdating = True
         End If
@@ -1169,9 +1169,9 @@ Public Class Tabelle2
 
                     If auslastungChanged Or summenChanged Or kostenChanged Then
                         If Not IsNothing(formProjectInfo1) Then
-                            Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
+                            Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                         End If
-                        Call aktualisiereCharts(visboZustaende.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -2055,19 +2055,19 @@ Public Class Tabelle2
         With visboZustaende
             pname = CStr(CType(appInstance.ActiveSheet.Cells(Target.Row, visboZustaende.meColpName), Excel.Range).Value)
 
-            If IsNothing(.lastProject) Then
+            If IsNothing(.currentProject) Then
                 ' es wurde bisher kein lastProject geladen 
                 If ShowProjekte.contains(pname) Then
-                    .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .currentProject = ShowProjekte.getProject(pname)
+                    .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .currentProject.variantName))
                     pNameChanged = True
                 End If
 
-            ElseIf pname <> .lastProject.name Then
+            ElseIf pname <> .currentProject.name Then
                 ' muss neu geholt werden 
                 If ShowProjekte.contains(pname) Then
-                    .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .currentProject = ShowProjekte.getProject(pname)
+                    .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .currentProject.variantName))
                     pNameChanged = True
                 End If
             End If
@@ -2076,11 +2076,11 @@ Public Class Tabelle2
             Dim alreadyDone As Boolean = False
             If pNameChanged Or changeBecauseProjektleitung Then
 
-                Call aktualisiereCharts(.lastProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
                 If pNameChanged Then
                     selectedProjekte.Clear(False)
-                    selectedProjekte.Add(.lastProject, False)
+                    selectedProjekte.Add(.currentProject, False)
 
                     If Not IsNothing(rcName) Then
 
@@ -2092,7 +2092,7 @@ Public Class Tabelle2
 
 
                     If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(.lastProject, .lastProjectSession)
+                        Call updateProjectInfo1(.currentProject, .currentProjectinSession)
                         ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
                     End If
                 End If
@@ -2105,7 +2105,7 @@ Public Class Tabelle2
                 If oldRCName <> rcName Then
                     If rcName <> "" And Not alreadyDone Then
                         selectedProjekte.Clear(False)
-                        selectedProjekte.Add(.lastProject, False)
+                        selectedProjekte.Add(.currentProject, False)
                         Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
                     End If
                 End If

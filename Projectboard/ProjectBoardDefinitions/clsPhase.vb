@@ -450,6 +450,13 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' löscht alle Deliverables des Meilensteines 
+    ''' </summary>
+    Public Sub clearDeliverables()
+        _deliverables.Clear()
+    End Sub
+
+    ''' <summary>
     ''' fügt das Deliverable Item der Liste hinzu; 
     ''' wenn das Item bereits in der Liste vorhanden ist, passiert nichts 
     ''' </summary>
@@ -2401,21 +2408,19 @@ Public Class clsPhase
 
             Next
 
-            ' 25.11.19 Bewertungen und Deliverables auch übernehmen
-            '_ das muss bei Projekten, die aus Dehnen, stauchen, Verschieben zustande kommen , so angepasst werden, dass Bewertungen aus der Vergangenheit 
-            ' übernommen werden, baer die Bewertungen der Zukunft nicht übernommen werden ! 
-            ' aktuell werden keine Bewertungen übernommen  
+            ' 16.12.19 Bewertungen auch übernehmen; in den Meilensteinen werden sie schon kängst übernommen ...
 
-            'For b As Integer = 1 To Me._bewertungen.Count
-            '    Dim newb As New clsBewertung
-            '    Me.getBewertung(b).copyto(newb)
-            '    Try
-            '        .addBewertung(newb)
-            '    Catch ex As Exception
 
-            '    End Try
+            For b As Integer = 1 To Me._bewertungen.Count
+                Dim newb As New clsBewertung
+                Me.getBewertung(b).copyto(newb)
+                Try
+                    .addBewertung(newb)
+                Catch ex As Exception
 
-            'Next
+                End Try
+
+            Next
 
             ' Deliverables sollen immer übernommen werden ...
             ' jetzt noch die Deliverables kopieren ... 
@@ -2864,6 +2869,24 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' liefert den Index zurück, bis zu dem ActualData in der Phase existiert 
+    ''' -1 es existiert kein ActualData in der Phase 
+    ''' 0 .LE. x .LE. dimension-1  die Monate xwerte(0), xwerte(1), ..xwerte(x) sind ActualData Monate  
+    ''' relende-relstart .LE. x alles ist actual data    ''' 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getActualDataIndex As Integer
+        Get
+            Dim tmpResult As Integer = -1
+            If hasActualData Then
+                tmpResult = getColumnOfDate(_parentProject.actualDataUntil) - getColumnOfDate(getStartDate)
+            End If
+
+            getActualDataIndex = tmpResult
+        End Get
+    End Property
+
     Public ReadOnly Property parentProject() As clsProjekt
         Get
             parentProject = _parentProject
@@ -3158,7 +3181,7 @@ Public Class clsPhase
 
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
-    ''' soll nach Testphase die bisherige berechneBedarev ablösen
+    ''' berücksichtigt die ActualDataUntil
     ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
     ''' wie die MEthode vorher ja auch ... 
     ''' </summary>
