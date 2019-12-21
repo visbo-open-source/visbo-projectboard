@@ -694,7 +694,7 @@ Public Class clsPhase
             End If
 
             If Me.bewertungsCount >= 1 Then
-                Me.getBewertung(1).colorIndex = value
+                Me.getBewertung(Me.bewertungsCount).colorIndex = value
             Else
 
                 Dim tmpB As New clsBewertung
@@ -790,6 +790,14 @@ Public Class clsPhase
     End Property
 
 
+    ''' <summary>
+    ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
+    ''' Allerdings nur , wenn erlaubt. 
+    ''' Nicht erlaubt: es gibt actualData, Starttermin liegt vor ActualData und soll verschoeben werden -> geht nicht 
+    ''' Start- oder Ende-Termin soll vor ActualData verschoeben werden ... 
+    ''' </summary>
+    ''' <param name="startOffset"></param>
+    ''' <param name="dauer"></param>
     Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
 
         Dim projektStartdate As Date
@@ -798,13 +806,61 @@ Public Class clsPhase
         Dim faktor As Double
         Dim dimension As Integer
 
+        Dim errMsg As String = ""
+
+        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteitl werden  
+        Dim newCalculationNecessary As Boolean = (startOffset <> Me.startOffsetinDays Or dauer <> Me.dauerInDays) And Me.dauerInDays > 0
 
 
         If dauer < 0 Then
-            Throw New ArgumentException("Dauer kann nicht negativ sein")
+            If awinSettings.englishLanguage Then
+                errMsg = "Dauer must not be negative!"
+            Else
+                errMsg = "Dauer kann nicht negativ sein!"
+            End If
+
+            Throw New ArgumentException(errMsg)
 
         ElseIf startOffset < 0 Then
-            Throw New ArgumentException("Phase kann nicht vor Projektstart beginnen")
+
+            If awinSettings.englishLanguage Then
+                errMsg = "Phase may not begin before project starts!"
+            Else
+                errMsg = "Phase kann nicht vor Projektstart beginnen"
+            End If
+
+            Throw New ArgumentException(errMsg)
+
+        ElseIf Me.hasActualData Then
+            ' unzulässig Startdatum verändert sich , altes oder neues Startdatum liegt vor ActualDatauntil 
+            If Me.startOffsetinDays <> startOffset Then
+                If Me.getStartDate < parentProject.actualDataUntil Or parentProject.startDate.AddDays(startOffset) < parentProject.actualDataUntil Then
+                    ' unzulässig 
+
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Start-Date may not be changed because of existing actual data!"
+                    Else
+                        errMsg = "Start-Datum kann nicht verändert werden, da es bereits Ist-Daten gibt. "
+                    End If
+
+                    Throw New ArgumentException(errMsg)
+                End If
+            End If
+
+            ' Überprüfung des Ende-Datums 
+            If parentProject.startDate.AddDays(startOffset + dauer - 1).Date < parentProject.actualDataUntil.Date Then
+                ' unzulässig 
+
+                If awinSettings.englishLanguage Then
+                    errMsg = "End-Date may not be before actual data - date!"
+                Else
+                    errMsg = "Ende-Datum kann nicht vor das Ist-Daten Datum gelegt werden ... "
+                End If
+
+                Throw New ArgumentException(errMsg)
+
+            End If
 
         End If
 
@@ -865,27 +921,18 @@ Public Class clsPhase
                 End Try
 
 
-                If awinSettings.autoCorrectBedarfe Then
+                If newCalculationNecessary Then
 
 
                     Dim newvalues() As Double
-                    Dim notYetDone As Boolean = True
 
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.countRoles > 0 Then
+                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
-                        notYetDone = False
-
-                    End If
-
-                    If Me.countCosts > 0 And notYetDone Then
-
-                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, 1)
 
                     End If
 
@@ -940,6 +987,9 @@ Public Class clsPhase
         Dim faktor As Double = 1.0
         Dim dimension As Integer
 
+        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteitl werden  
+        Dim newCalculationNecessary As Boolean = (startOffset <> Me.startOffsetinDays Or dauer <> Me.dauerInDays) And Me.dauerInDays > 0
 
         If dauer < 0 Then
             Throw New ArgumentException("Dauer kann nicht negativ sein")
@@ -989,7 +1039,7 @@ Public Class clsPhase
                 _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
 
 
-                If awinSettings.autoCorrectBedarfe Then
+                If newCalculationNecessary Then
 
                     Dim newvalues() As Double
                     'Dim notYetDone As Boolean = True
@@ -3018,19 +3068,93 @@ Public Class clsPhase
 
         Dim r As Integer, k As Integer
 
-        For r = 1 To Me.countRoles
-            oldXwerte = Me.getRole(r).Xwerte
-            ReDim newXwerte(dimension)
-            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-            Me.getRole(r).Xwerte = newXwerte
-        Next
+        ' hier wird jetzt berücksichtigt, dass sich Werte aus den Ist-Daten nicht mehr verändern dürfen ..
+        Dim actualIndex As Integer = getActualDataIndex
 
-        For k = 1 To Me.countCosts
-            oldXwerte = Me.getCost(k).Xwerte
-            ReDim newXwerte(dimension)
-            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-            Me.getCost(k).Xwerte = newXwerte
-        Next
+
+        If actualIndex < 0 Then
+            ' alles wie bisher , ohne Istdaten
+            For r = 1 To Me.countRoles
+                oldXwerte = Me.getRole(r).Xwerte
+                ReDim newXwerte(dimension)
+                Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                Me.getRole(r).Xwerte = newXwerte
+            Next
+
+            For k = 1 To Me.countCosts
+                oldXwerte = Me.getCost(k).Xwerte
+                ReDim newXwerte(dimension)
+                Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                Me.getCost(k).Xwerte = newXwerte
+            Next
+
+        Else
+            ' jetzt müssen die Ist-Daten unverändert bleiben 
+            Dim forecastDimension As Integer = dimension - actualIndex
+            Dim firstForecastMonth As Date = getDateofColumn(getColumnOfDate(parentProject.actualDataUntil) + 1, False)
+
+            For r = 1 To Me.countRoles
+
+                oldXwerte = Me.getRole(r).Xwerte
+
+                ReDim newXwerte(dimension)
+                Dim newBedarf As Double = oldXwerte.Sum * faktor
+
+                For ri As Integer = 0 To actualIndex
+                    newXwerte(ri) = oldXwerte(ri)
+                Next
+                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
+                Dim istDataSum As Double = newXwerte.Sum
+
+                Dim forecast(0) As Double
+                forecast(0) = newBedarf - istDataSum
+
+                ' darf nicht negativ werden  
+                If forecast(0) < 0 Then
+                    forecast(0) = 0
+                End If
+
+
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+
+
+                ' jetzt die Forecast Werte übernehmen 
+                For ri As Integer = actualIndex + 1 To dimension
+                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                Next
+
+            Next
+
+            For k = 1 To Me.countCosts
+                oldXwerte = Me.getCost(k).Xwerte
+
+                ReDim newXwerte(dimension)
+                Dim newBedarf As Double = oldXwerte.Sum * faktor
+
+                For ri As Integer = 0 To actualIndex
+                    newXwerte(ri) = oldXwerte(ri)
+                Next
+                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
+                Dim istDataSum As Double = newXwerte.Sum
+
+                Dim forecast(0) As Double
+                forecast(0) = newBedarf - istDataSum
+
+                ' darf nicht negativ werden  
+                If forecast(0) < 0 Then
+                    forecast(0) = 0
+                End If
+
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+
+                ' jetzt die Forecast Werte übernehmen 
+                For ri As Integer = actualIndex + 1 To dimension
+                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                Next
+
+            Next
+        End If
+
 
 
     End Sub

@@ -237,6 +237,14 @@ Public Class Tabelle3
                     If Not IsNothing(parentPhase) Then
                         allowedLeftDate = parentPhase.getStartDate
                         allowedRightDate = parentPhase.getEndDate
+                    Else
+                        ' wenn es sich um die Projekt-Phase handelt 
+                        If hproj.hasActualValues Then
+                            allowedLeftDate = hproj.startDate
+                        Else
+                            allowedLeftDate = StartofCalendar
+                        End If
+                        ' das erlaubte 
                     End If
 
 
@@ -252,14 +260,14 @@ Public Class Tabelle3
                                 Dim newStartDate As Date = CDate(Target.Value)
                                 If (newStartDate.Date >= allowedLeftDate.Date And newStartDate <= allowedRightDate) And newStartDate <= cphase.getEndDate Then
                                     ' alles ok, bearbeiten ..
-                                    'diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                                    Dim diffDaysOffset As Integer = cphase.startOffsetinDays + CInt(DateDiff(DateInterval.Day, cphase.getStartDate, newStartDate))
-                                    'dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
-                                    'offsetinTagen = 0
-                                    If diffDaysOffset <> 0 Then
-                                        hproj.startDate = hproj.startDate.AddDays(diffDaysOffset)
-                                        Call hproj.syncXWertePhases()
-                                    End If
+
+                                    ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
+                                    Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+                                    Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
+
+                                    ' jetzt wird die Phase entsprechend geändert ...
+
+                                    Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
 
                                 Else
                                     ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
@@ -299,10 +307,14 @@ Public Class Tabelle3
                                 ' Phase 
                                 Try
                                     Dim newEndDate As Date = CDate(Target.Value)
-                                    If (newEndDate >= allowedLeftDate.Date And newEndDate <= allowedRightDate) And cphase.getStartDate <= newEndDate Then
+                                    If (newEndDate.Date >= allowedLeftDate.Date And newEndDate <= allowedRightDate) And newEndDate >= cphase.getStartDate Then
                                         ' alles ok, bearbeiten ..
 
-                                        Call MsgBox("alles ok, wird bearbeitet ...")
+                                        ' jetzt muss die neue Dauer in Tagen bestimmt werden ... 
+                                        Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, cphase.getStartDate, newEndDate) + 1
+
+                                        ' jetzt wird die Phase entsprechend geändert ...
+                                        Call cphase.changeStartandDauer(cphase.startOffsetinDays, newDauerInTagen)
 
                                     Else
                                         ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
@@ -454,6 +466,12 @@ Public Class Tabelle3
                         Case Else
                             ' nichs tun , nicht erlaubt ..
                     End Select
+
+                    If Not IsNothing(Target.Cells(1, 1).value) Then
+                        visboZustaende.oldValue = CStr(Target.Cells(1, 1).value)
+                    Else
+                        visboZustaende.oldValue = ""
+                    End If
 
                 Else
                     ' es darf nur eine Zelle selektiert werden 
@@ -674,10 +692,71 @@ Public Class Tabelle3
                 frmDateEdit.allowedDateRight = allowedRightDate
 
                 If frmDateEdit.ShowDialog() = DialogResult.OK Then
-                    Target.Value = frmDateEdit.startdatePicker.Value
+                    ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
+                    ' heir ist bereits im Formular sichergestellt, dass es sich um valide Datum-Angaben handelt .. 
+                    Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                    Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
 
-                    ' das Ende Date ...
+                    Dim deltaOffset As Long = newOffsetInTagen - cphase.startOffsetinDays
+                    Dim deltaDauer As Long = newDauerInTagen - cphase.dauerInDays
+                    Dim faktor As Double = 1.0
+
+                    If cphase.dauerInDays > 0 Then
+                        faktor = newDauerInTagen / cphase.dauerInDays
+                    End If
+
+
+                    ' jetzt wird diese Phase entsprechend geändert ...
+                    Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+
+
+                    ' jetzt die Kind-Phasen anpassen 
+                    For Each childPhaseNameID As String In hproj.hierarchy.getChildIDsOf(elemID, False)
+
+                        Dim childPhase As clsPhase = hproj.getPhaseByID(childPhaseNameID)
+
+                        Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
+                        Dim newChildDuration As Long = CLng(faktor * childPhase.dauerInDays)
+
+                        ' jetzt prüfen, ob es actualdata gibt 
+                        If hproj.hasActualValues Then
+                            If getColumnOfDate(childPhase.getStartDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                                newChildOffset = childPhase.startOffsetinDays
+                                If getColumnOfDate(childPhase.getEndDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                                    newChildDuration = childPhase.dauerInDays
+                                Else
+
+                                End If
+                            Else
+
+                            End If
+                        End If
+
+
+                        If newChildDuration = 0 Then
+                            newChildDuration = 1
+                        End If
+
+                        Call childPhase.changeStartandDauer(newChildOffset, newChildDuration)
+
+                    Next
+
+
+                    ' jetzt die Meilensteine der Phase  anpassen 
+                    For Each childMilestoneNameID As String In hproj.hierarchy.getChildIDsOf(elemID, True)
+
+                    Next
+
+                    ' jetzt die Excel Zellen der aktuellen Zeile anpassen ... 
+                    meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                     meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
+
+                    ' jetzt die Excel Zeilen der Kinder aktualisieren  
+                    Dim lastChildRow As Integer = Target.Row + 1
+                    Dim potentialChildID As String = CStr(meWS.Cells(Target.Row + 1, col(PTmeTe.elemName)).comment.text)
+                    Dim isChild As Boolean = True
+
+
                 Else
                     Target.Value = visboZustaende.oldValue
                 End If
@@ -729,15 +808,26 @@ Public Class Tabelle3
                     frmDateEdit.allowedDateRight = allowedRightDate
 
                     If frmDateEdit.ShowDialog() = DialogResult.OK Then
-                        Target.Value = frmDateEdit.enddatePicker.Value
+
+                        ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
+                        Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
+                        Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
+
+                        ' jetzt wird die Phase entsprechend geändert ...
+
+                        Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+
                         ' das Start Date ...
                         meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
+                        meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
                     Else
                         Target.Value = visboZustaende.oldValue
                     End If
                 End If
 
-
+            Else
+                appInstance.EnableEvents = True
+                Cancel = True
             End If
         End If
 

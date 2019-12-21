@@ -8172,7 +8172,7 @@ Public Module agm2
 
             With currentWS
                 startCol = CInt(CType(.Range("BC1"), Excel.Range).Column)
-                endCol = CInt(CType(.Range("DB1"), Excel.Range).Column)
+                endCol = CInt(CType(.Range("DD1"), Excel.Range).Column)
             End With
 
 

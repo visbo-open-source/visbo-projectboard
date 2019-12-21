@@ -926,7 +926,6 @@ Public Class clsProjekt
         Dim cphase As clsPhase
         Dim dimension As Integer
         Dim phaseStart As Date, phaseEnd As Date
-        Dim notYetDone As Boolean = True
 
 
         ' prüfen, ob die Gesamtlänge übereinstimmt  
@@ -937,20 +936,14 @@ Public Class clsProjekt
 
             dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
-            If cphase.countRoles > 0 Then
-
-                ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                Call cphase.calcNewXwerte(dimension, 1)
-                notYetDone = False
-
-            End If
-
-            If cphase.countCosts > 0 And notYetDone Then
+            If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
 
                 ' hier müssen jetzt die Xwerte neu gesetzt werden 
                 Call cphase.calcNewXwerte(dimension, 1)
 
             End If
+
+
 
 
         Next

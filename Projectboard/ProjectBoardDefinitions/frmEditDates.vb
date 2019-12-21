@@ -7,6 +7,16 @@
 
         Call languageSettings()
 
+        If allowedDateLeft > Date.MinValue Then
+            startdatePicker.MinDate = allowedDateLeft
+            enddatePicker.MinDate = allowedDateRight
+        End If
+
+        If allowedDateRight > Date.MinValue Then
+            enddatePicker.MinDate = allowedDateLeft
+            enddatePicker.MaxDate = allowedDateRight
+        End If
+
         If IsMilestone Then
             startdatePicker.Enabled = False
         Else

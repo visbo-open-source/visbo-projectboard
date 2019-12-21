@@ -5267,7 +5267,7 @@ Imports System.Web
                         If ohneFehler Then
                             'sessionConstellationP enthält alle Projekte aus dem Import 
                             'Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=True, considerSummaryProjects:=False)
+                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
 
 
