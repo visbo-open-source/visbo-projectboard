@@ -205,8 +205,14 @@ Public Class Tabelle3
             Exit Sub
         Else
 
-            Dim allowedLeftDate As Date = hproj.startDate
-            Dim allowedRightDate As Date = hproj.endeDate
+            'Dim allowedLeftDate As Date = hproj.startDate
+            'Dim allowedRightDate As Date = hproj.endeDate
+
+            Dim allowedLeftDate As Date = StartofCalendar
+            If hproj.hasActualValues Then
+                allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+            End If
+            Dim allowedRightDate As Date = StartofCalendar.AddYears(20).AddDays(-1)
 
             Try
                 Dim datesWereChanged As Boolean = False
@@ -236,15 +242,14 @@ Public Class Tabelle3
                     Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
                     If Not IsNothing(parentPhase) Then
                         allowedLeftDate = parentPhase.getStartDate
-                        allowedRightDate = parentPhase.getEndDate
-                    Else
-                        ' wenn es sich um die Projekt-Phase handelt 
                         If hproj.hasActualValues Then
-                            allowedLeftDate = hproj.startDate
-                        Else
-                            allowedLeftDate = StartofCalendar
+                            If parentPhase.getStartDate < hproj.actualDataUntil Then
+                                allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+                            End If
                         End If
-                        ' das erlaubte 
+
+                        allowedRightDate = parentPhase.getEndDate
+
                     End If
 
 
@@ -264,10 +269,66 @@ Public Class Tabelle3
                                     ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
                                     Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
                                     Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, newStartDate, cphase.getEndDate) + 1
+                                    Dim autoAdjustChilds As Boolean = True
+
+
+                                    If cphase.nameID = rootPhaseName Then
+                                        Dim oldMovableStatus As Boolean = hproj.movable
+                                        hproj.movable = True
+                                        hproj.startDate = newStartDate
+                                        newOffsetInTagen = 0
+                                        hproj.movable = oldMovableStatus
+                                    End If
 
                                     ' jetzt wird die Phase entsprechend geändert ...
+                                    ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
+                                    ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
 
-                                    Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+                                    Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
+                                    cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+
+
+                                    If autoAdjustChilds Then
+                                        ' jetzt die Excel Zeilen der Kinder aktualisieren  
+                                        Dim currentChildRow As Integer = Target.Row + 1
+                                        Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                        Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+
+
+                                        Do While isChild
+                                            Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                            If isMilestone Then
+                                                Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                                meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                                meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                            Else
+                                                Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                                meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                                meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                            End If
+
+                                            currentChildRow = currentChildRow + 1
+
+                                            Try
+                                                If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                                    potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                    If potentialChildID <> "" Then
+                                                        isChild = nameIDCollection.Contains(potentialChildID)
+                                                    Else
+                                                        isChild = False
+                                                    End If
+                                                Else
+                                                    isChild = False
+                                                End If
+                                            Catch ex As Exception
+                                                isChild = False
+                                            End Try
+
+
+                                        Loop
+
+                                    End If
+
 
                                 Else
                                     ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
@@ -312,9 +373,57 @@ Public Class Tabelle3
 
                                         ' jetzt muss die neue Dauer in Tagen bestimmt werden ... 
                                         Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, cphase.getStartDate, newEndDate) + 1
+                                        Dim newOffsetInTagen As Long = cphase.startOffsetinDays
 
                                         ' jetzt wird die Phase entsprechend geändert ...
-                                        Call cphase.changeStartandDauer(cphase.startOffsetinDays, newDauerInTagen)
+                                        ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
+                                        ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
+                                        Dim autoAdjustChilds As Boolean = True
+                                        Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
+                                        cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+
+
+                                        If autoAdjustChilds Then
+                                            ' jetzt die Excel Zeilen der Kinder aktualisieren  
+                                            Dim currentChildRow As Integer = Target.Row + 1
+                                            Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                            Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+
+
+                                            Do While isChild
+                                                Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                                If isMilestone Then
+                                                    Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                                Else
+                                                    Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                                End If
+
+                                                currentChildRow = currentChildRow + 1
+
+                                                Try
+                                                    If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                                        potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                        If potentialChildID <> "" Then
+                                                            isChild = nameIDCollection.Contains(potentialChildID)
+                                                        Else
+                                                            isChild = False
+                                                        End If
+                                                    Else
+                                                        isChild = False
+                                                    End If
+                                                Catch ex As Exception
+                                                    isChild = False
+                                                End Try
+
+
+                                            Loop
+
+                                        End If
+
 
                                     Else
                                         ' nicht ok, Datum liegt ausserhalb der erlaubten Grenzen 
@@ -644,8 +753,14 @@ Public Class Tabelle3
         Dim cphase As clsPhase = Nothing
         Dim cMilestone As clsMeilenstein = Nothing
 
-        Dim allowedLeftDate As Date = hproj.startDate
-        Dim allowedRightDate As Date = hproj.endeDate
+        'Dim allowedLeftDate As Date = hproj.startDate
+        'Dim allowedRightDate As Date = hproj.endeDate
+
+        Dim allowedLeftDate As Date = StartofCalendar
+        If hproj.hasActualValues Then
+            allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+        End If
+        Dim allowedRightDate As Date = StartofCalendar.AddYears(20).AddDays(-1)
 
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
@@ -672,103 +787,24 @@ Public Class Tabelle3
             ' jedes Elem hat eine Eltern-Phase, die nur eine Phase sein kann ...
             Dim parentPhase As clsPhase = hproj.getParentPhaseByID(elemID)
             If Not IsNothing(parentPhase) Then
+
                 allowedLeftDate = parentPhase.getStartDate
+
+                If hproj.hasActualValues Then
+                    If parentPhase.getStartDate < hproj.actualDataUntil Then
+                        allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+                    End If
+                End If
+
                 allowedRightDate = parentPhase.getEndDate
             End If
 
 
-            If Target.Column = col(PTmeTe.startdate) Then
-                ' hier kann es nur eine Phase sein ... 
-
-                Dim frmDateEdit As New frmEditDates
-
-
-                frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
-                frmDateEdit.startdatePicker.Value = CDate(Target.Value)
-                frmDateEdit.enddatePicker.Value = cphase.getEndDate
-                frmDateEdit.IsMilestone = False
-
-                frmDateEdit.allowedDateLeft = allowedLeftDate
-                frmDateEdit.allowedDateRight = allowedRightDate
-
-                If frmDateEdit.ShowDialog() = DialogResult.OK Then
-                    ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
-                    ' heir ist bereits im Formular sichergestellt, dass es sich um valide Datum-Angaben handelt .. 
-                    Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
-                    Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
-
-                    Dim deltaOffset As Long = newOffsetInTagen - cphase.startOffsetinDays
-                    Dim deltaDauer As Long = newDauerInTagen - cphase.dauerInDays
-                    Dim faktor As Double = 1.0
-
-                    If cphase.dauerInDays > 0 Then
-                        faktor = newDauerInTagen / cphase.dauerInDays
-                    End If
-
-
-                    ' jetzt wird diese Phase entsprechend geändert ...
-                    Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
-
-
-                    ' jetzt die Kind-Phasen anpassen 
-                    For Each childPhaseNameID As String In hproj.hierarchy.getChildIDsOf(elemID, False)
-
-                        Dim childPhase As clsPhase = hproj.getPhaseByID(childPhaseNameID)
-
-                        Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
-                        Dim newChildDuration As Long = CLng(faktor * childPhase.dauerInDays)
-
-                        ' jetzt prüfen, ob es actualdata gibt 
-                        If hproj.hasActualValues Then
-                            If getColumnOfDate(childPhase.getStartDate) <= getColumnOfDate(hproj.actualDataUntil) Then
-                                newChildOffset = childPhase.startOffsetinDays
-                                If getColumnOfDate(childPhase.getEndDate) <= getColumnOfDate(hproj.actualDataUntil) Then
-                                    newChildDuration = childPhase.dauerInDays
-                                Else
-
-                                End If
-                            Else
-
-                            End If
-                        End If
-
-
-                        If newChildDuration = 0 Then
-                            newChildDuration = 1
-                        End If
-
-                        Call childPhase.changeStartandDauer(newChildOffset, newChildDuration)
-
-                    Next
-
-
-                    ' jetzt die Meilensteine der Phase  anpassen 
-                    For Each childMilestoneNameID As String In hproj.hierarchy.getChildIDsOf(elemID, True)
-
-                    Next
-
-                    ' jetzt die Excel Zellen der aktuellen Zeile anpassen ... 
-                    meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
-                    meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
-
-                    ' jetzt die Excel Zeilen der Kinder aktualisieren  
-                    Dim lastChildRow As Integer = Target.Row + 1
-                    Dim potentialChildID As String = CStr(meWS.Cells(Target.Row + 1, col(PTmeTe.elemName)).comment.text)
-                    Dim isChild As Boolean = True
-
-
-                Else
-                    Target.Value = visboZustaende.oldValue
-                End If
-
-
-            ElseIf Target.Column = col(PTmeTe.endDate) Then
-                ' hier kann es beides sein .. 
-
+            If Target.Column = col(PTmeTe.startdate) Or Target.Column = col(PTmeTe.endDate) Then
 
                 If visboZustaende.currentZeileIsMilestone Then
-                    ' Meilenstein 
 
+                    ' Meilenstein
 
                     ' in target.Value ist jetzt der neue Wert
                     Dim frmDateEdit As New frmEditDates
@@ -792,37 +828,104 @@ Public Class Tabelle3
 
 
                 Else
-                    ' Phase 
+                    ' ist Phase ...
 
-                    ' in target.Value ist jetzt der neue Wert
                     Dim frmDateEdit As New frmEditDates
+                    Dim wasRootPhase As Boolean = False
+
+                    ' wenn die Phase Kinder hat, muss das Flag "automatisch anpassen" angezeigt werden 
+                    Dim anzChilds As Integer = hproj.hierarchy.getChildIDsOf(cphase.nameID, True).Count + hproj.hierarchy.getChildIDsOf(cphase.nameID, False).Count
+                    If anzChilds > 0 Then
+                        frmDateEdit.chkbx_adjustChilds.Visible = True
+                        frmDateEdit.chkbx_adjustChilds.Enabled = True
+                        frmDateEdit.chkbx_adjustChilds.Checked = True
+                    End If
 
                     frmDateEdit.lblElemName.Text = elemNameOfElemID(visboZustaende.currentElemID)
+                    frmDateEdit.IsMilestone = False
+
                     frmDateEdit.startdatePicker.Value = cphase.getStartDate
-                    frmDateEdit.startdatePicker.Enabled = True
+
+                    If allowedLeftDate > cphase.getStartDate Then
+                        frmDateEdit.startdatePicker.Enabled = False
+                    End If
 
                     frmDateEdit.enddatePicker.Value = cphase.getEndDate
-                    frmDateEdit.IsMilestone = False
 
                     frmDateEdit.allowedDateLeft = allowedLeftDate
                     frmDateEdit.allowedDateRight = allowedRightDate
 
                     If frmDateEdit.ShowDialog() = DialogResult.OK Then
-
                         ' jetzt muss der neue Offset in Tagen bestimmt werden ... 
+                        ' hier ist bereits im Formular sichergestellt, dass es sich um valide Datum-Angaben handelt .. 
                         Dim newOffsetInTagen As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, frmDateEdit.startdatePicker.Value.Date)
                         Dim newDauerInTagen As Long = DateDiff(DateInterval.Day, frmDateEdit.startdatePicker.Value.Date, frmDateEdit.enddatePicker.Value.Date) + 1
+                        Dim autoAdjustChilds As Boolean = frmDateEdit.chkbx_adjustChilds.Checked
 
-                        ' jetzt wird die Phase entsprechend geändert ...
+                        If cphase.nameID = rootPhaseName Then
+                            wasRootPhase = True
+                            Dim oldMovableStatus As Boolean = hproj.movable
+                            hproj.movable = True
+                            hproj.startDate = frmDateEdit.startdatePicker.Value
+                            newOffsetInTagen = 0
+                            hproj.movable = oldMovableStatus
+                        End If
 
-                        Call cphase.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+                        ' jetzt kommt der rekursive Aufruf: die Phase mit all ihren Kindern und Kindeskindern wird angepasst
+                        ' unter Berücksichtigung der Ist-Daten, falls welche existieren ...  
+                        Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
+                        cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
 
-                        ' das Start Date ...
+                        ' jetzt die Excel Zellen der aktuellen Zeile, der Phase anpassen ... 
                         meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                         meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
+
+                        If autoAdjustChilds Or wasRootPhase Then
+                            ' jetzt die Excel Zeilen der Kinder aktualisieren  
+                            Dim currentChildRow As Integer = Target.Row + 1
+                            Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                            Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+
+
+                            Do While isChild
+                                Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                If isMilestone Then
+                                    Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                Else
+                                    Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                End If
+
+                                currentChildRow = currentChildRow + 1
+
+                                Try
+                                    If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                        potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                        If potentialChildID <> "" Then
+                                            isChild = nameIDCollection.Contains(potentialChildID)
+                                        Else
+                                            isChild = False
+                                        End If
+                                    Else
+                                        isChild = False
+                                    End If
+                                Catch ex As Exception
+                                    isChild = False
+                                End Try
+
+
+                            Loop
+
+                        End If
+
+
                     Else
                         Target.Value = visboZustaende.oldValue
                     End If
+
                 End If
 
             Else

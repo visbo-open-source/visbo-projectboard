@@ -78,8 +78,13 @@ Public Class clsProjekt
             If Not IsNothing(value) Then
                 If value > StartofCalendar Then
                     ' Actual Data Until kann aber nicht größer werden als das Projektende ...
-                    If endeDate < value Then
-                        _actualDataUntil = endeDate
+                    ' das gilt aber nur, wenn das Projekt nicht gerade erst aufgebaut wird, es also schon eine Dauer gibt 
+                    If dauerInDays > 0 Then
+                        If endeDate < value Then
+                            _actualDataUntil = endeDate
+                        Else
+                            _actualDataUntil = value
+                        End If
                     Else
                         _actualDataUntil = value
                     End If
@@ -5978,6 +5983,44 @@ Public Class clsProjekt
             Next
 
             getPhaseIdsWithRoleCost = iDCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu der angegebenen elemID alle Kind und Kindes-KinderIDs zurück
+    ''' das umfasst IDs von Phasen und IDs von Meilensteinen 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getAllChildIDsOf(ByVal elemID As String) As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            ' hole alle Phasen Ids von elemID
+            For Each childPhaseNameID As String In Me.hierarchy.getChildIDsOf(elemID, False)
+                If Not tmpCollection.Contains(childPhaseNameID) Then
+                    tmpCollection.Add(childPhaseNameID, childPhaseNameID)
+                End If
+
+                Dim childCollection As Collection = getAllChildIDsOf(childPhaseNameID)
+                If Not IsNothing(childCollection) Then
+                    For Each tmpNameID As String In childCollection
+                        If Not tmpCollection.Contains(tmpNameID) Then
+                            tmpCollection.Add(tmpNameID, tmpNameID)
+                        End If
+                    Next
+                End If
+
+            Next
+
+            ' hole alle Meilenstein IDs von elemID 
+            For Each childMilestoneNameID As String In Me.hierarchy.getChildIDsOf(elemID, True)
+                If Not tmpCollection.Contains(childMilestoneNameID) Then
+                    tmpCollection.Add(childMilestoneNameID, childMilestoneNameID)
+                End If
+            Next
+
+            getAllChildIDsOf = tmpCollection
         End Get
     End Property
 

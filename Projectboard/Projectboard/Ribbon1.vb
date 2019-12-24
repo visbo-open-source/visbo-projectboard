@@ -3874,6 +3874,7 @@ Imports System.Web
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
+        Dim reDrawProjects As New Collection
 
         ' Bildschirm einfrieren ...
         If appInstance.ScreenUpdating = True Then
@@ -3887,6 +3888,7 @@ Imports System.Web
 
             ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
             Dim tableTyp As Integer = ptTables.meRC
+
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 tableTyp = ptTables.meRC
                 Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
@@ -3931,6 +3933,12 @@ Imports System.Web
                             End If
                         End If
                     Else
+                        If tableTyp = ptTables.meTE Then
+                            ' neu Zeichnen des Projektes 
+                            If Not reDrawProjects.Contains(hproj.name) Then
+                                reDrawProjects.Add(hproj.name)
+                            End If
+                        End If
                         ' temporär geschützt lassen ...
                     End If
                 End If
@@ -4058,6 +4066,17 @@ Imports System.Web
             Catch ex As Exception
                 projectboardWindows(PTwindows.mptpr) = Nothing
             End Try
+
+            ' jetzt müssen alle ggf in reDrawProjects aufgeführten Projekte neu gezeichnet werden .. 
+            If reDrawProjects.Count > 0 Then
+                For Each pName As String In reDrawProjects
+                    If ShowProjekte.contains(pName) Then
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call replaceProjectVariant(pName, hproj.variantName, False, True, hproj.tfZeile)
+                    End If
+
+                Next
+            End If
         Catch ex As Exception
 
             enableOnUpdate = True

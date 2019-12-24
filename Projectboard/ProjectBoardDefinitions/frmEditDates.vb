@@ -8,8 +8,10 @@
         Call languageSettings()
 
         If allowedDateLeft > Date.MinValue Then
-            startdatePicker.MinDate = allowedDateLeft
-            enddatePicker.MinDate = allowedDateRight
+            If startdatePicker.Enabled Then
+                startdatePicker.MinDate = allowedDateLeft
+                startdatePicker.MaxDate = allowedDateRight
+            End If
         End If
 
         If allowedDateRight > Date.MinValue Then
@@ -17,11 +19,6 @@
             enddatePicker.MaxDate = allowedDateRight
         End If
 
-        If IsMilestone Then
-            startdatePicker.Enabled = False
-        Else
-            startdatePicker.Enabled = True
-        End If
     End Sub
 
     Private Sub languageSettings()
@@ -55,10 +52,14 @@
             End If
         Else
             ' es handelt sich um eine Phase
-            If DateDiff(DateInterval.Day, allowedDateLeft, CDate(startdatePicker.Value)) >= 0 And DateDiff(DateInterval.Day, allowedDateRight, CDate(startdatePicker.Value)) <= 0 And
-                DateDiff(DateInterval.Day, allowedDateLeft, CDate(enddatePicker.Value)) >= 0 And DateDiff(DateInterval.Day, allowedDateRight, CDate(enddatePicker.Value)) <= 0 And
-                DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
+            If DateDiff(DateInterval.Day, CDate(startdatePicker.Value), CDate(enddatePicker.Value)) >= 0 Then
                 allIsOk = True
+            Else
+                Dim errMsg As String = "Ende-Datum darf nicht vor dem Start-Datum liegen ..."
+                If awinSettings.englishLanguage Then
+                    errMsg = "end-date should be later or equal to start-date ..."
+                End If
+                Call MsgBox(errMsg)
             End If
         End If
 
