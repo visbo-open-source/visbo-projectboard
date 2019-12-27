@@ -994,99 +994,148 @@ Public Class clsProjektShapes
                         cphase = hproj.getPhaseByID(phaseNameID)
                         Dim parentPhase As clsPhase = hproj.getParentPhaseByID(cphase.nameID)
 
-                        If cphase.nameID = rootPhaseName Then
-                            ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
-                            ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
-                            ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
-                            Dim phBorderLinks As Double = phasesBorderLinks(hproj)
-                            Dim phBorderRechts As Double = phasesBorderRechts(hproj)
+                        Dim allowedLeftDate As Date = Date.MinValue
+                        Dim allowedRightDate As Date = Date.MinValue
 
-                            ' ist der linke Rand ok? 
-                            If curCoord(1) < phBorderLinks Then
-                                If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                                    ' alles ok
-                                Else
-                                    curCoord(1) = phBorderRechts - curCoord(3)
-                                    reDraw = True
-                                End If
-                            Else
-                                curCoord(1) = phBorderLinks
+                        ' Prüfen, ob links verschoben 
+                        If curCoord(1) <> oldCoord(1) Then
+                            ' darf sich das Start-Datum überhaupt verändern ? 
+                            If hproj.hasActualValues Then
+                                ' das geht das schon gar nicht ... 
+                                moveAllowed = False
                                 reDraw = True
+                                shpElement.Top = CSng(oldCoord(0))
+                                shpElement.Left = CSng(oldCoord(1))
+                                shpElement.Height = CSng(oldCoord(2))
+                                shpElement.Width = CSng(oldCoord(3))
                             End If
-
-
-                            ' ist der Rechte Rand ok? 
-                            If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                                ' alles ok 
-                            Else
-                                curCoord(3) = phBorderRechts - curCoord(1)
-                                reDraw = True
-                            End If
-
-                            ' jetzt enthalten die CurCoord die exakten Daten
-                            ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
-                            ' Offsets der anderen Phasen müssen gesetzt werden 
-                            diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
-                            offsetinTagen = 0
-                            If diffDays <> 0 Then
-                                hproj.startDate = hproj.startDate.AddDays(diffDays)
-                                Call hproj.syncXWertePhases()
-                            End If
-
-
-
-                        Else
-                            ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
-                            If curCoord(1) < projectBorderLinks Then
-                                If curCoord(3) <> oldCoord(3) Then
-                                    ' es wurde gedehnt
-                                    curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
-                                End If
-                                curCoord(1) = projectBorderLinks
-                                reDraw = True
-                            End If
-
-                            If curCoord(1) > projectBorderRechts Then
-                                ' gar nicht zugelassen
-                                curCoord(1) = oldCoord(1)
-                                reDraw = True
-                            End If
-
-                            If curCoord(1) + curCoord(3) > projectBorderRechts Then
-                                ' dann muss die Breite angepasst werden 
-                                curCoord(3) = projectBorderRechts - curCoord(1)
-                                reDraw = True
-                            End If
-
-                            ' jetzt enthalten die CurCoord die exakten Daten  
-                            offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
 
                         End If
 
-
-                        If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or _
-                            diffDays <> 0 Then
-                            Dim faktor As Double = dauerinTagen / cphase.dauerInDays
-
-                            reDraw = True
-
-                            Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
-                            If faktor <> 1.0 Then
-                                ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
-                                Call cphase.adjustMilestones(faktor)
-                            End If
+                        If moveAllowed Then
 
                             If cphase.nameID = rootPhaseName Then
-                                ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
-                                ' Phase 1 verändert hat, müssen die Phasen 2 bis N in ihren Startoffsets neu berechnet werden 
-                                If curCoord(1) <> oldCoord(1) Then
+                                ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
+                                ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
+                                ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
+                                Dim phBorderLinks As Double = phasesBorderLinks(hproj)
+                                Dim phBorderRechts As Double = phasesBorderRechts(hproj)
+
+                                ' ist der linke Rand ok? 
+                                If curCoord(1) < phBorderLinks Then
+                                    If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                        ' alles ok
+                                    Else
+                                        curCoord(1) = phBorderRechts - curCoord(3)
+                                        reDraw = True
+                                    End If
+                                Else
+                                    curCoord(1) = phBorderLinks
                                     reDraw = True
-                                    Call reCalcOffsetInPhases(hproj, diffDays)
                                 End If
+
+
+                                ' ist der Rechte Rand ok? 
+                                If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                    ' alles ok 
+                                Else
+                                    curCoord(3) = phBorderRechts - curCoord(1)
+                                    reDraw = True
+                                End If
+
+                                ' jetzt enthalten die CurCoord die exakten Daten
+                                ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
+                                ' Offsets der anderen Phasen müssen gesetzt werden 
+                                diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                                dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+                                offsetinTagen = 0
+                                If diffDays <> 0 Then
+                                    hproj.startDate = hproj.startDate.AddDays(diffDays)
+                                    Call hproj.syncXWertePhases()
+                                End If
+
+
+
+                            Else
+
+                                If Not IsNothing(parentPhase) Then
+                                    allowedLeftDate = parentPhase.getStartDate
+                                    allowedRightDate = parentPhase.getEndDate
+
+                                    If cphase.hasActualData Then
+                                        allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+                                    End If
+
+                                    projectBorderLinks = calcDateToXCoord(allowedLeftDate)
+                                    projectBorderRechts = calcDateToXCoord(allowedRightDate)
+
+                                End If
+
+                                ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
+                                If curCoord(1) < projectBorderLinks Then
+                                    If curCoord(3) <> oldCoord(3) Then
+                                        ' es wurde gedehnt
+                                        curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
+                                    End If
+                                    curCoord(1) = projectBorderLinks
+                                    reDraw = True
+                                End If
+
+                                If curCoord(1) > projectBorderRechts Then
+                                    ' gar nicht zugelassen
+                                    curCoord(1) = oldCoord(1)
+                                    reDraw = True
+                                End If
+
+                                If curCoord(1) + curCoord(3) > projectBorderRechts Then
+                                    ' dann muss die Breite angepasst werden 
+                                    curCoord(3) = projectBorderRechts - curCoord(1)
+                                    reDraw = True
+                                End If
+
+                                ' jetzt das Shape neu anpassen 
+                                With shpElement
+                                    .Top = CSng(curCoord(0))
+                                    .Left = CSng(curCoord(1))
+                                    .Height = CSng(curCoord(2))
+                                    .Width = CSng(curCoord(3))
+                                End With
+
+                                ' jetzt enthalten die CurCoord die exakten Daten  
+                                offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                                dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+
                             End If
 
+
+                            If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or
+                            diffDays <> 0 Then
+                                Dim faktor As Double = dauerinTagen / cphase.dauerInDays
+
+                                reDraw = True
+
+                                ' tk neue Anpassung, jetzt werden standardmäßig auch alle Kinder angepasst ... 
+                                cphase = cphase.adjustPhaseAndChilds(offsetinTagen, dauerinTagen, True)
+                                ' tk old 27.12.2019
+                                'Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
+                                'If faktor <> 1.0 Then
+                                '    ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
+                                '    Call cphase.adjustMilestones(faktor)
+                                'End If
+
+                                'If cphase.nameID = rootPhaseName Then
+                                '    ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
+                                '    ' Phase 1 verändert hat, müssen die Phasen 2 bis N in ihren Startoffsets neu berechnet werden 
+                                '    If curCoord(1) <> oldCoord(1) Then
+                                '        reDraw = True
+                                '        Call reCalcOffsetInPhases(hproj, diffDays)
+                                '    End If
+                                'End If
+                                '
+                                ' Ende tk old 27.12.2019 
+
+
+                            End If
 
                         End If
 
