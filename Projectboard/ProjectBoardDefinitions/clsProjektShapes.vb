@@ -1000,7 +1000,7 @@ Public Class clsProjektShapes
                         ' Prüfen, ob links verschoben 
                         If curCoord(1) <> oldCoord(1) Then
                             ' darf sich das Start-Datum überhaupt verändern ? 
-                            If hproj.hasActualValues Then
+                            If cphase.hasActualData Then
                                 ' das geht das schon gar nicht ... 
                                 moveAllowed = False
                                 reDraw = True
@@ -1057,6 +1057,9 @@ Public Class clsProjektShapes
 
 
                             Else
+                                ' hier sind folgende Möglichkeiten : 
+                                ' keine actual data:
+                                ' der Move  allowed und es handelt sich um eine normale Phase 
 
                                 If Not IsNothing(parentPhase) Then
                                     allowedLeftDate = parentPhase.getStartDate
@@ -1071,27 +1074,51 @@ Public Class clsProjektShapes
 
                                 End If
 
-                                ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
-                                If curCoord(1) < projectBorderLinks Then
-                                    If curCoord(3) <> oldCoord(3) Then
-                                        ' es wurde gedehnt
-                                        curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
+                                ' worum handelt es sich ?
+                                If curCoord(1) <> oldCoord(1) And curCoord(3) <> oldCoord(3) Then
+                                    ' 1. links anfassen und dehnen oder stauchen 
+                                    ' es hat in diesem Fall keine actual Values 
+                                    If curCoord(1) < oldCoord(1) Then
+                                        ' nach links gedehnt 
+                                        If curCoord(1) < projectBorderLinks Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderLinks
+                                        End If
+                                    Else
+                                        ' nach rechts gestaucht
+                                        If curCoord(1) > projectBorderRechts Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderRechts
+                                        End If
                                     End If
-                                    curCoord(1) = projectBorderLinks
-                                    reDraw = True
+
+                                ElseIf curCoord(1) <> oldCoord(1) Then
+                                    ' 2. nach links oder rechts verschieben
+                                    If curCoord(1) < oldCoord(1) Then
+                                        ' nach links verschoben 
+                                        If curCoord(1) < projectBorderLinks Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderLinks
+                                        End If
+                                    Else
+                                        ' nach rechts verschoben 
+                                        If curCoord(1) + curCoord(3) > projectBorderRechts Then
+                                            curCoord(1) = projectBorderRechts - curCoord(3)
+                                        End If
+                                    End If
+
+                                ElseIf curCoord(3) <> oldCoord(3) Then
+                                    ' 3. rechts anfassen und dehnen oder stauchen 
+                                    If curCoord(3) < oldCoord(3) Then
+                                        ' nach links gestaucht 
+                                        If curCoord(1) + curCoord(3) <= projectBorderLinks Then
+                                            curCoord(3) = projectBorderLinks - curCoord(1)
+                                        End If
+                                    Else
+                                        ' nach rechts gedehnt 
+                                    End If
                                 End If
 
-                                If curCoord(1) > projectBorderRechts Then
-                                    ' gar nicht zugelassen
-                                    curCoord(1) = oldCoord(1)
-                                    reDraw = True
-                                End If
-
-                                If curCoord(1) + curCoord(3) > projectBorderRechts Then
-                                    ' dann muss die Breite angepasst werden 
-                                    curCoord(3) = projectBorderRechts - curCoord(1)
-                                    reDraw = True
-                                End If
 
                                 ' jetzt das Shape neu anpassen 
                                 With shpElement
