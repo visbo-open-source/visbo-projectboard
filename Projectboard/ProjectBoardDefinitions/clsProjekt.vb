@@ -119,20 +119,25 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If _Status = ProjektStatus(PTProjektStati.geplant) Or
+            If value = True Then
+                If _Status = ProjektStatus(PTProjektStati.geplant) Or
                 _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
                 (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
                 value = False Then
-                _movable = value
+                    _movable = value
+
+                Else
+                    Dim errmsg As String
+                    If awinSettings.englishLanguage Then
+                        errmsg = "project status does not allow movement!"
+                    Else
+                        errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
+                    End If
+                    Throw New ArgumentException(errmsg)
+                End If
 
             Else
-                Dim errmsg As String
-                If awinSettings.englishLanguage Then
-                    errmsg = "project status does not allow movement!"
-                Else
-                    errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
-                End If
-                Throw New ArgumentException(errmsg)
+                _movable = value
             End If
 
         End Set
@@ -3665,24 +3670,33 @@ Public Class clsProjekt
                         tmpResult(0) = 0
                         notYetDone = False
                     End If
-                Else
-                    Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
-                    If rcLists.phaseContainsCost(phaseNameID, costID) Then
+                ElseIf rcNameID <> "" Then
+                    If CostDefinitions.containsName(rcNameID) Then
+                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
 
-                        cphase = getPhaseByID(phaseNameID)
-                        Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
-                        If Not IsNothing(tmpCost) Then
-                            xWerte = tmpCost.Xwerte
+                            cphase = getPhaseByID(phaseNameID)
+                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                            If Not IsNothing(tmpCost) Then
+                                xWerte = tmpCost.Xwerte
+                            Else
+                                ReDim tmpResult(0)
+                                tmpResult(0) = 0
+                                notYetDone = False
+                            End If
                         Else
                             ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If
+
                     Else
-                        ReDim tmpResult(0)
-                        tmpResult(0) = 0
                         notYetDone = False
                     End If
+
+
+                Else
+                    notYetDone = False
                 End If
 
                 If notYetDone Then
@@ -3696,6 +3710,9 @@ Public Class clsProjekt
                         End If
 
                     Next
+                Else
+                    ReDim tmpResult(0)
+                    tmpResult(0) = 0
                 End If
 
             End If

@@ -820,26 +820,113 @@ Public Class clsPhase
                 Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
                 Dim newChildDuration As Long = CLng(faktor * childPhase.dauerInDays)
 
+                Dim newCalculationNecessary As Boolean = (childPhase.getStartDate.Date <> parentProject.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> parentProject.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
                 ' jetzt prüfen, ob es actualdata gibt 
                 If hproj.hasActualValues Then
                     If getColumnOfDate(childPhase.getStartDate) <= getColumnOfDate(hproj.actualDataUntil) Then
-                        ' bisheriges Startdatum liegt vor ActualData-Date: unverändert lassen ...
+                        ' bisheriges Startdatum liegt vor ActualData-Date: es darf gar nicht verändert werden 
+                        Dim diffOffset As Long = DateDiff(DateInterval.Day, childPhase.getStartDate.Date, parentProject.startDate.AddDays(newChildOffset).Date)
+
+                        ' hier muss das aktuelle Projekt-Ende Datum ermittlet werden 
+                        If diffOffset <> 0 Then
+                            ' neu bestimmen der Notwendigkeit für Neuberechnung 
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> parentProject.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> parentProject.startDate.AddDays(newChildOffset + newChildDuration + diffOffset - 1).Date)
+                        End If
+
+                        'der Offset muss unverändert bleiben, da das Startdatum links vom ActualData Date liegt ..
                         newChildOffset = childPhase.startOffsetinDays
+
+
                         If getColumnOfDate(childPhase.getEndDate) <= getColumnOfDate(hproj.actualDataUntil) Then
                             ' bisheriges Endedatum liegt vor ActualData-Date: unverändert lassen ...
                             newChildDuration = childPhase.dauerInDays
+
+                            ' in diesem Fall ist keine Neu-Berechnung notwednig bzw. es führt dann zu Fehlern ... 
+                            ' weil Ende-Datum vor dem ActualDataUntil liegt 
+                            newCalculationNecessary = False
                         Else
                             ' liegt das neue Ende-Datum vor ActualData Date? 
                             If hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date <= hproj.actualDataUntil.Date Then
-                                ' wird auf den ersten des zum ActualDataUntil folgenden Monats gelegt
-                                newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset), getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)) + 1
+                                ' wird auf den letzten Tag des zum ActualDataUntil folgenden Monats gelegt
+                                newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True).Date) + 1
+
                             Else
                                 ' kann übernommen werden , newChildDuration ist ohnehin schon gesetzt 
+                                ' hier muss jetzt die ChildDuration um den diffOffset korrigiert werden 
+                                ' wenn das Startdatum nicht fet´stgehalten würde, dann wäre das Enddatum entsprechend weiter hinten buw. vorne - 
+                                ' deshalb muss der Duration Wert jetzt korrigiert werden, um dem Rechnung zu tragen  
+                                If diffOffset > 0 Then
+                                    ' das Phasen Ende wird nach rechts verschoben 
+                                    newChildDuration = newChildDuration + diffOffset
+
+                                Else
+                                    'newChildDuration = newChildDuration + diffOffset
+                                    ' das Phasen Ende wird nach links verschoben , darf aber nicht weiter als bis zum Ende des Folge-Monats auf ActualDataUntil sein 
+                                    If DateDiff(DateInterval.Day, getDateofColumn(getColumnOfDate(hproj.actualDataUntil), True).Date, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date) > 0 Then
+                                        ' alles in Ordnung 
+
+                                    Else
+                                        newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True).Date) + 1
+                                    End If
+
+                                End If
+
                             End If
+
+                            If newChildOffset + newChildDuration <= newOffsetInTagen + newDauerInTagen Then
+                                ' alles in Ordnung 
+                            Else
+                                newChildDuration = newOffsetInTagen + newDauerInTagen - newChildOffset
+                            End If
+
+                            ' wurde durch den oberen Absatz ersetzt 
+                            '' gilt für alle oberen Zweige ... 
+                            'If DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date, hproj.endeDate.Date) > 0 Then
+                            '    ' alles in Ordnung 
+                            'Else
+                            '    newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, hproj.endeDate.Date) + 1
+                            'End If
+
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> hproj.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
                         End If
+
                     Else
-                        ' kann komplett übernommen werden 
+
+                        ' hier muss aber noch überprüft werden, ob das neue (!) Startdatum vor dem hproj.actualdata liegt 
+                        If getColumnOfDate(hproj.startDate.AddDays(newChildOffset).Date) <= getColumnOfDate(hproj.actualDataUntil) Then
+                            ' das Startdatum der Phase  nach dem ActualData-Datum schieben  
+                            newChildOffset = DateDiff(DateInterval.Day, hproj.startDate.Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False).Date)
+
+                            If newChildOffset + newChildDuration <= newOffsetInTagen + newDauerInTagen Then
+                                ' alles in Ordnung 
+                            Else
+                                newChildDuration = newOffsetInTagen + newDauerInTagen - newChildOffset
+                            End If
+
+                            ' wurde durch den oberen Absatz ersetzt 
+                            'If DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date, hproj.endeDate.Date) > 0 Then
+                            '    ' alles in Ordnung 
+                            'Else
+                            '    newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, hproj.endeDate.Date) + 1
+                            'End If
+
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> hproj.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
+                        Else
+                            ' kann komplett übernommen werden 
+                            ' das neue startdatum liegt rechts von hproj.ActualDataUntil ..
+                        End If
+
                     End If
+
+
+
                 End If
 
 
@@ -847,9 +934,14 @@ Public Class clsPhase
                     newChildDuration = 1
                 End If
 
-                If newChildOffset <> childPhase.startOffsetinDays Or newChildDuration <> childPhase.dauerInDays Then
-                    childPhase = childPhase.adjustPhaseAndChilds(newChildOffset, newChildDuration, autoAdjustChilds)
-                End If
+                Try
+                    If newCalculationNecessary Then
+                        childPhase = childPhase.adjustPhaseAndChilds(newChildOffset, newChildDuration, autoAdjustChilds)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
 
 
 
@@ -877,6 +969,16 @@ Public Class clsPhase
                             ' kann übernommen werden , newChildOffset
                         End If
                     End If
+                End If
+
+                ' falls der Rundungsfehler zu einem zu späten Meilenstein führt ... 
+                If newChildOffset > Me.dauerInDays - 1 Then
+                    newChildOffset = Me.dauerInDays - 1
+                End If
+
+                ' falls der Rundungsfehler zu einem zu frühen Meilenstein führt ... 
+                If newChildOffset < 0 Then
+                    newChildOffset = 0
                 End If
 
                 childMilestone.setDate = Me.getStartDate.AddDays(newChildOffset)
@@ -908,8 +1010,11 @@ Public Class clsPhase
         Dim errMsg As String = ""
 
         ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
-        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteitl werden  
-        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or ((startOffset <> Me.startOffsetinDays Or dauer <> Me.dauerInDays) And Me.dauerInDays > 0)
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteilt werden  
+        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or
+                                                    (((Me.getStartDate.Date <> parentProject.startDate.AddDays(startOffset).Date) Or
+                                                    (Me.getEndDate.Date <> parentProject.startDate.AddDays(startOffset + dauer - 1).Date)) And
+                                                    Me.dauerInDays > 0)
 
         ' damit wird bestimmt, ob die Verteilung auch dann neu berechnet werden soll, wenn die Dimension des alten und des neuen Arrays gleich ist.  
         Dim calcAnyhow As Boolean = True

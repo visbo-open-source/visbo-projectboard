@@ -608,7 +608,7 @@ Public Class clsMeilenstein
             Else
                 Try
                     ' Änderung tk, 20.6.18 value.date , um zu normieren ...
-                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value.Date)
+                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset).Date, value.Date)
                 Catch ex As Exception
                     Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf & _
                                         ex.Message)

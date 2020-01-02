@@ -884,6 +884,16 @@ Public Class clsProjektShapes
 
                         End If
 
+                        ' jetzt wird noch geprüft, um welche Manipulation es sich handelt uind ob die zugelassen ist .. 
+                        If moveAllowed Then
+                            If curCoord(1) + curCoord(3) < oldCoord(1) + oldCoord(3) Then
+                                ' das End-Datum wurde nach vorne verschoben 
+                                If calcXCoordToDate(curCoord(1) + curCoord(3)) < hproj.actualDataUntil Then
+                                    curCoord(3) = calcDateToXCoord(getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True)) - curCoord(1)
+                                End If
+                            End If
+                        End If
+
                         If moveAllowed Then
 
                             If curCoord(3) <> oldCoord(3) Then
@@ -941,13 +951,23 @@ Public Class clsProjektShapes
                             End If
 
                             Dim autoAdjustChilds As Boolean = True
-
+                            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartdate.Date)
                             hproj.startDate = newStartdate
+
+                            If diffDays <> 0 Then
+                                ' tk 30.12.19 hier muss sichergestellt sein, dass die 
+                                Call hproj.syncXWertePhases()
+                            End If
+
                             newOffsetInTagen = 0
+
+
                             Dim cphase As clsPhase = hproj.getPhase(1)
                             Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(cphase.nameID)
 
                             cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+
+
 
                         End If
 
