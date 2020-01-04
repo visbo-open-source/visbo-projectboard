@@ -94,45 +94,49 @@ Public Class Tabelle2
 
         Application.EnableEvents = formerEE
 
+        ' tk 4.1.20 das wird hier nicht mehr gebracuht, weil Spalte 1 immer selektierbar ist ... 
         ' einen Select machen - nachdem Event Behandlung wieder true ist, dann werden project und lastprojectDB gesetzt ...
-        Try
-            'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            ' jetzt auf die erste selektierbare Zeile gehen ... 
-            Dim cz As Integer = 2
-            Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
 
-            Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
+        CType(CType(meWS, Excel.Worksheet).Cells(2, 1), Excel.Range).Select()
 
-            Do While bedingung
-                cz = cz + 1
-                eof = (cz > visboZustaende.meMaxZeile)
-                bedingung = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
-            Loop
+        'Try
+        '    'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+        '    ' jetzt auf die erste selektierbare Zeile gehen ... 
+        '    Dim cz As Integer = 2
+        '    Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
 
-            If Not eof Then
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
+        '    Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
 
-                Dim pName As String = ""
+        '    Do While bedingung
+        '        cz = cz + 1
+        '        eof = (cz > visboZustaende.meMaxZeile)
+        '        bedingung = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
+        '    Loop
 
-                With visboZustaende
+        '    If Not eof Then
+        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
 
-                    pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
-                    If ShowProjekte.contains(pName) Then
-                        .currentProject = ShowProjekte.getProject(pName)
-                        .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
-                    End If
+        '        Dim pName As String = ""
 
-                End With
-            Else
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
-            End If
+        '        With visboZustaende
+
+        '            pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
+        '            If ShowProjekte.contains(pName) Then
+        '                .currentProject = ShowProjekte.getProject(pName)
+        '                .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
+        '            End If
+
+        '        End With
+        '    Else
+        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
+        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
+        '    End If
 
 
 
-        Catch ex As Exception
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
         ' jetzt die Gridline zeigen
         With appInstance.ActiveWindow

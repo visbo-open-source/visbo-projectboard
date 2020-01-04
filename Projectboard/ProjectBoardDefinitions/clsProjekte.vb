@@ -367,11 +367,17 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property contains(ByVal key As String) As Boolean
         Get
-            If _allProjects.ContainsKey(key) Then
-                contains = True
-            Else
+
+            If IsNothing(key) Then
                 contains = False
+            Else
+                If _allProjects.ContainsKey(key) Then
+                    contains = True
+                Else
+                    contains = False
+                End If
             End If
+
         End Get
     End Property
 

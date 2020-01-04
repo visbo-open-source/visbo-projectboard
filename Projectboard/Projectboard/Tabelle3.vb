@@ -292,51 +292,57 @@ Public Class Tabelle3
                                     Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(elemID)
                                     cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
 
-                                    Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
-                                    If diffDays <> 0 Then
-                                        ' tk 30.12.19 hier muss sichergestellt sein, dass die 
-                                        Call hproj.syncXWertePhases()
-                                    End If
+                                    ' tk 4.1.20 eigentlich braucht man das hier nicht mehr ... 
+                                    'Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartDate.Date)
+                                    'If diffDays <> 0 Then
+                                    '    ' tk 30.12.19 hier muss sichergestellt sein, dass die 
+                                    '    Call hproj.syncXWertePhases()
+                                    'End If
 
                                     ' jetzt werden die Excel Zeilen aktualisiert 
-                                    If autoAdjustChilds Then
-                                        '  
-                                        Dim currentChildRow As Integer = Target.Row + 1
-                                        Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                        Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+                                    If autoAdjustChilds And nameIDCollection.Count > 0 Then
+                                        ' 
+                                        Try
+                                            Dim currentChildRow As Integer = Target.Row + 1
+                                            Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                            Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
 
-                                        Do While isChild
-                                            Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
-                                            If isMilestone Then
-                                                Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
-                                                meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
-                                                meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
-                                            Else
-                                                Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
-                                                meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
-                                                meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
-                                            End If
+                                            Do While isChild
+                                                Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                                If isMilestone Then
+                                                    Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                                Else
+                                                    Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                                End If
 
-                                            currentChildRow = currentChildRow + 1
+                                                currentChildRow = currentChildRow + 1
 
-                                            Try
-                                                If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
-                                                    potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                                    If potentialChildID <> "" Then
-                                                        isChild = nameIDCollection.Contains(potentialChildID)
+                                                Try
+                                                    If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                                        potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                        If potentialChildID <> "" Then
+                                                            isChild = nameIDCollection.Contains(potentialChildID)
+                                                        Else
+                                                            isChild = False
+                                                        End If
                                                     Else
                                                         isChild = False
                                                     End If
-                                                Else
+                                                Catch ex As Exception
                                                     isChild = False
-                                                End If
-                                            Catch ex As Exception
-                                                isChild = False
-                                            End Try
+                                                End Try
 
 
-                                        Loop
+                                            Loop
+                                        Catch ex As Exception
+
+                                        End Try
+
 
                                     End If
 
@@ -405,44 +411,49 @@ Public Class Tabelle3
                                         'Call hproj.syncXWertePhases()
 
                                         ' jetzt die Excel Zeilen der Kinder aktualisieren  
-                                        If autoAdjustChilds Then
+                                        If autoAdjustChilds And nameIDCollection.Count > 0 Then
                                             ' 
-                                            Dim currentChildRow As Integer = Target.Row + 1
-                                            Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                            Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+                                            Try
+                                                Dim currentChildRow As Integer = Target.Row + 1
+                                                Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
 
-                                            Do While isChild
-                                                Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
-                                                If isMilestone Then
-                                                    Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
-                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
-                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
-                                                Else
-                                                    Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
-                                                    meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
-                                                    meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
-                                                End If
+                                                Do While isChild
+                                                    Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                                    If isMilestone Then
+                                                        Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                                        meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                                        meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                                    Else
+                                                        Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                                        meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                                        meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                                    End If
 
-                                                currentChildRow = currentChildRow + 1
+                                                    currentChildRow = currentChildRow + 1
 
-                                                Try
-                                                    If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
-                                                        potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                                        If potentialChildID <> "" Then
-                                                            isChild = nameIDCollection.Contains(potentialChildID)
+                                                    Try
+                                                        If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                                            potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                            If potentialChildID <> "" Then
+                                                                isChild = nameIDCollection.Contains(potentialChildID)
+                                                            Else
+                                                                isChild = False
+                                                            End If
                                                         Else
                                                             isChild = False
                                                         End If
-                                                    Else
+                                                    Catch ex As Exception
                                                         isChild = False
-                                                    End If
-                                                Catch ex As Exception
-                                                    isChild = False
-                                                End Try
+                                                    End Try
 
 
-                                            Loop
+                                                Loop
+                                            Catch ex As Exception
+
+                                            End Try
+
 
                                         End If
 
@@ -907,7 +918,9 @@ Public Class Tabelle3
                                 hproj.startDate = frmDateEdit.startdatePicker.Value
 
                                 If diffDays <> 0 Then
-                                    ' tk 30.12.19 hier muss sichergestellt sein, dass die 
+                                    ' tk 30.12.19 hier muss sichergestellt sein, dass die X-Werte neu berechnet werden, denn es kann sein, 
+                                    ' dass so verschoben wird, dass offsets und Dauern jeweils gleich sind. 
+                                    ' 
                                     Call hproj.syncXWertePhases()
                                 End If
 
@@ -924,44 +937,50 @@ Public Class Tabelle3
                             meWS.Cells(Target.Row, col(PTmeTe.startdate)).value = frmDateEdit.startdatePicker.Value
                             meWS.Cells(Target.Row, col(PTmeTe.endDate)).value = frmDateEdit.enddatePicker.Value
 
-                            If autoAdjustChilds Or wasRootPhase Then
-                                ' jetzt die Excel Zeilen der Kinder aktualisieren  
-                                Dim currentChildRow As Integer = Target.Row + 1
-                                Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
+                            If autoAdjustChilds And nameIDCollection.Count > 0 Then
+
+                                Try
+                                    ' jetzt die Excel Zeilen der Kinder aktualisieren  
+                                    Dim currentChildRow As Integer = Target.Row + 1
+                                    Dim potentialChildID As String = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                    Dim isChild As Boolean = nameIDCollection.Contains(potentialChildID)
 
 
-                                Do While isChild
-                                    Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
-                                    If isMilestone Then
-                                        Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
-                                        meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
-                                        meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
-                                    Else
-                                        Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
-                                        meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
-                                        meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
-                                    End If
+                                    Do While isChild
+                                        Dim isMilestone As Boolean = elemIDIstMeilenstein(potentialChildID)
+                                        If isMilestone Then
+                                            Dim tmpMS As clsMeilenstein = hproj.getMilestoneByID(potentialChildID)
+                                            meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = ""
+                                            meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpMS.getDate
+                                        Else
+                                            Dim tmpPh As clsPhase = hproj.getPhaseByID(potentialChildID)
+                                            meWS.Cells(currentChildRow, col(PTmeTe.startdate)).value = tmpPh.getStartDate
+                                            meWS.Cells(currentChildRow, col(PTmeTe.endDate)).value = tmpPh.getEndDate
+                                        End If
 
-                                    currentChildRow = currentChildRow + 1
+                                        currentChildRow = currentChildRow + 1
 
-                                    Try
-                                        If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
-                                            potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
-                                            If potentialChildID <> "" Then
-                                                isChild = nameIDCollection.Contains(potentialChildID)
+                                        Try
+                                            If Not IsNothing(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment) Then
+                                                potentialChildID = CStr(meWS.Cells(currentChildRow, col(PTmeTe.elemName)).comment.text)
+                                                If potentialChildID <> "" Then
+                                                    isChild = nameIDCollection.Contains(potentialChildID)
+                                                Else
+                                                    isChild = False
+                                                End If
                                             Else
                                                 isChild = False
                                             End If
-                                        Else
+                                        Catch ex As Exception
                                             isChild = False
-                                        End If
-                                    Catch ex As Exception
-                                        isChild = False
-                                    End Try
+                                        End Try
 
 
-                                Loop
+                                    Loop
+
+                                Catch ex As Exception
+
+                                End Try
 
                             End If
 
