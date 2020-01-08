@@ -6465,9 +6465,11 @@ Imports System.Web
                 ' wenn es gibt - lesen der Externen Verträge 
                 Call readMonthlyExternKapasEV(outputCollection)
 
+                '' wenn es gibt - lesen der Urlaubslisten 
+                'Call readInterneAnwesenheitslisten(outputCollection)
                 ' wenn es gibt - lesen der Urlaubslisten 
-                Call readInterneAnwesenheitslisten(outputCollection)
-
+                Dim configCapaImport As String = awinPath & requirementsOrdner & "configCapaImport.xlsx"
+                Call readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
 
                 changedOrga.allRoles = RoleDefinitions
 
