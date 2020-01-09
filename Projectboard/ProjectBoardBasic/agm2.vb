@@ -13630,9 +13630,10 @@ Public Module agm2
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection)
+    Friend Function readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
+        Dim old_oPCollectionCount As Integer = oPCollection.Count
 
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -13986,19 +13987,21 @@ Public Module agm2
         ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
         ' ''End If
 
+        readAvailabilityOfRole = (oPCollection.Count = old_oPCollectionCount)
 
-    End Sub
+    End Function
 
     ''' <summary>
     ''' liest das im Diretory ../ressource manager evt. liegende File 'Urlaubsplaner*.xlsx' File  aus
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub readAvailabilityOfRoleWithConfig(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport),
+    Friend Function readAvailabilityOfRoleWithConfig(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport),
                                                 ByVal kapaFileName As String,
-                                                ByRef oPCollection As Collection)
+                                                ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
+        Dim old_oPCollectionCount As Integer = oPCollection.Count
 
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -14054,11 +14057,6 @@ Public Module agm2
 
                 Try
                     For index = 1 To appInstance.Worksheets.Count
-
-                        'If Not ok Then
-                        '    Exit For
-                        'End If
-
 
                         currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
                         With currentWS
@@ -14129,32 +14127,33 @@ Public Module agm2
                             ' --------------------------------------
 
 
-                            Dim vglColor As Integer = noColor         ' keine Farbe
-                            Dim i As Integer = firstUrlspalte
+                            'Dim vglColor As Integer = noColor         ' keine Farbe
+                            'Dim i As Integer = firstUrlspalte
 
-                            While ok And i <= lastSpalte
+                            'While ok And i <= lastSpalte
 
-                                If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
-                                    ok = (anzDays = anzMonthDays) Or (anzDays = 0)
-                                    vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
-                                    anzDays = 1
-                                Else
+                            'If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
+                            '    ok = (anzDays = anzMonthDays) Or (anzDays = 0)
+                            '    vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
+                            '    anzDays = 1
+                            'Else
 
-                                    Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
-                                    If isdate Then
-                                        colDate = getColumnOfDate(tmpDate)
-                                        monthNumber = Month(tmpDate)
-                                        anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
-                                        If Not monthDays.ContainsKey(colDate) Then
-                                            monthDays.Add(colDate, anzMonthDays)
-                                        End If
-
-                                    End If
-                                    anzDays = anzDays + 1
+                            Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
+                            If isdate Then
+                                colDate = getColumnOfDate(tmpDate)
+                                monthNumber = Month(tmpDate)
+                                anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
+                                If Not monthDays.ContainsKey(colDate) Then
+                                    monthDays.Add(colDate, anzMonthDays)
                                 End If
 
-                                i = i + 1
-                            End While
+                            End If
+
+                            '    anzDays = anzDays + 1
+                            'End If
+
+                            '    i = i + 1
+                            'End While
 
 
                             If Not ok Then
@@ -14331,12 +14330,13 @@ Public Module agm2
 
                             End If   ' ende von if not OK
                         Else
+
                             If awinSettings.visboDebug Then
 
                                 If awinSettings.englishLanguage Then
-                                    msgtxt = "Worksheet " & kapaFileName & "doesn't belongs to planning holidays ..."
+                                    msgtxt = "Worksheet " & kapaFileName & "doesn't contain month/year ..."
                                 Else
-                                    msgtxt = "Worksheet" & kapaFileName & " gehört nicht zum Urlaubsplaner ..."
+                                    msgtxt = "Worksheet" & kapaFileName & " enthält keine Angaben zu Monat/Jahr ..."
                                 End If
                                 If Not oPCollection.Contains(msgtxt) Then
                                     oPCollection.Add(msgtxt, msgtxt)
@@ -14383,6 +14383,7 @@ Public Module agm2
         End If
 
         enableOnUpdate = True
+
         kapaWB.Close(SaveChanges:=False)
 
         ' das wird jetzt an der übergeordneten Stelle gemacht
@@ -14394,8 +14395,9 @@ Public Module agm2
         ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
         ' ''End If
 
+        readAvailabilityOfRoleWithConfig = (oPCollection.Count = old_oPCollectionCount)
 
-    End Sub
+    End Function
 
     ''' <summary>
     ''' liest die Name-Mapping Definitionen der Phasen bzw Meilensteine ein
@@ -19500,8 +19502,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
             'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
             importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
-            importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities
-"
+            importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -19833,109 +19834,109 @@ Public Module agm2
             End If
 
 
-            Try
-                ' jetzt die CurrentOrga definieren
-                Dim currentOrga As New clsOrganisation
+            'Try
+            '    ' jetzt die CurrentOrga definieren
+            '    Dim currentOrga As New clsOrganisation
 
-                ' jetzt werden die ORganisation ausgelesen 
-                ' wenn es keine Organisation gibt , d
+            '    ' jetzt werden die ORganisation ausgelesen 
+            '    ' wenn es keine Organisation gibt , d
 
-                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+            '    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                If currentOrga.count > 0 Then
+            '    If currentOrga.count > 0 Then
 
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
+            '        If currentOrga.count > 0 Then
+            '            validOrganisations.addOrga(currentOrga)
+            '        End If
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
-
-
-                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                    Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-                        If IsNothing(customFieldDefinitions) Then
-                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        ElseIf customFieldDefinitions.count = 0 Then
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-                    Catch ex As Exception
-
-                    End Try
+            '        CostDefinitions = currentOrga.allCosts
+            '        RoleDefinitions = currentOrga.allRoles
 
 
-                Else
-                    awinSettings.readCostRolesFromDB = False
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("You don't have any organization in your system!")
-                    Else
-                        Call MsgBox("Es existiert keine Organisation im System!")
-                    End If
+            '        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+            '        Try
+            '            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+            '            If IsNothing(customFieldDefinitions) Then
+            '                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+            '                Try
+            '                    Call readCustomFieldDefinitions(wsName4)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            ElseIf customFieldDefinitions.count = 0 Then
+            '                Try
+            '                    Call readCustomFieldDefinitions(wsName4)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+            '        Catch ex As Exception
+
+            '        End Try
 
 
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-                End If
-
-
-                ' das kann nicht unmittelbar nach Login gemacht werden 
-                Dim meldungen As Collection = New Collection
-
-                '' jetzt werden die Rollen besetzt 
-                If awinSettings.readCostRolesFromDB Then
-
-                    Try
-                        Call setUserRoles(meldungen)
-                    Catch ex As Exception
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
-
-                        myCustomUserRole = New clsCustomUserRole
-
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
-                    End Try
+            '    Else
+            '        awinSettings.readCostRolesFromDB = False
+            '        If awinSettings.englishLanguage Then
+            '            Call MsgBox("You don't have any organization in your system!")
+            '        Else
+            '            Call MsgBox("Es existiert keine Organisation im System!")
+            '        End If
 
 
+            '        ' Auslesen der Custom Field Definitions aus Customization-File
+            '        Try
+            '            Call readCustomFieldDefinitions(wsName4)
+            '        Catch ex As Exception
 
-                Else
-                    myCustomUserRole = New clsCustomUserRole
+            '        End Try
 
-                    With myCustomUserRole
-                        .customUserRole = ptCustomUserRoles.OrgaAdmin
-                        .specifics = ""
-                        .userName = dbUsername
-                    End With
-                    ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                    Call myCustomUserRole.setNonAllowances()
-                End If
+            '    End If
 
-            Catch ex As Exception
 
-            End Try
+            '    ' das kann nicht unmittelbar nach Login gemacht werden 
+            '    Dim meldungen As Collection = New Collection
+
+            '    '' jetzt werden die Rollen besetzt 
+            '    If awinSettings.readCostRolesFromDB Then
+
+            '        Try
+            '            Call setUserRoles(meldungen)
+            '        Catch ex As Exception
+            '            If meldungen.Count > 0 Then
+            '                Call showOutPut(meldungen, "Error: setUserRoles", "")
+            '                Call logfileSchreiben(meldungen)
+            '            End If
+
+            '            myCustomUserRole = New clsCustomUserRole
+
+            '            With myCustomUserRole
+            '                .customUserRole = ptCustomUserRoles.OrgaAdmin
+            '                .specifics = ""
+            '                .userName = dbUsername
+            '            End With
+            '            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+            '            Call myCustomUserRole.setNonAllowances()
+            '        End Try
+
+
+
+            '    Else
+            '        myCustomUserRole = New clsCustomUserRole
+
+            '        With myCustomUserRole
+            '            .customUserRole = ptCustomUserRoles.OrgaAdmin
+            '            .specifics = ""
+            '            .userName = dbUsername
+            '        End With
+            '        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+            '        Call myCustomUserRole.setNonAllowances()
+            '    End If
+
+            'Catch ex As Exception
+
+            'End Try
 
             Try
 
@@ -20154,7 +20155,109 @@ Public Module agm2
                                                 "Bitte kontaktieren Sie ihren Administator!")
                 End If
 
+                Try
+                    ' jetzt die CurrentOrga definieren
+                    Dim currentOrga As New clsOrganisation
 
+                    ' jetzt werden die ORganisation ausgelesen 
+                    ' wenn es keine Organisation gibt , d
+
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    If currentOrga.count > 0 Then
+
+                        If currentOrga.count > 0 Then
+                            validOrganisations.addOrga(currentOrga)
+                        End If
+
+                        CostDefinitions = currentOrga.allCosts
+                        RoleDefinitions = currentOrga.allRoles
+
+
+                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                        Try
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                            If IsNothing(customFieldDefinitions) Then
+                                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf customFieldDefinitions.count = 0 Then
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    Else
+                        awinSettings.readCostRolesFromDB = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("You don't have any organization in your system!")
+                        Else
+                            Call MsgBox("Es existiert keine Organisation im System!")
+                        End If
+
+
+                        ' Auslesen der Custom Field Definitions aus Customization-File
+                        Try
+                            Call readCustomFieldDefinitions(wsName4)
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+
+                    ' das kann nicht unmittelbar nach Login gemacht werden 
+                    Dim meldungen As Collection = New Collection
+
+                    '' jetzt werden die Rollen besetzt 
+                    If awinSettings.readCostRolesFromDB Then
+
+                        Try
+                            Call setUserRoles(meldungen)
+                        Catch ex As Exception
+                            If meldungen.Count > 0 Then
+                                Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                Call logfileSchreiben(meldungen)
+                            End If
+
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                            Call myCustomUserRole.setNonAllowances()
+                        End Try
+
+
+
+                    Else
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
+                    End If
+
+                Catch ex As Exception
+
+                End Try
 
 
                 ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
@@ -22513,13 +22616,15 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub readInterneAnwesenheitslisten(ByRef meldungen As Collection)
+    Public Function readInterneAnwesenheitslisten(ByRef meldungen As Collection) As List(Of String)
 
         Dim kapaFileName As String
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
+        Dim listOfArchivFiles As New List(Of String)
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -22537,17 +22642,17 @@ Public Module agm2
         listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
                      FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
-        'listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
-        '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
-
-        ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
-        ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
                 Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                Call readAvailabilityOfRole(tmpDatei, meldungen)
+                result = readAvailabilityOfRole(tmpDatei, meldungen)
+                If result Then
+                    ' hier: merken der erfolgreich importierten KapaFiles
+                    listOfArchivFiles.Add(tmpDatei)
+                End If
+
             Next
 
         Else
@@ -22556,12 +22661,18 @@ Public Module agm2
 
             ' das sollte nicht dazu führen, dass nichts gemacht wird 
             'meldungen.Add(errMsg)
-            Call MsgBox(errMsg)
+            'Call MsgBox(errMsg)
 
             Call logfileSchreiben(errMsg, "", anzFehler)
         End If
+        If result Then
+            readInterneAnwesenheitslisten = listOfArchivFiles
+        Else
+            readInterneAnwesenheitslisten = New List(Of String)
+        End If
 
-    End Sub
+
+    End Function
     '''' <summary>
     '''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
     '''' </summary>
@@ -22576,15 +22687,18 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub readInterneAnwesenheitslistenAllg(ByVal configFile As String, ByRef meldungen As Collection)
+    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String, ByRef meldungen As Collection) As List(Of String)
 
         Dim kapaConfig As New SortedList(Of String, clsConfigKapaImport)
         Dim kapaFile As String = ""
+        Dim listOfArchivFiles As New List(Of String)
         Dim lastrow As Integer = 0
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
+
 
         Dim kapaFileName As String = "Urlaubsplaner*.xlsx"
 
@@ -22612,13 +22726,17 @@ Public Module agm2
         listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
                      FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
-
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
                 Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                'Call readAvailabilityOfRole(tmpDatei, meldungen)
-                Call readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                If result Then
+                    ' hier: merken der erfolgreich importierten KapaFiles
+                    listOfArchivFiles.Add(tmpDatei)
+                End If
+
             Next
 
         Else
@@ -22627,12 +22745,20 @@ Public Module agm2
 
             ' das sollte nicht dazu führen, dass nichts gemacht wird 
             'meldungen.Add(errMsg)
-            Call MsgBox(errMsg)
+            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+            'Call MsgBox(errMsg)
 
             Call logfileSchreiben(errMsg, "", anzFehler)
         End If
 
-    End Sub
+        If result Then
+            readInterneAnwesenheitslistenAllg = listOfArchivFiles
+        Else
+            readInterneAnwesenheitslistenAllg = New List(Of String)
+        End If
+
+
+    End Function
 
 
     ''' <summary>
@@ -22827,9 +22953,11 @@ Public Module agm2
 
                 End Try
 
+                ' configCapaImport - Konfigurationsfile schließen
+                configWB.Close(SaveChanges:=False)
+
             Catch ex As Exception
                 Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
-
             End Try
 
         End If
@@ -22837,7 +22965,30 @@ Public Module agm2
         checkRequirements = (kapaConfigs.Count > 0)
 
     End Function
+    ''' <summary>
+    ''' verschiebt die Dateien von listOfFiles in den Folder 'folder\archiv'
+    ''' </summary>
+    ''' <param name="listOfFiles"></param>
+    ''' <param name="folder"></param>
+    Public Sub moveFilesInArchiv(ByVal listOfFiles As List(Of String), ByVal folder As String)
 
+        Dim archivName As String = folder & "\archiv"
+
+        ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
+        If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
+            My.Computer.FileSystem.CreateDirectory(archivName)
+        End If
+
+        ' Dateien in archiv - Dir. verschieben
+        For Each fileName As String In listOfFiles
+
+            Dim onlyFileName As String = Path.GetFileName(fileName)
+            Dim archivFileName As String = archivName & "\" & onlyFileName
+            'My.Computer.FileSystem.CopyFile(fileName, archivFileName, True)
+            My.Computer.FileSystem.MoveFile(fileName, archivFileName, True)
+
+        Next
+    End Sub
 
     ''' <summary>
     ''' liest die Projekt- bzw. Modul-Vorlagen ein 

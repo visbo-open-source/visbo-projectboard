@@ -6465,11 +6465,12 @@ Imports System.Web
                 ' wenn es gibt - lesen der Externen Verträge 
                 Call readMonthlyExternKapasEV(outputCollection)
 
-                '' wenn es gibt - lesen der Urlaubslisten 
-                'Call readInterneAnwesenheitslisten(outputCollection)
-                ' wenn es gibt - lesen der Urlaubslisten 
+                '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
+                Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
+
+                ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & requirementsOrdner & "configCapaImport.xlsx"
-                Call readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
+                Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
 
                 changedOrga.allRoles = RoleDefinitions
 
@@ -6489,6 +6490,11 @@ Imports System.Web
                     If result = True Then
                         Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                         Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                        ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                        Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                        ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
                     Else
                         Call MsgBox("Error when writing Organisation to Database")
                         Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
