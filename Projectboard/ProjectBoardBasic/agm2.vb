@@ -20223,6 +20223,7 @@ Public Module agm2
                     If awinSettings.readCostRolesFromDB Then
 
                         Try
+                            ' Lesen der CustomUserRoles aus VCSetting in DB
                             Call setUserRoles(meldungen)
                         Catch ex As Exception
                             If meldungen.Count > 0 Then
@@ -20260,7 +20261,7 @@ Public Module agm2
                 End Try
 
 
-                ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
+                '  Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
                     Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
                     Dim tmpstr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
