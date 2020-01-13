@@ -12,6 +12,13 @@ Public Class clsRollenDefinitionWeb
     Public isExternRole As Boolean
     Public isTeam As Boolean
 
+    ' 8.1.2020 dazugekommen
+    Public aliases As String()
+    Public employeeNr As String
+    Public defaultDayCapa As Double
+    Public entryDate As Date
+    Public exitDate As Date
+
     Public uid As Integer
 
     Public name As String
@@ -89,6 +96,14 @@ Public Class clsRollenDefinitionWeb
             .name = Me.name
             .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
+
+            ' tk 8.1.20
+            .aliases = Me.aliases
+            .defaultDayCapa = Me.defaultDayCapa
+            .employeeNr = Me.employeeNr
+            .entryDate = Me.entryDate
+            .exitDate = Me.exitDate
+
 
             ' tk 23.11.18 
             .isExternRole = Me.isExternRole
@@ -261,6 +276,13 @@ Public Class clsRollenDefinitionWeb
             isExternRole = .isExternRole
             isTeam = .isTeam
 
+            ' tk 8.1.20
+            aliases = .aliases
+            defaultDayCapa = .defaultDayCapa
+            employeeNr = .employeeNr
+            entryDate = .entryDate
+            exitDate = .exitDate
+
             tagessatzIntern = .tagessatzIntern
             kapazitaet = .kapazitaet
 
@@ -273,65 +295,70 @@ Public Class clsRollenDefinitionWeb
         End With
     End Sub
 
-    ''' <summary>
-    ''' true, if both Roledefinitions are identical , except timestamp 
-    ''' </summary>
-    ''' <param name="vglRole"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinitionWeb) As Boolean
-        Get
-            Dim stillok As Boolean = True
+    '''' <summary>
+    '''' true, if both Roledefinitions are identical , except timestamp 
+    '''' </summary>
+    '''' <param name="vglRole"></param>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    ' tk 8.1.2020 : wird nie aufgerufen , deswegen auskommentiert
+    'Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinitionWeb) As Boolean
+    '    Get
+    '        Dim stillok As Boolean = True
 
-            If Me.subRoleIDs.Count = vglRole.subRoleIDs.Count Then
-                If Me.subRoleIDs.Count = 0 Then
-                    stillok = True
-                Else
-                    Dim i As Integer = 0
-                    Do While i < Me.subRoleIDs.Count And stillok
-                        stillok = (Me.subRoleIDs.ElementAt(i).key = vglRole.subRoleIDs.ElementAt(i).key And
-                                   Me.subRoleIDs.ElementAt(i).value = vglRole.subRoleIDs.ElementAt(i).value)
-                        i = i + 1
-                    Loop
+    '        If Me.subRoleIDs.Count = vglRole.subRoleIDs.Count Then
+    '            If Me.subRoleIDs.Count = 0 Then
+    '                stillok = True
+    '            Else
+    '                Dim i As Integer = 0
+    '                Do While i < Me.subRoleIDs.Count And stillok
+    '                    stillok = (Me.subRoleIDs.ElementAt(i).key = vglRole.subRoleIDs.ElementAt(i).key And
+    '                               Me.subRoleIDs.ElementAt(i).value = vglRole.subRoleIDs.ElementAt(i).value)
+    '                    i = i + 1
+    '                Loop
 
-                    i = 0
-                    Do While i < Me.teamIDs.Count And stillok
-                        stillok = (Me.teamIDs.ElementAt(i).key = vglRole.teamIDs.ElementAt(i).key And
-                                   Me.teamIDs.ElementAt(i).value = vglRole.teamIDs.ElementAt(i).value)
-                        i = i + 1
-                    Loop
-                End If
-            Else
-                stillok = False
-            End If
-
-
-            ' jetzt alle anderen Attribute überprüfen ...
-            If stillok Then
-
-                stillok = (Me.uid = vglRole.uid) And
-                            (Me.name = vglRole.name) And
-                            (Me.farbe = vglRole.farbe) And
-                            (Me.defaultKapa = vglRole.defaultKapa) And
-                            (Me.isExternRole = vglRole.isExternRole) And
-                            (Me.isTeam = vglRole.isTeam) And
-                            (Me.tagessatzIntern = vglRole.tagessatzIntern)
+    '                i = 0
+    '                Do While i < Me.teamIDs.Count And stillok
+    '                    stillok = (Me.teamIDs.ElementAt(i).key = vglRole.teamIDs.ElementAt(i).key And
+    '                               Me.teamIDs.ElementAt(i).value = vglRole.teamIDs.ElementAt(i).value)
+    '                    i = i + 1
+    '                Loop
+    '            End If
+    '        Else
+    '            stillok = False
+    '        End If
 
 
-            End If
+    '        ' jetzt alle anderen Attribute überprüfen ...
+    '        If stillok Then
 
-            ' jetzt die Kapa-Arrays vergleichen 
-            If stillok Then
-                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
-                'And
-                '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
-            End If
+    '            stillok = (Me.uid = vglRole.uid) And
+    '                        (Me.name = vglRole.name) And
+    '                        (Me.farbe = vglRole.farbe) And
+    '                        (Me.defaultKapa = vglRole.defaultKapa) And
+    '                        (Me.isExternRole = vglRole.isExternRole) And
+    '                        (Me.isTeam = vglRole.isTeam) And
+    '                        (Me.tagessatzIntern = vglRole.tagessatzIntern) And
+    '                        (Me.employeeNr = vglRole.employeeNr) And
+    '                        (Me.entryDate.Date = vglRole.entryDate.Date) And
+    '                        (Me.exitDate.Date = vglRole.exitDate.Date) And
+    '                        (Me.defaultDayCapa = vglRole.defaultDayCapa)
 
-            isIdenticalTo = stillok
 
-        End Get
-    End Property
+    '        End If
+
+    '        ' jetzt die Kapa-Arrays vergleichen 
+    '        If stillok Then
+    '            stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
+    '            'And
+    '            '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+    '        End If
+
+    '        isIdenticalTo = stillok
+
+    '    End Get
+    'End Property
 
     Public Sub New()
         subRoleIDs = New List(Of clsSubRoleID)
@@ -339,6 +366,13 @@ Public Class clsRollenDefinitionWeb
 
         isTeam = False
         isExternRole = False
+
+        ' am 10.1. dazugekommen 
+        aliases = Nothing
+        employeeNr = ""
+        defaultDayCapa = -1
+        entryDate = Date.MinValue
+        exitDate = CDate("31.12.2200")
 
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
@@ -350,6 +384,13 @@ Public Class clsRollenDefinitionWeb
 
         isTeam = False
         isExternRole = False
+
+        ' am 10.1. dazugekommen 
+        aliases = Nothing
+        employeeNr = ""
+        defaultDayCapa = -1
+        entryDate = Date.MinValue
+        exitDate = CDate("31.12.2200")
 
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime

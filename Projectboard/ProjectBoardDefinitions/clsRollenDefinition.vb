@@ -1,5 +1,15 @@
 ﻿Public Class clsRollenDefinition
 
+    ' Änderungen
+    ' tk 8.1.2020
+    ' Neu: _defaultDayKapa as Double: gibt die Anzahl Stunden wieder , die der Mitarbeiter am Tag macht. Und zwar , wenn Urlaub, Krankheit nicht eingerechnet wird. 
+    ' in der DefaultKapa ist in der monatlichen KApazität bereits der typische Anteil Urlaub, Krankheit berücksichtigt; in der defaultDayKapa nicht 
+    ' Neu: _startDate: Date gibt an, ab wann der Mitarbeiter zur Verfügung steht. Wird nur bei der Ressourcen Zuordnung bzw. beim Import berücksichtigt ... 
+    ' Neu: _endDate: Date gibt an, wann der Mitarbeiter das Unternehmen verlassen hat bzw verlassen wird. 
+    ' Neu: _employeeNr : String: ist die Personal-Nummer des Mitarbeiters im Unternehmen; dient nur der Namens- und schreibweisen-toleranten Erkennung des Mitarbeiters 
+
+
+
     ' am 21.11.18 dazu gekommen 
     ' _isExternRole, _isTeam, _teamIDs, _defaultDayKapa (errechnen sich wechselseitig auseinander: defaultDayKapa und defaultKapa errechnen sich über nrdayspMonth) 
     ' weggefallen ist:
@@ -9,6 +19,98 @@
 
     ' wenn es sich um ein Team handelt, dann gibt der Double-Wert an, wieviel Prozent der Kapa der SubRoleID in das Team einfliesst 
     Private _subRoleIDs As SortedList(Of Integer, Double)
+
+
+    ' neue Properties seit 8.1.20 
+    Private _aliases As String()
+    Public Property aliases As String()
+        Get
+            aliases = _aliases
+        End Get
+        Set(value As String())
+            _aliases = value
+        End Set
+    End Property
+
+    Private _employeeNr As String
+    Public Property employeeNr As String
+        Get
+            employeeNr = _employeeNr
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _employeeNr = value
+            End If
+        End Set
+    End Property
+
+    ' ist das Datum, ab wann der Mitarbeiter im Unternehmen bereit steht - wird immer auf den 1.Tag des Monats gesetzt 
+    Private _entryDate As Date
+    Public Property entryDate As Date
+        Get
+            entryDate = _entryDate
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                If value > Date.MinValue Then
+                    ' immer der erste Tag des Monats
+                    _entryDate = value.Date.AddDays(-1 * value.Date.Date.Day + 1)
+                Else
+                    _entryDate = Date.MinValue
+                End If
+
+            End If
+        End Set
+    End Property
+
+    ' ist das Datum, ab wann der Mitarbeiter nicht mehr im Unternehmen ist. wird immer auf den 1.Tag des Monats gesetzt 
+    Private _exitDate As Date
+    Public Property exitDate As Date
+        Get
+            exitDate = _exitDate
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                If value > _entryDate Then
+                    If value > Date.MinValue Then
+                        ' immer der erste Tag des Monats 
+                        _exitDate = value.Date.AddDays(-1 * value.Date.Date.Day + 1)
+                    Else
+                        _exitDate = Date.MinValue
+                    End If
+
+                End If
+
+            End If
+        End Set
+    End Property
+
+    ' tk 8.1.20
+    Private _defaultDayCapa As Double
+    Public Property defaultDayCapa As Double
+        Get
+            If _defaultDayCapa < 0 Then
+                ' das ist die Vorbesetzung, stellt sicher, dass auch in alten Umgebungen das Ganze noch funktioniert 
+                If nrOfDaysMonth > 0 Then
+                    defaultDayCapa = _defaultKapa / nrOfDaysMonth
+                Else
+                    defaultDayCapa = 0
+                End If
+            Else
+                defaultDayCapa = _defaultDayCapa
+            End If
+
+
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value > 0 And value <= 20 Then
+                    _defaultDayCapa = value
+                End If
+            End If
+        End Set
+
+    End Property
 
     ' 
     ' tk Allianz 21.11.18 Teams abbilden 
@@ -83,17 +185,6 @@
 
     End Function
 
-    Public ReadOnly Property defaultDayKapa As Double
-        Get
-            If nrOfDaysMonth > 0 Then
-                defaultDayKapa = _defaultKapa / nrOfDaysMonth
-            Else
-                defaultDayKapa = 0
-            End If
-
-        End Get
-
-    End Property
 
     Private _defaultKapa As Double
     Public Property defaultKapa As Double
@@ -366,7 +457,11 @@
                             (Me.defaultKapa = vglRole.defaultKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
-                            (Me.tagessatzIntern = vglRole.tagessatzIntern)
+                            (Me.tagessatzIntern = vglRole.tagessatzIntern) And
+                            (Me.employeeNr = vglRole.employeeNr) And
+                            (Me.entryDate.Date = vglRole.entryDate.Date) And
+                            (Me.exitDate.Date = vglRole.exitDate.Date) And
+                            (Me.defaultDayCapa = vglRole.defaultDayCapa)
                 'And _
                 '            (Me.tagessatzExtern = vglRole.tagessatzExtern)
 
@@ -397,6 +492,12 @@
 
         _subRoleIDs = New SortedList(Of Integer, Double)
         _teamIDs = New SortedList(Of Integer, Double)
+
+        _employeeNr = ""
+        _entryDate = Date.MinValue
+        _exitDate = CDate("31.12.2200")
+        _defaultDayCapa = -1
+        _aliases = Nothing
 
     End Sub
 
