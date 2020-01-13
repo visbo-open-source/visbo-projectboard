@@ -770,8 +770,11 @@ Public Class clsProjektShapes
         Dim shapeType As Integer
         Dim moveAllowed As Boolean
         Dim phaseNameID As String
-        Dim hproj As clsProjekt, newProjekt As clsProjekt
+        ' tk 22.12.19 auskommentiert, newProject wird nicht mehr gebraucht .. 
+        'Dim hproj As clsProjekt, newProjekt As clsProjekt
+        Dim hproj As clsProjekt
         Dim tmpRange As Excel.ShapeRange
+        'Dim tmpRange As Excel.ShapeRange
         Dim pShape As Excel.Shape
 
         Dim pName As String = ""
@@ -785,6 +788,7 @@ Public Class clsProjektShapes
 
             pName = extractName(shpElement.Name, PTshty.projektN)
             hproj = ShowProjekte.getProject(pName)
+
 
             If hproj.movable _
                 And Not shapeType = PTshty.status _
@@ -861,106 +865,122 @@ Public Class clsProjektShapes
                         ' für Projekte: berechne das neue Start-Datum und ggf die neue Dauer
                         Dim newStartdate As Date
                         Dim newEndDate As Date
-                        Dim tmpDauerIndays = hproj.dauerInDays
-                        newProjekt = New clsProjekt
-
+                        Dim newDauerInTagen As Long = hproj.dauerInDays
+                        Dim newOffsetInTagen As Long = 0
 
                         ' wenn gedehnt bzw. gestaucht wird ...
-                        If curCoord(3) <> oldCoord(3) Then
-                            ' es wird gestaucht bzw. gedehnt
-                            newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
-                            newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
-                        Else
 
-                            ' es wurde nur verschoben 
-                            newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
-                            newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
+                        ' Prüfen, ob links verschoben 
+                        If curCoord(1) <> oldCoord(1) Then
+                            ' darf sich das Start-Datum überhaupt verändern ? 
+                            If hproj.hasActualValues Then
+                                ' das geht das schon gar nicht ... 
+                                moveAllowed = False
+                                shpElement.Top = CSng(oldCoord(0))
+                                shpElement.Left = CSng(oldCoord(1))
+                                shpElement.Height = CSng(oldCoord(2))
+                                shpElement.Width = CSng(oldCoord(3))
+                            End If
 
-                            Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
-                            Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
+                        End If
 
-                            ' Platz schaffen auf der Projekt-Tafel
-                            If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
+                        ' jetzt wird noch geprüft, um welche Manipulation es sich handelt uind ob die zugelassen ist .. 
+                        If moveAllowed Then
+                            If curCoord(1) + curCoord(3) < oldCoord(1) + oldCoord(3) Then
+                                ' das End-Datum wurde nach vorne verschoben 
+                                If calcXCoordToDate(curCoord(1) + curCoord(3)) < hproj.actualDataUntil Then
+                                    curCoord(3) = calcDateToXCoord(getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True)) - curCoord(1)
+                                End If
+                            End If
+                        End If
+
+                        If moveAllowed Then
+
+                            If curCoord(3) <> oldCoord(3) Then
+                                ' es wird gestaucht bzw. gedehnt
+
+                                ' hier prüfen, ob es denn von links her gestaucht werden darf ... 
+                                newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+                                newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
+
+
+                                newDauerInTagen = DateDiff(DateInterval.Day, newStartdate.Date, newEndDate.Date) + 1
+
+                            Else
+
+                                ' hier prüfen, ob es überhaupt verschoben werden darf ... 
+
+                                ' es wurde nur verschoben 
+                                newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+                                newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
+
+                                Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
+                                Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
+
+                                ' Platz schaffen auf der Projekt-Tafel
+                                If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile,
+                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays,
                                                 anzahlZeilen:=anzahlZeilen) Then
 
-                                ' das verändert die Constellation ..
-                                currentConstellationName = calcLastSessionScenarioName()
-                                If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                                End If
+                                    ' das verändert die Constellation ..
+                                    currentConstellationName = calcLastSessionScenarioName()
+                                    If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                                        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                                    End If
 
 
-                                If curCoord(0) < oldCoord(0) Then
-                                    ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
-                                    ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
-                                    Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
-                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
-                                Else
-                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                                    If curCoord(0) < oldCoord(0) Then
+                                        ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
+                                        ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
+                                        Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
+                                        Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
+                                    Else
+                                        Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                                    End If
+
                                 End If
+
+                                ' tfzeile setzen
+                                hproj.tfZeile = newZeile
+
+
+                                newOffsetInTagen = 0
+
+
 
                             End If
 
-                            ' tfzeile setzen
-                            hproj.tfZeile = newZeile
+                            Dim autoAdjustChilds As Boolean = True
+                            Dim diffDays As Long = DateDiff(DateInterval.Day, hproj.startDate.Date, newStartdate.Date)
+                            hproj.startDate = newStartdate
+
+                            If diffDays <> 0 Then
+                                ' tk 30.12.19 hier muss sichergestellt sein, dass die 
+                                Call hproj.syncXWertePhases()
+                            End If
+
+                            newOffsetInTagen = 0
+
+
+                            Dim cphase As clsPhase = hproj.getPhase(1)
+                            Dim nameIDCollection As Collection = hproj.getAllChildIDsOf(cphase.nameID)
+
+                            cphase = cphase.adjustPhaseAndChilds(newOffsetInTagen, newDauerInTagen, autoAdjustChilds)
+
 
 
                         End If
 
-                        'hproj.copyAttrTo(newProjekt)
-                        hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
-                        With hproj
-                            newProjekt.name = .name
-                            newProjekt.variantName = .variantName
-                            newProjekt.description = .description
-                            newProjekt.ampelStatus = .ampelStatus
-                            newProjekt.ampelErlaeuterung = .ampelErlaeuterung
-                            newProjekt.Status = .Status
-                            newProjekt.shpUID = .shpUID
-                            newProjekt.tfZeile = .tfZeile
-                            newProjekt.movable = .movable
-
-                        End With
-
-                        newProjekt.timeStamp = Date.Now
-                        ' Workaround: 
-                        Dim tmpValue As Integer = newProjekt.dauerInDays
-                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                        'Call awinCreateBudgetWerte(newProjekt)
-
-                        ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
-                        ' und in der kopierten Form wieder aufgenommen werden 
-                        Dim key As String = pName
-                        ShowProjekte.Remove(pName)
-                        key = calcProjektKey(hproj)
-                        AlleProjekte.Remove(key)
-
-                        AlleProjekte.Add(newProjekt)
-                        ShowProjekte.Add(newProjekt)
-
-                        Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
-
-
                         pShape = shpElement
                         Dim phaseList As Collection
                         Dim milestoneList As Collection
-                        'Dim typCollection As New Collection
-                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
                         phaseList = Me.getPhaseList(pName)
                         milestoneList = Me.getMilestoneList(pName)
-                        'typCollection.Clear()
-                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
                         Call clearProjektinPlantafel(pName)
-                        ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
-                        ' sie noch in der Select Collection sind und danach noch behandelt werden 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile, _
+
+                        Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=hproj.name, tryzeile:=hproj.tfZeile,
                                                        drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
 
                         ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
@@ -969,9 +989,7 @@ Public Class clsProjektShapes
                         shpElement = tmpRange.Item(1)
 
                         ' workaround: 
-                        tmpDauerIndays = hproj.dauerInDays
-                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                        'Call awinCreateBudgetWerte(hproj)
+                        Dim tmpDauerIndays As Integer = hproj.dauerInDays
 
 
                         ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
@@ -984,6 +1002,7 @@ Public Class clsProjektShapes
                     ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
                         ' für Phasen: berechne das neue Start-Datum und ggf. die neue Dauer (muss innerhalb Projekt bleiben !
                         Dim cphase As clsPhase
+
                         Dim projectBorderLinks As Double = calcDateToXCoord(hproj.startDate)
                         Dim projectBorderRechts As Double = calcDateToXCoord(hproj.startDate.AddDays(hproj.dauerInDays - 1))
                         Dim offsetinTagen As Integer, dauerinTagen As Integer
@@ -993,102 +1012,177 @@ Public Class clsProjektShapes
 
                         phaseNameID = extractName(shpElement.Name, PTshty.phaseN)
                         cphase = hproj.getPhaseByID(phaseNameID)
+                        Dim parentPhase As clsPhase = hproj.getParentPhaseByID(cphase.nameID)
 
+                        Dim allowedLeftDate As Date = Date.MinValue
+                        Dim allowedRightDate As Date = Date.MinValue
 
-
-                        If cphase.nameID = rootPhaseName Then
-                            ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
-                            ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
-                            ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
-                            Dim phBorderLinks As Double = phasesBorderLinks(hproj)
-                            Dim phBorderRechts As Double = phasesBorderRechts(hproj)
-
-                            ' ist der linke Rand ok? 
-                            If curCoord(1) < phBorderLinks Then
-                                If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                                    ' alles ok
-                                Else
-                                    curCoord(1) = phBorderRechts - curCoord(3)
-                                    reDraw = True
-                                End If
-                            Else
-                                curCoord(1) = phBorderLinks
+                        ' Prüfen, ob links verschoben 
+                        If curCoord(1) <> oldCoord(1) Then
+                            ' darf sich das Start-Datum überhaupt verändern ? 
+                            If cphase.hasActualData Then
+                                ' das geht das schon gar nicht ... 
+                                moveAllowed = False
                                 reDraw = True
+                                shpElement.Top = CSng(oldCoord(0))
+                                shpElement.Left = CSng(oldCoord(1))
+                                shpElement.Height = CSng(oldCoord(2))
+                                shpElement.Width = CSng(oldCoord(3))
                             End If
-
-
-                            ' ist der Rechte Rand ok? 
-                            If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                                ' alles ok 
-                            Else
-                                curCoord(3) = phBorderRechts - curCoord(1)
-                                reDraw = True
-                            End If
-
-                            ' jetzt enthalten die CurCoord die exakten Daten
-                            ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
-                            ' Offsets der anderen Phasen müssen gesetzt werden 
-                            diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
-                            offsetinTagen = 0
-                            If diffDays <> 0 Then
-                                hproj.startDate = hproj.startDate.AddDays(diffDays)
-                                Call hproj.syncXWertePhases()
-                            End If
-
-
-
-                        Else
-                            ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
-                            If curCoord(1) < projectBorderLinks Then
-                                If curCoord(3) <> oldCoord(3) Then
-                                    ' es wurde gedehnt
-                                    curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
-                                End If
-                                curCoord(1) = projectBorderLinks
-                                reDraw = True
-                            End If
-
-                            If curCoord(1) > projectBorderRechts Then
-                                ' gar nicht zugelassen
-                                curCoord(1) = oldCoord(1)
-                                reDraw = True
-                            End If
-
-                            If curCoord(1) + curCoord(3) > projectBorderRechts Then
-                                ' dann muss die Breite angepasst werden 
-                                curCoord(3) = projectBorderRechts - curCoord(1)
-                                reDraw = True
-                            End If
-
-                            ' jetzt enthalten die CurCoord die exakten Daten  
-                            offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
 
                         End If
 
-
-                        If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or _
-                            diffDays <> 0 Then
-                            Dim faktor As Double = dauerinTagen / cphase.dauerInDays
-
-                            reDraw = True
-
-                            Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
-                            If faktor <> 1.0 Then
-                                ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
-                                Call cphase.adjustMilestones(faktor)
-                            End If
+                        If moveAllowed Then
 
                             If cphase.nameID = rootPhaseName Then
-                                ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
-                                ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
-                                If curCoord(1) <> oldCoord(1) Then
+                                ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
+                                ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
+                                ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
+                                Dim phBorderLinks As Double = phasesBorderLinks(hproj)
+                                Dim phBorderRechts As Double = phasesBorderRechts(hproj)
+
+                                ' ist der linke Rand ok? 
+                                If curCoord(1) < phBorderLinks Then
+                                    If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                        ' alles ok
+                                    Else
+                                        curCoord(1) = phBorderRechts - curCoord(3)
+                                        reDraw = True
+                                    End If
+                                Else
+                                    curCoord(1) = phBorderLinks
                                     reDraw = True
-                                    Call reCalcOffsetInPhases(hproj, diffDays)
                                 End If
+
+
+                                ' ist der Rechte Rand ok? 
+                                If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                    ' alles ok 
+                                Else
+                                    curCoord(3) = phBorderRechts - curCoord(1)
+                                    reDraw = True
+                                End If
+
+                                ' jetzt enthalten die CurCoord die exakten Daten
+                                ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
+                                ' Offsets der anderen Phasen müssen gesetzt werden 
+                                diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                                dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+                                offsetinTagen = 0
+                                If diffDays <> 0 Then
+                                    hproj.startDate = hproj.startDate.AddDays(diffDays)
+                                    Call hproj.syncXWertePhases()
+                                End If
+
+
+
+                            Else
+                                ' hier sind folgende Möglichkeiten : 
+                                ' keine actual data:
+                                ' der Move  allowed und es handelt sich um eine normale Phase 
+
+                                If Not IsNothing(parentPhase) Then
+                                    allowedLeftDate = parentPhase.getStartDate
+                                    allowedRightDate = parentPhase.getEndDate
+
+                                    If cphase.hasActualData Then
+                                        allowedLeftDate = getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False)
+                                    End If
+
+                                    projectBorderLinks = calcDateToXCoord(allowedLeftDate)
+                                    projectBorderRechts = calcDateToXCoord(allowedRightDate)
+
+                                End If
+
+                                ' worum handelt es sich ?
+                                If curCoord(1) <> oldCoord(1) And curCoord(3) <> oldCoord(3) Then
+                                    ' 1. links anfassen und dehnen oder stauchen 
+                                    ' es hat in diesem Fall keine actual Values 
+                                    If curCoord(1) < oldCoord(1) Then
+                                        ' nach links gedehnt 
+                                        If curCoord(1) < projectBorderLinks Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderLinks
+                                        End If
+                                    Else
+                                        ' nach rechts gestaucht
+                                        If curCoord(1) > projectBorderRechts Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderRechts
+                                        End If
+                                    End If
+
+                                ElseIf curCoord(1) <> oldCoord(1) Then
+                                    ' 2. nach links oder rechts verschieben
+                                    If curCoord(1) < oldCoord(1) Then
+                                        ' nach links verschoben 
+                                        If curCoord(1) < projectBorderLinks Then
+                                            ' auf zulässigen Wert beschränken 
+                                            curCoord(1) = projectBorderLinks
+                                        End If
+                                    Else
+                                        ' nach rechts verschoben 
+                                        If curCoord(1) + curCoord(3) > projectBorderRechts Then
+                                            curCoord(1) = projectBorderRechts - curCoord(3)
+                                        End If
+                                    End If
+
+                                ElseIf curCoord(3) <> oldCoord(3) Then
+                                    ' 3. rechts anfassen und dehnen oder stauchen 
+                                    If curCoord(3) < oldCoord(3) Then
+                                        ' nach links gestaucht 
+                                        If curCoord(1) + curCoord(3) <= projectBorderLinks Then
+                                            curCoord(3) = projectBorderLinks - curCoord(1)
+                                        End If
+                                    Else
+                                        ' nach rechts gedehnt 
+                                    End If
+                                End If
+
+
+                                ' jetzt das Shape neu anpassen 
+                                With shpElement
+                                    .Top = CSng(curCoord(0))
+                                    .Left = CSng(curCoord(1))
+                                    .Height = CSng(curCoord(2))
+                                    .Width = CSng(curCoord(3))
+                                End With
+
+                                ' jetzt enthalten die CurCoord die exakten Daten  
+                                offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                                dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+
                             End If
 
+
+                            If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or
+                            diffDays <> 0 Then
+                                Dim faktor As Double = dauerinTagen / cphase.dauerInDays
+
+                                reDraw = True
+
+                                ' tk neue Anpassung, jetzt werden standardmäßig auch alle Kinder angepasst ... 
+                                cphase = cphase.adjustPhaseAndChilds(offsetinTagen, dauerinTagen, True)
+                                ' tk old 27.12.2019
+                                'Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
+                                'If faktor <> 1.0 Then
+                                '    ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
+                                '    Call cphase.adjustMilestones(faktor)
+                                'End If
+
+                                'If cphase.nameID = rootPhaseName Then
+                                '    ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
+                                '    ' Phase 1 verändert hat, müssen die Phasen 2 bis N in ihren Startoffsets neu berechnet werden 
+                                '    If curCoord(1) <> oldCoord(1) Then
+                                '        reDraw = True
+                                '        Call reCalcOffsetInPhases(hproj, diffDays)
+                                '    End If
+                                'End If
+                                '
+                                ' Ende tk old 27.12.2019 
+
+
+                            End If
 
                         End If
 

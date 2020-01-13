@@ -227,22 +227,6 @@ Public Module awinGeneralModules
     End Function
 
 
-    ''' <summary>
-    ''' setzt alle angezeigten Projekte, also ShowProjekte,  zurück 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub clearProjectBoard()
-
-        Call awinClearPlanTafel()
-
-        ShowProjekte.Clear()
-        projectboardShapes.clear()
-
-        selectedProjekte.Clear(False)
-        ImportProjekte.Clear(False)
-
-
-    End Sub
 
     ''' <summary>
     ''' setzt die komplette Session zurück 
@@ -270,20 +254,16 @@ Public Module awinGeneralModules
             Call MsgBox("Fehler beim Löschen der Shapes ...")
         End Try
 
-        ShowProjekte.Clear()
-        AlleProjekte.Clear()
-        writeProtections.Clear()
-        selectedProjekte.Clear(False)
-        ImportProjekte.Clear(False)
+        ' Hier werden die Datenstrukturen alle zurückgesetzt ... 
+        ' tk 24.10.19, die hier vorher stehenden Aufrufe wurden in emptyAllVISBOStructures  
+        Call emptyAllVISBOStructures()
+
+
+        ' spezifisch für Projectboard, also den Excel Add-In
         DiagramList.Clear()
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
-        projectConstellations.clearLoadedPortfolios()
-
-
-        ' es gibt ja nix mehr in der Session 
-        currentConstellationName = ""
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
 
@@ -324,17 +304,39 @@ Public Module awinGeneralModules
             Dim a As String = ex.Message
         End Try
 
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
+    ''' <summary>
+    ''' macht den Teil des ClearSession, der so ggf auch in Powerpoint, Project etc gemacht werden kann, um 
+    ''' alle Strukturen zurückzusetzen
+    ''' </summary>
+    Public Sub emptyAllVISBOStructures()
+
+        ShowProjekte.Clear()
+        AlleProjekte.Clear()
+        writeProtections.Clear()
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
+
+        ' die ProjectConstellations bleiben erhalten - aber sie sind einfach 
+        projectConstellations.clearLoadedPortfolios()
+
+
+        ' es gibt ja nix mehr in der Session 
+        currentConstellationName = ""
+
+        ' jetzt den Datenbank Cache Löschen 
         Dim clearOK As Boolean = False
         Try
             clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
         Catch ex As Exception
-
+            Call MsgBox("Error when clearing session: " & ex.Message)
         End Try
 
-        ' Session gelöscht
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
     End Sub
 
     ''' <summary>
@@ -1078,8 +1080,10 @@ Public Module awinGeneralModules
     ''' wenn ein importiertes Projekt bereits in der Datenbank existiert, verändert wurde und von anderen geschützt ist, dann wird eine Variante angelegt 
     ''' </summary>
     ''' <param name="importDate"></param>
+    ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
+    ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
@@ -1118,6 +1122,8 @@ Public Module awinGeneralModules
         anzAktualisierungen = 0
         anzNeuProjekte = 0
 
+
+
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
 
@@ -1126,6 +1132,12 @@ Public Module awinGeneralModules
             Dim newVariantGenerated As Boolean = False
             fullName = kvp.Key
             hproj = kvp.Value
+
+            ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
+            If awinSettings.autoSetActualDataDate = True Then
+                ' das müssten den vorletzten Tag des Vormontas abgeben 
+                hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
+            End If
 
 
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
@@ -1224,7 +1236,7 @@ Public Module awinGeneralModules
                     ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
 
                     Try
-                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile)
+                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
                     End Try
@@ -1282,7 +1294,8 @@ Public Module awinGeneralModules
                                 ShowProjekte.Remove(hproj.name)
                             End If
 
-                        ElseIf existsInSession Then
+                            ' das muss auch gemacht werden, wenn hproj.marker = true
+                        ElseIf existsInSession Or hproj.marker = True Then
                             AlleProjekte.Remove(vglName, False)
                             If ShowProjekte.contains(hproj.name) Then
                                 ShowProjekte.Remove(hproj.name, False)
@@ -1294,12 +1307,6 @@ Public Module awinGeneralModules
                         Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
                     End Try
 
-                End If
-
-                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
-                If awinSettings.autoSetActualDataDate = True Then
-                    ' das müssten den vorletzten Tag des Vormontas abgeben 
-                    hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
                 End If
 
 
@@ -1405,10 +1412,14 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>
     ''' <param name="cproj"></param>
     ''' <param name="existsInSession"></param>
+    ''' <param name="importDate"></param>
+    ''' <param name="tafelZeile"></param>
+    ''' <param name="fileFrom3rdParty">gibt an, ob es sich um einen VISBO Steckbrief handelt (false) oder einen fremden Steckbrief</param>
     ''' <remarks></remarks>
     Private Sub awinAdjustValuesByExistingProj(ByRef hproj As clsProjekt, ByVal cproj As clsProjekt,
                                                ByVal existsInSession As Boolean, ByVal importDate As Date,
-                                               ByRef tafelZeile As Integer)
+                                               ByRef tafelZeile As Integer,
+                                               ByVal fileFrom3rdParty As Boolean)
         ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
         Dim vglName As String = calcProjektKey(hproj)
 
@@ -1430,6 +1441,14 @@ Public Module awinGeneralModules
 
                 .StartOffset = 0
                 .Status = cproj.Status
+
+                ' 
+                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden  
+                If awinSettings.autoSetActualDataDate = False Then
+                    ' das müssten den vorletzten Tag des Vormontas abgeben 
+                    hproj.actualDataUntil = cproj.actualDataUntil
+                End If
+
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
@@ -1456,6 +1475,52 @@ Public Module awinGeneralModules
 
                 End If
 
+                If fileFrom3rdParty Then
+                    If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
+                        ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
+                        Try
+                            Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
+                            If Not IsNothing(tmpProj) Then
+                                hproj = tmpProj
+                            End If
+                        Catch ex As Exception
+                            Call MsgBox("resources from former version could not be copied ... ")
+                        End Try
+
+                    End If
+
+
+                    ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
+                    If hproj.leadPerson = "" And cproj.leadPerson <> "" Then
+                        hproj.leadPerson = cproj.leadPerson
+                    End If
+
+                    If hproj.Erloes = 0 And cproj.Erloes > 0 Then
+                        hproj.Erloes = cproj.Erloes
+                    End If
+
+                    If hproj.actualDataUntil = Date.MinValue And cproj.actualDataUntil > cproj.startDate Then
+                        hproj.actualDataUntil = cproj.actualDataUntil
+                    End If
+
+                    If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And cproj.ampelStatus > 0 Then
+                        hproj.ampelStatus = cproj.ampelStatus
+                        hproj.ampelErlaeuterung = cproj.ampelErlaeuterung
+                    End If
+
+                    If hproj.description = "" And cproj.description <> "" Then
+                        hproj.description = cproj.description
+                    End If
+
+                    If hproj.kundenNummer = "" And cproj.kundenNummer <> "" Then
+                        hproj.kundenNummer = cproj.kundenNummer
+                    End If
+
+                    hproj.Risiko = cproj.Risiko
+                    hproj.StrategicFit = cproj.StrategicFit
+                    hproj.projectType = cproj.projectType
+
+                End If
 
 
             End With
@@ -1986,13 +2051,8 @@ Public Module awinGeneralModules
             If collectionsAreDifferent(uRoles, GPRoles) Then
                 tmpResult = False
             Else
-                showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
-                showRangeRight = getColumnOfDate(CDate("31.12.2019"))
-
-                If awinSettings.databaseName.EndsWith("20") Then
-                    showRangeLeft = getColumnOfDate(CDate("1.1.2020"))
-                    showRangeRight = getColumnOfDate(CDate("31.12.2020"))
-                End If
+                showRangeLeft = getColumnOfDate(CDate("1.1.2020"))
+                showRangeRight = getColumnOfDate(CDate("31.12.2020"))
 
                 For Each tmpRoleNameID As String In uRoles
 
@@ -3985,7 +4045,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub loadProjectfromDB(ByRef outputCollection As Collection,
                                  ByVal pName As String, vName As String, ByVal show As Boolean,
-                                 ByVal storedAtORBefore As Date)
+                                 ByVal storedAtORBefore As Date,
+                                 ByVal calledFromPPT As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
@@ -4008,7 +4069,8 @@ Public Module awinGeneralModules
                 ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
 
                 ' wenn jetzt gefiltert wurde und der Varianten-Name pfv ist, dann umsetzen 
-                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString Then
+                ' das muss aber nur gemacht werden, wenn nicht von Powerpoint , nur lesend aufgerufen ...
+                If awinSettings.filterPFV And hproj.variantName = ptVariantFixNames.pfv.ToString And Not calledFromPPT Then
                     hproj.variantName = ""
                     vName = ""
                     key = calcProjektKey(pName, "")
@@ -4029,18 +4091,29 @@ Public Module awinGeneralModules
 
                 AlleProjekte.Add(hproj)
 
-                ' jetzt die writeProtections aktualisieren 
-                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                writeProtections.upsert(wpItem)
+                ' nur machen, wenn nicht von PPT aufgerufen 
+                If Not calledFromPPT Then
+                    ' jetzt die writeProtections aktualisieren 
+                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                    writeProtections.upsert(wpItem)
 
-                If show Then
-                    ' prüfen, ob es bereits in der Showprojekt enthalten ist
-                    ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-                    ' replaceProjectVariant
+                    If show Then
+                        ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                        ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                        ' replaceProjectVariant
 
-                    Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+                        Call replaceProjectVariant(pName, vName, False, True, freieZeile)
 
+                    End If
+                Else
+                    ' wenn es aus PPT aus aufgerufen wird, muss das Projekt auch in ShowPRojekte eingetragen werden, 
+                    ' sofern nicht schon ein PRojekt gleichen Namens drin ist. 
+                    If Not ShowProjekte.contains(hproj.name) Then
+                        ShowProjekte.Add(hproj)
+                    End If
                 End If
+
+
             Else
                 Dim outputLine As String = "existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString
                 outputCollection.Add(outputLine)
@@ -4126,6 +4199,9 @@ Public Module awinGeneralModules
 
         Dim outputLine As String = ""
 
+        ' tk 7.10.19 calledFromPPT nur true, wenn kennung = PTtvActions.loadPVinPPT
+        Dim calledFromPPT As Boolean = (kennung = PTTvActions.loadPVInPPT)
+
         Dim anzTests As Integer = 0
         Dim anzDeleted As Integer = 0
         If kennung = PTTvActions.delFromDB Or
@@ -4151,13 +4227,13 @@ Public Module awinGeneralModules
                     Dim keyB As String = calcProjektKey(pname, "")
 
                     If Not AlleProjekte.Containskey(keyV) Then
-                        Call loadProjectfromDB(oCollection, pname, variantName, False, Date.Now)
+                        Call loadProjectfromDB(oCollection, pname, variantName, False, Date.Now, calledFromPPT)
                     Else
                         vExisted = True
                     End If
 
                     If Not AlleProjekte.Containskey(keyB) Then
-                        Call loadProjectfromDB(oCollection, pname, "", False, Date.Now)
+                        Call loadProjectfromDB(oCollection, pname, "", False, Date.Now, calledFromPPT)
                     Else
                         bExisted = True
                     End If
@@ -4660,7 +4736,11 @@ Public Module awinGeneralModules
                     If Not IsNothing(baseVariantProj) Then
                         baseVariantStatus = baseVariantProj.Status
                     Else
-                        Call MsgBox("BasisVariante kann nicht gefunden werden")
+
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("BasisVariante kann nicht gefunden werden")
+                        End If
+
                     End If
 
                 End If

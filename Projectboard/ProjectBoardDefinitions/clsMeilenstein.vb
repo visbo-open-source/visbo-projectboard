@@ -187,6 +187,12 @@ Public Class clsMeilenstein
     End Sub
 
     ''' <summary>
+    ''' löscht alle Deliverables des Meilensteines 
+    ''' </summary>
+    Public Sub clearDeliverables()
+        _deliverables.Clear()
+    End Sub
+    ''' <summary>
     ''' gibt das Element an der bezeichneten Stelle zurück
     ''' index kann Werte zwischen 1 .. count annehmen 
     ''' </summary>
@@ -602,7 +608,7 @@ Public Class clsMeilenstein
             Else
                 Try
                     ' Änderung tk, 20.6.18 value.date , um zu normieren ...
-                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value.Date)
+                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset).Date, value.Date)
                 Catch ex As Exception
                     Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf & _
                                         ex.Message)

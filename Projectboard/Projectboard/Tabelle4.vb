@@ -154,19 +154,19 @@ Public Class Tabelle4
             End If
 
 
-            If IsNothing(.lastProject) Then
+            If IsNothing(.currentProject) Then
                 ' es wurde bisher kein lastProject geladen 
                 If ShowProjekte.contains(pname) Then
-                    .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .currentProject = ShowProjekte.getProject(pname)
+                    .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .currentProject.variantName))
                     pNameChanged = True
                 End If
 
-            ElseIf pname <> .lastProject.name Then
+            ElseIf pname <> .currentProject.name Then
                 ' muss neu geholt werden 
                 If ShowProjekte.contains(pname) Then
-                    .lastProject = ShowProjekte.getProject(pname)
-                    .lastProjectSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
+                    .currentProject = ShowProjekte.getProject(pname)
+                    .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pname, .currentProject.variantName))
                     pNameChanged = True
                 End If
             End If

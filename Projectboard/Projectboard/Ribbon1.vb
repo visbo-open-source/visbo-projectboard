@@ -1068,7 +1068,7 @@ Imports System.Web
             If IsNothing(formProjectInfo1) And .projectBoardMode = ptModus.massEditRessCost Then
 
                 formProjectInfo1 = New frmProjectInfo1
-                Call updateProjectInfo1(visboZustaende.lastProject, visboZustaende.lastProjectSession)
+                Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
 
                 formProjectInfo1.Show()
             End If
@@ -1719,14 +1719,19 @@ Imports System.Web
                                 'jetzt die aktuelle Variante zur Standard Variante machen 
                                 ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
                                 hproj.variantName = ""
+
                                 ' notwendig, um den Speicher-Conflic 409 zu vermeinden 
-                                hproj.updatedAt = bisherigeBaseVariant.updatedAt
+                                If Not IsNothing(bisherigeBaseVariant) Then
+                                    hproj.updatedAt = bisherigeBaseVariant.updatedAt
+
+                                    '' tk 25.7.19 
+                                    'If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
+                                    '    hproj.marker = True
+                                    'End If
+                                End If
+
                                 hproj.timeStamp = Date.Now
 
-                                ' tk 25.7.19 
-                                If Not hproj.isIdenticalTo(bisherigeBaseVariant) Then
-                                    hproj.marker = True
-                                End If
 
                                 ' die "neue" Standard Variante in AlleProjekte und ShowProjekte aufnehmen 
                                 AlleProjekte.Add(hproj)
@@ -3869,6 +3874,7 @@ Imports System.Web
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
+        Dim reDrawProjects As New Collection
 
         ' Bildschirm einfrieren ...
         If appInstance.ScreenUpdating = True Then
@@ -3882,6 +3888,7 @@ Imports System.Web
 
             ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
             Dim tableTyp As Integer = ptTables.meRC
+
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 tableTyp = ptTables.meRC
                 Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
@@ -3926,6 +3933,12 @@ Imports System.Web
                             End If
                         End If
                     Else
+                        If tableTyp = ptTables.meTE Then
+                            ' neu Zeichnen des Projektes 
+                            If Not reDrawProjects.Contains(hproj.name) Then
+                                reDrawProjects.Add(hproj.name)
+                            End If
+                        End If
                         ' temporär geschützt lassen ...
                     End If
                 End If
@@ -4053,6 +4066,17 @@ Imports System.Web
             Catch ex As Exception
                 projectboardWindows(PTwindows.mptpr) = Nothing
             End Try
+
+            ' jetzt müssen alle ggf in reDrawProjects aufgeführten Projekte neu gezeichnet werden .. 
+            If reDrawProjects.Count > 0 Then
+                For Each pName As String In reDrawProjects
+                    If ShowProjekte.contains(pName) Then
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call replaceProjectVariant(pName, hproj.variantName, False, True, hproj.tfZeile)
+                    End If
+
+                Next
+            End If
         Catch ex As Exception
 
             enableOnUpdate = True
@@ -5212,6 +5236,14 @@ Imports System.Web
                                 isAllianzImport1 = True
                                 Call importAllianzType1(startdate, enddate)
 
+                            ElseIf scenarioNameP.StartsWith("BOBS") Then
+
+                                Dim startdate As Date = CDate("1.1.2020")
+                                Dim enddate As Date = CDate("31.12.2020")
+
+                                isAllianzImport1 = True
+                                Call importAllianzBOBS(startdate, enddate)
+
                             ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
 
                                 noScenarioCreation = True
@@ -5253,8 +5285,10 @@ Imports System.Web
 
                         If ohneFehler Then
                             'sessionConstellationP enthält alle Projekte aus dem Import 
+                            'Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
+
 
                             ' tk 8.5.19 das soll jetzt nicht mehr gemacht werden - immer alle Projekte zeigen, die importiert wurden und sich verändert haben 
                             If isAllianzImport1 Then
@@ -5300,11 +5334,18 @@ Imports System.Web
 
                             ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
                             ' tk 12.8.19 diese beiden Constellations sollen nicht mehr eingetragen werden , nur noch die Rupi-Liste 
+
+
                             projectConstellations.Add(sessionConstellationP)
-                            'projectConstellations.Add(sessionConstellationS)
+                            projectConstellations.Add(sessionConstellationS)
                             ' jetzt auf Projekt-Tafel anzeigen 
 
-                            Call loadSessionConstellation(scenarioNameP, False, True)
+                            currentConstellationName = sessionConstellationP.constellationName
+                            ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
+                            ' die andere kann dann über loadConstelaltion gezeichnet werden 
+                            Call awinZeichnePlanTafel(sessionConstellationP)
+
+                            'Call loadSessionConstellation(scenarioNameP, False, True)
 
                             '' tk 8.5.19 auskommentiert 
                             'If isAllianzImport1 Then
@@ -5531,7 +5572,7 @@ Imports System.Web
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, False)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5727,7 +5768,7 @@ Imports System.Web
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, True)
+                    Call importProjekteEintragen(importDate, True, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -5845,7 +5886,7 @@ Imports System.Web
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -6516,6 +6557,10 @@ Imports System.Web
                 Dim outputCollection As New Collection
                 Dim importedCustomization As clsCustomization = ImportCustomization(outputCollection)
 
+                ' vorher zurücksetzen ...
+                If customFieldDefinitions.count > 0 Then
+                    customFieldDefinitions = New clsCustomFieldDefinitions
+                End If
                 Dim customFieldDefs As clsCustomFieldDefinitions = ImportCustomFieldDefinitions(outputCollection)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
@@ -6568,7 +6613,7 @@ Imports System.Web
 
 
                 Else
-                        Call MsgBox("no customizations found ...")
+                    Call MsgBox("no customizations found ...")
                 End If
 
 
@@ -6662,7 +6707,7 @@ Imports System.Web
 
                     Call logfileSchreiben(outputCollection)
 
-                ElseIf Not IsNothing(importedAppearances) And importedAppearances.count > 0 Then
+                ElseIf Not IsNothing(importedAppearances) And importedAppearances.Count > 0 Then
                     ' jetzt wird die Appearances als Setting weggespeichert ... 
                     ' alles ok 
                     Dim err As New clsErrorCodeMsg
@@ -6807,7 +6852,7 @@ Imports System.Web
 
 
             Try
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, False)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -6983,7 +7028,7 @@ Imports System.Web
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                Call importProjekteEintragen(importDate, True)
+                Call importProjekteEintragen(importDate, True, True)
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -7760,7 +7805,7 @@ Imports System.Web
         visboZustaende.clearAuslastungsArray()
 
         ' jetzt müssen die Charts aktualisiert werden 
-        Call aktualisiereCharts(visboZustaende.lastProject, False)
+        Call aktualisiereCharts(visboZustaende.currentProject, False)
 
     End Sub
 

@@ -299,15 +299,25 @@ Public Class clsPhase
                                         Me.originalName = vPhase.originalName And
                                         Me.verantwortlich = vPhase.verantwortlich Then
 
-                                    If Me.appearance = vPhase.appearance And
-                                            Me.individualColor = vPhase.individualColor And
-                                            Me.earliestStart = vPhase.earliestStart And
-                                            Me.latestStart = vPhase.latestStart And
-                                            Me.offset = vPhase.offset Then
+                                    ' tk 25.11.19 appearance und individualColor müssen nicht gecheckt werden
+
+                                    If Me.earliestStart = vPhase.earliestStart And
+                                           Me.latestStart = vPhase.latestStart And
+                                           Me.offset = vPhase.offset Then
 
                                         stillOK = True
 
                                     End If
+
+                                    'If Me.appearance = vPhase.appearance And
+                                    '        Me.individualColor = vPhase.individualColor And
+                                    '        Me.earliestStart = vPhase.earliestStart And
+                                    '        Me.latestStart = vPhase.latestStart And
+                                    '        Me.offset = vPhase.offset Then
+
+                                    '    stillOK = True
+
+                                    'End If
 
                                 End If
 
@@ -320,7 +330,8 @@ Public Class clsPhase
                 End If
 
                 ' jetzt die Deliverables prüfen  
-                Dim MeDelis As String = Me.getAllDeliverables("#")
+                If stillOK Then
+                    Dim MeDelis As String = Me.getAllDeliverables("#")
                     Dim vglDelis As String = vPhase.getAllDeliverables("#")
 
                     If MeDelis = vglDelis Then
@@ -335,12 +346,15 @@ Public Class clsPhase
                                 stillOK = False
                             End If
                         Loop
-
+                    Else
+                        stillOK = False
                     End If
 
+                End If
 
-                    ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
-                    If stillOK Then
+
+                ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
+                If stillOK Then
                         ' sind die Rollen identisch 
                         ix = 1
                         Do While stillOK And ix <= Me.countRoles
@@ -434,6 +448,13 @@ Public Class clsPhase
             containsDeliverable = _deliverables.Contains(item)
         End Get
     End Property
+
+    ''' <summary>
+    ''' löscht alle Deliverables des Meilensteines 
+    ''' </summary>
+    Public Sub clearDeliverables()
+        _deliverables.Clear()
+    End Sub
 
     ''' <summary>
     ''' fügt das Deliverable Item der Liste hinzu; 
@@ -599,9 +620,11 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
-            ' tk 28.11.17
-            If PhaseDefinitions.Contains(Me.name) Then
-                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            ' tk 25.11.19 die erste if Abfrage eingeführt ..
+            If _appearance = "" Then
+                If PhaseDefinitions.Contains(Me.name) Then
+                    _appearance = PhaseDefinitions.getAppearance(Me.name)
+                End If
             End If
             appearance = _appearance
         End Get
@@ -671,7 +694,7 @@ Public Class clsPhase
             End If
 
             If Me.bewertungsCount >= 1 Then
-                Me.getBewertung(1).colorIndex = value
+                Me.getBewertung(Me.bewertungsCount).colorIndex = value
             Else
 
                 Dim tmpB As New clsBewertung
@@ -766,7 +789,216 @@ Public Class clsPhase
 
     End Property
 
+    Public Function adjustPhaseAndChilds(ByVal newOffsetInTagen As Long, ByVal newDauerInTagen As Long,
+                                         ByVal autoAdjustChilds As Boolean) As clsPhase
 
+        Dim tmpResult As clsPhase = Nothing
+
+        Dim elemID As String = Me.nameID
+
+        Dim hproj As clsProjekt = parentProject
+
+        Dim deltaOffset As Long = newOffsetInTagen - Me.startOffsetinDays
+        Dim deltaDauer As Long = newDauerInTagen - Me.dauerInDays
+        Dim faktor As Double = 1.0
+
+        If Me.dauerInDays > 0 Then
+            faktor = newDauerInTagen / Me.dauerInDays
+        End If
+
+
+        ' jetzt wird diese Phase entsprechend geändert ...
+        Call Me.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+
+        If autoAdjustChilds Then
+
+            ' jetzt die Kind-Phasen anpassen 
+            For Each childPhaseNameID As String In hproj.hierarchy.getChildIDsOf(elemID, False)
+
+                Dim childPhase As clsPhase = hproj.getPhaseByID(childPhaseNameID)
+
+                Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
+                Dim newChildDuration As Long = CLng(faktor * childPhase.dauerInDays)
+
+                Dim newCalculationNecessary As Boolean = (childPhase.getStartDate.Date <> parentProject.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> parentProject.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
+                ' jetzt prüfen, ob es actualdata gibt 
+                If hproj.hasActualValues Then
+                    If getColumnOfDate(childPhase.getStartDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                        ' bisheriges Startdatum liegt vor ActualData-Date: es darf gar nicht verändert werden 
+                        Dim diffOffset As Long = DateDiff(DateInterval.Day, childPhase.getStartDate.Date, parentProject.startDate.AddDays(newChildOffset).Date)
+
+                        ' hier muss das aktuelle Projekt-Ende Datum ermittlet werden 
+                        If diffOffset <> 0 Then
+                            ' neu bestimmen der Notwendigkeit für Neuberechnung 
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> parentProject.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> parentProject.startDate.AddDays(newChildOffset + newChildDuration + diffOffset - 1).Date)
+                        End If
+
+                        'der Offset muss unverändert bleiben, da das Startdatum links vom ActualData Date liegt ..
+                        newChildOffset = childPhase.startOffsetinDays
+
+
+                        If getColumnOfDate(childPhase.getEndDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                            ' bisheriges Endedatum liegt vor ActualData-Date: unverändert lassen ...
+                            newChildDuration = childPhase.dauerInDays
+
+                            ' in diesem Fall ist keine Neu-Berechnung notwednig bzw. es führt dann zu Fehlern ... 
+                            ' weil Ende-Datum vor dem ActualDataUntil liegt 
+                            newCalculationNecessary = False
+                        Else
+                            ' liegt das neue Ende-Datum vor ActualData Date? 
+                            If hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date <= hproj.actualDataUntil.Date Then
+                                ' wird auf den letzten Tag des zum ActualDataUntil folgenden Monats gelegt
+                                newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True).Date) + 1
+
+                            Else
+                                ' kann übernommen werden , newChildDuration ist ohnehin schon gesetzt 
+                                ' hier muss jetzt die ChildDuration um den diffOffset korrigiert werden 
+                                ' wenn das Startdatum nicht fet´stgehalten würde, dann wäre das Enddatum entsprechend weiter hinten buw. vorne - 
+                                ' deshalb muss der Duration Wert jetzt korrigiert werden, um dem Rechnung zu tragen  
+                                If diffOffset > 0 Then
+                                    ' das Phasen Ende wird nach rechts verschoben 
+                                    newChildDuration = newChildDuration + diffOffset
+
+                                Else
+                                    'newChildDuration = newChildDuration + diffOffset
+                                    ' das Phasen Ende wird nach links verschoben , darf aber nicht weiter als bis zum Ende des Folge-Monats auf ActualDataUntil sein 
+                                    If DateDiff(DateInterval.Day, getDateofColumn(getColumnOfDate(hproj.actualDataUntil), True).Date, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date) > 0 Then
+                                        ' alles in Ordnung 
+
+                                    Else
+                                        newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, True).Date) + 1
+                                    End If
+
+                                End If
+
+                            End If
+
+                            If newChildOffset + newChildDuration <= newOffsetInTagen + newDauerInTagen Then
+                                ' alles in Ordnung 
+                            Else
+                                newChildDuration = newOffsetInTagen + newDauerInTagen - newChildOffset
+                            End If
+
+                            ' wurde durch den oberen Absatz ersetzt 
+                            '' gilt für alle oberen Zweige ... 
+                            'If DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date, hproj.endeDate.Date) > 0 Then
+                            '    ' alles in Ordnung 
+                            'Else
+                            '    newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, hproj.endeDate.Date) + 1
+                            'End If
+
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> hproj.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
+                        End If
+
+                    Else
+
+                        ' hier muss aber noch überprüft werden, ob das neue (!) Startdatum vor dem hproj.actualdata liegt 
+                        If getColumnOfDate(hproj.startDate.AddDays(newChildOffset).Date) <= getColumnOfDate(hproj.actualDataUntil) Then
+                            ' das Startdatum der Phase  nach dem ActualData-Datum schieben  
+                            newChildOffset = DateDiff(DateInterval.Day, hproj.startDate.Date, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False).Date)
+
+                            If newChildOffset + newChildDuration <= newOffsetInTagen + newDauerInTagen Then
+                                ' alles in Ordnung 
+                            Else
+                                newChildDuration = newOffsetInTagen + newDauerInTagen - newChildOffset
+                            End If
+
+                            ' wurde durch den oberen Absatz ersetzt 
+                            'If DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date, hproj.endeDate.Date) > 0 Then
+                            '    ' alles in Ordnung 
+                            'Else
+                            '    newChildDuration = DateDiff(DateInterval.Day, hproj.startDate.AddDays(newChildOffset).Date, hproj.endeDate.Date) + 1
+                            'End If
+
+                            newCalculationNecessary = (childPhase.getStartDate.Date <> hproj.startDate.AddDays(newChildOffset).Date) Or
+                                                    (childPhase.getEndDate.Date <> hproj.startDate.AddDays(newChildOffset + newChildDuration - 1).Date)
+
+                        Else
+                            ' kann komplett übernommen werden 
+                            ' das neue startdatum liegt rechts von hproj.ActualDataUntil ..
+                        End If
+
+                    End If
+
+
+
+                End If
+
+
+                If newChildDuration = 0 Then
+                    newChildDuration = 1
+                End If
+
+                Try
+                    If newCalculationNecessary Then
+                        childPhase = childPhase.adjustPhaseAndChilds(newChildOffset, newChildDuration, autoAdjustChilds)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+
+
+            Next
+
+
+            ' jetzt die Meilensteine der Phase  anpassen 
+            For Each childMilestoneNameID As String In hproj.hierarchy.getChildIDsOf(elemID, True)
+
+                Dim childMilestone As clsMeilenstein = hproj.getMilestoneByID(childMilestoneNameID)
+                Dim newChildOffset As Long = CLng(childMilestone.offset * faktor)
+                ' jetzt prüfen, ob es actualdata gibt 
+
+                If hproj.hasActualValues Then
+                    If getColumnOfDate(childMilestone.getDate) <= getColumnOfDate(hproj.actualDataUntil) Then
+                        ' bisheriges Meilensteindatum liegt vor ActualData-Date: unverändert lassen ...
+                        newChildOffset = childMilestone.offset
+
+                    Else
+                        ' liegt das neue Datum vor ActualData Date? 
+                        If Me.getStartDate.AddDays(newChildOffset).Date <= hproj.actualDataUntil.Date Then
+                            ' wird auf den ersten des zum ActualDataUntil folgenden Monats gelegt
+                            newChildOffset = DateDiff(DateInterval.Day, Me.getStartDate, getDateofColumn(getColumnOfDate(hproj.actualDataUntil) + 1, False))
+                        Else
+                            ' kann übernommen werden , newChildOffset
+                        End If
+                    End If
+                End If
+
+                ' falls der Rundungsfehler zu einem zu späten Meilenstein führt ... 
+                If newChildOffset > Me.dauerInDays - 1 Then
+                    newChildOffset = Me.dauerInDays - 1
+                End If
+
+                ' falls der Rundungsfehler zu einem zu frühen Meilenstein führt ... 
+                If newChildOffset < 0 Then
+                    newChildOffset = 0
+                End If
+
+                childMilestone.setDate = Me.getStartDate.AddDays(newChildOffset)
+
+            Next
+
+        End If
+
+        adjustPhaseAndChilds = Me
+
+    End Function
+
+    ''' <summary>
+    ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
+    ''' Allerdings nur , wenn erlaubt. 
+    ''' Nicht erlaubt: es gibt actualData, Starttermin liegt vor ActualData und soll verschoeben werden -> geht nicht 
+    ''' Start- oder Ende-Termin soll vor ActualData verschoeben werden ... 
+    ''' </summary>
+    ''' <param name="startOffset"></param>
+    ''' <param name="dauer"></param>
     Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
 
         Dim projektStartdate As Date
@@ -775,13 +1007,75 @@ Public Class clsPhase
         Dim faktor As Double
         Dim dimension As Integer
 
+        Dim errMsg As String = ""
+
+        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteilt werden  
+        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or
+                                                    (((Me.getStartDate.Date <> parentProject.startDate.AddDays(startOffset).Date) Or
+                                                    (Me.getEndDate.Date <> parentProject.startDate.AddDays(startOffset + dauer - 1).Date)) And
+                                                    Me.dauerInDays > 0)
+
+        ' damit wird bestimmt, ob die Verteilung auch dann neu berechnet werden soll, wenn die Dimension des alten und des neuen Arrays gleich ist.  
+        Dim calcAnyhow As Boolean = True
+
+        If Me.nameID <> rootPhaseName And Not IsNothing(parentProject) Then
+            If System.Math.Abs(Me.getStartDate.Day - parentProject.startDate.AddDays(startOffset).Day) <= 1 And
+            System.Math.Abs(dauer - Me.dauerInDays) <= 1 Then
+                calcAnyhow = False
+            End If
+        End If
 
 
         If dauer < 0 Then
-            Throw New ArgumentException("Dauer kann nicht negativ sein")
+            If awinSettings.englishLanguage Then
+                errMsg = "Dauer must not be negative!"
+            Else
+                errMsg = "Dauer kann nicht negativ sein!"
+            End If
+
+            Throw New ArgumentException(errMsg)
 
         ElseIf startOffset < 0 Then
-            Throw New ArgumentException("Phase kann nicht vor Projektstart beginnen")
+
+            If awinSettings.englishLanguage Then
+                errMsg = "Phase may not begin before project starts!"
+            Else
+                errMsg = "Phase kann nicht vor Projektstart beginnen"
+            End If
+
+            Throw New ArgumentException(errMsg)
+
+        ElseIf Me.hasActualData And Me.dauerInDays > 0 Then
+            ' wenn die Phase gerade aufgebaut wird, darf das kein Abbruch geben ..
+            ' unzulässig Startdatum verändert sich , altes oder neues Startdatum liegt vor ActualDatauntil 
+            If Me.startOffsetinDays <> startOffset Then
+                If Me.getStartDate < parentProject.actualDataUntil Or parentProject.startDate.AddDays(startOffset) < parentProject.actualDataUntil Then
+                    ' unzulässig 
+
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Start-Date may not be changed because of existing actual data!"
+                    Else
+                        errMsg = "Start-Datum kann nicht verändert werden, da es bereits Ist-Daten gibt. "
+                    End If
+
+                    Throw New ArgumentException(errMsg)
+                End If
+            End If
+
+            ' Überprüfung des Ende-Datums 
+            If parentProject.startDate.AddDays(startOffset + dauer - 1).Date < parentProject.actualDataUntil.Date Then
+                ' unzulässig 
+
+                If awinSettings.englishLanguage Then
+                    errMsg = "End-Date may not be before actual data - date!"
+                Else
+                    errMsg = "Ende-Datum kann nicht vor das Ist-Daten Datum gelegt werden ... "
+                End If
+
+                Throw New ArgumentException(errMsg)
+
+            End If
 
         End If
 
@@ -804,7 +1098,7 @@ Public Class clsPhase
 
             Else
                 '  
-                If _dauerInDays > 0 And dauer > 0 Then
+                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
                     faktor = dauer / _dauerInDays
                 Else
                     faktor = 1
@@ -842,27 +1136,18 @@ Public Class clsPhase
                 End Try
 
 
-                If awinSettings.autoCorrectBedarfe Then
+                If newCalculationNecessary Then
 
 
                     Dim newvalues() As Double
-                    Dim notYetDone As Boolean = True
 
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.countRoles > 0 Then
+                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, faktor)
-                        notYetDone = False
-
-                    End If
-
-                    If Me.countCosts > 0 And notYetDone Then
-
-                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, 1)
+                        Call Me.calcNewXwerte(dimension, faktor, calcAnyhow:=calcAnyhow)
 
                     End If
 
@@ -914,9 +1199,12 @@ Public Class clsPhase
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
-        Dim faktor As Double
+        Dim faktor As Double = 1.0
         Dim dimension As Integer
 
+        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteitl werden  
+        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or ((startOffset <> Me.startOffsetinDays Or dauer <> Me.dauerInDays) And Me.dauerInDays > 0)
 
         If dauer < 0 Then
             Throw New ArgumentException("Dauer kann nicht negativ sein")
@@ -946,6 +1234,12 @@ Public Class clsPhase
             Else
                 '  
 
+                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
+                    faktor = dauer / _dauerInDays
+                Else
+                    faktor = 1
+                End If
+
                 _startOffsetinDays = startOffset
                 _dauerInDays = dauer
 
@@ -960,28 +1254,28 @@ Public Class clsPhase
                 _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
 
 
-                If awinSettings.autoCorrectBedarfe Then
+                If newCalculationNecessary Then
 
                     Dim newvalues() As Double
-                    Dim notYetDone As Boolean = True
+                    'Dim notYetDone As Boolean = True
 
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.countRoles > 0 Then
+                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
-                        notYetDone = False
+                        'notYetDone = False
 
                     End If
 
-                    If Me.countCosts > 0 And notYetDone Then
+                    'If Me.countCosts > 0 And notYetDone Then
 
-                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, 1)
+                    '    ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                    '    Call Me.calcNewXwerte(dimension, 1)
 
-                    End If
+                    'End If
 
                 End If
 
@@ -1099,13 +1393,14 @@ Public Class clsPhase
             Dim abbrev As String = ""
             Dim tmpName As String = Me.name
 
+
             If PhaseDefinitions.Contains(tmpName) Then
-                abbrev = PhaseDefinitions.getAbbrev(tmpName)
-            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
-                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
-            Else
-                abbrev = _shortName
-            End If
+                    abbrev = PhaseDefinitions.getAbbrev(tmpName)
+                ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                    abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+                Else
+                    abbrev = ""
+                End If
 
             shortName = abbrev
 
@@ -2101,24 +2396,56 @@ Public Class clsPhase
 
         With newphase
 
-            .earliestStart = Me._earliestStart
-            .latestStart = Me._latestStart
-            .offset = Me._offset
+            ' tk 25.11.19 , das Auskommentierte führte zu Fehlern ...
+            ' insbesondere bei appearance und farbe 
+
+            ' korrekt 25.11.19 
+            .earliestStart = earliestStart
+            .latestStart = latestStart
+            .offset = offset
 
             ' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
             ' wird also bei Mapping nicht übernommen
             If Not mapping Then
-                .nameID = _nameID
+                .nameID = nameID
             End If
 
 
             ' sonstigen Elemente übernehmen 
-            .shortName = Me._shortName
-            .originalName = Me._originalName
-            .appearance = Me._appearance
-            .farbe = Me._color
-            .verantwortlich = Me._verantwortlich
-            .percentDone = Me._percentDone
+            .shortName = shortName
+            .originalName = originalName
+
+
+            .appearance = appearance
+            .farbe = farbe
+            .verantwortlich = verantwortlich
+            .percentDone = percentDone
+            '
+            ' Ende korrekt 25.11.19 
+
+            ' ---------------------------------------
+            ' fehlerhaft 25.11.19 , insbesondere bei appearance und farbe
+            '.earliestStart = Me._earliestStart
+            '.latestStart = Me._latestStart
+            '.offset = Me._offset
+
+            '' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
+            '' wird also bei Mapping nicht übernommen
+            'If Not mapping Then
+            '    .nameID = _nameID
+            'End If
+
+
+            '' sonstigen Elemente übernehmen 
+            '.shortName = Me._shortName
+            '.originalName = Me._originalName
+
+
+            '.appearance = Me._appearance
+            '.farbe = Me._color
+            '.verantwortlich = Me._verantwortlich
+            '.percentDone = Me._percentDone
+            ' Ende fehlerhaft 25.11.19 ---------------
 
             ' Rollen und kosten werden bei Mapping nicht übernommen
             If Not mapping Then
@@ -2230,6 +2557,17 @@ Public Class clsPhase
                 .nameID = newPhaseNameID
             End If
 
+            ' ergänzt am 25.11.19 
+            ' sonstigen Elemente übernehmen 
+            .shortName = shortName
+            .originalName = originalName
+
+
+            .appearance = appearance
+            .farbe = farbe
+            .verantwortlich = verantwortlich
+            .percentDone = percentDone
+            ' Ende ergänzt am 25.11 
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
@@ -2334,6 +2672,28 @@ Public Class clsPhase
                 End Try
 
             Next
+
+            ' 16.12.19 Bewertungen auch übernehmen; in den Meilensteinen werden sie schon kängst übernommen ...
+
+
+            For b As Integer = 1 To Me._bewertungen.Count
+                Dim newb As New clsBewertung
+                Me.getBewertung(b).copyto(newb)
+                Try
+                    .addBewertung(newb)
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            ' Deliverables sollen immer übernommen werden ...
+            ' jetzt noch die Deliverables kopieren ... 
+            For i = 1 To Me.countDeliverables
+                Dim deli As String = Me.getDeliverable(i)
+                .addDeliverable(deli)
+            Next
+
 
         End With
 
@@ -2774,6 +3134,24 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' liefert den Index zurück, bis zu dem ActualData in der Phase existiert 
+    ''' -1 es existiert kein ActualData in der Phase 
+    ''' 0 .LE. x .LE. dimension-1  die Monate xwerte(0), xwerte(1), ..xwerte(x) sind ActualData Monate  
+    ''' relende-relstart .LE. x alles ist actual data    ''' 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getActualDataIndex As Integer
+        Get
+            Dim tmpResult As Integer = -1
+            If hasActualData Then
+                tmpResult = getColumnOfDate(_parentProject.actualDataUntil) - getColumnOfDate(getStartDate)
+            End If
+
+            getActualDataIndex = tmpResult
+        End Get
+    End Property
+
     Public ReadOnly Property parentProject() As clsProjekt
         Get
             parentProject = _parentProject
@@ -2898,26 +3276,119 @@ Public Class clsPhase
     ''' <summary>
     ''' synchronisiert bzw. berechnet die Xwerte der Rollen und Kosten
     ''' </summary>
+    ''' <param name="calcAnyhow">wenn true: berechnet die Verteilung neu, auch wenn die Dimension des Arrays gleich bleibt</param>
     ''' <remarks></remarks>
-    Public Sub calcNewXwerte(ByVal dimension As Integer, ByVal faktor As Double)
+    Public Sub calcNewXwerte(ByVal dimension As Integer, ByVal faktor As Double,
+                             ByVal Optional calcAnyhow As Boolean = False)
         Dim newXwerte() As Double
         Dim oldXwerte() As Double
+        Dim oldSum(0) As Double
 
         Dim r As Integer, k As Integer
 
-        For r = 1 To Me.countRoles
-            oldXwerte = Me.getRole(r).Xwerte
-            ReDim newXwerte(dimension)
-            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-            Me.getRole(r).Xwerte = newXwerte
-        Next
+        ' hier wird jetzt berücksichtigt, dass sich Werte aus den Ist-Daten nicht mehr verändern dürfen ..
+        Dim actualIndex As Integer = getActualDataIndex
 
-        For k = 1 To Me.countCosts
-            oldXwerte = Me.getCost(k).Xwerte
-            ReDim newXwerte(dimension)
-            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
-            Me.getCost(k).Xwerte = newXwerte
-        Next
+
+        If actualIndex < 0 Then
+            ' alles wie bisher , ohne Istdaten
+            For r = 1 To Me.countRoles
+                oldXwerte = Me.getRole(r).Xwerte
+                oldSum(0) = oldXwerte.Sum
+                ReDim newXwerte(dimension)
+                If calcAnyhow Then
+                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
+                Else
+                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                End If
+
+                Me.getRole(r).Xwerte = newXwerte
+            Next
+
+            For k = 1 To Me.countCosts
+                oldXwerte = Me.getCost(k).Xwerte
+                oldSum(0) = oldXwerte.Sum
+                ReDim newXwerte(dimension)
+                If calcAnyhow Then
+                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldSum, faktor, newXwerte)
+                Else
+                    Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
+                End If
+
+                Me.getCost(k).Xwerte = newXwerte
+            Next
+
+        Else
+            ' jetzt müssen die Ist-Daten unverändert bleiben 
+            Dim forecastDimension As Integer = dimension - actualIndex
+            Dim firstForecastMonth As Date = getDateofColumn(getColumnOfDate(parentProject.actualDataUntil) + 1, False)
+
+            For r = 1 To Me.countRoles
+
+                oldXwerte = Me.getRole(r).Xwerte
+
+                ReDim newXwerte(dimension)
+                Dim newBedarf As Double = oldXwerte.Sum * faktor
+
+                For ri As Integer = 0 To actualIndex
+                    newXwerte(ri) = oldXwerte(ri)
+                Next
+                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
+                Dim istDataSum As Double = newXwerte.Sum
+
+                Dim forecast(0) As Double
+                forecast(0) = newBedarf - istDataSum
+
+                ' darf nicht negativ werden  
+                If forecast(0) < 0 Then
+                    forecast(0) = 0
+                End If
+
+
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+
+
+                ' jetzt die Forecast Werte übernehmen 
+                For ri As Integer = actualIndex + 1 To dimension
+                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                Next
+
+                Me.getRole(r).Xwerte = newXwerte
+
+            Next
+
+            For k = 1 To Me.countCosts
+                oldXwerte = Me.getCost(k).Xwerte
+
+                ReDim newXwerte(dimension)
+                Dim newBedarf As Double = oldXwerte.Sum * faktor
+
+                For ri As Integer = 0 To actualIndex
+                    newXwerte(ri) = oldXwerte(ri)
+                Next
+                ' die bisher übertragenen Werte repräsentieren die Gesamt-summe an Ist-Daten 
+                Dim istDataSum As Double = newXwerte.Sum
+
+                Dim forecast(0) As Double
+                forecast(0) = newBedarf - istDataSum
+
+                ' darf nicht negativ werden  
+                If forecast(0) < 0 Then
+                    forecast(0) = 0
+                End If
+
+                Dim newForecastXWerte() As Double = calcVerteilungAufMonate(firstForecastMonth, Me.getEndDate, forecast, 1.0)
+
+                ' jetzt die Forecast Werte übernehmen 
+                For ri As Integer = actualIndex + 1 To dimension
+                    newXwerte(ri) = newForecastXWerte(ri - (actualIndex + 1))
+                Next
+
+                Me.getCost(k).Xwerte = newXwerte
+
+            Next
+        End If
+
 
 
     End Sub
@@ -3068,7 +3539,7 @@ Public Class clsPhase
 
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
-    ''' soll nach Testphase die bisherige berechneBedarev ablösen
+    ''' berücksichtigt die ActualDataUntil
     ''' ist jetzt als Function realisiert, die die Dimension aus Startdatum, Endedatum zieht 
     ''' wie die MEthode vorher ja auch ... 
     ''' </summary>

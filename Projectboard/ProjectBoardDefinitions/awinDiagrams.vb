@@ -997,8 +997,8 @@ Public Module awinDiagrams
 
                 ' bestimmen des Chart-Titles 
 
-                Dim startRed As Integer = -1
-                Dim lengthRed As Integer = -1
+                Dim startRedGreen As Integer = -1
+                Dim lengthRedGreen As Integer = -1
 
                 If prcTyp = DiagrammTypen(1) Then
                     ' Rolle 
@@ -1013,7 +1013,7 @@ Public Module awinDiagrams
                         .vergleichsArt = PTVergleichsArt.beauftragung
                     End With
 
-                    Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRed, lengthRed)
+                    Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRedGreen, lengthRedGreen)
 
                     ' ---- hier dann final den Titel setzen 
 
@@ -1022,9 +1022,15 @@ Public Module awinDiagrams
 
                     newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
 
-                    If startRed > 0 And lengthRed > 0 Then
-                        ' die aktuelle Summe muss rot eingefärbt werden 
-                        newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRed, lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                    If startRedGreen > 0 And lengthRedGreen > 0 Then
+                        If seriesSumDatenreihe.Sum < kdatenreihe.Sum Then
+                            ' die aktuelle Summe muss grün eingefärbt werden 
+                            newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
+                        Else
+                            ' die aktuelle Summe muss rot eingefärbt werden 
+                            newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                        End If
+
                     End If
 
 
@@ -1811,8 +1817,8 @@ Public Module awinDiagrams
                 titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
             End If
 
-            Dim startRed As Integer = -1
-            Dim lengthRed As Integer = -1
+            Dim startRedGreen As Integer = -1
+            Dim lengthRedGreen As Integer = -1
             If prcTyp = DiagrammTypen(1) And Not awinSettings.showValuesOfSelected Then
                 ' Rolle 
                 Dim scInfo As New clsSmartPPTChartInfo
@@ -1824,7 +1830,7 @@ Public Module awinDiagrams
                     .vergleichsTyp = PTVergleichsTyp.letzter
                     .vergleichsArt = PTVergleichsArt.beauftragung
                 End With
-                Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRed, lengthRed)
+                Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRedGreen, lengthRedGreen)
 
                 ' ---- hier dann final den Titel setzen 
 
@@ -1833,10 +1839,15 @@ Public Module awinDiagrams
 
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                            lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If seriesSumDatenreihe.Sum < kdatenreihe.Sum Then
+                        ' die aktuelle Summe muss grün eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                    End If
+
                 End If
 
 
@@ -6340,10 +6351,12 @@ Public Module awinDiagrams
 
 
         If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+            'IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
 
             If considerIstDaten Then
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                'PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             Else
                 PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             End If
@@ -6418,9 +6431,9 @@ Public Module awinDiagrams
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRed, lengthRed)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
         Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
@@ -6651,10 +6664,17 @@ Public Module awinDiagrams
             .ChartTitle.Font.Size = titleFontSize
             .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
 
-            If startRed > 0 And lengthRed > 0 Then
-                ' die aktuelle Summe muss rot eingefärbt werden 
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                    lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+            If startRedGreen > 0 And lengthRedGreen > 0 Then
+                If tDatenSumme > vDatensumme Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                Else
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
+                End If
+
             End If
 
         End With
@@ -7398,7 +7418,7 @@ Public Module awinDiagrams
             startRed = 0
             lengthRed = 0
 
-            If vergleichslinieExists And tsum > vsum Then
+            If vergleichslinieExists And (tsum > 1.025 * vsum Or tsum < 0.975 * vsum) Then
                 startRed = qualifier2.Length + 3
                 lengthRed = tsum.ToString("##,##0.").Length
             End If

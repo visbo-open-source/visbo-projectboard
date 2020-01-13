@@ -4249,9 +4249,9 @@ Module Module1
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRedGreen, lengthRedGreen)
 
 
 
@@ -4430,10 +4430,17 @@ Module Module1
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tSum < vSum Then
+                        ' die aktuelle Summe muss grün eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                            lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                            lengthRedGreen).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                    End If
+
                 End If
             End If
 
@@ -8400,7 +8407,7 @@ Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function isVisboShape(ByVal curShape As PowerPoint.Shape) As Boolean
-        If isRelevantMSPHShape(curShape) Or isCommentShape(curShape) Or isOtherVisboComponent(curShape) Then
+        If isRelevantMSPHShape(curShape) Or isCommentShape(curShape) Or isOtherVisboComponent(curShape) Or isAnnotationShape(curShape) Then
             isVisboShape = True
         Else
             isVisboShape = False
@@ -10529,12 +10536,12 @@ Module Module1
                         End If       'Ende ob SlideIDs ungleich sind
                     End If
                 Else
-                    'ur: ???
-                    'currentSlide = Nothing
+                    'tk 8.10.19 es muss immer eine Slide geben 
+                    currentSlide = Sld
                 End If
             Else
-                'ur: ???
-                'currentSlide = Nothing
+                'tk 8.10.19 es muss immer eine Slide geben 
+                currentSlide = Sld
             End If ' if currentPresHasVisboElements
         Else
             'nichts tun

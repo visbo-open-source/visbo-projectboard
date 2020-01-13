@@ -62,7 +62,7 @@
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.varianten_Tab = Me.Factory.CreateRibbonButton
-        Me.Button1 = Me.Factory.CreateRibbonButton
+        Me.Create_Button = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.Group2.SuspendLayout()
@@ -248,7 +248,7 @@
         '
         Me.SmartInfo.Items.Add(Me.settingsTab)
         Me.SmartInfo.Items.Add(Me.varianten_Tab)
-        Me.SmartInfo.Items.Add(Me.Button1)
+        Me.SmartInfo.Items.Add(Me.Create_Button)
         Me.SmartInfo.Name = "SmartInfo"
         '
         'settingsTab
@@ -262,14 +262,11 @@
         Me.varianten_Tab.Name = "varianten_Tab"
         Me.varianten_Tab.Visible = False
         '
-        'Button1
+        'Create_Button
         '
-        Me.Button1.Enabled = False
-        Me.Button1.Label = "Smartify Chart"
-        Me.Button1.Name = "Button1"
-        Me.Button1.ScreenTip = "embeds information about data source in Chart and uploads timestamped data source" &
-    ""
-        Me.Button1.Visible = False
+        Me.Create_Button.Label = "Create from Template"
+        Me.Create_Button.Name = "Create_Button"
+        Me.Create_Button.ScreenTip = "creates report from template"
         '
         'Ribbon1
         '
@@ -326,7 +323,7 @@
 
     End Sub
 
-    Friend WithEvents Button1 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Create_Button As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnDate As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton

@@ -766,5 +766,63 @@ Public Class Ribbon1
             Call MsgBox("ende btnToggle")
         End If
     End Sub
+
+    Private Sub Create_Button_Click(sender As Object, e As RibbonControlEventArgs) Handles Create_Button.Click
+        Dim deletedProj As Integer = 0
+        Dim returnValue As Windows.Forms.DialogResult
+
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim loadProjectsForm As New frmProjPortfolioAdmin
+
+        Try
+
+            With loadProjectsForm
+
+                .aKtionskennung = PTTvActions.loadPVInPPT
+
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
+            End With
+
+            returnValue = loadProjectsForm.ShowDialog
+
+            If returnValue = Windows.Forms.DialogResult.OK Then
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+                ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
+                Dim hproj As clsProjekt = Nothing
+                If selectedProjekte.Count = 1 Then
+                    hproj = selectedProjekte.getProject(1)
+
+                    Dim tmpCollection As New Collection
+                    Call createPPTSlidesFromProjectWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
+                    ' tk 7.10 selectedProjekte wieder zurücksetzen ..
+                    selectedProjekte.Clear(False)
+                Else
+                    Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "no project selected ... Exit"
+                    End If
+                    Call MsgBox(msgtxt)
+                End If
+
+
+
+            Else
+                ' returnValue = DialogResult.Cancel
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+        ' hier wird ja nix geladen, deshalb soll das nicht gemacht werden .. 
+        'If currentConstellationName <> calcLastSessionScenarioName() Then
+        '    currentConstellationName = calcLastSessionScenarioName()
+        'End If
+
+    End Sub
 End Class
 

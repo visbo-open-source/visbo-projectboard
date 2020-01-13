@@ -3496,12 +3496,13 @@ Public Module testModule
         End If
 
     End Sub
+
     ''' <summary>
     ''' übersetzt eine Collection von RoleNAmeIDs der Form roleID;teamID oder RoleId in eine Colelction mit den entsprechenden RoleNames
     ''' </summary>
     ''' <param name="roleNameIDs"></param>
     ''' <returns></returns>
-    Private Function translateToRoleNames(ByVal roleNameIDs As Collection) As Collection
+    Public Function translateToRoleNames(ByVal roleNameIDs As Collection) As Collection
         Dim tmpResult As New Collection
         Dim tmpName As String = ""
 
@@ -3529,7 +3530,7 @@ Public Module testModule
     ''' <param name="qualifier2"></param>
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
-    Private Function bestimmeCostQ2(ByVal qualifier2 As String, ByVal selectedCosts As Collection) As String
+    Public Function bestimmeCostQ2(ByVal qualifier2 As String, ByVal selectedCosts As Collection) As String
 
         If qualifier2 <> "" Then
             If qualifier2 = "%1" And selectedCosts.Count > 0 Then
@@ -3554,7 +3555,7 @@ Public Module testModule
     ''' <param name="qualifier2"></param>
     ''' <param name="selectedRoles"></param>
     ''' <returns></returns>
-    Private Function bestimmeRoleQ2(ByVal qualifier2 As String, ByVal selectedRoles As Collection) As String
+    Public Function bestimmeRoleQ2(ByVal qualifier2 As String, ByVal selectedRoles As Collection) As String
 
 
         If qualifier2 = "" Then
@@ -13158,6 +13159,14 @@ Public Module testModule
         minDate = tmpMinimum
         maxDate = tmpMaximum
 
+        ' jetzt noch den Puffer aufsetzen ...
+        ' tk 16.10.19 hier nach hinten immer etwas Luft lassen 
+        Dim puffer As Integer = CInt(DateDiff(DateInterval.Month, minDate, maxDate) * 0.2)
+        If puffer = 0 Then
+            puffer = 1
+        End If
+        maxDate = maxDate.AddMonths(puffer)
+
     End Sub
 
 
@@ -17931,7 +17940,7 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' Zeichnet den Meilenstein MS im PPTslide an Position MilestoneGrafikYPOs
+    ''' Zeichnet den Meilenste in MS im PPTslide an Position MilestoneGrafikYPOs
     ''' </summary>
     ''' <param name="pptslide"></param>
     ''' <param name="msShapeNames"></param>
@@ -17942,7 +17951,7 @@ Public Module testModule
     ''' <param name="milestoneGrafikYPos"></param>
     ''' <param name="rds"></param>
     ''' <remarks></remarks>
-    Private Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide,
+    Public Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide,
                                                      ByRef msShapeNames As Collection,
                                                      ByRef minX1 As Double, ByRef maxX2 As Double,
                                                      ByVal MS As clsMeilenstein,
@@ -18171,7 +18180,7 @@ Public Module testModule
     ''' <param name="rds">enthält sowohl slide als auch die Hilfs-Shapes </param>
     ''' <param name="curYPosition">gibt die aktuelle Y-Position wieder , ab der gezeichnet werden kann; ist am Ende wieder auf der nächsten freien Zeile  </param>
     ''' <remarks></remarks>
-    Private Sub zeichneSwlSegmentinAktZeile(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, ByVal segmentPhaseID As String,
+    Public Sub zeichneSwlSegmentinAktZeile(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, ByVal segmentPhaseID As String,
                                      Optional ByVal modus As Integer = 0, Optional ByVal hproj As clsProjekt = Nothing)
 
         Dim copiedShape As pptNS.ShapeRange
@@ -19925,6 +19934,7 @@ Public Module testModule
         ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
         'If completeMppDefinition.Sum = completeMppDefinition.Length Then
         Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+
         If missingShapes.Length = 0 Then
             ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
 
@@ -22394,6 +22404,7 @@ Public Module testModule
                 'resultShape.Shadow.Transparency = appear.ShadowTransp
                 resultShape.Line.BackColor.RGB = appear.LineBGColor
                 resultShape.Line.ForeColor.RGB = appear.LineFGColor
+
                 resultShape.Line.Weight = appear.LineWeight
 
                 If appear.hasText Then
@@ -22464,15 +22475,16 @@ Public Module testModule
             'Else
             If Not IsNothing(appear) Then
 
-                    resultShape.Rotation = appear.Rotation
-                    resultShape.Fill.BackColor.RGB = appear.BGcolor
-                    resultShape.Fill.ForeColor.RGB = appear.FGcolor
-                    resultShape.Glow.Color.RGB = appear.Glowcolor
-                    resultShape.Glow.Radius = appear.Glowradius
-                    resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
-                    'resultShape.Shadow.Transparency = appear.ShadowTransp
-                    resultShape.Line.BackColor.RGB = appear.LineBGColor
-                    resultShape.Line.ForeColor.RGB = appear.LineFGColor
+                resultShape.Rotation = appear.Rotation
+                resultShape.Fill.BackColor.RGB = appear.BGcolor
+                resultShape.Fill.ForeColor.RGB = appear.FGcolor
+                resultShape.Glow.Color.RGB = appear.Glowcolor
+                resultShape.Glow.Radius = appear.Glowradius
+                resultShape.Shadow.ForeColor.RGB = appear.ShadowFG
+                'resultShape.Shadow.Transparency = appear.ShadowTransp
+                resultShape.Line.BackColor.RGB = appear.LineBGColor
+                resultShape.Line.ForeColor.RGB = appear.LineFGColor
+
                 resultShape.Line.Weight = appear.LineWeight
 
                 If appear.hasText Then

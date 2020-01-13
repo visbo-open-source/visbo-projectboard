@@ -14,16 +14,75 @@ Public Class clsVisboZustaende
 
     ' nimmt im Massen-Edit Ressourcen die Spalten-Nummer für Ressource-/Kostenauf 
     Public Property meColRC As Integer
-    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für den Projekt-Namen auf  
+    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für den Projekt-Namen auf , im Massen Edit Termine den Elem-Name 
     Public Property meColpName As Integer = 2
-    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für StartData auf  
+    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für StartData auf  , im MassenEdit Termine Startdate
     Public Property meColSD As Integer
-    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für EndData  
+    ' nimmt  im Massen-Edit Ressourcen die Spalten-Nummer für EndData  , im MassenEdit Termine Ende-date
     Public Property meColED As Integer
     ' nimmt das letzte Projekt auf, zu dem zuletzt Informationen angezeigt/aktualisiert wurden ...
-    Public Property lastProject As clsProjekt
+    Public Property currentProject As clsProjekt
     ' hat den letzten Stand in der Datenbank zu dem Projekt, das zuletzt angezeigt wurde 
-    Public Property lastProjectSession As clsProjekt
+    Public Property currentProjectinSession As clsProjekt
+
+    ' wird in MassEdit Termine verwendet ... 
+    Private _currentElemID As String
+    Public Property currentElemID As String
+        Get
+            currentElemID = _currentElemID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _currentElemID = value
+            Else
+                _currentElemID = ""
+            End If
+        End Set
+    End Property
+
+    Public ReadOnly Property currentZeileIsMilestone As Boolean
+        Get
+            Dim tmpResult As Boolean = Nothing
+            If _currentElemID <> "" Then
+                tmpResult = elemIDIstMeilenstein(_currentElemID)
+            End If
+            currentZeileIsMilestone = tmpResult
+        End Get
+    End Property
+
+
+    Public ReadOnly Property getcurrentPhase() As clsPhase
+        Get
+            Dim cPhase As clsPhase = Nothing
+
+            If currentElemID <> "" Then
+                If Not elemIDIstMeilenstein(currentElemID) Then
+                    If Not IsNothing(currentProject) Then
+                        cPhase = currentProject.getPhaseByID(currentElemID)
+                    End If
+                End If
+            End If
+
+            getcurrentPhase = cPhase
+        End Get
+    End Property
+
+    Public ReadOnly Property getcurrentMilestone() As clsMeilenstein
+        Get
+            Dim cMilestone As clsMeilenstein = Nothing
+
+            If currentElemID <> "" Then
+                If elemIDIstMeilenstein(currentElemID) Then
+                    If Not IsNothing(currentProject) Then
+                        cMilestone = currentProject.getMilestoneByID(currentElemID)
+                    End If
+                End If
+            End If
+
+            getcurrentMilestone = cMilestone
+        End Get
+    End Property
+
 
     Public Property oldValue As String
         Get
@@ -97,8 +156,8 @@ Public Class clsVisboZustaende
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getUpDatedAuslastungsArray(ByVal roleNames As Collection, _
-                                                            ByVal von As Integer, ByVal bis As Integer, _
+    Public ReadOnly Property getUpDatedAuslastungsArray(ByVal roleNames As Collection,
+                                                            ByVal von As Integer, ByVal bis As Integer,
                                                             ByVal percentValues As Boolean) As Double(,)
         Get
             Dim resultValues() As Double = Nothing
@@ -168,8 +227,9 @@ Public Class clsVisboZustaende
         _meMaxZeile = 0
         _oldValue = ""
         _oldRow = 0
-        _lastProject = Nothing
-        _lastProjectSession = Nothing
+        _currentProject = Nothing
+        _currentProjectinSession = Nothing
+        _currentElemID = ""
         _auslastungsArray = Nothing
     End Sub
 End Class
