@@ -22716,41 +22716,42 @@ Public Module agm2
         ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
         Dim allesOK As Boolean = checkRequirements(configFile, kapaFile, kapaConfig, lastrow)
 
+        If allesOK Then
+            If Not (IsNothing(kapaFile) Or kapaFile = "") Then
+                kapaFileName = kapaConfig("Kapa-Datei").capacityFile
+                Dim Test As Boolean = (kapaFile = kapaFileName)
+            End If
 
+            ' Dateien mit WildCards lesen
+            listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                         FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
-        If Not (IsNothing(kapaFile) Or kapaFile = "") Then
-            kapaFileName = kapaConfig("Kapa-Datei").capacityFile
-            Dim Test As Boolean = (kapaFile = kapaFileName)
+            If listOfFiles.Count >= 1 Then
+
+                For Each tmpDatei As String In listOfFiles
+                    Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                    result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten KapaFiles
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
+
+                Next
+
+            Else
+                Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                             & "Es wurde daher jetzt keine berücksichtigt"
+
+                ' das sollte nicht dazu führen, dass nichts gemacht wird 
+                'meldungen.Add(errMsg)
+                'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+                'Call MsgBox(errMsg)
+
+                Call logfileSchreiben(errMsg, "", anzFehler)
+            End If
         End If
 
-        ' Dateien mit WildCards lesen
-        listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
-                     FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
-
-        If listOfFiles.Count >= 1 Then
-
-            For Each tmpDatei As String In listOfFiles
-                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
-
-                If result Then
-                    ' hier: merken der erfolgreich importierten KapaFiles
-                    listOfArchivFiles.Add(tmpDatei)
-                End If
-
-            Next
-
-        Else
-            Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt"
-
-            ' das sollte nicht dazu führen, dass nichts gemacht wird 
-            'meldungen.Add(errMsg)
-            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-            'Call MsgBox(errMsg)
-
-            Call logfileSchreiben(errMsg, "", anzFehler)
-        End If
 
         If result Then
             readInterneAnwesenheitslistenAllg = listOfArchivFiles
