@@ -5678,34 +5678,41 @@ Public Module agm2
 
                                 Try
 
-                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
-                                    Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
+                                    If Not IsNothing(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value) Then
+                                        Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
+                                        Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
 
-                                    If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
-                                        Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
+                                        If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
+                                            Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
 
-                                        If Not IsNothing(cfType) Then
-                                            Select Case cfType
-                                                Case ptCustomFields.Str
-                                                    Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomSField(cfUid, cfvalue)
-                                                Case ptCustomFields.Dbl
-                                                    Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomDField(cfUid, cfvalue)
-                                                Case ptCustomFields.bool
-                                                    Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomBField(cfUid, cfvalue)
-                                                Case Else
-                                                    ' Custom Field Type nicht bekannt ...
-                                                    Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
-                                            End Select
+                                            If Not IsNothing(cfType) Then
+                                                Select Case cfType
+                                                    Case ptCustomFields.Str
+                                                        Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomSField(cfUid, cfvalue)
+                                                    Case ptCustomFields.Dbl
+                                                        Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomDField(cfUid, cfvalue)
+                                                    Case ptCustomFields.bool
+                                                        Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomBField(cfUid, cfvalue)
+                                                    Case Else
+                                                        ' Custom Field Type nicht bekannt ...
+                                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                                End Select
+                                            Else
+                                                ' Custom Field UID nicht existent ...
+                                                Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                            End If
                                         Else
-                                            ' Custom Field UID nicht existent ...
-                                            Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                            ' Custom Field Definition nicht bekannt ...
+
+                                            If cfName <> "" Then
+                                                Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                            End If
+
                                         End If
-                                    Else
-                                        ' Custom Field Definition nicht bekannt ...
-                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+
                                     End If
 
                                 Catch ex As Exception
@@ -21217,7 +21224,12 @@ Public Module agm2
 
             If readingGroups Then
                 Try
-                    errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Range <awin_Gruppen_Definition> not defined ... Cancelled ..."
+                    Else
+                        errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
+                    End If
+
                     rolesRange = wsname.Range("awin_Gruppen_Definition")
                 Catch ex As Exception
                     rolesRange = Nothing
@@ -21225,7 +21237,12 @@ Public Module agm2
 
             Else
                 Try
-                    errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Range <awin_Rollen_Definition> not defined ... Cancelled ..."
+                    Else
+                        errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
+                    End If
+
                     rolesRange = wsname.Range("awin_Rollen_Definition")
                     przSatz = 1.0
                 Catch ex As Exception
@@ -21287,7 +21304,12 @@ Public Module agm2
                                                 IDCollection.Add(tmpIDValue.Trim, tmpIDValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                Else
+                                                    errMsg = "versch. Rollen mit identischer ID sidn nicht zugelassen: " & tmpIDValue.Trim
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                                 CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
@@ -21308,14 +21330,24 @@ Public Module agm2
                         ' jetzt auf identisch vorkommende Namen checken ... aber nur im Modus not readingGroups
                         If Not readingGroups Then
                             If tmpOrgaName = "" Then
-                                errMsg = "roles with empty string are not allowed "
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "roles with empty string are not allowed "
+                                Else
+                                    errMsg = "Eine Rollen-Name darf nicht der leere String sein ..."
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                             Else
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
                                 Else
-                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "several roles with same name are not allowed: " & tmpOrgaName
+                                    Else
+                                        errMsg = "mehrere Namen mit gleichem Namen sind nicht zugelassen: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
@@ -21326,18 +21358,34 @@ Public Module agm2
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
                                     If neueRollendefinitionen.containsName(tmpOrgaName) Then
-                                        errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                        Else
+                                            errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
+                                        End If
+
                                         meldungen.Add(errMsg)
                                         CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                     End If
                                 Else
-                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    Else
+                                        errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
                             Else
                                 If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
-                                    errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    Else
+                                        errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
@@ -21351,7 +21399,13 @@ Public Module agm2
                             Dim roleName As String = CStr(c.Value.trim)
 
                             If Not neueRollendefinitionen.containsName(roleName) Then
-                                errMsg = "Team-Role " & roleName & " does not exist ..."
+
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "Team-Role " & roleName & " does not exist ..."
+                                Else
+                                    errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
 
@@ -21368,11 +21422,22 @@ Public Module agm2
 
                 anzWithID = IDCollection.Count
                 If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
-                    errMsg = "some roles do contain IDs, others not ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "some roles do contain IDs, others not ..."
+                    Else
+                        errMsg = "einige Rollen enthalten IDs, einige nicht ... "
+                    End If
+
                     meldungen.Add(errMsg)
                     Exit Sub
                 ElseIf Not groupDefinitionIsOk Then
-                    errMsg = "Group Definitions not correct ..."
+
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Group Definitions not correct ..."
+                    Else
+                        errMsg = "Gruppen-Definitionen sind nicht korrekt ..."
+                    End If
+
                     meldungen.Add(errMsg)
                     Exit Sub
                 Else
@@ -21413,9 +21478,10 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
-                                    Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
 
-                                    If Not IsNothing(tmpValue) Then
+
+                                    If Not IsNothing(c.Offset(0, 3).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
                                         tmpValue = tmpValue.Trim
                                         Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
@@ -21423,6 +21489,118 @@ Public Module agm2
                                             .isExternRole = True
                                         End If
                                     End If
+
+                                    ' jetzt die neuen Attribute aufnehmen
+                                    ' Personal-Nummer
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 4).Value) Then
+                                            .employeeNr = CStr(c.Offset(0, 4).Value).Trim
+                                        Else
+                                            .employeeNr = ""
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for employeeNr: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Personal-Nummer: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 5).Value) Then
+                                            If CStr(c.Offset(0, 5).Value).Trim = "" Then
+                                                .defaultDayCapa = -1
+                                            ElseIf IsNumeric(c.Offset(0, 5).Value) Then
+                                                Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
+                                                If tmpValue >= 0 And tmpValue <= 12 Then
+                                                    .defaultDayCapa = tmpValue
+                                                Else
+                                                    ' 
+                                                    If awinSettings.englishLanguage Then
+                                                        errMsg = "invalid value for default capacity per day: " & .name
+                                                    Else
+                                                        errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                                    End If
+                                                    meldungen.Add(errMsg)
+                                                End If
+                                            End If
+                                        Else
+                                            .defaultDayCapa = -1
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for default capacity per day: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Eintrittsdatum der Ressourcen 
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 6).Value) Then
+                                            If CStr(c.Offset(0, 6).Value).Trim = "" Then
+                                                .entryDate = Date.MinValue
+                                            Else
+                                                Dim tmpValue As Date = CDate(c.Offset(0, 6).Value)
+                                                .entryDate = tmpValue.Date
+                                            End If
+                                        Else
+                                            .entryDate = Date.MinValue
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Entry-Date: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Eintrittsdatum: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Austrittsdatum der Ressourcen 
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 7).Value) Then
+                                            If CStr(c.Offset(0, 7).Value).Trim = "" Then
+                                                .exitDate = CDate("31.12.2200").Date
+                                            Else
+                                                Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
+                                                .exitDate = tmpValue
+                                            End If
+                                        Else
+                                            .exitDate = CDate("31.12.2200")
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Exit-Date: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Austrittsdatum: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Alias-Namen der Rolle  
+                                    Try
+
+                                        If Not IsNothing(c.Offset(0, 8).Value) Then
+                                            If CStr(c.Offset(0, 8).Value).Trim = "" Then
+                                                .aliases = Nothing
+                                            Else
+                                                Dim tmpValues() As String = CStr(c.Offset(0, 8).Value).Trim.Split(New Char() {CChar("#")})
+                                                .aliases = tmpValues
+                                            End If
+                                        Else
+                                            .aliases = Nothing
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Alias-Names: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Alias-Namen: " & .name
+                                            meldungen.Add(errMsg)
+                                        End If
+                                    End Try
 
 
                                     ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
@@ -21443,7 +21621,11 @@ Public Module agm2
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
                                     If Not neueRollendefinitionen.containsName(hrole.name) Then
                                         If neueRollendefinitionen.containsUid(hrole.UID) Then
-                                            errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "ID has multiple occurrences: " & hrole.UID
+                                            Else
+                                                errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            End If
                                             meldungen.Add(errMsg)
                                         Else
                                             neueRollendefinitionen.Add(hrole)
@@ -21518,7 +21700,12 @@ Public Module agm2
                                             End If
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
-                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                Else
+                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                             Else
                                                 subRole.addTeam(parentRole.UID, przSatz)
@@ -21577,7 +21764,12 @@ Public Module agm2
 
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
-                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                Else
+                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                             Else
                                                 subRole.addTeam(parentRole.UID, przSatz)
@@ -21595,7 +21787,12 @@ Public Module agm2
 
                                 End If
                             Catch ex As Exception
-                                errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "Row: " & ix.ToString & " : " & ex.Message
+                                Else
+                                    errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                             End Try
@@ -21613,8 +21810,9 @@ Public Module agm2
 
 
         Catch ex As Exception
-            errMsg = "general, unidentified error: " & ex.Message
-            meldungen.Add(errMsg)
+
+            meldungen.Add(ex.Message)
+
         End Try
 
 
