@@ -13160,7 +13160,12 @@ Public Module agm2
                                             tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
 
                                             If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                subRole.kapazitaet(index) = tmpKapa
+                                                If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
+                                                    subRole.kapazitaet(index) = tmpKapa
+                                                Else
+                                                    subRole.kapazitaet(index) = 0
+                                                End If
+
                                             End If
                                         End If
 
@@ -13217,7 +13222,12 @@ Public Module agm2
                                 ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
                             Else
                                 If tmpKapa >= 0 Then
-                                    hrole.kapazitaet(index) = tmpKapa
+                                    If index >= getColumnOfDate(hrole.entryDate) And index < getColumnOfDate(hrole.exitDate) Then
+                                        hrole.kapazitaet(index) = tmpKapa
+                                    Else
+                                        hrole.kapazitaet(index) = 0
+                                    End If
+
                                 End If
                             End If
 
@@ -13361,7 +13371,12 @@ Public Module agm2
                                                             Dim startCol As Integer = getColumnOfDate(startDate)
                                                             For ix As Integer = 0 To volumenArray.Length - 1
                                                                 If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
-                                                                    subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                                    If ix + startCol >= getColumnOfDate(subRole.entryDate) And ix + startCol < getColumnOfDate(subRole.exitDate) Then
+                                                                        subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                                    Else
+                                                                        subRole.kapazitaet(ix + startCol) = 0
+                                                                    End If
+
                                                                 End If
                                                             Next
 
@@ -13555,7 +13570,12 @@ Public Module agm2
                                                                         tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
 
                                                                         If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                            subRole.kapazitaet(index) = tmpKapa
+                                                                            If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
+                                                                                subRole.kapazitaet(index) = tmpKapa
+                                                                            Else
+                                                                                subRole.kapazitaet(index) = 0
+                                                                            End If
+
                                                                         End If
                                                                     End If
 
@@ -13894,7 +13914,12 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
-                                                hrole.kapazitaet(colOfDate) = anzArbTage
+                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                                Else
+                                                    hrole.kapazitaet(colOfDate) = 0
+                                                End If
+
                                                 iSp = iSp + anzDays
                                                 anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
                                                 anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
@@ -19423,6 +19448,13 @@ Public Module agm2
 
             End If
 
+            ' tk 14.1.2020
+            ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+            Dim customizations As New clsCustomization
+            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+            If Not IsNothing(customizations) Then
+                StartofCalendar = customizations.kalenderStart
+            End If
 
             Try
                 ' jetzt die CurrentOrga definieren
@@ -19578,10 +19610,10 @@ Public Module agm2
                 ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
 
                 Dim noCustomizationFound As Boolean = False   ' zeigt an, dass keine Einstellungen, entweder in DB oder auf Platte, gefunden wurden
-                Dim customizations As New clsCustomization
+                'Dim customizations As New clsCustomization
 
 
-                customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                'customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
                 If IsNothing(customizations) And Not IsNothing(wsName4) Then
 
@@ -21605,8 +21637,15 @@ Public Module agm2
 
                                     ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                                     For cp = 1 To 240
-
-                                        .kapazitaet(cp) = .defaultKapa
+                                        ' jetzt wird in Abhängigkeit von Entry und Exit-Date die Default-Kapa bestimmt 
+                                        If getColumnOfDate(StartofCalendar.AddMonths(cp - 1)) < getColumnOfDate(.entryDate) Then
+                                            .kapazitaet(cp) = 0
+                                        ElseIf getColumnOfDate(StartofCalendar.AddMonths(cp - 1)) >= getColumnOfDate(.exitDate) Then
+                                            .kapazitaet(cp) = 0
+                                        Else
+                                            .kapazitaet(cp) = .defaultKapa
+                                        End If
+                                        '.kapazitaet(cp) = .defaultKapa
                                         '.externeKapazitaet(cp) = 0.0
 
                                     Next

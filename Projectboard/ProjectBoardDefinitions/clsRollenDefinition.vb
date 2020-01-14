@@ -151,6 +151,24 @@
     End Property
 
     ''' <summary>
+    ''' gibt zurück, ob die Rolle im gegebenen Zeitraum showrangeLEft , showRangeRight überhaupt aktiv ist 
+    ''' kann später noch beschleunigt werden, in dem man columnEntryDate und columnExitDate als integer speichert ; aber nur temporär in der Session, nicht in der Datenbank 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function isActiveRole() As Boolean
+        Dim result As Boolean = True
+
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            Dim columnOfEntryDate As Integer = getColumnOfDate(entryDate)
+            Dim columnOfExitDate As Integer = getColumnOfDate(exitDate)
+
+            result = columnOfEntryDate <= showRangeRight And columnOfExitDate >= showRangeLeft
+        End If
+
+        isActiveRole = result
+    End Function
+
+    ''' <summary>
     ''' ist quasi ein Test-Check zur isTeam 
     ''' getTeamProperty gibt dann und nur dann true, wenn die Rolle Kinder enthält, die alle Team-Member in der Rolle selber sind ...  
     ''' </summary>
