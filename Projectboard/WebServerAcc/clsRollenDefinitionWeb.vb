@@ -101,8 +101,8 @@ Public Class clsRollenDefinitionWeb
             .aliases = Me.aliases
             .defaultDayCapa = Me.defaultDayCapa
             .employeeNr = Me.employeeNr
-            .entryDate = Me.entryDate
-            .exitDate = Me.exitDate
+            .entryDate = Me.entryDate.ToLocalTime
+            .exitDate = Me.exitDate.ToLocalTime
 
 
             ' tk 23.11.18 
@@ -190,7 +190,7 @@ Public Class clsRollenDefinitionWeb
 
 
             Else
-                ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach nach hinten verschoben 
+                ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach hinten verschoben 
                 ' also ggf. hinten auffüllen 
 
                 If lenDB = lenSession Then
@@ -280,8 +280,8 @@ Public Class clsRollenDefinitionWeb
             aliases = .aliases
             defaultDayCapa = .defaultDayCapa
             employeeNr = .employeeNr
-            entryDate = .entryDate
-            exitDate = .exitDate
+            entryDate = .entryDate.ToUniversalTime
+            exitDate = .exitDate.ToUniversalTime
 
             tagessatzIntern = .tagessatzIntern
             kapazitaet = .kapazitaet
@@ -371,8 +371,8 @@ Public Class clsRollenDefinitionWeb
         aliases = Nothing
         employeeNr = ""
         defaultDayCapa = -1
-        entryDate = Date.MinValue
-        exitDate = CDate("31.12.2200")
+        entryDate = Date.MinValue.ToUniversalTime
+        exitDate = CDate("31.12.2200").ToUniversalTime
 
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
@@ -389,8 +389,8 @@ Public Class clsRollenDefinitionWeb
         aliases = Nothing
         employeeNr = ""
         defaultDayCapa = -1
-        entryDate = Date.MinValue
-        exitDate = CDate("31.12.2200")
+        entryDate = Date.MinValue.ToUniversalTime
+        exitDate = CDate("31.12.2200").ToUniversalTime
 
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime

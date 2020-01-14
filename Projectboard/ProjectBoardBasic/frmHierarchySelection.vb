@@ -5202,39 +5202,42 @@ Public Class frmHierarchySelection
 
                 Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
 
-                topLevelNode = .Nodes.Add(role.name)
-                topLevelNode.Text = role.name
+                If role.isActiveRole Then
+                    topLevelNode = .Nodes.Add(role.name)
+                    topLevelNode.Text = role.name
 
 
-                Dim nrTag As New clsNodeRoleTag
-                With nrTag
-                    If role.getSubRoleCount > 0 And Not isAggregationRole(role) Then
-                        .pTag = "P"
-                        topLevelNode.Nodes.Clear()
-                        topLevelNode.Nodes.Add("-")
-                    Else
-                        .pTag = "X"
+                    Dim nrTag As New clsNodeRoleTag
+                    With nrTag
+                        If role.getSubRoleCount > 0 And Not isAggregationRole(role) Then
+                            .pTag = "P"
+                            topLevelNode.Nodes.Clear()
+                            topLevelNode.Nodes.Add("-")
+                        Else
+                            .pTag = "X"
+                        End If
+                    End With
+
+
+                    ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
+
+                    If role.isTeam Then
+                        ' toplevelNode kann nur Team sein, nicht Team-Member
+                        nrTag.isTeam = True
+                        nrTag.isTeamMember = False
                     End If
-                End With
+
+                    topLevelNode.Tag = nrTag
 
 
-                ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
+                    topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
 
-                If role.isTeam Then
-                    ' toplevelNode kann nur Team sein, nicht Team-Member
-                    nrTag.isTeam = True
-                    nrTag.isTeamMember = False
+
+                    If selectedRoles.Contains(topLevelNode.Name) Then
+                        topLevelNode.Checked = True
+                    End If
                 End If
 
-                topLevelNode.Tag = nrTag
-
-
-                topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
-
-
-                If selectedRoles.Contains(topLevelNode.Name) Then
-                    topLevelNode.Checked = True
-                End If
 
 
             Next
@@ -5255,53 +5258,57 @@ Public Class frmHierarchySelection
 
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(currentRoleUid)
-        Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
-        Dim currentNode As TreeNode
-        Dim childNode As TreeNode = Nothing
+        If currentRole.isActiveRole Then
+            Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
-        currentNode = parentNode.Nodes.Add(currentRole.name)
-        currentNode.Text = currentRole.name
+            Dim currentNode As TreeNode
+            Dim childNode As TreeNode = Nothing
 
-
-        Dim nrTag As New clsNodeRoleTag
-        If currentRole.isTeam Then
-
-            nrTag = New clsNodeRoleTag
-            With nrTag
-                .isTeam = True
-                .isTeamMember = False
-            End With
-
-        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
-
-            nrTag = New clsNodeRoleTag
-            Dim teamID As Integer
-            Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
-            With nrTag
-                .isTeam = False
-                .isTeamMember = True
-                .membershipID = parentID
-                .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
-            End With
-        End If
+            currentNode = parentNode.Nodes.Add(currentRole.name)
+            currentNode.Text = currentRole.name
 
 
-        If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
-            currentNode.Nodes.Clear()
-            currentNode.Nodes.Add("-")
-            nrTag.pTag = "P"
-        Else
-            nrTag.pTag = "X"
-        End If
+            Dim nrTag As New clsNodeRoleTag
+            If currentRole.isTeam Then
 
-        currentNode.Tag = nrTag
+                nrTag = New clsNodeRoleTag
+                With nrTag
+                    .isTeam = True
+                    .isTeamMember = False
+                End With
 
-        currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+            ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
+
+                nrTag = New clsNodeRoleTag
+                Dim teamID As Integer
+                Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
+                With nrTag
+                    .isTeam = False
+                    .isTeamMember = True
+                    .membershipID = parentID
+                    .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
+                End With
+            End If
 
 
-        If selectedRoles.Contains(currentNode.Name) Then
-            currentNode.Checked = True
+            If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
+                currentNode.Nodes.Clear()
+                currentNode.Nodes.Add("-")
+                nrTag.pTag = "P"
+            Else
+                nrTag.pTag = "X"
+            End If
+
+            currentNode.Tag = nrTag
+
+            currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+
+
+            If selectedRoles.Contains(currentNode.Name) Then
+                currentNode.Checked = True
+            End If
+
         End If
 
 
