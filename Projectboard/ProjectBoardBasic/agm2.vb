@@ -18185,7 +18185,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 8), Excel.Range).Locked = False
 
                                 ' Lieferumfänge
-                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
                                 CType(.Cells(zeile, 9), Excel.Range).Locked = False
 
                                 ' wer ist verantwortlich

@@ -235,19 +235,6 @@ Public Class clsMeilenstein
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt die Liste der Deliverables eines Meilensteins 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables() As List(Of String)
-        Get
-
-            getAllDeliverables = _deliverables
-
-        End Get
-    End Property
 
     ''' <summary>
     ''' liest / setzt die individuelle appearance für diesen Meilenstein 

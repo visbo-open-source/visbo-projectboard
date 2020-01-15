@@ -514,18 +514,6 @@ Public Class clsPhase
     End Property
 
 
-    ''' <summary>
-    ''' gibt die Liste der Deliverables einer Phase zurück; 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables() As List(Of String)
-        Get
-
-            getAllDeliverables = _deliverables
-
-        End Get
-    End Property
 
     ''' <summary>
     ''' liest/schreibt das Feld für verantwortlich
