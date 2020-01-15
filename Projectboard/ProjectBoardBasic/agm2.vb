@@ -13838,7 +13838,7 @@ Public Module agm2
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
@@ -13920,6 +13920,8 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
+
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                 If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
                                                     hrole.kapazitaet(colOfDate) = anzArbTage
                                                 Else
@@ -14243,7 +14245,7 @@ Public Module agm2
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
@@ -14331,7 +14333,12 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
-                                                hrole.kapazitaet(colOfDate) = anzArbTage
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                                Else
+                                                    hrole.kapazitaet(colOfDate) = 0
+                                                End If
                                                 iSp = iSp + anzDays
                                                 anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
                                                 anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
