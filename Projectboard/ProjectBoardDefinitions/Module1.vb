@@ -321,6 +321,7 @@ Public Module Module1
         allianzIstDaten = 8
         visboMassRessourcenEdit = 9
         visboMPP = 10
+        allianzBOBImport = 11
     End Enum
 
     Public Enum ptImportSettings
@@ -845,6 +846,7 @@ Public Module Module1
         chgInSession = 8
         delAllExceptFromDB = 9
         setWriteProtection = 10
+        loadPVInPPT = 11
     End Enum
 
     ''' <summary>
@@ -7978,6 +7980,33 @@ Public Module Module1
         askProxyAuthentication = True
 
     End Function
+
+    ''' <summary>
+    ''' schreibt im MassEdit den Meilenstein Namen als String, ggf inkl NameID als unsichtbarer Kommentar , wenn nötig
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="indentLevel"></param>
+    ''' <param name="msName"></param>
+    ''' <param name="msNameID"></param>
+    Public Sub writeMEcellWithMsNameID(ByRef currentCell As Excel.Range,
+                                       ByVal indentLevel As Integer,
+                                       ByVal msName As String,
+                                       ByVal msNameID As String)
+
+        ' Phasen-Name 
+        currentCell.Value = msName
+        '    Den Indent schreiben 
+        currentCell.IndentLevel = indentLevel
+        '    Kommentare alle löschen 
+        currentCell.ClearComments()
+
+        ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermittelt werden kann 
+        If calcHryElemKey(msName, True) <> msNameID Then
+            currentCell.AddComment(Text:=msNameID)
+            currentCell.Comment.Visible = False
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' schreibt in die angegebene MassenEdit Excel-Zelle den Phase-Name als String, 

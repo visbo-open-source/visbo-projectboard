@@ -63,17 +63,52 @@ Public Class clsRollen
 
     Public Sub Add(roledef As clsRollenDefinition)
 
+        Dim errMsg As String = ""
         ' Änderung tk: umgestellt auf 
+
         If Not _allRollen.ContainsKey(roledef.UID) Then
             _allRollen.Add(roledef.UID, roledef)
+
             If Not _allNames.ContainsKey(roledef.name) Then
                 _allNames.Add(roledef.name, roledef.UID)
+
+                ' jetzt müssen noch die Alias-Namen aufgenommen werden, sofern es welche gibt ... 
+                If Not IsNothing(roledef.aliases) Then
+                    If roledef.aliases(0) <> "" Then
+                        For Each aliasItem As String In roledef.aliases
+                            If Not _allNames.ContainsKey(aliasItem) Then
+                                _allNames.Add(aliasItem, roledef.UID)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errMsg = aliasItem & " already exists"
+                                Else
+                                    errMsg = aliasItem & " existiert bereits"
+                                End If
+
+                                Throw New ArgumentException(errMsg)
+                            End If
+                        Next
+                    End If
+                End If
             Else
-                Throw New ArgumentException(roledef.name & " existiert bereits")
+
+                If awinSettings.englishLanguage Then
+                    errMsg = roledef.name & " already exists"
+                Else
+                    errMsg = roledef.name & " existiert bereits"
+                End If
+
+                Throw New ArgumentException(errMsg)
             End If
 
         Else
-            Throw New ArgumentException(roledef.UID.ToString & " existiert bereits")
+            If awinSettings.englishLanguage Then
+                errMsg = roledef.UID.ToString & " already exists"
+            Else
+                errMsg = roledef.UID.ToString & " existiert bereits"
+            End If
+
+            Throw New ArgumentException(errMsg)
         End If
 
     End Sub
@@ -1770,6 +1805,25 @@ Public Class clsRollen
             getRoleDefByIDKennung = Nothing
         End Try
 
+    End Function
+
+    ''' <summary>
+    ''' gibt die RollenDefinition zurück, die zu de rPersonal-Nummer employeeNr gehört
+    ''' </summary>
+    ''' <param name="employeeNr"></param>
+    ''' <returns>Nothing or RoleDefinition</returns>
+    Public Function getRoledefByEmployeeNr(ByVal employeeNr As String) As clsRollenDefinition
+
+        Dim result As clsRollenDefinition = Nothing
+
+        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+            If kvp.Value.employeeNr = employeeNr Then
+                result = kvp.Value
+                Exit For
+            End If
+        Next
+
+        getRoledefByEmployeeNr = result
     End Function
     ''' <summary>
     ''' gibt die Rolle zurück, die die gesuchte ID hat ...

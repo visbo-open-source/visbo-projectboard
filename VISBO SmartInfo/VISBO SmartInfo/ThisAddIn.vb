@@ -31,6 +31,23 @@ Public Class ThisAddIn
         ' muss hier noch auf andere Art und Weise bestimmt werden 
         englishLanguage = True
 
+        Try
+            If englishLanguage Then
+                menuCult = ReportLang(PTSprache.englisch)
+                repCult = menuCult
+                'awinSettings.kapaEinheit = "PD"
+            Else
+                menuCult = ReportLang(PTSprache.deutsch)
+                repCult = menuCult
+                'awinSettings.kapaEinheit = "PT"
+            End If
+        Catch ex As Exception
+            awinSettings.englishLanguage = False
+            awinSettings.kapaEinheit = "PT"
+            menuCult = ReportLang(PTSprache.deutsch)
+            repCult = menuCult
+        End Try
+
         ' im Powerpoint soll das pwd immer gemerkt werden ..
 
         awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
@@ -218,5 +235,9 @@ Public Class ThisAddIn
     Private Sub Application_PresentationBeforeSave(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeSave
         ' Es wird noch pptApp_PresentationBeforeSave aufgerufen
         Dim a As Integer = 0
+    End Sub
+
+    Private Sub ThisAddIn_BindingContextChanged(sender As Object, e As EventArgs) Handles Me.BindingContextChanged
+
     End Sub
 End Class

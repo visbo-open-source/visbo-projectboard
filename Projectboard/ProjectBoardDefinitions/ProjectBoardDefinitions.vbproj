@@ -167,6 +167,12 @@
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsVerknuepfung.vb" />
     <Compile Include="clsWriteProtections.vb" />
+    <Compile Include="frmEditDates.Designer.vb">
+      <DependentUpon>frmEditDates.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEditDates.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmMppSettings.Designer.vb">
       <DependentUpon>frmMppSettings.vb</DependentUpon>
     </Compile>
@@ -219,6 +225,12 @@
       <DependentUpon>frmSelectOneItem.vb</DependentUpon>
     </Compile>
     <Compile Include="frmSelectOneItem.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSelectPhasesMilestones.Designer.vb">
+      <DependentUpon>frmSelectPhasesMilestones.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectPhasesMilestones.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmStatusInformation.Designer.vb">
@@ -322,6 +334,9 @@
     <EmbeddedResource Include="frmEarliestLatestStart.resx">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmEditDates.resx">
+      <DependentUpon>frmEditDates.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmMppSettings.resx">
       <DependentUpon>frmMppSettings.vb</DependentUpon>
     </EmbeddedResource>
@@ -345,6 +360,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectOneItem.resx">
       <DependentUpon>frmSelectOneItem.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectPhasesMilestones.resx">
+      <DependentUpon>frmSelectPhasesMilestones.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmStatusInformation.resx">
       <DependentUpon>frmStatusInformation.vb</DependentUpon>

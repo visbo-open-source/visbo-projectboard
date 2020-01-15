@@ -214,7 +214,7 @@
               <!--label="Modify Attributes"-->
               <button id="PT2G1M2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ampel, Ampel-Erläuterung und aktuelle Risiko Einschätzung editiert werden"/>
               <!--label="Modify Dates of Phases & Milestones"-->
-              <button id="PT2G1M2B2" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled ="false" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>              
+              <button id="PT2G1M2B2" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled ="true" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>              
               <!--<button id="PT2G1M2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>-->
               <!--<menuSeparator id="separator1" />-->
               <menuSeparator id="separator2"  />

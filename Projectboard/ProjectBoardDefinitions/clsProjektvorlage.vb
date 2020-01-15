@@ -956,18 +956,23 @@
             Dim phaseID As String
             Dim phIndex As Integer
 
-
-            currentNode = Me.hierarchy.nodeItem(elemID)
-
-            If Not IsNothing(currentNode) Then
-
-                phaseID = currentNode.parentNodeKey
-                phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
-                getParentPhaseByID = Me.getPhase(phIndex)
-
-            Else
+            If elemID = rootPhaseName Then
                 getParentPhaseByID = Nothing
+            Else
+                currentNode = Me.hierarchy.nodeItem(elemID)
+
+                If Not IsNothing(currentNode) Then
+
+                    phaseID = currentNode.parentNodeKey
+                    phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
+                    getParentPhaseByID = Me.getPhase(phIndex)
+
+                Else
+                    getParentPhaseByID = Nothing
+                End If
             End If
+
+
 
         End Get
     End Property
@@ -1064,6 +1069,29 @@
 
 
         End Get
+    End Property
+
+    Private _Erloes As Double = 0.0
+    Public Property Erloes As Double
+        Get
+            If Not IsNothing(_Erloes) Then
+                Erloes = _Erloes
+            Else
+                Erloes = 0.0
+            End If
+        End Get
+        Set(value As Double)
+            If Not IsNothing(value) Then
+                If value > 0 Then
+                    _Erloes = value
+                Else
+                    _Erloes = 0.0
+                End If
+            Else
+                _Erloes = 0.0
+            End If
+
+        End Set
     End Property
 
 
@@ -4713,6 +4741,8 @@
         rcLists = New clsListOfCostAndRoles
 
         relStart = 1
+        ' Erloes meint eigentlich Budget eigentlich Budget ...
+        _Erloes = 0
         _projectType = ptPRPFType.projectTemplate
         _Dauer = 0
         '_StartOffset = 0

@@ -78,8 +78,13 @@ Public Class clsProjekt
             If Not IsNothing(value) Then
                 If value > StartofCalendar Then
                     ' Actual Data Until kann aber nicht größer werden als das Projektende ...
-                    If endeDate < value Then
-                        _actualDataUntil = endeDate
+                    ' das gilt aber nur, wenn das Projekt nicht gerade erst aufgebaut wird, es also schon eine Dauer gibt 
+                    If dauerInDays > 0 Then
+                        If endeDate < value Then
+                            _actualDataUntil = endeDate
+                        Else
+                            _actualDataUntil = value
+                        End If
                     Else
                         _actualDataUntil = value
                     End If
@@ -114,20 +119,25 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If _Status = ProjektStatus(PTProjektStati.geplant) Or
+            If value = True Then
+                If _Status = ProjektStatus(PTProjektStati.geplant) Or
                 _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
                 (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
                 value = False Then
-                _movable = value
+                    _movable = value
+
+                Else
+                    Dim errmsg As String
+                    If awinSettings.englishLanguage Then
+                        errmsg = "project status does not allow movement!"
+                    Else
+                        errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
+                    End If
+                    Throw New ArgumentException(errmsg)
+                End If
 
             Else
-                Dim errmsg As String
-                If awinSettings.englishLanguage Then
-                    errmsg = "project status does not allow movement!"
-                Else
-                    errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
-                End If
-                Throw New ArgumentException(errmsg)
+                _movable = value
             End If
 
         End Set
@@ -203,28 +213,7 @@ Public Class clsProjekt
         End Set
     End Property
 
-    Private _Erloes As Double = 0.0
-    Public Property Erloes As Double
-        Get
-            If Not IsNothing(_Erloes) Then
-                Erloes = _Erloes
-            Else
-                Erloes = 0.0
-            End If
-        End Get
-        Set(value As Double)
-            If Not IsNothing(value) Then
-                If value > 0 Then
-                    _Erloes = value
-                Else
-                    _Erloes = 0.0
-                End If
-            Else
-                _Erloes = 0.0
-            End If
-
-        End Set
-    End Property
+    ' hier war vorher die Property Erloes - wurde in clsProjektVorlage verschoben
 
     ''' <summary>
     ''' gibt die Budgetwerte des Projekts zurück
@@ -966,7 +955,6 @@ Public Class clsProjekt
         Dim cphase As clsPhase
         Dim dimension As Integer
         Dim phaseStart As Date, phaseEnd As Date
-        Dim notYetDone As Boolean = True
 
 
         ' prüfen, ob die Gesamtlänge übereinstimmt  
@@ -977,20 +965,14 @@ Public Class clsProjekt
 
             dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
-            If cphase.countRoles > 0 Then
-
-                ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                Call cphase.calcNewXwerte(dimension, 1)
-                notYetDone = False
-
-            End If
-
-            If cphase.countCosts > 0 And notYetDone Then
+            If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
 
                 ' hier müssen jetzt die Xwerte neu gesetzt werden 
                 Call cphase.calcNewXwerte(dimension, 1)
 
             End If
+
+
 
 
         Next
@@ -1376,7 +1358,7 @@ Public Class clsProjekt
             If tmpERG < 0 Then
                 neededBudget = -1 * tmpERG
             End If
-            Me.Erloes = neededBudget
+            Erloes = neededBudget
         Catch ex As Exception
 
             If awinSettings.visboDebug Then
@@ -2564,12 +2546,17 @@ Public Class clsProjekt
 
 
 
+    ''' <summary>
+    ''' es werden alle Bewertungen gelöscht, auch die Phase(1), also Projekt-Bewertung
+    ''' </summary>
     Public Sub clearBewertungen()
         Dim cPhase As clsPhase
 
 
         For p = 1 To Me.CountPhases
             cPhase = Me.getPhase(p)
+            cPhase.clearBewertungen()
+
             For r = 1 To cPhase.countMilestones
                 With cPhase.getMilestone(r)
                     .clearBewertungen()
@@ -2933,7 +2920,7 @@ Public Class clsProjekt
             .VorlagenName = VorlagenName
             .Risiko = _Risiko
             .StrategicFit = _StrategicFit
-            .Erloes = _Erloes
+            .Erloes = Erloes
             .description = _description
             .variantName = _variantName
             .variantDescription = _variantDescription
@@ -3105,6 +3092,124 @@ Public Class clsProjekt
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' übernimmt für die eigenen Phasen die entsprechenden Ressourcenbedarfe aus dem anderen Projekt 
+    ''' berücksichtigt ausschließlich Phasen, die im eigenen Projekt vorkommen .. 
+    ''' wennactualDataUntil > projektstart, dann muss dafür gesorgt werden , dass die Ist-Werte erhalten bleiben ...  
+    ''' wenn das eigene PRojekt bereits Ressourcen enthält , dann wird nichts gemacht !  
+    ''' es wird auch das Budget übernommen, wenn es nicht schon existiert 
+    ''' </summary>
+    ''' <param name="pRessources">das Projekt mit Ressourcen </param>
+    ''' <returns></returns>
+    Public Function updateProjectWithRessourcesFrom(ByVal pRessources As clsProjekt) As clsProjekt
+        Dim ergebnisProjekt As clsProjekt = createVariant("$temp$", "Ressource-Merge")
+
+        ' Budget übernehmen ? 
+        If ergebnisProjekt.Erloes = 0 And pRessources.Erloes > 0 Then
+            ergebnisProjekt.Erloes = pRessources.Erloes
+        End If
+
+
+        If getGesamtKostenBedarf.Sum > 0 Or pRessources.getGesamtKostenBedarf.Sum = 0 Then
+            ' es gibt bereits Ressourcen oder AndereKosten .. nichts machen oder das andere Projekt hat gar keine Ressourcen
+            ergebnisProjekt = Nothing
+        Else
+
+            Dim considerActualData As Boolean = pRessources.getPhase(1).hasActualData
+            Dim actualDataIX As Integer = -1
+
+            If considerActualData Then
+                actualDataIX = getColumnOfDate(pRessources.actualDataUntil) - getColumnOfDate(pRessources.startDate)
+            End If
+
+            For Each cphase As clsPhase In ergebnisProjekt.AllPhases
+
+
+                Dim NameID As String = cphase.nameID
+                Dim otherPhase As clsPhase = pRessources.getPhaseByID(NameID)
+
+
+
+                If Not IsNothing(otherPhase) Then
+                    ' die Phase wurde gefunden, jetzt muss überprüft werden, ob es actualdataUntil gibt ... 
+                    Dim considerActualPhaseData As Boolean = considerActualData And actualDataIX >= otherPhase.relStart - 1
+                    Dim phaseActualIX As Integer = actualDataIX - otherPhase.relStart + 1
+
+                    For Each role As clsRolle In otherPhase.rollenListe
+                        ' gibt es für diese Rolle ActualData 
+                        Dim sumActualValues As Double = 0
+                        Dim sumForecastValues As Double = 0
+
+                        If considerActualPhaseData Then
+                            sumActualValues = role.getSumUntil(phaseActualIX)
+                            sumForecastValues = role.getSumFrom(phaseActualIX)
+                        Else
+                            sumForecastValues = role.Xwerte.Sum
+                        End If
+
+                        ' jetzt muss das ggf in dem neuen PRojekt angelegt werden 
+                        ' die Rolle hat bisher noch nicht existiert ...
+                        Dim dimension As Integer = cphase.relEnde - cphase.relStart
+                        Dim tmpRole As clsRolle = New clsRolle(dimension)
+
+                        Dim newXwerte(dimension) As Double
+
+                        If considerActualPhaseData Then
+                            ' sind sumActualValues > 0 ? 
+                            If sumActualValues > 0 Then
+
+                                ' dann muss Start der beiden Phasen identisch sein .. 
+                                If getColumnOfDate(cphase.getStartDate) = getColumnOfDate(otherPhase.getStartDate) Then
+                                    ' alles ok 
+                                    For i As Integer = 0 To phaseActualIX
+                                        newXwerte(i) = role.Xwerte(i)
+                                    Next
+                                Else
+                                    ' nicht zugelassen, weil ja beim alten Projekt schon Ist-Daten Zuordnungen da waren ... 
+                                    Throw New ArgumentException("Phasen haben Ist-Daten, aber unterschiedliche Start-Daten ... " & cphase.name)
+                                End If
+                            Else
+                                For i As Integer = 0 To phaseActualIX
+                                    newXwerte(i) = 0
+                                Next
+                            End If
+
+                            Dim csum(0) As Double
+                            csum(0) = sumForecastValues
+                            Dim forecastWerte() As Double = calcVerteilungAufMonate(cphase.getStartDate.Date.AddMonths(phaseActualIX + 1), cphase.getEndDate.Date, csum, 1.0)
+                            For i As Integer = 0 To forecastWerte.Length - 1
+                                newXwerte(i + phaseActualIX + 1) = forecastWerte(i)
+                            Next
+
+                        Else
+                            Dim csum(0) As Double
+                            csum(0) = sumForecastValues
+                            newXwerte = calcVerteilungAufMonate(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
+                            'Dim chcknewXwerte() As Double = cphase.berechneBedarfeNew(cphase.getStartDate.Date, cphase.getEndDate.Date, csum, 1.0)
+                        End If
+
+
+                        With tmpRole
+                            .uid = role.uid
+                            .teamID = role.teamID
+                            .Xwerte = newXwerte
+                        End With
+
+                        cphase.addRole(tmpRole)
+
+                    Next
+
+                End If
+            Next
+
+            ergebnisProjekt.variantName = variantName
+            ergebnisProjekt.variantDescription = variantDescription
+        End If
+
+
+        updateProjectWithRessourcesFrom = ergebnisProjekt
+    End Function
 
     Public Function createVariant(ByVal variantName As String, ByVal variantDescription As String) As clsProjekt
 
@@ -3883,24 +3988,33 @@ Public Class clsProjekt
                         tmpResult(0) = 0
                         notYetDone = False
                     End If
-                Else
-                    Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
-                    If rcLists.phaseContainsCost(phaseNameID, costID) Then
+                ElseIf rcNameID <> "" Then
+                    If CostDefinitions.containsName(rcNameID) Then
+                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
 
-                        cphase = getPhaseByID(phaseNameID)
-                        Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
-                        If Not IsNothing(tmpCost) Then
-                            xWerte = tmpCost.Xwerte
+                            cphase = getPhaseByID(phaseNameID)
+                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                            If Not IsNothing(tmpCost) Then
+                                xWerte = tmpCost.Xwerte
+                            Else
+                                ReDim tmpResult(0)
+                                tmpResult(0) = 0
+                                notYetDone = False
+                            End If
                         Else
                             ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If
+
                     Else
-                        ReDim tmpResult(0)
-                        tmpResult(0) = 0
                         notYetDone = False
                     End If
+
+
+                Else
+                    notYetDone = False
                 End If
 
                 If notYetDone Then
@@ -3914,6 +4028,9 @@ Public Class clsProjekt
                         End If
 
                     Next
+                Else
+                    ReDim tmpResult(0)
+                    tmpResult(0) = 0
                 End If
 
             End If
@@ -6201,6 +6318,44 @@ Public Class clsProjekt
             Next
 
             getPhaseIdsWithRoleCost = iDCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu der angegebenen elemID alle Kind und Kindes-KinderIDs zurück
+    ''' das umfasst IDs von Phasen und IDs von Meilensteinen 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getAllChildIDsOf(ByVal elemID As String) As Collection
+        Get
+            Dim tmpCollection As New Collection
+
+            ' hole alle Phasen Ids von elemID
+            For Each childPhaseNameID As String In Me.hierarchy.getChildIDsOf(elemID, False)
+                If Not tmpCollection.Contains(childPhaseNameID) Then
+                    tmpCollection.Add(childPhaseNameID, childPhaseNameID)
+                End If
+
+                Dim childCollection As Collection = getAllChildIDsOf(childPhaseNameID)
+                If Not IsNothing(childCollection) Then
+                    For Each tmpNameID As String In childCollection
+                        If Not tmpCollection.Contains(tmpNameID) Then
+                            tmpCollection.Add(tmpNameID, tmpNameID)
+                        End If
+                    Next
+                End If
+
+            Next
+
+            ' hole alle Meilenstein IDs von elemID 
+            For Each childMilestoneNameID As String In Me.hierarchy.getChildIDsOf(elemID, True)
+                If Not tmpCollection.Contains(childMilestoneNameID) Then
+                    tmpCollection.Add(childMilestoneNameID, childMilestoneNameID)
+                End If
+            Next
+
+            getAllChildIDsOf = tmpCollection
         End Get
     End Property
 

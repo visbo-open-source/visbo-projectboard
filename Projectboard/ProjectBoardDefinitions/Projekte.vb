@@ -5595,9 +5595,9 @@ Public Module Projekte
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRed, lengthRed, calledFromMassEdit:=calledFromMassEdit)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen, calledFromMassEdit:=calledFromMassEdit)
 
 
 
@@ -5753,9 +5753,16 @@ Public Module Projekte
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tDatenSumme < vDatensumme Then
+                        ' grün einfärben 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbGreen
+                    Else
+                        ' rot einfärben
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                    End If
                     ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed, lengthRed).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+
                 End If
 
             End With
@@ -6784,9 +6791,9 @@ Public Module Projekte
 
         End If
 
-        Dim startRed As Integer = 0
-        Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRed, lengthRed, calledFromMassEdit)
+        Dim startRedGreen As Integer = 0
+        Dim lengthRedGreen As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tDatenSumme, vDatensumme, startRedGreen, lengthRedGreen, calledFromMassEdit)
 
 
         With CType(chtobj.Chart, Excel.Chart)
@@ -6920,11 +6927,18 @@ Public Module Projekte
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbBlack
 
-                If startRed > 0 And lengthRed > 0 Then
-                    ' die aktuelle Summe muss rot eingefärbt werden 
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
-                    lengthRed).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If tDatenSumme < vDatensumme Then
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbGreen
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen,
+                        lengthRedGreen).Font.Fill.ForeColor.RGB = Excel.XlRgbColor.rgbRed
+                    End If
                 End If
+
             End If
 
 
@@ -13430,7 +13444,8 @@ Public Module Projekte
                 ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
             Else
                 If IsNumeric(profitUserAskedFor) Then
-                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+                    'Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).Erloes
                     If referenceBudget > 0 Then
                         'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
                         'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
@@ -13538,7 +13553,8 @@ Public Module Projekte
                                                  ByVal roleNames() As String, ByVal roleValues() As Double,
                                                  ByVal costNames() As String, ByVal costValues() As Double,
                                                  ByVal phNames() As String, ByVal przPhasenAnteile() As Double,
-                                                 ByVal combinedName As Boolean)
+                                                 ByVal combinedName As Boolean,
+                                                 Optional ByVal createBudget As Boolean = False)
 
         Dim hproj As clsProjekt = New clsProjekt
 
@@ -13572,9 +13588,14 @@ Public Module Projekte
 
                 If combinedName Then
                     If Not IsNothing(projectNummer) Then
-                        .name = projectNummer.Trim & "_" & pName
+                        If projectNummer <> "" Then
+                            .name = pName & "_" & projectNummer.Trim
+                        Else
+                            .name = pName
+                        End If
+
                     Else
-                        .name = "_" & pName
+                        .name = pName
                     End If
                 Else
                     .name = pName
@@ -13642,7 +13663,8 @@ Public Module Projekte
         hproj.addListOfCustomFields(listOfCustomFields)
 
         ' jetzt das Budget so setzen, wie es benötigt wird ... 
-        If budget <= 0 And atleastOneRC Then
+        ' NEIN - kein Budget automatisch erstellen ...
+        If budget <= 0 And atleastOneRC And createBudget Then
             hproj.setBudgetAsNeeded()
         End If
 
@@ -13693,6 +13715,7 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
         Dim referenceBudget As Double = 0.0
+        Dim gesamtKostenVorlage As Double = 0.0
 
         '
         ' ein neues Projekt wird als Objekt angelegt ....
@@ -13704,8 +13727,11 @@ Public Module Projekte
         Try
             Dim zielrenditenVorgabe As Double
             Dim budgetVorgabe As Double = erloes
-            referenceBudget = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-            If referenceBudget > 0 Then
+            ' get Summe Kosten kann dann herangezogen werden, wenn 
+            gesamtKostenVorlage = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+            referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+            If referenceBudget > 0 And gesamtKostenVorlage > 0 And budgetVorgabe > 0 Then
+                ' nur wenn alle drei Bedingungen erfüllt sind, amcht es sinn , einen Plan zu erzeugen inkl Ressourcen Verteilung gemäß Vorlage und Budget
                 zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUSerAskedFor) / 100)) / referenceBudget
                 Projektvorlagen.getProject(vorlagenName).korrCopyTo(newprojekt, startdate, endedate, zielrenditenVorgabe)
             Else
@@ -17995,36 +18021,6 @@ Public Module Projekte
 
     End Sub
 
-    ' ''' <summary>
-    ' ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
-    ' ''' </summary>
-    ' ''' <param name="nameList"></param>
-    ' ''' <param name="prcTyp"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
-
-    '    Dim tmpName As String = ""
-
-    '    If nameList.Count < 1 Then
-    '        tmpName = ""
-    '    ElseIf nameList.Count = 1 Then
-    '        tmpName = CStr(nameList.Item(1))
-    '    ElseIf nameList.Count > 1 Then
-    '        tmpName = "Collection"
-
-    '    End If
-
-    '    With roentgenBlick
-    '        If .isOn Then
-    '            'Call awinNoshowProjectNeeds()
-    '        End If
-    '        .isOn = True
-    '        .name = tmpName
-    '        .myCollection = nameList
-    '        .type = prcTyp
-    '        'Call awinShowProjectNeeds1(nameList, prcTyp)
-    '    End With
-    'End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -18208,184 +18204,75 @@ Public Module Projekte
 
     End Sub
 
+
     ''' <summary>
-    ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' zeichnet bei fromScratch = true: zuerst in Reihenfolge der Business Units, 
-    ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
-    ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' löscht das Projectboard und zeichnet dann die Constellation 
+    ''' zeichnet das Projectboard, baut es von Scratch an auf ... 
+    ''' in AlleProjekte sind die zu zeichnenden Projekte drin ...
     ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel_old(ByVal fromScratch As Boolean)
-
-        Dim todoListe As New SortedList(Of Double, String)
-        Dim key As Double
-        Dim pname As String
-
-        Dim lastZeileOld As Integer
-        Dim hproj As clsProjekt
-        Dim positionsKennzahl As Double
-
-        Dim notOK As Boolean = True
-        Dim tryExceptionCounts As Integer = 0
+    Public Sub awinZeichnePlanTafel(ByVal myConstellation As clsConstellation)
 
 
-        If fromScratch Then
-            Dim zeile As Integer
-            Dim lastBU As String = ""
+        ' wenn das nicht so aufgesetzt, dann werden alle aktuellen Constelaltions-Items im Attribut auf false gesetzt ...
+        Call clearProjectBoard(updateCurrentConstellation:=False)
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        ' wenn Nothing übergeben wird, dann wird die currentConstellation gezeichnet
 
-                notOK = True
+        Dim zeile As Integer = 2
+        Dim hproj As clsProjekt = Nothing
 
-                With kvp.Value
+        Dim listOfPnames As String() = myConstellation.sortListe.Values.ToArray
 
-                    'positionsKennzahl = calcKennziffer(kvp.Value)
-                    If projectConstellations.Contains(currentConstellationName) Then
-                        positionsKennzahl = projectConstellations.getConstellation(currentConstellationName).getBoardZeile(kvp.Key)
-                    Else
-                        positionsKennzahl = currentSessionConstellation.getBoardZeile(kvp.Key)
-                    End If
+        For Each tmpPname As String In listOfPnames
 
+            Dim cItem As clsConstellationItem = myConstellation.getShownItem(tmpPname)
 
-                    Do While notOK
-                        Try
-                            If todoListe.ContainsKey(positionsKennzahl) Then
-                                positionsKennzahl = positionsKennzahl + 0.00001
-                            Else
-                                todoListe.Add(positionsKennzahl, .name)
-                                notOK = False
-                            End If
-                        Catch ex As Exception
-                            positionsKennzahl = positionsKennzahl + 0.00001
-                            tryExceptionCounts = tryExceptionCounts + 1
-                        End Try
-                    Loop
-
-
-                End With
-
-            Next
-
-            zeile = 2
-            Dim i As Integer
-
-            For i = 1 To todoListe.Count
-
-                pname = todoListe.ElementAt(i - 1).Value
-
-                Try
-                    hproj = ShowProjekte.getProject(pname)
+            If Not IsNothing(cItem) Then
+                ' diese Abfrage ist eigentlich redundant, aber sicher ist sicher 
+                If cItem.show Then
+                    Dim key As String = calcProjektKey(cItem.projectName, cItem.variantName)
+                    hproj = AlleProjekte.getProject(key)
 
                     hproj.tfZeile = zeile
 
+                    ShowProjekte.Add(hproj)
+
                     Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, zeile, tmpCollection, tmpCollection)
 
                     ' zeile soviel weiterschalten, wie Platz benötigt wird ...
-                    zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
-
-                Catch ex As Exception
-                    tryExceptionCounts = tryExceptionCounts + 1
-                End Try
-
-            Next
+                    zeile = zeile + 1
 
 
-        Else
+                End If
 
-            Dim zeile As Integer, lastzeile As Integer, curzeile As Integer, max As Integer
-            ' so wurde es bisher gemacht ... bis zum 17.1.15
-            ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                Try
-                    With kvp.Value
-                        key = 10000 * .tfZeile + kvp.Value.Start
-                        Do While todoListe.ContainsKey(key)
-                            key = key + 0.000001
-                        Loop
-                        todoListe.Add(key, .name)
-                    End With
-                Catch ex As Exception
-
-                    tryExceptionCounts = tryExceptionCounts + 1
-                    'Call MsgBox("Fehler in awinZeichnePlanTafel")
-
-                End Try
+            End If
 
 
-            Next
+        Next
 
-            zeile = 2
-            lastzeile = 0
-
-
-            'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-            ' dann sollen die Projekte im extended mode gezeichnet werden 
-            ' jetzt erst mal die Konstellation "last" speichern
-            ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
-            ' Call storeSessionConstellation(ShowProjekte, "Last")
-
-            ' jetzt die todoListe abarbeiten
-            Dim i As Integer
-            For i = 1 To todoListe.Count
-                pname = todoListe.ElementAt(i - 1).Value
-
-                Try
-                    hproj = ShowProjekte.getProject(pname)
-
-                    If i = 1 Then
-                        curzeile = hproj.tfZeile
-                        lastZeileOld = hproj.tfZeile
-                        lastzeile = curzeile
-                        max = curzeile
-                    Else
-                        If lastZeileOld = hproj.tfZeile Then
-                            curzeile = lastzeile
-                        Else
-                            lastzeile = max
-                            lastZeileOld = hproj.tfZeile
-                        End If
-
-                    End If
-
-                    ' Änderung 9.10.14, damit die Spaces in einer 
-                    'If hproj.tfZeile >= curZeile + 1 Then
-                    '    curZeile = curZeile + 1
-                    'End If
-                    ' Ende Änderung
-                    hproj.tfZeile = curzeile
-                    lastzeile = curzeile
-                    'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curzeile, tmpCollection, tmpCollection)
-                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
-
-
-                    If curzeile > max Then
-                        max = curzeile
-                    End If
-                Catch ex As Exception
-                    tryExceptionCounts = tryExceptionCounts + 1
-                End Try
-
-
-
-            Next
-        End If
-
-        'If tryExceptionCounts > 0 Then
-        '    Call MsgBox("Anzahl: " & tryExceptionCounts)
-        'End If
-
-        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
 
     End Sub
 
-    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean,
-                                    Optional ByVal cstl As clsConstellation = Nothing)
+
+    ''' <summary>
+    ''' setzt alle angezeigten Projekte, also ShowProjekte,  zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clearProjectBoard(Optional ByVal updateCurrentConstellation As Boolean = True)
+
+        Call awinClearPlanTafel()
+
+        ShowProjekte.Clear(updateCurrentConstellation)
+        projectboardShapes.clear()
+
+        selectedProjekte.Clear(False)
+        ImportProjekte.Clear(False)
+
+
+    End Sub
+
+    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean)
 
         Dim todoListe As New SortedList(Of Double, String)
         Dim key As Double
@@ -18732,49 +18619,6 @@ Public Module Projekte
 
     ''End Sub
 
-    ''' <summary>
-    ''' schnelles Zeichnen der Projekte von Scratch bzw. Update eines Projektes 
-    ''' ist aber eigentlich nicht notwendig, weil der Perfromance Gewinn gegenüber der awinzeichnePlanTafel marginal ist
-    ''' </summary>
-    ''' <param name="fromScratch"></param>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafelNeu(ByVal fromScratch As Boolean)
-
-
-        Dim pname As String
-        Dim hproj As clsProjekt
-
-
-        Dim notOK As Boolean = True
-        Dim tryExceptionCounts As Integer = 0
-
-        'Call MsgBox("Start: " & Date.Now.TimeOfDay.ToString)
-
-        If fromScratch Then
-            Dim zeile As Integer = 2
-            Dim lastBU As String = ""
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                pname = kvp.Value.name
-                hproj = kvp.Value
-
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
-
-                zeile = zeile + 1
-            Next
-
-        Else
-
-            Call MsgBox("noch nicht implementiert ")
-
-        End If
-
-
-        'Call MsgBox("Ende: " & Date.Now.TimeOfDay.ToString)
-
-    End Sub
 
 
     ''' <summary>
@@ -18812,7 +18656,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
-        Dim vorlagenShape As xlNS.Shape
+        'Dim vorlagenShape As xlNS.Shape
         Dim isMissingPhaseDefinition As Boolean = False
         Dim isMissingMilestoneDefinition As Boolean = False
 
@@ -19722,7 +19566,7 @@ Public Module Projekte
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
         Dim showOnlyWithinTimeFrame As Boolean
-        Dim vorlagenShape As xlNS.Shape
+        'Dim vorlagenShape As xlNS.Shape
         Dim realNameList As New Collection
 
         Try
@@ -20647,7 +20491,8 @@ Public Module Projekte
         Dim heute As Date = Date.Now
         Dim alreadyGroup As Boolean = False
         Dim shpElement As xlNS.Shape
-        Dim vorlagenshape As xlNS.Shape
+        ' vorlagenshape ist durch Ute's Umsetzung der Appearances ohne Excel Shapes unnötig geworden ... 
+        'Dim vorlagenshape As xlNS.Shape
         Dim appear As clsAppearance
         Dim shpName As String
         Dim todoListe As New Collection
@@ -22692,16 +22537,21 @@ Public Module Projekte
                 .range("Projekt_Name").font.size = hproj.Schrift
                 .range("Projekt_Name").font.color = hproj.Schriftfarbe
                 Try
-                    If hproj.kundenNummer <> "" Then
+                    ' Überprüfen, ob es den gibt ...
+                    If IsNothing(CType(.range("Projekt_Nr"), Excel.Range).Value) Then
+                        appInstance.ActiveWorkbook.Names.Add(Name:="Projekt_Nr", RefersTo:="=Stammdaten!$C$8")
+                        CType(.range("Stammdaten!$B$8"), Excel.Range).Value = "Projekt-Nr"
+                    End If
+
+                    If Not IsNothing(hproj.kundenNummer) Then
                         .range("Projekt_Nr").value = hproj.kundenNummer
                     Else
-
+                        .range("Projekt_Nr").value = ""
                     End If
-                Catch ex As Exception
-                    Call MsgBox("Vorlage von VISBO-Steckbrief enthält den ExcelNamen 'Projekt_Nr' nicht!")
 
-                    appInstance.ActiveWorkbook.Names.Add(Name:="Projekt_Nr", RefersTo:="=Stammdaten!$C$8")
-                    .range("Projekt_Nr").value = hproj.kundenNummer
+                Catch ex As Exception
+                    Call MsgBox("Fehler beim Schreiben der Projekt-Nummer ...")
+
                 End Try
 
 
@@ -26945,7 +26795,9 @@ Public Module Projekte
 
                 Try
                     If .AlternativeText.Length > 0 Then
-                        tmpValue = CInt(.AlternativeText)
+                        If IsNumeric(.AlternativeText) Then
+                            tmpValue = CInt(.AlternativeText)
+                        End If
                     End If
                 Catch ex As Exception
 
@@ -27956,76 +27808,76 @@ Public Module Projekte
     End Sub
 
 
-    ''' <summary>
-    ''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
-    ''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
-    ''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
-    ''' es werden allerdings nur Phasen verlängert/verkürzt die
-    ''' noch nicht beendet sind 
-    ''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
-    ''' </summary>
-    ''' <param name="shorterPercentage"></param>
-    ''' <param name="longerPercentage"></param>
-    ''' <param name="heute"></param>
-    ''' <remarks></remarks>
-    Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
+    '''' <summary>
+    '''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
+    '''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
+    '''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
+    '''' es werden allerdings nur Phasen verlängert/verkürzt die
+    '''' noch nicht beendet sind 
+    '''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
+    '''' </summary>
+    '''' <param name="shorterPercentage"></param>
+    '''' <param name="longerPercentage"></param>
+    '''' <param name="heute"></param>
+    '''' <remarks></remarks>
+    'Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
 
-        Dim expl As String = "Erläuterung ..."
-        Dim redBaseValue As Double = 0.3
-        Dim yellowBaseValue As Double = 0.7
-        Dim zufall As New Random(10)
+    '    Dim expl As String = "Erläuterung ..."
+    '    Dim redBaseValue As Double = 0.3
+    '    Dim yellowBaseValue As Double = 0.7
+    '    Dim zufall As New Random(10)
 
-        Dim moveForward As Double = 0.1
-        Dim moveBackward As Double = 0.8
-        Dim makeItShorter As Double = 0.1
-        Dim makeItLonger As Double = 0.8
-        Dim currentValue As Double
+    '    Dim moveForward As Double = 0.1
+    '    Dim moveBackward As Double = 0.8
+    '    Dim makeItShorter As Double = 0.1
+    '    Dim makeItLonger As Double = 0.8
+    '    Dim currentValue As Double
 
-        Dim cphase As clsPhase
-        Dim previousSetting As Boolean = awinSettings.propAnpassRess
-        Dim startColumn As Integer, endColumn As Integer
-        Dim heuteColumn As Integer = getColumnOfDate(heute)
+    '    Dim cphase As clsPhase
+    '    Dim previousSetting As Boolean = awinSettings.propAnpassRess
+    '    Dim startColumn As Integer, endColumn As Integer
+    '    Dim heuteColumn As Integer = getColumnOfDate(heute)
 
-        ' bisheriges Setting merken 
-        awinSettings.propAnpassRess = True
+    '    ' bisheriges Setting merken 
+    '    awinSettings.propAnpassRess = True
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-            With kvp.Value
+    '        With kvp.Value
 
-                For pi As Integer = 1 To .CountPhases
-                    cphase = .getPhase(pi)
-                    startColumn = getColumnOfDate(cphase.getStartDate)
-                    endColumn = getColumnOfDate(cphase.getEndDate)
+    '            For pi As Integer = 1 To .CountPhases
+    '                cphase = .getPhase(pi)
+    '                startColumn = getColumnOfDate(cphase.getStartDate)
+    '                endColumn = getColumnOfDate(cphase.getEndDate)
 
-                    ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
-                    If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
-                        ' Start nach vorne bzw hinten verschieben
-                        currentValue = zufall.NextDouble
-                        If currentValue <= moveForward Then
-                            Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
-                            If anzahlTage > 0 Then
-                                Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
+    '                ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
+    '                If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
+    '                    ' Start nach vorne bzw hinten verschieben
+    '                    currentValue = zufall.NextDouble
+    '                    If currentValue <= moveForward Then
+    '                        Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
+    '                        If anzahlTage > 0 Then
+    '                            Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
 
-                            End If
+    '                        End If
 
 
-                        ElseIf currentValue >= moveBackward Then
+    '                    ElseIf currentValue >= moveBackward Then
 
-                        End If
-                    End If
+    '                    End If
+    '                End If
 
-                    ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
-                Next
+    '                ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
+    '            Next
 
-            End With
+    '        End With
 
-        Next
+    '    Next
 
-        ' altes Setting wiederherstellen 
-        awinSettings.propAnpassRess = previousSetting
+    '    ' altes Setting wiederherstellen 
+    '    awinSettings.propAnpassRess = previousSetting
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' Funktion, um die Kalenderwoche in aktuellen Länderset zu bestimmen 

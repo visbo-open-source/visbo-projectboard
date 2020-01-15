@@ -1105,13 +1105,13 @@ Public Module PBBModules
         If Not IsNothing(awinSelection) Then
 
             If awinSettings.englishLanguage Then
-                bestaetigeLoeschen.botschaft = "please confirm deleting in session ..." & vbLf & _
+                bestaetigeLoeschen.botschaft = "please confirm deleting in session ..." & vbLf &
                                             "Attention: all variants will get deleted as well ..."
             Else
-                bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
+                bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf &
                                             "Vorsicht: alle Varianten werden mitgelöscht ..."
             End If
-            
+
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.Cancel Then
@@ -1140,7 +1140,7 @@ Public Module PBBModules
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
                             If Not IsNothing(hproj) Then
 
-                                Call awinDeleteProjectInSession(pName:=.Name)
+                                Call awinDeleteProjectInSession(pName:= .Name)
                                 ' Änderung tk: bei dem Löschen in der Session soll keine Restriktion gelten;
                                 ' ausserdem soll es konsistent zu Löschen aus Session über Portfolio Browser sein 
                                 'If notReferencedByAnyPortfolio(hproj.name, hproj.variantName) Then
@@ -1201,7 +1201,8 @@ Public Module PBBModules
 
                     If returnValue = DialogResult.OK Then
 
-                        'Call MsgBox("ok, aus Session gelöscht  !")
+                        ' das war vorherin frmProjPortfolioAdmin, im Click 
+                        Call awinNeuZeichnenDiagramme(2)
 
                     Else
                         ' returnValue = DialogResult.Cancel
@@ -1218,6 +1219,8 @@ Public Module PBBModules
 
 
         End If
+
+
 
         Call awinDeSelect()
 
@@ -1260,6 +1263,9 @@ Public Module PBBModules
 
             If returnValue = DialogResult.OK Then
                 'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+                ' tk 7.10.19 das war vorher in Click-Aktion von frmProjPortfolioAdmin
+                Call awinNeuZeichnenDiagramme(2)
 
             Else
                 ' returnValue = DialogResult.Cancel
