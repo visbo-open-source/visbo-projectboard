@@ -105,6 +105,7 @@ Imports System.Web
 
         Dim removeConstFilterFrm As New frmRemoveConstellation
         Dim constFilterName As String
+        Dim dbPortfolioNames As New SortedList(Of String, String)
 
         Dim returnValue As DialogResult
 
@@ -123,7 +124,11 @@ Imports System.Web
 
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
+
+                'projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
+                dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
+                removeConstFilterFrm.dbPortfolioNames = dbPortfolioNames
+
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -169,7 +174,8 @@ Imports System.Web
 
                 For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
                     constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
-                    Call awinRemoveConstellation(constFilterName, removeFromDB)
+                    Dim constvpid As String = dbPortfolioNames(constFilterName)
+                    Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
 
                     If awinSettings.englishLanguage Then
                         outputLine = constFilterName & " deleted ..."
@@ -255,7 +261,8 @@ Imports System.Web
         Dim storeConstellationFrm As New frmLoadConstellation
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim DBtimeStamp As Date = Date.Now
-
+        Dim sessionPortfolioNames As New SortedList(Of String, String)
+        Dim dbPortfolioNames As New SortedList(Of String, String)
         Dim outPutCollection As New Collection
 
 
@@ -265,8 +272,10 @@ Imports System.Web
             Else
                 .Text = "Portfolio(s) in Datenbank speichern"
             End If
-
-            .constellationsToShow = projectConstellations
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                sessionPortfolioNames.Add(kvp.Key, kvp.Value.constellationName)
+            Next
+            .constellationsToShow = sessionPortfolioNames
             .retrieveFromDB = False
             .lblStandvom.Visible = False
             .requiredDate.Visible = False
@@ -280,14 +289,17 @@ Imports System.Web
         If returnValue = DialogResult.OK Then
 
             Dim errMsg As New clsErrorCodeMsg
-            Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+
+            ' ur:13.12.2019
+            'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+            dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
 
             For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
 
                 Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
                 Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-                Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbConstellations)
+                Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
 
             Next
 
@@ -314,14 +326,22 @@ Imports System.Web
 
         Dim err As New clsErrorCodeMsg
 
+        ' Timer
+        Dim sw As clsStopWatch
+        sw = New clsStopWatch
+        sw.StartTimer()
+
         Dim load1FromDatenbank As String = "PT5G1B1"
         Dim load2FromDatenbank As String = "PT5G1"
+        Dim load3FromDatenbank As String = "PT2G2B2"
+
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
         Dim ControlID As String = control.Id
         Dim timeStampsCollection As New Collection
-        Dim dbConstellations As New clsConstellations
-
+        'Dim dbConstellations As New clsConstellations
+        Dim dbPortfolioNames As New SortedList(Of String, String)
+        Dim cTimestamp As Date
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
         Dim loadFromSession As Boolean = (control.Id = "PT2G2B2")
@@ -341,14 +361,16 @@ Imports System.Web
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
+                dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
+                'dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
 
                 Try
                     timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
                     'Dim heute As String = Date.Now.ToString
                     If timeStampsCollection.Count > 0 Then
                         With loadConstellationFrm
-                            .constellationsToShow = dbConstellations
+                            .constellationsToShow = dbPortfolioNames
+                            '.constellationsToShow = dbConstellations
                             .retrieveFromDB = True
                             If timeStampsCollection.Count > 0 Then
                                 '.earliestDate = CDate(timeStampsCollection.Item(1))
@@ -369,8 +391,14 @@ Imports System.Web
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
             End If
         Else
+            Dim sessionPortfolioNames As New SortedList(Of String, String)
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                sessionPortfolioNames.Add(kvp.Key, "")
+            Next
             With loadConstellationFrm
-                .constellationsToShow = projectConstellations
+                'ur:13.12.2019
+                '.constellationsToShow = projectConstellations
+                .constellationsToShow = sessionPortfolioNames
                 .retrieveFromDB = False
             End With
         End If
@@ -385,40 +413,45 @@ Imports System.Web
         End If
 
 
+        'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
+
 
         returnValue = loadConstellationFrm.ShowDialog
+
+        sw.StartTimer()
 
         If returnValue = DialogResult.OK Then
 
             Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
 
-            appInstance.ScreenUpdating = False
+            '???appInstance.ScreenUpdating = False
 
-            If Not loadFromSession Then
 
-                If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
-                    storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
-                Else
-                    storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
-                End If
-
-                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
-
-                'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
-                ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
-                For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
-
-                    If projectConstellations.Contains(kvp.Key) Then
-                        projectConstellations.Remove(kvp.Key)
-                        projectConstellations.Add(kvp.Value)
-                    Else
-                        projectConstellations.Add(kvp.Value)
-                    End If
-
-                Next
-
+            If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
+                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
+            Else
+                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
+
+            'If Not loadFromSession Then
+
+            '    dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
+
+            '    'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
+            '    ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
+            '    For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
+
+            '        If projectConstellations.Contains(kvp.Key) Then
+            '            projectConstellations.Remove(kvp.Key)
+            '            projectConstellations.Add(kvp.Value)
+            '        Else
+            '            projectConstellations.Add(kvp.Value)
+            '        End If
+
+            '    Next
+
+            'End If
 
 
             Dim constellationsToDo As New clsConstellations
@@ -446,8 +479,15 @@ Imports System.Web
 
                     ' tmpname ist nicht mehr in der Session geladen
                     If IsNothing(checkconst) And Not loadFromSession Then
-                        ' hole Portfolio (tmpname) aus den dbConstellations-liste
-                        checkconst = dbConstellations.getConstellation(tmpName)
+                        '' ''' hole Portfolio (tmpname) aus den dbConstellations-liste
+                        '' ''checkconst = dbConstellations.getConstellation(tmpName)
+                        ''
+                        ' hole Portfolio (tmpname) aus den db
+                        checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
+                                                                                                           dbPortfolioNames(tmpName),
+                                                                                                           cTimestamp, err,
+                                                                                                           storedAtOrBefore)
+
                         If Not IsNothing(checkconst) Then
                             ' tmpname in die Session-Liste wieder aufnehmen
                             projectConstellations.Add(checkconst)
@@ -490,7 +530,11 @@ Imports System.Web
                                 End If
 
                             ElseIf Not loadFromSession Then
-                                constellation = dbConstellations.getConstellation(tmpName)
+                                ' hole Portfolio (tmpname) aus den db
+                                constellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
+                                                                                                           dbPortfolioNames(tmpName),
+                                                                                                           cTimestamp, err,
+                                                                                                           storedAtOrBefore)
                                 If Not IsNothing(constellation) Then
                                     If Not constellationsToDo.Contains(constellation.constellationName) Then
                                         If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
@@ -530,8 +574,6 @@ Imports System.Web
                                 projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
                             End If
 
-
-
                         Else
                             ' Meldung, und dann nicht aufnehmen 
                             Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
@@ -543,14 +585,21 @@ Imports System.Web
                     Dim tstmsg As String = ex.Message
                 End Try
 
-
-
             Next
+
+            sw.StartTimer()
 
             'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
+
                 Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProject:=showSummaryProjects, onlySessionLoad:=loadFromSession)
+
+                ' Timer
+                If awinSettings.visboDebug Then
+                    Call MsgBox("PTLadenKonstellation 2nd Part took: " & sw.EndTimer & "milliseconds")
+                End If
+
 
                 ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
                 ' aber nur, wenn es nicht nur von der Session geholt wird  
@@ -559,12 +608,15 @@ Imports System.Web
                 End If
             End If
 
-
-
             appInstance.ScreenUpdating = True
 
             Cursor.Current = Cursors.Default
 
+        End If
+
+        ' Timer
+        If awinSettings.visboDebug Then
+            Call MsgBox("PTLadenKonstellation 3rd Part took: " & sw.EndTimer & "milliseconds")
         End If
 
         enableOnUpdate = True
@@ -6432,9 +6484,12 @@ Imports System.Web
                 ' wenn es gibt - lesen der Externen Verträge 
                 Call readMonthlyExternKapasEV(outputCollection)
 
-                ' wenn es gibt - lesen der Urlaubslisten 
-                Call readInterneAnwesenheitslisten(outputCollection)
+                '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
+                Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
 
+                ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+                Dim configCapaImport As String = awinPath & requirementsOrdner & "configCapaImport.xlsx"
+                Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
 
                 changedOrga.allRoles = RoleDefinitions
 
@@ -6454,6 +6509,11 @@ Imports System.Web
                     If result = True Then
                         Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                         Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                        ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                        Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                        ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
                     Else
                         Call MsgBox("Error when writing Organisation to Database")
                         Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)

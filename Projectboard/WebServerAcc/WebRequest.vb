@@ -850,7 +850,12 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
-        'Dim errcode As Integer
+
+        'Verwenden Sie den code wie folgt
+
+        Dim sw As clsStopWatch
+        sw = New clsStopWatch
+        sw.StartTimer
 
         Try
 
@@ -916,24 +921,6 @@ Public Class Request
 
                 Else
                     Throw New ArgumentException(err.errorCode & vbLf & "Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
-                End If
-
-
-                ' hier wird der Fall behandelt : Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
-
-                '--------------------------------------------------------
-                '     Basis-Variante erzeugen aus gegebener Variante
-                '--------------------------------------------------------
-
-                projekt.variantName = standardVariante ' STANDARD-Variante
-
-                ' schreiben der Basis Variante 
-                Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
-
-                If erfolgreich Then
-                    projekt.variantName = vname
-                Else
-
                 End If
 
 
@@ -1043,6 +1030,10 @@ Public Class Request
         Catch ex As Exception
             'Throw New ArgumentException(ex.Message & ": storeProjectToDB")
         End Try
+
+        Call MsgBox("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
+
+        Debug.Print("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
 
         storeProjectToDB = result
 
@@ -1956,6 +1947,37 @@ Public Class Request
         retrieveConstellationsFromDB = result
     End Function
 
+    ''' <summary>
+    '''  Alle PortfolioNamen aus der Datenbank holen
+    '''  Das Ergebnis dieser Funktion ist eine sortierte Liste (Name, vpid) 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function retrievePortfolioNamesFromDB(ByVal storedAtOrBefore As Date, ByRef err As clsErrorCodeMsg) As SortedList(Of String, String)
+
+        Dim result As New SortedList(Of String, String)
+        Try
+
+            Dim intermediate As New SortedList(Of String, clsVP)
+            Dim timestamp As Date = storedAtOrBefore.ToUniversalTime
+            Dim c As New clsConstellation
+
+            intermediate = GETallVP(aktVCid, err, ptPRPFType.portfolio)
+
+            If err.errorCode = 200 Then
+
+                For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
+                    result.Add(kvp.Key, kvp.Value._id)
+                Next
+
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrievePortfolioNamesFromDB = result
+    End Function
 
     ''' <summary>
     ''' Speichert ein Multiprojekt-Szenario in der Datenbank
@@ -2045,7 +2067,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal c As clsConstellation, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -2058,22 +2080,25 @@ Public Class Request
 
             ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
             'cVP = GETvpid(c.constellationName, vpType:=2)
-            cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
+            If cVpid = "" Then
+                cVP = GETvpid(cName, err, ptPRPFType.portfolio)
+                cVpid = cVP._id
+            End If
 
-            newVPf = GETallVPf(cVP._id, Date.Now.ToUniversalTime, err)
+            newVPf = GETallVPf(cVpid, Date.Now.ToUniversalTime, err)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
 
                 If newVPf.Count = 1 Then
-                    result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id, err)
+                    result = DELETEOneVPf(cVpid, newVPf.ElementAt(0).Value._id, err)
                 Else
                     Dim lv As Integer = 0
                     Dim ok As Boolean = True
                     result = ok
                     While result And (lv < newVPf.Count)
                         lv = lv + 1
-                        ok = DELETEOneVPf(cVP._id, newVPf.ElementAt(lv - 1).Value._id, err)
+                        ok = DELETEOneVPf(cVpid, newVPf.ElementAt(lv - 1).Value._id, err)
                         If lv = 1 Then
                             result = ok
                         Else
@@ -2088,7 +2113,7 @@ Public Class Request
             End If
 
             If result = True Then
-                result = DELETEOneVP(cVP._id, err)
+                result = DELETEOneVP(cVpid, err)
             End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

@@ -23,7 +23,7 @@
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO Visual Board\</PublishUrl>
+    <PublishUrl>\\KOYTEK-NAS\backup\publish\VISBO Dev\Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>3.7.2.4</ApplicationVersion>
@@ -420,7 +420,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>05EAA44D40FA9CD0512B1A31F664ED44DBAFCCEE</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>AD1559135B014B40D1053ED18ABAAB4EF98CE1F9</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>

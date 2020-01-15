@@ -22,7 +22,7 @@ Public Class clsProjekt
     Private _earliestStartDate As Date
     Private _startDate As Date
     Private _latestStartDate As Date
-    ' Änderung tk: ist jetzt in der Phase 1 , Bewertung (1) abgespeichert 
+    ' Änderung tk: ist jetzt in der Phase 1 , Bewertung (last) abgespeichert 
     'Private _ampelStatus As Integer
     'Private _ampelErlaeuterung As String
     Private _name As String = "Project Dummy Name"
