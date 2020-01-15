@@ -18052,71 +18052,71 @@ Public Module agm2
                             Dim msNameID As String = cMilestone.nameID
 
                             ' schreibe den Meilenstein
-                            With CType(currentWS, Excel.Worksheet)
 
 
-                                ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
 
-                                ' jetzt die Kommentare schreiben 
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
+                            ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
 
-                                ' jetzt muss die genaue ID reingeschrieben werden
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).AddComment(Text:=msNameID)
+                            ' jetzt die Kommentare schreiben 
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
+
+                            ' jetzt muss die genaue ID reingeschrieben werden
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).AddComment(Text:=msNameID)
                                 CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
 
 
-                                ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+                            ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
+                            CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
+                            CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
 
-                                ' Ende-Datum 
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
-                                If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
-                                    ' Sperren ...
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
-                                Else
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
-                                End If
+                            ' Ende-Datum 
+                            CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                            If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
+                                ' Sperren ...
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                            Else
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                            End If
 
-                                ' Ampel-Farbe
-                                CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
-                                CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
+                            ' Ampel-Farbe
+                            CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
+                            CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
 
-                                If cMilestone.ampelStatus = 1 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
-                                ElseIf cMilestone.ampelStatus = 2 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
-                                ElseIf cMilestone.ampelStatus = 3 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
-                                Else
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
-                                End If
+                            If cMilestone.ampelStatus = 1 Then
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
+                            ElseIf cMilestone.ampelStatus = 2 Then
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
+                            ElseIf cMilestone.ampelStatus = 3 Then
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
+                            Else
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                            End If
 
-                                ' Ampel-Erläuterung
-                                CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
-                                CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
+                            ' Ampel-Erläuterung
+                            CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
+                            CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
 
-                                ' Lieferumfänge
-                                CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
-                                CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
+                            ' Lieferumfänge
+                            CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                            CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
 
-                                ' wer ist verantwortlich
-                                CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
-                                CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
+                            ' wer ist verantwortlich
+                            CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
+                            CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
 
-                                ' wieviel ist erledigt ? 
-                                CType(currentWS.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
-                                CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
+                            ' wieviel ist erledigt ? 
+                            CType(currentWS.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
+                            CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
 
-                                ' der Dokumenten Link 
-                                CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
-                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                            ' der Dokumenten Link 
+                            CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
+                            CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
 
-                            End With
+
                         Else
 
                             cPhase = hproj.getPhaseByID(curElemID)
