@@ -367,11 +367,17 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property contains(ByVal key As String) As Boolean
         Get
-            If _allProjects.ContainsKey(key) Then
-                contains = True
-            Else
+
+            If IsNothing(key) Then
                 contains = False
+            Else
+                If _allProjects.ContainsKey(key) Then
+                    contains = True
+                Else
+                    contains = False
+                End If
             End If
+
         End Get
     End Property
 
@@ -3099,7 +3105,7 @@ Public Class clsProjekte
 
                     If anzLoops > 0 Then
 
-                        tempArray = hproj.getKostenBedarfNew(CostID)
+                        tempArray = hproj.getKostenBedarf(CostID)
 
                         For i = 0 To anzLoops - 1
                             costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)

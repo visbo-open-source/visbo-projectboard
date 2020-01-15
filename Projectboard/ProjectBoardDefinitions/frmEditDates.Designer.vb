@@ -28,6 +28,7 @@ Partial Class frmEditDates
         Me.lblElemName = New System.Windows.Forms.Label()
         Me.btn_OK = New System.Windows.Forms.Button()
         Me.btn_Cancel = New System.Windows.Forms.Button()
+        Me.chkbx_adjustChilds = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'startdatePicker
@@ -65,7 +66,7 @@ Partial Class frmEditDates
         '
         'btn_OK
         '
-        Me.btn_OK.Location = New System.Drawing.Point(120, 90)
+        Me.btn_OK.Location = New System.Drawing.Point(120, 99)
         Me.btn_OK.Name = "btn_OK"
         Me.btn_OK.Size = New System.Drawing.Size(99, 23)
         Me.btn_OK.TabIndex = 4
@@ -74,18 +75,31 @@ Partial Class frmEditDates
         '
         'btn_Cancel
         '
-        Me.btn_Cancel.Location = New System.Drawing.Point(246, 90)
+        Me.btn_Cancel.Location = New System.Drawing.Point(246, 99)
         Me.btn_Cancel.Name = "btn_Cancel"
         Me.btn_Cancel.Size = New System.Drawing.Size(99, 23)
         Me.btn_Cancel.TabIndex = 5
         Me.btn_Cancel.Text = "Abbruch"
         Me.btn_Cancel.UseVisualStyleBackColor = True
         '
+        'chkbx_adjustChilds
+        '
+        Me.chkbx_adjustChilds.AutoSize = True
+        Me.chkbx_adjustChilds.Enabled = False
+        Me.chkbx_adjustChilds.Location = New System.Drawing.Point(246, 76)
+        Me.chkbx_adjustChilds.Name = "chkbx_adjustChilds"
+        Me.chkbx_adjustChilds.Size = New System.Drawing.Size(175, 17)
+        Me.chkbx_adjustChilds.TabIndex = 6
+        Me.chkbx_adjustChilds.Text = """Kinder"" automatisch anpassen"
+        Me.chkbx_adjustChilds.UseVisualStyleBackColor = True
+        Me.chkbx_adjustChilds.Visible = False
+        '
         'frmEditDates
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(473, 129)
+        Me.ClientSize = New System.Drawing.Size(473, 145)
+        Me.Controls.Add(Me.chkbx_adjustChilds)
         Me.Controls.Add(Me.btn_Cancel)
         Me.Controls.Add(Me.btn_OK)
         Me.Controls.Add(Me.lblElemName)
@@ -105,4 +119,5 @@ Partial Class frmEditDates
     Public WithEvents startdatePicker As Windows.Forms.DateTimePicker
     Public WithEvents enddatePicker As Windows.Forms.DateTimePicker
     Public WithEvents lblElemName As Windows.Forms.Label
+    Public WithEvents chkbx_adjustChilds As Windows.Forms.CheckBox
 End Class

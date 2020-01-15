@@ -3259,7 +3259,8 @@ Public Module awinGeneralModules
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
                                 Optional ByVal ampelbeschreibung As String = "",
-                                Optional ByVal responsible As String = "") As clsProjekt
+                                Optional ByVal responsible As String = "",
+                                Optional ByRef ProjListe As clsProjekteAlle = Nothing) As clsProjekt
 
         Dim calculateBudget As Boolean = (budget <= -0.99)
         Dim gesamtbudget As Double = budget
@@ -3294,6 +3295,7 @@ Public Module awinGeneralModules
                 Dim isFirstProj As Boolean = True
                 Dim maxActualDate As Date = Date.MinValue
                 Dim unionVariantName As String = ""
+                ProjListe = New clsProjekteAlle
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
@@ -3312,6 +3314,8 @@ Public Module awinGeneralModules
                     End If
 
 
+                    ProjListe.Add(hproj, False)
+                    'projektListe.Add(hproj, False)
 
                     If Not IsNothing(hproj) Then
 
@@ -3377,6 +3381,8 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
         End Try
+
+        'ProjListe = projektListe ' Liste an Projekte, aus der das SummaryProjekt entstanden ist
 
         calcUnionProject = unionProj
 
@@ -3906,7 +3912,10 @@ Public Module awinGeneralModules
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
 
-                    currentConstellation.timestamp = Date.Now
+
+                    ' ur: 26.10.2019: nicht mehr Date.now, da sonst das Summary-Projekt einen Timestamp hat, der vor dem Portfolio liegt, was unlogisch ist
+
+                    currentConstellation.timestamp = DBtimeStamp
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then
@@ -7531,14 +7540,25 @@ Public Module awinGeneralModules
                     ' nimmt das ggf zu mergende Projekt auf
                     Dim mProj As clsProjekt = Nothing
 
-                    '' erst hier muss der Wert für hproj.timeStamp = heute gesetzt werden
+                    Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
-                    ' ur: 14.2.2019 zurückgändert
-                    'If demoModusHistory Then
-                    '    hproj.timeStamp = historicDate
+                    ''ur: 15.1.2020: wird nun ja im Server erledigt
+
+                    'If hproj.variantName <> vorgabeVariantName Then
+
+                    '    '
+                    '    ' hier muss die Berechnung der keyMetrics-Daten erfolgen
+                    '    '
+                    '    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
+
+
                     'Else
-                    '    hproj.timeStamp = jetzt
+                    '    ' hier ist noch zu überlegen, was zu tun ist.
+                    '    ' z.B.  leere keyMetrics
+                    '    hproj.keyMetrics = New clsKeyMetrics
                     'End If
+
+
 
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err, attrToStore:=kdNrToStore) Then
 
@@ -7755,107 +7775,118 @@ Public Module awinGeneralModules
                                         outPutCollection.Add(outputline)
                                     End If
                                 End If
-                                Dim mproj As clsProjekt = Nothing
 
-                                'ur: 14.2..2019: wieder zurückgeändert
-                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
-                                'If demoModusHistory Then
-                                '    hproj.timeStamp = historicDate
+                                Dim mproj As clsProjekt = Nothing
+                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+                                ''ur: 15.1.2020: wird nun ja im Server erledigt
+
+                                'If hproj.variantName <> vorgabeVariantName Then
+
+                                '    '
+                                '    ' hier muss die Berechnung der keyMetrics-Daten erfolgen
+                                '    '
+                                '    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
+
+
                                 'Else
-                                '    hproj.timeStamp = jetzt
+                                '    ' hier ist noch zu überlegen, was zu tun ist.
+                                '    ' z.B.  leere keyMetrics
+                                '    hproj.keyMetrics = New clsKeyMetrics
                                 'End If
+
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "saved : " & hproj.name & ", " & hproj.variantName
-                                        outPutCollection.Add(outputline)
-                                    Else
-                                        outputline = "gespeichert : " & hproj.name & ", " & hproj.variantName
-                                        outPutCollection.Add(outputline)
-                                    End If
-
-                                    anzahlStores = anzahlStores + 1
-
-                                    ' jetzt die writeProtections aktualisieren 
-                                    If Not IsNothing(mproj) Then
-
-                                        'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
-                                        Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
-
-                                        If AlleProjekte.Containskey(hProjKey) Then
-                                            AlleProjekte.Remove(hProjKey, False)
-                                            AlleProjekte.Add(mproj, False)
-                                            ShowProjekte.Remove(hproj.name)
-                                            ShowProjekte.Add(mproj)
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "saved : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputline)
                                         Else
-                                            AlleProjekte.Add(mproj, False)
-                                            ShowProjekte.Add(mproj)
+                                            outputline = "gespeichert : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputline)
                                         End If
 
-                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
-                                        writeProtections.upsert(wpItem)
+                                        anzahlStores = anzahlStores + 1
+
+                                        ' jetzt die writeProtections aktualisieren 
+                                        If Not IsNothing(mproj) Then
+
+                                            'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
+                                            Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                                            If AlleProjekte.Containskey(hProjKey) Then
+                                                AlleProjekte.Remove(hProjKey, False)
+                                                AlleProjekte.Add(mproj, False)
+                                                ShowProjekte.Remove(hproj.name)
+                                                ShowProjekte.Add(mproj)
+                                            Else
+                                                AlleProjekte.Add(mproj, False)
+                                                ShowProjekte.Add(mproj)
+                                            End If
+
+                                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
+                                            writeProtections.upsert(wpItem)
+
+                                        Else
+
+                                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                            writeProtections.upsert(wpItem, False)
+
+                                        End If
 
                                     Else
+                                        If awinSettings.visboServer Then
+                                            Select Case err.errorCode
+                                                Case 403  'No Permission to Create Visbo Project Version
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    Else
+                                                        outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    End If
 
-                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                        writeProtections.upsert(wpItem, False)
-
-                                    End If
-
-                                Else
-                                    If awinSettings.visboServer Then
-                                        Select Case err.errorCode
-                                            Case 403  'No Permission to Create Visbo Project Version
-                                                If awinSettings.englishLanguage Then
-                                                    outputline = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                Else
-                                                    outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                End If
-
-                                            Case 409 ' VisboProjectVersion was already updated in between
-                                                If awinSettings.englishLanguage Then
-                                                    outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                Else
-                                                    outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                End If
+                                                Case 409 ' VisboProjectVersion was already updated in between
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    Else
+                                                        outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    End If
 
 
                                                 '' erneut das projekt holen und abändern
                                                 '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
                                                 'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
 
-                                            Case 423 ' Visbo Project (Portfolio) is locked by another user
-                                                If awinSettings.englishLanguage Then
-                                                    outputline = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                Else
-                                                    outputline = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
-                                                    outPutCollection.Add(outputline)
-                                                End If
+                                                Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    Else
+                                                        outputline = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
+                                                        outPutCollection.Add(outputline)
+                                                    End If
 
-                                        End Select
-                                    Else
-                                        If awinSettings.englishLanguage Then
-                                            outputline = "protected project : " & hproj.name & ", " & hproj.variantName
-                                            outPutCollection.Add(outputline)
+                                            End Select
                                         Else
-                                            outputline = "geschütztes Projekt : " & hproj.name & ", " & hproj.variantName
-                                            outPutCollection.Add(outputline)
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "protected project : " & hproj.name & ", " & hproj.variantName
+                                                outPutCollection.Add(outputline)
+                                            Else
+                                                outputline = "geschütztes Projekt : " & hproj.name & ", " & hproj.variantName
+                                                outPutCollection.Add(outputline)
+                                            End If
                                         End If
+
+
+                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                        writeProtections.upsert(wpItem)
+
                                     End If
-
-
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                    writeProtections.upsert(wpItem)
-
                                 End If
-                            End If
-                        Else
+                            Else
                             ' nicht mehr rausschreiben - das ist ohnehin erwartet ... 
                             'If awinSettings.englishLanguage Then
                             '    outputline = "geschütztes Projekt: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -8082,6 +8113,10 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' speichert die selektierten Projekte
+    ''' </summary>
+    ''' <returns>Anzahl der erfolgreich gespeicherten Projekte</returns>
     Public Function StoreSelectedProjectsinDB() As Integer
 
         Dim err As New clsErrorCodeMsg
@@ -8170,6 +8205,8 @@ Public Module awinGeneralModules
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
                                 Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, "", hproj.timeStamp, err)
+
+
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -8193,14 +8230,24 @@ Public Module awinGeneralModules
 
                                 Dim mproj As clsProjekt = Nothing
 
-                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
-                                ' ur:31.1.2019: erst hier muss der neue Timestamp gesetzt sein.
-                                ' ur: 14.2.2019: wieder zurückgeändert
-                                'If demoModusHistory Then
-                                '    hproj.timeStamp = historicDate
+                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
+                                ''ur: 15.1.2020: wird nun ja im Server erledigt
+
+                                'If hproj.variantName <> vorgabeVariantName Then
+
+                                '    '
+                                '    ' hier muss die Berechnung der keyMetrics-Daten erfolgen
+                                '    '
+                                '    hproj.keyMetrics = calcKeyMetricsOfProject(hproj)
+
+
                                 'Else
-                                '    hproj.timeStamp = jetzt
+                                '    ' hier ist noch zu überlegen, was zu tun ist.
+                                '    ' z.B.  leere keyMetrics
+                                '    hproj.keyMetrics = New clsKeyMetrics
                                 'End If
+
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err, attrToStore:=kdNrToStore) Then
 
@@ -8345,6 +8392,63 @@ Public Module awinGeneralModules
         End If
 
         Return anzStoredProj
+
+    End Function
+
+
+    ''' <summary>
+    ''' Es wird die keyMetrics des Projekte berechnet und als result zurückgegeben
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    Public Function calcKeyMetricsOfProject(ByVal hproj As clsProjekt) As clsKeyMetrics
+
+
+        Dim result As New clsKeyMetrics
+        Dim err As New clsErrorCodeMsg
+
+        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+        Dim index As Integer = getColumnOfDate(hproj.timeStamp) - hproj.Start
+
+        Dim lproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+        '
+        ' hier muss die Berechnung der keyMetrics-Daten erfolgen        '
+        '
+        If Not IsNothing(lproj) Then
+
+            result.costBaseLastTotal = lproj.getSummeKosten()
+            result.costCurrentTotal = hproj.getSummeKosten()
+
+            result.costBaseLastActual = lproj.getSummeKosten(index)
+            result.costCurrentActual = hproj.getSummeKosten(index)
+
+            result.endDateBaseLast = lproj.endeDate
+            result.endDateCurrent = hproj.endeDate
+
+            Dim baseMs As SortedList(Of Date, String) = lproj.getMilestones
+            Dim basePhases As SortedList(Of Date, String) = lproj.getPhases
+            result.timeCompletionBaseLastActual = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+            result.timeCompletionBaseLastTotal = lproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp, True).Sum
+
+            result.timeCompletionCurrentActual = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp).Sum
+            result.timeCompletionCurrentTotal = hproj.getTimeCompletionMetric(baseMs, basePhases, hproj.timeStamp, True).Sum
+
+            Dim baseDeliverables As SortedList(Of String, String) = lproj.getDeliverables
+            result.deliverableCompletionBaseLastActual = lproj.getDeliverableCompletionMetric(baseDeliverables, hproj.timeStamp).Sum
+            result.deliverableCompletionBaseLastTotal = lproj.getDeliverableCompletionMetric(baseDeliverables, hproj.timeStamp, True).Sum
+
+            result.deliverableCompletionCurrentActual = hproj.getDeliverableCompletionMetric(baseDeliverables, hproj.timeStamp).Sum
+            result.deliverableCompletionCurrentTotal = hproj.getDeliverableCompletionMetric(baseDeliverables, hproj.timeStamp, True).Sum
+
+        Else
+
+            ' result bleibt nahezu leer, d.h. es werden nur costCurrentActual und costCurrentTotal und endDateCurrent besetzt
+            result.costCurrentTotal = hproj.getSummeKosten()
+            result.costCurrentActual = hproj.getSummeKosten(index)
+            result.endDateCurrent = hproj.endeDate
+        End If
+
+        calcKeyMetricsOfProject = result
 
     End Function
 End Module

@@ -3926,6 +3926,7 @@ Imports System.Web
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
+        Dim reDrawProjects As New Collection
 
         ' Bildschirm einfrieren ...
         If appInstance.ScreenUpdating = True Then
@@ -3939,6 +3940,7 @@ Imports System.Web
 
             ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
             Dim tableTyp As Integer = ptTables.meRC
+
             If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                 tableTyp = ptTables.meRC
                 Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
@@ -3983,6 +3985,12 @@ Imports System.Web
                             End If
                         End If
                     Else
+                        If tableTyp = ptTables.meTE Then
+                            ' neu Zeichnen des Projektes 
+                            If Not reDrawProjects.Contains(hproj.name) Then
+                                reDrawProjects.Add(hproj.name)
+                            End If
+                        End If
                         ' temporär geschützt lassen ...
                     End If
                 End If
@@ -4110,6 +4118,17 @@ Imports System.Web
             Catch ex As Exception
                 projectboardWindows(PTwindows.mptpr) = Nothing
             End Try
+
+            ' jetzt müssen alle ggf in reDrawProjects aufgeführten Projekte neu gezeichnet werden .. 
+            If reDrawProjects.Count > 0 Then
+                For Each pName As String In reDrawProjects
+                    If ShowProjekte.contains(pName) Then
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call replaceProjectVariant(pName, hproj.variantName, False, True, hproj.tfZeile)
+                    End If
+
+                Next
+            End If
         Catch ex As Exception
 
             enableOnUpdate = True
@@ -5319,7 +5338,7 @@ Imports System.Web
                         If ohneFehler Then
                             'sessionConstellationP enthält alle Projekte aus dem Import 
                             'Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=True, considerSummaryProjects:=False)
+                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
                             Dim sessionConstellationS As clsConstellation = Nothing
 
 
@@ -7752,6 +7771,121 @@ Imports System.Web
         End If
 
 
+
+
+
+
+    End Sub
+
+    Sub PTTestAPI_Client(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+
+        Dim clientValues As Double()
+        Dim APIvalues As List(Of Double)
+
+        Dim outputString As String = ""
+        Dim outPutCollection As New Collection
+
+        Dim err As New clsErrorCodeMsg
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                Try
+
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
+                    With singleShp
+                        If isProjectType(shapeArt) Then
+
+                            Try
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
+
+                                ' jetzt wird dieses Projekt exportiert ... 
+                                Try
+                                    ' hier muss nun die Berechnung der Personalkosten im Client aufgerufen werden
+                                    clientValues = hproj.getAllPersonalKosten
+
+                                    ' hier muss nun die Berechnung der Personaltkosten im Server aufgerufen werden
+                                    APIvalues = CType(databaseAcc, DBAccLayer.Request).evaluateCostsOfProject(hproj.name, hproj.variantName, Date.Now, dbUsername, err)
+
+                                    ' die beiden werden nun verglichen
+
+                                    outputString = hproj.getShapeText & " erfolgreich .."
+                                    outPutCollection.Add(outputString)
+
+                                    outputString = "Vergleich API - Client"
+                                    outPutCollection.Add(outputString)
+
+                                    ' Ausgabe des Ergebnisses
+                                    Dim i As Integer = 0
+                                    For Each apival As Double In APIvalues
+                                        outputString = apival.ToString & "   -   " & clientValues(i)
+                                        outPutCollection.Add(outputString)
+                                        i = i + 1
+                                    Next
+
+                                Catch ex As Exception
+                                    outputString = hproj.getShapeText & " nicht erfolgreich .."
+                                    outPutCollection.Add(outputString)
+                                End Try
+
+
+
+                            Catch ex As Exception
+                                outputString = singleShp.Name & " nicht gefunden ..."
+                                outPutCollection.Add(outputString)
+                            End Try
+
+                        End If
+                    End With
+
+                Catch ex As Exception
+
+                    outputString = "Fehler in TestAPI_Client"
+                    outPutCollection.Add(outputString)
+
+                End Try
+
+
+            Next
+
+            If outPutCollection.Count > 0 Then
+                Call showOutPut(outPutCollection,
+                                 "Berechnung Kosten API - Client",
+                                 "berechnete Werte im Vergleich im Folgenden")
+            End If
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
 
 

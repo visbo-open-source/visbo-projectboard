@@ -5679,34 +5679,41 @@ Public Module agm2
 
                                 Try
 
-                                    Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
-                                    Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
+                                    If Not IsNothing(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value) Then
+                                        Dim cfName As String = CStr(CType(.Cells(i, cfValueColumn - 1), Excel.Range).Value).Trim
+                                        Dim cfUid As Integer = customFieldDefinitions.getUid(cfName)
 
-                                    If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
-                                        Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
+                                        If cfUid > -1 Then ' dann existiert diese Custom Field Definition 
+                                            Dim cfType As Integer = customFieldDefinitions.getTyp(cfUid)
 
-                                        If Not IsNothing(cfType) Then
-                                            Select Case cfType
-                                                Case ptCustomFields.Str
-                                                    Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomSField(cfUid, cfvalue)
-                                                Case ptCustomFields.Dbl
-                                                    Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomDField(cfUid, cfvalue)
-                                                Case ptCustomFields.bool
-                                                    Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
-                                                    hproj.addSetCustomBField(cfUid, cfvalue)
-                                                Case Else
-                                                    ' Custom Field Type nicht bekannt ...
-                                                    Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
-                                            End Select
+                                            If Not IsNothing(cfType) Then
+                                                Select Case cfType
+                                                    Case ptCustomFields.Str
+                                                        Dim cfvalue As String = CStr(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomSField(cfUid, cfvalue)
+                                                    Case ptCustomFields.Dbl
+                                                        Dim cfvalue As Double = CDbl(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomDField(cfUid, cfvalue)
+                                                    Case ptCustomFields.bool
+                                                        Dim cfvalue As Boolean = CBool(CType(.Cells(i, cfValueColumn), Excel.Range).Value)
+                                                        hproj.addSetCustomBField(cfUid, cfvalue)
+                                                    Case Else
+                                                        ' Custom Field Type nicht bekannt ...
+                                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                                End Select
+                                            Else
+                                                ' Custom Field UID nicht existent ...
+                                                Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                            End If
                                         Else
-                                            ' Custom Field UID nicht existent ...
-                                            Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                            ' Custom Field Definition nicht bekannt ...
+
+                                            If cfName <> "" Then
+                                                Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                            End If
+
                                         End If
-                                    Else
-                                        ' Custom Field Definition nicht bekannt ...
-                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+
                                     End If
 
                                 Catch ex As Exception
@@ -6089,7 +6096,9 @@ Public Module agm2
 
                                                         ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                         For ix As Integer = 1 To splitStr.Length
-                                                            .addDeliverable(splitStr(ix - 1))
+                                                            If splitStr(ix - 1) <> "" Then
+                                                                .addDeliverable(splitStr(ix - 1))
+                                                            End If
                                                         Next
                                                     End If
                                                 Catch ex As Exception
@@ -6305,7 +6314,9 @@ Public Module agm2
 
                                                     ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                     For ix As Integer = 1 To splitStr.Length
-                                                        cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        If splitStr(ix - 1) <> "" Then
+                                                            cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        End If
                                                     Next
                                                 End If
                                             Catch ex As Exception
@@ -8173,7 +8184,7 @@ Public Module agm2
 
             With currentWS
                 startCol = CInt(CType(.Range("BC1"), Excel.Range).Column)
-                endCol = CInt(CType(.Range("DB1"), Excel.Range).Column)
+                endCol = CInt(CType(.Range("DD1"), Excel.Range).Column)
             End With
 
 
@@ -10849,10 +10860,13 @@ Public Module agm2
         Dim tmpResult As String = ""
         Try
             If excelCell.Cells.Count = 1 Then
-                tmpResult = CStr(excelCell.Value).Trim
-                If IsNothing(tmpResult) Then
-                    tmpResult = ""
+                If Not IsNothing(excelCell.Value) Then
+                    tmpResult = CStr(excelCell.Value).Trim
+                    If IsNothing(tmpResult) Then
+                        tmpResult = ""
+                    End If
                 End If
+
             End If
 
         Catch ex As Exception
@@ -13151,7 +13165,12 @@ Public Module agm2
                                             tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
 
                                             If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                subRole.kapazitaet(index) = tmpKapa
+                                                If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
+                                                    subRole.kapazitaet(index) = tmpKapa
+                                                Else
+                                                    subRole.kapazitaet(index) = 0
+                                                End If
+
                                             End If
                                         End If
 
@@ -13208,7 +13227,12 @@ Public Module agm2
                                 ' alles ist Null , wird erst später aufgrund der Sub-Rollen berechnet 
                             Else
                                 If tmpKapa >= 0 Then
-                                    hrole.kapazitaet(index) = tmpKapa
+                                    If index >= getColumnOfDate(hrole.entryDate) And index < getColumnOfDate(hrole.exitDate) Then
+                                        hrole.kapazitaet(index) = tmpKapa
+                                    Else
+                                        hrole.kapazitaet(index) = 0
+                                    End If
+
                                 End If
                             End If
 
@@ -13352,7 +13376,12 @@ Public Module agm2
                                                             Dim startCol As Integer = getColumnOfDate(startDate)
                                                             For ix As Integer = 0 To volumenArray.Length - 1
                                                                 If ix + startCol <= 240 And ix + startCol > 0 And volumenArray(ix) >= 0 Then
-                                                                    subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                                    If ix + startCol >= getColumnOfDate(subRole.entryDate) And ix + startCol < getColumnOfDate(subRole.exitDate) Then
+                                                                        subRole.kapazitaet(ix + startCol) = volumenArray(ix)
+                                                                    Else
+                                                                        subRole.kapazitaet(ix + startCol) = 0
+                                                                    End If
+
                                                                 End If
                                                             Next
 
@@ -13546,7 +13575,12 @@ Public Module agm2
                                                                         tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
 
                                                                         If index <= 240 And index > 0 And tmpKapa >= 0 Then
-                                                                            subRole.kapazitaet(index) = tmpKapa
+                                                                            If index >= getColumnOfDate(subRole.entryDate) And index < getColumnOfDate(subRole.exitDate) Then
+                                                                                subRole.kapazitaet(index) = tmpKapa
+                                                                            Else
+                                                                                subRole.kapazitaet(index) = 0
+                                                                            End If
+
                                                                         End If
                                                                     End If
 
@@ -13804,7 +13838,7 @@ Public Module agm2
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
@@ -13886,7 +13920,14 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
-                                                hrole.kapazitaet(colOfDate) = anzArbTage
+
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                                Else
+                                                    hrole.kapazitaet(colOfDate) = 0
+                                                End If
+
                                                 iSp = iSp + anzDays
                                                 anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
                                                 anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
@@ -14204,7 +14245,7 @@ Public Module agm2
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
@@ -14292,7 +14333,12 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
-                                                hrole.kapazitaet(colOfDate) = anzArbTage
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                                Else
+                                                    hrole.kapazitaet(colOfDate) = 0
+                                                End If
                                                 iSp = iSp + anzDays
                                                 anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
                                                 anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
@@ -16523,8 +16569,8 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            budget = budget + vorgabeProj.getKostenBedarf(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                         ' welcher Planungs-Stand ist das ? 
@@ -16540,7 +16586,7 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                     End If
@@ -17547,256 +17593,206 @@ Public Module agm2
                 restrictedTopRole = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
             End If
 
-            For Each pvName As String In todoListe
+            Try
 
-                Dim hproj As clsProjekt = Nothing
-                If AlleProjekte.Containskey(pvName) Then
-                    hproj = AlleProjekte.getProject(pvName)
-                End If
+                For Each pvName As String In todoListe
 
-                If Not IsNothing(hproj) Then
-
-                    Dim projectWithActualData As Boolean = False
-                    Dim actualDataRelColumn As Integer = -1
-                    Dim summeEditierenErlaubt As Boolean = awinSettings.allowSumEditing
-
-                    ' jetzt wird geprüft, ob es bereits Ist-Daten geben könnte 
-                    If DateDiff(DateInterval.Month, StartofCalendar, hproj.actualDataUntil) > 0 Then
-                        projectWithActualData = (getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate) >= 0)
-                        actualDataRelColumn = getColumnOfDate(hproj.actualDataUntil) - von
+                    Dim hproj As clsProjekt = Nothing
+                    If AlleProjekte.Containskey(pvName) Then
+                        hproj = AlleProjekte.getProject(pvName)
                     End If
 
-                    ' ist das Projekt geschützt ? 
-                    ' wenn nein, dann temporär schützen 
-                    Dim protectionText As String = ""
-                    Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean
+                    If Not IsNothing(hproj) Then
 
-                    ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
+                        Dim projectWithActualData As Boolean = False
+                        Dim actualDataRelColumn As Integer = -1
+                        Dim summeEditierenErlaubt As Boolean = awinSettings.allowSumEditing
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                        If awinSettings.visboServer Then
-                            isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
-                        Else
-                            isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        ' jetzt wird geprüft, ob es bereits Ist-Daten geben könnte 
+                        If DateDiff(DateInterval.Month, StartofCalendar, hproj.actualDataUntil) > 0 Then
+                            projectWithActualData = (getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate) >= 0)
+                            actualDataRelColumn = getColumnOfDate(hproj.actualDataUntil) - von
                         End If
-                    Else
-                        ' er kann es nur ändern, wenn er es für sich schützen kann 
-                        Dim vNameToProtect As String = hproj.variantName
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                            If hproj.variantName <> "" Then
-                                vNameToProtect = hproj.variantName
+
+                        ' ist das Projekt geschützt ? 
+                        ' wenn nein, dann temporär schützen 
+                        Dim protectionText As String = ""
+                        Dim wpItem As clsWriteProtectionItem
+                        Dim isProtectedbyOthers As Boolean
+
+                        ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                            If awinSettings.visboServer Then
+                                isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
                             Else
-                                vNameToProtect = ptVariantFixNames.pfv.ToString
+                                isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                            End If
+                        Else
+                            ' er kann es nur ändern, wenn er es für sich schützen kann 
+                            Dim vNameToProtect As String = hproj.variantName
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                If hproj.variantName <> "" Then
+                                    vNameToProtect = hproj.variantName
+                                Else
+                                    vNameToProtect = ptVariantFixNames.pfv.ToString
+                                End If
+                            End If
+                            isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
+                        End If
+
+
+
+                        If isProtectedbyOthers Then
+
+                            ' nicht erfolgreich, weil durch anderen geschützt ... 
+                            ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
+                            wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                            writeProtections.upsert(wpItem)
+
+                            protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+
+                        End If
+
+                        If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
+                            If awinSettings.englishLanguage Then
+                                protectionText = "Actual Data until " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
+                            Else
+                                protectionText = "Ist-Daten bis " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
                             End If
                         End If
-                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, vNameToProtect)
-                    End If
 
 
+                        pStart = getColumnOfDate(hproj.startDate)
+                        pEnde = getColumnOfDate(hproj.endeDate)
+                        'Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
 
-                    If isProtectedbyOthers Then
+                        For p = 1 To hproj.CountPhases
 
-                        ' nicht erfolgreich, weil durch anderen geschützt ... 
-                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        writeProtections.upsert(wpItem)
+                            Dim cphase As clsPhase = hproj.getPhase(p)
+                            Dim phaseNameID As String = cphase.nameID
+                            Dim phaseName As String = cphase.name
+                            Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
-                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
-
-                    End If
-
-                    If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
-                        If awinSettings.englishLanguage Then
-                            protectionText = "Actual Data until " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
-                        Else
-                            protectionText = "Ist-Daten bis " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
-                        End If
-                    End If
+                            ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
+                            Dim hasActualData As Boolean = cphase.hasActualData
+                            summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
-                    pStart = getColumnOfDate(hproj.startDate)
-                    pEnde = getColumnOfDate(hproj.endeDate)
-                    'Dim defaultEmptyValidation As String = validationStrings(rcValidation(anzahlRollen + 1)) ' alle Rollen und Kostenarten 
+                            Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
 
-                    For p = 1 To hproj.CountPhases
+                            If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                                ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
 
-                        Dim cphase As clsPhase = hproj.getPhase(p)
-                        Dim phaseNameID As String = cphase.nameID
-                        Dim phaseName As String = cphase.name
-                        Dim chckNameID As String = calcHryElemKey(phaseName, False)
+                                ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
+                                Dim ixZeitraum As Integer
+                                Dim ix As Integer, breite As Integer
 
-                        ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
-                        Dim hasActualData As Boolean = cphase.hasActualData
-                        summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
+                                Dim atLeastOne As Boolean = False
 
+                                Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
 
-                        Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
+                                Dim validRoles As New SortedList(Of Integer, clsRolle)
+                                Dim posIX As Integer = 1
+                                Dim lastIX As Integer = 1
+                                For r = 1 To cphase.countRoles
 
-                        If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
-                            ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+                                    Dim role As clsRolle = cphase.getRole(r)
+                                    ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
+                                    ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
 
-                            ' jetzt müssen die Zellen, die zur Phase gehören , geschrieben werden ...
-                            Dim ixZeitraum As Integer
-                            Dim ix As Integer, breite As Integer
+                                    Dim roleName As String = role.name
+                                    Dim roleUID As Integer = role.uid
+                                    Dim teamID As Integer = role.teamID
 
-                            Dim atLeastOne As Boolean = False
+                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                                    Dim validRole As Boolean = True
+                                    Dim isVirtualChild As Boolean = False
 
-                            Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                                        If myCustomUserRole.specifics.Length > 0 Then
+                                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
-                            Dim validRoles As New SortedList(Of Integer, clsRolle)
-                            Dim posIX As Integer = 1
-                            Dim lastIX As Integer = 1
-                            For r = 1 To cphase.countRoles
+                                                ' tk 6.5.19
+                                                validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
 
-                                Dim role As clsRolle = cphase.getRole(r)
-                                ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
-                                ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
-
-                                Dim roleName As String = role.name
-                                Dim roleUID As Integer = role.uid
-                                Dim teamID As Integer = role.teamID
-
-                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                                Dim validRole As Boolean = True
-                                Dim isVirtualChild As Boolean = False
-
-                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                    If myCustomUserRole.specifics.Length > 0 Then
-                                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
-
-                                            ' tk 6.5.19
-                                            validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
-
-                                            If validRole Then
-                                                If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
-                                                    isVirtualChild = True
+                                                If validRole Then
+                                                    If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                                        isVirtualChild = True
+                                                    End If
                                                 End If
-                                            End If
 
+                                            End If
                                         End If
                                     End If
-                                End If
 
 
-                                If validRole Then
-                                    posIX = RoleDefinitions.getPositionIndex(roleNameID)
-                                    If posIX = -1 Then
-                                        posIX = lastIX
-                                    End If
-                                    validRoles.Add(posIX, role)
-                                    lastIX = posIX + 1
-                                End If
-
-                            Next r
-
-                            ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
-
-                            For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
-
-                                Dim roleName As String = kvp.Value.name
-                                Dim roleUID As Integer = kvp.Value.uid
-                                Dim teamID As Integer = kvp.Value.teamID
-
-                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-
-
-                                Dim xValues() As Double = kvp.Value.Xwerte
-
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
-
-                                ' ggf Schreibschutz setzen für die Zeile setzen
-                                Dim lockZeile As Boolean = False
-                                Dim lockText As String = ""
-                                If isProtectedbyOthers Then
-                                    lockZeile = True
-                                    lockText = protectionText
-                                    ' tk 25.7.19 beide können wechselseitig ihr Zuordnungen überschreiben 
-                                    'ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                                    '    ' dem Ressourcen Manager soll es erlaubt sein , Team-Bedarfe zu editieren und zu löschen , aber nicht einzufügen ...  
-                                    '    lockZeile = False
-                                    '    If awinSettings.englishLanguage Then
-                                    '        lockText = "Ressourcen-Manager darf Teams nicht editieren"
-                                    '    Else
-                                    '        lockText = "Ressourcen-Manager may not edit Teams"
-                                    '    End If
-
-                                    'ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                    '    ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
-                                    '    Try
-                                    '        If restrictedTopRole.UID <> roleUID Then
-                                    '            lockZeile = False
-                                    '            If awinSettings.englishLanguage Then
-                                    '                lockText = "Team-Manager darf Personen nicht editieren"
-                                    '            Else
-                                    '                lockText = "Team-Manager may not edit persons"
-                                    '            End If
-                                    '        End If
-                                    '    Catch ex As Exception
-
-                                    '    End Try
-
-
-
-                                End If
-
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
-                                                                        lockText, von, bis,
-                                                                        actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
-
-                                If ok Then
-
-                                    With currentWS
-                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                    End With
-
-                                    If schnittmenge.Sum > 0 Then
-                                        For l As Integer = 0 To bis - von
-
-                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                            Else
-                                                editRange.Cells(1, l + 1).value = ""
-                                            End If
-
-                                        Next
-                                    Else
-                                        editRange.Value = ""
+                                    If validRole Then
+                                        posIX = RoleDefinitions.getPositionIndex(roleNameID)
+                                        If posIX = -1 Then
+                                            posIX = lastIX
+                                        End If
+                                        validRoles.Add(posIX, role)
+                                        lastIX = posIX + 1
                                     End If
 
-                                    atLeastOne = True
+                                Next r
 
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
-                                End If
+                                ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
 
-                            Next kvp
+                                For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
 
-                            ' jetzt kommt die Behandlung der Kostenarten
+                                    Dim roleName As String = kvp.Value.name
+                                    Dim roleUID As Integer = kvp.Value.uid
+                                    Dim teamID As Integer = kvp.Value.teamID
 
-                            ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
+                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
 
-                            If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
-                                For c = 1 To cphase.countCosts
 
-                                    Dim cost As clsKostenart = cphase.getCost(c)
-                                    Dim costName As String = cost.name
-                                    Dim xValues() As Double = cost.Xwerte
-
+                                    Dim xValues() As Double = kvp.Value.Xwerte
 
                                     schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                     zeilensumme = schnittmenge.Sum
 
-                                    'ReDim zeilenWerte(bis - von)
+                                    ' ggf Schreibschutz setzen für die Zeile setzen
+                                    Dim lockZeile As Boolean = False
+                                    Dim lockText As String = ""
+                                    If isProtectedbyOthers Then
+                                        lockZeile = True
+                                        lockText = protectionText
+                                        ' tk 25.7.19 beide können wechselseitig ihr Zuordnungen überschreiben 
+                                        'ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                        '    ' dem Ressourcen Manager soll es erlaubt sein , Team-Bedarfe zu editieren und zu löschen , aber nicht einzufügen ...  
+                                        '    lockZeile = False
+                                        '    If awinSettings.englishLanguage Then
+                                        '        lockText = "Ressourcen-Manager darf Teams nicht editieren"
+                                        '    Else
+                                        '        lockText = "Ressourcen-Manager may not edit Teams"
+                                        '    End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
-                                                                                protectionText, von, bis,
-                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                        'ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                                        '    ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
+                                        '    Try
+                                        '        If restrictedTopRole.UID <> roleUID Then
+                                        '            lockZeile = False
+                                        '            If awinSettings.englishLanguage Then
+                                        '                lockText = "Team-Manager darf Personen nicht editieren"
+                                        '            Else
+                                        '                lockText = "Team-Manager may not edit persons"
+                                        '            End If
+                                        '        End If
+                                        '    Catch ex As Exception
+
+                                        '    End Try
+
+
+
+                                    End If
+
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                                                        lockText, von, bis,
+                                                                        actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
                                     If ok Then
 
@@ -17826,54 +17822,92 @@ Public Module agm2
                                         Call MsgBox("not ok")
                                     End If
 
-                                Next c
-                            End If
+                                Next kvp
+
+                                ' jetzt kommt die Behandlung der Kostenarten
+
+                                ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
+
+                                If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
+                                    For c = 1 To cphase.countCosts
+
+                                        Dim cost As clsKostenart = cphase.getCost(c)
+                                        Dim costName As String = cost.name
+                                        Dim xValues() As Double = cost.Xwerte
 
 
-                            If Not atLeastOne Then
+                                        schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                        zeilensumme = schnittmenge.Sum
 
-                                ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
-                                ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+                                        'ReDim zeilenWerte(bis - von)
+
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
+                                                                                protectionText, von, bis,
+                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+
+                                        If ok Then
+
+                                            With currentWS
+                                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                                editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                            End With
+
+                                            If schnittmenge.Sum > 0 Then
+                                                For l As Integer = 0 To bis - von
+
+                                                    If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                        editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                    Else
+                                                        editRange.Cells(1, l + 1).value = ""
+                                                    End If
+
+                                                Next
+                                            Else
+                                                editRange.Value = ""
+                                            End If
+
+                                            atLeastOne = True
+
+                                            zeile = zeile + 1
+                                        Else
+                                            Call MsgBox("not ok")
+                                        End If
+
+                                    Next c
+                                End If
 
 
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, "", "", False,
+                                If Not atLeastOne Then
+
+                                    ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
+                                    ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
+
+
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, "", "", False,
                                                                             protectionText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
 
-                                If ok Then
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
+                                    If ok Then
+                                        zeile = zeile + 1
+                                    Else
+                                        Call MsgBox("not ok")
+                                    End If
+
                                 End If
 
                             End If
 
-                        End If
+                        Next p
 
-                    Next p
+                    End If
 
-                End If
+                Next
 
-            Next
-
-            ' für Testzwecke only 
-            ' last Check - jetzt letzte
-            ''Dim checkRange As Excel.Range = currentWS.UsedRange
-            ''Dim anzZ As Integer = checkRange.Rows.Count
-            ''Dim anzSp As Integer = checkRange.Columns.Count
-
-            ''CType(currentWS.Cells(anzZ + 1, 1), Range).Value = "Anzahl Zeilen " & anzZ.ToString
-            ''CType(currentWS.Cells(1, anzSp + 1), Range).Value = "Anzahl Spalten " & anzSp.ToString
-            ' Ende für Testzwecke only 
-
-            ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
-            '' jetzt die erste Zeile so groß wie nötig machen 
-            'Try
-            '    ersteZeile.AutoFit()
-            'Catch ex As Exception
-
-            'End Try
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Aufbereiten der Tabelle ... " & vbLf & ex.Message)
+            End Try
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
 
@@ -18465,6 +18499,7 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
                                 Else
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                 End If
@@ -18474,13 +18509,13 @@ Public Module agm2
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
 
                                 If cMilestone.ampelStatus = 1 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
                                 ElseIf cMilestone.ampelStatus = 2 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeYellow
                                 ElseIf cMilestone.ampelStatus = 3 Then
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
                                 Else
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                                 End If
 
                                 ' Ampel-Erläuterung
@@ -18488,7 +18523,7 @@ Public Module agm2
                                 CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
 
                                 ' Lieferumfänge
-                                CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
 
                                 ' wer ist verantwortlich
@@ -18532,6 +18567,7 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
                                 Else
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
                                 End If
@@ -18542,6 +18578,7 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
                                 Else
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                 End If
@@ -18566,7 +18603,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 8), Excel.Range).Locked = False
 
                                 ' Lieferumfänge
-                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
                                 CType(.Cells(zeile, 9), Excel.Range).Locked = False
 
                                 ' wer ist verantwortlich
@@ -19833,6 +19870,13 @@ Public Module agm2
 
             End If
 
+            ' tk 14.1.2020
+            ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+            Dim customizations As New clsCustomization
+            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+            If Not IsNothing(customizations) Then
+                StartofCalendar = customizations.kalenderStart
+            End If
 
             'Try
             '    ' jetzt die CurrentOrga definieren
@@ -19988,10 +20032,10 @@ Public Module agm2
                 ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
 
                 Dim noCustomizationFound As Boolean = False   ' zeigt an, dass keine Einstellungen, entweder in DB oder auf Platte, gefunden wurden
-                Dim customizations As New clsCustomization
+                'Dim customizations As New clsCustomization
 
 
-                customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                'customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
 
                 If IsNothing(customizations) And Not IsNothing(wsName4) Then
 
@@ -21738,7 +21782,12 @@ Public Module agm2
 
             If readingGroups Then
                 Try
-                    errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Range <awin_Gruppen_Definition> not defined ... Cancelled ..."
+                    Else
+                        errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
+                    End If
+
                     rolesRange = wsname.Range("awin_Gruppen_Definition")
                 Catch ex As Exception
                     rolesRange = Nothing
@@ -21746,7 +21795,12 @@ Public Module agm2
 
             Else
                 Try
-                    errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Range <awin_Rollen_Definition> not defined ... Cancelled ..."
+                    Else
+                        errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
+                    End If
+
                     rolesRange = wsname.Range("awin_Rollen_Definition")
                     przSatz = 1.0
                 Catch ex As Exception
@@ -21808,7 +21862,12 @@ Public Module agm2
                                                 IDCollection.Add(tmpIDValue.Trim, tmpIDValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                Else
+                                                    errMsg = "versch. Rollen mit identischer ID sidn nicht zugelassen: " & tmpIDValue.Trim
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                                 CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
@@ -21829,14 +21888,24 @@ Public Module agm2
                         ' jetzt auf identisch vorkommende Namen checken ... aber nur im Modus not readingGroups
                         If Not readingGroups Then
                             If tmpOrgaName = "" Then
-                                errMsg = "roles with empty string are not allowed "
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "roles with empty string are not allowed "
+                                Else
+                                    errMsg = "Eine Rollen-Name darf nicht der leere String sein ..."
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                             Else
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
                                 Else
-                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "several roles with same name are not allowed: " & tmpOrgaName
+                                    Else
+                                        errMsg = "mehrere Namen mit gleichem Namen sind nicht zugelassen: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
@@ -21847,18 +21916,34 @@ Public Module agm2
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
                                     If neueRollendefinitionen.containsName(tmpOrgaName) Then
-                                        errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                        Else
+                                            errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
+                                        End If
+
                                         meldungen.Add(errMsg)
                                         CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                     End If
                                 Else
-                                    errMsg = "roles with same name are not allowed: " & tmpOrgaName
+
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                    Else
+                                        errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
                             Else
                                 If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
-                                    errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    Else
+                                        errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
+                                    End If
+
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
@@ -21872,7 +21957,13 @@ Public Module agm2
                             Dim roleName As String = CStr(c.Value.trim)
 
                             If Not neueRollendefinitionen.containsName(roleName) Then
-                                errMsg = "Team-Role " & roleName & " does not exist ..."
+
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "Team-Role " & roleName & " does not exist ..."
+                                Else
+                                    errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
 
@@ -21889,11 +21980,22 @@ Public Module agm2
 
                 anzWithID = IDCollection.Count
                 If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
-                    errMsg = "some roles do contain IDs, others not ..."
+                    If awinSettings.englishLanguage Then
+                        errMsg = "some roles do contain IDs, others not ..."
+                    Else
+                        errMsg = "einige Rollen enthalten IDs, einige nicht ... "
+                    End If
+
                     meldungen.Add(errMsg)
                     Exit Sub
                 ElseIf Not groupDefinitionIsOk Then
-                    errMsg = "Group Definitions not correct ..."
+
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Group Definitions not correct ..."
+                    Else
+                        errMsg = "Gruppen-Definitionen sind nicht korrekt ..."
+                    End If
+
                     meldungen.Add(errMsg)
                     Exit Sub
                 Else
@@ -21934,9 +22036,10 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
-                                    Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
 
-                                    If Not IsNothing(tmpValue) Then
+
+                                    If Not IsNothing(c.Offset(0, 3).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
                                         tmpValue = tmpValue.Trim
                                         Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
@@ -21945,11 +22048,130 @@ Public Module agm2
                                         End If
                                     End If
 
+                                    ' jetzt die neuen Attribute aufnehmen
+                                    ' Personal-Nummer
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 4).Value) Then
+                                            .employeeNr = CStr(c.Offset(0, 4).Value).Trim
+                                        Else
+                                            .employeeNr = ""
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for employeeNr: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Personal-Nummer: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Kapazität pro Tag - wird für Urlaubsplaner, Zeuss etc benötigt
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 5).Value) Then
+                                            If CStr(c.Offset(0, 5).Value).Trim = "" Then
+                                                .defaultDayCapa = -1
+                                            ElseIf IsNumeric(c.Offset(0, 5).Value) Then
+                                                Dim tmpValue As Double = CDbl(c.Offset(0, 5).Value)
+                                                If tmpValue >= 0 And tmpValue <= 12 Then
+                                                    .defaultDayCapa = tmpValue
+                                                Else
+                                                    ' 
+                                                    If awinSettings.englishLanguage Then
+                                                        errMsg = "invalid value for default capacity per day: " & .name
+                                                    Else
+                                                        errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                                    End If
+                                                    meldungen.Add(errMsg)
+                                                End If
+                                            End If
+                                        Else
+                                            .defaultDayCapa = -1
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for default capacity per day: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Default Kapa pro Tag: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Eintrittsdatum der Ressourcen 
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 6).Value) Then
+                                            If CStr(c.Offset(0, 6).Value).Trim = "" Then
+                                                .entryDate = Date.MinValue
+                                            Else
+                                                Dim tmpValue As Date = CDate(c.Offset(0, 6).Value)
+                                                .entryDate = tmpValue.Date
+                                            End If
+                                        Else
+                                            .entryDate = Date.MinValue
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Entry-Date: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Eintrittsdatum: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Austrittsdatum der Ressourcen 
+                                    Try
+                                        If Not IsNothing(c.Offset(0, 7).Value) Then
+                                            If CStr(c.Offset(0, 7).Value).Trim = "" Then
+                                                .exitDate = CDate("31.12.2200").Date
+                                            Else
+                                                Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
+                                                .exitDate = tmpValue
+                                            End If
+                                        Else
+                                            .exitDate = CDate("31.12.2200")
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Exit-Date: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Austrittsdatum: " & .name
+                                        End If
+                                        meldungen.Add(errMsg)
+                                    End Try
+
+                                    ' Alias-Namen der Rolle  
+                                    Try
+
+                                        If Not IsNothing(c.Offset(0, 8).Value) Then
+                                            If CStr(c.Offset(0, 8).Value).Trim = "" Then
+                                                .aliases = Nothing
+                                            Else
+                                                Dim tmpValues() As String = CStr(c.Offset(0, 8).Value).Trim.Split(New Char() {CChar("#")})
+                                                .aliases = tmpValues
+                                            End If
+                                        Else
+                                            .aliases = Nothing
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "invalid value for Alias-Names: " & .name
+                                        Else
+                                            errMsg = "ungültiger Wert für Alias-Namen: " & .name
+                                            meldungen.Add(errMsg)
+                                        End If
+                                    End Try
+
 
                                     ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                                     For cp = 1 To 240
-
-                                        .kapazitaet(cp) = .defaultKapa
+                                        ' jetzt wird in Abhängigkeit von Entry und Exit-Date die Default-Kapa bestimmt 
+                                        If getColumnOfDate(StartofCalendar.AddMonths(cp - 1)) < getColumnOfDate(.entryDate) Then
+                                            .kapazitaet(cp) = 0
+                                        ElseIf getColumnOfDate(StartofCalendar.AddMonths(cp - 1)) >= getColumnOfDate(.exitDate) Then
+                                            .kapazitaet(cp) = 0
+                                        Else
+                                            .kapazitaet(cp) = .defaultKapa
+                                        End If
+                                        '.kapazitaet(cp) = .defaultKapa
                                         '.externeKapazitaet(cp) = 0.0
 
                                     Next
@@ -21964,7 +22186,11 @@ Public Module agm2
                                     ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
                                     If Not neueRollendefinitionen.containsName(hrole.name) Then
                                         If neueRollendefinitionen.containsUid(hrole.UID) Then
-                                            errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "ID has multiple occurrences: " & hrole.UID
+                                            Else
+                                                errMsg = "ID kommt mehrfach vor: " & hrole.UID
+                                            End If
                                             meldungen.Add(errMsg)
                                         Else
                                             neueRollendefinitionen.Add(hrole)
@@ -22039,7 +22265,12 @@ Public Module agm2
                                             End If
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
-                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                Else
+                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                             Else
                                                 subRole.addTeam(parentRole.UID, przSatz)
@@ -22098,7 +22329,12 @@ Public Module agm2
 
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
-                                                errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                Else
+                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                End If
+
                                                 meldungen.Add(errMsg)
                                             Else
                                                 subRole.addTeam(parentRole.UID, przSatz)
@@ -22116,7 +22352,12 @@ Public Module agm2
 
                                 End If
                             Catch ex As Exception
-                                errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "Row: " & ix.ToString & " : " & ex.Message
+                                Else
+                                    errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                                End If
+
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                             End Try
@@ -22134,8 +22375,9 @@ Public Module agm2
 
 
         Catch ex As Exception
-            errMsg = "general, unidentified error: " & ex.Message
-            meldungen.Add(errMsg)
+
+            meldungen.Add(ex.Message)
+
         End Try
 
 
@@ -22974,7 +23216,7 @@ Public Module agm2
     ''' <param name="folder"></param>
     Public Sub moveFilesInArchiv(ByVal listOfFiles As List(Of String), ByVal folder As String)
 
-        Dim archivName As String = folder & "\archiv"
+        Dim archivName As String = folder & "\archive"
 
         ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
         If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
