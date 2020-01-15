@@ -6221,7 +6221,7 @@ Module Module1
                                             Else
                                                 tmpText = ms.name & " Lieferumfänge:" & vbLf
                                             End If
-                                            newCmtText = tmpText & ms.getAllDeliverables
+                                            newCmtText = tmpText & ms.getAllDeliverables(vbLf)
                                             newCmtColor = ms.getBewertung(1).colorIndex
                                         End If
 
