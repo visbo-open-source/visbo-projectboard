@@ -23216,7 +23216,7 @@ Public Module agm2
     ''' <param name="folder"></param>
     Public Sub moveFilesInArchiv(ByVal listOfFiles As List(Of String), ByVal folder As String)
 
-        Dim archivName As String = folder & "\archiv"
+        Dim archivName As String = folder & "\archive"
 
         ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
         If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
