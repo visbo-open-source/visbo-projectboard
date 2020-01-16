@@ -14143,6 +14143,23 @@ Public Module agm2
 
                             lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
                             lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            Dim found As Boolean = False
+                            Dim i As Integer = 0
+                            While Not found
+                                i = i + 1
+                                If kapaConfig("LastLine").regex = "RegEx" Then
+                                    Dim Lastline As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                    regexpression = New Regex(kapaConfig("LastLine").content)
+                                    Dim match As Match = regexpression.Match(Lastline)
+                                    If match.Success Then
+                                        Lastline = match.Value
+                                    End If
+                                End If
+
+                            End While
+                            lastZeile = i
+
                             ' Nachkorrektur,
                             If CStr(CType(currentWS.Cells(lastZeile - 1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Contains("http") Then
                                 lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row - 2  ' URL von Zeuss-Software nicht benötigt
@@ -23048,6 +23065,7 @@ Public Module agm2
                             InputFileCol As Integer,
                             TypCol As Integer,
                             DatenCol As Integer,
+                            TabUCol As Integer, TabNCol As Integer,
                             SUCol As Integer, SNCol As Integer,
                             ZUCol As Integer, ZNCol As Integer,
                             ObjCol As Integer,
@@ -23060,6 +23078,8 @@ Public Module agm2
                         InputFileCol = searcharea.Find("InputFile").Column
                         TypCol = searcharea.Find("Typ").Column
                         DatenCol = searcharea.Find("Datenbereich").Column
+                        TabUCol = searcharea.Find("Tabellen-Name").Column
+                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
                         SUCol = searcharea.Find("Spaltenüberschrift").Column
                         SNCol = searcharea.Find("Spalten-Nummer").Column
                         ZUCol = searcharea.Find("Zeilenbeschriftung").Column
@@ -23067,7 +23087,7 @@ Public Module agm2
                         ObjCol = searcharea.Find("Objekt-Typ").Column
                         InhaltCol = searcharea.Find("Inhalt").Column
 
-                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 10)
+                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
 
                         If ok Then
                             With currentWS
@@ -23164,6 +23184,19 @@ Public Module agm2
                                             configLine.regex = CStr(.Cells(i, ObjCol).value)
                                             configLine.content = CStr(.Cells(i, InhaltCol).value)
 
+                                        Case "LastLine"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
                                         Case Else
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
                                             configLine.Identifier = CStr(.Cells(i, IdentCol).value)
@@ -23218,7 +23251,7 @@ Public Module agm2
 
         Dim archivName As String = folder & "\archive"
 
-        ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
+        ' archive-Directory erzeugen, wenn nicht bereits vorhanden
         If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
             My.Computer.FileSystem.CreateDirectory(archivName)
         End If
