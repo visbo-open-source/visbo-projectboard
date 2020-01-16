@@ -3105,7 +3105,7 @@ Public Class clsProjekte
 
                     If anzLoops > 0 Then
 
-                        tempArray = hproj.getKostenBedarfNew(CostID)
+                        tempArray = hproj.getKostenBedarf(CostID)
 
                         For i = 0 To anzLoops - 1
                             costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)

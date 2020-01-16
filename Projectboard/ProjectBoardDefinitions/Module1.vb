@@ -1585,12 +1585,13 @@ Public Module Module1
                 If Not IsNothing(idArray) Then
                     tmpResult = idArray.Contains(role.UID)
                 End If
+                ' tk 16.1.20 das wird rausgenommen , weil einzelnen Team-MEmbern soll etwas zugewiesen werden können
+                ' evtl das Ganze durch ein Custom-Setting awinsettings lösen
+                'ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
-            ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
-
-                ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
-                ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
-                tmpResult = role.isTeam
+                '    ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
+                '    ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
+                '    tmpResult = role.isTeam
 
             ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                 Dim teamID As Integer = -1
@@ -4675,7 +4676,7 @@ Public Module Module1
                         If cphase.countMilestones > 0 Then
                             Dim milestone As clsMeilenstein = cphase.getMilestone(cphase.countMilestones)
                             If Not IsNothing(milestone) Then
-                                tmpStr = milestone.getAllDeliverables
+                                tmpStr = milestone.getAllDeliverables(vbLf)
                             End If
                         End If
                     Catch ex As Exception
@@ -5983,16 +5984,16 @@ Public Module Module1
 
                             If isCost Then
 
-                                curValue = hproj.getKostenBedarfNew(curItem).Sum
+                                curValue = hproj.getKostenBedarf(curItem).Sum
 
                                 If considerLapr Then
-                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    laprValue = lproj.getKostenBedarf(curItem).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
+                                    faprValue = bproj.getKostenBedarf(curItem).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
@@ -8122,6 +8123,8 @@ Public Module Module1
         End With
 
     End Sub
+
+
 
 
 End Module

@@ -425,7 +425,7 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
-    ''' gibt die Anzahl Deliverables für diesen Meilenstein zurück 
+    ''' gibt die Anzahl Deliverables für diese Phase zurück 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -489,14 +489,14 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
-    ''' gibt die Liste der Deliverables eines Meilensteins als einen String zurück; 
+    ''' gibt die Liste der Deliverables einer Phase als einen String zurück; 
     ''' die einzelnen Deliverables sind by default durch einen vblf getrennt
     ''' oder getrennt durch das übergebene trennzeichen  
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables(Optional ByVal trennzeichen As String = vbLf) As String
+    Public ReadOnly Property getAllDeliverables(ByVal trennzeichen As String) As String
         Get
             Dim tmpDeliverables As String = ""
             For i As Integer = 1 To _deliverables.Count
@@ -513,8 +513,10 @@ Public Class clsPhase
         End Get
     End Property
 
+
+
     ''' <summary>
-    ''' liest/schreibt das Feld für vrantwortlich
+    ''' liest/schreibt das Feld für verantwortlich
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>

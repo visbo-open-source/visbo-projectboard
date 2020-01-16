@@ -17,6 +17,7 @@ Imports System.Globalization
 
 Imports Microsoft.VisualBasic
 Imports System.Security.Principal
+Imports System.Text.RegularExpressions
 
 
 ''' <summary>
@@ -6095,7 +6096,9 @@ Public Module agm2
 
                                                         ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                         For ix As Integer = 1 To splitStr.Length
-                                                            .addDeliverable(splitStr(ix - 1))
+                                                            If splitStr(ix - 1) <> "" Then
+                                                                .addDeliverable(splitStr(ix - 1))
+                                                            End If
                                                         Next
                                                     End If
                                                 Catch ex As Exception
@@ -6311,7 +6314,9 @@ Public Module agm2
 
                                                     ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
                                                     For ix As Integer = 1 To splitStr.Length
-                                                        cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        If splitStr(ix - 1) <> "" Then
+                                                            cMilestone.addDeliverable(splitStr(ix - 1))
+                                                        End If
                                                     Next
                                                 End If
                                             Catch ex As Exception
@@ -13659,9 +13664,10 @@ Public Module agm2
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection)
+    Friend Function readAvailabilityOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
+        Dim old_oPCollectionCount As Integer = oPCollection.Count
 
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -13832,7 +13838,7 @@ Public Module agm2
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
@@ -13914,6 +13920,8 @@ Public Module agm2
                                                 Next
 
                                                 anzArbTage = anzArbStd / 8
+
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                 If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
                                                     hrole.kapazitaet(colOfDate) = anzArbTage
                                                 Else
@@ -14020,8 +14028,422 @@ Public Module agm2
         ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
         ' ''End If
 
+        readAvailabilityOfRole = (oPCollection.Count = old_oPCollectionCount)
 
-    End Sub
+    End Function
+
+    ''' <summary>
+    ''' liest das im Diretory ../ressource manager evt. liegende File 'Urlaubsplaner*.xlsx' File  aus
+    ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Function readAvailabilityOfRoleWithConfig(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport),
+                                                ByVal kapaFileName As String,
+                                                ByRef oPCollection As Collection) As Boolean
+
+        Dim err As New clsErrorCodeMsg
+        Dim old_oPCollectionCount As Integer = oPCollection.Count
+
+        Dim ok As Boolean = True
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim msgtxt As String = ""
+        Dim anzFehler As Integer = 0
+        Dim fehler As Boolean = False
+
+        Dim kapaWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim spalte As Integer = 2
+        Dim firstUrlspalte As Integer = 0
+        Dim firstUrlzeile As Integer = 0
+        Dim noColor As Integer = -4142
+        Dim whiteColor As Integer = 2
+        Dim currentWS As Excel.Worksheet
+        Dim index As Integer
+        Dim tmpDate As Date
+
+        'Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
+        Dim monthName As String = ""
+        Dim monthNumber As Integer = 0
+        Dim Jahr As Integer = 0
+        Dim anzMonthDays As Integer = 0
+        Dim colDate As Integer = 0
+        Dim anzDays As Integer = 0
+
+        Dim lastZeile As Integer
+        Dim lastSpalte As Integer
+        Dim monthDays As New SortedList(Of Integer, Integer)
+
+        Dim hrole As New clsRollenDefinition
+        Dim rolename As String = ""
+
+        Dim regexpression As Regex
+
+        Dim outPutCollection As New Collection
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(kapaFileName) Then
+
+            Try
+                kapaWB = appInstance.Workbooks.Open(kapaFileName)
+
+                Try
+                    For index = 1 To appInstance.Worksheets.Count
+
+                        currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        With currentWS
+
+                            'Dim regex As String = kapaConfig("month").regex
+                            'Dim Inhalt As String = kapaConfig("month").content
+
+                            ' Auslesen der Jahreszahl, falls vorhanden
+                            Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                            If kapaConfig("year").regex = "RegEx" Then
+                                'regexpression = New Regex("[0-9]{4}")
+                                regexpression = New Regex(kapaConfig("year").content)
+                                Dim match As Match = regexpression.Match(hjahr)
+                                If match.Success Then
+                                    Jahr = CInt(match.Value)
+                                End If
+                            End If
+
+                            ' Auslesen des relevanten Monats
+                            Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+                            If kapaConfig("month").regex = "RegEx" Then
+                                'regexpression = New Regex("(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dez(?:ember)?)(?=\D|$)")
+                                regexpression = New Regex(kapaConfig("month").content)
+                                Dim Match As Match = regexpression.Match(hmonth)
+                                If Match.Success Then
+                                    monthName = Match.Value
+
+                                End If
+                            End If
+
+                            ' Auslesen erste Urlaubsspalte
+                            firstUrlspalte = kapaConfig("valueStart").column
+                            firstUrlzeile = kapaConfig("valueStart").row
+                        End With
+
+                        If Jahr <> 0 And monthName <> "" Then
+
+                            ok = True
+
+                            monthDays.Clear()
+
+                            anzDays = 0
+
+                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                            ' Nachkorrektur,
+                            If CStr(CType(currentWS.Cells(lastZeile - 1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Contains("http") Then
+                                lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row - 2  ' URL von Zeuss-Software nicht benötigt
+                            End If
+
+                            ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                            ' -------------------------------------
+                            Dim rng As Range
+                            Dim rngEnd As Range
+
+                            rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                            If rng.MergeCells Then
+
+                                rng = rng.MergeArea
+                                rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                ' dann ist die lastZeile neu zu besetzen
+                                lastZeile = rngEnd.Row
+                            End If
+
+                            ' nun hat die Variable lastZeile sicher den richtigen Wert
+                            ' --------------------------------------
+
+
+                            'Dim vglColor As Integer = noColor         ' keine Farbe
+                            'Dim i As Integer = firstUrlspalte
+
+                            'While ok And i <= lastSpalte
+
+                            'If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
+                            '    ok = (anzDays = anzMonthDays) Or (anzDays = 0)
+                            '    vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
+                            '    anzDays = 1
+                            'Else
+
+                            Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
+                            If isdate Then
+                                colDate = getColumnOfDate(tmpDate)
+                                monthNumber = Month(tmpDate)
+                                anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
+                                If Not monthDays.ContainsKey(colDate) Then
+                                    monthDays.Add(colDate, anzMonthDays)
+                                End If
+
+                            End If
+
+                            '    anzDays = anzDays + 1
+                            'End If
+
+                            '    i = i + 1
+                            'End While
+
+
+                            If Not ok Then
+
+                                fehler = True
+
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Error reading planning holidays: Please check the calendar in this file ..."
+                                Else
+                                    msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
+                                End If
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+                                'Call MsgBox(msgtxt)
+
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+
+                                If formerEE Then
+                                    appInstance.EnableEvents = True
+                                End If
+
+                                If formerSU Then
+                                    appInstance.ScreenUpdating = True
+                                End If
+
+                                enableOnUpdate = True
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Your planning holidays couldn't be read, because of problems"
+                                Else
+                                    msgtxt = "Ihre Urlaubsplanung konnte nicht berücksichtigt werden"
+                                End If
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
+                                ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
+                                'Throw New ArgumentException(msgtxt)
+                            Else
+
+                                For iZ = firstUrlzeile To lastZeile
+
+
+                                    rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                    If rolename <> "" Then
+                                        hrole = RoleDefinitions.getRoledef(rolename)
+                                        If Not IsNothing(hrole) Then
+
+                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
+
+                                            Dim iSp As Integer = firstUrlspalte
+                                            Dim anzArbTage As Double = 0
+                                            Dim anzArbStd As Double = 0
+
+                                            For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+
+                                                Dim colOfDate As Integer = kvp.Key
+                                                anzDays = kvp.Value
+                                                For sp = iSp + 0 To iSp + anzDays - 1
+
+                                                    If iSp <= lastSpalte Then
+
+                                                        Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
+
+                                                        If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
+                                                            Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
+
+                                                            Dim aktCell As Object = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+
+                                                            If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                                                                If IsNumeric(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+
+                                                                    Dim angabeInStd As Double = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, Double)
+
+                                                                    If angabeInStd >= 0 And angabeInStd <= 24 Then
+                                                                        anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                                    Else
+                                                                        If awinSettings.englishLanguage Then
+                                                                            msgtxt = "Error reading the amount of working hours for " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                        Else
+                                                                            msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                        End If
+                                                                        If Not oPCollection.Contains(msgtxt) Then
+                                                                            oPCollection.Add(msgtxt, msgtxt)
+                                                                        End If
+                                                                        'Call MsgBox(msgtxt)
+                                                                        fehler = True
+                                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                    End If
+                                                                ElseIf (CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value = "") Then
+
+                                                                    ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+                                                                End If
+
+                                                            Else
+                                                                ' ur:07.01.2020: Telair Variante entfällt mit Zeuss-Anpassung
+
+                                                                ' Feld ist ohne Inhalt: also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+
+                                                                '' hier wird die Telair Variante gemacht 
+                                                                '' das einfachste wäre eigentlich  
+                                                                ''anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+
+                                                                ''Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
+
+                                                                '' ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
+                                                                ''If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value <> "/" Then
+                                                                ''    'anzArbStd = anzArbStd + 8
+                                                                ''    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+                                                                ''Else
+                                                                ''    ' freier Tag für Teilzeitbeschäftigte
+                                                                ''    msgtxt = "Tag zählt nicht: Zeile " & iZ & ", Spalte " & sp
+                                                                ''    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                ''End If
+
+                                                            End If
+                                                        End If
+                                                    Else
+                                                        If awinSettings.englishLanguage Then
+                                                            msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
+                                                        Else
+                                                            msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                        End If
+                                                        fehler = True
+                                                        If Not oPCollection.Contains(msgtxt) Then
+                                                            oPCollection.Add(msgtxt, msgtxt)
+                                                        End If
+                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                    End If
+
+                                                Next
+
+                                                anzArbTage = anzArbStd / 8
+                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                                Else
+                                                    hrole.kapazitaet(colOfDate) = 0
+                                                End If
+                                                iSp = iSp + anzDays
+                                                anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+                                                anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
+
+                                            Next
+
+                                        Else
+
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "Role " & rolename & " not defined ..."
+                                            Else
+                                                msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                            End If
+                                            If Not oPCollection.Contains(msgtxt) Then
+                                                oPCollection.Add(msgtxt, msgtxt)
+                                            End If
+                                            'Call MsgBox(msgtxt)
+                                            fehler = True
+                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        End If
+                                    Else
+
+                                        If awinSettings.englishLanguage Then
+                                            msgtxt = "No Name of role given ..."
+                                        Else
+                                            msgtxt = "kein Rollenname angegeben ..."
+                                        End If
+                                        If Not oPCollection.Contains(msgtxt) Then
+                                            oPCollection.Add(msgtxt, msgtxt)
+                                        End If
+                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                    End If
+
+                                Next iZ
+
+                            End If   ' ende von if not OK
+                        Else
+
+                            If awinSettings.visboDebug Then
+
+                                If awinSettings.englishLanguage Then
+                                    msgtxt = "Worksheet " & kapaFileName & "doesn't contain month/year ..."
+                                Else
+                                    msgtxt = "Worksheet" & kapaFileName & " enthält keine Angaben zu Monat/Jahr ..."
+                                End If
+                                If Not oPCollection.Contains(msgtxt) Then
+                                    oPCollection.Add(msgtxt, msgtxt)
+                                End If
+                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                            End If
+
+                        End If
+
+                    Next index
+
+
+                Catch ex2 As Exception
+                    'If fehler Then
+                    '    'Call MsgBox(msgtxt)
+
+                    '    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now, err)
+
+                    '    msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
+                    '    If awinSettings.englishLanguage Then
+                    '        msgtxt = "Therefore read the capacity of every Role from the DB  ..."
+                    '    End If
+                    '    If Not oPCollection.Contains(msgtxt) Then
+                    '        oPCollection.Add(msgtxt, msgtxt)
+                    '    End If
+                    '    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                    'End If
+                End Try
+
+                'kapaWB.Close(SaveChanges:=False)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = True
+        End If
+
+        enableOnUpdate = True
+
+        kapaWB.Close(SaveChanges:=False)
+
+        ' das wird jetzt an der übergeordneten Stelle gemacht
+        'Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
+
+        ' ''If outPutCollection.Count > 0 Then
+        ' ''    Call showOutPut(outPutCollection, _
+        ' ''                    "Meldungen Einlesevorgang Urlaubsdatei", _
+        ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
+        ' ''End If
+
+        readAvailabilityOfRoleWithConfig = (oPCollection.Count = old_oPCollectionCount)
+
+    End Function
 
     ''' <summary>
     ''' liest die Name-Mapping Definitionen der Phasen bzw Meilensteine ein
@@ -16147,8 +16569,8 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            budget = budget + vorgabeProj.getKostenBedarf(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                         ' welcher Planungs-Stand ist das ? 
@@ -16164,7 +16586,7 @@ Public Module agm2
                         Next
 
                         For Each itemName As String In costCollection
-                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarf(itemName).Sum
                         Next
 
                     End If
@@ -18086,6 +18508,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
                             CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
 
+
                             If cMilestone.ampelStatus = 1 Then
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
                             ElseIf cMilestone.ampelStatus = 2 Then
@@ -18096,13 +18519,16 @@ Public Module agm2
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                             End If
 
+
                             ' Ampel-Erläuterung
                             CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
                             CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
 
+
                             ' Lieferumfänge
-                            CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
-                            CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
+                            CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
+
 
                             ' wer ist verantwortlich
                             CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
@@ -18181,7 +18607,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 8), Excel.Range).Locked = False
 
                                 ' Lieferumfänge
-                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
                                 CType(.Cells(zeile, 9), Excel.Range).Locked = False
 
                                 ' wer ist verantwortlich
@@ -18962,6 +19388,7 @@ Public Module agm2
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub awinsetTypen(ByVal special As String)
+
         Try
             Dim err As New clsErrorCodeMsg
 
@@ -19116,8 +19543,7 @@ Public Module agm2
             importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
             'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
             importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
-            importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities
-"
+            importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -19388,18 +19814,6 @@ Public Module agm2
                 End If
 
 
-                ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
-                '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-                ''Dim allMyCustomUserRoles As New clsCustomUserRoles
-                ''allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
-
-                ''If allMyCustomUserRoles.count > 1 Then
-                ''    Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
-                ''Else
-                ''    myCustomUserRole = allMyCustomUserRoles.elementAt(0)
-                ''End If
-
-
                 If Not loginErfolgreich Then
 
 
@@ -19419,12 +19833,6 @@ Public Module agm2
                 End If
 
             End If
-
-
-            ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-            ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
 
 
             Dim wsName7810 As Excel.Worksheet = Nothing
@@ -19456,109 +19864,109 @@ Public Module agm2
                 StartofCalendar = customizations.kalenderStart
             End If
 
-            Try
-                ' jetzt die CurrentOrga definieren
-                Dim currentOrga As New clsOrganisation
+            'Try
+            '    ' jetzt die CurrentOrga definieren
+            '    Dim currentOrga As New clsOrganisation
 
-                ' jetzt werden die ORganisation ausgelesen 
-                ' wenn es keine Organisation gibt , d
+            '    ' jetzt werden die ORganisation ausgelesen 
+            '    ' wenn es keine Organisation gibt , d
 
-                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+            '    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                If currentOrga.count > 0 Then
+            '    If currentOrga.count > 0 Then
 
-                    If currentOrga.count > 0 Then
-                        validOrganisations.addOrga(currentOrga)
-                    End If
+            '        If currentOrga.count > 0 Then
+            '            validOrganisations.addOrga(currentOrga)
+            '        End If
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
-
-
-                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                    Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-                        If IsNothing(customFieldDefinitions) Then
-                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        ElseIf customFieldDefinitions.count = 0 Then
-                            Try
-                                Call readCustomFieldDefinitions(wsName4)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
-                    Catch ex As Exception
-
-                    End Try
+            '        CostDefinitions = currentOrga.allCosts
+            '        RoleDefinitions = currentOrga.allRoles
 
 
-                Else
-                    awinSettings.readCostRolesFromDB = False
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("You don't have any organization in your system!")
-                    Else
-                        Call MsgBox("Es existiert keine Organisation im System!")
-                    End If
+            '        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+            '        Try
+            '            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+            '            If IsNothing(customFieldDefinitions) Then
+            '                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+            '                Try
+            '                    Call readCustomFieldDefinitions(wsName4)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            ElseIf customFieldDefinitions.count = 0 Then
+            '                Try
+            '                    Call readCustomFieldDefinitions(wsName4)
+            '                Catch ex As Exception
+
+            '                End Try
+            '            End If
+            '        Catch ex As Exception
+
+            '        End Try
 
 
-                    ' Auslesen der Custom Field Definitions aus Customization-File
-                    Try
-                        Call readCustomFieldDefinitions(wsName4)
-                    Catch ex As Exception
-
-                    End Try
-
-                End If
-
-
-                ' das kann nicht unmittelbar nach Login gemacht werden 
-                Dim meldungen As Collection = New Collection
-
-                '' jetzt werden die Rollen besetzt 
-                If awinSettings.readCostRolesFromDB Then
-
-                    Try
-                        Call setUserRoles(meldungen)
-                    Catch ex As Exception
-                        If meldungen.Count > 0 Then
-                            Call showOutPut(meldungen, "Error: setUserRoles", "")
-                            Call logfileSchreiben(meldungen)
-                        End If
-
-                        myCustomUserRole = New clsCustomUserRole
-
-                        With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
-                            .specifics = ""
-                            .userName = dbUsername
-                        End With
-                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                        Call myCustomUserRole.setNonAllowances()
-                    End Try
+            '    Else
+            '        awinSettings.readCostRolesFromDB = False
+            '        If awinSettings.englishLanguage Then
+            '            Call MsgBox("You don't have any organization in your system!")
+            '        Else
+            '            Call MsgBox("Es existiert keine Organisation im System!")
+            '        End If
 
 
+            '        ' Auslesen der Custom Field Definitions aus Customization-File
+            '        Try
+            '            Call readCustomFieldDefinitions(wsName4)
+            '        Catch ex As Exception
 
-                Else
-                    myCustomUserRole = New clsCustomUserRole
+            '        End Try
 
-                    With myCustomUserRole
-                        .customUserRole = ptCustomUserRoles.OrgaAdmin
-                        .specifics = ""
-                        .userName = dbUsername
-                    End With
-                    ' jetzt gibt es eine currentUserRole: myCustomUserRole
-                    Call myCustomUserRole.setNonAllowances()
-                End If
+            '    End If
 
-            Catch ex As Exception
 
-            End Try
+            '    ' das kann nicht unmittelbar nach Login gemacht werden 
+            '    Dim meldungen As Collection = New Collection
+
+            '    '' jetzt werden die Rollen besetzt 
+            '    If awinSettings.readCostRolesFromDB Then
+
+            '        Try
+            '            Call setUserRoles(meldungen)
+            '        Catch ex As Exception
+            '            If meldungen.Count > 0 Then
+            '                Call showOutPut(meldungen, "Error: setUserRoles", "")
+            '                Call logfileSchreiben(meldungen)
+            '            End If
+
+            '            myCustomUserRole = New clsCustomUserRole
+
+            '            With myCustomUserRole
+            '                .customUserRole = ptCustomUserRoles.OrgaAdmin
+            '                .specifics = ""
+            '                .userName = dbUsername
+            '            End With
+            '            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+            '            Call myCustomUserRole.setNonAllowances()
+            '        End Try
+
+
+
+            '    Else
+            '        myCustomUserRole = New clsCustomUserRole
+
+            '        With myCustomUserRole
+            '            .customUserRole = ptCustomUserRoles.OrgaAdmin
+            '            .specifics = ""
+            '            .userName = dbUsername
+            '        End With
+            '        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+            '        Call myCustomUserRole.setNonAllowances()
+            '    End If
+
+            'Catch ex As Exception
+
+            'End Try
 
             Try
 
@@ -19777,10 +20185,113 @@ Public Module agm2
                                                 "Bitte kontaktieren Sie ihren Administator!")
                 End If
 
+                Try
+                    ' jetzt die CurrentOrga definieren
+                    Dim currentOrga As New clsOrganisation
+
+                    ' jetzt werden die ORganisation ausgelesen 
+                    ' wenn es keine Organisation gibt , d
+
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    If currentOrga.count > 0 Then
+
+                        If currentOrga.count > 0 Then
+                            validOrganisations.addOrga(currentOrga)
+                        End If
+
+                        CostDefinitions = currentOrga.allCosts
+                        RoleDefinitions = currentOrga.allRoles
+
+
+                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                        Try
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+
+                            If IsNothing(customFieldDefinitions) Then
+                                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf customFieldDefinitions.count = 0 Then
+                                Try
+                                    Call readCustomFieldDefinitions(wsName4)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    Else
+                        awinSettings.readCostRolesFromDB = False
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("You don't have any organization in your system!")
+                        Else
+                            Call MsgBox("Es existiert keine Organisation im System!")
+                        End If
+
+
+                        ' Auslesen der Custom Field Definitions aus Customization-File
+                        Try
+                            Call readCustomFieldDefinitions(wsName4)
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+
+                    ' das kann nicht unmittelbar nach Login gemacht werden 
+                    Dim meldungen As Collection = New Collection
+
+                    '' jetzt werden die Rollen besetzt 
+                    If awinSettings.readCostRolesFromDB Then
+
+                        Try
+                            ' Lesen der CustomUserRoles aus VCSetting in DB
+                            Call setUserRoles(meldungen)
+                        Catch ex As Exception
+                            If meldungen.Count > 0 Then
+                                Call showOutPut(meldungen, "Error: setUserRoles", "")
+                                Call logfileSchreiben(meldungen)
+                            End If
+
+                            myCustomUserRole = New clsCustomUserRole
+
+                            With myCustomUserRole
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                                .specifics = ""
+                                .userName = dbUsername
+                            End With
+                            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                            Call myCustomUserRole.setNonAllowances()
+                        End Try
 
 
 
-                ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
+                    Else
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+
+                '  Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
                 If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
                     Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
                     Dim tmpstr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
@@ -19945,21 +20456,22 @@ Public Module agm2
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
 
-                    If Not noDB And awinSettings.readCostRolesFromDB Then
+                    '' ur:12.12.2019: entfernt, da Portfolios nun anders geladen werden
+                    ''If Not noDB And awinSettings.readCostRolesFromDB Then
 
-                        ' ur: 31.08.2017: Initialisierung
-                        beforeFilterConstellation = Nothing
+                    ''    ' ur: 31.08.2017: Initialisierung
+                    ''    beforeFilterConstellation = Nothing
 
-                        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                        Call readInitConstellations()
+                    ''    ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                    ''    Call readInitConstellations()
 
-                        currentSessionConstellation.constellationName = calcLastSessionScenarioName()
+                    ''    currentSessionConstellation.constellationName = calcLastSessionScenarioName()
 
-                        If awinSettings.visboDebug Then
-                            Call MsgBox("readInitConstellations , ok")
-                        End If
+                    ''    If awinSettings.visboDebug Then
+                    ''        Call MsgBox("readInitConstellations , ok")
+                    ''    End If
 
-                    End If
+                    ''End If
 
 
 
@@ -19984,7 +20496,7 @@ Public Module agm2
                 appInstance.EnableEvents = True
                 Throw New ArgumentException(ex.Message)
             End Try
-            
+
             If Not IsNothing(xlsCustomization) Then
                 ' jetzt wird das Customization-File geschlossen
                 xlsCustomization.Close(SaveChanges:=False)
@@ -22333,13 +22845,15 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub readInterneAnwesenheitslisten(ByRef meldungen As Collection)
+    Public Function readInterneAnwesenheitslisten(ByRef meldungen As Collection) As List(Of String)
 
         Dim kapaFileName As String
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
+        Dim listOfArchivFiles As New List(Of String)
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -22357,17 +22871,17 @@ Public Module agm2
         listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
                      FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
-        'listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
-        '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
-
-        ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
-        ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
                 Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                Call readAvailabilityOfRole(tmpDatei, meldungen)
+                result = readAvailabilityOfRole(tmpDatei, meldungen)
+                If result Then
+                    ' hier: merken der erfolgreich importierten KapaFiles
+                    listOfArchivFiles.Add(tmpDatei)
+                End If
+
             Next
 
         Else
@@ -22376,11 +22890,334 @@ Public Module agm2
 
             ' das sollte nicht dazu führen, dass nichts gemacht wird 
             'meldungen.Add(errMsg)
-            Call MsgBox(errMsg)
+            'Call MsgBox(errMsg)
 
             Call logfileSchreiben(errMsg, "", anzFehler)
         End If
+        If result Then
+            readInterneAnwesenheitslisten = listOfArchivFiles
+        Else
+            readInterneAnwesenheitslisten = New List(Of String)
+        End If
 
+
+    End Function
+    '''' <summary>
+    '''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub readRessourcenDetails(ByRef meldungen As Collection)
+
+    '    ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
+    '    Call readMonthlyModifierKapas(meldungen)
+
+    'End Sub
+    ''' <summary>
+    ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String, ByRef meldungen As Collection) As List(Of String)
+
+        Dim kapaConfig As New SortedList(Of String, clsConfigKapaImport)
+        Dim kapaFile As String = ""
+        Dim listOfArchivFiles As New List(Of String)
+        Dim lastrow As Integer = 0
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
+        Dim anzFehler As Integer = 0
+        Dim result As Boolean = False
+
+
+        Dim kapaFileName As String = "Urlaubsplaner*.xlsx"
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkRequirements(configFile, kapaFile, kapaConfig, lastrow)
+
+        If allesOK Then
+            If Not (IsNothing(kapaFile) Or kapaFile = "") Then
+                kapaFileName = kapaConfig("Kapa-Datei").capacityFile
+                Dim Test As Boolean = (kapaFile = kapaFileName)
+            End If
+
+            ' Dateien mit WildCards lesen
+            listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                         FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+            If listOfFiles.Count >= 1 Then
+
+                For Each tmpDatei As String In listOfFiles
+                    Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                    result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten KapaFiles
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
+
+                Next
+
+            Else
+                Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                             & "Es wurde daher jetzt keine berücksichtigt"
+
+                ' das sollte nicht dazu führen, dass nichts gemacht wird 
+                'meldungen.Add(errMsg)
+                'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+                'Call MsgBox(errMsg)
+
+                Call logfileSchreiben(errMsg, "", anzFehler)
+            End If
+        End If
+
+
+        If result Then
+            readInterneAnwesenheitslistenAllg = listOfArchivFiles
+        Else
+            readInterneAnwesenheitslistenAllg = New List(Of String)
+        End If
+
+
+    End Function
+
+
+    ''' <summary>
+    ''' überprüft, ob die Voraussetzungen für das Einlesen der InternenAnwesenheitslisten. 
+    ''' </summary>
+    ''' <param name="configFile"></param>
+    ''' <param name="kapaFile"></param>
+    ''' <param name="kapaConfigs"></param>
+    ''' <param name="lastrow"></param>
+    ''' <returns></returns>
+    Public Function checkRequirements(ByVal configFile As String,
+                                      ByRef kapaFile As String,
+                                      ByRef kapaConfigs As SortedList(Of String, clsConfigKapaImport),
+                                      ByRef lastrow As Integer) As Boolean
+
+        Dim configLine As New clsConfigKapaImport
+        Dim currentDirectoryName As String = requirementsOrdner
+        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        'Dim found As Boolean
+        'Dim i As Integer
+
+        ''
+        '' Config-file wird geöffnet
+        ' Filename ggf. mit Directory erweitern
+        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(configFile) Then
+
+            Try
+                configWB = appInstance.Workbooks.Open(configFile)
+
+                Try
+
+                    If appInstance.Worksheets.Count > 0 Then
+
+                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                        Dim titleCol As Integer,
+                            IdentCol As Integer,
+                            InputFileCol As Integer,
+                            TypCol As Integer,
+                            DatenCol As Integer,
+                            SUCol As Integer, SNCol As Integer,
+                            ZUCol As Integer, ZNCol As Integer,
+                            ObjCol As Integer,
+                            InhaltCol As Integer
+
+                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
+
+                        titleCol = searcharea.Find("Titel").Column
+                        IdentCol = searcharea.Find("Identifier").Column
+                        InputFileCol = searcharea.Find("InputFile").Column
+                        TypCol = searcharea.Find("Typ").Column
+                        DatenCol = searcharea.Find("Datenbereich").Column
+                        SUCol = searcharea.Find("Spaltenüberschrift").Column
+                        SNCol = searcharea.Find("Spalten-Nummer").Column
+                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
+                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                        ObjCol = searcharea.Find("Objekt-Typ").Column
+                        InhaltCol = searcharea.Find("Inhalt").Column
+
+                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 10)
+
+                        If ok Then
+                            With currentWS
+                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
+
+                                For i = 6 To lastrow
+
+                                    configLine = New clsConfigKapaImport
+
+                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
+
+                                    Select Case Titel
+                                        Case "Kapa-Datei"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.capacityFile = CStr(.Cells(i, InputFileCol).value)
+                                            kapaFile = configLine.capacityFile
+
+                                        Case "month"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                        Case "year"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                        Case "role"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+
+                                        Case "valueStart"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                        Case "valueLength"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                        Case "valueSign"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                        Case Else
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.column = CInt(.Cells(i, SNCol).value)
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                            configLine.row = CInt(.Cells(i, ZNCol).value)
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                    End Select
+
+                                    If kapaConfigs.ContainsKey(configLine.Titel) Then
+                                        kapaConfigs.Remove(configLine.Titel)
+                                    End If
+
+                                    kapaConfigs.Add(configLine.Titel, configLine)
+
+                                Next
+
+                            End With
+
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+                ' configCapaImport - Konfigurationsfile schließen
+                configWB.Close(SaveChanges:=False)
+
+            Catch ex As Exception
+                Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
+            End Try
+
+        End If
+
+        checkRequirements = (kapaConfigs.Count > 0)
+
+    End Function
+    ''' <summary>
+    ''' verschiebt die Dateien von listOfFiles in den Folder 'folder\archiv'
+    ''' </summary>
+    ''' <param name="listOfFiles"></param>
+    ''' <param name="folder"></param>
+    Public Sub moveFilesInArchiv(ByVal listOfFiles As List(Of String), ByVal folder As String)
+
+        Dim archivName As String = folder & "\archive"
+
+        ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
+        If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
+            My.Computer.FileSystem.CreateDirectory(archivName)
+        End If
+
+        ' Dateien in archiv - Dir. verschieben
+        For Each fileName As String In listOfFiles
+
+            Dim onlyFileName As String = Path.GetFileName(fileName)
+            Dim archivFileName As String = archivName & "\" & onlyFileName
+            'My.Computer.FileSystem.CopyFile(fileName, archivFileName, True)
+            My.Computer.FileSystem.MoveFile(fileName, archivFileName, True)
+
+        Next
     End Sub
 
     ''' <summary>

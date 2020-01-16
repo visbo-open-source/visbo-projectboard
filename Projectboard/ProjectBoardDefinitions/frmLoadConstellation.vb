@@ -3,12 +3,18 @@
     Private formerselect As String
     Public retrieveFromDB As Boolean
     Public earliestDate As Date
-    Public constellationsToShow As clsConstellations
+
+    Public constellationsToShow As SortedList(Of String, String)
     Private Sub frmLoadConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
         Call languageSettings()
-        For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+        'For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+
+        '    ListBox1.Items.Add(kvp.Key)
+
+        'Next
+        For Each kvp As KeyValuePair(Of String, String) In constellationsToShow
 
             ListBox1.Items.Add(kvp.Key)
 
@@ -106,7 +112,8 @@
         ' Dieser Aufruf ist für den Designer erforderlich.
         InitializeComponent()
         retrieveFromDB = False
-        constellationsToShow = New clsConstellations
+        'constellationsToShow = New clsConstellations
+        constellationsToShow = New SortedList(Of String, String)
 
         ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
 

@@ -76,6 +76,9 @@ Public Class clsProjektWeb
     ' verschoben von clsProjektWebLong
     Public updatedAt As String
 
+    'ergänzt am 14.10.2019 für HTML5-Viewer in UI 
+    Public keyMetrics As clsKeyMetrics
+
 
     ''' <summary>
     ''' kopiert den Inhalt des Projektes (clsProjekt) in clsProjektWeb
@@ -181,6 +184,25 @@ Public Class clsProjektWeb
                 Dim hvar As New clsStringBoolean(CStr(kvp.Key), CBool(kvp.Value))
                 Me.customBoolFields.Add(hvar)
             Next
+
+            ' jetzt werden die keyMetrics übertragen
+            Me.keyMetrics.costCurrentActual = projekt.keyMetrics.costCurrentActual
+            Me.keyMetrics.costCurrentTotal = projekt.keyMetrics.costCurrentTotal
+            Me.keyMetrics.costBaseLastActual = projekt.keyMetrics.costBaseLastActual
+            Me.keyMetrics.costBaseLastTotal = projekt.keyMetrics.costBaseLastTotal
+
+            Me.keyMetrics.timeCompletionCurrentActual = projekt.keyMetrics.timeCompletionCurrentActual
+            Me.keyMetrics.timeCompletionBaseLastActual = projekt.keyMetrics.timeCompletionBaseLastActual
+            Me.keyMetrics.timeCompletionCurrentTotal = projekt.keyMetrics.timeCompletionCurrentTotal
+            Me.keyMetrics.timeCompletionBaseLastTotal = projekt.keyMetrics.timeCompletionBaseLastTotal
+            Me.keyMetrics.endDateCurrent = projekt.keyMetrics.endDateCurrent.ToUniversalTime
+            Me.keyMetrics.endDateBaseLast = projekt.keyMetrics.endDateBaseLast.ToUniversalTime
+
+            Me.keyMetrics.deliverableCompletionCurrentActual = projekt.keyMetrics.deliverableCompletionCurrentActual
+            Me.keyMetrics.deliverableCompletionCurrentTotal = projekt.keyMetrics.deliverableCompletionCurrentTotal
+
+            Me.keyMetrics.deliverableCompletionBaseLastActual = projekt.keyMetrics.deliverableCompletionBaseLastActual
+            Me.keyMetrics.deliverableCompletionBaseLastTotal = projekt.keyMetrics.deliverableCompletionBaseLastTotal
 
 
         End With
@@ -321,6 +343,33 @@ Public Class clsProjektWeb
                 Next
             End If
 
+            ' ergänzt 14.10.2019: keyMetrics für HTML5 in vpv-long gespeichert
+            ' jetzt werden die keyMetrics übertragen
+            .keyMetrics.costCurrentActual = Me.keyMetrics.costCurrentActual
+            .keyMetrics.costCurrentTotal = Me.keyMetrics.costCurrentTotal
+            .keyMetrics.costBaseLastActual = Me.keyMetrics.costBaseLastActual
+            .keyMetrics.costBaseLastTotal = Me.keyMetrics.costBaseLastTotal
+            .keyMetrics.timeCompletionCurrentActual = Me.keyMetrics.timeCompletionCurrentActual
+            .keyMetrics.timeCompletionBaseLastActual = Me.keyMetrics.timeCompletionBaseLastActual
+            .keyMetrics.timeCompletionCurrentTotal = Me.keyMetrics.timeCompletionCurrentTotal
+            .keyMetrics.timeCompletionBaseLastTotal = Me.keyMetrics.timeCompletionBaseLastTotal
+
+            If IsNothing(Me.keyMetrics.endDateCurrent) Then
+                .keyMetrics.endDateCurrent = Date.MinValue
+            Else
+                .keyMetrics.endDateCurrent = Me.keyMetrics.endDateCurrent.ToLocalTime
+            End If
+            If IsNothing(Me.keyMetrics.endDateBaseLast) Then
+                .keyMetrics.endDateBaseLast = Date.MinValue
+            Else
+                .keyMetrics.endDateBaseLast = Me.keyMetrics.endDateBaseLast.ToLocalTime
+            End If
+
+            .keyMetrics.deliverableCompletionCurrentActual = Me.keyMetrics.deliverableCompletionCurrentActual
+            .keyMetrics.deliverableCompletionCurrentTotal = Me.keyMetrics.deliverableCompletionCurrentTotal
+            .keyMetrics.deliverableCompletionBaseLastActual = Me.keyMetrics.deliverableCompletionBaseLastActual
+            .keyMetrics.deliverableCompletionBaseLastTotal = Me.keyMetrics.deliverableCompletionBaseLastTotal
+
 
             If IsNothing(Me.actualDataUntil) Then
                 .actualDataUntil = Date.MinValue
@@ -353,6 +402,7 @@ Public Class clsProjektWeb
         customStringFields = New List(Of clsStringString)
         customBoolFields = New List(Of clsStringBoolean)
 
+        keyMetrics = New clsKeyMetrics
     End Sub
     '''''<Serializable()>
     '''''Public Class clsProjektWeb

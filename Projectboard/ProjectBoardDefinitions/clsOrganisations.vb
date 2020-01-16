@@ -4,7 +4,7 @@
 Public Class clsOrganisations
 
     ' Der integer key entspricht der Monatsspalte ab StartofCalendar; damit lässt sich die entsprechend gültige Org schnell bestimmen
-    Private _validOrganisations As SortedList(Of Integer, clsOrganisation)
+    Private _validOrganisations As SortedList(Of Date, clsOrganisation)
 
     Public ReadOnly Property count As Integer
         Get
@@ -13,10 +13,10 @@ Public Class clsOrganisations
     End Property
     Public ReadOnly Property getOrganisationValidAt(ByVal datum As Date) As clsOrganisation
         Get
-            Dim searchkey As Integer = getColumnOfDate(datum)
+            Dim searchkey As Date = datum
             Dim tmpOrga As clsOrganisation = Nothing
 
-            If searchkey < getColumnOfDate(StartofCalendar) Then
+            If searchkey < StartofCalendar Then
                 ' nichts tun - es wird nach der Orga gefragt, die vor dem StartofCalendar gültig war: Nonsense 
             Else
                 Dim found As Boolean = False
@@ -49,7 +49,7 @@ Public Class clsOrganisations
     ''' <param name="orga"></param>
     Public Sub addOrga(ByVal orga As clsOrganisation)
 
-        Dim key As Integer = getColumnOfDate(orga.validFrom)
+        Dim key As Date = orga.validFrom
         If _validOrganisations.ContainsKey(key) Then
             _validOrganisations.Remove(key)
         End If
@@ -70,7 +70,7 @@ Public Class clsOrganisations
 
     End Sub
     Sub New()
-        _validOrganisations = New SortedList(Of Integer, clsOrganisation)
+        _validOrganisations = New SortedList(Of Date, clsOrganisation)
 
     End Sub
 

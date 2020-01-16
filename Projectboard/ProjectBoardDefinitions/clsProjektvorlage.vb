@@ -3728,7 +3728,7 @@
     ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Meilensteine zurück 
     ''' </summary>
     ''' <value></value>
-    ''' <returns>nach Datum sortierte Liste der MEilensteine im Projekt </returns>
+    ''' <returns>nach Datum sortierte Liste der MEilenstein-IDs  </returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getMilestones As SortedList(Of Date, String)
         Get
@@ -3763,7 +3763,7 @@
     ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Phasen zurück
     ''' Sortierkriterium ist dabei das Phasen-Ende
     ''' </summary>
-    ''' <returns></returns>
+    ''' <returns>sortierte Liste der PhaseIDs, sortiert nach Phasen Ende</returns>
     Public ReadOnly Property getPhases As SortedList(Of Date, String)
         Get
 
@@ -3845,7 +3845,27 @@
 
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)
+                tmpNameID = cphase.nameID
 
+                For d = 1 To cphase.countDeliverables
+                    tmpDeliverable = cphase.getDeliverable(d)
+                    If tmpValues.ContainsKey(tmpDeliverable) Then
+                        tmpDeliverable = tmpDeliverable & "(" & tmpNameID & ")"
+                    Else
+                        ' nichts tun, Deliverable existiert noch nicht ...
+                    End If
+
+                    ' jetzt ist sichergestellt, dass das Deliverable noch nicht existiert 
+                    ' bzw. das Deliverable dieser NameID bereits aufgenommen ist 
+                    If Not tmpValues.ContainsKey(tmpDeliverable) Then
+                        tmpValues.Add(tmpDeliverable, tmpNameID)
+                    Else
+                        ' nichts mehr tun - Deliverable dieser NameID ist schon drin 
+
+                    End If
+                Next d
+
+                ' schleife über die Meilensteine der Phase cphase, um die Deliverables aufzusammeln
                 For r = 1 To cphase.countMilestones
                     cresult = cphase.getMilestone(r)
                     tmpNameID = cresult.nameID
@@ -4141,104 +4161,104 @@
 
     End Property
 
-    '
-    ' übergibt in KostenBedarf die Werte der Kostenart <costId>
-    '
-    Public ReadOnly Property getKostenBedarfNew(CostID As Object) As Double()
+    ''
+    '' übergibt in KostenBedarf die Werte der Kostenart <costId>
+    ''
+    'Public ReadOnly Property getKostenBedarfNew(CostID As Object) As Double()
 
-        Get
-            Dim costValues() As Double
-            Dim anzKostenarten As Integer
-            Dim anzPhasen As Integer
-            Dim found As Boolean
-            Dim i As Integer, p As Integer, k As Integer
-            Dim phase As clsPhase
-            Dim cost As clsKostenart
-            Dim lookforIndex As Boolean, isPersCost As Boolean
-            Dim phasenStart As Integer
-            Dim tempArray() As Double
-            Dim dimension As Integer
-            Dim costUID As Integer = 0
-            Dim costName As String = ""
-
-
-            If _Dauer > 0 Then
-
-                ReDim costValues(_Dauer - 1)
-
-                lookforIndex = IsNumeric(CostID)
-                isPersCost = False
-
-                If lookforIndex Then
-                    costUID = CInt(CostID)
-                    costName = CostDefinitions.getCostdef(costUID).name
-                    If CostID = CostDefinitions.Count Then
-                        isPersCost = True
-                    End If
-                Else
-                    If CostDefinitions.containsName(CStr(CostID)) Then
-                        costUID = CostDefinitions.getCostdef(CStr(CostID)).UID
-                        costName = CStr(CostID)
-                    End If
-                    If CostID = "Personalkosten" Then
-                        isPersCost = True
-                    End If
-                End If
-
-                If isPersCost Then
-                    ' costvalues = AllPersonalKosten
-                    costValues = Me.getAllPersonalKosten
-                Else
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithCost(costName)
-                    anzPhasen = listOfPhases.Count
-
-                    For p = 1 To anzPhasen
-                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
-
-                        With phase
-                            ' Off1
-                            anzKostenarten = .countCosts
-                            phasenStart = .relStart - 1
-                            'phasenEnde = .relEnde - 1
+    '    Get
+    '        Dim costValues() As Double
+    '        Dim anzKostenarten As Integer
+    '        Dim anzPhasen As Integer
+    '        Dim found As Boolean
+    '        Dim i As Integer, p As Integer, k As Integer
+    '        Dim phase As clsPhase
+    '        Dim cost As clsKostenart
+    '        Dim lookforIndex As Boolean, isPersCost As Boolean
+    '        Dim phasenStart As Integer
+    '        Dim tempArray() As Double
+    '        Dim dimension As Integer
+    '        Dim costUID As Integer = 0
+    '        Dim costName As String = ""
 
 
-                            For k = 1 To anzKostenarten
-                                cost = .getCost(k)
-                                found = False
+    '        If _Dauer > 0 Then
 
-                                With cost
+    '            ReDim costValues(_Dauer - 1)
 
-                                    If .KostenTyp = costUID Then
+    '            lookforIndex = IsNumeric(CostID)
+    '            isPersCost = False
 
-                                        dimension = .getDimension
-                                        ReDim tempArray(dimension)
-                                        tempArray = .Xwerte
+    '            If lookforIndex Then
+    '                costUID = CInt(CostID)
+    '                costName = CostDefinitions.getCostdef(costUID).name
+    '                If CostID = CostDefinitions.Count Then
+    '                    isPersCost = True
+    '                End If
+    '            Else
+    '                If CostDefinitions.containsName(CStr(CostID)) Then
+    '                    costUID = CostDefinitions.getCostdef(CStr(CostID)).UID
+    '                    costName = CStr(CostID)
+    '                End If
+    '                If CostID = "Personalkosten" Then
+    '                    isPersCost = True
+    '                End If
+    '            End If
 
-                                        For i = phasenStart To phasenStart + dimension
-                                            costValues(i) = costValues(i) + tempArray(i - phasenStart)
-                                        Next i
+    '            If isPersCost Then
+    '                ' costvalues = AllPersonalKosten
+    '                costValues = Me.getAllPersonalKosten
+    '            Else
+    '                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithCost(costName)
+    '                anzPhasen = listOfPhases.Count
 
-                                    End If
+    '                For p = 1 To anzPhasen
+    '                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
 
-                                End With ' cost
-
-                            Next k
-
-                        End With ' phase
-
-                    Next p ' Loop über alle Phasen
-                End If
-            Else
-                ReDim costValues(0)
-                costValues(0) = 0
-            End If
-
-            getKostenBedarfNew = costValues
+    '                    With phase
+    '                        ' Off1
+    '                        anzKostenarten = .countCosts
+    '                        phasenStart = .relStart - 1
+    '                        'phasenEnde = .relEnde - 1
 
 
-        End Get
+    '                        For k = 1 To anzKostenarten
+    '                            cost = .getCost(k)
+    '                            found = False
 
-    End Property
+    '                            With cost
+
+    '                                If .KostenTyp = costUID Then
+
+    '                                    dimension = .getDimension
+    '                                    ReDim tempArray(dimension)
+    '                                    tempArray = .Xwerte
+
+    '                                    For i = phasenStart To phasenStart + dimension
+    '                                        costValues(i) = costValues(i) + tempArray(i - phasenStart)
+    '                                    Next i
+
+    '                                End If
+
+    '                            End With ' cost
+
+    '                        Next k
+
+    '                    End With ' phase
+
+    '                Next p ' Loop über alle Phasen
+    '            End If
+    '        Else
+    '            ReDim costValues(0)
+    '            costValues(0) = 0
+    '        End If
+
+    '        getKostenBedarfNew = costValues
+
+
+    '    End Get
+
+    'End Property
 
     '
     ' übergibt in getUsedKosten eine Collection von Kostenarten Definitionen, 
@@ -4291,7 +4311,7 @@
 
 
     ''' <summary>
-    ''' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
+    ''' berechnet die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten, über die gesamte Projektdauer addiert
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -4370,6 +4390,7 @@
                 ReDim costValues(_Dauer - 1)
                 costValues = Me.getAllPersonalKosten
 
+                ' Aufsummieren der Personalkosten nur bis index-ten Monat
                 costSum = 0
                 For i = 0 To index
 
@@ -4389,6 +4410,8 @@
 
                     ReDim costValues(_Dauer - 1)
                     costValues = Me.getKostenBedarf(costname)
+
+                    ' Aufsummieren aller anderen Kosten nur bis index-ten Monat
                     For i = 0 To index
 
                         costSum = costSum + costValues(i)
@@ -4406,9 +4429,11 @@
 
     End Property
 
-    '
-    ' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
-    '
+
+    ''' <summary>
+    ''' berechnet die GesamtKosten einschl. aller Personalkosten in T€ über die gesamte Projektdauer/je Monat
+    ''' </summary>
+    ''' <returns>Array of Double</returns>
     Public ReadOnly Property getGesamtKostenBedarf() As Double()
 
         Get
@@ -4453,6 +4478,10 @@
     '
     ' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
     '
+    ''' <summary>
+    ''' berechnet die GesamtKosten ohne Personalkosten in T€ über die gesamte Projektdauer/je Monat
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property getGesamtAndereKosten() As Double()
 
         Get
@@ -4662,6 +4691,9 @@
         End Get
 
     End Property
+
+
+
 
     Public Overridable Property earliestStart() As Integer
 

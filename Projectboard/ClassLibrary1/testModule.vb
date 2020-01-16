@@ -10274,7 +10274,7 @@ Public Module testModule
 
                         ' Lieferumfänge eintragen 
                         tableCell = CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape
-                        tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables
+                        tableCell.TextFrame2.TextRange.Text = cResult.getAllDeliverables(vbLf)
 
                         ' Ampelbewertungen eintragen
                         If anzSpalten >= 5 Then

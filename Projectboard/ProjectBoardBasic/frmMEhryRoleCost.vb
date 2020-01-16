@@ -47,9 +47,6 @@ Public Class frmMEhryRoleCost
     ' der ggf dazugehörende Team-Name 
     Public teamName As String
 
-    ' tk 7.7.19 Sicht Team-Manager 
-    Private showTeamsOnly As Boolean = myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager
-
 
 
     ' das in der Zeile aktive Projekt
@@ -212,11 +209,6 @@ Public Class frmMEhryRoleCost
     Public Sub buildMERoleTree()
 
 
-        'Dim hPhase As clsPhase = Nothing
-        'If Not IsNothing(hproj) Then
-        '    hPhase = hproj.getPhaseByID(phaseNameID)
-        'End If
-
         Dim topLevelNode As TreeNode
         Dim checkProj As Boolean = False
 
@@ -238,8 +230,20 @@ Public Class frmMEhryRoleCost
 
                             topNodes.Clear()
                             Dim teamID As Integer = -1
-                            Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
-                            topNodes.Add(roleUID)
+                            Dim restrictedToOrgaID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
+                            topNodes.Add(restrictedToOrgaID)
+
+                            ' hier müssen jetzt auch die Skillgruppen angezeigt werden 
+                            Dim topLevelTeams As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
+                            For Each topTeamID As Integer In topLevelTeams
+                                Dim listOFCommonChildIds As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(topTeamID, restrictedToOrgaID)
+                                If listOFCommonChildIds.Count > 0 Then
+                                    If Not topNodes.Contains(topTeamID) Then
+                                        topNodes.Add(topTeamID)
+                                    End If
+                                End If
+
+                            Next
 
                         End If
                     End If
@@ -296,22 +300,6 @@ Public Class frmMEhryRoleCost
 
                         End If
                     End If
-
-
-
-                    ' 9.12.18 nicht mehr nötig, da jetzt selektiv, wie der User den BAum entfaltet, aufgebaut wird 
-                    'Dim listOfChildIDs As New SortedList(Of Integer, Double)
-                    'Try
-                    '    listOfChildIDs = role.getSubRoleIDs
-                    'Catch ex As Exception
-
-                    'End Try
-
-                    'If listOfChildIDs.Count > 0 Then
-                    '    For ii As Integer = 0 To listOfChildIDs.Count - 1
-                    '        Call buildMESubRoleTree(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
-                    '    Next
-                    'End If
 
                 Next
             End If
@@ -454,49 +442,6 @@ Public Class frmMEhryRoleCost
 
 
 
-
-        'Dim hPhase As clsPhase = Nothing
-        'If Not IsNothing(hproj) Then
-        '    hPhase = hproj.getPhaseByID(phaseNameID)
-        'End If
-
-
-        '' ---- altes Vorgehen 9.12.18 
-        'Dim doItAnyWay As Boolean = False
-
-        'With parentNode
-
-        '    currentNode = .Nodes.Add(currentRole.name)
-        '    currentNode.Name = currentRoleUid.ToString
-        '    currentNode.Text = currentRole.name
-
-        '    ' hier muss gecheckt werden, welche Rollen in dem Projekt und dieser Phase, in der der Doppelclick erfolgte
-        '    ' vergeben sind. Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
-
-        '    If Not IsNothing(hPhase) Then
-        '        If Not IsNothing(hPhase.getRole(currentRole.name)) Then
-
-        '            ' entsprechend kennzeichnen
-        '            currentNode.NodeFont = existingRoleFont
-        '            currentNode.ForeColor = existingRoleColor
-
-        '            If currentRole.name = rcName Then
-        '                currentNode.Checked = True
-        '            End If
-
-        '        End If
-        '    End If
-
-
-        'End With
-
-        'For i = 0 To childIds.Count - 1
-
-        '    Call buildMESubRoleTree(currentNode, childIds.ElementAt(i).Key)
-
-        'Next
-        ''End If
-
     End Sub
 
     ''' <summary>
@@ -579,10 +524,9 @@ Public Class frmMEhryRoleCost
                     Dim teamID As Integer
                     Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                    If showTeamsOnly And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
-                        ' Allianz Proof of Concept : wenn es sich zunächst um einen Ressourcen Manager oder einen Projektleiter handelt , dann sollen die virtuellen Childs der aktuellen Rolle auch angezeigt werden ... 
-                        Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
 
+                        Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
                         If Not IsNothing(virtualChilds) Then
                             For Each vcID As Integer In virtualChilds
                                 If Not nodelist.ContainsKey(vcID) Then
@@ -592,6 +536,8 @@ Public Class frmMEhryRoleCost
                         End If
 
                     Else
+                        ' wenn es sich um einen Ressourcen Manager handelt, kommen jetzt nur die Kinder zurück, die auch zum Ressort des 
+                        ' Ressource Managers gehören 
                         nodelist = curRole.getSubRoleIDs
                     End If
 

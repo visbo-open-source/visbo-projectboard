@@ -307,6 +307,7 @@ Public Class frmProjektEingabe1
 
 
         If dauerUnverändert.Checked Then
+
             'StartDatum muss gemäß Vorlagendauer errechnet werden
 
             calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
@@ -314,13 +315,11 @@ Public Class frmProjektEingabe1
 
             DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
 
-
         Else
 
             calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-            calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-
-            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+            'calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+            calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
 
         End If
 
@@ -372,7 +371,8 @@ Public Class frmProjektEingabe1
 
                 Else
                     calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-                    calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+                    'calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+                    calcProjektStart = DateTimeStart.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
 
                 End If
             End If
@@ -391,7 +391,6 @@ Public Class frmProjektEingabe1
     End Sub
 
     Private Sub DateTimeStart_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
-
         If dontFire Then
             ' nichts tun
         Else
@@ -500,68 +499,68 @@ Public Class frmProjektEingabe1
     Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
 
 
-        If dontFire Then
-            ' nichts tun
-        Else
-            If startMilestoneDropbox.Text = "Projektstart" Then
-                startMsOffset = 0
-            Else
-                startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
-            End If
+        'If dontFire Then
+        '    ' nichts tun
+        'Else
+        '    If startMilestoneDropbox.Text = "Projektstart" Then
+        '        startMsOffset = 0
+        '    Else
+        '        startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
+        '    End If
 
-            If dauerUnverändert.Checked Then
-                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-            Else
-                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-                calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
-            End If
+        '    If dauerUnverändert.Checked Then
+        '        calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+        '        calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+        '        DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+        '    Else
+        '        calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+        '        calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+        '        DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
+        '    End If
 
-            If awinSettings.englishLanguage Then
-                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            Else
-                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            End If
+        '    If awinSettings.englishLanguage Then
+        '        lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+        '                                calcProjektEnde.ToShortDateString
+        '    Else
+        '        lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+        '                                calcProjektEnde.ToShortDateString
+        '    End If
 
-        End If
+        'End If
 
     End Sub
 
     Private Sub endMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles endMilestoneDropbox.SelectedIndexChanged
 
-        If dontFire Then
-            ' nichts tun
-        Else
-            If endMilestoneDropbox.Text = "Projektende" Then
-                endMsOffset = dauerVorlage - 1
-            Else
-                endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
-            End If
+        'If dontFire Then
+        '    ' nichts tun
+        'Else
+        '    If endMilestoneDropbox.Text = "Projektende" Then
+        '        endMsOffset = dauerVorlage - 1
+        '    Else
+        '        endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
+        '    End If
 
-            If dauerUnverändert.Checked Then
-                calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
-                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
+        '    If dauerUnverändert.Checked Then
+        '        calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+        '        calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
 
-                DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
-            Else
-                calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+        '        DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
+        '    Else
+        '        calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+        '        calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
 
-            End If
+        '    End If
 
-            If awinSettings.englishLanguage Then
-                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            Else
-                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            End If
+        '    If awinSettings.englishLanguage Then
+        '        lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+        '                                calcProjektEnde.ToShortDateString
+        '    Else
+        '        lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+        '                                calcProjektEnde.ToShortDateString
+        '    End If
 
-        End If
+        'End If
 
     End Sub
 

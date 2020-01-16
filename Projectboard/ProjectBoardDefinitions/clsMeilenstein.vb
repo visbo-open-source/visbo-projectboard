@@ -218,14 +218,14 @@ Public Class clsMeilenstein
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllDeliverables(Optional ByVal trennzeichen As String = vbLf) As String
+    Public ReadOnly Property getAllDeliverables(ByVal trennzeichen As String) As String
         Get
             Dim tmpDeliverables As String = ""
             For i As Integer = 1 To _deliverables.Count
                 If i = 1 Then
                     tmpDeliverables = _deliverables.Item(i - 1)
                 Else
-                    tmpDeliverables = tmpDeliverables & trennzeichen & _
+                    tmpDeliverables = tmpDeliverables & trennzeichen &
                         _deliverables.Item(i - 1)
                 End If
             Next
@@ -234,6 +234,7 @@ Public Class clsMeilenstein
 
         End Get
     End Property
+
 
     ''' <summary>
     ''' liest / setzt die individuelle appearance für diesen Meilenstein 
