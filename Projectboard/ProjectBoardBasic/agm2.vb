@@ -14144,26 +14144,26 @@ Public Module agm2
                             lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
                             lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
 
+                            ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
                             Dim found As Boolean = False
-                            Dim i As Integer = 0
+                            Dim i As Integer = lastZeile + 1
                             While Not found
-                                i = i + 1
+                                i = i - 1
                                 If kapaConfig("LastLine").regex = "RegEx" Then
-                                    Dim Lastline As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
                                     regexpression = New Regex(kapaConfig("LastLine").content)
-                                    Dim match As Match = regexpression.Match(Lastline)
-                                    If match.Success Then
-                                        Lastline = match.Value
+                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                    If Not IsNothing(lastLineContent) Then
+                                        Dim match As Match = regexpression.Match(lastLineContent)
+                                        If match.Success Then
+                                            lastLineContent = match.Value
+                                            found = True
+                                        End If
                                     End If
                                 End If
 
                             End While
-                            lastZeile = i
+                            lastZeile = i - 1
 
-                            ' Nachkorrektur,
-                            If CStr(CType(currentWS.Cells(lastZeile - 1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Contains("http") Then
-                                lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row - 2  ' URL von Zeuss-Software nicht benötigt
-                            End If
 
                             ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
                             ' -------------------------------------
