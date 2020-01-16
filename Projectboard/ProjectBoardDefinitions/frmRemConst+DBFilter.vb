@@ -1,6 +1,7 @@
 ﻿Public Class frmRemoveConstellation
     Private formerselect As String
     Public frmOption As String
+    Public dbPortfolioNames As SortedList(Of String, String)
     Private Sub frmRemoveConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ListBox1.Items.Clear()
@@ -19,7 +20,7 @@
         If frmOption = "ProjConstellation" Then
             Me.Text = "Portfolio löschen"
 
-            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+            For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
 
                 ListBox1.Items.Add(kvp.Key)
 

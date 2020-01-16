@@ -71,6 +71,7 @@
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
     <Compile Include="clsBewertungDB.vb" />
+    <Compile Include="clsConfigKapaImport.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
@@ -82,6 +83,7 @@
     <Compile Include="clsErrorCodeMsg.vb" />
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
+    <Compile Include="clsKeyMetrics.vb" />
     <Compile Include="clsKostenartDB.vb" />
     <Compile Include="clsKostenartDefinitionDB.vb" />
     <Compile Include="clsLicences.vb" />
@@ -102,6 +104,7 @@
     <Compile Include="clsroleNode.vb" />
     <Compile Include="clsSmartPPTChartInfo.vb" />
     <Compile Include="clsSmartPPTCompInfo.vb" />
+    <Compile Include="clsStopWatch.vb" />
     <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />
