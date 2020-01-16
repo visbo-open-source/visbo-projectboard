@@ -1585,12 +1585,13 @@ Public Module Module1
                 If Not IsNothing(idArray) Then
                     tmpResult = idArray.Contains(role.UID)
                 End If
+                ' tk 16.1.20 das wird rausgenommen , weil einzelnen Team-MEmbern soll etwas zugewiesen werden können
+                ' evtl das Ganze durch ein Custom-Setting awinsettings lösen
+                'ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
 
-            ElseIf (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
-
-                ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
-                ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
-                tmpResult = role.isTeam
+                '    ' tk 2.7.19 das wurde für Allianz Demo eingeführt ; das muss ggf unterchieden werden , ob Normal-Modus oder allianz Modus 
+                '    ' Andernfalls wäre es nicht mehr möglich, einzelnen Team-Membern etwas zuzuweisen
+                '    tmpResult = role.isTeam
 
             ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
                 Dim teamID As Integer = -1
