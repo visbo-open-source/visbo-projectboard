@@ -19810,18 +19810,6 @@ Public Module agm2
                 End If
 
 
-                ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
-                '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-                ''Dim allMyCustomUserRoles As New clsCustomUserRoles
-                ''allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
-
-                ''If allMyCustomUserRoles.count > 1 Then
-                ''    Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
-                ''Else
-                ''    myCustomUserRole = allMyCustomUserRoles.elementAt(0)
-                ''End If
-
-
                 If Not loginErfolgreich Then
 
 
@@ -19841,12 +19829,6 @@ Public Module agm2
                 End If
 
             End If
-
-
-            ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-            ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
 
 
             Dim wsName7810 As Excel.Worksheet = Nothing

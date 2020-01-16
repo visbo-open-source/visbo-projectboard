@@ -452,6 +452,10 @@ Public Class Tabelle2
                                 zeile = visboZustaende.oldRow
                             Next
 
+                            For Each costNameIDitem As String In frmMERoleCost.costsToAdd
+                                Call meRCZeileEinfuegen(zeile, costNameIDitem, False)
+                                zeile = visboZustaende.oldRow
+                            Next
 
 
                             ' alte Vorgehensweise ...

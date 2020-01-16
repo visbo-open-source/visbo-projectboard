@@ -15,7 +15,12 @@ Public Class frmEinstellungen
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
-        loadPFV.Checked = awinSettings.loadPFV
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            loadPFV.Checked = awinSettings.loadPFV
+        Else
+            loadPFV.Checked = awinSettings.filterPFV
+        End If
 
         dontFire = True
         If awinSettings.meCompareWithLastVersion Then
