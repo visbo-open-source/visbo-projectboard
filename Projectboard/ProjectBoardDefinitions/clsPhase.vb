@@ -810,7 +810,7 @@ Public Class clsPhase
 
 
         ' jetzt wird diese Phase entsprechend geändert ...
-        Call Me.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+        Call Me.adjustStartandDauer(newOffsetInTagen, newDauerInTagen)
 
         If autoAdjustChilds Then
 
@@ -993,6 +993,198 @@ Public Class clsPhase
 
     End Function
 
+    ''' <summary>
+    ''' ähnlich wie changeStartAnd Dauer, nur mit Modifikationen, die für adjustPhaseAndChilds notwendig sind ... 
+    ''' </summary>
+    ''' <param name="startOffset"></param>
+    ''' <param name="dauer"></param>
+    Private Sub adjustStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
+        Dim projektStartdate As Date
+        Dim projektstartColumn As Integer
+        Dim oldDauerinDays As Integer = Me._dauerInDays
+        Dim faktor As Double
+        Dim dimension As Integer
+
+        Dim errMsg As String = ""
+
+        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
+        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteilt werden  
+        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or
+                                                    (((Me.getStartDate.Date <> parentProject.startDate.AddDays(startOffset).Date) Or
+                                                    (Me.getEndDate.Date <> parentProject.startDate.AddDays(startOffset + dauer - 1).Date)) And
+                                                    Me.dauerInDays > 0)
+
+        ' damit wird bestimmt, ob die Verteilung auch dann neu berechnet werden soll, wenn die Dimension des alten und des neuen Arrays gleich ist.  
+        Dim calcAnyhow As Boolean = True
+
+        If Me.nameID <> rootPhaseName And Not IsNothing(parentProject) Then
+            If System.Math.Abs(Me.getStartDate.Day - parentProject.startDate.AddDays(startOffset).Day) <= 1 And
+            System.Math.Abs(dauer - Me.dauerInDays) <= 1 Then
+                calcAnyhow = False
+            End If
+        End If
+
+
+        If dauer < 0 Then
+            If awinSettings.englishLanguage Then
+                errMsg = "Dauer must not be negative!"
+            Else
+                errMsg = "Dauer kann nicht negativ sein!"
+            End If
+
+            Throw New ArgumentException(errMsg)
+
+        ElseIf startOffset < 0 Then
+
+            If awinSettings.englishLanguage Then
+                errMsg = "Phase may not begin before project starts!"
+            Else
+                errMsg = "Phase kann nicht vor Projektstart beginnen"
+            End If
+
+            Throw New ArgumentException(errMsg)
+
+        ElseIf Me.hasActualData And Me.dauerInDays > 0 Then
+            ' wenn die Phase gerade aufgebaut wird, darf das kein Abbruch geben ..
+            ' unzulässig Startdatum verändert sich , altes oder neues Startdatum liegt vor ActualDatauntil 
+            If Me.startOffsetinDays <> startOffset Then
+                If Me.getStartDate < parentProject.actualDataUntil Or parentProject.startDate.AddDays(startOffset) < parentProject.actualDataUntil Then
+                    ' unzulässig 
+
+                    If awinSettings.englishLanguage Then
+                        errMsg = "Start-Date may not be changed because of existing actual data!"
+                    Else
+                        errMsg = "Start-Datum kann nicht verändert werden, da es bereits Ist-Daten gibt. "
+                    End If
+
+                    Throw New ArgumentException(errMsg)
+                End If
+            End If
+
+            ' Überprüfung des Ende-Datums 
+            If parentProject.startDate.AddDays(startOffset + dauer - 1).Date < parentProject.actualDataUntil.Date Then
+                ' unzulässig 
+
+                If awinSettings.englishLanguage Then
+                    errMsg = "End-Date may not be before actual data - date!"
+                Else
+                    errMsg = "Ende-Datum kann nicht vor das Ist-Daten Datum gelegt werden ... "
+                End If
+
+                Throw New ArgumentException(errMsg)
+
+            End If
+
+        End If
+
+
+        Try
+            ' Änderung tk, 20.6.18 .startDate.Date um zu normieren ..
+            projektStartdate = Me.parentProject.startDate.Date
+            projektstartColumn = Me.parentProject.Start
+
+            If dauer = 0 And _relEnde > 0 Then
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            ElseIf dauer = 0 And _relEnde = 0 Then
+
+                Throw New ArgumentException("Phase kann nicht Dauer = 0 haben ")
+
+            Else
+                '  
+                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
+                    faktor = dauer / _dauerInDays
+                Else
+                    faktor = 1
+                End If
+
+
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
+
+
+
+                Dim oldlaenge As Integer = _relEnde - _relStart + 1
+
+
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
+
+
+                _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
+                _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
+
+                ' jetzt muss geprüft werden, ob die Phase die Dauer des Projektes verlängert 
+                ' dieser Aufruf korrigiert notfalls die intern gehaltene
+
+                Try
+                    If Not IsNothing(Me.parentProject.getPhase(1)) Then
+                        If Me.nameID <> Me.parentProject.getPhase(1).nameID Then
+                            ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                            Me.parentProject.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                        End If
+                    End If
+
+                Catch ex As Exception
+                    Dim b As Integer = 0
+                End Try
+
+
+                If newCalculationNecessary Then
+
+
+                    Dim newvalues() As Double
+
+                    dimension = _relEnde - _relStart
+                    ReDim newvalues(dimension)
+
+                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
+
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, faktor, calcAnyhow:=calcAnyhow)
+
+                    End If
+
+
+                End If
+
+
+
+
+            End If
+
+
+        Catch ex As Exception
+            ' bei einer Projektvorlage gibt es kein Datum - es sollen aber die Werte für Offset und Dauer übernommen werden
+
+            If dauer = 0 And _relEnde > 0 Then
+
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
+                '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
+                '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            Else
+                '  
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
+
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
+
+
+            End If
+
+        End Try
+
+    End Sub
     ''' <summary>
     ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
     ''' Allerdings nur , wenn erlaubt. 
