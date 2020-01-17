@@ -871,6 +871,7 @@ Public Module Module1
         offlineData = 13
         customization = 14
         appearances = 15
+        projectWithConfig = 16
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

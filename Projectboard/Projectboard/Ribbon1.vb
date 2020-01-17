@@ -7111,6 +7111,97 @@ Imports System.Web
 
 
     End Sub
+    Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
+
+        Dim hproj As New clsProjekt
+        Dim cproj As New clsProjekt
+        Dim vglName As String = " "
+        Dim outputString As String = ""
+        Dim dateiName As String
+        Dim getProjConfigImport As New frmSelectImportFiles
+        Dim returnValue As DialogResult
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+
+        getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+        returnValue = getProjConfigImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+
+
+            Dim importDate As Date = Date.Now
+            'Dim importDate As Date = "31.10.2013"
+            ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+            Dim listofVorlagen As Collection
+            listofVorlagen = getProjConfigImport.selImportFiles
+
+            Dim myCollection As New Collection
+
+
+
+            '' ''dirName = awinPath & msprojectFilesOrdner
+            ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+            ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear(False)
+
+            '' Cursor auf HourGlass setzen
+            Cursor.Current = Cursors.WaitCursor
+
+            ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+            Dim i As Integer
+
+            Dim outPutCollection As New Collection
+            Dim outputLine As String = ""
+
+            For i = 1 To listofVorlagen.Count
+                dateiName = listofVorlagen.Item(i).ToString
+
+
+
+
+                ' '' ''Dim skip As Boolean = False
+
+
+                ' '' ''Try
+                ' '' ''    appInstance.Workbooks.Open(dateiName)
+                ' '' ''Catch ex1 As Exception
+                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                ' '' ''    skip = True
+                ' '' ''End Try
+
+                ' '' ''If Not skip Then
+                ' '' ''    pname = ""
+
+                hproj = New clsProjekt
+
+                ' Definition für ein eventuelles Mapping
+                Dim mapProj As clsProjekt = Nothing
+
+
+                ' hier muss was rein
+
+
+            Next
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
 
     ''' <summary>
     ''' exportiert selektierte/alle Files in eine Excel Datei, die genauso aufgebaut ist , wie die BMW Import Datei  

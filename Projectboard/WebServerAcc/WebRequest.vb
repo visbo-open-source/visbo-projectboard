@@ -1025,6 +1025,19 @@ Public Class Request
 
                 End If
 
+                ' pfv-Variante wurde angelegt
+                If result = True And myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    ' Nachsehen, ob StandardVariante bereits existiert, oder nicht
+                    projekt.variantName = standardVariante
+                    Dim stdproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, projekt.vpID, Date.Now, err)
+
+                    ' es existiert noch keine Planungsvariante zu diesem Projekt-die vpv-Standard wird nun gleich der pfv-Variante angelegt
+                    If IsNothing(stdproj) Then
+                        result = POSTOneVPv(vpid, projekt, userName, err)
+                    End If
+
+                End If
+
             End If
 
         Catch ex As Exception
