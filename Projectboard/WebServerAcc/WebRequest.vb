@@ -1025,6 +1025,28 @@ Public Class Request
 
                 End If
 
+                ' Es wurde pfv-Variante  angelegt
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And result = True Then
+
+                    ' Nachsehen, ob StandardVariante bereits existiert, oder nicht
+                    projekt.variantName = standardVariante
+                    'Dim stdproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, projekt.vpID, Date.Now, err)
+                    Dim stdvpvs As List(Of clsProjektWebLong) = GETallVPvLong(vpid, err, "", "", False, "", Date.Now)
+
+                    ' es existiert noch keine Planungsvariante zu diesem Projekt-die vpv-Standard wird nun gleich der pfv-Variante angelegt
+                    If stdvpvs.Count <= 0 Then
+                        result = POSTOneVPv(vpid, projekt, userName, err)
+                    Else
+                        ' Create an Copy vpv mit neuer KeyMetrics
+                        ' POST /vpv/vpvid/copy
+                        ' url:     Http : //localhost:3484/vpv/vpv5c754feaa/copy
+                        ' {
+                        '  "timestamp": "2019-03-19T11:04:12.094Z"
+                        ' }
+                    End If
+
+                End If
+
             End If
 
         Catch ex As Exception
@@ -6298,6 +6320,11 @@ Public Class Request
                     ' updatedAt - Angabe in projekt speichern
                     If storeAntwort.vpv.Count >= 1 Then
                         projekt.updatedAt = storeAntwort.vpv.ElementAt(0).updatedAt
+                    End If
+
+                    ' vpid - Angabe in projekt speichern
+                    If storeAntwort.vpv.Count >= 1 Then
+                        projekt.vpID = storeAntwort.vpv.ElementAt(0).vpid
                     End If
 
 
