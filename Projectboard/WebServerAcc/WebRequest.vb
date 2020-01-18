@@ -2087,7 +2087,7 @@ Public Class Request
     ''' <summary>
     ''' Löschen des Portfolios  mit allen vorhandene Versionen aus der Datenbank
     ''' </summary>
-    ''' <param name="c"></param>
+    ''' <param name="cName"></param>
     ''' <returns></returns>
     Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
 

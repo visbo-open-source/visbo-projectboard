@@ -10475,6 +10475,8 @@ Imports System.Web
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
         Dim currentRow As Integer
         Dim currentColumn As Integer
         Dim prcTyp As String
@@ -10494,18 +10496,26 @@ Imports System.Web
             currentColumn = visboZustaende.meColRC
         End Try
 
-        Dim rcName As String = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+        Dim rcName As String = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
+        Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(currentRow, visboZustaende.meColRC), Excel.Range))
+
+        Dim rcNameTeamID As Integer = -1
+        Dim rcID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, rcNameTeamID)
+
+
         If IsNothing(rcName) Then
             rcName = ""
         End If
 
-        Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
-            currentRow = currentRow + 1
-            rcName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
-            If IsNothing(rcName) Then
-                rcName = ""
-            End If
-        Loop
+        ' tk 18.1.2020 rausnehmen besser !
+        'Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
+        '    currentRow = currentRow + 1
+        '    rcName = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
+        '    If IsNothing(rcName) Then
+        '        rcName = ""
+        '    End If
+        'Loop
+        ' Ende tk 18.1.2020
 
         ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
         If rcName = "" Then
@@ -10689,10 +10699,33 @@ Imports System.Web
 
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
 
+                    ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
+                    ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+
+                            Dim tmpParentName As String = ""
+
+                            If rcNameTeamID = -1 Then
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                            Else
+                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                If tmpParentName = "" Then
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                Else
+                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                    If lproj.containsRoleNameID(tmpParentNameID) Then
+                                        ' passt bereits 
+                                    Else
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    End If
+
+                                End If
+                            End If
+
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
@@ -10728,11 +10761,33 @@ Imports System.Web
 
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+
+                            Dim tmpParentName As String = ""
+
+                            If rcNameTeamID = -1 Then
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                            Else
+                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                If tmpParentName = "" Then
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                Else
+                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                    If lproj.containsRoleNameID(tmpParentNameID) Then
+                                        ' passt bereits 
+                                    Else
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    End If
+
+                                End If
+                            End If
+
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
+
                         End If
 
 

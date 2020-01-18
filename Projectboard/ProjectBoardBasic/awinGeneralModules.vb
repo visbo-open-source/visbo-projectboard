@@ -7195,6 +7195,18 @@ Public Module awinGeneralModules
             currentRoleName = ""
         End If
 
+        ' tk neu ab 18.1.20
+        Dim currentRoleNameID As String = ""
+        Dim rcID As Integer = -1
+        Dim teamID As Integer = -1
+
+        Dim potentialParents() As Integer = Nothing
+
+        If currentRoleName <> "" Then
+            rcID = RoleDefinitions.parseRoleNameID(currentRoleName, teamID)
+            currentRoleNameID = RoleDefinitions.bestimmeRoleNameID(rcID, teamID)
+        End If
+
         Dim err As New clsErrorCodeMsg
 
         Dim chtobj As Excel.ChartObject
@@ -7255,13 +7267,17 @@ Public Module awinGeneralModules
                                     .detailID = typID
 
                                     If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
-                                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+
+                                        potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
                                         If Not IsNothing(potentialParents) Then
                                             Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
                                             If tmpParentName <> "" Then
                                                 scInfo.q2 = tmpParentName
                                             End If
                                         End If
+
                                     Else
                                         .q2 = roleCostName
                                     End If
@@ -7335,12 +7351,44 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+
+
                                             scInfo.vergleichsTyp = PTVergleichsTyp.erster
                                             scInfo.vglProj = vglProj
 
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
-                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            ' tk neu 18.1.2020
+                                            potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
+
                                             Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.KostenBalken2
@@ -7354,6 +7402,39 @@ Public Module awinGeneralModules
 
                                             scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                                             scInfo.vglProj = vglProj
+
+                                            ' tk neu 18.1.2020
+                                            potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
@@ -7373,6 +7454,39 @@ Public Module awinGeneralModules
                                             scInfo.vergleichsTyp = PTVergleichsTyp.erster
                                             scInfo.vglProj = vglProj
 
+                                            ' tk neu 18.1.2020
+                                            potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
@@ -7389,6 +7503,39 @@ Public Module awinGeneralModules
 
                                             scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                                             scInfo.vglProj = vglProj
+
+                                            ' tk neu 18.1.2020
+                                            potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 

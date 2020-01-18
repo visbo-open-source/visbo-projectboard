@@ -791,6 +791,14 @@ Public Class clsPhase
 
     End Property
 
+    ''' <summary>
+    ''' wird verwendet um Termine entweder per Drag and Drop zu verändern , unter Berücksichtigung der ActualData 
+    ''' oder aber im MassEditTermine 
+    ''' </summary>
+    ''' <param name="newOffsetInTagen"></param>
+    ''' <param name="newDauerInTagen"></param>
+    ''' <param name="autoAdjustChilds"></param>
+    ''' <returns></returns>
     Public Function adjustPhaseAndChilds(ByVal newOffsetInTagen As Long, ByVal newDauerInTagen As Long,
                                          ByVal autoAdjustChilds As Boolean) As clsPhase
 
@@ -995,6 +1003,10 @@ Public Class clsPhase
 
     ''' <summary>
     ''' ähnlich wie changeStartAnd Dauer, nur mit Modifikationen, die für adjustPhaseAndChilds notwendig sind ... 
+    ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
+    ''' Allerdings nur , wenn erlaubt. 
+    ''' Nicht erlaubt: es gibt actualData, Starttermin liegt vor ActualData und soll verschoeben werden -> geht nicht 
+    ''' Start- oder Ende-Termin soll vor ActualData verschoeben werden ... 
     ''' </summary>
     ''' <param name="startOffset"></param>
     ''' <param name="dauer"></param>
@@ -1201,75 +1213,13 @@ Public Class clsPhase
         Dim faktor As Double
         Dim dimension As Integer
 
-        Dim errMsg As String = ""
-
-        ' hier muss unterschieden werden, ob Me.dauerIndays überhaupt schon was enthält, andernfalls muss keine Neuberechnung der Xwerte erfolgen
-        ' die muss nur dann erfolgen wenn aus zwei enthaltenen Monaten plötzlich drei werden . Dann muss die Bedarfs-Summe eben entsprechend neu verteilt werden  
-        Dim newCalculationNecessary As Boolean = (Me.nameID = rootPhaseName) Or
-                                                    (((Me.getStartDate.Date <> parentProject.startDate.AddDays(startOffset).Date) Or
-                                                    (Me.getEndDate.Date <> parentProject.startDate.AddDays(startOffset + dauer - 1).Date)) And
-                                                    Me.dauerInDays > 0)
-
-        ' damit wird bestimmt, ob die Verteilung auch dann neu berechnet werden soll, wenn die Dimension des alten und des neuen Arrays gleich ist.  
-        Dim calcAnyhow As Boolean = True
-
-        If Me.nameID <> rootPhaseName And Not IsNothing(parentProject) Then
-            If System.Math.Abs(Me.getStartDate.Day - parentProject.startDate.AddDays(startOffset).Day) <= 1 And
-            System.Math.Abs(dauer - Me.dauerInDays) <= 1 Then
-                calcAnyhow = False
-            End If
-        End If
 
 
         If dauer < 0 Then
-            If awinSettings.englishLanguage Then
-                errMsg = "Dauer must not be negative!"
-            Else
-                errMsg = "Dauer kann nicht negativ sein!"
-            End If
-
-            Throw New ArgumentException(errMsg)
+            Throw New ArgumentException("Dauer kann nicht negativ sein")
 
         ElseIf startOffset < 0 Then
-
-            If awinSettings.englishLanguage Then
-                errMsg = "Phase may not begin before project starts!"
-            Else
-                errMsg = "Phase kann nicht vor Projektstart beginnen"
-            End If
-
-            Throw New ArgumentException(errMsg)
-
-        ElseIf Me.hasActualData And Me.dauerInDays > 0 Then
-            ' wenn die Phase gerade aufgebaut wird, darf das kein Abbruch geben ..
-            ' unzulässig Startdatum verändert sich , altes oder neues Startdatum liegt vor ActualDatauntil 
-            If Me.startOffsetinDays <> startOffset Then
-                If Me.getStartDate < parentProject.actualDataUntil Or parentProject.startDate.AddDays(startOffset) < parentProject.actualDataUntil Then
-                    ' unzulässig 
-
-                    If awinSettings.englishLanguage Then
-                        errMsg = "Start-Date may not be changed because of existing actual data!"
-                    Else
-                        errMsg = "Start-Datum kann nicht verändert werden, da es bereits Ist-Daten gibt. "
-                    End If
-
-                    Throw New ArgumentException(errMsg)
-                End If
-            End If
-
-            ' Überprüfung des Ende-Datums 
-            If parentProject.startDate.AddDays(startOffset + dauer - 1).Date < parentProject.actualDataUntil.Date Then
-                ' unzulässig 
-
-                If awinSettings.englishLanguage Then
-                    errMsg = "End-Date may not be before actual data - date!"
-                Else
-                    errMsg = "Ende-Datum kann nicht vor das Ist-Daten Datum gelegt werden ... "
-                End If
-
-                Throw New ArgumentException(errMsg)
-
-            End If
+            Throw New ArgumentException("Phase kann nicht vor Projektstart beginnen")
 
         End If
 
@@ -1292,7 +1242,7 @@ Public Class clsPhase
 
             Else
                 '  
-                If _dauerInDays > 0 And dauer > 0 And awinSettings.propAnpassRess = True Then
+                If _dauerInDays > 0 And dauer > 0 Then
                     faktor = dauer / _dauerInDays
                 Else
                     faktor = 1
@@ -1330,18 +1280,27 @@ Public Class clsPhase
                 End Try
 
 
-                If newCalculationNecessary Then
+                If awinSettings.autoCorrectBedarfe Then
 
 
                     Dim newvalues() As Double
+                    Dim notYetDone As Boolean = True
 
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.countRoles > 0 Or Me.countCosts > 0 Then
+                    If Me.countRoles > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
-                        Call Me.calcNewXwerte(dimension, faktor, calcAnyhow:=calcAnyhow)
+                        Call Me.calcNewXwerte(dimension, faktor)
+                        notYetDone = False
+
+                    End If
+
+                    If Me.countCosts > 0 And notYetDone Then
+
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, 1)
 
                     End If
 
@@ -1379,6 +1338,7 @@ Public Class clsPhase
             End If
 
         End Try
+
 
 
     End Sub

@@ -1179,7 +1179,10 @@ Public Class Tabelle2
                         If Not IsNothing(formProjectInfo1) Then
                             Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                         End If
-                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                        ' tk 18.1.20
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcNameID)
+                        'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
                     End If
 
@@ -1978,6 +1981,7 @@ Public Class Tabelle2
 
         Dim pname As String = ""
         Dim rcName As String = ""
+        Dim rcNameID As String = ""
         Dim oldRCName As String = ""
         Dim changeBecauseProjektleitung As Boolean = False
         Try
@@ -1988,6 +1992,7 @@ Public Class Tabelle2
             End If
 
             rcName = CStr(meWS.Cells(Target.Row, columnRC).value)
+            rcNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(Target.Row, columnRC), Excel.Range))
 
             If visboZustaende.oldRow > 0 Then
                 oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
@@ -2084,7 +2089,7 @@ Public Class Tabelle2
             Dim alreadyDone As Boolean = False
             If pNameChanged Or changeBecauseProjektleitung Then
 
-                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcNameID)
 
                 If pNameChanged Then
                     selectedProjekte.Clear(False)

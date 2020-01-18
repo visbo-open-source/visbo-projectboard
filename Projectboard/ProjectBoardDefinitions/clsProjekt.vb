@@ -6117,6 +6117,18 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' bekommt eine RoleName ID der Form roleID;TeamID übergeben
+    ''' gibt true zurück, wenn diese RoleNameID im Projekt vorkommt 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsRoleNameID(ByVal roleNameID As String) As Boolean
+        Get
+            containsRoleNameID = getRoleNameIDs.Contains(roleNameID)
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
     ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
     ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
