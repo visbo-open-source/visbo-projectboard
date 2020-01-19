@@ -8026,6 +8026,10 @@ Public Module Module1
         '    Kommentare alle löschen 
         currentCell.ClearComments()
 
+        ' ist immer locked , also entsprechend kennzeichnen
+        currentCell.Interior.Color = XlRgbColor.rgbLightGray
+
+
         ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermitelt werden kann 
         If calcHryElemKey(phaseName, False) <> phaseNameID Then
             currentCell.AddComment(Text:=phaseNameID)
@@ -8046,6 +8050,9 @@ Public Module Module1
                                           ByVal protectiontext As String)
 
         currentCell.Value = pName
+
+        ' ist immer locked , also entsprechend kennzeichnen
+        currentCell.Interior.Color = XlRgbColor.rgbLightGray
 
         If isProtectedbyOthers Then
 
@@ -8073,7 +8080,7 @@ Public Module Module1
                                          ByVal isLocked As Boolean,
                                          ByVal rcName As String,
                                          ByVal roleNameID As String,
-                                         ByVal isRole As Boolean)
+                                         ByVal isRole As Boolean, ByVal indentlevel As Integer)
 
 
         Dim teamID As Integer = -1
@@ -8108,6 +8115,13 @@ Public Module Module1
         With currentCell
             .Value = rcName
             .Locked = isLocked
+            .IndentLevel = indentlevel
+
+            If isLocked Then
+                ' als gesperrt kennzeichnen 
+                .Interior.Color = XlRgbColor.rgbLightGray
+            End If
+
             Try
                 If Not IsNothing(.Validation) Then
                     .Validation.Delete()

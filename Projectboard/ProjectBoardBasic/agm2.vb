@@ -17225,7 +17225,7 @@ Public Module agm2
                     CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
                 End If
 
-                ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
+                ' hier wird jetzt der Rollen- bzw Kostenart-Name eingetragen 
                 Dim rcName As String = rcNameID
                 Dim islocked As Boolean = False
                 Dim teamID As Integer = -1
@@ -17245,7 +17245,7 @@ Public Module agm2
 
                 Dim teamName As String = ""
                 ' tk 4.3.19 es muss newzeile sein, statt zeile 
-                Dim currentCell As Excel.Range = CType(.Cells(newZeile, 5), Excel.Range)
+                Dim currentCell As Excel.Range = CType(.Cells(newZeile, columnRC), Excel.Range)
                 ' erst mal alle Kommentare löschen 
                 currentCell.ClearComments()
 
@@ -17275,6 +17275,10 @@ Public Module agm2
                 With currentCell
                     .Value = rcName
                     .Locked = islocked
+
+                    If .Locked = False Then
+                        .Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+                    End If
                     ' eigentlich hier nicht mehr notwendig - es gibt hier keine Validation
                     'Try
                     '    If Not IsNothing(.Validation) Then
@@ -17365,6 +17369,96 @@ Public Module agm2
 
 
     ''' <summary>
+    ''' die zuerst angegebene ZeilenNummer wird auf Highlight gesetzt, sofern >1 
+    ''' die zuletzt angegebene ZeilenNummer wird auf Normal gesetzt, sofern > 1 und unterschiedlich zu ersten ZeilenNummer 
+    ''' </summary>
+    ''' <param name="rowToHightlight"></param>
+    ''' <param name="rowToNormal"></param>
+    Sub highlightRow(ByVal rowToHightlight As Integer, ByVal rowToNormal As Integer)
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        Dim aktuelleZeile As Excel.Range = Nothing
+        Dim formerZeile As Excel.Range = Nothing
+
+        If rowToHightlight > 1 Then
+            aktuelleZeile = meWS.Range(meWS.Cells(rowToHightlight, 1), meWS.Cells(rowToHightlight, visboZustaende.meColED))
+        End If
+
+        If rowToNormal > 1 And rowToNormal <> rowToHightlight Then
+            formerZeile = meWS.Range(meWS.Cells(rowToNormal, 1), meWS.Cells(rowToNormal, visboZustaende.meColED))
+        End If
+
+
+        If Not IsNothing(formerZeile) Then
+            ' set to Normal
+            With formerZeile
+                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
+                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
+
+                With .Borders(XlBordersIndex.xlEdgeLeft)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeTop)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeBottom)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                With .Borders(XlBordersIndex.xlEdgeRight)
+                    .LineStyle = XlLineStyle.xlLineStyleNone
+                    .ColorIndex = XlColorIndex.xlColorIndexNone
+                End With
+                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlInsideHorizontal).ColorIndex = XlColorIndex.xlColorIndexNone
+            End With
+
+        End If
+
+        ' jetzt highlighten - die Reihenfolge ist wichtig, wenn das De-Highlight nach dem Highlight gemacht wird, dann kann es sein, dass Teile des Highlights wieder weg sind ..
+        If Not IsNothing(aktuelleZeile) Then
+            ' set to Hightlight
+            With aktuelleZeile
+                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
+                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
+                With .Borders(XlBordersIndex.xlEdgeLeft)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeTop)
+                    .LineStyle = XlLineStyle.xlContinuous
+
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeBottom)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                With .Borders(XlBordersIndex.xlEdgeRight)
+                    .LineStyle = XlLineStyle.xlContinuous
+                    .ColorIndex = 0
+                    .TintAndShade = 0
+                    .Weight = XlBorderWeight.xlMedium
+                End With
+                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
+            End With
+        End If
+
+
+    End Sub
+
+
+
+    ''' <summary>
     ''' fügt eine Zeile im MassEdit ein 
     ''' </summary>
     ''' <param name="controlID"></param>
@@ -17391,6 +17485,8 @@ Public Module agm2
 
             Call meRCZeileEinfuegen(zeile, "", True)
 
+            ' neueZeile highlighten, ale Zeile to Normal
+            Call highlightRow(zeile + 1, zeile)
 
             ' jetzt den Blattschutz wiederherstellen ... 
             If Not awinSettings.meEnableSorting Then
@@ -17617,7 +17713,7 @@ Public Module agm2
                         ' ist das Projekt geschützt ? 
                         ' wenn nein, dann temporär schützen 
                         Dim protectionText As String = ""
-                        Dim wpItem As clsWriteProtectionItem
+                        'Dim wpItem As clsWriteProtectionItem
                         Dim isProtectedbyOthers As Boolean
 
                         ' nur beim Ressourcen Manager muss es nicht zwangsläufig komplett geschützt werden ... bei allen anderen schon ... 
@@ -17642,13 +17738,14 @@ Public Module agm2
                         End If
 
 
-
+                        ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
                         If isProtectedbyOthers Then
 
                             ' nicht erfolgreich, weil durch anderen geschützt ... 
                             ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                            wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                            writeProtections.upsert(wpItem)
+                            ' tk 19.1.20 ist doch gar nicht mehr notwendig ? 
+                            'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                            'writeProtections.upsert(wpItem)
 
                             protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
@@ -17679,7 +17776,7 @@ Public Module agm2
                             summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
-                            Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
+                            Dim indentlevelPhMS As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
 
                             If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
                                 ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
@@ -17695,7 +17792,9 @@ Public Module agm2
                                 Dim validRoles As New SortedList(Of Integer, clsRolle)
                                 Dim posIX As Integer = 1
                                 Dim lastIX As Integer = 1
-                                For r = 1 To cphase.countRoles
+
+
+                                For r As Integer = 1 To cphase.countRoles
 
                                     Dim role As clsRolle = cphase.getRole(r)
                                     ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
@@ -17706,6 +17805,7 @@ Public Module agm2
                                     Dim teamID As Integer = role.teamID
 
                                     Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                                    Dim indentLevelRole As Integer = 0
                                     Dim validRole As Boolean = True
                                     Dim isVirtualChild As Boolean = False
 
@@ -17747,6 +17847,8 @@ Public Module agm2
                                     Dim teamID As Integer = kvp.Value.teamID
 
                                     Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                                    ' tk 19.1.20 
+                                    Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
 
 
                                     Dim xValues() As Double = kvp.Value.Xwerte
@@ -17757,42 +17859,19 @@ Public Module agm2
                                     ' ggf Schreibschutz setzen für die Zeile setzen
                                     Dim lockZeile As Boolean = False
                                     Dim lockText As String = ""
+
                                     If isProtectedbyOthers Then
                                         lockZeile = True
                                         lockText = protectionText
-                                        ' tk 25.7.19 beide können wechselseitig ihr Zuordnungen überschreiben 
-                                        'ElseIf isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                                        '    ' dem Ressourcen Manager soll es erlaubt sein , Team-Bedarfe zu editieren und zu löschen , aber nicht einzufügen ...  
-                                        '    lockZeile = False
-                                        '    If awinSettings.englishLanguage Then
-                                        '        lockText = "Ressourcen-Manager darf Teams nicht editieren"
-                                        '    Else
-                                        '        lockText = "Ressourcen-Manager may not edit Teams"
-                                        '    End If
-
-                                        'ElseIf Not isVirtualChild And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                        '    ' bei Team-Manager sollen alle Rollen, die nicht der restrictedTopRole entsprechen als schreibgeschützt dargestellt werden 
-                                        '    Try
-                                        '        If restrictedTopRole.UID <> roleUID Then
-                                        '            lockZeile = False
-                                        '            If awinSettings.englishLanguage Then
-                                        '                lockText = "Team-Manager darf Personen nicht editieren"
-                                        '            Else
-                                        '                lockText = "Team-Manager may not edit persons"
-                                        '            End If
-                                        '        End If
-                                        '    Catch ex As Exception
-
-                                        '    End Try
-
-
 
                                     End If
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, lockZeile, zeile, roleName, roleNameID, True,
+                                    Dim roleHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, roleNameID, True, False).Sum > 0
+
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, roleName, roleNameID, True,
                                                                         lockText, von, bis,
-                                                                        actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                                                        actualDataRelColumn, roleHasActualData, summeEditierenErlaubt,
+                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, roleIndentLevel)
 
                                     If ok Then
 
@@ -17841,10 +17920,10 @@ Public Module agm2
 
                                         'ReDim zeilenWerte(bis - von)
 
-                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, costName, "", False,
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, isProtectedbyOthers, zeile, costName, "", False,
                                                                                 protectionText, von, bis,
                                                                                 actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
                                         If ok Then
 
@@ -17884,10 +17963,10 @@ Public Module agm2
                                     ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
 
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, "", "", False,
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, isProtectedbyOthers, zeile, "", "", False,
                                                                             protectionText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+                                                                            ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
 
                                     If ok Then
                                         zeile = zeile + 1
@@ -18086,7 +18165,7 @@ Public Module agm2
     ''' <param name="wsName"></param>
     ''' <param name="hproj"></param>
     ''' <param name="cphase"></param>
-    ''' <param name="indentLevel"></param>
+    ''' <param name="indentLevelPhMs"></param>
     ''' <param name="isProtectedbyOthers"></param>
     ''' <param name="zeile"></param>
     ''' <param name="rcName"></param>
@@ -18099,13 +18178,13 @@ Public Module agm2
     ''' <param name="breite"></param>
     ''' <param name="startSpalteDaten"></param>
     ''' <returns></returns>
-    Public Function massEditWrite1Zeile(ByVal wsName As String, ByVal hproj As clsProjekt, ByVal cphase As clsPhase, ByVal indentLevel As Integer,
+    Public Function massEditWrite1Zeile(ByVal wsName As String, ByVal hproj As clsProjekt, ByVal cphase As clsPhase, ByVal indentLevelPhMs As Integer,
                                          ByVal isProtectedbyOthers As Boolean, ByVal zeile As Integer,
                                          ByVal rcName As String, ByVal rcNameID As String, ByVal isRole As Boolean,
                                          ByVal protectiontext As String,
                                          ByVal von As Integer, ByVal bis As Integer,
                                          ByVal actualdataRelColumn As Integer, ByVal hasActualdata As Boolean, ByVal summeEditierenErlaubt As Boolean,
-                                         ByVal ixZeitraum As Integer, ByVal breite As Integer, ByVal startSpalteDaten As Integer, ByRef maxRcLength As Integer) As Boolean
+                                         ByVal ixZeitraum As Integer, ByVal breite As Integer, ByVal startSpalteDaten As Integer, ByRef maxRcLength As Integer, ByVal indentlevelRC As Integer) As Boolean
 
         Dim currentWS As Excel.Worksheet = Nothing
         Dim writeResult As Boolean = False
@@ -18134,14 +18213,15 @@ Public Module agm2
 
                 ' den Varianten-Namen schreiben
                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                 ' Phase und ggf PhaseNameID schreiben
-                Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevel, cphase.name, cphase.nameID)
+                Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevelPhMs, cphase.name, cphase.nameID)
 
 
                 ' Rolle oder Kostenart schreiben 
                 Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
-                Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole)
+                Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
 
 
                 ' das Format der Zeile mit der Summe
@@ -18173,6 +18253,9 @@ Public Module agm2
                         End If
 
                     End With
+                Else
+                    ' als gesperrt kennzeichnen 
+                    CType(.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                 End If
 
             End With
@@ -18203,13 +18286,17 @@ Public Module agm2
 
                             ' jetzt kommt die Farbsetzung ... die hängt nur von actualDataRelColumn ab
                             If spix <= actualdataRelColumn Then
-                                .Interior.Color = awinSettings.AmpelNichtBewertet
+                                ' tk 19.1.20
+                                ' .Interior.Color = awinSettings.AmpelNichtBewertet
+                                .Interior.Color = XlRgbColor.rgbGray
                                 .Font.Color = XlRgbColor.rgbBlack
                             Else
-                                .Interior.Color = visboFarbeBlau
+
                                 If Not isProtectedbyOthers Then
+                                    .Interior.Color = visboFarbeBlau
                                     .Font.Color = XlRgbColor.rgbWhite
                                 Else
+                                    .Interior.Color = XlRgbColor.rgbLightGray
                                     .Font.Color = XlRgbColor.rgbBlack
                                 End If
                             End If
@@ -18400,7 +18487,7 @@ Public Module agm2
                     ' ist das Projekt geschützt ? 
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
-                    Dim wpItem As clsWriteProtectionItem
+                    'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
                     isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
@@ -18408,10 +18495,11 @@ Public Module agm2
 
                     If isProtectedbyOthers Then
 
+                        ' tk 19.1.20 ist doch überhaupt nicht notwendig 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        writeProtections.upsert(wpItem)
+                        'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                        'writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
@@ -18438,11 +18526,13 @@ Public Module agm2
                         ' Business-Unit
                         CType(currentWS.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
                         CType(currentWS.Cells(zeile, 1), Excel.Range).Locked = True
+                        CType(currentWS.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' 
                         ' Projekt-Name
                         CType(currentWS.Cells(zeile, 2), Excel.Range).Value = hproj.name
                         CType(currentWS.Cells(zeile, 2), Excel.Range).Locked = True
+                        CType(currentWS.Cells(zeile, 2), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' geschützt oder nicht geschützt ? 
                         Dim currentCell As Excel.Range = CType(currentWS.Cells(zeile, 2), Excel.Range)
@@ -18463,6 +18553,7 @@ Public Module agm2
                         ' Varianten-Name
                         CType(currentWS.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                         CType(currentWS.Cells(zeile, 3), Excel.Range).Locked = True
+                        CType(currentWS.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' 
                         ' jetzt kommen die Milestone bzw Phase-abhängigen Elemente  
@@ -18475,12 +18566,11 @@ Public Module agm2
 
                             ' schreibe den Meilenstein
 
-
-
                             ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
                             CType(currentWS.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                             ' jetzt die Kommentare schreiben 
                             CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
@@ -18493,20 +18583,33 @@ Public Module agm2
                             ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+                            CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                             ' Ende-Datum 
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
                             If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
                                 ' Sperren ...
                                 CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                End If
+
                             End If
 
                             ' Ampel-Farbe
                             CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
-                            CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
+                                CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
+                            End If
+
 
 
                             If cMilestone.ampelStatus = 1 Then
@@ -18522,25 +18625,55 @@ Public Module agm2
 
                             ' Ampel-Erläuterung
                             CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
-                            CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
+                                CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
+                            End If
+
 
 
                             ' Lieferumfänge
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
+                            End If
+
 
 
                             ' wer ist verantwortlich
                             CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
-                            CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
+                                CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
+                            End If
+
 
                             ' wieviel ist erledigt ? 
                             CType(currentWS.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
-                            CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
+                                CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
+                            End If
+
 
                             ' der Dokumenten Link 
                             CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
-                            CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                            If isProtectedbyOthers Then
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            Else
+                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                            End If
+
 
 
                         Else
@@ -18557,6 +18690,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
 
                                 CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
+                                CType(.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                                 ' jetzt die Kommentare schreiben 
                                 CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
@@ -18571,9 +18705,14 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
+                                    If isProtectedbyOthers Then
+                                        CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    Else
+                                        CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
+                                    End If
                                 End If
 
 
@@ -18582,14 +18721,26 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                    If isProtectedbyOthers Then
+                                        CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    Else
+                                        CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
+                                    End If
+
                                 End If
 
                                 ' Ampel-Farbe
                                 CType(.Cells(zeile, 7), Excel.Range).Value = cPhase.ampelStatus
-                                CType(.Cells(zeile, 7), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(.Cells(zeile, 7), Excel.Range).Locked = False
+                                End If
+
 
                                 If cPhase.ampelStatus = 1 Then
                                     CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeGreen
@@ -18604,23 +18755,53 @@ Public Module agm2
 
                                 ' Ampel-Erläuterung
                                 CType(.Cells(zeile, 8), Excel.Range).Value = cPhase.ampelErlaeuterung
-                                CType(.Cells(zeile, 8), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(.Cells(zeile, 8), Excel.Range).Locked = False
+                                End If
+
 
                                 ' Lieferumfänge
                                 CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
-                                CType(.Cells(zeile, 9), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(.Cells(zeile, 9), Excel.Range).Locked = False
+                                End If
+
 
                                 ' wer ist verantwortlich
                                 CType(.Cells(zeile, 10), Excel.Range).Value = cPhase.verantwortlich
-                                CType(.Cells(zeile, 10), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(.Cells(zeile, 10), Excel.Range).Locked = False
+                                End If
+
 
                                 ' wieviel ist erledigt ? 
                                 CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone.ToString("0#%")
-                                CType(.Cells(zeile, 11), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(.Cells(zeile, 11), Excel.Range).Locked = False
+                                End If
+
 
                                 ' der Dokumenten Link 
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cPhase.DocURL
-                                CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                Else
+                                    CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                                End If
+
 
                             End With
                         End If
@@ -18921,7 +19102,7 @@ Public Module agm2
                     ' ist das Projekt geschützt ? 
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
-                    Dim wpItem As clsWriteProtectionItem
+                    'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
 
                     ' hier muss es geschützt werden ...
@@ -18930,10 +19111,11 @@ Public Module agm2
 
                     If isProtectedbyOthers Then
 
+                        ' tk ist doch überhauot nicht notwendig, wird doch schon oben geacht 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        writeProtections.upsert(wpItem)
+                        'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                        'writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
@@ -18941,8 +19123,9 @@ Public Module agm2
 
                     ' jetzt wird für jedes Projekt genau eine Zeile geschrieben 
                     With CType(currentWS, Excel.Worksheet)
+
                         CType(.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
-                        CType(.Cells(zeile, 1), Excel.Range).NumberFormat = "@"
+                        'CType(.Cells(zeile, 1), Excel.Range).NumberFormat = "@"
 
                         CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
 
@@ -19040,6 +19223,7 @@ Public Module agm2
                         End With
 
                         kompletteZeile.Locked = True
+                        kompletteZeile.Interior.Color = XlRgbColor.rgbLightGray
 
                     Else
                         Dim protectArea As Excel.Range = Nothing
@@ -19052,11 +19236,14 @@ Public Module agm2
                                 protectArea = CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Excel.Range)
                                 editArea.Locked = False
                                 protectArea.Locked = True
+                                protectArea.Interior.Color = XlRgbColor.rgbLightGray
+
                             Else
                                 'protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 3)), Excel.Range)
                                 protectArea = CType(.Rows(zeile), Excel.Range)
                                 editArea = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 6)), Excel.Range)
                                 protectArea.Locked = True
+                                protectArea.Interior.Color = XlRgbColor.rgbLightGray
                                 editArea.Locked = False
                             End If
 

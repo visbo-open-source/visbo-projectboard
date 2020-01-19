@@ -3289,6 +3289,103 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' gibt zur den Array an Ist-Werten der angegebenen Rolle / Kostenart zurück  
+    ''' </summary>
+    ''' <param name="rcNameID"></param>
+    ''' <param name="isRole"></param>
+    ''' <param name="outPutInEuro"></param>
+    ''' <returns></returns>
+    Public Function getActualRCValues(ByVal rcNameID As String, ByVal isRole As Boolean, ByVal outPutInEuro As Boolean) As Double()
+
+        Dim tmpResult() As Double = Nothing
+
+        Dim xWerte() As Double = Nothing
+        Dim notYetDone As Boolean = True
+        Dim tagessatz As Double = 800
+
+
+
+        Dim pstart As Integer = getColumnOfDate(getStartDate)
+        Dim pEnde As Integer = getColumnOfDate(getEndDate)
+        Dim actualIX As Integer
+        Dim arrayEnde As Integer
+
+        If DateDiff(DateInterval.Month, StartofCalendar, parentProject.actualDataUntil) > 0 Then
+            actualIX = getColumnOfDate(parentProject.actualDataUntil)
+            arrayEnde = System.Math.Min(pEnde, actualIX)
+        Else
+            arrayEnde = pEnde
+        End If
+
+
+        If pstart > arrayEnde Then
+            ' es kann noch keine Ist-Daten geben 
+            ReDim tmpResult(0)
+            tmpResult(0) = 0
+
+        ElseIf pstart <= arrayEnde Then
+            ReDim tmpResult(arrayEnde - pstart)
+            If isRole Then
+                ' enthält diese Phase überhaupt diese Rolle ?
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+
+                Dim tmpRole As clsRolle = getRoleByRoleNameID(rcNameID)
+                If Not IsNothing(tmpRole) Then
+                    tagessatz = tmpRole.tagessatzIntern
+                    xWerte = tmpRole.Xwerte
+                Else
+                    ReDim tmpResult(0)
+                    tmpResult(0) = 0
+                    notYetDone = False
+                End If
+
+            ElseIf rcNameID <> "" Then
+                If CostDefinitions.containsName(rcNameID) Then
+                    Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+
+                    Dim tmpCost As clsKostenart = getCost(rcNameID)
+                    If Not IsNothing(tmpCost) Then
+                        xWerte = tmpCost.Xwerte
+                    Else
+                        ReDim tmpResult(0)
+                        tmpResult(0) = 0
+                        notYetDone = False
+                    End If
+
+                Else
+                    notYetDone = False
+                End If
+
+
+            Else
+                notYetDone = False
+            End If
+
+            If notYetDone Then
+
+                For i As Integer = 0 To arrayEnde - pstart
+                    If isRole And outPutInEuro Then
+                        ' mit Tagessatz multiplizieren 
+                        tmpResult(i) = xWerte(i) * tagessatz
+                    Else
+                        tmpResult(i) = xWerte(i)
+                    End If
+
+                Next
+            Else
+                ReDim tmpResult(0)
+                tmpResult(0) = 0
+            End If
+
+        End If
+
+
+
+        getActualRCValues = tmpResult
+    End Function
+
+    ''' <summary>
     ''' liefert den Index zurück, bis zu dem ActualData in der Phase existiert 
     ''' -1 es existiert kein ActualData in der Phase 
     ''' 0 .LE. x .LE. dimension-1  die Monate xwerte(0), xwerte(1), ..xwerte(x) sind ActualData Monate  

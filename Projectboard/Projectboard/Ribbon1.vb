@@ -3586,17 +3586,9 @@ Imports System.Web
 
             If todoListe.Count > 0 Then
 
-                ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
-                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                    ' alles ok , bereits gesetzt 
+                ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
 
-                Else
 
-                    showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                    showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                End If
 
 
                 Call enableControls(meModus)
@@ -3615,6 +3607,13 @@ Imports System.Web
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
+
+                        showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                        showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+
                         ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
                         ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
                         projektTodoliste = substituteListeByPVNameIDs(todoListe)

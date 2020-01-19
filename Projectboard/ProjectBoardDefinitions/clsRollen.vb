@@ -402,6 +402,31 @@ Public Class clsRollen
     End Function
 
     ''' <summary>
+    ''' gibt den anzuzeigenden Indeltlevel an 
+    ''' 0: nicht gefunden 
+    ''' 1: ist bereits auf top Level
+    ''' 2, .. Kind bzw. Kindeskind ...
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <returns></returns>
+    Public Function getRoleIndent(ByVal roleNameID As String) As Integer
+        Dim tmpResult As Integer = 0
+
+        Dim teamID As Integer = -1
+        Dim tmpRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
+        Try
+            tmpResult = getParentArray(tmpRole).Count
+        Catch ex As Exception
+
+        End Try
+
+
+        getRoleIndent = tmpResult
+
+    End Function
+
+
+    ''' <summary>
     ''' gibt die Eltern-/Groß-Eltern-ID bis zum höchsten Knoten zurück
     ''' wenn Role Nothing ist, kommt Nothing zurück 
     ''' die Liste enthält auch die Kind-Rolle als erstes Element , wenn also nur ein Element drin ist, dann ist es bereits ein TopLevelNode 
@@ -560,7 +585,7 @@ Public Class clsRollen
 
     ''' <summary>
     ''' gibt die Positions-Indices zurück 
-    ''' im Fehlerfall werden die ids als Sortier-Kriterium verwnedte 
+    ''' im Fehlerfall werden die Role-IDs als Sortier-Kriterium verwnedte 
     ''' </summary>
     ''' <param name="NameIDListe"></param>
     ''' <returns></returns>

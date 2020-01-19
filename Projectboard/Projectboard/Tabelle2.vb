@@ -381,12 +381,11 @@ Public Class Tabelle2
                     Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
                     Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                    ' jetzt wird 
+                    ' 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
                     Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
-                    'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
                     Dim hproj As clsProjekt = Nothing
                     If Not IsNothing(pName) And pName <> "" Then
@@ -433,19 +432,19 @@ Public Class Tabelle2
                             ' die noch keine Ist-Daten enthalten
 
 
+                            ' tk 19.1.20 das Löschen aus dem Formular soll nicht gehen ... 
+                            'For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
+                            '    Dim zeileToDelete As Integer = findeZeileInMeRC(meWS, pName, phaseNameID, roleNameIDItem)
+                            '    Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
+                            'Next
 
-                            For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
-                                Dim zeileToDelete As Integer = findeZeileInMeRC(meWS, pName, phaseNameID, roleNameIDItem)
-                                Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
-                            Next
-
-                            If Not frmMERoleCost.rolesToDelete.Contains(frmMERoleCost.rcNameID) Then
-                                ' dann gibt es den noch ... 
-                                zeile = findeZeileInMeRC(meWS, pName, phaseNameID, frmMERoleCost.rcNameID)
-                            Else
-                                ' andernfalls - such eine beliebige Zeile mit pName, PhaseNamID
-                                zeile = findeZeileInMeRC(meWS, pName, phaseNameID, "*")
-                            End If
+                            'If Not frmMERoleCost.rolesToDelete.Contains(frmMERoleCost.rcNameID) Then
+                            '    ' dann gibt es den noch ... 
+                            '    zeile = findeZeileInMeRC(meWS, pName, phaseNameID, frmMERoleCost.rcNameID)
+                            'Else
+                            '    ' andernfalls - such eine beliebige Zeile mit pName, PhaseNamID
+                            '    zeile = findeZeileInMeRC(meWS, pName, phaseNameID, "*")
+                            'End If
 
                             For Each roleNameIDitem As String In frmMERoleCost.rolesToAdd
                                 Call meRCZeileEinfuegen(zeile, roleNameIDitem, True)
@@ -1850,79 +1849,6 @@ Public Class Tabelle2
     End Sub
 
     ''' <summary>
-    ''' setzt die angegebene Zeile auf den High-Light Modus bzw. wieder auf den Normal-Modus 
-    ''' </summary>
-    ''' <param name="zeile"></param>
-    ''' <param name="highlight"></param>
-    Private Sub selectionMode(ByVal zeile As Integer, ByVal highlight As Boolean)
-
-        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
-        Dim aktuelleZeile As Excel.Range = meWS.Range(meWS.Cells(zeile, 1), meWS.Cells(zeile, visboZustaende.meColED))
-
-
-
-        If highlight Then
-            With aktuelleZeile
-                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
-                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
-                With .Borders(XlBordersIndex.xlEdgeLeft)
-                    .LineStyle = XlLineStyle.xlContinuous
-                    .ColorIndex = 0
-                    .TintAndShade = 0
-                    .Weight = XlBorderWeight.xlMedium
-                End With
-                With .Borders(XlBordersIndex.xlEdgeTop)
-                    .LineStyle = XlLineStyle.xlContinuous
-
-                    .TintAndShade = 0
-                    .Weight = XlBorderWeight.xlMedium
-                End With
-                With .Borders(XlBordersIndex.xlEdgeBottom)
-                    .LineStyle = XlLineStyle.xlContinuous
-                    .ColorIndex = 0
-                    .TintAndShade = 0
-                    .Weight = XlBorderWeight.xlMedium
-                End With
-                With .Borders(XlBordersIndex.xlEdgeRight)
-                    .LineStyle = XlLineStyle.xlContinuous
-                    .ColorIndex = 0
-                    .TintAndShade = 0
-                    .Weight = XlBorderWeight.xlMedium
-                End With
-                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
-            End With
-        Else
-            With aktuelleZeile
-                .Borders(XlBordersIndex.xlDiagonalDown).LineStyle = XlLineStyle.xlLineStyleNone
-                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
-                .Borders(XlBordersIndex.xlDiagonalUp).LineStyle = XlLineStyle.xlLineStyleNone
-                .Borders(XlBordersIndex.xlDiagonalDown).ColorIndex = XlColorIndex.xlColorIndexNone
-
-                With .Borders(XlBordersIndex.xlEdgeLeft)
-                    .LineStyle = XlLineStyle.xlLineStyleNone
-                    .ColorIndex = XlColorIndex.xlColorIndexNone
-                End With
-                With .Borders(XlBordersIndex.xlEdgeTop)
-                    .LineStyle = XlLineStyle.xlLineStyleNone
-                    .ColorIndex = XlColorIndex.xlColorIndexNone
-                End With
-                With .Borders(XlBordersIndex.xlEdgeBottom)
-                    .LineStyle = XlLineStyle.xlLineStyleNone
-                    .ColorIndex = XlColorIndex.xlColorIndexNone
-                End With
-                With .Borders(XlBordersIndex.xlEdgeRight)
-                    .LineStyle = XlLineStyle.xlLineStyleNone
-                    .ColorIndex = XlColorIndex.xlColorIndexNone
-                End With
-                .Borders(XlBordersIndex.xlInsideHorizontal).LineStyle = XlLineStyle.xlLineStyleNone
-                .Borders(XlBordersIndex.xlInsideHorizontal).ColorIndex = XlColorIndex.xlColorIndexNone
-            End With
-        End If
-
-
-    End Sub
-
-    ''' <summary>
     ''' gibt in der Headerzeile an, ob es sich bei den Werten in der Zeile um Personentage oder oder um Tausend Euro handelt 
     ''' </summary>
     ''' <param name="zeile"></param>
@@ -1970,8 +1896,7 @@ Public Class Tabelle2
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
         If Target.Row <> oldRow Then
-            Call selectionMode(oldRow, False)
-            Call selectionMode(Target.Row, True)
+            Call highlightRow(Target.Row, oldRow)
 
             ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
             Call defineHeaderTitleOfRoleCost(Target.Row)
@@ -2000,7 +1925,7 @@ Public Class Tabelle2
 
             ' das wirkt sich auf das aktualisieren der charts aus 
             changeBecauseProjektleitung = rcName <> oldRCName And
-                                                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+                                          myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
 
             ' alte Row merken 
             visboZustaende.oldRow = Target.Row

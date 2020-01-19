@@ -3952,21 +3952,23 @@ Public Class clsProjekt
             Dim pstart As Integer = getColumnOfDate(cphase.getStartDate)
             Dim pEnde As Integer = getColumnOfDate(cphase.getEndDate)
             Dim actualIX As Integer
+            Dim arrayEnde As Integer
 
             If DateDiff(DateInterval.Month, StartofCalendar, actualDataUntil) > 0 Then
                 actualIX = getColumnOfDate(actualDataUntil)
+                arrayEnde = System.Math.Min(pEnde, actualIX)
             Else
-                actualIX = -9999
+                arrayEnde = pEnde
             End If
 
 
-            If pstart > actualIX Then
+            If pstart > arrayEnde Then
                 ' es kann noch keine Ist-Daten geben 
                 ReDim tmpResult(0)
                 tmpResult(0) = 0
 
-            ElseIf pstart <= actualIX Then
-                ReDim tmpResult(actualIX - pstart)
+            ElseIf pstart <= arrayEnde Then
+                ReDim tmpResult(arrayEnde - pstart)
                 If isRole Then
                     ' enthält diese Phase überhaupt diese Rolle ?
                     Dim teamID As Integer = -1
@@ -4019,7 +4021,7 @@ Public Class clsProjekt
 
                 If notYetDone Then
 
-                    For i As Integer = 0 To actualIX - pstart
+                    For i As Integer = 0 To arrayEnde - pstart
                         If isRole And outputInEuro Then
                             ' mit Tagessatz multiplizieren 
                             tmpResult(i) = xWerte(i) * tagessatz
