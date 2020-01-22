@@ -2034,6 +2034,7 @@ Imports System.Web
                     tmpLabel = "Organisation"
                 End If
 
+
             Case "PT4G1B11"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Custom Nutzer Rollen"
@@ -3036,6 +3037,12 @@ Imports System.Web
                     tmpLabel = "Prioritäten Liste..."
                 Else
                     tmpLabel = "Priority List..."
+                End If
+            Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt allg."
+                Else
+                    tmpLabel = "project generally"
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -7113,16 +7120,27 @@ Imports System.Web
     End Sub
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
 
-        Dim hproj As New clsProjekt
-        Dim cproj As New clsProjekt
-        Dim vglName As String = " "
+        Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
         Dim outputString As String = ""
         Dim dateiName As String
-        Dim getProjConfigImport As New frmSelectImportFiles
-        Dim returnValue As DialogResult
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configProjectsImport As String = awinPath & requirementsOrdner & "configProjectImport.xlsx"
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+        Dim getProjConfigImport As New frmSelectImportFiles
+
+        Dim returnValue As DialogResult
 
 
         Call projektTafelInit()
@@ -7131,22 +7149,18 @@ Imports System.Web
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-
-
         getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+        getProjConfigImport.importFileNames = projectsFile
         returnValue = getProjConfigImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
 
-
+            Dim ok As Boolean = False
             Dim importDate As Date = Date.Now
             'Dim importDate As Date = "31.10.2013"
             ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
             Dim listofVorlagen As Collection
             listofVorlagen = getProjConfigImport.selImportFiles
-
-            Dim myCollection As New Collection
-
 
 
             '' ''dirName = awinPath & msprojectFilesOrdner
@@ -7162,36 +7176,20 @@ Imports System.Web
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
 
-            Dim outPutCollection As New Collection
-            Dim outputLine As String = ""
 
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
+                Dim myCollection As New Collection
 
+                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, myCollection)
 
-
-                ' '' ''Dim skip As Boolean = False
-
-
-                ' '' ''Try
-                ' '' ''    appInstance.Workbooks.Open(dateiName)
-                ' '' ''Catch ex1 As Exception
-                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
-                ' '' ''    skip = True
-                ' '' ''End Try
-
-                ' '' ''If Not skip Then
-                ' '' ''    pname = ""
-
-                hproj = New clsProjekt
-
-                ' Definition für ein eventuelles Mapping
-                Dim mapProj As clsProjekt = Nothing
-
-
-                ' hier muss was rein
-
+                'If ok Then
+                '    listofArchivAllg.Add(dateiName)
+                'End If
+                If listofArchivAllg.Count > 0 Then
+                    moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
 
             Next
         End If

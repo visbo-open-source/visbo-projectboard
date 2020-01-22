@@ -10,6 +10,7 @@ Public Class frmSelectImportFiles
 
     Public menueAswhl As Integer
     Public dateiOrdner As String
+    Public importFileNames As String
 
     Public selImportFiles As New Collection
 
@@ -30,7 +31,7 @@ Public Class frmSelectImportFiles
                 Case PTImpExp.msproject
                     fileNameWildCards = {"*.mpp"}
                 Case PTImpExp.projectWithConfig
-                    'Call checkConfigForProjects()
+                    fileNameWildCards = {importFileNames}
                 Case Else
                     fileNameWildCards = {"*.xls", "*.xlsx"}
             End Select
