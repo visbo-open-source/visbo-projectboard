@@ -19852,120 +19852,8 @@ Public Module agm2
 
             End If
 
-            ' tk 14.1.2020
-            ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
-            Dim customizations As New clsCustomization
-            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
-            If Not IsNothing(customizations) Then
-                StartofCalendar = customizations.kalenderStart
-            End If
-
-            'Try
-            '    ' jetzt die CurrentOrga definieren
-            '    Dim currentOrga As New clsOrganisation
-
-            '    ' jetzt werden die ORganisation ausgelesen 
-            '    ' wenn es keine Organisation gibt , d
-
-            '    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-            '    If currentOrga.count > 0 Then
-
-            '        If currentOrga.count > 0 Then
-            '            validOrganisations.addOrga(currentOrga)
-            '        End If
-
-            '        CostDefinitions = currentOrga.allCosts
-            '        RoleDefinitions = currentOrga.allRoles
-
-
-            '        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-            '        Try
-            '            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-            '            If IsNothing(customFieldDefinitions) Then
-            '                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-            '                Try
-            '                    Call readCustomFieldDefinitions(wsName4)
-            '                Catch ex As Exception
-
-            '                End Try
-            '            ElseIf customFieldDefinitions.count = 0 Then
-            '                Try
-            '                    Call readCustomFieldDefinitions(wsName4)
-            '                Catch ex As Exception
-
-            '                End Try
-            '            End If
-            '        Catch ex As Exception
-
-            '        End Try
-
-
-            '    Else
-            '        awinSettings.readCostRolesFromDB = False
-            '        If awinSettings.englishLanguage Then
-            '            Call MsgBox("You don't have any organization in your system!")
-            '        Else
-            '            Call MsgBox("Es existiert keine Organisation im System!")
-            '        End If
-
-
-            '        ' Auslesen der Custom Field Definitions aus Customization-File
-            '        Try
-            '            Call readCustomFieldDefinitions(wsName4)
-            '        Catch ex As Exception
-
-            '        End Try
-
-            '    End If
-
-
-            '    ' das kann nicht unmittelbar nach Login gemacht werden 
-            '    Dim meldungen As Collection = New Collection
-
-            '    '' jetzt werden die Rollen besetzt 
-            '    If awinSettings.readCostRolesFromDB Then
-
-            '        Try
-            '            Call setUserRoles(meldungen)
-            '        Catch ex As Exception
-            '            If meldungen.Count > 0 Then
-            '                Call showOutPut(meldungen, "Error: setUserRoles", "")
-            '                Call logfileSchreiben(meldungen)
-            '            End If
-
-            '            myCustomUserRole = New clsCustomUserRole
-
-            '            With myCustomUserRole
-            '                .customUserRole = ptCustomUserRoles.OrgaAdmin
-            '                .specifics = ""
-            '                .userName = dbUsername
-            '            End With
-            '            ' jetzt gibt es eine currentUserRole: myCustomUserRole
-            '            Call myCustomUserRole.setNonAllowances()
-            '        End Try
-
-
-
-            '    Else
-            '        myCustomUserRole = New clsCustomUserRole
-
-            '        With myCustomUserRole
-            '            .customUserRole = ptCustomUserRoles.OrgaAdmin
-            '            .specifics = ""
-            '            .userName = dbUsername
-            '        End With
-            '        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-            '        Call myCustomUserRole.setNonAllowances()
-            '    End If
-
-            'Catch ex As Exception
-
-            'End Try
-
             Try
-
+                ' Lesen appearance Defintions
                 appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
 
                 If IsNothing(appearanceDefinitions) Then
@@ -19977,24 +19865,6 @@ Public Module agm2
                         ' Aufbauen der Darstellungsklassen  aus Customizationfile
                         Call aufbauenAppearanceDefinitions(wsName7810)
 
-                        ' sollte nur gelesen, nicht gespeichert werden
-                        'Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
-                        '                                                                       CStr(settingTypes(ptSettingTypes.appearance)),
-                        '                                                                       "Appearance",
-                        '                                                                       Nothing, err)
-                        'If Not store_ok Then
-
-                        '    If awinSettings.englishLanguage Then
-                        '        Call MsgBox("You don't have any appearances for your phases and milestones in your system!")
-                        '    Else
-                        '        Call MsgBox("Es existieren keine Darstellungsklassen für Phasen und Meilensteine im System!")
-                        '    End If
-
-                        '    If awinSettings.visboDebug Then
-                        '        Call MsgBox("Fehler beim Speichern: aktueller User hat das Recht dazu nicht! " & vbCrLf & err.errorMsg)
-                        '    End If
-
-                        'End If
 
                     Else
                         If awinSettings.englishLanguage Then
@@ -20005,10 +19875,20 @@ Public Module agm2
                         End If
                     End If
                 End If
+            Catch ex As Exception
+
+            End Try
 
 
+            ' tk 14.1.2020
+            ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+            Dim customizations As New clsCustomization
+            customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+            If Not IsNothing(customizations) Then
+                StartofCalendar = customizations.kalenderStart
+            End If
 
-
+            Try
 
                 ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
                 ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
