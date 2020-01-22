@@ -5763,32 +5763,42 @@ Public Module Module1
                 toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj)
             Else
                 ' es sind im q2 eine durch vblf bzw vbcr getrennte Rollen und Kosten angegeben
-                Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
-                Dim isRole As Boolean = False
-                Dim isCost As Boolean = False
-                For Each tmpName As String In tmpStr
-                    isRole = RoleDefinitions.containsNameOrID(tmpName)
-                    If Not isRole Then
-                        isCost = CostDefinitions.containsName(tmpName)
-                    End If
+                If q2 <> "" Then
+                    Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
+                    Dim isRole As Boolean = False
+                    Dim isCost As Boolean = False
 
-                    If isRole Then
-                        Dim teamID As Integer = -1
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
-                        If Not toDoCollectionR.Contains(roleNameID) Then
-                            toDoCollectionR.Add(roleNameID)
+                    For Each tmpName As String In tmpStr
+                        isRole = RoleDefinitions.containsNameOrID(tmpName)
+
+                        If IsNumeric(tmpName) And isRole Then
+                            Dim teamID As Integer = -1
+                            tmpName = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).name
                         End If
-                    ElseIf isCost Then
-                        If Not toDoCollectionC.Contains(tmpName) Then
-                            toDoCollectionC.Add(tmpName)
+
+                        If Not isRole Then
+                            isCost = CostDefinitions.containsName(tmpName)
                         End If
-                    Else
-                        Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
-                        outPutCollection.Add(outPutLine)
-                    End If
 
+                        If isRole Then
+                            Dim teamID As Integer = -1
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
+                            If Not toDoCollectionR.Contains(roleNameID) Then
+                                toDoCollectionR.Add(roleNameID)
+                            End If
+                        ElseIf isCost Then
+                            If Not toDoCollectionC.Contains(tmpName) Then
+                                toDoCollectionC.Add(tmpName)
+                            End If
+                        Else
+                            Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
+                            outPutCollection.Add(outPutLine)
+                        End If
 
-                Next
+                    Next
+
+                End If
+
             End If
         Catch ex As Exception
 
@@ -6125,7 +6135,11 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
-        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        If awinSettings.englishLanguage Then
+            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+        Else
+            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        End If
 
         Dim roleBezeichner As String = ""
 

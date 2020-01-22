@@ -433,12 +433,16 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="role"></param>
     ''' <returns></returns>
-    Private Function getParentArray(ByVal role As clsRollenDefinition) As Integer()
+    Public Function getParentArray(ByVal role As clsRollenDefinition, ByVal Optional includingMySelf As Boolean = True) As Integer()
 
         Dim tmpList As New List(Of Integer)
 
         If Not IsNothing(role) Then
-            tmpList.Add(role.UID)
+
+            If includingMySelf Then
+                tmpList.Add(role.UID)
+            End If
+
 
             Dim parentRole As clsRollenDefinition = getParentRoleOf(role.UID)
             Do While Not IsNothing(parentRole)

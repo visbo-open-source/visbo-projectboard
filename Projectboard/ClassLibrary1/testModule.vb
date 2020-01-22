@@ -13079,9 +13079,8 @@ Public Module testModule
 
             ' Meilensteine 
             ' das muss nur gemacht werden, wenn showAllIfOne=true 
-            If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
 
-                For Each fullMsName As String In selectedMilestones
+            For Each fullMsName As String In selectedMilestones
 
                     Dim breadcrumb As String = ""
                     Dim msName As String = ""
@@ -13150,7 +13149,7 @@ Public Module testModule
 
 
                 Next
-            End If
+
 
 
         Next

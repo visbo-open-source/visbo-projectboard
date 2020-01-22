@@ -3325,13 +3325,38 @@ Public Class clsProjekt
 
                 Dim roleNameID As String = curRole.getNameID
 
+                ' tk ist es einer Skill/Team zugeordnet 
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
                 Dim found As Boolean = False
                 Dim ix As Integer = 1
+
+                ' tk 19.1.20 um rollen mit Skills der Skill-Gruppe zuzuordnen ... 
+                ' Anfang ... 
+                If teamID > 0 And RoleDefinitions.containsUid(teamID) Then
+
+                    Do While ix <= summaryRoleIDs.Length And Not found
+                        If teamID = summaryRoleIDs(ix - 1) Then
+                            found = True
+                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(teamID, summaryRoleIDs(ix - 1)) Then
+                            found = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    Loop
+
+                End If
+
+                If Not found Then
+                    ix = 1
+                End If
+                ' Ende ...
 
                 Do While ix <= summaryRoleIDs.Length And Not found
 
                     If curRole.uid <> summaryRoleIDs(ix - 1) Then
-                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 erstetzt wird 
+                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
                         If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
 
@@ -3942,6 +3967,7 @@ Public Class clsProjekt
         ' die Ist-Werte sind immer die Werte vom anfang der Phase bis atualDatauntil einschließlich
 
         Dim tmpResult() As Double = Nothing
+
         Dim xWerte() As Double = Nothing
         Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
         Dim notYetDone As Boolean = True
@@ -3958,7 +3984,8 @@ Public Class clsProjekt
                 actualIX = getColumnOfDate(actualDataUntil)
                 arrayEnde = System.Math.Min(pEnde, actualIX)
             Else
-                arrayEnde = pEnde
+                ' das ist das Abbruch-Kriterium, es gibt keine Ist-Daten
+                arrayEnde = pstart - 1
             End If
 
 

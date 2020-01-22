@@ -1179,7 +1179,7 @@ Public Class Tabelle2
                             Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                         End If
                         ' tk 18.1.20
-                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcNameID)
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcNameID)
                         'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
                         Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
@@ -1908,7 +1908,7 @@ Public Class Tabelle2
         Dim rcName As String = ""
         Dim rcNameID As String = ""
         Dim oldRCName As String = ""
-        Dim changeBecauseProjektleitung As Boolean = False
+        Dim changeBecauseRCNameChanged As Boolean = False
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
             If Target.Cells.Count > 1 Then
@@ -1924,8 +1924,7 @@ Public Class Tabelle2
             End If
 
             ' das wirkt sich auf das aktualisieren der charts aus 
-            changeBecauseProjektleitung = rcName <> oldRCName And
-                                          myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung
+            changeBecauseRCNameChanged = rcName <> oldRCName
 
             ' alte Row merken 
             visboZustaende.oldRow = Target.Row
@@ -2012,9 +2011,9 @@ Public Class Tabelle2
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
             Dim alreadyDone As Boolean = False
-            If pNameChanged Or changeBecauseProjektleitung Then
+            If pNameChanged Or changeBecauseRCNameChanged Then
 
-                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcNameID)
+                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcNameID)
 
                 If pNameChanged Then
                     selectedProjekte.Clear(False)

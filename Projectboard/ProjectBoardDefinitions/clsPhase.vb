@@ -3314,7 +3314,8 @@ Public Class clsPhase
             actualIX = getColumnOfDate(parentProject.actualDataUntil)
             arrayEnde = System.Math.Min(pEnde, actualIX)
         Else
-            arrayEnde = pEnde
+            ' das ist das Abbruch-Kriterium, es gibt keine Ist-Daten
+            arrayEnde = pstart - 1
         End If
 
 

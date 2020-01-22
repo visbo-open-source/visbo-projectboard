@@ -3331,7 +3331,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt die RoleNameIDs in einer Colelction of Strings zurück; jeder Eintrag hat die Form roleId;teamID bzw. roleID  
+    ''' gibt die RoleNameIDs in einer Collection of Strings zurück; jeder Eintrag hat die Form roleId;teamID bzw. roleID  
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property getRoleNameIDs() As Collection
@@ -3376,6 +3376,50 @@
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' gibt die im Projekt vorkommenden RoleIDs als sortierte Liste zurück 
+    ''' damit man eine sortierte Liste haben kann , wurde der Value als Bool definiert ; den Value braucht man nicht 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleIDs() As SortedList(Of Integer, Boolean)
+        Get
+            Dim phase As clsPhase
+            Dim tmpRoleIDs As New SortedList(Of Integer, Boolean)
+
+            Dim roleID As Integer
+            Dim hrole As clsRolle
+            Dim p As Integer, r As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+                    phase = AllPhases.Item(p)
+                    With phase
+                        For r = 1 To .countRoles
+                            hrole = .getRole(r)
+                            If hrole.summe > 0 Then
+                                roleID = hrole.uid
+                                '
+                                ' das ist performanter als der Weg über try .. catch 
+                                '
+                                If Not tmpRoleIDs.ContainsKey(roleID) Then
+                                    tmpRoleIDs.Add(roleID, True)
+                                End If
+
+                            End If
+                        Next r
+                    End With
+                Next p
+
+            End If
+
+
+            getRoleIDs = tmpRoleIDs
+
+        End Get
     End Property
 
 

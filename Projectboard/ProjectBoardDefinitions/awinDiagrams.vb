@@ -1004,7 +1004,8 @@ Public Module awinDiagrams
                     ' Rolle 
                     Dim scInfo As New clsSmartPPTChartInfo
                     With scInfo
-
+                        .prPF = ptPRPFType.portfolio
+                        .pName = currentConstellationName
                         .q2 = prcName
                         .elementTyp = ptElementTypen.roles
                         .einheit = PTEinheiten.personentage
@@ -1823,6 +1824,8 @@ Public Module awinDiagrams
                 ' Rolle 
                 Dim scInfo As New clsSmartPPTChartInfo
                 With scInfo
+                    .prPF = ptPRPFType.portfolio
+                    .pName = currentConstellationName
                     .q2 = prcName
                     .elementTyp = ptElementTypen.roles
                     .einheit = PTEinheiten.personentage
@@ -7161,57 +7164,64 @@ Public Module awinDiagrams
             Case "I"
                 'Ist Werte 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Actuals"
+                    tmpResult = "Actual-to-date"
                 Else
-                    tmpResult = "Ist-Werte"
+                    tmpResult = "Actual-to-date"
+                    'tmpResult = "Ist-Werte (AC)"
                 End If
 
             Case "IS"
                 'Ist Werte 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Actuals (Sum of Portfolio)"
+                    tmpResult = "Actual-to-date (Sum of Portfolio)"
                 Else
-                    tmpResult = "Ist-Werte (Portfolio Summe)"
+                    tmpResult = "Actual-to-date (Sum of Portfolio)"
+                    'tmpResult = "Ist-Werte (Portfolio Summe)"
                 End If
 
             Case "P"
                 ' Planung Projekt
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Forecast"
+                    tmpResult = "Estimate-to-Complete"
                 Else
-                    tmpResult = "Planung"
+                    tmpResult = "Estimate-to-Complete"
+                    ' tmpResult = "Planung (ETC)"
                 End If
 
             Case "PS"
                 ' Planung Portfolio 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Forecast (Sum of Portfolio)"
+                    tmpResult = "Monthly Needs (Sum of Portfolio)"
                 Else
-                    tmpResult = "Planung (Portfolio Summe)"
+                    tmpResult = "Monthly Needs (Sum of Portfolio)"
+                    'tmpResult = "Planung (Portfolio Summe)"
                 End If
 
             Case "B"
                 ' Beauftragung 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Baseline"
+                    tmpResult = "Planned Value, Baseline"
                 Else
-                    tmpResult = "Baseline"
+                    tmpResult = "Planned Value, Baseline"
+                    ' tmpResult = "Baseline"
                 End If
 
             Case "C"
                 ' Capacity  
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Capacity"
+                    tmpResult = "Total Capa"
                 Else
-                    tmpResult = "Kapazität"
+                    tmpResult = "Total Capa"
+                    'tmpResult = "Gesmat-Kapazität"
                 End If
 
             Case "CI"
                 ' interne Capacity 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "intern"
+                    tmpResult = "Intern Capa"
                 Else
-                    tmpResult = "intern"
+                    tmpResult = "Intern Capa"
+                    'tmpResult = "interne Kapa"
                 End If
             Case Else
 
@@ -7423,10 +7433,28 @@ Public Module awinDiagrams
                 lengthRed = tsum.ToString("##,##0.").Length
             End If
 
-            tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+            If scInfo.prPF = ptPRPFType.portfolio Then
+                Dim txt As String() = {"Bedarf", "Kapa"}
+                startRed = startRed + 7
+                If awinSettings.englishLanguage Then
+                    startRed = startRed - 1
+                    txt = {"Needs", "Capa"}
+                End If
+                tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+            Else
+                startRed = startRed + 4
+                tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+            End If
+            ' tk 18.1 20 alt .. 
+            'tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+            ' tk 18.120 Ende alt
 
             If calledFromMassEdit Then
                 Dim modifiedTitle As String = "Soll-Ist-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                If awinSettings.englishLanguage Then
+                    modifiedTitle = "Target-Actual Comparison " & scInfo.hproj.name & vbLf & tmpResult
+                End If
+
                 Dim offset As Integer = modifiedTitle.Length - tmpResult.Length
                 startRed = startRed + offset
                 tmpResult = modifiedTitle

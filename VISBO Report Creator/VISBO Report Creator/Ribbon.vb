@@ -72,7 +72,6 @@ Public Class Ribbon
                 returnValue = loadProjectsForm.ShowDialog
 
                 If returnValue = Windows.Forms.DialogResult.OK Then
-                    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                     ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
                     Dim hproj As clsProjekt = Nothing
@@ -83,12 +82,20 @@ Public Class Ribbon
                         Dim tmpCollection As New Collection
                         Call createPPTSlidesFromProjectWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
                         ' tk 7.10 selectedProjekte wieder zurücksetzen ..
+                        ShowProjekte.Clear(False)
                         selectedProjekte.Clear(False)
+                        showRangeLeft = 0
+                        showRangeRight = 0
+
 
                         Try
                             ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
+
                             Dim savePath As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
                             Dim fullFileName As String = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
+                            If anzP > 1 Then
+                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiprojekt-Report")
+                            End If
                             curPresentation.SaveAs(fullFileName)
                         Catch ex As Exception
 
