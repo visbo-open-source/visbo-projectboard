@@ -135,6 +135,7 @@
         End Set
     End Property
 
+
     ' gibt an, ob es sich um eine Team Definition handelt 
     Private _isTeam As Boolean
     Public Property isTeam As Boolean
@@ -232,6 +233,20 @@
     Private _uuid As Integer
     'Private Kapa() As Double
 
+    Private _isTeamParent As Boolean
+    Public Property isTeamParent As Boolean
+        Get
+            isTeamParent = _isTeamParent
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isTeamParent = value
+            Else
+                _isTeamParent = False
+            End If
+
+        End Set
+    End Property
 
     Public Property name As String
     Public Property farbe As Object
@@ -284,7 +299,8 @@
 
     ''' <summary>
     ''' gibt die Liste an SubRole IDs als sortierte Liste zurück; 
-    ''' Nothing wenn es keine gibt 
+    ''' wenn es sich um einen Ressourcen-Manager handelt, werden nur die Personen, Untereinheiten angezeigt, die mindestens eine Person aus ihrem eigenen Ressort enthalten  
+    ''' leere Liste, wenn es keine gibt 
     ''' oder Dim = 1 , erstes Element = 0 
     ''' </summary>
     ''' <value></value>
@@ -292,7 +308,38 @@
     ''' <remarks></remarks>
     Public ReadOnly Property getSubRoleIDs As SortedList(Of Integer, Double)
         Get
-            getSubRoleIDs = _subRoleIDs
+            ' tk 15.1.20 wenn es sich bei der Rolle um ein Team handelt und es sich um einen Ressourcen-Manager handelt , dann werden nur die 
+            ' Skillgruppen gezeigt, die mindestens ein Mitglied in dem Team haben 
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And (Me.isTeam = True Or Me.isTeamParent) Then
+
+                Dim restrictedToOrgaID As Integer = CInt(myCustomUserRole.specifics)
+                Dim restrictedSubRoleIDs As New SortedList(Of Integer, Double)
+
+                For Each kvp As KeyValuePair(Of Integer, Double) In _subRoleIDs
+                    Dim roleName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
+
+
+
+                    Dim childIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(roleName)
+                    If childIDs.Count = 0 Then
+                        ' jetzt die Rolle selber aufnehmen 
+                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleName, "")
+                        childIDs.Add(roleNameID, 1.0)
+                    End If
+
+                    Dim childIDArray As String() = childIDs.Keys.ToArray
+                    If RoleDefinitions.hasAnyChildParentRelationsship(childIDArray, restrictedToOrgaID) Then
+                        restrictedSubRoleIDs.Add(kvp.Key, kvp.Value)
+                    End If
+
+                Next
+
+                getSubRoleIDs = restrictedSubRoleIDs
+
+            Else
+                getSubRoleIDs = _subRoleIDs
+            End If
+
         End Get
     End Property
 
@@ -327,6 +374,7 @@
 
     ''' <summary>
     ''' gibt die Anzahl SubRoles zurück 
+    ''' dabei muss unterschieden werden, ob es sich um Ressourcen-Manager handelt und die subRoles eines Knoten berechnet werden müssen, der Vater von Teams ist .. 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -505,6 +553,9 @@
 
         _isExternRole = False
         _isTeam = False
+
+        ' tk wird aktuell noch nicht in der DB gespeichert, wird beim buildOrgaTeams gesetzt 
+        _isTeamParent = False
 
         'ReDim _externeKapazitaet(240)
 

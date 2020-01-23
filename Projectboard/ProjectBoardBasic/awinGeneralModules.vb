@@ -9708,14 +9708,19 @@ Public Module awinGeneralModules
         Dim responsible As String = ""
         Dim status As String = ""
         Dim zeile As Integer = ""
-        Dim roleNames() As String
-        Dim roleValues() As Double
-        Dim costNames() As String
-        Dim costValues() As Double
-        Dim phNames() As String
-        Dim przPhasenAnteile() As Double
+        Dim roleNames() As String = Nothing
+        Dim roleValues() As Double = Nothing
+        Dim roleListNameValues As New SortedList(Of String, Double())
+        Dim costNames() As String = Nothing
+        Dim costValues() As Double = Nothing
+        Dim phNames() As String = Nothing
+        Dim przPhasenAnteile() As Double = Nothing
         Dim combinedName As Boolean = False
         Dim createBudget As Boolean = False
+
+        Dim monthVon As Integer = 0
+        Dim monthBis As Integer = 0
+
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
 
@@ -9782,11 +9787,20 @@ Public Module awinGeneralModules
                                 End With
 
                                 If projNumber_new <> projNumber Then
+                                    Dim anzRoles As Integer = roleListNameValues.Count
+                                    ReDim roleNames(anzRoles - 1)
+                                    ReDim roleValues(monthBis - monthVon)
+                                    Dim k As Integer = 0
+                                    For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                                        roleNames(k) = kvp.Key
+                                        k = k + 1
+                                    Next
+
                                     'erstelleProjektausParametern()
                                     Dim hproj As clsProjekt = erstelleProjektausParametern(pName, vName, vorlagenName,
                                                      startDate, endDate,
                                                      budget, sfit, risk,
-                                                     projectNummer, description,
+                                                     projNumber, description,
                                                      listOfCustomFields, businessUnit, responsible,
                                                      status, zeile,
                                                      roleNames, roleValues,
@@ -9827,6 +9841,7 @@ Public Module awinGeneralModules
                                             projBU = CInt(match.Value)
                                         End If
                                     End If
+                                    businessUnit = projBU
                                 End With
 
                                 'Find ProjectName
@@ -9864,8 +9879,7 @@ Public Module awinGeneralModules
                                     pName = projName
                                 End With
 
-                                ' find TimeUnit
-                                'Find ProjectName
+                                ' Find TimeUnit
                                 Dim timeUnit As String
                                 Dim timeUnitConfig As clsConfigProjectsImport = projectConfig("TimeUnit")
                                 If currentWS.Index <> timeUnitConfig.sheet Then
@@ -9879,22 +9893,111 @@ Public Module awinGeneralModules
                                 With currentWS
                                     Select Case timeUnitConfig.Typ
                                         Case "Text"
-                                            projName = CStr(.Cells(i, timeUnitConfig.column.von).value)
+                                            timeUnit = CStr(.Cells(i, timeUnitConfig.column.von).value)
                                         Case "Integer"
-                                            projName = CInt(.Cells(i, timeUnitConfig.column.von).value)
+                                            timeUnit = CInt(.Cells(i, timeUnitConfig.column.von).value)
                                         Case "Decimal"
-                                            projName = CDbl(.Cells(i, timeUnitConfig.column.von).value)
+                                            timeUnit = CDbl(.Cells(i, timeUnitConfig.column.von).value)
                                         Case "Date"
-                                            projName = CDate(.Cells(i, timeUnitConfig.column.von).value)
+                                            timeUnit = CDate(.Cells(i, timeUnitConfig.column.von).value)
                                         Case Else
-                                            projName = .Cells(i, timeUnitConfig.column.von).value
+                                            timeUnit = .Cells(i, timeUnitConfig.column.von).value
                                     End Select
 
                                     If timeUnitConfig.objType = "RegEx" Then
                                         regexpression = New Regex(timeUnitConfig.content)
-                                        Dim match As Match = regexpression.Match(timeUnit)
-                                        If match.Success Then
-                                            timeUnit = CInt(match.Value)
+                                        Dim timeUnitMatch As Match = regexpression.Match(timeUnit)
+                                        If timeUnitMatch.Success Then
+                                            timeUnit = CInt(timeUnitMatch.Value)
+                                            ' find months
+                                            Dim months As String = ""
+                                            'Dim monthVon As Integer = 0
+                                            'Dim monthBis As Integer = 0
+                                            Dim monthsConfig As clsConfigProjectsImport = projectConfig("months")
+                                            If currentWS.Index <> monthsConfig.sheet Then
+                                                If Not IsNothing(monthsConfig.sheet) Then
+                                                    currentWS = CType(appInstance.Worksheets(monthsConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                Else
+                                                    currentWS = CType(appInstance.Worksheets(monthsConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                End If
+                                            End If
+                                            With currentWS
+                                                Select Case monthsConfig.Typ
+                                                    Case "Text"
+                                                        months = CStr(.Cells(i, monthsConfig.column.von).value)
+                                                    Case "Integer"
+                                                        months = CInt(.Cells(i, monthsConfig.column.von).value)
+                                                    Case "Decimal"
+                                                        months = CDbl(.Cells(i, monthsConfig.column.von).value)
+                                                    Case "Date"
+                                                        months = CDate(.Cells(i, monthsConfig.column.von).value)
+                                                    Case Else
+                                                        months = .Cells(i, monthsConfig.column.von).value
+                                                        If monthsConfig.cellrange Then
+                                                            monthVon = monthsConfig.column.von
+                                                            monthBis = monthsConfig.column.bis
+                                                        End If
+                                                End Select
+
+                                                If monthsConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(monthsConfig.content)
+                                                    Dim match As Match = regexpression.Match(months)
+                                                    If match.Success Then
+                                                        months = CInt(match.Value)
+                                                    End If
+                                                End If
+
+                                            End With
+
+                                            ' Find Role
+                                            Dim roleName As String
+                                            Dim roleNameConfig As clsConfigProjectsImport = projectConfig("Ressourcen")
+                                            If currentWS.Index <> roleNameConfig.sheet Then
+                                                If Not IsNothing(roleNameConfig.sheet) Then
+                                                    currentWS = CType(appInstance.Worksheets(roleNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                Else
+                                                    currentWS = CType(appInstance.Worksheets(roleNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                End If
+                                            End If
+
+                                            With currentWS
+                                                Select Case roleNameConfig.Typ
+                                                    Case "Text"
+                                                        roleName = CStr(.Cells(i, roleNameConfig.column.von).value)
+                                                    Case "Integer"
+                                                        roleName = CInt(.Cells(i, roleNameConfig.column.von).value)
+                                                    Case "Decimal"
+                                                        roleName = CDbl(.Cells(i, roleNameConfig.column.von).value)
+                                                    Case "Date"
+                                                        roleName = CDate(.Cells(i, roleNameConfig.column.von).value)
+                                                    Case Else
+                                                        roleName = .Cells(i, roleNameConfig.column.von).value
+                                                End Select
+
+                                                If roleNameConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(roleNameConfig.content)
+                                                    Dim match As Match = regexpression.Match(roleName)
+                                                    If match.Success Then
+                                                        roleName = CInt(match.Value)
+                                                    End If
+                                                End If
+                                                If RoleDefinitions.containsName(roleName) Then
+                                                    ReDim roleValues(monthBis - monthVon + 1)
+                                                    For m = monthVon To monthBis
+                                                        roleValues(m) = CInt(.Cells(i, m).value)
+                                                    Next
+                                                    If Not roleListNameValues.ContainsKey(roleName) Then
+                                                        ' liste aufbauen, die später dazu dient, das erstellte Projekt zu befüllen
+                                                        roleListNameValues.Add(roleName, roleValues)
+                                                    Else
+                                                        ' evt. aufsummieren der jeweiligen werte eines Monats
+                                                    End If
+                                                Else
+                                                    Call MsgBox("Rolle existiert in diesem VC nicht")
+
+                                                End If
+                                            End With
+
                                         End If
                                     End If
                                     pName = timeUnit

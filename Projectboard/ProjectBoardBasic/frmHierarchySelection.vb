@@ -28,9 +28,6 @@ Public Class frmHierarchySelection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
 
-    ' tk 7.7.19 für Rolle Team-Manager 
-    Private showTeamsOnly As Boolean = myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager
-
 
     ' ur: 23.04.2019: hryStufen wurde entfernt, da der Wert immer auf 50 festgelegt wurde.
     Private hryStufenValue As Integer = 50
@@ -1799,7 +1796,7 @@ Public Class frmHierarchySelection
                         Dim teamID As Integer
                         Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                        If showTeamsOnly And Not curRole.isTeam And myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
                             Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
                             For Each vcID As Integer In virtualChilds
                                 If Not nodelist.ContainsKey(vcID) Then
@@ -1807,7 +1804,7 @@ Public Class frmHierarchySelection
                                 End If
                             Next
                         Else
-                            nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
+                            nodelist = curRole.getSubRoleIDs
                         End If
 
                         anzChilds = nodelist.Count
@@ -1824,39 +1821,7 @@ Public Class frmHierarchySelection
                     For i As Integer = 0 To anzChilds - 1
 
                         Call buildRoleSubTreeView(node, nodelist.ElementAt(i).Key)
-                        'childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
-                        'Dim childName As String = childRole.name
-                        'Dim childID As Integer = childRole.UID
 
-                        'If allRoles.Contains(childName) Then
-
-                        '    childNode = node.Nodes.Add(childName)
-                        '    childNode.Name = childID.ToString
-                        '    childNode.Text = childName
-
-
-                        '    If selectedRoles.Contains(childName) Then
-                        '        childNode.Checked = True
-                        '    End If
-
-                        '    Dim anzSubRolesOFChild As Integer
-                        '    Try
-                        '        anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
-                        '    Catch ex As Exception
-                        '        anzSubRolesOFChild = 0
-                        '    End Try
-
-                        '    If anzSubRolesOFChild > 0 Then
-                        '        childNode.Tag = "P"
-
-
-                        '        placeholder = childNode.Nodes.Add("-")
-                        '        placeholder.Tag = "P"
-                        '    Else
-                        '        childNode.Tag = "X"
-                        '    End If
-
-                        'End If
                     Next
 
 
@@ -5188,8 +5153,20 @@ Public Class frmHierarchySelection
 
                         topNodes.Clear()
                         Dim teamID As Integer = -1
-                        Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
-                        topNodes.Add(roleUID)
+                        Dim restrictedToOrgaID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
+                        topNodes.Add(restrictedToOrgaID)
+
+                        ' hier müssen jetzt auch die Skillgruppen angezeigt werden 
+                        Dim topLevelTeams As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
+                        For Each topTeamID As Integer In topLevelTeams
+                            Dim listOFCommonChildIds As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(topTeamID, restrictedToOrgaID)
+                            If listOFCommonChildIds.Count > 0 Then
+                                If Not topNodes.Contains(topTeamID) Then
+                                    topNodes.Add(topTeamID)
+                                End If
+                            End If
+
+                        Next
 
                     End If
                 End If
@@ -5202,6 +5179,7 @@ Public Class frmHierarchySelection
 
                 Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
 
+                ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
                 If role.isActiveRole Then
                     topLevelNode = .Nodes.Add(role.name)
                     topLevelNode.Text = role.name

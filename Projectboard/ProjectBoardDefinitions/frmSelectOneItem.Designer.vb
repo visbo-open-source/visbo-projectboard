@@ -22,6 +22,7 @@ Partial Class frmSelectOneItem
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSelectOneItem))
         Me.OKBtn = New System.Windows.Forms.Button()
         Me.itemList = New System.Windows.Forms.ListBox()
         Me.SuspendLayout()
@@ -54,6 +55,7 @@ Partial Class frmSelectOneItem
         Me.ClientSize = New System.Drawing.Size(336, 248)
         Me.Controls.Add(Me.itemList)
         Me.Controls.Add(Me.OKBtn)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectOneItem"
         Me.Text = "Wählen Sie ein VISBO Project Center"
         Me.ResumeLayout(False)
