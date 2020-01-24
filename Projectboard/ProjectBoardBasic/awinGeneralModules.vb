@@ -9691,8 +9691,10 @@ Public Module awinGeneralModules
         Dim firstUrlzeile As Integer
         Dim lastSpalte As Integer
         Dim lastZeile As Integer
+        Dim anz_Proj As Integer = 0
 
         ' Variables to create a Project
+        Dim hproj As clsProjekt
         Dim pName As String = ""
         Dim vName As String = ""
         Dim vorlagenName As String = ""
@@ -9707,16 +9709,17 @@ Public Module awinGeneralModules
         Dim businessUnit As String = ""
         Dim responsible As String = ""
         Dim status As String = ""
-        Dim zeile As Integer = ""
+        Dim zeile As Integer = 0
         Dim roleNames() As String = Nothing
         Dim roleValues() As Double = Nothing
         Dim roleListNameValues As New SortedList(Of String, Double())
-        Dim costNames() As String = Nothing
-        Dim costValues() As Double = Nothing
-        Dim phNames() As String = Nothing
-        Dim przPhasenAnteile() As Double = Nothing
+        Dim costNames() As String
+        Dim costValues() As Double
+        Dim phNames() As String
+        Dim przPhasenAnteile() As Double
         Dim combinedName As Boolean = False
-        Dim createBudget As Boolean = False
+        Dim createBudget As Boolean = True
+        Dim createCostsRolesAnyhow As Boolean = True
 
         Dim monthVon As Integer = 0
         Dim monthBis As Integer = 0
@@ -9746,7 +9749,7 @@ Public Module awinGeneralModules
                     Try
                         Dim projNumber As String = ""
 
-                        For i = firstUrlzeile To lastZeile
+                        For i = firstUrlzeile To lastZeile + 1
 
                             If appInstance.Worksheets.Count > 0 Then
 
@@ -9780,13 +9783,13 @@ Public Module awinGeneralModules
                                         regexpression = New Regex(projNrConfig.content)
                                         Dim match As Match = regexpression.Match(projNumber_new)
                                         If match.Success Then
-                                            projNumber_new = CInt(match.Value)
+                                            projNumber_new = match.Value
                                         End If
                                     End If
 
                                 End With
 
-                                If projNumber_new <> projNumber Then
+                                If projNumber_new <> projNumber And i > firstUrlzeile Then
                                     Dim anzRoles As Integer = roleListNameValues.Count
                                     ReDim roleNames(anzRoles - 1)
                                     ReDim roleValues(monthBis - monthVon)
@@ -9796,17 +9799,40 @@ Public Module awinGeneralModules
                                         k = k + 1
                                     Next
 
+                                    ReDim phNames(1)
+                                    ReDim przPhasenAnteile(1)
+
                                     'erstelleProjektausParametern()
-                                    Dim hproj As clsProjekt = erstelleProjektausParametern(pName, vName, vorlagenName,
+                                    anz_Proj = anz_Proj + 1
+                                    hproj = New clsProjekt
+                                    hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
                                                      startDate, endDate,
                                                      budget, sfit, risk,
                                                      projNumber, description,
                                                      listOfCustomFields, businessUnit, responsible,
                                                      status, zeile,
                                                      roleNames, roleValues,
-                                                     costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget)
+                                                     costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget, createCostsRolesAnyhow)
+
+                                    For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+
+                                        Dim tmpRCnameID As String = RoleDefinitions.bestimmeRoleNameID(kvp.Key, "")
+                                        hproj.AllPhases(0).getRoleByRoleNameID(tmpRCnameID).Xwerte = kvp.Value
+
+                                        Dim hilfe As Boolean = True
+                                    Next
+
+                                    ImportProjekte.Add(hproj)
+
+                                    outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
+                                    meldungen.Add(outputline)
+
+                                    ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
+                                    roleListNameValues = New SortedList(Of String, Double())
 
                                 End If
+
+                                projNumber = projNumber_new
 
                                 'Find BusinesssUnit
                                 Dim projBU As Object
@@ -9838,7 +9864,7 @@ Public Module awinGeneralModules
                                         regexpression = New Regex(projBUConfig.content)
                                         Dim match As Match = regexpression.Match(projBU)
                                         If match.Success Then
-                                            projBU = CInt(match.Value)
+                                            projBU = match.Value
                                         End If
                                     End If
                                     businessUnit = projBU
@@ -9873,11 +9899,179 @@ Public Module awinGeneralModules
                                         regexpression = New Regex(projNameConfig.content)
                                         Dim match As Match = regexpression.Match(projName)
                                         If match.Success Then
-                                            projName = CInt(match.Value)
+                                            projName = match.Value
                                         End If
                                     End If
                                     pName = projName
+                                    ' ggfs. vorhandene Sonderzeichen wie (,),# [,] ersetzen
+                                    If Not isValidProjectName(pName) Then
+                                        pName = makeValidProjectName(pName)
+                                    End If
+
                                 End With
+
+                                'Find ProjectTemplate
+                                Dim projTmp As String
+                                Dim projTmpConfig As clsConfigProjectsImport = projectConfig("ProjectTemplate")
+                                If currentWS.Index <> projTmpConfig.sheet And projTmpConfig.sheet <> 0 Then
+                                    If Not IsNothing(projTmpConfig.sheet) Then
+                                        currentWS = CType(appInstance.Worksheets(projTmpConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    Else
+                                        currentWS = CType(appInstance.Worksheets(projTmpConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    End If
+                                End If
+
+                                If projTmpConfig.objType = "direkt" Then
+                                    vorlagenName = projTmpConfig.content
+                                Else
+                                    With currentWS
+                                        Select Case projTmpConfig.Typ
+                                            Case "Text"
+                                                projTmp = CStr(.Cells(i, projTmpConfig.column.von).value)
+                                            Case "Integer"
+                                                projTmp = CInt(.Cells(i, projTmpConfig.column.von).value)
+                                            Case "Decimal"
+                                                projTmp = CDbl(.Cells(i, projTmpConfig.column.von).value)
+                                            Case "Date"
+                                                projTmp = CDate(.Cells(i, projTmpConfig.column.von).value)
+                                            Case Else
+                                                projTmp = .Cells(i, projTmpConfig.column.von).value
+                                        End Select
+
+                                        If projTmpConfig.objType = "RegEx" Then
+                                            regexpression = New Regex(projTmpConfig.content)
+                                            Dim match As Match = regexpression.Match(projTmp)
+                                            If match.Success Then
+                                                projTmp = match.Value
+                                            End If
+                                        End If
+                                        vorlagenName = projTmp
+                                    End With
+                                End If
+
+
+                                'Find ProjectStart
+                                Dim projStart As String
+                                Dim projStartConfig As clsConfigProjectsImport = projectConfig("ProjectStart")
+                                If currentWS.Index <> projStartConfig.sheet And projStartConfig.sheet <> 0 Then
+                                    If Not IsNothing(projStartConfig.sheet) Then
+                                        currentWS = CType(appInstance.Worksheets(projStartConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    Else
+                                        currentWS = CType(appInstance.Worksheets(projStartConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    End If
+                                End If
+
+                                If projStartConfig.objType = "direkt" Then
+                                    startDate = CDate(projStartConfig.content)
+                                Else
+                                    With currentWS
+
+                                        Select Case projStartConfig.Typ
+                                            Case "Text"
+                                                projStart = CStr(.Cells(i, projStartConfig.column.von).value)
+                                            Case "Integer"
+                                                projStart = CInt(.Cells(i, projStartConfig.column.von).value)
+                                            Case "Decimal"
+                                                projStart = CDbl(.Cells(i, projStartConfig.column.von).value)
+                                            Case "Date"
+                                                projStart = CDate(currentWS.Cells(i, projStartConfig.column.von).value)
+                                            Case Else
+                                                projStart = .Cells(i, projStartConfig.column.von).value
+                                        End Select
+
+                                        If projStartConfig.objType = "RegEx" Then
+                                            regexpression = New Regex(projStartConfig.content)
+                                            Dim match As Match = regexpression.Match(projStart)
+                                            If match.Success Then
+                                                projStart = match.Value
+                                            End If
+                                        End If
+                                    End With
+                                    startDate = projStart
+                                End If
+
+
+                                'Find ProjectEnde
+                                Dim projEnde As String
+                                Dim projEndeConfig As clsConfigProjectsImport = projectConfig("ProjectEnd")
+                                If currentWS.Index <> projEndeConfig.sheet And projEndeConfig.sheet <> 0 Then
+                                    If Not IsNothing(projEndeConfig.sheet) Then
+                                        currentWS = CType(appInstance.Worksheets(projEndeConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    Else
+                                        currentWS = CType(appInstance.Worksheets(projEndeConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    End If
+                                End If
+
+                                If projEndeConfig.objType = "direkt" Then
+                                    endDate = CDate(projEndeConfig.content)
+                                Else
+
+                                    With currentWS
+                                        Select Case projEndeConfig.Typ
+                                            Case "Text"
+                                                projEnde = CStr(.Cells(i, projEndeConfig.column.von).value)
+                                            Case "Integer"
+                                                projEnde = CInt(.Cells(i, projEndeConfig.column.von).value)
+                                            Case "Decimal"
+                                                projEnde = CDbl(.Cells(i, projEndeConfig.column.von).value)
+                                            Case "Date"
+                                                projEnde = CDate(.Cells(i, projEndeConfig.column.von).value)
+                                            Case Else
+                                                projEnde = .Cells(i, projEndeConfig.column.von).value
+                                        End Select
+
+                                        If projEndeConfig.objType = "RegEx" Then
+                                            regexpression = New Regex(projEndeConfig.content)
+                                            Dim match As Match = regexpression.Match(projEnde)
+                                            If match.Success Then
+                                                projEnde = match.Value
+                                            End If
+                                        End If
+                                    End With
+                                    endDate = CDate(projEnde)
+                                End If
+
+
+                                ' find ProjectDescription
+                                Dim projDescr As String
+                                Dim projDescrConfig As clsConfigProjectsImport = projectConfig("ProjectDescription")
+                                If currentWS.Index <> projDescrConfig.sheet And projDescrConfig.sheet <> 0 Then
+                                    If Not IsNothing(projDescrConfig.sheet) Then
+                                        currentWS = CType(appInstance.Worksheets(projDescrConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    Else
+                                        currentWS = CType(appInstance.Worksheets(projDescrConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                    End If
+                                End If
+
+                                If projDescrConfig.objType = "direkt" Then
+                                    description = CStr(projDescrConfig.content)
+                                Else
+
+                                    With currentWS
+                                        Select Case projDescrConfig.Typ
+                                            Case "Text"
+                                                projDescr = CStr(.Cells(i, projDescrConfig.column.von).value)
+                                            Case "Integer"
+                                                projDescr = CInt(.Cells(i, projDescrConfig.column.von).value)
+                                            Case "Decimal"
+                                                projDescr = CDbl(.Cells(i, projDescrConfig.column.von).value)
+                                            Case "Date"
+                                                projDescr = CDate(.Cells(i, projEndeConfig.column.von).value)
+                                            Case Else
+                                                projDescr = .Cells(i, projDescrConfig.column.von).value
+                                        End Select
+
+                                        If projDescrConfig.objType = "RegEx" Then
+                                            regexpression = New Regex(projDescrConfig.content)
+                                            Dim match As Match = regexpression.Match(projDescr)
+                                            If match.Success Then
+                                                projDescr = match.Value
+                                            End If
+                                        End If
+                                        description = projDescr
+                                    End With
+                                End If
+
 
                                 ' Find TimeUnit
                                 Dim timeUnit As String
@@ -9908,7 +10102,7 @@ Public Module awinGeneralModules
                                         regexpression = New Regex(timeUnitConfig.content)
                                         Dim timeUnitMatch As Match = regexpression.Match(timeUnit)
                                         If timeUnitMatch.Success Then
-                                            timeUnit = CInt(timeUnitMatch.Value)
+                                            timeUnit = CStr(timeUnitMatch.Value)
                                             ' find months
                                             Dim months As String = ""
                                             'Dim monthVon As Integer = 0
@@ -9922,30 +10116,40 @@ Public Module awinGeneralModules
                                                 End If
                                             End If
                                             With currentWS
-                                                Select Case monthsConfig.Typ
-                                                    Case "Text"
-                                                        months = CStr(.Cells(i, monthsConfig.column.von).value)
-                                                    Case "Integer"
-                                                        months = CInt(.Cells(i, monthsConfig.column.von).value)
-                                                    Case "Decimal"
-                                                        months = CDbl(.Cells(i, monthsConfig.column.von).value)
-                                                    Case "Date"
-                                                        months = CDate(.Cells(i, monthsConfig.column.von).value)
-                                                    Case Else
-                                                        months = .Cells(i, monthsConfig.column.von).value
-                                                        If monthsConfig.cellrange Then
-                                                            monthVon = monthsConfig.column.von
-                                                            monthBis = monthsConfig.column.bis
-                                                        End If
-                                                End Select
+                                                If Not IsNothing(monthsConfig.Typ) And
+                                                    Not IsNothing(monthsConfig.column) Then
 
-                                                If monthsConfig.objType = "RegEx" Then
-                                                    regexpression = New Regex(monthsConfig.content)
-                                                    Dim match As Match = regexpression.Match(months)
-                                                    If match.Success Then
-                                                        months = CInt(match.Value)
+                                                    Select Case monthsConfig.Typ
+                                                        Case "Text"
+                                                            months = CStr(.Cells(i, monthsConfig.column.von).value)
+                                                        Case "Integer"
+                                                            months = CInt(.Cells(i, monthsConfig.column.von).value)
+                                                        Case "Decimal"
+                                                            months = CDbl(.Cells(i, monthsConfig.column.von).value)
+                                                        Case "Date"
+                                                            months = CDate(.Cells(i, monthsConfig.column.von).value)
+                                                        Case Else
+                                                            months = .Cells(i, monthsConfig.column.von).value
+                                                    End Select
+                                                End If
+
+                                                If Not IsNothing(monthsConfig.cellrange) Then
+                                                    If monthsConfig.cellrange Then
+                                                        monthVon = monthsConfig.column.von
+                                                        monthBis = monthsConfig.column.bis
                                                     End If
                                                 End If
+
+                                                If Not IsNothing(monthsConfig.objType) Then
+                                                    If monthsConfig.objType = "RegEx" Then
+                                                        regexpression = New Regex(monthsConfig.content)
+                                                        Dim match As Match = regexpression.Match(months)
+                                                        If match.Success Then
+                                                            months = CInt(match.Value)
+                                                        End If
+                                                    End If
+                                                End If
+
 
                                             End With
 
@@ -9976,31 +10180,51 @@ Public Module awinGeneralModules
 
                                                 If roleNameConfig.objType = "RegEx" Then
                                                     regexpression = New Regex(roleNameConfig.content)
-                                                    Dim match As Match = regexpression.Match(roleName)
-                                                    If match.Success Then
-                                                        roleName = CInt(match.Value)
+                                                    Dim matchnew As Match = regexpression.Match(roleName)
+                                                    If matchnew.Success Then
+                                                        roleName = CStr(matchnew.Value)
                                                     End If
                                                 End If
+                                                regexpression = New Regex("\((.*)\)")
+                                                Dim match As Match = regexpression.Match(roleName)
+                                                Dim col As MatchCollection = regexpression.Matches(roleName)
+                                                ' Loop through Matches.
+                                                For Each m As Match In col
+                                                    ' Access first Group and its value.
+                                                    Dim g As Group = m.Groups(1)
+                                                    roleName = g.Value
+                                                Next
+                                                Dim xx As String = CStr(match.Value)
+
+
                                                 If RoleDefinitions.containsName(roleName) Then
-                                                    ReDim roleValues(monthBis - monthVon + 1)
+                                                    Dim hroleValues As Double()
+                                                    ' initialisieren des Array
+                                                    ReDim hroleValues(monthBis - monthVon)
                                                     For m = monthVon To monthBis
-                                                        roleValues(m) = CInt(.Cells(i, m).value)
+                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value)
                                                     Next
                                                     If Not roleListNameValues.ContainsKey(roleName) Then
                                                         ' liste aufbauen, die später dazu dient, das erstellte Projekt zu befüllen
-                                                        roleListNameValues.Add(roleName, roleValues)
+                                                        roleListNameValues.Add(roleName, hroleValues)
                                                     Else
                                                         ' evt. aufsummieren der jeweiligen werte eines Monats
                                                     End If
                                                 Else
-                                                    Call MsgBox("Rolle existiert in diesem VC nicht")
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "Role " & roleName & " isn't defined in this VC"
+                                                    Else
+                                                        outputline = "Rolle " & roleName & " existiert in diesem VC nicht"
+                                                    End If
 
+                                                    meldungen.Add(outputline)
+                                                    'Call MsgBox("Rolle " & roleName & " existiert in diesem VC nicht")
                                                 End If
                                             End With
 
                                         End If
                                     End If
-                                    pName = timeUnit
+
                                 End With
 
 
@@ -10011,6 +10235,9 @@ Public Module awinGeneralModules
                     Catch ex As Exception
 
                     End Try
+
+                    projectWB.Close(SaveChanges:=False)
+
                 Catch ex As Exception
 
                 End Try
@@ -10020,6 +10247,8 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
         End Try
+
+        result = (anz_Proj = ImportProjekte.Count)
 
         readProjectsWithConfig = result
     End Function

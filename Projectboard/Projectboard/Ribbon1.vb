@@ -7124,7 +7124,7 @@ Imports System.Web
         Dim projectsFile As String = ""
         Dim lastrow As Integer = 0
         Dim outputString As String = ""
-        Dim dateiName As String
+        Dim dateiName As String = ""
         Dim listofArchivAllg As New List(Of String)
         Dim outPutCollection As New Collection
 
@@ -7177,21 +7177,49 @@ Imports System.Web
             Dim i As Integer
 
 
+
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
-                Dim myCollection As New Collection
 
-                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, myCollection)
+                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
 
-                'If ok Then
-                '    listofArchivAllg.Add(dateiName)
-                'End If
                 If listofArchivAllg.Count > 0 Then
-                    moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
                 End If
 
             Next
+
+            Call logfileOpen()
+            Call logfileSchreiben(outPutCollection)
+            Call logfileSchliessen()
+
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Import Projects of File: " & dateiName, "please check the notifications ...")
+            Else
+                Call showOutPut(outPutCollection, "Einlesen Projekte aus Datei: " & dateiName, "folgende Probleme sind aufgetaucht")
+            End If
+
+
+            '' Cursor auf Default setzen
+            Cursor.Current = Cursors.Default
+
+
+            ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+            Try
+                Call importProjekteEintragen(importDate, True, True)
+
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
+
+            End Try
+
+
+
         End If
 
 

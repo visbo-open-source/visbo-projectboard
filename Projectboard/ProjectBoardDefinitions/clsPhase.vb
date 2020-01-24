@@ -2013,8 +2013,9 @@ Public Class clsPhase
     ''' <param name="prozentSatz">wenn nur ein bestimmter Prozentsatz auf die Phase verteilt werden sollen; by Default 1</param>
     Public Sub addCostsAndRoles(ByVal roleNames() As String, ByVal roleValues() As Double,
                                 ByVal costNames() As String, ByVal costValues() As Double,
-                                ByVal Optional prozentSatz As Double = 1.0,
-                                Optional roleNamesAreIds As Boolean = False)
+                                Optional ByVal prozentSatz As Double = 1.0,
+                                Optional ByVal roleNamesAreIds As Boolean = False,
+                                Optional ByVal createCostsRolesAnyhow As Boolean = False)
 
         Dim anzRoles As Integer
         Dim anzCosts As Integer
@@ -2050,6 +2051,10 @@ Public Class clsPhase
                 ' whenexisting sollte immer dazu addiert werden ... ! 
                 'Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
                 Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
+            Else
+                If createCostsRolesAnyhow Then
+                    Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
+                End If
             End If
 
         Next
@@ -2061,6 +2066,10 @@ Public Class clsPhase
                 ' wenn existing sollte immer dazu addiert werden 
                 'Me.addCostRole(tmpRCnameID, tmpRCvalue, False, False)
                 Me.addCostRole(tmpRCnameID, tmpRCvalue, False, False)
+            Else
+                If createCostsRolesAnyhow Then
+                    Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
+                End If
             End If
         Next
 
@@ -2184,7 +2193,7 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
-    ''' entfernt alle Rollen-Instanzen mut RolleName-ID "roleuid;teamUid" aus der Phase
+    ''' entfernt alle Rollen-Instanzen mit RolleName-ID "roleuid;teamUid" aus der Phase
     ''' </summary>
     ''' <param name="roleNameID"></param>
     Public Sub removeRoleByNameID(ByVal roleNameID As String)
