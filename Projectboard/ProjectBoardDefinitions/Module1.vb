@@ -202,6 +202,7 @@ Public Module Module1
     Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
     ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
+    ' der Wert massColFontValues(x, 0) repräsentiert die Font-Size 
     Public massColFontValues(2, 100) As Double
 
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 

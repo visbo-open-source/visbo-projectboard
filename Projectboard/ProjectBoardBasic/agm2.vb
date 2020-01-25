@@ -20043,6 +20043,34 @@ Public Module agm2
 
             End If
 
+            Try
+                ' Lesen appearance Defintions
+                appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+
+                If IsNothing(appearanceDefinitions) Then
+
+                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
+
+                    If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
+
+                        ' Aufbauen der Darstellungsklassen  aus Customizationfile
+                        Call aufbauenAppearanceDefinitions(wsName7810)
+
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
+                        Else
+                            Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                        End If
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+
+
             ' tk 14.1.2020
             ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
             Dim customizations As New clsCustomization
