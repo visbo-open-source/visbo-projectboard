@@ -99,47 +99,13 @@ Public Class Tabelle2
 
         CType(CType(meWS, Excel.Worksheet).Cells(2, 1), Excel.Range).Select()
 
-        'Try
-        '    'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-        '    ' jetzt auf die erste selektierbare Zeile gehen ... 
-        '    Dim cz As Integer = 2
-        '    Dim eof As Boolean = (cz > visboZustaende.meMaxZeile)
-
-        '    Dim bedingung As Boolean = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
-
-        '    Do While bedingung
-        '        cz = cz + 1
-        '        eof = (cz > visboZustaende.meMaxZeile)
-        '        bedingung = CBool(CType(meWS.Cells(cz, columnRC), Excel.Range).Locked = True) And Not eof
-        '    Loop
-
-        '    If Not eof Then
-        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
-
-        '        Dim pName As String = ""
-
-        '        With visboZustaende
-
-        '            pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
-        '            If ShowProjekte.contains(pName) Then
-        '                .currentProject = ShowProjekte.getProject(pName)
-        '                .currentProjectinSession = sessionCacheProjekte.getProject(calcProjektKey(pName, .currentProject.variantName))
-        '            End If
-
-        '        End With
-        '    Else
-        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
-        '        CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
-        '    End If
-
-
-
-        'Catch ex As Exception
-
-        'End Try
 
         ' jetzt die Gridline zeigen
         With appInstance.ActiveWindow
+            If massColFontValues(0, 0) <> 0 Then
+                .Zoom = massColFontValues(0, 0)
+            End If
+
             .DisplayGridlines = True
             .GridlineColor = Excel.XlRgbColor.rgbBlack
         End With
@@ -691,11 +657,16 @@ Public Class Tabelle2
                                     ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
                                     If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
 
+                                        Dim rcIndentLevel As Integer = 0
                                         If isRole Then
                                             ' es handelt sich um eine Rollen-Änderung
 
                                             Dim teamID As Integer = -1
                                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+
+                                            ' jetzt den Indentlevel der Rolle vestimmen bestimmen 
+                                            rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
+                                            currentCell.IndentLevel = rcIndentLevel
 
                                             Dim newRoleID As Integer = tmpRole.UID
                                             If visboZustaende.oldValue.Trim.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
@@ -792,13 +763,23 @@ Public Class Tabelle2
                                             End If
                                         Else
                                             ' falsche/unbekannte Eingabe
-                                            Call MsgBox("unbekannte Rolle / Kostenart ... ")
+                                            Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "unknown role/cost ..."
+                                            End If
+                                            Call MsgBox(errMsg)
+
                                             Target.Cells(1, 1).value = visboZustaende.oldValue
                                         End If
 
 
                                     Else
-                                        Call MsgBox("keine Doppelbelegung innerhalb einer Projektphase erlaubt ... ")
+                                        Dim errMsg As String = "keine Doppelbelegung innerhalb einer Projektphase erlaubt ... "
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "no duplicates within one phase, please"
+                                        End If
+                                        Call MsgBox(errMsg)
+
                                         Target.Cells(1, 1).value = visboZustaende.oldValue
 
                                         If visboZustaende.oldValue = "" Or IsNothing(visboZustaende.oldValue) Then
@@ -817,8 +798,39 @@ Public Class Tabelle2
                                     Call defineHeaderTitleOfRoleCost(Target.Row)
 
 
+                                ElseIf IsNothing(rcName) Then
+
+                                    If Not IsNothing(visboZustaende.oldValue) Then
+                                        If visboZustaende.oldValue <> "" Then
+                                            Dim errMsg As String = "um Rolle /Kostenart zu löschen bitte entsprechenden Menupunkt nutzen ... "
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "to delete a role or cost, please use the according menu-item ..."
+                                            End If
+                                            Call MsgBox(errMsg)
+                                            Target.Cells(1, 1).value = visboZustaende.oldValue
+                                        End If
+                                    End If
+
+
+
+                                ElseIf rcName.Trim = "" Then
+
+                                    If visboZustaende.oldValue <> "" Then
+                                        Dim errMsg As String = "um Rolle /Kostenart zu löschen bitte entsprechenden Menupunkt nutzen ... "
+                                        If awinSettings.englishLanguage Then
+                                            errMsg = "to delete a role or cost, please use the according menu-item ..."
+                                        End If
+                                        Call MsgBox(errMsg)
+                                        Target.Cells(1, 1).value = visboZustaende.oldValue
+                                    End If
+
+
                                 Else
-                                    Call MsgBox("nicht zugelassen ... ")
+                                    Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "unknown role/cost ..."
+                                    End If
+                                    Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
@@ -849,7 +861,11 @@ Public Class Tabelle2
                                     End If
 
                                 Else
-                                    Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
+                                    Dim errMsg As String = "bitte erst eine Rolle oder Kostenart auswählen ..."
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "please, first choose a role or cost name ..."
+                                    End If
+                                    Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
@@ -1116,7 +1132,11 @@ Public Class Tabelle2
 
 
                                 Else
-                                    Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
+                                    Dim errMsg As String = "bitte erst eine Rolle oder Kostenart auswählen ..."
+                                    If awinSettings.englishLanguage Then
+                                        errMsg = "please, first choose a role or cost name ..."
+                                    End If
+                                    Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
@@ -1199,7 +1219,11 @@ Public Class Tabelle2
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message)
+            Dim errMsg As String = "Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message
+            If awinSettings.englishLanguage Then
+                errMsg = "Error in editing resources / cost: " & vbLf & ex.Message
+            End If
+            Call MsgBox(errMsg)
         End Try
 
         appInstance.EnableEvents = True

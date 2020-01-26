@@ -3289,6 +3289,20 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' gibt treu zurück, wenn diese Phase noch Monate enthält , zu denen Forecast Planungen eingegeben werden können 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property hasForecastMonths As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+            If _parentProject.hasActualValues Then
+                tmpResult = getColumnOfDate(getEndDate) > getColumnOfDate(_parentProject.actualDataUntil)
+            End If
+            hasForecastMonths = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt zur den Array an Ist-Werten der angegebenen Rolle / Kostenart zurück  
     ''' </summary>
     ''' <param name="rcNameID"></param>

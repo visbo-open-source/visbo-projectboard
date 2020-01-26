@@ -201,8 +201,8 @@ Public Module Module1
     Public chartWidth As Double = 140 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
-    ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
-    ' der Wert massColFontValues(x, 0) repräsentiert die Font-Size 
+    ' dieser Array dient zur Aufnahme der Spaltenbreiten für MassEditRC (0), massEditTE (1), massEditAT (2)
+    ' der Wert massColFontValues(x, 0) repräsentiert jetzt den ActiveWindow.Zoom Faktor  
     Public massColFontValues(2, 100) As Double
 
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
@@ -8065,23 +8065,24 @@ Public Module Module1
                                           ByVal protectiontext As String)
 
         currentCell.Value = pName
+        ' Kommentare löschen
+        currentCell.ClearComments()
 
         ' ist immer locked , also entsprechend kennzeichnen
         currentCell.Interior.Color = XlRgbColor.rgbLightGray
 
-        If isProtectedbyOthers Then
+        If Not IsNothing(protectiontext) Then
+            If protectiontext <> "" Then
 
-            If isProtectedbyOthers Then
-                currentCell.Font.Color = awinSettings.protectedByOtherColor
+                If isProtectedbyOthers Then
+                    currentCell.Font.Color = awinSettings.protectedByOtherColor
+                    currentCell.AddComment(Text:=protectiontext)
+                    currentCell.Comment.Visible = False
+                End If
+
             End If
-
-            ' Kommentare löschen
-            currentCell.ClearComments()
-
-            currentCell.AddComment(Text:=protectiontext)
-            currentCell.Comment.Visible = False
-
         End If
+
 
 
     End Sub

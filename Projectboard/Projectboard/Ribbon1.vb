@@ -3882,14 +3882,14 @@ Imports System.Web
         Try
 
             ' jetzt die Spalten Werte merken 
-            'Try
-            '    massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-            '    For ik As Integer = 1 To anzahlMassColSpalten
-            '        massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-            '    Next
-            'Catch ex As Exception
+            Try
+                massColFontValues(mIX, 0) = CDbl(appInstance.ActiveWindow.Zoom)
+                For ik As Integer = 1 To 100
+                    massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+                Next
+            Catch ex As Exception
 
-            'End Try
+            End Try
 
 
             ' jetzt die Autofilter de-aktivieren ... 

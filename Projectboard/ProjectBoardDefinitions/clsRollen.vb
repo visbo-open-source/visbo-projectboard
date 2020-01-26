@@ -410,16 +410,19 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <returns></returns>
     Public Function getRoleIndent(ByVal roleNameID As String) As Integer
+
         Dim tmpResult As Integer = 0
 
         Dim teamID As Integer = -1
         Dim tmpRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
-        Try
-            tmpResult = getParentArray(tmpRole).Count
-        Catch ex As Exception
 
-        End Try
+        If Not IsNothing(tmpRole) Then
+            Try
+                tmpResult = getParentArray(tmpRole).Count
+            Catch ex As Exception
 
+            End Try
+        End If
 
         getRoleIndent = tmpResult
 

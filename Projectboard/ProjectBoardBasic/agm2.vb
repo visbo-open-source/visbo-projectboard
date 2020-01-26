@@ -16964,7 +16964,12 @@ Public Module agm2
 
         Dim currentCell As Excel.Range
         Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
-        appInstance.EnableEvents = False
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
 
         Dim ok As Boolean = True
 
@@ -17020,7 +17025,10 @@ Public Module agm2
             Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
         End Try
 
-        appInstance.EnableEvents = True
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
+
 
     End Sub
 
@@ -17179,6 +17187,12 @@ Public Module agm2
         Dim newZeile As Integer
         appInstance.EnableEvents = False
 
+        ' tk 26.1.20 
+        Dim rcIndentLevel As Integer = 0
+        If isRole Then
+            rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
+        End If
+
         Try
 
             currentRow = CType(ws.Rows(zeile), Excel.Range)
@@ -17275,6 +17289,7 @@ Public Module agm2
                 With currentCell
                     .Value = rcName
                     .Locked = islocked
+                    .IndentLevel = rcIndentLevel
 
                     If .Locked = False Then
                         .Interior.ColorIndex = XlColorIndex.xlColorIndexNone
@@ -17773,6 +17788,12 @@ Public Module agm2
 
                             ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                             Dim hasActualData As Boolean = cphase.hasActualData
+                            Dim hasForecastMonths As Boolean = True
+
+                            If hasActualData Then
+                                hasForecastMonths = cphase.hasForecastMonths
+                            End If
+
                             summeEditierenErlaubt = (awinSettings.allowSumEditing And Not hasActualData)
 
 
@@ -17857,13 +17878,12 @@ Public Module agm2
                                     zeilensumme = schnittmenge.Sum
 
                                     ' ggf Schreibschutz setzen für die Zeile setzen
-                                    Dim lockZeile As Boolean = False
+                                    Dim lockZeile As Boolean = Not hasForecastMonths
                                     Dim lockText As String = ""
 
                                     If isProtectedbyOthers Then
                                         lockZeile = True
                                         lockText = protectionText
-
                                     End If
 
                                     Dim roleHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, roleNameID, True, False).Sum > 0
@@ -17918,10 +17938,17 @@ Public Module agm2
                                         schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                         zeilensumme = schnittmenge.Sum
 
-                                        'ReDim zeilenWerte(bis - von)
+                                        ' ggf Schreibschutz setzen für die Zeile setzen
+                                        Dim lockZeile As Boolean = Not hasForecastMonths
+                                        Dim lockText As String = ""
 
-                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, isProtectedbyOthers, zeile, costName, "", False,
-                                                                                protectionText, von, bis,
+                                        If isProtectedbyOthers Then
+                                            lockZeile = True
+                                            lockText = protectionText
+                                        End If
+
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
+                                                                                lockText, von, bis,
                                                                                 actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                                 ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
@@ -17962,9 +17989,17 @@ Public Module agm2
                                     ' in diesem Fall sollte eine leere Projekt-Phasen-Information geschrieben werden, quasi ein Platzhalter
                                     ' in diesem Platzhalter kann dann später die Ressourcen Information aufgenommen werden  
 
+                                    ' ggf Schreibschutz setzen für die Zeile setzen
+                                    Dim lockZeile As Boolean = Not hasForecastMonths
+                                    Dim lockText As String = ""
 
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, isProtectedbyOthers, zeile, "", "", False,
-                                                                            protectionText, von, bis,
+                                    If isProtectedbyOthers Then
+                                        lockZeile = True
+                                        lockText = protectionText
+                                    End If
+
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, "", "", False,
+                                                                            lockText, von, bis,
                                                                             actualDataRelColumn, hasActualData, summeEditierenErlaubt,
                                                                             ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 0)
 
@@ -17990,131 +18025,30 @@ Public Module agm2
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
 
-            Dim infoBlock As Excel.Range
-            Dim infoDatablock As Excel.Range
+            Dim infoBlock As Excel.Range = Nothing
+            Dim infoDatablock As Excel.Range = Nothing
+
+            Dim firstHundredColumns As Excel.Range
+            Dim maxDataColumnWidth As Integer = 5
+
 
             Try
 
                 With CType(currentWS, Excel.Worksheet)
-                    infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 2)), Excel.Range)
-                    infoDatablock = CType(.Range(.Cells(2, 1), .Cells(zeile, startSpalteDaten - 2)), Excel.Range)
+                    infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 1)), Excel.Range)
+                    infoDatablock = CType(.Range(.Cells(2, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                    firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
 
-                    infoDatablock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                    infoDatablock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-
-                    ' hier prüfen, ob es bereits Werte für massColValues gibt ..
-                    If massColFontValues(0, 0) > 4 Then
-                        ' diese Werte übernehmen 
-                        infoDatablock.Font.Size = CInt(massColFontValues(0, 0))
-                        For ik As Integer = 1 To 5
-                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
-                        Next
-
-
-                    Else
-                        ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
-                        infoBlock.AutoFit()
-
-                        Try
-                            'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                            'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
-                            Dim availableScreenWidth As Double = maxScreenWidth
-                            If infoBlock.Width > 0.6 * availableScreenWidth Then
-
-                                infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
-                                ' BU bekommt 5%
-                                'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
-                                CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
-                                ' pName bekomt 30%
-                                'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                                CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
-                                ' vName bekomt 5%
-                                'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
-                                CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
-                                ' phaseName bekomt 30%
-                                'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                                CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
-                                ' RoleCost Name bekomt 30%
-                                'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                                CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
-                            End If
-                        Catch ex As Exception
-
-                        End Try
-
-                        ' Werte setzen ...
-                        massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
-                        For ik As Integer = 1 To 5
-                            massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
-                        Next
-
-                    End If
-
-
-
-                End With
-            Catch ex As Exception
-
-            End Try
-
-
-            ' die Breite der Summen-Spalte festlegen 
-            Try
-                With CType(currentWS, Excel.Worksheet)
-                    ' nur die Überschrift der Summe ...
-                    infoBlock = CType(.Columns(startSpalteDaten - 1), Excel.Range)
-                    infoBlock.ColumnWidth = 14
-                    'infoBlock.AutoFit()
-                End With
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                With CType(currentWS, Excel.Worksheet)
-                    ' nur die Überschrift der Summe ...
-                    infoBlock = CType(.Cells(1, startSpalteDaten - 1), Excel.Range)
-                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    'infoBlock.AutoFit()
-                End With
-            Catch ex As Exception
-
-            End Try
-
-            Try
-                With CType(currentWS, Excel.Worksheet)
-                    ' nur den Datenbereich der Summe ...
-                    infoBlock = CType(.Range(.Cells(2, startSpalteDaten - 1), .Cells(zeile, startSpalteDaten - 1)), Excel.Range)
-                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    infoBlock.Font.Size = CInt(massColFontValues(0, 0))
-                    'infoBlock.AutoFit()
-                End With
-            Catch ex As Exception
 
-            End Try
-            ' Summe Datenbereich formatieren 
+                    infoDatablock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    infoDatablock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    infoDatablock.NumberFormat = "##,##0.#"
 
-
-            ' die Breite der Daten festlegen 
-            Try
-                Dim tmpRange As Excel.Range
-                With CType(currentWS, Excel.Worksheet)
 
                     For mis As Integer = 0 To bis - von
-                        tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
-
-                        tmpRange.Columns.ColumnWidth = 5
-                        'tmpRange.Font.Size = 10
-                        If CInt(massColFontValues(0, 0)) > 3 Then
-                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 1)
-                        Else
-                            CType(tmpRange.Font, Excel.Font).Size = 9
-                        End If
-
-                        tmpRange.NumberFormat = "##,##0.#"
-                        tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-
+                        CType(infoDatablock.Font, Excel.Font).Size = 9
                     Next
 
 
@@ -18124,12 +18058,7 @@ Public Module agm2
                     For m As Integer = 0 To bis - von
                         With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
                             .Value = startMonat.AddMonths(m)
-                            If massColFontValues(0, 0) > 4 Then
-                                .Font.Size = CInt(massColFontValues(0, 0))
-                            Else
-                                .Font.Size = 10
-                            End If
-
+                            .Font.Size = 10
                             .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                             .NumberFormat = "[$-409]mmm yy;@"
                             .WrapText = False
@@ -18142,7 +18071,54 @@ Public Module agm2
 
                     Next
 
+                    ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+
+                    If massColFontValues(0, 5) > 0 Then
+                        ' diese Werte übernehmen 
+
+                        For ik As Integer = 1 To 100
+                            CType(firstHundredColumns.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
+                        Next
+
+
+                    Else
+                        ' hier jetzt den Platzbedarf automatisch bestimmen 
+                        'infoBlock.AutoFit()
+                        firstHundredColumns.AutoFit()
+
+                        ' jetzt die größte Spaltenbreite im echten Datenblock festlegen 
+
+                        For mis As Integer = 0 To bis - von
+                            maxDataColumnWidth = System.Math.Max(maxDataColumnWidth, CType(currentWS.Columns(startSpalteDaten + mis), Excel.Range).ColumnWidth)
+                        Next
+
+                    End If
+
+                    ' jetzt die Orientierung der Summen-Spalte festlegen 
+                    ' nur die Überschrift der Summe ...
+                    infoBlock = CType(.Columns(startSpalteDaten - 1), Excel.Range)
+                    If infoBlock.ColumnWidth < 14 Then
+                        infoBlock.ColumnWidth = 14
+                    End If
+
+                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    infoBlock.IndentLevel = 3
+
+                    infoBlock.Cells(1, 1).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+
+
                 End With
+            Catch ex As Exception
+                Call MsgBox("Error when preparing mass-edit Resources+Cost ... ")
+            End Try
+
+            Try
+
+                ' jetzt muss die Größe der Spalten im Datenbereich vereinheitlich werden 
+                For mis As Integer = 0 To bis - von
+                    infoDatablock.Columns.ColumnWidth = maxDataColumnWidth
+                Next
+
             Catch ex As Exception
 
             End Try
