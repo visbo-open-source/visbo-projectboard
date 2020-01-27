@@ -3325,13 +3325,38 @@ Public Class clsProjekt
 
                 Dim roleNameID As String = curRole.getNameID
 
+                ' tk ist es einer Skill/Team zugeordnet 
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
                 Dim found As Boolean = False
                 Dim ix As Integer = 1
+
+                ' tk 19.1.20 um rollen mit Skills der Skill-Gruppe zuzuordnen ... 
+                ' Anfang ... 
+                If teamID > 0 And RoleDefinitions.containsUid(teamID) Then
+
+                    Do While ix <= summaryRoleIDs.Length And Not found
+                        If teamID = summaryRoleIDs(ix - 1) Then
+                            found = True
+                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(teamID, summaryRoleIDs(ix - 1)) Then
+                            found = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    Loop
+
+                End If
+
+                If Not found Then
+                    ix = 1
+                End If
+                ' Ende ...
 
                 Do While ix <= summaryRoleIDs.Length And Not found
 
                     If curRole.uid <> summaryRoleIDs(ix - 1) Then
-                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 erstetzt wird 
+                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
                         If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
 
@@ -3942,6 +3967,7 @@ Public Class clsProjekt
         ' die Ist-Werte sind immer die Werte vom anfang der Phase bis atualDatauntil einschließlich
 
         Dim tmpResult() As Double = Nothing
+
         Dim xWerte() As Double = Nothing
         Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
         Dim notYetDone As Boolean = True
@@ -3952,21 +3978,24 @@ Public Class clsProjekt
             Dim pstart As Integer = getColumnOfDate(cphase.getStartDate)
             Dim pEnde As Integer = getColumnOfDate(cphase.getEndDate)
             Dim actualIX As Integer
+            Dim arrayEnde As Integer
 
             If DateDiff(DateInterval.Month, StartofCalendar, actualDataUntil) > 0 Then
                 actualIX = getColumnOfDate(actualDataUntil)
+                arrayEnde = System.Math.Min(pEnde, actualIX)
             Else
-                actualIX = -9999
+                ' das ist das Abbruch-Kriterium, es gibt keine Ist-Daten
+                arrayEnde = pstart - 1
             End If
 
 
-            If pstart > actualIX Then
+            If pstart > arrayEnde Then
                 ' es kann noch keine Ist-Daten geben 
                 ReDim tmpResult(0)
                 tmpResult(0) = 0
 
-            ElseIf pstart <= actualIX Then
-                ReDim tmpResult(actualIX - pstart)
+            ElseIf pstart <= arrayEnde Then
+                ReDim tmpResult(arrayEnde - pstart)
                 If isRole Then
                     ' enthält diese Phase überhaupt diese Rolle ?
                     Dim teamID As Integer = -1
@@ -4019,7 +4048,7 @@ Public Class clsProjekt
 
                 If notYetDone Then
 
-                    For i As Integer = 0 To actualIX - pstart
+                    For i As Integer = 0 To arrayEnde - pstart
                         If isRole And outputInEuro Then
                             ' mit Tagessatz multiplizieren 
                             tmpResult(i) = xWerte(i) * tagessatz
@@ -6113,6 +6142,18 @@ Public Class clsProjekt
             End If
 
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' bekommt eine RoleName ID der Form roleID;TeamID übergeben
+    ''' gibt true zurück, wenn diese RoleNameID im Projekt vorkommt 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsRoleNameID(ByVal roleNameID As String) As Boolean
+        Get
+            containsRoleNameID = getRoleNameIDs.Contains(roleNameID)
         End Get
     End Property
 

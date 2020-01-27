@@ -338,6 +338,14 @@ Module creationModule1
             ' muss hier noch die Auswahl der selectedPhases passieren 
 
             If phMSSelNeeded(0) = True And Not phMSSelNeeded(1) = True Then
+
+                Dim listOfFormerSelectedProjects As String() = Nothing
+                If selectedProjekte.Count > 0 Then
+
+                    listOfFormerSelectedProjects = selectedProjekte.Liste.Keys.ToArray
+
+                End If
+
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
                     selectedPhases = frmSelectionPhMs.selectedPhases
@@ -349,6 +357,19 @@ Module creationModule1
                 End If
 
                 phMSSelNeeded(1) = True
+                If Not IsNothing(listOfFormerSelectedProjects) Then
+                    selectedProjekte.Clear(False)
+
+                    For Each tmpName As String In listOfFormerSelectedProjects
+                        If ShowProjekte.contains(tmpName) Then
+                            selectedProjekte.Add(ShowProjekte.getProject(tmpName), False)
+                        End If
+                    Next
+                End If
+
+                ' jetzt muss für den Multiprojekt Report noch showrangeLeft und Right gesetzt werden 
+                showRangeLeft = ShowProjekte.getMinMonthColumn - 1
+                showRangeRight = ShowProjekte.getMaxMonthColumn + 3
 
             End If
 

@@ -201,7 +201,8 @@ Public Module Module1
     Public chartWidth As Double = 140 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
-    ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
+    ' dieser Array dient zur Aufnahme der Spaltenbreiten für MassEditRC (0), massEditTE (1), massEditAT (2)
+    ' der Wert massColFontValues(x, 0) repräsentiert jetzt den ActiveWindow.Zoom Faktor  
     Public massColFontValues(2, 100) As Double
 
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
@@ -1235,10 +1236,11 @@ Public Module Module1
                                 myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                                 If Not tmpCollection.Contains(kvp.Key) Then
-                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                        tmpCollection.Add(kvp.Key, kvp.Key)
-                                    End If
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    '' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    'If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    '    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    'End If
                                 End If
 
                             End If
@@ -1254,10 +1256,13 @@ Public Module Module1
                                                             myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Then
 
                                 If Not tmpCollection.Contains(kvp.Key) Then
-                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                        tmpCollection.Add(kvp.Key, kvp.Key)
-                                    End If
+                                    ' tk , 27.1.20 wird auf alle Fälle aufgenommen 
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+
+                                    '' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    'If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    '    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    'End If
 
                                 End If
                             End If
@@ -5763,32 +5768,42 @@ Public Module Module1
                 toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj)
             Else
                 ' es sind im q2 eine durch vblf bzw vbcr getrennte Rollen und Kosten angegeben
-                Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
-                Dim isRole As Boolean = False
-                Dim isCost As Boolean = False
-                For Each tmpName As String In tmpStr
-                    isRole = RoleDefinitions.containsNameOrID(tmpName)
-                    If Not isRole Then
-                        isCost = CostDefinitions.containsName(tmpName)
-                    End If
+                If q2 <> "" Then
+                    Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
+                    Dim isRole As Boolean = False
+                    Dim isCost As Boolean = False
 
-                    If isRole Then
-                        Dim teamID As Integer = -1
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
-                        If Not toDoCollectionR.Contains(roleNameID) Then
-                            toDoCollectionR.Add(roleNameID)
+                    For Each tmpName As String In tmpStr
+                        isRole = RoleDefinitions.containsNameOrID(tmpName)
+
+                        If IsNumeric(tmpName) And isRole Then
+                            Dim teamID As Integer = -1
+                            tmpName = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).name
                         End If
-                    ElseIf isCost Then
-                        If Not toDoCollectionC.Contains(tmpName) Then
-                            toDoCollectionC.Add(tmpName)
+
+                        If Not isRole Then
+                            isCost = CostDefinitions.containsName(tmpName)
                         End If
-                    Else
-                        Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
-                        outPutCollection.Add(outPutLine)
-                    End If
 
+                        If isRole Then
+                            Dim teamID As Integer = -1
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
+                            If Not toDoCollectionR.Contains(roleNameID) Then
+                                toDoCollectionR.Add(roleNameID)
+                            End If
+                        ElseIf isCost Then
+                            If Not toDoCollectionC.Contains(tmpName) Then
+                                toDoCollectionC.Add(tmpName)
+                            End If
+                        Else
+                            Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
+                            outPutCollection.Add(outPutLine)
+                        End If
 
-                Next
+                    Next
+
+                End If
+
             End If
         Catch ex As Exception
 
@@ -6125,7 +6140,11 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
-        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        If awinSettings.englishLanguage Then
+            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+        Else
+            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        End If
 
         Dim roleBezeichner As String = ""
 
@@ -8026,6 +8045,10 @@ Public Module Module1
         '    Kommentare alle löschen 
         currentCell.ClearComments()
 
+        ' ist immer locked , also entsprechend kennzeichnen
+        'currentCell.Interior.Color = XlRgbColor.rgbLightGray
+
+
         ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermitelt werden kann 
         If calcHryElemKey(phaseName, False) <> phaseNameID Then
             currentCell.AddComment(Text:=phaseNameID)
@@ -8046,20 +8069,24 @@ Public Module Module1
                                           ByVal protectiontext As String)
 
         currentCell.Value = pName
+        ' Kommentare löschen
+        currentCell.ClearComments()
 
-        If isProtectedbyOthers Then
+        ' ist immer locked , also entsprechend kennzeichnen
+        'currentCell.Interior.Color = XlRgbColor.rgbLightGray
 
-            If isProtectedbyOthers Then
-                currentCell.Font.Color = awinSettings.protectedByOtherColor
+        If Not IsNothing(protectiontext) Then
+            If protectiontext <> "" Then
+
+                If isProtectedbyOthers Then
+                    currentCell.Font.Color = awinSettings.protectedByOtherColor
+                    currentCell.AddComment(Text:=protectiontext)
+                    currentCell.Comment.Visible = False
+                End If
+
             End If
-
-            ' Kommentare löschen
-            currentCell.ClearComments()
-
-            currentCell.AddComment(Text:=protectiontext)
-            currentCell.Comment.Visible = False
-
         End If
+
 
 
     End Sub
@@ -8073,7 +8100,7 @@ Public Module Module1
                                          ByVal isLocked As Boolean,
                                          ByVal rcName As String,
                                          ByVal roleNameID As String,
-                                         ByVal isRole As Boolean)
+                                         ByVal isRole As Boolean, ByVal indentlevel As Integer)
 
 
         Dim teamID As Integer = -1
@@ -8108,6 +8135,13 @@ Public Module Module1
         With currentCell
             .Value = rcName
             .Locked = isLocked
+            .IndentLevel = indentlevel
+
+            'If isLocked Then
+            '    ' als gesperrt kennzeichnen 
+            '    .Interior.Color = XlRgbColor.rgbLightGray
+            'End If
+
             Try
                 If Not IsNothing(.Validation) Then
                     .Validation.Delete()

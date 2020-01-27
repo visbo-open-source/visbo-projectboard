@@ -791,6 +791,14 @@ Public Class clsPhase
 
     End Property
 
+    ''' <summary>
+    ''' wird verwendet um Termine entweder per Drag and Drop zu verändern , unter Berücksichtigung der ActualData 
+    ''' oder aber im MassEditTermine 
+    ''' </summary>
+    ''' <param name="newOffsetInTagen"></param>
+    ''' <param name="newDauerInTagen"></param>
+    ''' <param name="autoAdjustChilds"></param>
+    ''' <returns></returns>
     Public Function adjustPhaseAndChilds(ByVal newOffsetInTagen As Long, ByVal newDauerInTagen As Long,
                                          ByVal autoAdjustChilds As Boolean) As clsPhase
 
@@ -810,7 +818,7 @@ Public Class clsPhase
 
 
         ' jetzt wird diese Phase entsprechend geändert ...
-        Call Me.changeStartandDauer(newOffsetInTagen, newDauerInTagen)
+        Call Me.adjustStartandDauer(newOffsetInTagen, newDauerInTagen)
 
         If autoAdjustChilds Then
 
@@ -994,6 +1002,7 @@ Public Class clsPhase
     End Function
 
     ''' <summary>
+    ''' ähnlich wie changeStartAnd Dauer, nur mit Modifikationen, die für adjustPhaseAndChilds notwendig sind ... 
     ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
     ''' Allerdings nur , wenn erlaubt. 
     ''' Nicht erlaubt: es gibt actualData, Starttermin liegt vor ActualData und soll verschoeben werden -> geht nicht 
@@ -1001,8 +1010,7 @@ Public Class clsPhase
     ''' </summary>
     ''' <param name="startOffset"></param>
     ''' <param name="dauer"></param>
-    Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
-
+    Private Sub adjustStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
         Dim oldDauerinDays As Integer = Me._dauerInDays
@@ -1187,6 +1195,150 @@ Public Class clsPhase
             End If
 
         End Try
+
+    End Sub
+    ''' <summary>
+    ''' ändert die Daten der Phase, also Startdatum und Ende-Datum. 
+    ''' Allerdings nur , wenn erlaubt. 
+    ''' Nicht erlaubt: es gibt actualData, Starttermin liegt vor ActualData und soll verschoeben werden -> geht nicht 
+    ''' Start- oder Ende-Termin soll vor ActualData verschoeben werden ... 
+    ''' </summary>
+    ''' <param name="startOffset"></param>
+    ''' <param name="dauer"></param>
+    Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
+
+        Dim projektStartdate As Date
+        Dim projektstartColumn As Integer
+        Dim oldDauerinDays As Integer = Me._dauerInDays
+        Dim faktor As Double
+        Dim dimension As Integer
+
+
+
+        If dauer < 0 Then
+            Throw New ArgumentException("Dauer kann nicht negativ sein")
+
+        ElseIf startOffset < 0 Then
+            Throw New ArgumentException("Phase kann nicht vor Projektstart beginnen")
+
+        End If
+
+
+        Try
+            ' Änderung tk, 20.6.18 .startDate.Date um zu normieren ..
+            projektStartdate = Me.parentProject.startDate.Date
+            projektstartColumn = Me.parentProject.Start
+
+            If dauer = 0 And _relEnde > 0 Then
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            ElseIf dauer = 0 And _relEnde = 0 Then
+
+                Throw New ArgumentException("Phase kann nicht Dauer = 0 haben ")
+
+            Else
+                '  
+                If _dauerInDays > 0 And dauer > 0 Then
+                    faktor = dauer / _dauerInDays
+                Else
+                    faktor = 1
+                End If
+
+
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
+
+
+
+                Dim oldlaenge As Integer = _relEnde - _relStart + 1
+
+
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
+
+
+                _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
+                _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
+
+                ' jetzt muss geprüft werden, ob die Phase die Dauer des Projektes verlängert 
+                ' dieser Aufruf korrigiert notfalls die intern gehaltene
+
+                Try
+                    If Not IsNothing(Me.parentProject.getPhase(1)) Then
+                        If Me.nameID <> Me.parentProject.getPhase(1).nameID Then
+                            ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                            Me.parentProject.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
+                        End If
+                    End If
+
+                Catch ex As Exception
+                    Dim b As Integer = 0
+                End Try
+
+
+                If awinSettings.autoCorrectBedarfe Then
+
+
+                    Dim newvalues() As Double
+                    Dim notYetDone As Boolean = True
+
+                    dimension = _relEnde - _relStart
+                    ReDim newvalues(dimension)
+
+                    If Me.countRoles > 0 Then
+
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, faktor)
+                        notYetDone = False
+
+                    End If
+
+                    If Me.countCosts > 0 And notYetDone Then
+
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, 1)
+
+                    End If
+
+
+                End If
+
+
+
+
+            End If
+
+
+        Catch ex As Exception
+            ' bei einer Projektvorlage gibt es kein Datum - es sollen aber die Werte für Offset und Dauer übernommen werden
+
+            If dauer = 0 And _relEnde > 0 Then
+
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
+                '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
+                '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            Else
+                '  
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
+
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
+
+
+            End If
+
+        End Try
+
 
 
     End Sub
@@ -1845,21 +1997,21 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' gibt die Rollen Instanz der Rolle zurück, die den Namen roleName hat; wenn teamID = Nothing, dann egal in welchem Team
+    ''' gibt die Rollen Instanz der Rolle zurück, die den Namen roleName hat; wenn teamID = 0, dann egal in welchem Team
     ''' wenn teamID angegeben ist, dann nur die Rolle in der Eigenschaft als Team-MEmber
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = Nothing) As clsRolle
+    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = -1) As clsRolle
 
         Get
             Dim returnValue As clsRolle = Nothing
             Dim ix As Integer = 0
             Dim found As Boolean = False
 
-            If IsNothing(teamID) Then
+            If teamID = 0 Then
                 ' teamID ist bei der suche nicht relevant
                 While Not found And ix <= _allRoles.Count - 1
                     If _allRoles.Item(ix).name = roleName Then
@@ -3135,6 +3287,118 @@ Public Class clsPhase
             hasActualData = tmpResult
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt treu zurück, wenn diese Phase noch Monate enthält , zu denen Forecast Planungen eingegeben werden können 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property hasForecastMonths As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+            If _parentProject.hasActualValues Then
+                tmpResult = getColumnOfDate(getEndDate) > getColumnOfDate(_parentProject.actualDataUntil)
+            End If
+            hasForecastMonths = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zur den Array an Ist-Werten der angegebenen Rolle / Kostenart zurück  
+    ''' </summary>
+    ''' <param name="rcNameID"></param>
+    ''' <param name="isRole"></param>
+    ''' <param name="outPutInEuro"></param>
+    ''' <returns></returns>
+    Public Function getActualRCValues(ByVal rcNameID As String, ByVal isRole As Boolean, ByVal outPutInEuro As Boolean) As Double()
+
+        Dim tmpResult() As Double = Nothing
+
+        Dim xWerte() As Double = Nothing
+        Dim notYetDone As Boolean = True
+        Dim tagessatz As Double = 800
+
+
+
+        Dim pstart As Integer = getColumnOfDate(getStartDate)
+        Dim pEnde As Integer = getColumnOfDate(getEndDate)
+        Dim actualIX As Integer
+        Dim arrayEnde As Integer
+
+        If DateDiff(DateInterval.Month, StartofCalendar, parentProject.actualDataUntil) > 0 Then
+            actualIX = getColumnOfDate(parentProject.actualDataUntil)
+            arrayEnde = System.Math.Min(pEnde, actualIX)
+        Else
+            ' das ist das Abbruch-Kriterium, es gibt keine Ist-Daten
+            arrayEnde = pstart - 1
+        End If
+
+
+        If pstart > arrayEnde Then
+            ' es kann noch keine Ist-Daten geben 
+            ReDim tmpResult(0)
+            tmpResult(0) = 0
+
+        ElseIf pstart <= arrayEnde Then
+            ReDim tmpResult(arrayEnde - pstart)
+            If isRole Then
+                ' enthält diese Phase überhaupt diese Rolle ?
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+
+                Dim tmpRole As clsRolle = getRoleByRoleNameID(rcNameID)
+                If Not IsNothing(tmpRole) Then
+                    tagessatz = tmpRole.tagessatzIntern
+                    xWerte = tmpRole.Xwerte
+                Else
+                    ReDim tmpResult(0)
+                    tmpResult(0) = 0
+                    notYetDone = False
+                End If
+
+            ElseIf rcNameID <> "" Then
+                If CostDefinitions.containsName(rcNameID) Then
+                    Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+
+                    Dim tmpCost As clsKostenart = getCost(rcNameID)
+                    If Not IsNothing(tmpCost) Then
+                        xWerte = tmpCost.Xwerte
+                    Else
+                        ReDim tmpResult(0)
+                        tmpResult(0) = 0
+                        notYetDone = False
+                    End If
+
+                Else
+                    notYetDone = False
+                End If
+
+
+            Else
+                notYetDone = False
+            End If
+
+            If notYetDone Then
+
+                For i As Integer = 0 To arrayEnde - pstart
+                    If isRole And outPutInEuro Then
+                        ' mit Tagessatz multiplizieren 
+                        tmpResult(i) = xWerte(i) * tagessatz
+                    Else
+                        tmpResult(i) = xWerte(i)
+                    End If
+
+                Next
+            Else
+                ReDim tmpResult(0)
+                tmpResult(0) = 0
+            End If
+
+        End If
+
+
+
+        getActualRCValues = tmpResult
+    End Function
 
     ''' <summary>
     ''' liefert den Index zurück, bis zu dem ActualData in der Phase existiert 

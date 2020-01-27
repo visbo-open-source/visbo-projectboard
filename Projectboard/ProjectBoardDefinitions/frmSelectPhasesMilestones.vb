@@ -71,7 +71,8 @@ Public Class frmSelectPhasesMilestones
         Dim kennung As String ' V: für Vorlagen, P: für Projekte, C: für Kategorien/Darstellungsklassen
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
-        Dim projekteToLook As clsProjekte = ShowProjekte
+        ' das kann später verwendet werden, um auf Basis aller geladenen Projekte die verschiedenen Vorlagen anzuzeigen ...
+        'Dim projekteToLook As clsProjekte = ShowProjekte
 
         With TreeViewProjects
             .Nodes.Clear()
@@ -82,42 +83,41 @@ Public Class frmSelectPhasesMilestones
 
             If auswahl = PTItemType.vorlage Then
 
-                ' alle Templates zeigen 
+                ' das Projekt als Vorlage zeigen, das zuvor in der Projekt-Ansicht gezeigt wurde ... 
+
                 kennung = "V:"
 
-                For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
 
-                    If projekteToLook.getTypNames().Contains(kvp.Key) Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-                        If kvp.Value.hierarchy.count > 0 Then
-                            topLevel = .Nodes.Add(kvp.Key)
-                            topLevel.Name = kennung & kvp.Key
-                            topLevel.Text = kvp.Key
+                    If kvp.Value.hierarchy.count > 0 Then
+                        topLevel = .Nodes.Add(kvp.Key)
+                        topLevel.Name = kennung & kvp.Key
+                        topLevel.Text = kvp.Key
 
-                            hry = kvp.Value.hierarchy
+                        hry = kvp.Value.hierarchy
 
-                            Dim projVorlage As clsProjektvorlage = Projektvorlagen.getProject(kvp.Key)
-                            Dim nodeToCheck As Boolean = False
+                        Dim nodeToCheck As Boolean = False
 
-                            If selectedPhases.Count > 0 Then
-                                nodeToCheck = projVorlage.containsAnyPhasesOfCollection(selectedPhases)
-                            Else
-                                nodeToCheck = False
-                            End If
-
-                            If selectedMilestones.Count > 0 Then
-                                nodeToCheck = nodeToCheck Or projVorlage.containsAnyMilestonesOfCollection(selectedMilestones)
-                            Else
-                                nodeToCheck = nodeToCheck Or False
-                            End If
-
-                            If nodeToCheck Then
-                                topLevel.Checked = True
-                            End If
-
-                            Call buildProjectSubTreeViewInPPT(topLevel, hry)
+                        If selectedPhases.Count > 0 Then
+                            nodeToCheck = kvp.Value.containsAnyPhasesOfCollection(selectedPhases)
+                        Else
+                            nodeToCheck = False
                         End If
+
+                        If selectedMilestones.Count > 0 Then
+                            nodeToCheck = nodeToCheck Or kvp.Value.containsAnyMilestonesOfCollection(selectedMilestones)
+                        Else
+                            nodeToCheck = nodeToCheck Or False
+                        End If
+
+                        If nodeToCheck Then
+                            topLevel.Checked = True
+                        End If
+
+                        Call buildProjectSubTreeViewInPPT(topLevel, hry)
                     End If
+
 
                 Next
 
@@ -133,11 +133,11 @@ Public Class frmSelectPhasesMilestones
 
                         If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
                             ' überprüfen, ob das Projekt irgend eine der selektierten Phasen oder Meilensteine enthält
-                            Dim hproj As clsProjekt = projekteToLook.getProject(kvp.Key)
+
                             Dim tmpcollection As New Collection
                             Dim newFil As New clsFilter("tmp", tmpcollection, tmpcollection,
                                                         selectedPhases, selectedMilestones, tmpcollection, tmpcollection)
-                            If newFil.doesNotBlock(hproj) Then
+                            If newFil.doesNotBlock(kvp.Value) Then
                                 topLevel.Checked = True
                             End If
                         End If
@@ -283,7 +283,7 @@ Public Class frmSelectPhasesMilestones
 
         ' es kann sich hier um die PRojekt- und die Vorlagen Struktur handeln, diese Struktur soll hier exoandiert werden 
         If type = PTItemType.vorlage Then
-            curHry = Projektvorlagen.getProject(PVname).hierarchy
+            curHry = selectedProjekte.getProject(1).hierarchy
         Else
             curHry = ShowProjekte.getProject(PVname).hierarchy
         End If
@@ -324,9 +324,6 @@ Public Class frmSelectPhasesMilestones
                         Loop
                         Dim pvElem As String = "[" & topNode.Name & "]" & ele
 
-                        If Projektvorlagen.Contains(topNode.Text) Then
-                            Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
-                        End If
 
                         If ShowProjekte.contains(topNode.Text) Then
 
@@ -730,9 +727,14 @@ Public Class frmSelectPhasesMilestones
 
         If type = PTItemType.vorlage Then
 
-            If Projektvorlagen.Contains(pvName) Then
-                tmpResult = Projektvorlagen.getProject(pvName).hierarchy
+            ' jetzt anders ... 
+            If selectedProjekte.contains(pvName) Then
+                tmpResult = selectedProjekte.getProject(pvName).hierarchy
             End If
+
+            'If Projektvorlagen.Contains(pvName) Then
+            '    tmpResult = Projektvorlagen.getProject(pvName).hierarchy
+            'End If
 
         Else
             If ShowProjekte.contains(pvName) Then
@@ -933,6 +935,24 @@ Public Class frmSelectPhasesMilestones
 
     Private Sub TreeViewProjects_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjects.AfterSelect
 
+        ' nur etwas machen, wenn man im Modus Projekte ist, nur dann kann ja ein Projekt ausgewählt werden, das dann als Vorlage dienen soll ... 
+        If rdbProjStruktProj.Checked = True And e.Node.Level = 0 Then
+            Dim node As TreeNode = e.Node
+            Dim elemID As String = node.Name
+            Dim PVname As String = getPVnameFromNode(e.Node)
+
+            If selectedProjekte.Count > 0 Then
+                selectedProjekte.Clear(False)
+            End If
+
+            Dim pName As String = getPnameFromKey(PVname)
+            If ShowProjekte.contains(pName) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(getPnameFromKey(PVname))
+                selectedProjekte.Add(hproj, False)
+            End If
+        End If
+
+
     End Sub
 
     Private Sub rdbProjStruktTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktTyp.CheckedChanged
@@ -948,7 +968,7 @@ Public Class frmSelectPhasesMilestones
 
     Private Sub rdbProjStruktProj_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktProj.CheckedChanged
 
-        If rdbProjStruktTyp.Checked Then
+        If rdbProjStruktProj.Checked Then
             Call buildHryTreeViewInPPT(PTItemType.projekt)
         Else
             selectedPhases.Clear()
