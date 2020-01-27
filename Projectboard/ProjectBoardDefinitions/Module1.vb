@@ -1236,10 +1236,11 @@ Public Module Module1
                                 myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                                 If Not tmpCollection.Contains(kvp.Key) Then
-                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                        tmpCollection.Add(kvp.Key, kvp.Key)
-                                    End If
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    '' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    'If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    '    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    'End If
                                 End If
 
                             End If
@@ -1255,10 +1256,13 @@ Public Module Module1
                                                             myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Then
 
                                 If Not tmpCollection.Contains(kvp.Key) Then
-                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                        tmpCollection.Add(kvp.Key, kvp.Key)
-                                    End If
+                                    ' tk , 27.1.20 wird auf alle Fälle aufgenommen 
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+
+                                    '' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    'If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    '    tmpCollection.Add(kvp.Key, kvp.Key)
+                                    'End If
 
                                 End If
                             End If
@@ -8042,7 +8046,7 @@ Public Module Module1
         currentCell.ClearComments()
 
         ' ist immer locked , also entsprechend kennzeichnen
-        currentCell.Interior.Color = XlRgbColor.rgbLightGray
+        'currentCell.Interior.Color = XlRgbColor.rgbLightGray
 
 
         ' wenn nötig Kommentar schreiben mit phaseNameID , damit später die ID zweifelsfrei ermitelt werden kann 
@@ -8069,7 +8073,7 @@ Public Module Module1
         currentCell.ClearComments()
 
         ' ist immer locked , also entsprechend kennzeichnen
-        currentCell.Interior.Color = XlRgbColor.rgbLightGray
+        'currentCell.Interior.Color = XlRgbColor.rgbLightGray
 
         If Not IsNothing(protectiontext) Then
             If protectiontext <> "" Then
@@ -8133,10 +8137,10 @@ Public Module Module1
             .Locked = isLocked
             .IndentLevel = indentlevel
 
-            If isLocked Then
-                ' als gesperrt kennzeichnen 
-                .Interior.Color = XlRgbColor.rgbLightGray
-            End If
+            'If isLocked Then
+            '    ' als gesperrt kennzeichnen 
+            '    .Interior.Color = XlRgbColor.rgbLightGray
+            'End If
 
             Try
                 If Not IsNothing(.Validation) Then

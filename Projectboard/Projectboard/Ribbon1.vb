@@ -349,6 +349,7 @@ Imports System.Web
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
+        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -608,11 +609,25 @@ Imports System.Web
                 End If
             End If
 
+            ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
+            ' Window so positionieren, dass die Projekte sichtbar sind ...  
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If boardWasEmpty Or clearBoard Then
+                    If leftborder - 12 > 0 Then
+                        appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                    End If
+                End If
+            End If
+
             appInstance.ScreenUpdating = True
 
             Cursor.Current = Cursors.Default
 
         End If
+
+
+
 
         ' Timer
         If awinSettings.visboDebug Then
@@ -3608,11 +3623,27 @@ Imports System.Web
 
                     If meModus = ptModus.massEditRessCost Then
 
-                        showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                        showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+                        If showRangeLeft = 0 Then
+                            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
 
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        Else
+                            ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
+                            Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
+                            Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
 
+                            If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
+                                ' neu bestimmen 
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+
+                                showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                                showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+                            End If
+                        End If
 
                         ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
                         ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
@@ -8174,7 +8205,18 @@ Imports System.Web
     ''' <remarks></remarks>
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
+        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
         Call PBBDatenbankLoadProjekte(Control)
+
+        ' Window so positionieren, dass die Projekte sichtbar sind ...  
+        If ShowProjekte.Count > 0 Then
+            Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+            If boardWasEmpty And Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                End If
+            End If
+        End If
 
 
     End Sub
@@ -10633,6 +10675,11 @@ Imports System.Web
             Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
             Dim chWidth As Double = stdBreite
             Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
+
+            If chHeight < 0.8 * projectboardWindows(PTwindows.meChart).Height Then
+                chHeight = 0.8 * projectboardWindows(PTwindows.meChart).Height
+            End If
+
             Dim chTop As Double = 5
 
             If ShowProjekte.contains(pName) Then

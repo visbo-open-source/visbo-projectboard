@@ -630,6 +630,20 @@ Public Class Tabelle2
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                 Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+
+                ' den Team-Namen rausholen 
+                Dim teamName As String = ""
+                Dim oldTeamID As Integer = -1
+
+                Dim tmpComment As Excel.Comment = CType(meWS.Cells(zeile, columnRC), Excel.Range).Comment
+                If Not IsNothing(tmpComment) Then
+                    teamName = tmpComment.Text
+                    If RoleDefinitions.containsName(teamName) Then
+                        oldTeamID = RoleDefinitions.getRoledef(teamName).UID
+                    End If
+                End If
+
+
                 Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
@@ -673,12 +687,21 @@ Public Class Tabelle2
                                                 ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                                 Try
                                                     auslastungChanged = True
-                                                    Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue)
+                                                    Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, oldTeamID)
                                                     If IsNothing(cRole) Then
                                                     Else
                                                         hproj.rcLists.removeRP(cRole.uid, cphase.nameID, teamID, False)
                                                         cRole.uid = newRoleID
                                                         hproj.rcLists.addRP(newRoleID, cphase.nameID, teamID)
+                                                    End If
+
+                                                    ' Überprüfen, ob oldTeamID und neue TeamID identisch sind 
+                                                    If oldTeamID <> teamID And teamID = -1 Then
+                                                        ' den Kommentar löschen 
+                                                        If Not IsNothing(tmpComment) Then
+                                                            tmpComment.Delete()
+                                                        End If
+
                                                     End If
 
                                                 Catch ex As Exception

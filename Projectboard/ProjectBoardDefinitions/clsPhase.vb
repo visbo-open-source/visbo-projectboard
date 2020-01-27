@@ -1997,21 +1997,21 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' gibt die Rollen Instanz der Rolle zurück, die den Namen roleName hat; wenn teamID = Nothing, dann egal in welchem Team
+    ''' gibt die Rollen Instanz der Rolle zurück, die den Namen roleName hat; wenn teamID = 0, dann egal in welchem Team
     ''' wenn teamID angegeben ist, dann nur die Rolle in der Eigenschaft als Team-MEmber
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = Nothing) As clsRolle
+    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = -1) As clsRolle
 
         Get
             Dim returnValue As clsRolle = Nothing
             Dim ix As Integer = 0
             Dim found As Boolean = False
 
-            If IsNothing(teamID) Then
+            If teamID = 0 Then
                 ' teamID ist bei der suche nicht relevant
                 While Not found And ix <= _allRoles.Count - 1
                     If _allRoles.Item(ix).name = roleName Then

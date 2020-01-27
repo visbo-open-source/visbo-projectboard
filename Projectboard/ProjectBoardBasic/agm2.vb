@@ -18189,7 +18189,7 @@ Public Module agm2
 
                 ' den Varianten-Namen schreiben
                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                'CType(.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                 ' Phase und ggf PhaseNameID schreiben
                 Call writeMEcellWithPhaseNameID(CType(.Cells(zeile, 4), Excel.Range), indentLevelPhMs, cphase.name, cphase.nameID)
@@ -18231,7 +18231,7 @@ Public Module agm2
                     End With
                 Else
                     ' als gesperrt kennzeichnen 
-                    CType(.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                    'CType(.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                 End If
 
             End With
@@ -18265,14 +18265,14 @@ Public Module agm2
                                 ' tk 19.1.20
                                 ' .Interior.Color = awinSettings.AmpelNichtBewertet
                                 .Interior.Color = XlRgbColor.rgbGray
-                                .Font.Color = XlRgbColor.rgbBlack
+                                .Font.Color = XlRgbColor.rgbWhite
                             Else
 
                                 If Not isProtectedbyOthers Then
                                     .Interior.Color = visboFarbeBlau
                                     .Font.Color = XlRgbColor.rgbWhite
                                 Else
-                                    .Interior.Color = XlRgbColor.rgbLightGray
+                                    '.Interior.Color = XlRgbColor.rgbLightGray
                                     .Font.Color = XlRgbColor.rgbBlack
                                 End If
                             End If
@@ -18502,13 +18502,13 @@ Public Module agm2
                         ' Business-Unit
                         CType(currentWS.Cells(zeile, 1), Excel.Range).Value = hproj.kundenNummer
                         CType(currentWS.Cells(zeile, 1), Excel.Range).Locked = True
-                        CType(currentWS.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                        'CType(currentWS.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' 
                         ' Projekt-Name
                         CType(currentWS.Cells(zeile, 2), Excel.Range).Value = hproj.name
                         CType(currentWS.Cells(zeile, 2), Excel.Range).Locked = True
-                        CType(currentWS.Cells(zeile, 2), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                        'CType(currentWS.Cells(zeile, 2), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' geschützt oder nicht geschützt ? 
                         Dim currentCell As Excel.Range = CType(currentWS.Cells(zeile, 2), Excel.Range)
@@ -18529,7 +18529,7 @@ Public Module agm2
                         ' Varianten-Name
                         CType(currentWS.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                         CType(currentWS.Cells(zeile, 3), Excel.Range).Locked = True
-                        CType(currentWS.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                        'CType(currentWS.Cells(zeile, 3), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                         ' 
                         ' jetzt kommen die Milestone bzw Phase-abhängigen Elemente  
@@ -18546,7 +18546,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
                             CType(currentWS.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
                             CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
-                            CType(currentWS.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            'CType(currentWS.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                             ' jetzt die Kommentare schreiben 
                             CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
@@ -18559,18 +18559,23 @@ Public Module agm2
                             ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
-                            CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                            'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+
+                            Dim isPastElement As Boolean = DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0
 
                             ' Ende-Datum 
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
-                            If DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0 Then
+                            If isPastElement Then
                                 ' Sperren ...
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
                                 CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                 End If
@@ -18581,7 +18586,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = False
                             End If
@@ -18603,7 +18608,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = False
                             End If
@@ -18614,7 +18619,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = False
                             End If
@@ -18625,7 +18630,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = False
                             End If
@@ -18635,7 +18640,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = False
                             End If
@@ -18645,7 +18650,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cMilestone.DocURL
                             If isProtectedbyOthers Then
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
-                                CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
                             End If
@@ -18666,7 +18671,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
 
                                 CType(currentWS.Cells(zeile, 4), Excel.Range).Locked = True
-                                CType(.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                'CType(.Cells(zeile, 4), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
                                 ' jetzt die Kommentare schreiben 
                                 CType(currentWS.Cells(zeile, 4), Excel.Range).ClearComments()
@@ -18680,12 +18685,13 @@ Public Module agm2
                                 CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Font.Color = XlRgbColor.rgbWhite
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
-                                        CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                        'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                     Else
                                         CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = False
                                     End If
@@ -18697,11 +18703,12 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                        CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                        'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                     Else
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = False
                                     End If
@@ -18712,7 +18719,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 7), Excel.Range).Value = cPhase.ampelStatus
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 7), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 7), Excel.Range).Locked = False
                                 End If
@@ -18733,7 +18740,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 8), Excel.Range).Value = cPhase.ampelErlaeuterung
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 8), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 8), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 8), Excel.Range).Locked = False
                                 End If
@@ -18743,7 +18750,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables(vbLf)
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 9), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 9), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 9), Excel.Range).Locked = False
                                 End If
@@ -18753,7 +18760,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 10), Excel.Range).Value = cPhase.verantwortlich
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 10), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 10), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 10), Excel.Range).Locked = False
                                 End If
@@ -18763,7 +18770,7 @@ Public Module agm2
                                 CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone.ToString("0#%")
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 11), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 11), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(.Cells(zeile, 11), Excel.Range).Locked = False
                                 End If
@@ -18773,7 +18780,7 @@ Public Module agm2
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Value = cPhase.DocURL
                                 If isProtectedbyOthers Then
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
+                                    'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                                 Else
                                     CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
                                 End If
@@ -18797,9 +18804,15 @@ Public Module agm2
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
+
+            Dim firstHundredColumns As Excel.Range = Nothing
+
             With CType(currentWS, Excel.Worksheet)
                 infoBlock = CType(.Range(.Columns(1), .Columns(12)), Excel.Range)
                 infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
+
+                firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
+
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
@@ -18827,45 +18840,22 @@ Public Module agm2
                 End With
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
-                If massColFontValues(1, 0) > 4 Then
-                    ' diese Werte übernehmen 
-                    infoDataBlock.Font.Size = CInt(massColFontValues(1, 0))
-                    For ik As Integer = 1 To 12
-                        If massColFontValues(1, ik) > 0 Then
-                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
-                        End If
+                If massColFontValues(1, 2) > 0 Then
+                    ' es wurden bereits mal Spaltenbreiten gesetzt 
 
+                    For ik As Integer = 1 To 100
+                        CType(firstHundredColumns.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
                     Next
-
 
                 Else
                     ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
                     Try
-                        infoDataBlock.AutoFit()
+                        firstHundredColumns.AutoFit()
                     Catch ex As Exception
 
                     End Try
 
 
-                    Try
-                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
-                        Dim availableScreenWidth As Double = maxScreenWidth
-                        If infoDataBlock.Width > availableScreenWidth Then
-
-                            infoDataBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
-                            infoDataBlock.AutoFit()
-
-                        End If
-                    Catch ex As Exception
-
-                    End Try
-
-                    ' Werte setzen ...
-                    massColFontValues(1, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
-                    For ik As Integer = 1 To 12
-                        massColFontValues(1, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
-                    Next
 
                 End If
 
@@ -19199,7 +19189,7 @@ Public Module agm2
                         End With
 
                         kompletteZeile.Locked = True
-                        kompletteZeile.Interior.Color = XlRgbColor.rgbLightGray
+                        'kompletteZeile.Interior.Color = XlRgbColor.rgbLightGray
 
                     Else
                         Dim protectArea As Excel.Range = Nothing
@@ -19212,14 +19202,14 @@ Public Module agm2
                                 protectArea = CType(.Range(.Cells(zeile, 2), .Cells(zeile, 3)), Excel.Range)
                                 editArea.Locked = False
                                 protectArea.Locked = True
-                                protectArea.Interior.Color = XlRgbColor.rgbLightGray
+                                'protectArea.Interior.Color = XlRgbColor.rgbLightGray
 
                             Else
                                 'protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 3)), Excel.Range)
                                 protectArea = CType(.Rows(zeile), Excel.Range)
                                 editArea = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 6)), Excel.Range)
                                 protectArea.Locked = True
-                                protectArea.Interior.Color = XlRgbColor.rgbLightGray
+                                'protectArea.Interior.Color = XlRgbColor.rgbLightGray
                                 editArea.Locked = False
                             End If
 
@@ -19239,10 +19229,13 @@ Public Module agm2
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
+            Dim firstHundredColumns As Excel.Range
 
             With CType(currentWS, Excel.Worksheet)
 
                 infoBlock = CType(.Range(.Columns(1), .Columns(anzahlSpalten)), Excel.Range)
+                firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
+
                 'infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 'infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
@@ -19252,12 +19245,9 @@ Public Module agm2
                     'If massColFontValues(2, 0) > 4 Then
                     ' diese Werte übernehmen 
 
-                    'For ik As Integer = 1 To anzahlSpalten
-                    '    If massColFontValues(1, ik) > 0 Then
-                    '        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
-                    '    End If
-
-                    'Next
+                    For ik As Integer = 1 To 100
+                        CType(firstHundredColumns.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(2, ik)
+                    Next
 
 
                 Else
@@ -19416,30 +19406,6 @@ Public Module agm2
                     End If
 
                 End If
-
-                '' jetzt noch die Spalte 4 die Ampel bedingt formatieren .. 
-                '' nur bei Projektleiter relevant ...
-                'If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
-                '    Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 4), .Cells(zeile - 1, 4)), Excel.Range)
-                '    With trafficLightRange
-                '        .Interior.Color = visboFarbeNone
-
-                '        Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
-
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
-
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
-
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
-                '        CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
-
-                '    End With
-                'End If
 
 
                 ' jetzt noch die Zeile alle in der Höhe automat. anpassen ..
