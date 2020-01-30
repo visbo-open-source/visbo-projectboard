@@ -1025,6 +1025,7 @@ Public Class Request
 
                 End If
 
+
                 ' Es wurde pfv-Variante  angelegt
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And result = True Then
 

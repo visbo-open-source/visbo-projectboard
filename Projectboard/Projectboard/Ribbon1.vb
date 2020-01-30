@@ -2049,6 +2049,7 @@ Imports System.Web
                     tmpLabel = "Organisation"
                 End If
 
+
             Case "PT4G1B11"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Custom Nutzer Rollen"
@@ -3051,6 +3052,12 @@ Imports System.Web
                     tmpLabel = "Prioritäten Liste..."
                 Else
                     tmpLabel = "Priority List..."
+                End If
+            Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt allg."
+                Else
+                    tmpLabel = "project generally"
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -7139,6 +7146,116 @@ Imports System.Web
 
 
 
+
+    End Sub
+    Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
+
+        Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
+        Dim outputString As String = ""
+        Dim dateiName As String = ""
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configProjectsImport As String = awinPath & requirementsOrdner & "configProjectImport.xlsx"
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+        Dim getProjConfigImport As New frmSelectImportFiles
+
+        Dim returnValue As DialogResult
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+        getProjConfigImport.importFileNames = projectsFile
+        returnValue = getProjConfigImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+
+            Dim ok As Boolean = False
+            Dim importDate As Date = Date.Now
+            'Dim importDate As Date = "31.10.2013"
+            ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+            Dim listofVorlagen As Collection
+            listofVorlagen = getProjConfigImport.selImportFiles
+
+
+            '' ''dirName = awinPath & msprojectFilesOrdner
+            ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+            ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear(False)
+
+            '' Cursor auf HourGlass setzen
+            Cursor.Current = Cursors.WaitCursor
+
+            ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+            Dim i As Integer
+
+
+
+            For i = 1 To listofVorlagen.Count
+                dateiName = listofVorlagen.Item(i).ToString
+
+
+                listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
+
+                If listofArchivAllg.Count > 0 Then
+                    Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                End If
+
+            Next
+
+            Call logfileOpen()
+            Call logfileSchreiben(outPutCollection)
+            Call logfileSchliessen()
+
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Import Projects of File: " & dateiName, "please check the notifications ...")
+            Else
+                Call showOutPut(outPutCollection, "Einlesen Projekte aus Datei: " & dateiName, "folgende Probleme sind aufgetaucht")
+            End If
+
+
+            '' Cursor auf Default setzen
+            Cursor.Current = Cursors.Default
+
+
+            ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+            Try
+                Call importProjekteEintragen(importDate, True, True)
+
+            Catch ex As Exception
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                Else
+                    Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                End If
+
+            End Try
+
+
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 

@@ -14143,10 +14143,27 @@ Public Module agm2
 
                             lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
                             lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
-                            ' Nachkorrektur,
-                            If CStr(CType(currentWS.Cells(lastZeile - 1, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Contains("http") Then
-                                lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row - 2  ' URL von Zeuss-Software nicht benötigt
-                            End If
+
+                            ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
+                            Dim found As Boolean = False
+                            Dim i As Integer = lastZeile + 1
+                            While Not found
+                                i = i - 1
+                                If kapaConfig("LastLine").regex = "RegEx" Then
+                                    regexpression = New Regex(kapaConfig("LastLine").content)
+                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                    If Not IsNothing(lastLineContent) Then
+                                        Dim match As Match = regexpression.Match(lastLineContent)
+                                        If match.Success Then
+                                            lastLineContent = match.Value
+                                            found = True
+                                        End If
+                                    End If
+                                End If
+
+                            End While
+                            lastZeile = i - 1
+
 
                             ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
                             ' -------------------------------------
@@ -19668,11 +19685,10 @@ Public Module agm2
             importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\OfflineData"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
             importOrdnerNames(PTImpExp.Orga) = awinPath & "Import\Organisation"
-            'importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "requirements"
             importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "Import\CustomUserRoles"
-            'importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
             importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\ActualData"
             importOrdnerNames(PTImpExp.Kapas) = awinPath & "Import\Capacities"
+            importOrdnerNames(PTImpExp.projectWithConfig) = awinPath & "Import\Projects With Config"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -19985,6 +20001,7 @@ Public Module agm2
 
             End If
 
+
             Try
                 ' Lesen appearance Defintions
                 appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
@@ -20021,155 +20038,7 @@ Public Module agm2
                 StartofCalendar = customizations.kalenderStart
             End If
 
-            'Try
-            '    ' jetzt die CurrentOrga definieren
-            '    Dim currentOrga As New clsOrganisation
-
-            '    ' jetzt werden die ORganisation ausgelesen 
-            '    ' wenn es keine Organisation gibt , d
-
-            '    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-            '    If currentOrga.count > 0 Then
-
-            '        If currentOrga.count > 0 Then
-            '            validOrganisations.addOrga(currentOrga)
-            '        End If
-
-            '        CostDefinitions = currentOrga.allCosts
-            '        RoleDefinitions = currentOrga.allRoles
-
-
-            '        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-            '        Try
-            '            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
-
-            '            If IsNothing(customFieldDefinitions) Then
-            '                ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
-            '                Try
-            '                    Call readCustomFieldDefinitions(wsName4)
-            '                Catch ex As Exception
-
-            '                End Try
-            '            ElseIf customFieldDefinitions.count = 0 Then
-            '                Try
-            '                    Call readCustomFieldDefinitions(wsName4)
-            '                Catch ex As Exception
-
-            '                End Try
-            '            End If
-            '        Catch ex As Exception
-
-            '        End Try
-
-
-            '    Else
-            '        awinSettings.readCostRolesFromDB = False
-            '        If awinSettings.englishLanguage Then
-            '            Call MsgBox("You don't have any organization in your system!")
-            '        Else
-            '            Call MsgBox("Es existiert keine Organisation im System!")
-            '        End If
-
-
-            '        ' Auslesen der Custom Field Definitions aus Customization-File
-            '        Try
-            '            Call readCustomFieldDefinitions(wsName4)
-            '        Catch ex As Exception
-
-            '        End Try
-
-            '    End If
-
-
-            '    ' das kann nicht unmittelbar nach Login gemacht werden 
-            '    Dim meldungen As Collection = New Collection
-
-            '    '' jetzt werden die Rollen besetzt 
-            '    If awinSettings.readCostRolesFromDB Then
-
-            '        Try
-            '            Call setUserRoles(meldungen)
-            '        Catch ex As Exception
-            '            If meldungen.Count > 0 Then
-            '                Call showOutPut(meldungen, "Error: setUserRoles", "")
-            '                Call logfileSchreiben(meldungen)
-            '            End If
-
-            '            myCustomUserRole = New clsCustomUserRole
-
-            '            With myCustomUserRole
-            '                .customUserRole = ptCustomUserRoles.OrgaAdmin
-            '                .specifics = ""
-            '                .userName = dbUsername
-            '            End With
-            '            ' jetzt gibt es eine currentUserRole: myCustomUserRole
-            '            Call myCustomUserRole.setNonAllowances()
-            '        End Try
-
-
-
-            '    Else
-            '        myCustomUserRole = New clsCustomUserRole
-
-            '        With myCustomUserRole
-            '            .customUserRole = ptCustomUserRoles.OrgaAdmin
-            '            .specifics = ""
-            '            .userName = dbUsername
-            '        End With
-            '        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-            '        Call myCustomUserRole.setNonAllowances()
-            '    End If
-
-            'Catch ex As Exception
-
-            'End Try
-
             Try
-
-                appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
-
-                If IsNothing(appearanceDefinitions) Then
-
-                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
-
-                    If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
-
-                        ' Aufbauen der Darstellungsklassen  aus Customizationfile
-                        Call aufbauenAppearanceDefinitions(wsName7810)
-
-                        ' sollte nur gelesen, nicht gespeichert werden
-                        'Dim store_ok As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
-                        '                                                                       CStr(settingTypes(ptSettingTypes.appearance)),
-                        '                                                                       "Appearance",
-                        '                                                                       Nothing, err)
-                        'If Not store_ok Then
-
-                        '    If awinSettings.englishLanguage Then
-                        '        Call MsgBox("You don't have any appearances for your phases and milestones in your system!")
-                        '    Else
-                        '        Call MsgBox("Es existieren keine Darstellungsklassen für Phasen und Meilensteine im System!")
-                        '    End If
-
-                        '    If awinSettings.visboDebug Then
-                        '        Call MsgBox("Fehler beim Speichern: aktueller User hat das Recht dazu nicht! " & vbCrLf & err.errorMsg)
-                        '    End If
-
-                        'End If
-
-                    Else
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
-                        Else
-                            Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
-
-                        End If
-                    End If
-                End If
-
-
-
-
 
                 ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
                 ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
@@ -23099,7 +22968,7 @@ Public Module agm2
         enableOnUpdate = False
 
         ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkRequirements(configFile, kapaFile, kapaConfig, lastrow)
+        Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow)
 
         If allesOK Then
             If Not (IsNothing(kapaFile) Or kapaFile = "") Then
@@ -23147,211 +23016,6 @@ Public Module agm2
 
     End Function
 
-
-    ''' <summary>
-    ''' überprüft, ob die Voraussetzungen für das Einlesen der InternenAnwesenheitslisten. 
-    ''' </summary>
-    ''' <param name="configFile"></param>
-    ''' <param name="kapaFile"></param>
-    ''' <param name="kapaConfigs"></param>
-    ''' <param name="lastrow"></param>
-    ''' <returns></returns>
-    Public Function checkRequirements(ByVal configFile As String,
-                                      ByRef kapaFile As String,
-                                      ByRef kapaConfigs As SortedList(Of String, clsConfigKapaImport),
-                                      ByRef lastrow As Integer) As Boolean
-
-        Dim configLine As New clsConfigKapaImport
-        Dim currentDirectoryName As String = requirementsOrdner
-        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
-        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
-        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
-        'Dim found As Boolean
-        'Dim i As Integer
-
-        ''
-        '' Config-file wird geöffnet
-        ' Filename ggf. mit Directory erweitern
-        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
-
-        ' öffnen des Files 
-        If My.Computer.FileSystem.FileExists(configFile) Then
-
-            Try
-                configWB = appInstance.Workbooks.Open(configFile)
-
-                Try
-
-                    If appInstance.Worksheets.Count > 0 Then
-
-                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                        Dim titleCol As Integer,
-                            IdentCol As Integer,
-                            InputFileCol As Integer,
-                            TypCol As Integer,
-                            DatenCol As Integer,
-                            SUCol As Integer, SNCol As Integer,
-                            ZUCol As Integer, ZNCol As Integer,
-                            ObjCol As Integer,
-                            InhaltCol As Integer
-
-                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
-
-                        titleCol = searcharea.Find("Titel").Column
-                        IdentCol = searcharea.Find("Identifier").Column
-                        InputFileCol = searcharea.Find("InputFile").Column
-                        TypCol = searcharea.Find("Typ").Column
-                        DatenCol = searcharea.Find("Datenbereich").Column
-                        SUCol = searcharea.Find("Spaltenüberschrift").Column
-                        SNCol = searcharea.Find("Spalten-Nummer").Column
-                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
-                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
-                        ObjCol = searcharea.Find("Objekt-Typ").Column
-                        InhaltCol = searcharea.Find("Inhalt").Column
-
-                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 10)
-
-                        If ok Then
-                            With currentWS
-                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
-
-                                For i = 6 To lastrow
-
-                                    configLine = New clsConfigKapaImport
-
-                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
-
-                                    Select Case Titel
-                                        Case "Kapa-Datei"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.capacityFile = CStr(.Cells(i, InputFileCol).value)
-                                            kapaFile = configLine.capacityFile
-
-                                        Case "month"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "year"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "role"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-
-                                        Case "valueStart"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "valueLength"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "valueSign"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case Else
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                    End Select
-
-                                    If kapaConfigs.ContainsKey(configLine.Titel) Then
-                                        kapaConfigs.Remove(configLine.Titel)
-                                    End If
-
-                                    kapaConfigs.Add(configLine.Titel, configLine)
-
-                                Next
-
-                            End With
-
-                        End If
-
-                    End If
-
-                Catch ex As Exception
-
-                End Try
-
-                ' configCapaImport - Konfigurationsfile schließen
-                configWB.Close(SaveChanges:=False)
-
-            Catch ex As Exception
-                Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
-            End Try
-
-        End If
-
-        checkRequirements = (kapaConfigs.Count > 0)
-
-    End Function
     ''' <summary>
     ''' verschiebt die Dateien von listOfFiles in den Folder 'folder\archiv'
     ''' </summary>
@@ -23361,7 +23025,7 @@ Public Module agm2
 
         Dim archivName As String = folder & "\archive"
 
-        ' archiv-Directory erzeugen, wenn nicht bereits vorhanden
+        ' archive-Directory erzeugen, wenn nicht bereits vorhanden
         If Not My.Computer.FileSystem.DirectoryExists(archivName) Then
             My.Computer.FileSystem.CreateDirectory(archivName)
         End If
