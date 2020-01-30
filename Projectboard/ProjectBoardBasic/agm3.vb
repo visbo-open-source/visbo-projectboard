@@ -24,13 +24,15 @@ Public Module agm3
     Public Function checkCapaImportConfig(ByVal configFile As String,
                                       ByRef kapaFile As String,
                                       ByRef kapaConfigs As SortedList(Of String, clsConfigKapaImport),
-                                      ByRef lastrow As Integer) As Boolean
+                                      ByRef lastrow As Integer, ByRef oPCollection As Collection) As Boolean
 
+        Dim outputline As String = ""
         Dim configLine As New clsConfigKapaImport
         Dim currentDirectoryName As String = requirementsOrdner
         Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        Dim anzOld_oPCollection As Integer = oPCollection.Count
         'Dim found As Boolean
         'Dim i As Integer
 
@@ -212,25 +214,33 @@ Public Module agm3
                                 Next
 
                             End With
-
+                        Else
+                            outputline = "Die Konfigurationsdatei stimmt nicht mit der erwarteten Struktur überein!"
+                            oPCollection.Add(outputline)
                         End If
 
                     End If
 
                 Catch ex As Exception
-
+                    outputline = "Fehler beim Lesen der Konfigurationsdatei ..."
+                    oPCollection.Add(outputline)
                 End Try
 
                 ' configCapaImport - Konfigurationsfile schließen
                 configWB.Close(SaveChanges:=False)
 
             Catch ex As Exception
-                Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
+                outputline = "Die Konfigurationsdatei konnte nicht geöffnet werden - " & configFile
+                oPCollection.Add(outputline)
+                'Call MsgBox(outputline)
             End Try
-
+        Else
+            ' soll nur Info im Logbuch sein
+            outputline = "Keine Konfigurationsdatei für Import Capacities vorhanden! - " & configFile
+            Call logfileSchreiben(outputline, "", -1)
         End If
 
-        checkCapaImportConfig = (kapaConfigs.Count > 0)
+        checkCapaImportConfig = (kapaConfigs.Count > 0) And (anzOld_oPCollection - oPCollection.Count = 0)
 
     End Function
 
@@ -1157,7 +1167,11 @@ Public Module agm3
 
                             End With
                         Else
-                            outputLine = ("der Aufbau der Konfigurationsdatei zum Einlesen von Projekten ist nicht passend")
+                            If awinSettings.englishLanguage Then
+                                outputLine = "The structure of the configFile doesn't match!  -  " & configFile
+                            Else
+                                outputLine = "Der Aufbau der Konfigurationsdatei ist nicht passend  -  " & configFile
+                            End If
                             outputCollection.Add(outputLine)
                         End If
 
@@ -1173,15 +1187,22 @@ Public Module agm3
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("The configration-file " & configFile & "  to import the projects couldn't be opened.")
+                    outputLine = "The configrationfile " & configFile & "  to import the projects couldn't be opened."
                 Else
                     Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
                                 vbCrLf & " Die Projekte können somit nicht importiert werden")
+                    outputLine = "Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
+                                vbCrLf & " Die Projekte können somit nicht importiert werden"
                 End If
-
-                outputLine = "The configration-file " & configFile & "  to import the projects couldn't be opened."
                 outputCollection.Add(outputLine)
             End Try
-
+        Else
+            If awinSettings.englishLanguage Then
+                outputLine = "The configration-file don't exists!  -  " & configFile
+            Else
+                outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
+            End If
+            outputCollection.Add(outputLine)
         End If
 
         checkProjectImportConfig = (ProjectsConfigs.Count > 0)
@@ -2049,7 +2070,7 @@ Public Module agm3
     End Function
 
     ''' <summary>
-    ''' liest das im Diretory ../ressource manager evt. liegende File 'Urlaubsplaner*.xlsx' File  aus
+    ''' liest das im Diretory ../ressource manager evt. liegende File 'zeuss*.xlsx' (oder wie in kapaConfig benamst) File  aus
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>

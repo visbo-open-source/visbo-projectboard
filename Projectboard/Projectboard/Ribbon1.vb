@@ -6301,44 +6301,46 @@ Imports System.Web
         Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
         If allesOK Then
 
-        End If
-        Dim listOfImportfilesAllg As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, actualDataFile)
-        anzFiles = listOfImportfilesAllg.Count
 
-        If listOfImportfilesAllg.Count >= 1 Then
+            Dim listOfImportfilesAllg As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, actualDataFile)
+            anzFiles = listOfImportfilesAllg.Count
 
-            For Each tmpDatei As String In listOfImportfilesAllg
+            If listOfImportfilesAllg.Count >= 1 Then
 
-                Call logfileSchreiben("Einlesen der ActualData " & tmpDatei, "", anzFehler)
+                For Each tmpDatei As String In listOfImportfilesAllg
 
-                result = readActualDataWithConfig(actualDataConfig, tmpDatei, outPutCollection)
+                    Call logfileSchreiben("Einlesen der ActualData " & tmpDatei, "", anzFehler)
 
-                ' hier weitermachen
+                    result = readActualDataWithConfig(actualDataConfig, tmpDatei, outPutCollection)
 
-                If result Then
-                    ' hier: merken der erfolgreich importierten ActualData Files
-                    listOfArchivFiles.Add(tmpDatei)
-                End If
+                    ' hier weitermachen
 
-            Next
+                    If result Then
+                        ' hier: merken der erfolgreich importierten ActualData Files
+                        listOfArchivFiles.Add(tmpDatei)
+                    End If
 
+                Next
+
+            Else
+                Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                                 & "Es wurde daher jetzt keine berücksichtigt"
+
+                ' das sollte nicht dazu führen, dass nichts gemacht wird 
+                'meldungen.Add(errMsg)
+                'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
+                'Call MsgBox(errMsg)
+
+                Call logfileSchreiben(errMsg, "", anzFehler)
+            End If
+
+
+            ' Schließen des LogFiles
+            Call logfileSchliessen()
         Else
-            Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
-                             & "Es wurde daher jetzt keine berücksichtigt"
+            ' Fehlermeldung für Konfigurationsfile nicht vorhanden
 
-            ' das sollte nicht dazu führen, dass nichts gemacht wird 
-            'meldungen.Add(errMsg)
-            'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-            'Call MsgBox(errMsg)
-
-            Call logfileSchreiben(errMsg, "", anzFehler)
-        End If
-
-
-        ' Schließen des LogFiles
-        Call logfileSchliessen()
-
-
+        End If    ' allesOK
 
 
         enableOnUpdate = True
@@ -7002,20 +7004,6 @@ Imports System.Web
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
-
-                ' '' ''Dim skip As Boolean = False
-
-
-                ' '' ''Try
-                ' '' ''    appInstance.Workbooks.Open(dateiName)
-                ' '' ''Catch ex1 As Exception
-                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
-                ' '' ''    skip = True
-                ' '' ''End Try
-
-                ' '' ''If Not skip Then
-                ' '' ''    pname = ""
-
                 hproj = New clsProjekt
 
                 ' Definition für ein eventuelles Mapping
@@ -7217,6 +7205,7 @@ Imports System.Web
             End If
 
         End If
+
         If outPutCollection.Count > 0 Then
             If awinSettings.englishLanguage Then
                 Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")

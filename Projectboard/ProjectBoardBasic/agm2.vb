@@ -13442,7 +13442,8 @@ Public Module agm2
                 Next i
 
             Else
-                meldungen.Add("Keine Datei mit Kapazitäten der externen Verträge vorhanden ! ")
+                ' nur Info im logfile
+                Call logfileSchreiben("Keine Datei mit Kapazitäten der externen Verträge vorhanden ! ", "", -1)
             End If
 
 
@@ -13637,7 +13638,8 @@ Public Module agm2
 
                 Next i
             Else
-                meldungen.Add("Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ")
+                ' nur Info im Logbuch
+                Call logfileSchreiben("Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ", "", -1)
             End If
 
 
@@ -21975,14 +21977,10 @@ Public Module agm2
             Next
 
         Else
-            Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+            Dim infoMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
                          & "Es wurde daher jetzt keine berücksichtigt"
+            Call logfileSchreiben(infoMsg, "", anzFehler)
 
-            ' das sollte nicht dazu führen, dass nichts gemacht wird 
-            'meldungen.Add(errMsg)
-            'Call MsgBox(errMsg)
-
-            Call logfileSchreiben(errMsg, "", anzFehler)
         End If
         If result Then
             readInterneAnwesenheitslisten = listOfArchivFiles
@@ -22017,7 +22015,7 @@ Public Module agm2
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
-
+        Dim outputline As String = ""
 
         Dim kapaFileName As String = "Urlaubsplaner*.xlsx"
 
@@ -22032,7 +22030,7 @@ Public Module agm2
         enableOnUpdate = False
 
         ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
-        Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow)
+        Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow, meldungen)
 
         If allesOK Then
             If Not (IsNothing(kapaFile) Or kapaFile = "") Then
@@ -22053,30 +22051,31 @@ Public Module agm2
                     If result Then
                         ' hier: merken der erfolgreich importierten KapaFiles
                         listOfArchivFiles.Add(tmpDatei)
+                    Else
+
                     End If
 
                 Next
 
             Else
-                Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                If awinSettings.englishLanguage Then
+                    outputline = "No file for planning the availabilities of employee! " & vbLf _
+                             & "therefore no availabilities in the organisation written"
+                Else
+                    Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
                              & "Es wurde daher jetzt keine berücksichtigt"
+                    outputline = errMsg
+                End If
+                ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                'meldungen.Add(outputline)
 
-                ' das sollte nicht dazu führen, dass nichts gemacht wird 
-                'meldungen.Add(errMsg)
-                'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-                'Call MsgBox(errMsg)
-
-                Call logfileSchreiben(errMsg, "", anzFehler)
+                Call logfileSchreiben(outputline, "", anzFehler)
             End If
-        End If
-
-
-        If result Then
-            readInterneAnwesenheitslistenAllg = listOfArchivFiles
         Else
-            readInterneAnwesenheitslistenAllg = New List(Of String)
+            ' irgendetwas mit ConfigFile falsch
         End If
 
+        readInterneAnwesenheitslistenAllg = listOfArchivFiles
 
     End Function
 
