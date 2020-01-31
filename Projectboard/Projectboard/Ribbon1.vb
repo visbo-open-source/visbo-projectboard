@@ -616,6 +616,8 @@ Imports System.Web
                 If boardWasEmpty Or clearBoard Then
                     If leftborder - 12 > 0 Then
                         appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                    Else
+                        appInstance.ActiveWindow.ScrollColumn = 1
                     End If
                 End If
             End If
@@ -8328,9 +8330,11 @@ Imports System.Web
         ' Window so positionieren, dass die Projekte sichtbar sind ...  
         If ShowProjekte.Count > 0 Then
             Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
-            If boardWasEmpty And Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+            If boardWasEmpty Then
                 If leftborder - 12 > 0 Then
                     appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
                 End If
             End If
         End If
