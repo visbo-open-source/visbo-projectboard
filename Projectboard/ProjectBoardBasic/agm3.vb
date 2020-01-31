@@ -2144,330 +2144,331 @@ Public Module agm3
 
                             ' Auslesen der Jahreszahl, falls vorhanden
                             Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
-                            If kapaConfig("year").regex = "RegEx" Then
-                                'regexpression = New Regex("[0-9]{4}")
-                                regexpression = New Regex(kapaConfig("year").content)
-                                Dim match As Match = regexpression.Match(hjahr)
-                                If match.Success Then
-                                    Jahr = CInt(match.Value)
+                            If IsNothing(hjahr) Then
+                                Jahr = 0
+                            Else
+                                If kapaConfig("year").regex = "RegEx" Then
+                                    'regexpression = New Regex("[0-9]{4}")
+                                    regexpression = New Regex(kapaConfig("year").content)
+                                    Dim match As Match = regexpression.Match(hjahr)
+                                    If match.Success Then
+                                        Jahr = CInt(match.Value)
+                                    Else
+                                        Jahr = 0
+                                    End If
                                 End If
                             End If
+
 
                             ' Auslesen des relevanten Monats
                             Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
-                            If kapaConfig("month").regex = "RegEx" Then
-                                'regexpression = New Regex("(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dez(?:ember)?)(?=\D|$)")
-                                regexpression = New Regex(kapaConfig("month").content)
-                                Dim Match As Match = regexpression.Match(hmonth)
-                                If Match.Success Then
-                                    monthName = Match.Value
-
+                            If IsNothing(hmonth) Then
+                                monthName = ""
+                            Else
+                                If kapaConfig("month").regex = "RegEx" Then
+                                    regexpression = New Regex(kapaConfig("month").content)
+                                    Dim Match As Match = regexpression.Match(hmonth)
+                                    If Match.Success Then
+                                        monthName = Match.Value
+                                    Else
+                                        monthName = ""
+                                    End If
                                 End If
                             End If
 
-                            ' Auslesen erste Urlaubsspalte
+
+                            ' Auslesen erste Verfügbarkeitsspalte
                             firstUrlspalte = kapaConfig("valueStart").column
                             firstUrlzeile = kapaConfig("valueStart").row
                         End With
 
-                        If Jahr <> 0 And monthName <> "" Then
+                        Dim beginningDay As Integer = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte).value)
+                        If beginningDay <> 1 Then
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "there is something wrong in the inputsheet - or with your configuration"
+                            Else
+                                msgtxt = "Beginn der Daten stimmt nicht mit Konfiguration überein"
 
-                            ok = True
+                            End If
+                            oPCollection.Add(msgtxt)
+                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
 
-                            monthDays.Clear()
+                        Else
+                            If Jahr <> 0 And monthName <> "" Then
 
-                            anzDays = 0
+                                ok = True
 
-                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                                monthDays.Clear()
 
-                            ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
-                            Dim found As Boolean = False
-                            Dim i As Integer = lastZeile + 1
-                            While Not found
-                                i = i - 1
-                                If kapaConfig("LastLine").regex = "RegEx" Then
-                                    regexpression = New Regex(kapaConfig("LastLine").content)
-                                    Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
-                                    If Not IsNothing(lastLineContent) Then
-                                        Dim match As Match = regexpression.Match(lastLineContent)
-                                        If match.Success Then
-                                            lastLineContent = match.Value
-                                            found = True
+                                anzDays = 0
+
+                                lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                                lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                                ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
+                                Dim found As Boolean = False
+                                Dim i As Integer = lastZeile + 1
+                                While Not found
+                                    i = i - 1
+                                    If kapaConfig("LastLine").regex = "RegEx" Then
+                                        regexpression = New Regex(kapaConfig("LastLine").content)
+                                        Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                        If Not IsNothing(lastLineContent) Then
+                                            Dim match As Match = regexpression.Match(lastLineContent)
+                                            If match.Success Then
+                                                lastLineContent = match.Value
+                                                found = True
+                                            End If
                                         End If
                                     End If
+
+                                End While
+                                lastZeile = i - 1
+
+
+                                ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                                ' -------------------------------------
+                                Dim rng As Range
+                                Dim rngEnd As Range
+
+                                rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                                If rng.MergeCells Then
+
+                                    rng = rng.MergeArea
+                                    rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                    ' dann ist die lastZeile neu zu besetzen
+                                    lastZeile = rngEnd.Row
                                 End If
 
-                            End While
-                            lastZeile = i - 1
 
+                                Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
+                                If isdate Then
+                                    colDate = getColumnOfDate(tmpDate)
+                                    monthNumber = Month(tmpDate)
+                                    anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
+                                    If Not monthDays.ContainsKey(colDate) Then
+                                        monthDays.Add(colDate, anzMonthDays)
+                                    End If
 
-                            ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
-                            ' -------------------------------------
-                            Dim rng As Range
-                            Dim rngEnd As Range
-
-                            rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
-
-                            If rng.MergeCells Then
-
-                                rng = rng.MergeArea
-                                rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
-
-                                ' dann ist die lastZeile neu zu besetzen
-                                lastZeile = rngEnd.Row
-                            End If
-
-                            ' nun hat die Variable lastZeile sicher den richtigen Wert
-                            ' --------------------------------------
-
-
-                            'Dim vglColor As Integer = noColor         ' keine Farbe
-                            'Dim i As Integer = firstUrlspalte
-
-                            'While ok And i <= lastSpalte
-
-                            'If vglColor <> CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex Then
-                            '    ok = (anzDays = anzMonthDays) Or (anzDays = 0)
-                            '    vglColor = CType(currentWS.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex
-                            '    anzDays = 1
-                            'Else
-
-                            Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
-                            If isdate Then
-                                colDate = getColumnOfDate(tmpDate)
-                                monthNumber = Month(tmpDate)
-                                anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
-                                If Not monthDays.ContainsKey(colDate) Then
-                                    monthDays.Add(colDate, anzMonthDays)
                                 End If
 
-                            End If
+                                If Not ok Then
 
-                            '    anzDays = anzDays + 1
-                            'End If
+                                    fehler = True
 
-                            '    i = i + 1
-                            'End While
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Error reading availabilities: Please check the calendar in this file ..."
+                                    Else
+                                        msgtxt = "Fehler beim Lesen der Verfügbarkeiten: Bitte prüfen Sie die Korrektheit des Kalenders ..."
+                                    End If
+                                    If Not oPCollection.Contains(msgtxt) Then
+                                        oPCollection.Add(msgtxt, msgtxt)
+                                    End If
+                                    'Call MsgBox(msgtxt)
 
+                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
 
-                            If Not ok Then
+                                    If formerEE Then
+                                        appInstance.EnableEvents = True
+                                    End If
 
-                                fehler = True
+                                    If formerSU Then
+                                        appInstance.ScreenUpdating = True
+                                    End If
 
-                                If awinSettings.englishLanguage Then
-                                    msgtxt = "Error reading planning holidays: Please check the calendar in this file ..."
+                                    enableOnUpdate = True
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Your availabilities couldn't be read, because of problems"
+                                    Else
+                                        msgtxt = "Ihre Verfügbarkeiten konnten nicht berücksichtigt werden"
+                                    End If
+                                    If Not oPCollection.Contains(msgtxt) Then
+                                        oPCollection.Add(msgtxt, msgtxt)
+                                    End If
+
+                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                    'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
+                                    ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
+                                    'Throw New ArgumentException(msgtxt)
                                 Else
-                                    msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
-                                End If
-                                If Not oPCollection.Contains(msgtxt) Then
-                                    oPCollection.Add(msgtxt, msgtxt)
-                                End If
-                                'Call MsgBox(msgtxt)
 
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
-
-                                If formerEE Then
-                                    appInstance.EnableEvents = True
-                                End If
-
-                                If formerSU Then
-                                    appInstance.ScreenUpdating = True
-                                End If
-
-                                enableOnUpdate = True
-                                If awinSettings.englishLanguage Then
-                                    msgtxt = "Your planning holidays couldn't be read, because of problems"
-                                Else
-                                    msgtxt = "Ihre Urlaubsplanung konnte nicht berücksichtigt werden"
-                                End If
-                                If Not oPCollection.Contains(msgtxt) Then
-                                    oPCollection.Add(msgtxt, msgtxt)
-                                End If
-
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
-                                'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
-                                ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
-                                'Throw New ArgumentException(msgtxt)
-                            Else
-
-                                For iZ = firstUrlzeile To lastZeile
+                                    For iZ = firstUrlzeile To lastZeile
 
 
-                                    rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
-                                    If rolename <> "" Then
-                                        hrole = RoleDefinitions.getRoledef(rolename)
-                                        If Not IsNothing(hrole) Then
+                                        rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+                                        If rolename <> "" Then
+                                            hrole = RoleDefinitions.getRoledef(rolename)
+                                            If Not IsNothing(hrole) Then
 
-                                            Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
+                                                Dim defaultHrsPerdayForThisPerson As Double = hrole.defaultDayCapa
 
-                                            Dim iSp As Integer = firstUrlspalte
-                                            Dim anzArbTage As Double = 0
-                                            Dim anzArbStd As Double = 0
+                                                Dim iSp As Integer = firstUrlspalte
+                                                Dim anzArbTage As Double = 0
+                                                Dim anzArbStd As Double = 0
 
-                                            For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
+                                                For Each kvp As KeyValuePair(Of Integer, Integer) In monthDays
 
-                                                Dim colOfDate As Integer = kvp.Key
-                                                anzDays = kvp.Value
-                                                For sp = iSp + 0 To iSp + anzDays - 1
+                                                    Dim colOfDate As Integer = kvp.Key
+                                                    anzDays = kvp.Value
+                                                    For sp = iSp + 0 To iSp + anzDays - 1
 
-                                                    If iSp <= lastSpalte Then
 
-                                                        Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
+                                                        If iSp <= lastSpalte Then
 
-                                                        If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
-                                                            Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
+                                                            Dim hint As Integer = CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex)
 
-                                                            Dim aktCell As Object = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                            If CInt(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex) = noColor _
+                                                                Or CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Interior.ColorIndex = whiteColor Then
 
-                                                            If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                                Dim aktCell As Object = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
 
-                                                                If IsNumeric(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                                If Not IsNothing(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
 
-                                                                    Dim angabeInStd As Double = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, Double)
+                                                                    If IsNumeric(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
 
-                                                                    If angabeInStd >= 0 And angabeInStd <= 24 Then
-                                                                        anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                                    Else
-                                                                        If awinSettings.englishLanguage Then
-                                                                            msgtxt = "Error reading the amount of working hours for " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                        Dim angabeInStd As Double = CType(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value, Double)
+
+                                                                        If angabeInStd >= 0 And angabeInStd <= 24 Then
+                                                                            anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                                                         Else
-                                                                            msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                            If awinSettings.englishLanguage Then
+                                                                                msgtxt = "Error reading the amount of working hours for " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                            Else
+                                                                                msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " : " & angabeInStd.ToString & " (!!)"
+                                                                            End If
+                                                                            If Not oPCollection.Contains(msgtxt) Then
+                                                                                oPCollection.Add(msgtxt, msgtxt)
+                                                                            End If
+                                                                            'Call MsgBox(msgtxt)
+                                                                            fehler = True
+                                                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                                         End If
-                                                                        If Not oPCollection.Contains(msgtxt) Then
-                                                                            oPCollection.Add(msgtxt, msgtxt)
-                                                                        End If
-                                                                        'Call MsgBox(msgtxt)
-                                                                        fehler = True
-                                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                    ElseIf (CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value = "") Then
+
+                                                                        ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                        anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                     End If
-                                                                ElseIf (CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value = "") Then
 
-                                                                    ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                Else
+                                                                    ' ur:07.01.2020: Telair Variante entfällt mit Zeuss-Anpassung
+
+                                                                    ' Feld ist ohne Inhalt: also ist es Arbeitstag mit Default-Std pro Tag 
                                                                     anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+
+                                                                    '' hier wird die Telair Variante gemacht 
+                                                                    '' das einfachste wäre eigentlich  
+                                                                    ''anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+
+                                                                    ''Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
+
+                                                                    '' ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
+                                                                    ''If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value <> "/" Then
+                                                                    ''    'anzArbStd = anzArbStd + 8
+                                                                    ''    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+                                                                    ''Else
+                                                                    ''    ' freier Tag für Teilzeitbeschäftigte
+                                                                    ''    msgtxt = "Tag zählt nicht: Zeile " & iZ & ", Spalte " & sp
+                                                                    ''    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                    ''End If
+
                                                                 End If
-
-                                                            Else
-                                                                ' ur:07.01.2020: Telair Variante entfällt mit Zeuss-Anpassung
-
-                                                                ' Feld ist ohne Inhalt: also ist es Arbeitstag mit Default-Std pro Tag 
-                                                                anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
-
-                                                                '' hier wird die Telair Variante gemacht 
-                                                                '' das einfachste wäre eigentlich  
-                                                                ''anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
-
-                                                                ''Dim colorIndup As Integer = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex
-
-                                                                '' ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
-                                                                ''If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value <> "/" Then
-                                                                ''    'anzArbStd = anzArbStd + 8
-                                                                ''    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
-                                                                ''Else
-                                                                ''    ' freier Tag für Teilzeitbeschäftigte
-                                                                ''    msgtxt = "Tag zählt nicht: Zeile " & iZ & ", Spalte " & sp
-                                                                ''    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
-                                                                ''End If
-
                                                             End If
-                                                        End If
-                                                    Else
-                                                        If awinSettings.englishLanguage Then
-                                                            msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
                                                         Else
-                                                            msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                            If awinSettings.englishLanguage Then
+                                                                msgtxt = "Error reading the amount of working days of " & hrole.name & " ..."
+                                                            Else
+                                                                msgtxt = "Fehler beim Lesen der verfügbaren Arbeitstage von " & hrole.name & " ..."
+                                                            End If
+                                                            fehler = True
+                                                            If Not oPCollection.Contains(msgtxt) Then
+                                                                oPCollection.Add(msgtxt, msgtxt)
+                                                            End If
+                                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                         End If
-                                                        fehler = True
-                                                        If Not oPCollection.Contains(msgtxt) Then
-                                                            oPCollection.Add(msgtxt, msgtxt)
-                                                        End If
-                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+
+                                                    Next
+
+                                                    anzArbTage = anzArbStd / 8
+                                                    'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                                                    If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
+                                                        hrole.kapazitaet(colOfDate) = anzArbTage
+                                                    Else
+                                                        hrole.kapazitaet(colOfDate) = 0
                                                     End If
+                                                    iSp = iSp + anzDays
+                                                    anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
+                                                    anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
 
                                                 Next
 
-                                                anzArbTage = anzArbStd / 8
-                                                'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
-                                                If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
-                                                    hrole.kapazitaet(colOfDate) = anzArbTage
+                                            Else
+
+                                                If awinSettings.englishLanguage Then
+                                                    msgtxt = "Role " & rolename & " not defined ..."
                                                 Else
-                                                    hrole.kapazitaet(colOfDate) = 0
+                                                    msgtxt = "Rolle " & rolename & " nicht definiert ..."
                                                 End If
-                                                iSp = iSp + anzDays
-                                                anzArbTage = 0              ' Anzahl Arbeitstage wieder zurücksetzen für den nächsten Monat
-                                                anzArbStd = 0               ' Anzahl zu leistender Arbeitsstunden wieder zurücksetzen für den nächsten Monat
-
-                                            Next
-
+                                                If Not oPCollection.Contains(msgtxt) Then
+                                                    oPCollection.Add(msgtxt, msgtxt)
+                                                End If
+                                                'Call MsgBox(msgtxt)
+                                                fehler = True
+                                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                            End If
                                         Else
 
                                             If awinSettings.englishLanguage Then
-                                                msgtxt = "Role " & rolename & " not defined ..."
+                                                msgtxt = "No Name of role given ..."
                                             Else
-                                                msgtxt = "Rolle " & rolename & " nicht definiert ..."
+                                                msgtxt = "kein Rollenname angegeben ..."
                                             End If
                                             If Not oPCollection.Contains(msgtxt) Then
                                                 oPCollection.Add(msgtxt, msgtxt)
                                             End If
-                                            'Call MsgBox(msgtxt)
-                                            fehler = True
                                             Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                         End If
+
+                                    Next iZ
+
+                                End If   ' ende von if not OK
+                            Else
+
+                                If awinSettings.visboDebug Then
+
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Worksheet " & kapaFileName & "doesn't contain month/year ..."
                                     Else
-
-                                        If awinSettings.englishLanguage Then
-                                            msgtxt = "No Name of role given ..."
-                                        Else
-                                            msgtxt = "kein Rollenname angegeben ..."
-                                        End If
-                                        If Not oPCollection.Contains(msgtxt) Then
-                                            oPCollection.Add(msgtxt, msgtxt)
-                                        End If
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        msgtxt = "Worksheet" & kapaFileName & " enthält keine Angaben zu Monat/Jahr ..."
                                     End If
-
-                                Next iZ
-
-                            End If   ' ende von if not OK
-                        Else
-
-                            If awinSettings.visboDebug Then
-
-                                If awinSettings.englishLanguage Then
-                                    msgtxt = "Worksheet " & kapaFileName & "doesn't contain month/year ..."
-                                Else
-                                    msgtxt = "Worksheet" & kapaFileName & " enthält keine Angaben zu Monat/Jahr ..."
+                                    If Not oPCollection.Contains(msgtxt) Then
+                                        oPCollection.Add(msgtxt, msgtxt)
+                                    End If
+                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                 End If
-                                If Not oPCollection.Contains(msgtxt) Then
-                                    oPCollection.Add(msgtxt, msgtxt)
-                                End If
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+
                             End If
 
-                        End If
+                        End If      'beginningDay = 1
 
                     Next index
 
 
                 Catch ex2 As Exception
-                    'If fehler Then
-                    '    'Call MsgBox(msgtxt)
-
-                    '    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now, err)
-
-                    '    msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
-                    '    If awinSettings.englishLanguage Then
-                    '        msgtxt = "Therefore read the capacity of every Role from the DB  ..."
-                    '    End If
-                    '    If Not oPCollection.Contains(msgtxt) Then
-                    '        oPCollection.Add(msgtxt, msgtxt)
-                    '    End If
-                    '    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
-                    'End If
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Error reading dates like month/year ..."
+                    Else
+                        msgtxt = "Fehler beim Lesen der notwendigen Randdaten wie Monat/Jahr ..."
+                    End If
+                    If Not oPCollection.Contains(msgtxt) Then
+                        oPCollection.Add(msgtxt, msgtxt)
+                    End If
+                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                 End Try
 
-                'kapaWB.Close(SaveChanges:=False)
-            Catch ex As Exception
+        'kapaWB.Close(SaveChanges:=False)
+        Catch ex As Exception
 
             End Try
 
@@ -2485,15 +2486,6 @@ Public Module agm3
         enableOnUpdate = True
 
         kapaWB.Close(SaveChanges:=False)
-
-        ' das wird jetzt an der übergeordneten Stelle gemacht
-        'Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
-
-        ' ''If outPutCollection.Count > 0 Then
-        ' ''    Call showOutPut(outPutCollection, _
-        ' ''                    "Meldungen Einlesevorgang Urlaubsdatei", _
-        ' ''                    "zum Zeitpunkt " & storedAtOrBefore.ToString & " aufgeführte Rolle nicht definiert")
-        ' ''End If
 
         readAvailabilityOfRoleWithConfig = (oPCollection.Count = old_oPCollectionCount)
 
@@ -2563,9 +2555,10 @@ Public Module agm3
                                     ByVal tmpDatei As String,
                                     ByRef meldungen As Collection) As Boolean
         Dim outputline As String = ""
+        Dim ok As Boolean = False
         Dim result As Boolean = False
-        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook
-        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet
+        Dim projectWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim regexpression As Regex
         Dim firstUrlspalte As Integer
         Dim firstUrlzeile As Integer
@@ -2593,8 +2586,8 @@ Public Module agm3
         Dim roleNames() As String = Nothing
         Dim roleValues() As Double = Nothing
         Dim roleListNameValues As New SortedList(Of String, Double())
-        Dim costNames() As String
-        Dim costValues() As Double
+        Dim costNames() As String = Nothing
+        Dim costValues() As Double = Nothing
         Dim phNames() As String
         Dim przPhasenAnteile() As Double
         Dim combinedName As Boolean = False
@@ -2616,519 +2609,635 @@ Public Module agm3
                     firstUrlspalte = vstart.column.von
                     firstUrlzeile = vstart.row.von
 
-                    If Not IsNothing(vstart.sheet) Then
-                        currentWS = CType(appInstance.Worksheets(vstart.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        Dim ok As Boolean = (currentWS.Name = vstart.sheetDescript)
-                    Else
-                        currentWS = CType(appInstance.Worksheets(vstart.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                    End If
+                    If appInstance.Worksheets.Count > 0 Then
 
-                    lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-                    lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                        If Not IsNothing(vstart.sheet) Then
+                            currentWS = CType(appInstance.Worksheets(vstart.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            ok = (currentWS.Name = vstart.sheetDescript)
+                        End If
+                        If Not ok Then
+                            If Not IsNothing(vstart.sheetDescript) Then
+                                currentWS = CType(appInstance.Worksheets(vstart.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            Else
+                                currentWS = Nothing
+                            End If
+                        End If
 
-                    Try
-                        Dim projNumber As String = ""
+                        If IsNothing(currentWS) Then
+                            outputline = "The Worksheet you want to import cannot be matched"
+                            meldungen.Add(outputline)
+                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                        Else
 
-                        For i = firstUrlzeile To lastZeile + 1
+                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
 
-                            If appInstance.Worksheets.Count > 0 Then
+                            Try
+                                Dim projNumber As String = ""
 
-                                'Find ProjectNumber
-                                Dim projNumber_new As String
-                                Dim projNrConfig As clsConfigProjectsImport = projectConfig("ProjectNumber")
+                                For i = firstUrlzeile To lastZeile + 1
 
-                                If currentWS.Index <> projNrConfig.sheet Then
-                                    If Not IsNothing(projNrConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projNrConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projNrConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-                                With currentWS
+                                    'Find ProjectNumber
+                                    Dim projNumber_new As String = ""
+                                    Try
+                                        Dim projNrConfig As clsConfigProjectsImport = projectConfig("ProjectNumber")
 
-                                    Select Case projNrConfig.Typ
-                                        Case "Text"
-                                            projNumber_new = CStr(.Cells(i, projNrConfig.column.von).value)
-                                        Case "Integer"
-                                            projNumber_new = CInt(.Cells(i, projNrConfig.column.von).value)
-                                        Case "Decimal"
-                                            projNumber_new = CDbl(.Cells(i, projNrConfig.column.von).value)
-                                        Case "Date"
-                                            projNumber_new = CDate(.Cells(i, projNrConfig.column.von).value)
-                                        Case Else
-                                            projNumber_new = .Cells(i, projNrConfig.column.von).value
-                                    End Select
-
-                                    If projNrConfig.objType = "RegEx" Then
-                                        regexpression = New Regex(projNrConfig.content)
-                                        Dim match As Match = regexpression.Match(projNumber_new)
-                                        If match.Success Then
-                                            projNumber_new = match.Value
-                                        End If
-                                    End If
-
-                                End With
-
-                                If projNumber_new <> projNumber And i > firstUrlzeile Then
-                                    Dim anzRoles As Integer = roleListNameValues.Count
-                                    ReDim roleNames(anzRoles - 1)
-                                    ReDim roleValues(monthBis - monthVon)
-                                    Dim k As Integer = 0
-                                    For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
-                                        roleNames(k) = kvp.Key
-                                        k = k + 1
-                                    Next
-
-                                    ReDim phNames(1)
-                                    ReDim przPhasenAnteile(1)
-
-                                    'erstelleProjektausParametern()
-                                    anz_Proj = anz_Proj + 1
-                                    hproj = New clsProjekt
-                                    hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
-                                                     startDate, endDate,
-                                                     budget, sfit, risk,
-                                                     projNumber, description,
-                                                     listOfCustomFields, businessUnit, responsible,
-                                                     status, zeile,
-                                                     roleNames, roleValues,
-                                                     costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget, createCostsRolesAnyhow)
-
-                                    For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
-
-                                        Dim tmpRCnameID As String = RoleDefinitions.bestimmeRoleNameID(kvp.Key, "")
-                                        hproj.AllPhases(0).getRoleByRoleNameID(tmpRCnameID).Xwerte = kvp.Value
-
-                                        Dim hilfe As Boolean = True
-                                    Next
-
-                                    ImportProjekte.Add(hproj)
-
-                                    outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
-                                    meldungen.Add(outputline)
-
-                                    ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
-                                    roleListNameValues = New SortedList(Of String, Double())
-
-                                End If
-
-                                projNumber = projNumber_new
-
-                                'Find BusinesssUnit
-                                Dim projBU As Object
-                                Dim projBUConfig As clsConfigProjectsImport = projectConfig("BU")
-
-                                If currentWS.Index <> projBUConfig.sheet Then
-                                    If Not IsNothing(projBUConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projBUConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projBUConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-                                With currentWS
-
-                                    Select Case projBUConfig.Typ
-                                        Case "Text"
-                                            projBU = CStr(.Cells(i, projBUConfig.column.von).value)
-                                        Case "Integer"
-                                            projBU = CInt(.Cells(i, projBUConfig.column.von).value)
-                                        Case "Decimal"
-                                            projBU = CDbl(.Cells(i, projBUConfig.column.von).value)
-                                        Case "Color"
-                                            projBU = CLng(.Cells(i, projBUConfig.column.von).value)
-                                        Case Else
-                                            projBU = .Cells(i, projBUConfig.column.von).value
-                                    End Select
-
-                                    If projBUConfig.objType = "RegEx" Then
-                                        regexpression = New Regex(projBUConfig.content)
-                                        Dim match As Match = regexpression.Match(projBU)
-                                        If match.Success Then
-                                            projBU = match.Value
-                                        End If
-                                    End If
-                                    businessUnit = projBU
-                                End With
-
-                                'Find ProjectName
-                                Dim projName As String
-                                Dim projNameConfig As clsConfigProjectsImport = projectConfig("ProjectName")
-                                If currentWS.Index <> projNameConfig.sheet Then
-                                    If Not IsNothing(projNameConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                With currentWS
-                                    Select Case projNameConfig.Typ
-                                        Case "Text"
-                                            projName = CStr(.Cells(i, projNameConfig.column.von).value)
-                                        Case "Integer"
-                                            projName = CInt(.Cells(i, projNameConfig.column.von).value)
-                                        Case "Decimal"
-                                            projName = CDbl(.Cells(i, projNameConfig.column.von).value)
-                                        Case "Date"
-                                            projName = CDate(.Cells(i, projNameConfig.column.von).value)
-                                        Case Else
-                                            projName = .Cells(i, projNameConfig.column.von).value
-                                    End Select
-
-                                    If projNameConfig.objType = "RegEx" Then
-                                        regexpression = New Regex(projNameConfig.content)
-                                        Dim match As Match = regexpression.Match(projName)
-                                        If match.Success Then
-                                            projName = match.Value
-                                        End If
-                                    End If
-                                    pName = projName
-                                    ' ggfs. vorhandene Sonderzeichen wie (,),# [,] ersetzen
-                                    If Not isValidProjectName(pName) Then
-                                        pName = makeValidProjectName(pName)
-                                    End If
-
-                                End With
-
-                                'Find ProjectTemplate
-                                Dim projTmp As String
-                                Dim projTmpConfig As clsConfigProjectsImport = projectConfig("ProjectTemplate")
-                                If currentWS.Index <> projTmpConfig.sheet And projTmpConfig.sheet <> 0 Then
-                                    If Not IsNothing(projTmpConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projTmpConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projTmpConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                If projTmpConfig.objType = "direkt" Then
-                                    vorlagenName = projTmpConfig.content
-                                Else
-                                    With currentWS
-                                        Select Case projTmpConfig.Typ
-                                            Case "Text"
-                                                projTmp = CStr(.Cells(i, projTmpConfig.column.von).value)
-                                            Case "Integer"
-                                                projTmp = CInt(.Cells(i, projTmpConfig.column.von).value)
-                                            Case "Decimal"
-                                                projTmp = CDbl(.Cells(i, projTmpConfig.column.von).value)
-                                            Case "Date"
-                                                projTmp = CDate(.Cells(i, projTmpConfig.column.von).value)
-                                            Case Else
-                                                projTmp = .Cells(i, projTmpConfig.column.von).value
-                                        End Select
-
-                                        If projTmpConfig.objType = "RegEx" Then
-                                            regexpression = New Regex(projTmpConfig.content)
-                                            Dim match As Match = regexpression.Match(projTmp)
-                                            If match.Success Then
-                                                projTmp = match.Value
+                                        If currentWS.Index <> projNrConfig.sheet Then
+                                            If Not IsNothing(projNrConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projNrConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projNrConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
                                             End If
                                         End If
-                                        vorlagenName = projTmp
-                                    End With
-                                End If
+                                        With currentWS
 
+                                            Select Case projNrConfig.Typ
+                                                Case "Text"
+                                                    projNumber_new = CStr(.Cells(i, projNrConfig.column.von).value)
+                                                Case "Integer"
+                                                    projNumber_new = CInt(.Cells(i, projNrConfig.column.von).value)
+                                                Case "Decimal"
+                                                    projNumber_new = CDbl(.Cells(i, projNrConfig.column.von).value)
+                                                Case "Date"
+                                                    projNumber_new = CDate(.Cells(i, projNrConfig.column.von).value)
+                                                Case Else
+                                                    projNumber_new = .Cells(i, projNrConfig.column.von).value
+                                            End Select
 
-                                'Find ProjectStart
-                                Dim projStart As String
-                                Dim projStartConfig As clsConfigProjectsImport = projectConfig("ProjectStart")
-                                If currentWS.Index <> projStartConfig.sheet And projStartConfig.sheet <> 0 Then
-                                    If Not IsNothing(projStartConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projStartConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projStartConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                If projStartConfig.objType = "direkt" Then
-                                    startDate = CDate(projStartConfig.content)
-                                Else
-                                    With currentWS
-
-                                        Select Case projStartConfig.Typ
-                                            Case "Text"
-                                                projStart = CStr(.Cells(i, projStartConfig.column.von).value)
-                                            Case "Integer"
-                                                projStart = CInt(.Cells(i, projStartConfig.column.von).value)
-                                            Case "Decimal"
-                                                projStart = CDbl(.Cells(i, projStartConfig.column.von).value)
-                                            Case "Date"
-                                                projStart = CDate(currentWS.Cells(i, projStartConfig.column.von).value)
-                                            Case Else
-                                                projStart = .Cells(i, projStartConfig.column.von).value
-                                        End Select
-
-                                        If projStartConfig.objType = "RegEx" Then
-                                            regexpression = New Regex(projStartConfig.content)
-                                            Dim match As Match = regexpression.Match(projStart)
-                                            If match.Success Then
-                                                projStart = match.Value
-                                            End If
-                                        End If
-                                    End With
-                                    startDate = projStart
-                                End If
-
-
-                                'Find ProjectEnde
-                                Dim projEnde As String
-                                Dim projEndeConfig As clsConfigProjectsImport = projectConfig("ProjectEnd")
-                                If currentWS.Index <> projEndeConfig.sheet And projEndeConfig.sheet <> 0 Then
-                                    If Not IsNothing(projEndeConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projEndeConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projEndeConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                If projEndeConfig.objType = "direkt" Then
-                                    endDate = CDate(projEndeConfig.content)
-                                Else
-
-                                    With currentWS
-                                        Select Case projEndeConfig.Typ
-                                            Case "Text"
-                                                projEnde = CStr(.Cells(i, projEndeConfig.column.von).value)
-                                            Case "Integer"
-                                                projEnde = CInt(.Cells(i, projEndeConfig.column.von).value)
-                                            Case "Decimal"
-                                                projEnde = CDbl(.Cells(i, projEndeConfig.column.von).value)
-                                            Case "Date"
-                                                projEnde = CDate(.Cells(i, projEndeConfig.column.von).value)
-                                            Case Else
-                                                projEnde = .Cells(i, projEndeConfig.column.von).value
-                                        End Select
-
-                                        If projEndeConfig.objType = "RegEx" Then
-                                            regexpression = New Regex(projEndeConfig.content)
-                                            Dim match As Match = regexpression.Match(projEnde)
-                                            If match.Success Then
-                                                projEnde = match.Value
-                                            End If
-                                        End If
-                                    End With
-                                    endDate = CDate(projEnde)
-                                End If
-
-
-                                ' find ProjectDescription
-                                Dim projDescr As String
-                                Dim projDescrConfig As clsConfigProjectsImport = projectConfig("ProjectDescription")
-                                If currentWS.Index <> projDescrConfig.sheet And projDescrConfig.sheet <> 0 Then
-                                    If Not IsNothing(projDescrConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(projDescrConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(projDescrConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                If projDescrConfig.objType = "direkt" Then
-                                    description = CStr(projDescrConfig.content)
-                                Else
-
-                                    With currentWS
-                                        Select Case projDescrConfig.Typ
-                                            Case "Text"
-                                                projDescr = CStr(.Cells(i, projDescrConfig.column.von).value)
-                                            Case "Integer"
-                                                projDescr = CInt(.Cells(i, projDescrConfig.column.von).value)
-                                            Case "Decimal"
-                                                projDescr = CDbl(.Cells(i, projDescrConfig.column.von).value)
-                                            Case "Date"
-                                                projDescr = CDate(.Cells(i, projEndeConfig.column.von).value)
-                                            Case Else
-                                                projDescr = .Cells(i, projDescrConfig.column.von).value
-                                        End Select
-
-                                        If projDescrConfig.objType = "RegEx" Then
-                                            regexpression = New Regex(projDescrConfig.content)
-                                            Dim match As Match = regexpression.Match(projDescr)
-                                            If match.Success Then
-                                                projDescr = match.Value
-                                            End If
-                                        End If
-                                        description = projDescr
-                                    End With
-                                End If
-
-
-                                ' Find TimeUnit
-                                Dim timeUnit As String
-                                Dim timeUnitConfig As clsConfigProjectsImport = projectConfig("TimeUnit")
-                                If currentWS.Index <> timeUnitConfig.sheet Then
-                                    If Not IsNothing(timeUnitConfig.sheet) Then
-                                        currentWS = CType(appInstance.Worksheets(timeUnitConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    Else
-                                        currentWS = CType(appInstance.Worksheets(timeUnitConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                    End If
-                                End If
-
-                                With currentWS
-                                    Select Case timeUnitConfig.Typ
-                                        Case "Text"
-                                            timeUnit = CStr(.Cells(i, timeUnitConfig.column.von).value)
-                                        Case "Integer"
-                                            timeUnit = CInt(.Cells(i, timeUnitConfig.column.von).value)
-                                        Case "Decimal"
-                                            timeUnit = CDbl(.Cells(i, timeUnitConfig.column.von).value)
-                                        Case "Date"
-                                            timeUnit = CDate(.Cells(i, timeUnitConfig.column.von).value)
-                                        Case Else
-                                            timeUnit = .Cells(i, timeUnitConfig.column.von).value
-                                    End Select
-
-                                    If timeUnitConfig.objType = "RegEx" Then
-                                        regexpression = New Regex(timeUnitConfig.content)
-                                        Dim timeUnitMatch As Match = regexpression.Match(timeUnit)
-                                        If timeUnitMatch.Success Then
-                                            timeUnit = CStr(timeUnitMatch.Value)
-                                            ' find months
-                                            Dim months As String = ""
-                                            'Dim monthVon As Integer = 0
-                                            'Dim monthBis As Integer = 0
-                                            Dim monthsConfig As clsConfigProjectsImport = projectConfig("months")
-                                            If currentWS.Index <> monthsConfig.sheet Then
-                                                If Not IsNothing(monthsConfig.sheet) Then
-                                                    currentWS = CType(appInstance.Worksheets(monthsConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                                Else
-                                                    currentWS = CType(appInstance.Worksheets(monthsConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            If projNrConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(projNrConfig.content)
+                                                Dim match As Match = regexpression.Match(projNumber_new)
+                                                If match.Success Then
+                                                    projNumber_new = match.Value
                                                 End If
                                             End If
+
+                                        End With
+
+                                        If projNumber_new <> projNumber And i > firstUrlzeile Then
+                                            Dim anzRoles As Integer = roleListNameValues.Count
+                                            ReDim roleNames(anzRoles - 1)
+                                            ReDim roleValues(monthBis - monthVon)
+                                            Dim k As Integer = 0
+                                            For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                                                roleNames(k) = kvp.Key
+                                                k = k + 1
+                                            Next
+
+                                            ReDim phNames(1)
+                                            ReDim przPhasenAnteile(1)
+
+                                            'erstelleProjektausParametern()
+                                            anz_Proj = anz_Proj + 1
+                                            hproj = New clsProjekt
+                                            hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
+                                                             startDate, endDate,
+                                                             budget, sfit, risk,
+                                                             projNumber, description,
+                                                             listOfCustomFields, businessUnit, responsible,
+                                                             status, zeile,
+                                                             roleNames, roleValues,
+                                                             costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget, createCostsRolesAnyhow)
+
+                                            For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+
+                                                Dim tmpRCnameID As String = RoleDefinitions.bestimmeRoleNameID(kvp.Key, "")
+                                                hproj.AllPhases(0).getRoleByRoleNameID(tmpRCnameID).Xwerte = kvp.Value
+
+                                                Dim hilfe As Boolean = True
+                                            Next
+
+                                            ImportProjekte.Add(hproj)
+
+                                            outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
+                                            meldungen.Add(outputline)
+                                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+                                            ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
+                                            roleListNameValues = New SortedList(Of String, Double())
+
+                                        End If
+
+                                        If i > lastZeile And IsNothing(projNumber_new) Then
+                                            ' am Ende der zu lesenden Zeilen angekommen, die Felder sind nun leer
+                                            ' beenden der Einlese-Aktion indem die For-Schleife abgebrochen wird
+                                            Exit For
+                                        End If
+
+                                        projNumber = projNumber_new
+
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the projectnumber in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden der ProjektNummer in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+                                    'Find BusinesssUnit
+                                    Dim projBU As Object
+                                    Try
+                                        Dim projBUConfig As clsConfigProjectsImport = projectConfig("BU")
+
+                                        If currentWS.Index <> projBUConfig.sheet Then
+                                            If Not IsNothing(projBUConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projBUConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projBUConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+                                        With currentWS
+
+                                            Select Case projBUConfig.Typ
+                                                Case "Text"
+                                                    projBU = CStr(.Cells(i, projBUConfig.column.von).value)
+                                                Case "Integer"
+                                                    projBU = CInt(.Cells(i, projBUConfig.column.von).value)
+                                                Case "Decimal"
+                                                    projBU = CDbl(.Cells(i, projBUConfig.column.von).value)
+                                                Case "Color"
+                                                    projBU = CLng(.Cells(i, projBUConfig.column.von).value)
+                                                Case Else
+                                                    projBU = .Cells(i, projBUConfig.column.von).value
+                                            End Select
+
+                                            If projBUConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(projBUConfig.content)
+                                                Dim match As Match = regexpression.Match(projBU)
+                                                If match.Success Then
+                                                    projBU = match.Value
+                                                End If
+                                            End If
+                                            businessUnit = projBU
+                                        End With
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the BU in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden der BU in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+
+                                    'Find ProjectName
+                                    Dim projName As String
+                                    Try
+                                        Dim projNameConfig As clsConfigProjectsImport = projectConfig("ProjectName")
+                                        If currentWS.Index <> projNameConfig.sheet Then
+                                            If Not IsNothing(projNameConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+
+                                        With currentWS
+                                            Select Case projNameConfig.Typ
+                                                Case "Text"
+                                                    projName = CStr(.Cells(i, projNameConfig.column.von).value)
+                                                Case "Integer"
+                                                    projName = CInt(.Cells(i, projNameConfig.column.von).value)
+                                                Case "Decimal"
+                                                    projName = CDbl(.Cells(i, projNameConfig.column.von).value)
+                                                Case "Date"
+                                                    projName = CDate(.Cells(i, projNameConfig.column.von).value)
+                                                Case Else
+                                                    projName = .Cells(i, projNameConfig.column.von).value
+                                            End Select
+
+                                            If projNameConfig.objType = "RegEx" Then
+                                                regexpression = New Regex(projNameConfig.content)
+                                                Dim match As Match = regexpression.Match(projName)
+                                                If match.Success Then
+                                                    projName = match.Value
+                                                End If
+                                            End If
+                                            pName = projName
+                                            ' ggfs. vorhandene Sonderzeichen wie (,),# [,] ersetzen
+                                            If Not isValidProjectName(pName) Then
+                                                pName = makeValidProjectName(pName)
+                                            End If
+
+                                        End With
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the projectname in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden des ProjektNamens in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+
+                                    'Find ProjectTemplate
+                                    Dim projTmp As String
+                                    Try
+                                        Dim projTmpConfig As clsConfigProjectsImport = projectConfig("ProjectTemplate")
+                                        If currentWS.Index <> projTmpConfig.sheet And projTmpConfig.sheet <> 0 Then
+                                            If Not IsNothing(projTmpConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projTmpConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projTmpConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+
+                                        If projTmpConfig.objType = "direkt" Then
+                                            vorlagenName = projTmpConfig.content
+                                        Else
                                             With currentWS
-                                                If Not IsNothing(monthsConfig.Typ) And
-                                                    Not IsNothing(monthsConfig.column) Then
-
-                                                    Select Case monthsConfig.Typ
-                                                        Case "Text"
-                                                            months = CStr(.Cells(i, monthsConfig.column.von).value)
-                                                        Case "Integer"
-                                                            months = CInt(.Cells(i, monthsConfig.column.von).value)
-                                                        Case "Decimal"
-                                                            months = CDbl(.Cells(i, monthsConfig.column.von).value)
-                                                        Case "Date"
-                                                            months = CDate(.Cells(i, monthsConfig.column.von).value)
-                                                        Case Else
-                                                            months = .Cells(i, monthsConfig.column.von).value
-                                                    End Select
-                                                End If
-
-                                                If Not IsNothing(monthsConfig.cellrange) Then
-                                                    If monthsConfig.cellrange Then
-                                                        monthVon = monthsConfig.column.von
-                                                        monthBis = monthsConfig.column.bis
-                                                    End If
-                                                End If
-
-                                                If Not IsNothing(monthsConfig.objType) Then
-                                                    If monthsConfig.objType = "RegEx" Then
-                                                        regexpression = New Regex(monthsConfig.content)
-                                                        Dim match As Match = regexpression.Match(months)
-                                                        If match.Success Then
-                                                            months = CInt(match.Value)
-                                                        End If
-                                                    End If
-                                                End If
-
-
-                                            End With
-
-                                            ' Find Role
-                                            Dim roleName As String
-                                            Dim roleNameConfig As clsConfigProjectsImport = projectConfig("Ressourcen")
-                                            If currentWS.Index <> roleNameConfig.sheet Then
-                                                If Not IsNothing(roleNameConfig.sheet) Then
-                                                    currentWS = CType(appInstance.Worksheets(roleNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                                Else
-                                                    currentWS = CType(appInstance.Worksheets(roleNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                                                End If
-                                            End If
-
-                                            With currentWS
-                                                Select Case roleNameConfig.Typ
+                                                Select Case projTmpConfig.Typ
                                                     Case "Text"
-                                                        roleName = CStr(.Cells(i, roleNameConfig.column.von).value)
+                                                        projTmp = CStr(.Cells(i, projTmpConfig.column.von).value)
                                                     Case "Integer"
-                                                        roleName = CInt(.Cells(i, roleNameConfig.column.von).value)
+                                                        projTmp = CInt(.Cells(i, projTmpConfig.column.von).value)
                                                     Case "Decimal"
-                                                        roleName = CDbl(.Cells(i, roleNameConfig.column.von).value)
+                                                        projTmp = CDbl(.Cells(i, projTmpConfig.column.von).value)
                                                     Case "Date"
-                                                        roleName = CDate(.Cells(i, roleNameConfig.column.von).value)
+                                                        projTmp = CDate(.Cells(i, projTmpConfig.column.von).value)
                                                     Case Else
-                                                        roleName = .Cells(i, roleNameConfig.column.von).value
+                                                        projTmp = .Cells(i, projTmpConfig.column.von).value
                                                 End Select
 
-                                                If roleNameConfig.objType = "RegEx" Then
-                                                    regexpression = New Regex(roleNameConfig.content)
-                                                    Dim matchnew As Match = regexpression.Match(roleName)
-                                                    If matchnew.Success Then
-                                                        roleName = CStr(matchnew.Value)
+                                                If projTmpConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(projTmpConfig.content)
+                                                    Dim match As Match = regexpression.Match(projTmp)
+                                                    If match.Success Then
+                                                        projTmp = match.Value
                                                     End If
                                                 End If
-                                                regexpression = New Regex("\((.*)\)")
-                                                Dim match As Match = regexpression.Match(roleName)
-                                                Dim col As MatchCollection = regexpression.Matches(roleName)
-                                                ' Loop through Matches.
-                                                For Each m As Match In col
-                                                    ' Access first Group and its value.
-                                                    Dim g As Group = m.Groups(1)
-                                                    roleName = g.Value
-                                                Next
-                                                Dim xx As String = CStr(match.Value)
+                                                vorlagenName = projTmp
+                                            End With
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the project-template in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden des Projekt-Template in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
 
+                                    'Find ProjectStart
+                                    Dim projStart As String = ""
+                                    Try
+                                        Dim projStartConfig As clsConfigProjectsImport = projectConfig("ProjectStart")
+                                        If currentWS.Index <> projStartConfig.sheet And projStartConfig.sheet <> 0 Then
+                                            If Not IsNothing(projStartConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projStartConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projStartConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
 
-                                                If RoleDefinitions.containsName(roleName) Then
-                                                    Dim hroleValues As Double()
-                                                    ' initialisieren des Array
-                                                    ReDim hroleValues(monthBis - monthVon)
-                                                    For m = monthVon To monthBis
-                                                        hroleValues(m - monthVon) = CDbl(.Cells(i, m).value)
-                                                    Next
-                                                    If Not roleListNameValues.ContainsKey(roleName) Then
-                                                        ' liste aufbauen, die später dazu dient, das erstellte Projekt zu befüllen
-                                                        roleListNameValues.Add(roleName, hroleValues)
-                                                    Else
-                                                        ' evt. aufsummieren der jeweiligen werte eines Monats
+                                        If projStartConfig.objType = "direkt" Then
+                                            startDate = CDate(projStartConfig.content)
+                                        Else
+                                            With currentWS
+
+                                                Select Case projStartConfig.Typ
+                                                    Case "Text"
+                                                        projStart = CStr(.Cells(i, projStartConfig.column.von).value)
+                                                    Case "Integer"
+                                                        projStart = CInt(.Cells(i, projStartConfig.column.von).value)
+                                                    Case "Decimal"
+                                                        projStart = CDbl(.Cells(i, projStartConfig.column.von).value)
+                                                    Case "Date"
+                                                        projStart = CDate(currentWS.Cells(i, projStartConfig.column.von).value)
+                                                    Case Else
+                                                        projStart = .Cells(i, projStartConfig.column.von).value
+                                                End Select
+
+                                                If projStartConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(projStartConfig.content)
+                                                    Dim match As Match = regexpression.Match(projStart)
+                                                    If match.Success Then
+                                                        projStart = match.Value
                                                     End If
-                                                Else
-                                                    If awinSettings.englishLanguage Then
-                                                        outputline = "Role " & roleName & " isn't defined in this VC"
-                                                    Else
-                                                        outputline = "Rolle " & roleName & " existiert in diesem VC nicht"
-                                                    End If
-
-                                                    meldungen.Add(outputline)
-                                                    'Call MsgBox("Rolle " & roleName & " existiert in diesem VC nicht")
                                                 End If
                                             End With
+                                            startDate = projStart
+                                        End If
 
+
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the projectstart in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden des Projekt-Starts in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+                                    'Find ProjectEnde
+                                    Dim projEnde As String = ""
+                                    Try
+                                        Dim projEndeConfig As clsConfigProjectsImport = projectConfig("ProjectEnd")
+                                        If currentWS.Index <> projEndeConfig.sheet And projEndeConfig.sheet <> 0 Then
+                                            If Not IsNothing(projEndeConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projEndeConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projEndeConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+
+                                        If projEndeConfig.objType = "direkt" Then
+                                            endDate = CDate(projEndeConfig.content)
+                                        Else
+
+                                            With currentWS
+                                                Select Case projEndeConfig.Typ
+                                                    Case "Text"
+                                                        projEnde = CStr(.Cells(i, projEndeConfig.column.von).value)
+                                                    Case "Integer"
+                                                        projEnde = CInt(.Cells(i, projEndeConfig.column.von).value)
+                                                    Case "Decimal"
+                                                        projEnde = CDbl(.Cells(i, projEndeConfig.column.von).value)
+                                                    Case "Date"
+                                                        projEnde = CDate(.Cells(i, projEndeConfig.column.von).value)
+                                                    Case Else
+                                                        projEnde = .Cells(i, projEndeConfig.column.von).value
+                                                End Select
+
+                                                If projEndeConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(projEndeConfig.content)
+                                                    Dim match As Match = regexpression.Match(projEnde)
+                                                    If match.Success Then
+                                                        projEnde = match.Value
+                                                    End If
+                                                End If
+                                            End With
+                                            endDate = CDate(projEnde)
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the projectend in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden des Projekt-Endes in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+                                    ' find ProjectDescription
+                                    Dim projDescr As String = ""
+                                    Try
+                                        Dim projDescrConfig As clsConfigProjectsImport = projectConfig("ProjectDescription")
+                                        If currentWS.Index <> projDescrConfig.sheet And projDescrConfig.sheet <> 0 Then
+                                            If Not IsNothing(projDescrConfig.sheet) Then
+                                                currentWS = CType(appInstance.Worksheets(projDescrConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            Else
+                                                currentWS = CType(appInstance.Worksheets(projDescrConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                            End If
+                                        End If
+
+                                        If projDescrConfig.objType = "direkt" Then
+                                            description = CStr(projDescrConfig.content)
+                                        Else
+
+                                            With currentWS
+                                                Select Case projDescrConfig.Typ
+                                                    Case "Text"
+                                                        projDescr = CStr(.Cells(i, projDescrConfig.column.von).value)
+                                                    Case "Integer"
+                                                        projDescr = CInt(.Cells(i, projDescrConfig.column.von).value)
+                                                    Case "Decimal"
+                                                        projDescr = CDbl(.Cells(i, projDescrConfig.column.von).value)
+                                                    Case "Date"
+                                                        projDescr = CDate(.Cells(i, projDescrConfig.column.von).value)
+                                                    Case Else
+                                                        projDescr = .Cells(i, projDescrConfig.column.von).value
+                                                End Select
+
+                                                If projDescrConfig.objType = "RegEx" Then
+                                                    regexpression = New Regex(projDescrConfig.content)
+                                                    Dim match As Match = regexpression.Match(projDescr)
+                                                    If match.Success Then
+                                                        projDescr = match.Value
+                                                    End If
+                                                End If
+                                                description = projDescr
+                                            End With
+                                        End If
+                                    Catch ex As Exception
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Couldn't find the projectdescription in line " & i.ToString & "of the inputfile"
+                                        Else
+                                            outputline = "Fehler beim Herausfinden der Projekt-Beschreibung in Zeile " & i.ToString & " des Inputfiles"
+                                        End If
+                                        meldungen.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                    End Try
+
+
+
+                                    ' Find TimeUnit
+                                    Dim timeUnit As String = ""
+                                    Dim timeUnitConfig As clsConfigProjectsImport = projectConfig("TimeUnit")
+                                    If currentWS.Index <> timeUnitConfig.sheet Then
+                                        If Not IsNothing(timeUnitConfig.sheet) Then
+                                            currentWS = CType(appInstance.Worksheets(timeUnitConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                        Else
+                                            currentWS = CType(appInstance.Worksheets(timeUnitConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
                                         End If
                                     End If
 
-                                End With
+                                    With currentWS
+                                        Select Case timeUnitConfig.Typ
+                                            Case "Text"
+                                                timeUnit = CStr(.Cells(i, timeUnitConfig.column.von).value)
+                                            Case "Integer"
+                                                timeUnit = CInt(.Cells(i, timeUnitConfig.column.von).value)
+                                            Case "Decimal"
+                                                timeUnit = CDbl(.Cells(i, timeUnitConfig.column.von).value)
+                                            Case "Date"
+                                                timeUnit = CDate(.Cells(i, timeUnitConfig.column.von).value)
+                                            Case Else
+                                                timeUnit = .Cells(i, timeUnitConfig.column.von).value
+                                        End Select
+
+                                        If timeUnitConfig.objType = "RegEx" Then
+                                            regexpression = New Regex(timeUnitConfig.content)
+                                            Dim timeUnitMatch As Match = regexpression.Match(timeUnit)
+                                            Dim xx As MatchCollection = regexpression.Matches(timeUnit)
+                                            If timeUnitMatch.Success Then
+                                                timeUnit = CStr(timeUnitMatch.Value)
+                                                ' find months
+                                                Dim months As String = ""
+                                                'Dim monthVon As Integer = 0
+                                                'Dim monthBis As Integer = 0
+                                                Dim monthsConfig As clsConfigProjectsImport = projectConfig("months")
+                                                If currentWS.Index <> monthsConfig.sheet Then
+                                                    If Not IsNothing(monthsConfig.sheet) Then
+                                                        currentWS = CType(appInstance.Worksheets(monthsConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                    Else
+                                                        currentWS = CType(appInstance.Worksheets(monthsConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                    End If
+                                                End If
+                                                With currentWS
+                                                    If Not IsNothing(monthsConfig.Typ) And
+                                                        Not IsNothing(monthsConfig.column) Then
+
+                                                        Select Case monthsConfig.Typ
+                                                            Case "Text"
+                                                                months = CStr(.Cells(i, monthsConfig.column.von).value)
+                                                            Case "Integer"
+                                                                months = CInt(.Cells(i, monthsConfig.column.von).value)
+                                                            Case "Decimal"
+                                                                months = CDbl(.Cells(i, monthsConfig.column.von).value)
+                                                            Case "Date"
+                                                                months = CDate(.Cells(i, monthsConfig.column.von).value)
+                                                            Case Else
+                                                                months = .Cells(i, monthsConfig.column.von).value
+                                                        End Select
+                                                    End If
+
+                                                    If Not IsNothing(monthsConfig.cellrange) Then
+                                                        If monthsConfig.cellrange Then
+                                                            monthVon = monthsConfig.column.von
+                                                            monthBis = monthsConfig.column.bis
+                                                        End If
+                                                    End If
+
+                                                    If Not IsNothing(monthsConfig.objType) Then
+                                                        If monthsConfig.objType = "RegEx" Then
+                                                            regexpression = New Regex(monthsConfig.content)
+                                                            Dim match As Match = regexpression.Match(months)
+                                                            If match.Success Then
+                                                                months = CInt(match.Value)
+                                                            End If
+                                                        End If
+                                                    End If
 
 
-                            End If
+                                                End With
 
-                        Next i
+                                                ' Find Role
+                                                Dim roleName As String
+                                                Dim roleNameConfig As clsConfigProjectsImport = projectConfig("Ressourcen")
+                                                If currentWS.Index <> roleNameConfig.sheet Then
+                                                    If Not IsNothing(roleNameConfig.sheet) Then
+                                                        currentWS = CType(appInstance.Worksheets(roleNameConfig.sheet), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                    Else
+                                                        currentWS = CType(appInstance.Worksheets(roleNameConfig.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                                    End If
+                                                End If
 
-                    Catch ex As Exception
+                                                With currentWS
+                                                    Select Case roleNameConfig.Typ
+                                                        Case "Text"
+                                                            roleName = CStr(.Cells(i, roleNameConfig.column.von).value)
+                                                        Case "Integer"
+                                                            roleName = CInt(.Cells(i, roleNameConfig.column.von).value)
+                                                        Case "Decimal"
+                                                            roleName = CDbl(.Cells(i, roleNameConfig.column.von).value)
+                                                        Case "Date"
+                                                            roleName = CDate(.Cells(i, roleNameConfig.column.von).value)
+                                                        Case Else
+                                                            roleName = .Cells(i, roleNameConfig.column.von).value
+                                                    End Select
 
-                    End Try
+                                                    If roleNameConfig.objType = "RegEx" Then
+                                                        regexpression = New Regex(roleNameConfig.content)
+                                                        Dim col As MatchCollection = regexpression.Matches(roleName)
+                                                        ' Loop through Matches.
+                                                        For Each m As Match In col
+                                                            ' Access first Group and its value.
+                                                            Dim g As Group = m.Groups(1)
+                                                            roleName = g.Value
+                                                        Next
+                                                    End If
+
+                                                    If RoleDefinitions.containsName(roleName) Then
+                                                        Dim hroleValues As Double()
+                                                        ' initialisieren des Array
+                                                        ReDim hroleValues(monthBis - monthVon)
+                                                        For m = monthVon To monthBis
+                                                            Select Case timeUnit
+                                                                Case "hours", "hour"
+                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) / 8
+                                                                Case "days", "day"
+                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value)
+                                                                Case "weeks", "week"
+                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * 5
+                                                                Case "months", "month"
+                                                                    hroleValues(m - monthVon) = CDbl(.Cells(i, m).value) * nrOfDaysMonth
+                                                            End Select
+
+                                                        Next
+                                                        If Not roleListNameValues.ContainsKey(roleName) Then
+                                                            ' liste aufbauen, die später dazu dient, das erstellte Projekt zu befüllen
+                                                            roleListNameValues.Add(roleName, hroleValues)
+                                                        Else
+                                                            ' evt. aufsummieren der jeweiligen werte eines Monats
+                                                        End If
+                                                    Else
+                                                        If awinSettings.englishLanguage Then
+                                                            outputline = "Role " & roleName & " isn't defined in this VC"
+                                                        Else
+                                                            outputline = "Rolle " & roleName & " existiert in diesem VC nicht"
+                                                        End If
+
+                                                        'meldungen.Add(outputline)
+                                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+                                                    End If
+                                                End With
+
+                                            End If
+                                        End If
+
+                                    End With
+                                Next i
+
+                            Catch ex As Exception
+                                If awinSettings.englishLanguage Then
+                                    outputline = "The actual file isn't conform with the Configuration!"
+                                Else
+                                    outputline = "die ausgewählte Datei entspricht nicht der Konfiguration!"
+                                End If
+
+                                meldungen.Add(outputline)
+                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                            End Try
+
+                        End If
+
+                    End If
+
 
                     projectWB.Close(SaveChanges:=False)
 
                 Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        outputline = "There is something wrong with the inputfile!"
+                    Else
+                        outputline = "Fehler im Inputfile!"
+                    End If
 
+                    meldungen.Add(outputline)
+                    Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
                 End Try
-
+            Else
+                If awinSettings.englishLanguage Then
+                    outputline = "The file you selected doesn't exist!"
+                Else
+                    outputline = "Die ausgewählte Datei existiert nicht!"
+                End If
+                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
             End If
 
         Catch ex As Exception
 
         End Try
 
-        result = (anz_Proj = ImportProjekte.Count)
+        result = (anz_Proj = ImportProjekte.Count) And (anz_Proj > 0)
 
         readProjectsWithConfig = result
     End Function

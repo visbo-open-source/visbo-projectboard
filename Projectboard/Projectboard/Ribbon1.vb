@@ -7161,10 +7161,10 @@ Imports System.Web
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
+                Call logfileOpen()
+
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
                 Dim i As Integer
-
-
 
                 For i = 1 To listofVorlagen.Count
                     dateiName = listofVorlagen.Item(i).ToString
@@ -7178,8 +7178,7 @@ Imports System.Web
 
                 Next
 
-                Call logfileOpen()
-                Call logfileSchreiben(outPutCollection)
+                'Call logfileSchreiben(outPutCollection)
                 Call logfileSchliessen()
 
 
