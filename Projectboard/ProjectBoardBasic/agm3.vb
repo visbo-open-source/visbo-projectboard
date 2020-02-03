@@ -1391,13 +1391,21 @@ Public Module agm3
     ''' <param name="oPCollection"></param>
     ''' <returns></returns>
     Public Function readActualDataWithConfig(ByVal ActualDataConfig As SortedList(Of String, clsConfigActualDataImport),
-                                                ByVal tmpDatei As String,
-                                                ByRef oPCollection As Collection) As Boolean
+                                             ByVal tmpDatei As String,
+                                             ByVal IstDatenDate As Date,
+                                             ByRef cacheProjekte As clsProjekteAlle,
+                                             ByRef validProjectNames As SortedList(Of String, SortedList(Of String, Double())),
+                                             ByRef projectRoleNames(,) As String,
+                                             ByRef projectRoleValues(,,) As Double,
+                                             ByRef updatedProjects As Integer,
+                                             ByRef oPCollection As Collection) As Boolean
+
         Dim err As New clsErrorCodeMsg
         Dim outputline As String = ""
+        Dim ok As Boolean = False
         Dim result As Boolean = False
         Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook
-        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim regexpression As Regex
         Dim firstUrlTabelle As Integer
         Dim firstUrlspalte As Integer
@@ -1409,29 +1417,14 @@ Public Module agm3
         Dim anz_Proj As Integer = 0
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim t As Integer = 0  ' tabellenIndex
-        Dim IstMonat As Integer
-        Dim cacheProjekte As New clsProjekteAlle
-        '
-        Dim editActualDataMonth As New frmInfoActualDataMonth
-
-        If editActualDataMonth.ShowDialog = DialogResult.OK Then
-            Dim IstdatenDate As Date = CDate(editActualDataMonth.MonatJahr.Text)
-            IstMonat = Month(IstdatenDate)
-
-            'Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
-            'Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+        Dim hrole As clsRollenDefinition = Nothing
+        Dim curmonth As Integer
+        Dim lastValidMonth As Integer = getColumnOfDate(IstDatenDate)
 
 
-            'Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, oPCollection)
-
-        End If
-
-        ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
-        Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
-
-        ' hilfsliste 
-        Dim hRoleIst As New SortedList(Of String, Double())
-
+        ' ======================
+        ' vorarbeit der Definitionen geleistet
+        ' ======================
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
@@ -1443,171 +1436,289 @@ Public Module agm3
                     firstUrlspalte = vstart.column.von
                     firstUrlzeile = vstart.row.von
 
-                    ' über alle Tabellenblätter gehen
+                    ' Schleife über alle Tabellenblätter eines ausgewählten Excel-Files (hier = einer Rolle)
                     For t = 0 To vstart.sheet.bis
 
                         If Not IsNothing(vstart.sheet.von + t) Then
                             currentWS = CType(appInstance.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                            Dim ok As Boolean = (currentWS.Name = vstart.sheetDescript)
+                            If Not IsNothing(vstart.sheetDescript) Then
+                                ok = (vstart.sheetDescript.Contains(currentWS.Name))
+                            Else
+                                ok = True
+                            End If
+                        End If
 
+                        If Not ok Then
+                            If awinSettings.englishLanguage Then
+                                outputline = "the sheet " & currentWS.Name & " doesn't match with the configuration"
+                            Else
+                                outputline = "das Tabellenblatt " & currentWS.Name & " passt nicht zur Konfiguration"
+                            End If
+                            oPCollection.Add(outputline)
+                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            Exit For ' keine weiteren Tabellenblätter mehr lesen - Fehler aufgetreten
+                        End If
+
+                        If IsNothing(currentWS) Then
+                            If awinSettings.englishLanguage Then
+                                outputline = "the sheet " & vstart.sheetDescript & " doesn't exists in this workbook"
+                            Else
+                                outputline = "das Tabellenblatt " & vstart.sheetDescript & " ist nicht vorhanden"
+                            End If
+                            oPCollection.Add(outputline)
+                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
                         Else
-                            currentWS = CType(appInstance.Worksheets(vstart.sheetDescript), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        End If
+                            ' passendes Worksheet gefunden
 
-                        ' Find Wertespalte auf jedem Tabellenblatt evt. anders
-                        Dim hspalte As String = ActualDataConfig("Total").columnDescript
-                        Dim überschriftenzeile As Integer = ActualDataConfig("Überschriften").row.von
-                        searcharea = currentWS.Rows(überschriftenzeile)          ' Zeile über... enthält die verschieden Spaltendescript
-                        Dim stdSpalteTotal As Integer = searcharea.Find(hspalte).Column
-
-                        ' find PersoNr
-                        Dim vPersoNr As clsConfigActualDataImport = ActualDataConfig("PersonalNumber")
-                        Dim personalNumber As String = currentWS.Cells(vPersoNr.row.von, vPersoNr.column.von).value
-                        ' find PersonalName
-                        Dim vPersoName As clsConfigActualDataImport = ActualDataConfig("PersonalName")
-                        Dim personalName As String = currentWS.Cells(vPersoName.row.von, vPersoName.column.von).value
-                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledefByEmployeeNr(personalNumber)
-
-                        ' Find Month
-                        Dim monat As String = currentWS.Cells(ActualDataConfig("months").row.von, ActualDataConfig("months").column.von).value
-                        Dim vglMonat As String = currentWS.Name
-                        Dim validm As Boolean = (vglMonat.Contains(monat) Or monat.Contains(vglMonat))
-                        ' find Year
-                        Dim jahr As String = currentWS.Cells(ActualDataConfig("years").row.von, ActualDataConfig("years").column.von).value
-                        Dim vglJahr As String = currentWS.Name
-                        Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
-                        Dim xxx As Date = "01." & monat & " " & jahr
-                        Dim mzahl As Integer = Month(xxx)
-                        Dim i1 As Integer = (IstMonat) + 3 Mod 12
-                        Dim i2 As Integer = (mzahl + 3) Mod 12
-                        If (IstMonat + 3) Mod 12 < (mzahl + 3) Mod 12 Then
-                            ' es sollen nur die Istdaten bis Monat IstMonat eingelesen werden. +3, damit die größer-kleiner Beziehung passt
-                            Exit For
-                        End If
-
-                        lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-                        lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
-
-                        ' alle Zeilen eines Tabellenblattes lesen
-                        For z = firstUrlzeile To lastZeile
-                            ' find ProjectNumber and the relevant Project
-                            Dim projektKDNr As String = ""
-                            projektKDNr = CStr(currentWS.Cells(z, ActualDataConfig("ProjectNumber").column.von).value)
-                            Dim projektName As String = ""
-                            projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
-                            Dim stundenTotal As Integer = CInt(currentWS.Cells(z, stdSpalteTotal).value)
-
-                            Dim pvkey As String = calcProjektKey(projektName, "")
-                            If cacheProjekte.containsPNr(projektKDNr) Or cacheProjekte.Containskey(pvkey) Then
-                                hproj = cacheProjekte.getProject(pvkey)
-                            Else
-                                hproj = Nothing
-                            End If
-
-                            If IsNothing(hproj) Then
-                                Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
-                                If pNames.Count = 1 Then
-                                    pName = pNames(1)
-                                    Dim pname_ok As Boolean = pName = projektName
-                                    hproj = New clsProjekt
-                                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
-                                    cacheProjekte.Add(hproj)
+                            ' Find Wertespalte - auf jedem Tabellenblatt evt. anders
+                            Dim hspalte As String = ActualDataConfig("Total").columnDescript
+                            Dim stdSpalteTotal As Integer = 0
+                            Try
+                                Dim überschriftenzeile As Integer = ActualDataConfig("Überschriften").row.von
+                                searcharea = currentWS.Rows(überschriftenzeile)          ' Zeile über... enthält die verschieden Spaltendescript
+                                stdSpalteTotal = searcharea.Find(hspalte).Column
+                            Catch ex As Exception
+                                If awinSettings.englishLanguage Then
+                                    outputline = "in the sheet " & vstart.sheetDescript & " the value-column " & hspalte & " not found"
+                                Else
+                                    outputline = "im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
                                 End If
-                            End If
-
-                            Dim projBeginn = getColumnOfDate(hproj.startDate)
-                            Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
-
-                            ' Aufbauen des Eintrags
-                            Dim roleValues As New SortedList(Of String, Double())
-                            Dim tmpValues() As Double
-
-                            ReDim tmpValues(IstMonat - 1)
-                            Dim teamID As Integer = -1
-
-                            If Not IsNothing(hrole) Then
-                                Dim tagessatz As Double = hrole.tagessatzIntern
-                                If tagessatz <= 0 Then
-                                    tagessatz = 800.0
-                                End If
-
-                                ''If Not validProjectNames.ContainsKey(pName) Then
-
-                                ''    roleValues = New SortedList(Of String, Double())
-                                ''    ' wird doch überhaupt nicht gebraucht
-                                ''    'ReDim tmpValues(monat - 1)
-
-                                ''    ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                ''    tmpValues(curMonat - 1) = stundenTotal
-
-                                ''    roleValues.Add(roleNameID, tmpValues)
-                                ''    validProjectNames.Add(pName, roleValues)
-
-                                ''Else
-                                ''    roleValues = validProjectNames.Item(pName)
-                                ''    If roleValues.ContainsKey(roleNameID) Then
-                                ''        ' rolle ist bereits enthalten 
-                                ''        ' also summieren 
-                                ''        tmpValues = roleValues.Item(roleNameID)
-                                ''        If readAll Then
-                                ''            ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                ''            If curMonat <= monat Then
-                                ''                tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
-                                ''            Else
-                                ''                tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
-                                ''            End If
-                                ''        Else
-                                ''            tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
-                                ''        End If
-
-                                ''    Else
-                                ''        ' Rolle ist noch nicht enthalten 
-                                ''        'ReDim tmpValues(monat - 1)
-
-                                ''        If readAll Then
-                                ''            ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                ''            If curMonat <= monat Then
-                                ''                tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                ''            Else
-                                ''                tmpValues(curMonat - 1) = curZuwPTValue
-                                ''            End If
-                                ''        Else
-                                ''            ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                ''            tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                ''        End If
-
-                                ''        roleValues.Add(roleNameID, tmpValues)
-                                ''    End If
-
-                                ''End If
-
-                                'Dim pvkey As String = calcProjektKey(pName, "")
-                                'oldProj = cacheProjekte.getProject(pvkey)
-
-                                'If Not IsNothing(oldProj) Then
-
-                                '    ' Aufbauen des Eintrags
-                                '    Dim roleValues As New SortedList(Of String, Double())
-                                '    Dim tmpValues() As Double
-
-                                '    'ReDim tmpValues(monat - 1)
-                                '    ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
-                                '    ReDim tmpValues(lastValidMonth - 1)
-                                '    Dim teamID As Integer = -1
-                                '    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
-
-
-                            Else
-                                'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
-                                outputline = "Es gibt mehrere Projekte mit der gleichen Projekt-Nummer. Istdaten sind nicht zuordenbar"
                                 oPCollection.Add(outputline)
-                                result = False
+                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            End Try
+
+
+                            ' find PersoNr
+                            Dim vPersoNr As clsConfigActualDataImport = ActualDataConfig("PersonalNumber")
+                            Try
+                                Dim personalNumber As String = currentWS.Cells(vPersoNr.row.von, vPersoNr.column.von).value
+                                ' find PersonalName
+                                Dim vPersoName As clsConfigActualDataImport = ActualDataConfig("PersonalName")
+                                Dim personalName As String = currentWS.Cells(vPersoName.row.von, vPersoName.column.von).value
+                                hrole = RoleDefinitions.getRoledefByEmployeeNr(personalNumber)
+
+                            Catch ex As Exception
+                                If awinSettings.englishLanguage Then
+                                    outputline = "in the sheet " & vstart.sheetDescript & "- there is something wrong with 'personal-No' or 'personal name'"
+                                Else
+                                    outputline = "im Tabellenblatt " & vstart.sheetDescript & "- es gibt ein Fehler beim lesen der Personalnummer oder des Namens"
+                                End If
+                                oPCollection.Add(outputline)
+                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            End Try
+
+                            Try
+                                ' Find Month
+                                Dim monat As String = currentWS.Cells(ActualDataConfig("months").row.von, ActualDataConfig("months").column.von).value
+                                Dim vglMonat As String = currentWS.Name
+                                Dim validm As Boolean = (vglMonat.Contains(monat) Or monat.Contains(vglMonat))
+                                ' find Year
+                                Dim jahr As String = currentWS.Cells(ActualDataConfig("years").row.von, ActualDataConfig("years").column.von).value
+                                Dim vglJahr As String = currentWS.Name
+                                Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
+                                Dim xxx As Date = "01." & monat & " " & jahr
+                                curmonth = getColumnOfDate(xxx)
+
+                            Catch ex As Exception
+
+                            End Try
+
+                            lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, firstUrlspalte), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            If Not IsNothing(ActualDataConfig("valueEnd").rowDescript) Then
+                                Dim hzeile As String = ActualDataConfig("valueEnd").rowDescript
+                                Dim valueEndspalte As Integer = ActualDataConfig("valueEnd").column.von
+                                searcharea = currentWS.Columns(valueEndspalte)          ' Zeile über... enthält die verschieden Spaltendescript
+                                lastZeile = searcharea.Find(hzeile).Column
                             End If
-                        Next z
-                    Next
+
+
+                            ' alle Zeilen eines Tabellenblattes lesen
+                            For z = firstUrlzeile To lastZeile
+
+                                    ' find ProjectNumber and the relevant Project
+                                    Dim projektKDNr As String = ""
+                                    Dim projKDNrConfig As clsConfigActualDataImport = ActualDataConfig("ProjectNumber")
+                                    projektKDNr = CStr(currentWS.Cells(z, projKDNrConfig.column.von).value)
+
+                                    If Not IsNothing(projektKDNr) Then
+
+                                        If projKDNrConfig.objType = "RegEx" Then
+                                            If Not IsNothing(projKDNrConfig.content) Then
+                                                regexpression = New Regex(projKDNrConfig.content)
+                                                Dim match As Match = regexpression.Match(projektKDNr)
+                                                If match.Success Then
+                                                    projektKDNr = match.Value
+                                                Else
+                                                    projektKDNr = Nothing
+                                                End If
+                                            End If
+                                        End If
+
+                                        Dim projektName As String = ""
+                                        projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
+                                        Dim stundenTotal As Integer = CInt(currentWS.Cells(z, stdSpalteTotal).value)
+
+                                        Dim pvkey As String
+                                        If Not IsNothing(projektName) Then
+                                            pvkey = calcProjektKey(projektName, "")
+                                        Else
+                                            pvkey = ""
+                                        End If
+
+                                        If cacheProjekte.containsPNr(projektKDNr) Then
+                                            hproj = cacheProjekte.getProjectByKDNr(projektKDNr)
+                                        Else
+                                            hproj = Nothing         ' Vorbesetzung
+
+                                            Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
+                                            If pNames.Count = 1 Then
+                                                pName = pNames(1)
+
+                                                Dim pname_ok As Boolean = pName = projektName
+                                                ' Meldung noch ins Logbuch, wenn die Namen nicht übereinstimmen
+                                                If Not pname_ok Then
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "projectname of projectNr. " & projektKDNr & "in the sheet is " & projektName & " in the DB it is " & pName
+                                                    Else
+                                                        outputline = "Projektname des Projektes Nr. " & projektKDNr & " in der ExcelTabelle ist " & projektName & " in der DB heißt das Projekt " & pName
+                                                    End If
+
+                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                End If
+
+                                                hproj = New clsProjekt
+                                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", "", Date.Now, err)
+
+                                            ElseIf pNames.Count < 1 Then
+                                                ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
+                                                outputline = "There exists more than one project zu project No. '" & projektKDNr & "'"
+                                                oPCollection.Add(outputline)
+                                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                result = False
+
+                                            Else
+                                                ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
+                                                outputline = "There exists no project zu project No. '" & projektKDNr & "'"
+                                                oPCollection.Add(outputline)
+                                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                result = False
+                                            End If
+                                        End If
+
+                                        If IsNothing(hproj) Then
+                                            'Fehler, Projekt mit einer ProjektNr. existiert in DB nicht, Keine Istdaten hierzu einlesbar
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "project Nr. " & projektKDNr & " doesn't exist in the DB. No actual data can be stored"
+                                            Else
+                                                outputline = "Projekt mit der  Projekt-Nummer " & projektKDNr & "existiert in der DB nicht. Istdaten sind nicht zuordenbar"
+                                            End If
+                                            oPCollection.Add(outputline)
+                                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                            result = False
+
+                                        Else
+                                            cacheProjekte.Add(hproj)
+
+                                            Dim projBeginn = getColumnOfDate(hproj.startDate)
+                                            Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
+
+                                            ' Aufbauen des Eintrags
+                                            Dim roleValues As New SortedList(Of String, Double())
+                                            Dim tmpValues() As Double
+
+                                            ReDim tmpValues(lastValidMonth - projBeginn)
+                                            Dim teamID As Integer = -1
+
+                                            If Not IsNothing(hrole) Then
+                                                'Dim tagessatz As Double = hrole.tagessatzIntern
+                                                'If tagessatz <= 0 Then
+                                                '    tagessatz = 800.0
+                                                'End If
+
+                                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(hrole.name, "")
+
+                                                If Not validProjectNames.ContainsKey(pName) Then
+
+                                                    roleValues = New SortedList(Of String, Double())
+                                                    ' wird doch überhaupt nicht gebraucht
+
+                                                    ' es handelt sich um Stunden, also in PT umrechnen 
+                                                    tmpValues(curmonth - projBeginn) = stundenTotal / 8
+
+
+
+                                                    roleValues.Add(roleNameID, tmpValues)
+                                                    validProjectNames.Add(pName, roleValues)
+
+                                                Else
+                                                    roleValues = validProjectNames.Item(pName)
+                                                    If roleValues.ContainsKey(roleNameID) Then
+                                                        ' rolle ist bereits enthalten 
+                                                        ' also summieren 
+                                                        tmpValues = roleValues.Item(roleNameID)
+
+                                                        tmpValues(curmonth - projBeginn) = tmpValues(curmonth - projBeginn) + stundenTotal / 8
+
+
+                                                    Else
+                                                        ' Rolle ist noch nicht enthalten 
+
+                                                        ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
+                                                        tmpValues(curmonth - projBeginn) = stundenTotal / 8
+
+
+                                                        roleValues.Add(roleNameID, tmpValues)
+                                                    End If
+
+                                                End If
+
+                                                'Dim pvkey As String = calcProjektKey(pName, "")
+                                                'oldProj = cacheProjekte.getProject(pvkey)
+
+                                                'If Not IsNothing(oldProj) Then
+
+                                                '    ' Aufbauen des Eintrags
+                                                '    Dim roleValues As New SortedList(Of String, Double())
+                                                '    Dim tmpValues() As Double
+
+                                                '    'ReDim tmpValues(monat - 1)
+                                                '    ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
+                                                '    ReDim tmpValues(lastValidMonth - 1)
+                                                '    Dim teamID As Integer = -1
+                                                '    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
+
+
+                                            Else
+                                                'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
+                                                outputline = "Es gibt mehrere Projekte mit der gleichen Projekt-Nummer. Istdaten sind nicht zuordenbar"
+                                                oPCollection.Add(outputline)
+                                                result = False
+                                            End If
+                                        End If
+                                    Else
+                                        'Fehler, es ist keine ProjektKDNr angegeben, Keine Istdaten hierzu einlesbar
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "there exists no project Nr. No actual data can be stored"
+                                        Else
+                                            outputline = "es ist keine Projekt-Nummer angegeben. Istdaten sind nicht zuordenbar"
+                                        End If
+                                        'oPCollection.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+
+                                    End If      ' if ProjektKDNr = ""
+
+                                Next z          'nächste Zeile lesen
+
+                            End If
+
+
+                    Next t    ' nächste Tabelle des Excel-Inputfiles
 
                 Catch ex As Exception
                     actDataWB = Nothing
+                    Call MsgBox("1 " & ex.Message)
                 End Try
 
                 If Not IsNothing(actDataWB) Then
@@ -1617,12 +1728,8 @@ Public Module agm3
 
             End If
         Catch ex As Exception
-
+            Call MsgBox("2 " & ex.Message)
         End Try
-
-
-
-
 
 
         readActualDataWithConfig = result
@@ -2619,6 +2726,9 @@ Public Module agm3
         Dim monthVon As Integer = 0
         Dim monthBis As Integer = 0
 
+        Dim noGo As Integer = 0   'Sobald diese Variable > 0 ist, wird das Projekt nicht importiert
+
+
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
 
@@ -2696,49 +2806,70 @@ Public Module agm3
 
                                         End With
 
+
+
                                         If projNumber_new <> projNumber And i > firstUrlzeile Then
-                                            Dim anzRoles As Integer = roleListNameValues.Count
-                                            ReDim roleNames(anzRoles - 1)
-                                            ReDim roleValues(monthBis - monthVon)
-                                            Dim k As Integer = 0
-                                            For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
-                                                roleNames(k) = kvp.Key
-                                                k = k + 1
-                                            Next
+                                            If noGo > 0 Then
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "Error : Project '" & pName & "' starting at: " & startDate.ToString & " finishing at: " & endDate.ToString & "  N O T  imported !"
+                                                Else
+                                                    outputline = "Fehler : Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & "  N I C H T  erzeugt !"
+                                                End If
+                                                meldungen.Add(outputline)
+                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
 
-                                            ReDim phNames(1)
-                                            ReDim przPhasenAnteile(1)
+                                                ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
+                                                roleListNameValues = New SortedList(Of String, Double())
 
-                                            'erstelleProjektausParametern()
-                                            anz_Proj = anz_Proj + 1
-                                            hproj = New clsProjekt
-                                            hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
-                                                             startDate, endDate,
-                                                             budget, sfit, risk,
-                                                             projNumber, description,
-                                                             listOfCustomFields, businessUnit, responsible,
-                                                             status, zeile,
-                                                             roleNames, roleValues,
-                                                             costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget, createCostsRolesAnyhow)
+                                                ' zurücksetzen der Variable, die anzeigt, dass das aktuelle Projekt echte Fehler hatte beim Einlesen
+                                                noGo = 0
+                                            Else
 
-                                            For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                                                Dim anzRoles As Integer = roleListNameValues.Count
+                                                ReDim roleNames(anzRoles - 1)
+                                                ReDim roleValues(monthBis - monthVon)
+                                                Dim k As Integer = 0
+                                                For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
+                                                    roleNames(k) = kvp.Key
+                                                    k = k + 1
+                                                Next
 
-                                                Dim tmpRCnameID As String = RoleDefinitions.bestimmeRoleNameID(kvp.Key, "")
-                                                hproj.AllPhases(0).getRoleByRoleNameID(tmpRCnameID).Xwerte = kvp.Value
+                                                ReDim phNames(1)
+                                                ReDim przPhasenAnteile(1)
 
-                                                Dim hilfe As Boolean = True
-                                            Next
+                                                'erstelleProjektausParametern()
+                                                anz_Proj = anz_Proj + 1
+                                                hproj = New clsProjekt
+                                                hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
+                                                                 startDate, endDate,
+                                                                 budget, sfit, risk,
+                                                                 projNumber, description,
+                                                                 listOfCustomFields, businessUnit, responsible,
+                                                                 status, zeile,
+                                                                 roleNames, roleValues,
+                                                                 costNames, costValues, phNames, przPhasenAnteile, combinedName, createBudget, createCostsRolesAnyhow)
 
-                                            ImportProjekte.Add(hproj)
+                                                For Each kvp As KeyValuePair(Of String, Double()) In roleListNameValues
 
-                                            outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
-                                            meldungen.Add(outputline)
-                                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                    Dim tmpRCnameID As String = RoleDefinitions.bestimmeRoleNameID(kvp.Key, "")
+                                                    hproj.AllPhases(0).getRoleByRoleNameID(tmpRCnameID).Xwerte = kvp.Value
 
-                                            ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
-                                            roleListNameValues = New SortedList(Of String, Double())
+                                                    Dim hilfe As Boolean = True
+                                                Next
+
+                                                ImportProjekte.Add(hproj)
+
+                                                outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
+                                                meldungen.Add(outputline)
+                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+                                                ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
+                                                roleListNameValues = New SortedList(Of String, Double())
+
+                                            End If
 
                                         End If
+
 
                                         If i > lastZeile And IsNothing(projNumber_new) Then
                                             ' am Ende der zu lesenden Zeilen angekommen, die Felder sind nun leer
@@ -2756,6 +2887,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
                                     'Find BusinesssUnit
@@ -2802,6 +2934,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
 
@@ -2853,6 +2986,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
 
@@ -2903,6 +3037,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
                                     'Find ProjectStart
@@ -2955,6 +3090,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
                                     'Find ProjectEnde
@@ -3005,6 +3141,7 @@ Public Module agm3
                                         End If
                                         meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        noGo = noGo + 1
                                     End Try
 
                                     ' find ProjectDescription
@@ -3166,14 +3303,27 @@ Public Module agm3
                                                     End Select
 
                                                     If roleNameConfig.objType = "RegEx" Then
-                                                        regexpression = New Regex(roleNameConfig.content)
-                                                        Dim col As MatchCollection = regexpression.Matches(roleName)
-                                                        ' Loop through Matches.
-                                                        For Each m As Match In col
-                                                            ' Access first Group and its value.
-                                                            Dim g As Group = m.Groups(1)
-                                                            roleName = g.Value
-                                                        Next
+                                                        If IsNothing(roleNameConfig.content) Then
+                                                            'Fehlermeldung einbauen
+                                                            If awinSettings.englishLanguage Then
+                                                                outputline = "There is no regular expression defined in the config for getting the rolename"
+                                                            Else
+                                                                outputline = "Es wurde keine Regular Expression für die Ressource definiert"
+                                                            End If
+                                                            meldungen.Add(outputline)
+                                                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                            noGo = noGo + 1
+                                                        Else
+                                                            regexpression = New Regex(roleNameConfig.content)
+                                                            Dim col As MatchCollection = regexpression.Matches(roleName)
+                                                            ' Loop through Matches.
+                                                            For Each m As Match In col
+                                                                ' Access first Group and its value.
+                                                                Dim g As Group = m.Groups(1)
+                                                                roleName = g.Value
+                                                            Next
+                                                        End If
+
                                                     End If
 
                                                     If RoleDefinitions.containsName(roleName) Then
@@ -3227,6 +3377,7 @@ Public Module agm3
 
                                 meldungen.Add(outputline)
                                 Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                noGo = noGo + 1
                             End Try
 
                         End If

@@ -6327,7 +6327,7 @@ Imports System.Web
         Call logfileOpen()
 
         ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
-        Dim configActualDataImport As String = awinPath & requirementsOrdner & "configActualDataImport.xlsx"
+        Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
         Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
@@ -6338,12 +6338,84 @@ Imports System.Web
             anzFiles = listOfImportfilesAllg.Count
 
             If listOfImportfilesAllg.Count >= 1 Then
+                ' Vorbereitungen für die Aufnahme der verschiedenen Excel-File Daten in die unterschiedlichen Projekte
+                Dim editActualDataMonth As New frmInfoActualDataMonth
+                Dim lastValidMonth As Integer = 0  ' angegeben in dem Dialog
+                Dim IstdatenDate As Date
+                Dim curMonth As Integer = 0
+                Dim hrole As New clsRollenDefinition
+                Dim cacheProjekte As New clsProjekteAlle
+
+                If editActualDataMonth.ShowDialog = DialogResult.OK Then
+                    IstdatenDate = CDate(editActualDataMonth.MonatJahr.Text)
+                    lastValidMonth = Month(IstdatenDate)
+
+
+                    'Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                    'Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+
+
+                    'Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, oPCollection)
+
+                End If
+
+
+                ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+                Dim istDatenReferatsliste() As Integer
+                Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+                ReDim istDatenReferatsliste(anzTopNodes - 1)
+                Dim i As Integer = 0
+                For i = 0 To anzTopNodes - 1
+                    istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+                Next
+
+                ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+                Dim referatsCollection As New Collection
+                For Each itemID As Integer In istDatenReferatsliste
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+                    If Not IsNothing(tmpRole) Then
+                        If Not referatsCollection.Contains(tmpRole.name) Then
+                            referatsCollection.Add(tmpRole.name, tmpRole.name)
+                        End If
+                    End If
+                Next
+
+                ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
+                Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+
+
+                ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
+                Dim projectRoleNames(,) As String = Nothing
+
+                ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
+                Dim projectRoleValues(,,) As Double = Nothing
+
+                Dim updatedProjects As Integer = 0
+
+                Dim logF_Fehler As Integer = 0
+                ' nimmt die Texte für die LogFile Zeile auf
+                ' Array kann beliebig lang werden 
+                Dim logArray() As String
+                Dim logDblArray() As Double
+
+
+                ' hilfsliste 
+                Dim hRoleIst As New SortedList(Of String, Double())
+
+
 
                 For Each tmpDatei As String In listOfImportfilesAllg
 
                     Call logfileSchreiben("Einlesen der ActualData " & tmpDatei, "", anzFehler)
 
-                    result = readActualDataWithConfig(actualDataConfig, tmpDatei, outPutCollection)
+
+                    result = readActualDataWithConfig(actualDataConfig, tmpDatei,
+                                                      IstdatenDate,
+                                                      cacheProjekte,
+                                                      validProjectNames, projectRoleNames,
+                                                      projectRoleValues,
+                                                      updatedProjects,
+                                                      outPutCollection)
 
                     ' hier weitermachen
 
@@ -6527,7 +6599,7 @@ Imports System.Web
                 Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
 
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-                Dim configCapaImport As String = awinPath & requirementsOrdner & "configCapaImport.xlsx"
+                Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
 
                 changedOrga.allRoles = RoleDefinitions
@@ -7151,7 +7223,7 @@ Imports System.Web
         ' Konfigurationsdatei lesen und Validierung durchführen
 
         ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-        Dim configProjectsImport As String = awinPath & requirementsOrdner & "configProjectImport.xlsx"
+        Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
 
         ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
         Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)

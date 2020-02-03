@@ -12626,11 +12626,9 @@ Public Module agm2
                         End If
 
 
-
-
                         With newProj
                             .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
-                            .variantName = ""
+                            .variantName = ""   ' eliminieren von VariantenName acd
                             .variantDescription = ""
                         End With
 
