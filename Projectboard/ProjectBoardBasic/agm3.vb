@@ -2298,6 +2298,19 @@ Public Module agm3
 
 
                                         rolename = CType(currentWS.Cells(iZ, kapaConfig("role").column), Global.Microsoft.Office.Interop.Excel.Range).Text
+
+                                        ' tk 31.1.2020 Test - der CheckWert steht auf Spalte "AS"
+                                        ' dazu muss manuell der Check-Wert bestimmt und in der Excel Datei eingetragen werden ..  
+                                        Dim checkWert As Double = -1
+                                        Try
+                                            If Not IsNothing(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                checkWert = CDbl(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                            End If
+                                        Catch ex As Exception
+
+                                        End Try
+                                        ' Ende tk 31.1.2020 Auslesen Checkwert für Kapa-Bestimmung 
+
                                         If rolename <> "" Then
                                             hrole = RoleDefinitions.getRoledef(rolename)
                                             If Not IsNothing(hrole) Then
@@ -2391,6 +2404,15 @@ Public Module agm3
                                                     Next
 
                                                     anzArbTage = anzArbStd / 8
+
+                                                    ' tk 31.1.20 Check den Wert
+                                                    If checkWert <> -1 Then
+                                                        If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
+                                                            Call MsgBox("Abweichung in Kapa-Bestimmung")
+                                                        End If
+                                                    End If
+                                                    ' Ende tk Check den Wert 
+
                                                     'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                     If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
                                                         hrole.kapazitaet(colOfDate) = anzArbTage

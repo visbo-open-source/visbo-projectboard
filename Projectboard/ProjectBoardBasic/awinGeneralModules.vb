@@ -1093,8 +1093,6 @@ Public Module awinGeneralModules
         Dim fullName As String, vglName As String
         'Dim pname As String
 
-
-
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
@@ -1145,8 +1143,14 @@ Public Module awinGeneralModules
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
             ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
             ' wenn nein, wird es im Show-Modus ergänzt 
+            Dim searchPName As String = hproj.name
+            Dim searchVName As String = hproj.variantName
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' das hier muss gemacht werden, weil man ja wissen will, inwieweit sich das Projekt im Vergleich zur Baseline / pfv verändert werden 
+                searchVName = getDefaultVariantNameAccordingUserRole()
+            End If
 
-            vglName = calcProjektKey(hproj)
+            vglName = calcProjektKey(searchPName, searchVName)
             Try
                 cproj = AlleProjekte.getProject(vglName)
 
@@ -1154,7 +1158,7 @@ Public Module awinGeneralModules
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        cproj = awinReadProjectFromDatabase(searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
@@ -1243,6 +1247,10 @@ Public Module awinGeneralModules
                         Call MsgBox(ex.Message)
                     End Try
 
+                    ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
+                        cproj.variantName = hproj.variantName
+                    End If
 
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
                         ' das heisst, das Projekt hat sich verändert 
