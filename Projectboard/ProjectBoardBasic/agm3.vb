@@ -2203,11 +2203,14 @@ Public Module agm3
         Dim whiteColor As Integer = 2
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
-        Dim tmpDate As Date
+        Dim dateConsidered As Date
 
         'Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
         Dim monthName As String = ""
-        Dim monthNumber As Integer = 0
+
+        ' tk wird nicht verwendet ... 
+        'Dim monthNumber As Integer = 0
+
         Dim Jahr As Integer = 0
         Dim anzMonthDays As Integer = 0
         Dim colDate As Integer = 0
@@ -2289,77 +2292,117 @@ Public Module agm3
                             firstUrlzeile = kapaConfig("valueStart").row
                         End With
 
-                        Dim beginningDay As Integer = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte).value)
+                        ' tk 3.2.20 
+                        Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, dateConsidered)
+                        Dim beginningDay As Integer = -1
+                        Dim endingDay As Integer = -1
+                        Try
+                            ' das kann schiefgehen, wenn keine Zahl im Feld steht ... 
+                            beginningDay = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte).value)
+                        Catch ex As Exception
+                            beginningDay = -1
+                        End Try
+
                         If beginningDay <> 1 Then
                             If awinSettings.englishLanguage Then
-                                msgtxt = "there is something wrong in the inputsheet - or with your configuration"
+                                msgtxt = "Error in date definition row in Capa file: File, Row, Column: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte & " does not start with 1"
                             Else
-                                msgtxt = "Beginn der Daten stimmt nicht mit Konfiguration überein"
+                                msgtxt = "Fehler in Datums-Zeile in Kapazitäts-Datei: Datei, Zeile, Spalte: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte & "startet nicht bei 1"
 
                             End If
                             oPCollection.Add(msgtxt)
                             Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
 
+                        ElseIf Not isdate Then
+
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "Error in Month of capacity definition: no valid month, year in Capa file: " & kapaFileName
+                            Else
+                                msgtxt = "Fehler in Angabe des auszulesenden Monats in Kapazitäts-Datei: " & kapaFileName
+
+                            End If
+                            oPCollection.Add(msgtxt)
+                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                         Else
                             If Jahr <> 0 And monthName <> "" Then
 
-                                ok = True
 
                                 monthDays.Clear()
 
-                                anzDays = 0
+                                anzMonthDays = DateTime.DaysInMonth(Jahr, Month(dateConsidered))
+                                If Not monthDays.ContainsKey(colDate) Then
+                                    monthDays.Add(colDate, anzMonthDays)
+                                End If
 
-                                lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
-                                lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                                ' tk prüfen, ob der letzte Tag auch der richtige ist ... 
+                                Try
+                                    ' das kann schiefgehen, wenn keine Zahl im Feld steht ... 
+                                    endingDay = CInt(currentWS.Cells(firstUrlzeile - 1, firstUrlspalte + anzMonthDays - 1).value)
+                                Catch ex As Exception
+                                    endingDay = -1
+                                End Try
 
-                                ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
-                                Dim found As Boolean = False
-                                Dim i As Integer = lastZeile + 1
-                                While Not found
-                                    i = i - 1
-                                    If kapaConfig("LastLine").regex = "RegEx" Then
-                                        regexpression = New Regex(kapaConfig("LastLine").content)
-                                        Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
-                                        If Not IsNothing(lastLineContent) Then
-                                            Dim match As Match = regexpression.Match(lastLineContent)
-                                            If match.Success Then
-                                                lastLineContent = match.Value
-                                                found = True
+                                If endingDay <> anzMonthDays Then
+                                    ok = False
+
+                                    If awinSettings.englishLanguage Then
+                                        msgtxt = "Error in date definition row in Capa file: File, Row, Column: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & " does not show last day in month"
+                                    Else
+                                        msgtxt = "Fehler in Datums-Zeile in Kapazitäts-Datei: Datei, Zeile, Spalte: " & vbLf & kapaFileName & ", " & firstUrlzeile & ", " & firstUrlspalte + anzMonthDays - 1 & "zeigt nicht den letzten Tag des Monats "
+
+                                    End If
+
+                                    oPCollection.Add(msgtxt)
+                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+
+                                Else
+                                    ' hier ist sichergestellt, dass die erste Spalte mit 1 beginnt, die letzte Spalte dem Tag entspricht, mit dem der Monat endet
+
+                                    ok = True
+
+                                    anzDays = 0
+
+                                    lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                                    lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                                    ' Nachkorrektur gemäss Angabe in KonfigDate 'LastLine'
+                                    Dim found As Boolean = False
+                                    Dim i As Integer = lastZeile + 1
+                                    While Not found
+                                        i = i - 1
+                                        If kapaConfig("LastLine").regex = "RegEx" Then
+                                            regexpression = New Regex(kapaConfig("LastLine").content)
+                                            Dim lastLineContent As String = CStr(currentWS.Cells(i, kapaConfig("LastLine").column).value)
+                                            If Not IsNothing(lastLineContent) Then
+                                                Dim match As Match = regexpression.Match(lastLineContent)
+                                                If match.Success Then
+                                                    lastLineContent = match.Value
+                                                    found = True
+                                                End If
                                             End If
                                         End If
+
+                                    End While
+                                    lastZeile = i - 1
+
+
+                                    ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                                    ' -------------------------------------
+                                    Dim rng As Range
+                                    Dim rngEnd As Range
+
+                                    rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                                    If rng.MergeCells Then
+
+                                        rng = rng.MergeArea
+                                        rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                        ' dann ist die lastZeile neu zu besetzen
+                                        lastZeile = rngEnd.Row
                                     End If
-
-                                End While
-                                lastZeile = i - 1
-
-
-                                ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
-                                ' -------------------------------------
-                                Dim rng As Range
-                                Dim rngEnd As Range
-
-                                rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
-
-                                If rng.MergeCells Then
-
-                                    rng = rng.MergeArea
-                                    rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
-
-                                    ' dann ist die lastZeile neu zu besetzen
-                                    lastZeile = rngEnd.Row
                                 End If
 
-
-                                Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, tmpDate)
-                                If isdate Then
-                                    colDate = getColumnOfDate(tmpDate)
-                                    monthNumber = Month(tmpDate)
-                                    anzMonthDays = DateTime.DaysInMonth(Jahr, Month(tmpDate))
-                                    If Not monthDays.ContainsKey(colDate) Then
-                                        monthDays.Add(colDate, anzMonthDays)
-                                    End If
-
-                                End If
 
                                 If Not ok Then
 
@@ -2411,10 +2454,12 @@ Public Module agm3
                                         Dim checkWert As Double = -1
                                         Try
                                             If Not IsNothing(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
-                                                checkWert = CDbl(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                If IsNumeric(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                                    checkWert = CDbl(CType(currentWS.Cells(iZ, "AS"), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                End If
                                             End If
                                         Catch ex As Exception
-
+                                            checkWert = -1
                                         End Try
                                         ' Ende tk 31.1.2020 Auslesen Checkwert für Kapa-Bestimmung 
 
@@ -2513,11 +2558,16 @@ Public Module agm3
                                                     anzArbTage = anzArbStd / 8
 
                                                     ' tk 31.1.20 Check den Wert
-                                                    If checkWert <> -1 Then
-                                                        If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
-                                                            Call MsgBox("Abweichung in Kapa-Bestimmung")
+                                                    'Dim formerVD As Boolean = awinSettings.visboDebug
+                                                    'awinSettings.visboDebug = True
+                                                    If awinSettings.visboDebug Then
+                                                        If checkWert <> -1 Then
+                                                            If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
+                                                                Call MsgBox("Abweichung in Kapa-Bestimmung")
+                                                            End If
                                                         End If
                                                     End If
+                                                    'awinSettings.visboDebug = formerVD
                                                     ' Ende tk Check den Wert 
 
                                                     'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen

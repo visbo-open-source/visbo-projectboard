@@ -7294,7 +7294,9 @@ Imports System.Web
 
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                 Try
-                    Call importProjekteEintragen(importDate, True, True)
+                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                    Call importProjekteEintragen(importDate, True, False)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
