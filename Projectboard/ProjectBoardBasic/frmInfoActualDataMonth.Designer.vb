@@ -90,7 +90,7 @@ Partial Class frmInfoActualDataMonth
     End Sub
 
     Friend WithEvents Label1 As Windows.Forms.Label
-    Friend WithEvents MonatJahr As Windows.Forms.DateTimePicker
     Friend WithEvents okBtn As Windows.Forms.Button
     Friend WithEvents cancelBtn As Windows.Forms.Button
+    Public WithEvents MonatJahr As Windows.Forms.DateTimePicker
 End Class

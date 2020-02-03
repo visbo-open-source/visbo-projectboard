@@ -1040,10 +1040,7 @@ Public Class Request
                     Else
                         ' Create an Copy vpv mit neuer KeyMetrics
                         ' POST /vpv/vpvid/copy
-                        ' url:     Http : //localhost:3484/vpv/vpv5c754feaa/copy
-                        ' {
-                        '  "timestamp": "2019-03-19T11:04:12.094Z"
-                        ' }
+                        result = POSTOneVPvCopy(vpid, stdvpvs.Item(0)._id, stdvpvs.Item(0).timestamp, projekt, userName, err)
                     End If
 
                 End If
@@ -1054,9 +1051,12 @@ Public Class Request
             'Throw New ArgumentException(ex.Message & ": storeProjectToDB")
         End Try
 
-        Call MsgBox("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
+        If awinSettings.visboDebug Then
+            Call MsgBox("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
 
-        Debug.Print("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
+            Debug.Print("storeProjectToDB took: " & sw.EndTimer & "milliseconds")
+        End If
+
 
         storeProjectToDB = result
 
@@ -6343,6 +6343,103 @@ Public Class Request
 
         End Try
         POSTOneVPv = result
+    End Function
+
+
+    Private Function POSTOneVPvCopy(ByVal vpid As String,
+                                    ByVal vpvid As String,
+                                    ByVal timestamp As Date,
+                                ByRef projekt As clsProjekt,
+                                ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+
+            'Dim webVP As New clsWebVP
+            'Dim vpErg As New List(Of clsVP)
+            'Dim data() As Byte
+
+            Dim pname As String = projekt.name
+            Dim vname As String = projekt.variantName
+
+            ' jetzt muss noch VisboProjectVersion gespeichert werden
+            Dim typeRequest As String = "/vpv/" & vpvid & "/copy"
+            Dim serverUriString As String = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+            'data = serverInputDataJson(timestamp.ToUniversalTime, "")
+
+            Dim storeAntwort As clsWebLongVPv
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = (storeAntwort.state = "success")
+                result = True
+
+                ' vpv zu Cache hinzufügen
+                VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+
+                If awinSettings.visboDebug Then
+
+                    ' Rundum-Test
+                    Dim newProjekt As New clsProjekt
+                    Dim newWebProj As clsProjektWebLong = storeAntwort.vpv.ElementAt(0)
+
+                    Dim vp As New clsVP
+                    If VRScache.VPsId.ContainsKey(vpid) Then
+                        vp = VRScache.VPsId(vpid)
+                    End If
+
+                    newWebProj.copyto(newProjekt, vp)
+                    Dim korrekt As Boolean = newProjekt.isIdenticalTo(projekt)
+                    If korrekt Then
+                        Call MsgBox("Projekt nach POSTOneVPv gleich dem Ursprünglichen")
+                    Else
+                        Call MsgBox("FEHLER: Projekt nach POSTOneVPv nicht gleich dem Ursprünglichen")
+                    End If
+
+                End If
+
+
+                ' updatedAt - Angabe in projekt speichern
+                If storeAntwort.vpv.Count >= 1 Then
+                    projekt.updatedAt = storeAntwort.vpv.ElementAt(0).updatedAt
+                End If
+
+                ' vpid - Angabe in projekt speichern
+                If storeAntwort.vpv.Count >= 1 Then
+                    projekt.vpID = storeAntwort.vpv.ElementAt(0).vpid
+                End If
+
+
+            Else
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVPvCopy", errcode, errmsg & " : " & storeAntwort.message)
+
+            End If
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVPvCopy" & " : " & errmsg & " : " & storeAntwort.message
+
+
+        Catch ex As Exception
+
+        End Try
+        POSTOneVPvCopy = result
     End Function
 
     ''' <summary>
