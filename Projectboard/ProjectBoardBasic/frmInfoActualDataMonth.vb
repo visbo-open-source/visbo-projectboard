@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class frmInfoActualDataMonth
-    Private Sub MonatJahr_ValueChanged(sender As Object, e As EventArgs) Handles MonatJahr.ValueChanged
+    Public Sub MonatJahr_ValueChanged(sender As Object, e As EventArgs) Handles MonatJahr.ValueChanged
 
     End Sub
 

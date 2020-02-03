@@ -900,6 +900,38 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt das Projekt zurück, das den angegebenen Schlüssel kdNr enthält
+    ''' </summary>
+    ''' <param name="kdNr">kdNr = kundenNummer</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectByKDNr(ByVal kdNr As String) As clsProjekt
+        Get
+            Dim tmpResult As clsProjekt = Nothing
+
+            If Not IsNothing(kdNr) Then
+
+                If kdNr <> "" Then
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                        If Not IsNothing(kvp.Value.kundenNummer) Then
+                            If kvp.Value.kundenNummer = kdNr Then
+                                tmpResult = kvp.Value
+                                Exit For
+                            End If
+                        End If
+
+                    Next
+                End If
+
+            End If
+
+            getProjectByKDNr = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die entsprechende bezeichnete Variante zurück
     ''' VariantNummer = 0 => 1. Projekt-Vorkommen, meist mit Varianten-Namen "" 
     ''' </summary>
