@@ -410,16 +410,19 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <returns></returns>
     Public Function getRoleIndent(ByVal roleNameID As String) As Integer
+
         Dim tmpResult As Integer = 0
 
         Dim teamID As Integer = -1
         Dim tmpRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
-        Try
-            tmpResult = getParentArray(tmpRole).Count
-        Catch ex As Exception
 
-        End Try
+        If Not IsNothing(tmpRole) Then
+            Try
+                tmpResult = getParentArray(tmpRole).Count
+            Catch ex As Exception
 
+            End Try
+        End If
 
         getRoleIndent = tmpResult
 
@@ -433,12 +436,16 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="role"></param>
     ''' <returns></returns>
-    Private Function getParentArray(ByVal role As clsRollenDefinition) As Integer()
+    Public Function getParentArray(ByVal role As clsRollenDefinition, ByVal Optional includingMySelf As Boolean = True) As Integer()
 
         Dim tmpList As New List(Of Integer)
 
         If Not IsNothing(role) Then
-            tmpList.Add(role.UID)
+
+            If includingMySelf Then
+                tmpList.Add(role.UID)
+            End If
+
 
             Dim parentRole As clsRollenDefinition = getParentRoleOf(role.UID)
             Do While Not IsNothing(parentRole)

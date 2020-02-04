@@ -3325,13 +3325,38 @@ Public Class clsProjekt
 
                 Dim roleNameID As String = curRole.getNameID
 
+                ' tk ist es einer Skill/Team zugeordnet 
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
                 Dim found As Boolean = False
                 Dim ix As Integer = 1
+
+                ' tk 19.1.20 um rollen mit Skills der Skill-Gruppe zuzuordnen ... 
+                ' Anfang ... 
+                If teamID > 0 And RoleDefinitions.containsUid(teamID) Then
+
+                    Do While ix <= summaryRoleIDs.Length And Not found
+                        If teamID = summaryRoleIDs(ix - 1) Then
+                            found = True
+                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(teamID, summaryRoleIDs(ix - 1)) Then
+                            found = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    Loop
+
+                End If
+
+                If Not found Then
+                    ix = 1
+                End If
+                ' Ende ...
 
                 Do While ix <= summaryRoleIDs.Length And Not found
 
                     If curRole.uid <> summaryRoleIDs(ix - 1) Then
-                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 erstetzt wird 
+                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
                         If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
 
@@ -3421,6 +3446,32 @@ Public Class clsProjekt
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' checks whether or not project has roles with resource needs where role has already left the company or is not yet part of the company
+    ''' returns a collection with names of Roles ; if empty there are no such roles
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function hasRolesWithInvalidNeeds() As Collection
+        Dim allInvalidNames As New Collection
+
+        For Each cphase As clsPhase In AllPhases
+            Dim invalidPhaseRoles As Collection = cphase.hasRolesWithInvalidNeeds
+
+            If invalidPhaseRoles.Count > 0 Then
+
+                For Each invalidName As String In invalidPhaseRoles
+                    If Not allInvalidNames.Contains(invalidName) Then
+                        allInvalidNames.Add(invalidName, invalidName)
+                    End If
+                Next
+
+            End If
+        Next
+
+
+        hasRolesWithInvalidNeeds = allInvalidNames
+    End Function
 
     ''' <summary>
     ''' true, wenn die Anzahl Phase und die einzelnen PhaseNameIDs identisch sind und ebenso die Start- und Endezeitpunkte 
@@ -3942,6 +3993,7 @@ Public Class clsProjekt
         ' die Ist-Werte sind immer die Werte vom anfang der Phase bis atualDatauntil einschließlich
 
         Dim tmpResult() As Double = Nothing
+
         Dim xWerte() As Double = Nothing
         Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
         Dim notYetDone As Boolean = True
@@ -3958,7 +4010,8 @@ Public Class clsProjekt
                 actualIX = getColumnOfDate(actualDataUntil)
                 arrayEnde = System.Math.Min(pEnde, actualIX)
             Else
-                arrayEnde = pEnde
+                ' das ist das Abbruch-Kriterium, es gibt keine Ist-Daten
+                arrayEnde = pstart - 1
             End If
 
 

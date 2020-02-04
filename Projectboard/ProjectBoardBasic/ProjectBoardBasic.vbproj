@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="agm2.vb" />
+    <Compile Include="agm3.vb" />
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
     <Compile Include="clsProjectboardConfig.vb" />
@@ -81,6 +82,12 @@
       <DependentUpon>frmEinstellungen.vb</DependentUpon>
     </Compile>
     <Compile Include="frmEinstellungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmInfoActualDataMonth.Designer.vb">
+      <DependentUpon>frmInfoActualDataMonth.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmInfoActualDataMonth.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmProvideActualDataMonth.Designer.vb">
@@ -333,6 +340,9 @@
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmInfoActualDataMonth.resx">
+      <DependentUpon>frmInfoActualDataMonth.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmLoadCockpit.resx">
       <DependentUpon>frmLoadCockpit.vb</DependentUpon>
