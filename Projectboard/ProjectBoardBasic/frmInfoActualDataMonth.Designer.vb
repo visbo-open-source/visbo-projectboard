@@ -35,15 +35,14 @@ Partial Class frmInfoActualDataMonth
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.Location = New System.Drawing.Point(12, 24)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(191, 15)
+        Me.Label1.Size = New System.Drawing.Size(220, 15)
         Me.Label1.TabIndex = 1
-        Me.Label1.Text = "Ist-Daten bis einschließlich Monat"
+        Me.Label1.Text = "Ist-Daten bis vorangegangenem Monat"
         '
         'MonatJahr
         '
         Me.MonatJahr.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.MonatJahr.Location = New System.Drawing.Point(209, 24)
-        Me.MonatJahr.MaxDate = New Date(2020, 1, 29, 0, 0, 0, 0)
+        Me.MonatJahr.Location = New System.Drawing.Point(238, 24)
         Me.MonatJahr.Name = "MonatJahr"
         Me.MonatJahr.Size = New System.Drawing.Size(82, 20)
         Me.MonatJahr.TabIndex = 2
@@ -64,7 +63,7 @@ Partial Class frmInfoActualDataMonth
         '
         Me.cancelBtn.BackColor = System.Drawing.SystemColors.ButtonFace
         Me.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.cancelBtn.Location = New System.Drawing.Point(196, 55)
+        Me.cancelBtn.Location = New System.Drawing.Point(225, 55)
         Me.cancelBtn.Name = "cancelBtn"
         Me.cancelBtn.Size = New System.Drawing.Size(95, 23)
         Me.cancelBtn.TabIndex = 6
@@ -76,21 +75,20 @@ Partial Class frmInfoActualDataMonth
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(303, 90)
+        Me.ClientSize = New System.Drawing.Size(348, 90)
         Me.Controls.Add(Me.cancelBtn)
         Me.Controls.Add(Me.okBtn)
         Me.Controls.Add(Me.MonatJahr)
         Me.Controls.Add(Me.Label1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmInfoActualDataMonth"
-        Me.Text = "Import Istdaten"
+        Me.Text = "Import Actual Data"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
-
-    Friend WithEvents Label1 As Windows.Forms.Label
     Friend WithEvents okBtn As Windows.Forms.Button
     Friend WithEvents cancelBtn As Windows.Forms.Button
     Public WithEvents MonatJahr As Windows.Forms.DateTimePicker
+    Public WithEvents Label1 As Windows.Forms.Label
 End Class

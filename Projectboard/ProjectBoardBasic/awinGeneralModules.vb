@@ -1694,7 +1694,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="roleValues"></param>
     ''' <returns></returns>
-    Friend Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
+    Public Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
         Dim tmpResult As Double = 0.0
         Dim hrole As clsRollenDefinition = Nothing
 
