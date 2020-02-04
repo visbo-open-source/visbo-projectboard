@@ -14,6 +14,5 @@ Public Class frmInfoActualDataMonth
 
     Private Sub frmInfoActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         MonatJahr.MinDate = StartofCalendar
-        MonatJahr.MaxDate = Date.Now
     End Sub
 End Class
