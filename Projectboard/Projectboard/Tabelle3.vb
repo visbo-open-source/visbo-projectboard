@@ -170,6 +170,11 @@ Public Class Tabelle3
 
         ' jetzt die Gridline zeigen
         With appInstance.ActiveWindow
+
+            If massColFontValues(1, 0) <> 0 Then
+                .Zoom = massColFontValues(1, 0)
+            End If
+
             .DisplayGridlines = True
             .GridlineColor = Excel.XlRgbColor.rgbBlack
         End With

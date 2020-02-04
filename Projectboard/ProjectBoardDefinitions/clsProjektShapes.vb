@@ -1482,31 +1482,31 @@ Public Class clsProjektShapes
 
     End Function
 
-    ''' <summary>
-    ''' der Phasenoffset wird neu berechnet, da sich die Phase 1 als Repräsentant des Projekts verschoben hat 
-    ''' </summary>
-    ''' <param name="diffDays"></param>
-    ''' <remarks></remarks>
-    Private Sub reCalcOffsetInPhases(ByRef project As clsProjekt, ByVal diffDays As Integer)
-        Dim newOffset As Integer, oldDauer As Integer
-        Dim cphase As clsPhase
+    '''' <summary>
+    '''' der Phasenoffset wird neu berechnet, da sich die Phase 1 als Repräsentant des Projekts verschoben hat 
+    '''' </summary>
+    '''' <param name="diffDays"></param>
+    '''' <remarks></remarks>
+    'Private Sub reCalcOffsetInPhases(ByRef project As clsProjekt, ByVal diffDays As Integer)
+    '    Dim newOffset As Integer, oldDauer As Integer
+    '    Dim cphase As clsPhase
 
-        For p = 2 To project.CountPhases
+    '    For p = 2 To project.CountPhases
 
-            cphase = project.getPhase(p)
-            newOffset = cphase.startOffsetinDays
-            oldDauer = cphase.dauerInDays
+    '        cphase = project.getPhase(p)
+    '        newOffset = cphase.startOffsetinDays
+    '        oldDauer = cphase.dauerInDays
 
-            If newOffset - diffDays < 0 Then
-                newOffset = 0
-            Else
-                newOffset = newOffset - diffDays
-            End If
+    '        If newOffset - diffDays < 0 Then
+    '            newOffset = 0
+    '        Else
+    '            newOffset = newOffset - diffDays
+    '        End If
 
-            Call cphase.changeStartandDauer(newOffset, oldDauer)
+    '        Call cphase.changeStartandDauer(newOffset, oldDauer)
 
-        Next
+    '    Next
 
-    End Sub
+    'End Sub
 
 End Class

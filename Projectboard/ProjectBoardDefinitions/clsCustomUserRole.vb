@@ -106,6 +106,10 @@ Public Class clsCustomUserRole
     ''' <returns></returns>
     Public Function isAllowedToSee(ByVal nameOrID As String,
                                    Optional includingVirtualChilds As Boolean = False) As Boolean
+        ' die Aufruf-Schnittstelle wurde geändert , includingVirtualChilds ist jetzt immer true 
+        ' tk Änderung 18.1 includingVirtualChilds ist immer true 
+
+
         Dim isAllowed As Boolean = False
 
         If nameOrID = "" Then
@@ -118,38 +122,57 @@ Public Class clsCustomUserRole
             Dim roleID As Integer = RoleDefinitions.parseRoleNameID(nameOrID, teamID)
             Dim curRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
 
+
             If Not IsNothing(curRoleDef) Then
 
                 Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
 
                 If _customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
                     Dim prntTeamID As Integer = -1
-                    Dim parentRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(specifics, prntTeamID).UID
-                    isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID, includingVirtualChilds:=includingVirtualChilds)
-
+                    Dim restrictedToRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(specifics, prntTeamID)
+                    Dim restrictedToRoleID As Integer = restrictedToRoleDef.UID
+                    ' tk 18.1.20 bei einem Team kommt nur dann true raus, wenn alle Team-Mitglieder in der restrictedRoleID sind, 
+                    ' deshalb wurde das von dem anderen Aufruf ersetzt 
+                    ' ALt vor 18.1 20
+                    'isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedToRoleID, includingVirtualChilds:=includingVirtualChilds)
                     ' mit dem Folgenden wird sichergestellt, dass ein Ressourcen-Manager , z.B KB1, auch eine Person von KB1 in seiner Eigenschaft als Team-Member sehen kann
                     ' nicht includingVirtualChilds, weil das eine PErson betrifft ..
-                    If Not isAllowed And teamID > 0 Then
-                        Dim roleNameIDBasic As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
-                        isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameIDBasic, parentRoleID)
-                    End If
+                    'If Not isAllowed And teamID > 0 Then
+                    '    Dim roleNameIDBasic As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                    '    isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameIDBasic, restrictedToRoleID)
+                    'End If
+                    ' Ende Alt vor 18.1.20
 
-
-                ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    Dim idArray() As Integer = getAggregationRoleIDs()
-                    If Not IsNothing(idArray) Then
-                        isAllowed = idArray.Contains(roleID)
-                        If Not isAllowed Then
-                            isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
-                        End If
+                    ' Neu seit 18.1.20
+                    If restrictedToRoleDef.isTeam Or restrictedToRoleDef.isTeamParent Then
+                        isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedToRoleID)
                     Else
-                        isAllowed = True
+                        Dim tmpergList As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(roleID, restrictedToRoleID)
+                        isAllowed = tmpergList.Count > 0
                     End If
+                    ' Ende Neu seit 18.1.20
+
+                    'ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    '    Dim idArray() As Integer = getAggregationRoleIDs()
+                    '    If Not IsNothing(idArray) Then
+                    '        isAllowed = idArray.Contains(roleID)
+                    '        If Not isAllowed Then
+                    '            isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray)
+                    '        End If
+                    '    Else
+                    '        isAllowed = True
+                    '    End If
 
 
-                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or _customUserRole = ptCustomUserRoles.InternalViewer Then
+                ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                       _customUserRole = ptCustomUserRoles.InternalViewer Or
+                       _customUserRole = ptCustomUserRoles.PortfolioManager Or
+                       _customUserRole = ptCustomUserRoles.OrgaAdmin Then
                     isAllowed = True
+                Else
+                    isAllowed = False
                 End If
+
             End If
         End If
 
