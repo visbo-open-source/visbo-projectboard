@@ -3059,8 +3059,8 @@ Public Module awinGeneralModules
 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection,
-                                "Meldungen",
-                                "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
+                                "Messages when reading Portfolio ",
+                                " ")
             End If
 
         End If
@@ -3089,7 +3089,7 @@ Public Module awinGeneralModules
         Dim vName As String = getVariantnameFromKey(key)
         Dim hproj As clsProjekt
         Dim tryZeile As Integer
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " does not exist in DB at " & storedAtOrBefore.ToShortDateString
 
 
         If AlleProjekte.Containskey(key) Then
@@ -3156,6 +3156,28 @@ Public Module awinGeneralModules
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtOrBefore, err)
 
                     If Not IsNothing(hproj) Then
+
+
+                        ' tk 4.2.20
+                        ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+                        ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+                        If DateDiff(DateInterval.Day, Date.Now, storedAtOrBefore) = 0 Then
+                            ' nur bei aktuellen Projekten anmeckern ... 
+
+                            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                            If invalidNeedNames.Count > 0 Then
+
+                                For Each iVName As String In invalidNeedNames
+                                    Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                                    msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                                    outPutCollection.Add(msgTxt)
+                                Next
+
+                            End If
+
+                        End If
+
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         Dim newPosition As Integer = -1
                         If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
@@ -4086,19 +4108,25 @@ Public Module awinGeneralModules
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 
             ' tk 4.2.20
-            ' hier muss gepfürt werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+            ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
             ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
-            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
-            If invalidNeedNames.Count > 0 Then
-                Dim header As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
-                Dim explanation As String = "Person ist noch nicht oder nicht mehr im Unternehmen"
+            If Not calledFromPPT And Not IsNothing(hproj) And DateDiff(DateInterval.Day, Date.Now, storedAtORBefore) = 0 Then
+                ' nur bei aktuellen Projekten anmeckern ... 
 
-                If awinSettings.englishLanguage Then
-                    header = "Project " & hproj.getShapeText & " has invalid resource needs"
-                    explanation = "Resource is not yet or not any more within company"
+                Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                If invalidNeedNames.Count > 0 Then
+
+                    For Each iVName As String In invalidNeedNames
+                        Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                        msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                        outputCollection.Add(msgTxt)
+                    Next
+
                 End If
-                Call showOutPut(invalidNeedNames, header, explanation)
+
             End If
+
 
 
             If Not IsNothing(hproj) Then

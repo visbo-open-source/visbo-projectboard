@@ -6094,6 +6094,10 @@ Imports System.Web
 
                 ElseIf importedOrga.count > 0 Then
 
+                    ' TopNodes und OrgaTeamChilds bauen 
+                    Call importedOrga.allRoles.buildTopNodes()
+                    Call importedOrga.allRoles.buildOrgaTeamChilds()
+
                     ' jetzt wird die Orga als Setting weggespeichert ... 
                     Dim err As New clsErrorCodeMsg
                     Dim result As Boolean = False

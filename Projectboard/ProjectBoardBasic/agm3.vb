@@ -2294,6 +2294,7 @@ Public Module agm3
 
                         ' tk 3.2.20 
                         Dim isdate As Boolean = DateTime.TryParse(monthName & " " & Jahr.ToString, dateConsidered)
+
                         Dim beginningDay As Integer = -1
                         Dim endingDay As Integer = -1
                         Try
@@ -2326,6 +2327,7 @@ Public Module agm3
                         Else
                             If Jahr <> 0 And monthName <> "" Then
 
+                                colDate = getColumnOfDate(dateConsidered)
 
                                 monthDays.Clear()
 
@@ -2558,8 +2560,8 @@ Public Module agm3
                                                     anzArbTage = anzArbStd / 8
 
                                                     ' tk 31.1.20 Check den Wert
-                                                    'Dim formerVD As Boolean = awinSettings.visboDebug
-                                                    'awinSettings.visboDebug = True
+                                                    Dim formerVD As Boolean = awinSettings.visboDebug
+                                                    awinSettings.visboDebug = True
                                                     If awinSettings.visboDebug Then
                                                         If checkWert <> -1 Then
                                                             If Math.Abs(anzArbTage - checkWert) > 0.0001 Then
@@ -2567,8 +2569,8 @@ Public Module agm3
                                                             End If
                                                         End If
                                                     End If
-                                                    'awinSettings.visboDebug = formerVD
-                                                    ' Ende tk Check den Wert 
+                                                    awinSettings.visboDebug = formerVD
+                                                    'Ende tk Check den Wert 
 
                                                     'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                     If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
