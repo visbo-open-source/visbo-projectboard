@@ -17,10 +17,11 @@ Public Class clsProjekte
     Public Sub Add(project As clsProjekt, Optional ByVal updateCurrentConstellation As Boolean = True)
 
         Try
-            Dim pname As String = project.name
-            Dim shpUID As String = project.shpUID
-
             If Not IsNothing(project) Then
+
+                Dim pname As String = project.name
+                Dim shpUID As String = project.shpUID
+
                 _allProjects.Add(pname, project)
 
                 If shpUID <> "" Then

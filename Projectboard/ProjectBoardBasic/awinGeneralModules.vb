@@ -1093,8 +1093,6 @@ Public Module awinGeneralModules
         Dim fullName As String, vglName As String
         'Dim pname As String
 
-
-
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
@@ -1145,8 +1143,14 @@ Public Module awinGeneralModules
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
             ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
             ' wenn nein, wird es im Show-Modus ergänzt 
+            Dim searchPName As String = hproj.name
+            Dim searchVName As String = hproj.variantName
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' das hier muss gemacht werden, weil man ja wissen will, inwieweit sich das Projekt im Vergleich zur Baseline / pfv verändert werden 
+                searchVName = getDefaultVariantNameAccordingUserRole()
+            End If
 
-            vglName = calcProjektKey(hproj)
+            vglName = calcProjektKey(searchPName, searchVName)
             Try
                 cproj = AlleProjekte.getProject(vglName)
 
@@ -1154,7 +1158,7 @@ Public Module awinGeneralModules
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        cproj = awinReadProjectFromDatabase(searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
@@ -1243,6 +1247,10 @@ Public Module awinGeneralModules
                         Call MsgBox(ex.Message)
                     End Try
 
+                    ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
+                        cproj.variantName = hproj.variantName
+                    End If
 
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
                         ' das heisst, das Projekt hat sich verändert 
@@ -3051,8 +3059,8 @@ Public Module awinGeneralModules
 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection,
-                                "Meldungen",
-                                "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
+                                "Messages when reading Portfolio ",
+                                " ")
             End If
 
         End If
@@ -3081,7 +3089,7 @@ Public Module awinGeneralModules
         Dim vName As String = getVariantnameFromKey(key)
         Dim hproj As clsProjekt
         Dim tryZeile As Integer
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " does not exist in DB at " & storedAtOrBefore.ToShortDateString
 
 
         If AlleProjekte.Containskey(key) Then
@@ -3148,6 +3156,28 @@ Public Module awinGeneralModules
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtOrBefore, err)
 
                     If Not IsNothing(hproj) Then
+
+
+                        ' tk 4.2.20
+                        ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+                        ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+                        If DateDiff(DateInterval.Day, Date.Now, storedAtOrBefore) = 0 Then
+                            ' nur bei aktuellen Projekten anmeckern ... 
+
+                            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                            If invalidNeedNames.Count > 0 Then
+
+                                For Each iVName As String In invalidNeedNames
+                                    Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                                    msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                                    outPutCollection.Add(msgTxt)
+                                Next
+
+                            End If
+
+                        End If
+
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         Dim newPosition As Integer = -1
                         If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
@@ -4076,6 +4106,27 @@ Public Module awinGeneralModules
             Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
+
+            ' tk 4.2.20
+            ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+            ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+            If Not calledFromPPT And Not IsNothing(hproj) And DateDiff(DateInterval.Day, Date.Now, storedAtORBefore) = 0 Then
+                ' nur bei aktuellen Projekten anmeckern ... 
+
+                Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                If invalidNeedNames.Count > 0 Then
+
+                    For Each iVName As String In invalidNeedNames
+                        Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                        msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                        outputCollection.Add(msgTxt)
+                    Next
+
+                End If
+
+            End If
+
 
 
             If Not IsNothing(hproj) Then
@@ -7190,12 +7241,43 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean,
                                   Optional ByVal calledFromMassEdit As Boolean = False,
-                                  Optional ByVal currentRoleName As String = "")
+                                  Optional ByVal currentRCName As String = "")
 
         ' Validieren ...
-        If IsNothing(currentRoleName) Then
-            currentRoleName = ""
+        If IsNothing(currentRCName) Then
+            currentRCName = ""
         End If
+
+        ' tk neu ab 18.1.20
+        Dim currentRoleNameID As String = ""
+        Dim rcID As Integer = -1
+        Dim teamID As Integer = -1
+        Dim isRole As Boolean = False
+        Dim isCost As Boolean = False
+
+        Dim potentialParents() As Integer = Nothing
+        Dim q2StillNeedsToBeDefined As Boolean = False
+
+        ' wenn currentRCName = "" dann soll Gesamtkosten gezeigt werden ... 
+        If currentRCName <> "" Then
+            rcID = RoleDefinitions.parseRoleNameID(currentRCName, teamID)
+            currentRoleNameID = RoleDefinitions.bestimmeRoleNameID(rcID, teamID)
+
+            If rcID < 0 Then
+                ' vorauss ist es eine Kostenart 
+                If CostDefinitions.containsName(currentRCName) Then
+                    isCost = True
+                    rcID = CostDefinitions.getCostdef(currentRCName).UID
+                Else
+                    ' jetzt werdne einfach dei Gesamtkosten gezeigt 
+                    currentRCName = ""
+                End If
+            Else
+                isRole = True
+            End If
+        End If
+
+
 
         Dim err As New clsErrorCodeMsg
 
@@ -7251,23 +7333,28 @@ Public Module awinGeneralModules
                                 Dim roleCostName As String = ""
                                 Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, chartPname, roleCostName)
 
+                                If calledFromMassEdit And typID <> PTprdk.Ergebnis Then
+                                    roleCostName = currentRCName
+                                    ' mit welchem  soll verglichen werden ?  
+                                    If awinSettings.meCompareWithLastVersion Then
+                                        typID = PTprdk.KostenBalken2
+                                    Else
+                                        typID = PTprdk.KostenBalken
+                                    End If
+
+                                    If roleCostName = "" Then
+                                        ' damit werden die Gesamtkosten gezeigt ..
+                                        auswahl = 2
+                                    End If
+                                End If
+
                                 Dim scInfo As New clsSmartPPTChartInfo
                                 With scInfo
                                     .hproj = hproj
                                     .detailID = typID
 
-                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung And currentRoleName <> "" Then
-                                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
-                                        If Not IsNothing(potentialParents) Then
-                                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(currentRoleName, potentialParents, True)
-                                            If tmpParentName <> "" Then
-                                                scInfo.q2 = tmpParentName
-                                            End If
-                                        End If
-                                    Else
-                                        .q2 = roleCostName
-                                    End If
-
+                                    ' Setzung von .q2 wird ggf in Kostenbalken, Kostenbalken2, Personabalken und Personalbalken2 noch mal revidiert ..
+                                    .q2 = roleCostName
 
                                     .vergleichsArt = PTVergleichsArt.beauftragung
                                     .vergleichsTyp = PTVergleichsTyp.letzter
@@ -7279,13 +7366,18 @@ Public Module awinGeneralModules
                                             .vergleichsTyp = PTVergleichsTyp.erster
                                         End If
 
-                                        If auswahl = 1 And roleCostName = "" Then
+                                        If isCost Then
                                             .elementTyp = ptElementTypen.costs
+                                        Else
+                                            If auswahl = 1 And roleCostName = "" Then
+                                                .elementTyp = ptElementTypen.costs
 
-                                        ElseIf auswahl = 2 And roleCostName = "" Then
-                                            .elementTyp = ptElementTypen.rolesAndCost
-
+                                            ElseIf auswahl = 2 And roleCostName = "" Then
+                                                .elementTyp = ptElementTypen.rolesAndCost
+                                            End If
                                         End If
+
+
 
                                         .einheit = PTEinheiten.euro
 
@@ -7337,12 +7429,94 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
+
+
                                             scInfo.vergleichsTyp = PTVergleichsTyp.erster
                                             scInfo.vglProj = vglProj
 
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
-                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
+                                            ' tk neu 18.1.2020
+                                            ' 
+                                            If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                                ' 
+                                                potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+
+
+                                            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+
+                                                Try
+                                                    Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
+                                                    Dim checkID As Integer
+
+                                                    If teamID > 0 Then
+                                                        checkID = teamID
+                                                    Else
+                                                        ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
+                                                        checkID = rcID
+                                                    End If
+
+                                                    ' die potentiellen Parents sind  die Parents des Teams
+                                                    Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
+                                                    Dim ergListe As New List(Of Integer)
+                                                    Dim found As Boolean = False
+                                                    Dim ix As Integer = 1
+
+                                                    Do While Not found And ix <= tmpList.Length
+                                                        If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
+                                                            found = True
+                                                        Else
+                                                            ix = ix + 1
+                                                        End If
+                                                    Loop
+
+                                                    If found Then
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
+                                                    Else
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                End Try
+
+
+                                                potentialParents = Nothing
+
+                                            End If
+
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
+
                                             Call updateExcelChartOfProject(scInfo, chtobj, replaceProj, calledFromMassEdit)
 
                                         Case PTprdk.KostenBalken2
@@ -7356,6 +7530,85 @@ Public Module awinGeneralModules
 
                                             scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                                             scInfo.vglProj = vglProj
+
+                                            ' tk neu 18.1.2020
+                                            If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                                ' 
+                                                potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+
+                                                Try
+                                                    Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
+                                                    Dim checkID As Integer
+
+                                                    If teamID > 0 Then
+                                                        checkID = teamID
+                                                    Else
+                                                        ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
+                                                        checkID = rcID
+                                                    End If
+
+                                                    ' die potentiellen Parents sind  die Parents des Teams
+                                                    Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
+                                                    Dim ergListe As New List(Of Integer)
+                                                    Dim found As Boolean = False
+                                                    Dim ix As Integer = 1
+
+                                                    Do While Not found And ix <= tmpList.Length
+                                                        If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
+                                                            found = True
+                                                        Else
+                                                            ix = ix + 1
+                                                        End If
+                                                    Loop
+
+                                                    If found Then
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
+                                                    Else
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                End Try
+
+
+                                                potentialParents = Nothing
+                                            End If
+
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
@@ -7375,6 +7628,84 @@ Public Module awinGeneralModules
                                             scInfo.vergleichsTyp = PTVergleichsTyp.erster
                                             scInfo.vglProj = vglProj
 
+                                            ' tk neu 18.1.2020
+                                            If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                                ' 
+                                                potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+
+                                                Try
+                                                    Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
+                                                    Dim checkID As Integer
+
+                                                    If teamID > 0 Then
+                                                        checkID = teamID
+                                                    Else
+                                                        ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
+                                                        checkID = rcID
+                                                    End If
+
+                                                    ' die potentiellen Parents sind  die Parents des Teams
+                                                    Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
+                                                    Dim ergListe As New List(Of Integer)
+                                                    Dim found As Boolean = False
+                                                    Dim ix As Integer = 1
+
+                                                    Do While Not found And ix <= tmpList.Length
+                                                        If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
+                                                            found = True
+                                                        Else
+                                                            ix = ix + 1
+                                                        End If
+                                                    Loop
+
+                                                    If found Then
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
+                                                    Else
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                End Try
+
+
+                                                potentialParents = Nothing
+                                            End If
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
+
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
@@ -7391,6 +7722,84 @@ Public Module awinGeneralModules
 
                                             scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                                             scInfo.vglProj = vglProj
+
+                                            ' tk neu 18.1.2020
+                                            If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                                ' 
+                                                potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+
+                                                Try
+                                                    Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
+                                                    Dim checkID As Integer
+
+                                                    If teamID > 0 Then
+                                                        checkID = teamID
+                                                    Else
+                                                        ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
+                                                        checkID = rcID
+                                                    End If
+
+                                                    ' die potentiellen Parents sind  die Parents des Teams
+                                                    Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
+                                                    Dim ergListe As New List(Of Integer)
+                                                    Dim found As Boolean = False
+                                                    Dim ix As Integer = 1
+
+                                                    Do While Not found And ix <= tmpList.Length
+                                                        If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
+                                                            found = True
+                                                        Else
+                                                            ix = ix + 1
+                                                        End If
+                                                    Loop
+
+                                                    If found Then
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
+                                                    Else
+                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                    End If
+
+                                                Catch ex As Exception
+                                                    scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                End Try
+
+
+                                                potentialParents = Nothing
+                                            End If
+
+                                            If Not IsNothing(potentialParents) Then
+
+                                                Dim tmpParentName As String = ""
+
+                                                If teamID = -1 Then
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                Else
+                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    If tmpParentName = "" Then
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    Else
+                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                            ' passt bereits 
+                                                        Else
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        End If
+
+                                                    End If
+                                                End If
+
+                                                If tmpParentName <> "" Then
+                                                    scInfo.q2 = tmpParentName
+                                                End If
+
+                                            End If
+
+                                            ' Ende tk neu 18.1.20
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
