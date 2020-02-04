@@ -6301,6 +6301,7 @@ Imports System.Web
         ' Konfigurationsdatei lesen und Validierung durchführen
 
 
+
         ' öffnen des LogFiles
         Call logfileOpen()
 
@@ -6414,35 +6415,35 @@ Imports System.Web
                     ' jetzt kommt die zweite Bearbeitungs-Welle
                     ' das Rausschreiben der Test Records 
 
-                    ' Protokoll schreiben ...
+                    'Protokoll schreiben...
                     ' tk 8.5.19 nicht mehr machen 
-                    'For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    '    Dim protocolLine As String = ""
-                    '    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+                        Dim protocolLine As String = ""
+                        For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
-                    '        ' jetzt schreiben 
-                    '        Dim teamID As Integer = -1
-                    '        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                    '        Dim curTagessatz As Double = hrole.tagessatzIntern
+                            ' jetzt schreiben 
+                            Dim teamID As Integer = -1
+                            Dim hilfsrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                            Dim curTagessatz As Double = hrole.tagessatzIntern
 
-                    '        ReDim logArray(3)
-                    '        logArray(0) = "Importiert wurde: "
-                    '        logArray(1) = ""
-                    '        logArray(2) = vPKvP.Key
-                    '        logArray(3) = rVKvP.Key & ": " & hrole.name
+                            ReDim logArray(3)
+                            logArray(0) = "Importiert wurde: "
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = rVKvP.Key & ": " & hilfsrole.name
 
 
-                    '        ReDim logDblArray(rVKvP.Value.Length - 1)
-                    '        For i As Integer = 0 To rVKvP.Value.Length - 1
-                    '            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                    '            logDblArray(i) = rVKvP.Value(i) * curTagessatz
-                    '        Next
+                            ReDim logDblArray(rVKvP.Value.Length - 1)
+                            For j As Integer = 0 To rVKvP.Value.Length - 1
+                                ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                                logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
+                            Next
 
-                    '        Call logfileSchreiben(logArray, logDblArray)
-                    '    Next
+                            Call logfileSchreiben(logArray, logDblArray)
+                        Next
 
-                    'Next
+                    Next
                     ' Protokoll schreiben Ende ... 
 
                     Dim gesamtIstValue As Double = 0.0
@@ -6600,14 +6601,15 @@ Imports System.Web
 
 
             Else
-                Dim errMsg As String = "Es gibt keine Datei für Actual Data"
+                If awinSettings.englishLanguage Then
+                    outPutline = "No file to import actual data"
+                Else
+                    outPutline = "Es gibt keine Datei zum Importieren von Istdaten"
+                End If
 
-                ' das sollte nicht dazu führen, dass nichts gemacht wird 
-                'meldungen.Add(errMsg)
-                'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
-                'Call MsgBox(errMsg)
+                Call MsgBox(outPutline)
 
-                Call logfileSchreiben(errMsg, "PTImportIstdaten", anzFehler)
+                Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
             End If
 
 
@@ -6621,13 +6623,14 @@ Imports System.Web
             End If
             Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
 
+            Call MsgBox(outPutline)
+
         End If    ' allesOK
 
 
 
         ' Schließen des LogFiles
         Call logfileSchliessen()
-
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
