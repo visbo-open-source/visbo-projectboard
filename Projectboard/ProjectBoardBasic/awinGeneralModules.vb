@@ -4085,6 +4085,21 @@ Public Module awinGeneralModules
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 
+            ' tk 4.2.20
+            ' hier muss gepfürt werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+            ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+            If invalidNeedNames.Count > 0 Then
+                Dim header As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                Dim explanation As String = "Person ist noch nicht oder nicht mehr im Unternehmen"
+
+                If awinSettings.englishLanguage Then
+                    header = "Project " & hproj.getShapeText & " has invalid resource needs"
+                    explanation = "Resource is not yet or not any more within company"
+                End If
+                Call showOutPut(invalidNeedNames, header, explanation)
+            End If
+
 
             If Not IsNothing(hproj) Then
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 

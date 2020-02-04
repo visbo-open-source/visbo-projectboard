@@ -2038,6 +2038,7 @@ Public Class clsPhase
 
     End Property
 
+
     ''' <summary>
     ''' liefert die Namen und Bedarfs-Summen aller Rollen, die in der Phase referenziert werden ...
     ''' </summary>
@@ -2087,6 +2088,84 @@ Public Class clsPhase
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' checks whether or not phase has roles with resourcen-needsand role  has already left company or is not yet part of the company 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function hasRolesWithInvalidNeeds() As Collection
+        Dim allInvalidNames As New Collection
+        Try
+            Dim startColumn As Integer = parentProject.Start + relStart - 1
+            Dim endColumn As Integer = parentProject.Start + relEnde - 1
+
+            For Each role As clsRolle In _allRoles
+                If isRoleWithInvalidNeeds(role, startColumn, endColumn) Then
+                    Dim roleName As String = role.name
+                    If Not allInvalidNames.Contains(roleName) Then
+                        allInvalidNames.Add(roleName, roleName)
+                    End If
+                End If
+            Next
+        Catch ex As Exception
+            If awinSettings.visboDebug Then
+                Call MsgBox("Érror-Code 9973276-0")
+            End If
+        End Try
+
+
+        hasRolesWithInvalidNeeds = allInvalidNames
+    End Function
+
+    ''' <summary>
+    ''' returns whether or not his role has resource needs where role ist not yet at the company or not any more. 
+    ''' </summary>
+    ''' <param name="tmprole"></param>
+    ''' <returns></returns>
+    Public Function isRoleWithInvalidNeeds(ByVal tmprole As clsRolle, ByVal startColumn As Integer, ByVal endColumn As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Try
+            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmprole.uid)
+            Dim startOfEmployee As Integer = getColumnOfDate(currentRole.entryDate)
+            Dim leaveOFEmployee As Integer = getColumnOfDate(currentRole.exitDate)
+
+            ' wann ist es kritisch 
+            If startOfEmployee > startColumn Or leaveOFEmployee <= endColumn Then
+                If startOfEmployee > endColumn Or leaveOFEmployee <= startColumn Then
+                    ' nur dann ungültig, wenn es auch Werte > 0 gibt  
+                    tmpResult = tmprole.Xwerte.Sum > 0
+
+                Else
+                    ' hier ist gesichert, dass StartOfEmployee <= endColumn ist ..
+                    For i As Integer = startColumn To startOfEmployee
+                        If tmprole.Xwerte(i - startColumn) > 0 Then
+                            tmpResult = True
+                            Exit For
+                        End If
+                    Next
+
+                    If Not tmpResult And leaveOFEmployee <= endColumn Then
+                        For i As Integer = leaveOFEmployee To endColumn
+                            If tmprole.Xwerte(i - startColumn) > 0 Then
+                                tmpResult = True
+                                Exit For
+                            End If
+                        Next
+                    End If
+
+                End If
+            End If
+        Catch ex As Exception
+            If awinSettings.visboDebug Then
+                Call MsgBox("Érror-Code 9973276-1")
+            End If
+        End Try
+
+
+
+        isRoleWithInvalidNeeds = tmpResult
+    End Function
 
     ''' <summary>
     ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
