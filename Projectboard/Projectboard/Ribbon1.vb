@@ -349,6 +349,7 @@ Imports System.Web
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
+        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -608,11 +609,25 @@ Imports System.Web
                 End If
             End If
 
+            ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
+            ' Window so positionieren, dass die Projekte sichtbar sind ...  
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If boardWasEmpty Or clearBoard Then
+                    If leftborder - 12 > 0 Then
+                        appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                    End If
+                End If
+            End If
+
             appInstance.ScreenUpdating = True
 
             Cursor.Current = Cursors.Default
 
         End If
+
+
+
 
         ' Timer
         If awinSettings.visboDebug Then
@@ -3586,17 +3601,9 @@ Imports System.Web
 
             If todoListe.Count > 0 Then
 
-                ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
-                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                    ' alles ok , bereits gesetzt 
+                ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
 
-                Else
 
-                    showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-                    showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                End If
 
 
                 Call enableControls(meModus)
@@ -3615,6 +3622,29 @@ Imports System.Web
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
+
+                        If showRangeLeft = 0 Then
+                            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        Else
+                            ' beim alten ShowRangeLeft lassen, wenn es Überlappungen gibt ..
+                            Dim newLeft As Integer = ShowProjekte.getMinMonthColumn(todoListe)
+                            Dim newRight As Integer = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                            If newLeft >= showRangeRight Or newRight <= showRangeLeft Then
+                                ' neu bestimmen 
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+
+                                showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                                showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+                            End If
+                        End If
+
                         ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
                         ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
                         projektTodoliste = substituteListeByPVNameIDs(todoListe)
@@ -3883,14 +3913,14 @@ Imports System.Web
         Try
 
             ' jetzt die Spalten Werte merken 
-            'Try
-            '    massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-            '    For ik As Integer = 1 To anzahlMassColSpalten
-            '        massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-            '    Next
-            'Catch ex As Exception
+            Try
+                massColFontValues(mIX, 0) = CDbl(appInstance.ActiveWindow.Zoom)
+                For ik As Integer = 1 To 100
+                    massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+                Next
+            Catch ex As Exception
 
-            'End Try
+            End Try
 
 
             ' jetzt die Autofilter de-aktivieren ... 
@@ -8175,7 +8205,18 @@ Imports System.Web
     ''' <remarks></remarks>
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
+        Dim boardWasEmpty As Boolean = ShowProjekte.Count = 0
         Call PBBDatenbankLoadProjekte(Control)
+
+        ' Window so positionieren, dass die Projekte sichtbar sind ...  
+        If ShowProjekte.Count > 0 Then
+            Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+            If boardWasEmpty And Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                End If
+            End If
+        End If
 
 
     End Sub
@@ -10475,6 +10516,8 @@ Imports System.Web
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
         Dim currentRow As Integer
         Dim currentColumn As Integer
         Dim prcTyp As String
@@ -10494,18 +10537,26 @@ Imports System.Web
             currentColumn = visboZustaende.meColRC
         End Try
 
-        Dim rcName As String = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+        Dim rcName As String = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
+        Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(currentRow, visboZustaende.meColRC), Excel.Range))
+
+        Dim rcNameTeamID As Integer = -1
+        Dim rcID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, rcNameTeamID)
+
+
         If IsNothing(rcName) Then
             rcName = ""
         End If
 
-        Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
-            currentRow = currentRow + 1
-            rcName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
-            If IsNothing(rcName) Then
-                rcName = ""
-            End If
-        Loop
+        ' tk 18.1.2020 rausnehmen besser !
+        'Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
+        '    currentRow = currentRow + 1
+        '    rcName = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
+        '    If IsNothing(rcName) Then
+        '        rcName = ""
+        '    End If
+        'Loop
+        ' Ende tk 18.1.2020
 
         ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
         If rcName = "" Then
@@ -10624,6 +10675,11 @@ Imports System.Web
             Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
             Dim chWidth As Double = stdBreite
             Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
+
+            If chHeight < 0.8 * projectboardWindows(PTwindows.meChart).Height Then
+                chHeight = 0.8 * projectboardWindows(PTwindows.meChart).Height
+            End If
+
             Dim chTop As Double = 5
 
             If ShowProjekte.contains(pName) Then
@@ -10689,10 +10745,33 @@ Imports System.Web
 
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
 
+                    ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
+                    ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+
+                            Dim tmpParentName As String = ""
+
+                            If rcNameTeamID = -1 Then
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                            Else
+                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                If tmpParentName = "" Then
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                Else
+                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                    If lproj.containsRoleNameID(tmpParentNameID) Then
+                                        ' passt bereits 
+                                    Else
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    End If
+
+                                End If
+                            End If
+
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
@@ -10728,11 +10807,33 @@ Imports System.Web
 
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
                         If Not IsNothing(potentialParents) Then
-                            Dim tmpParentName As String = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+
+                            Dim tmpParentName As String = ""
+
+                            If rcNameTeamID = -1 Then
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                            Else
+                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                If tmpParentName = "" Then
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                Else
+                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                    If lproj.containsRoleNameID(tmpParentNameID) Then
+                                        ' passt bereits 
+                                    Else
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    End If
+
+                                End If
+                            End If
+
                             If tmpParentName <> "" Then
                                 scInfo.q2 = tmpParentName
                             End If
+
                         End If
 
 

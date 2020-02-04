@@ -87,6 +87,15 @@ Public Class Tabelle4
 
         End Try
 
+        ' jetzt die Gridline zeigen
+        With appInstance.ActiveWindow
+            If massColFontValues(2, 0) <> 0 Then
+                .Zoom = massColFontValues(2, 0)
+            End If
+
+            .DisplayGridlines = True
+            .GridlineColor = Excel.XlRgbColor.rgbBlack
+        End With
 
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
