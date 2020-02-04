@@ -10,6 +10,7 @@ Public Class frmSelectImportFiles
 
     Public menueAswhl As Integer
     Public dateiOrdner As String
+    Public importFileNames As String
 
     Public selImportFiles As New Collection
 
@@ -29,6 +30,8 @@ Public Class frmSelectImportFiles
                     fileNameWildCards = {"*.rxf"}
                 Case PTImpExp.msproject
                     fileNameWildCards = {"*.mpp"}
+                Case PTImpExp.projectWithConfig
+                    fileNameWildCards = {importFileNames}
                 Case Else
                     fileNameWildCards = {"*.xls", "*.xlsx"}
             End Select
@@ -275,6 +278,20 @@ Public Class frmSelectImportFiles
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
+
+        ElseIf menueAswhl = PTImpExp.projectWithConfig Then
+
+            'dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            dirName = importOrdnerNames(PTImpExp.projectWithConfig)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a file with project definitions belonging to a configfile"
+            Else
+                Me.Text = "Datei auswählen, die Projektdefinitionen enthält und in einem Konfigurationsfile beschrieben sind"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple
+            Me.alleButton.Visible = True
+
         End If
 
 
@@ -337,6 +354,8 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.offlineData Then
             dirName = importOrdnerNames(PTImpExp.offlineData)
 
+        ElseIf menueAswhl = PTImpExp.projectWithConfig Then
+            dirName = importOrdnerNames(PTImpExp.projectWithConfig)
         End If
 
 

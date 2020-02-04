@@ -7,6 +7,8 @@ Imports Microsoft.Office.Interop.Excel
 'Imports System.ComponentModel
 'Imports System.Windows
 Imports System.Windows.Forms
+Imports System.Security.Principal
+Imports System.Text.RegularExpressions
 
 'Imports System
 'Imports System.Runtime.Serialization
@@ -1091,8 +1093,6 @@ Public Module awinGeneralModules
         Dim fullName As String, vglName As String
         'Dim pname As String
 
-
-
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
@@ -1143,8 +1143,14 @@ Public Module awinGeneralModules
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
             ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
             ' wenn nein, wird es im Show-Modus ergänzt 
+            Dim searchPName As String = hproj.name
+            Dim searchVName As String = hproj.variantName
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' das hier muss gemacht werden, weil man ja wissen will, inwieweit sich das Projekt im Vergleich zur Baseline / pfv verändert werden 
+                searchVName = getDefaultVariantNameAccordingUserRole()
+            End If
 
-            vglName = calcProjektKey(hproj)
+            vglName = calcProjektKey(searchPName, searchVName)
             Try
                 cproj = AlleProjekte.getProject(vglName)
 
@@ -1152,7 +1158,7 @@ Public Module awinGeneralModules
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        cproj = awinReadProjectFromDatabase(searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
@@ -1241,6 +1247,10 @@ Public Module awinGeneralModules
                         Call MsgBox(ex.Message)
                     End Try
 
+                    ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
+                        cproj.variantName = hproj.variantName
+                    End If
 
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
                         ' das heisst, das Projekt hat sich verändert 
@@ -1684,7 +1694,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="roleValues"></param>
     ''' <returns></returns>
-    Friend Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
+    Public Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
         Dim tmpResult As Double = 0.0
         Dim hrole As clsRollenDefinition = Nothing
 
@@ -3049,8 +3059,8 @@ Public Module awinGeneralModules
 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection,
-                                "Meldungen",
-                                "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
+                                "Messages when reading Portfolio ",
+                                " ")
             End If
 
         End If
@@ -3079,7 +3089,7 @@ Public Module awinGeneralModules
         Dim vName As String = getVariantnameFromKey(key)
         Dim hproj As clsProjekt
         Dim tryZeile As Integer
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " does not exist in DB at " & storedAtOrBefore.ToShortDateString
 
 
         If AlleProjekte.Containskey(key) Then
@@ -3146,6 +3156,28 @@ Public Module awinGeneralModules
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtOrBefore, err)
 
                     If Not IsNothing(hproj) Then
+
+
+                        ' tk 4.2.20
+                        ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+                        ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+                        If DateDiff(DateInterval.Day, Date.Now, storedAtOrBefore) = 0 Then
+                            ' nur bei aktuellen Projekten anmeckern ... 
+
+                            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                            If invalidNeedNames.Count > 0 Then
+
+                                For Each iVName As String In invalidNeedNames
+                                    Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                                    msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                                    outPutCollection.Add(msgTxt)
+                                Next
+
+                            End If
+
+                        End If
+
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         Dim newPosition As Integer = -1
                         If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
@@ -4074,6 +4106,27 @@ Public Module awinGeneralModules
             Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
+
+            ' tk 4.2.20
+            ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+            ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+            If Not calledFromPPT And Not IsNothing(hproj) And DateDiff(DateInterval.Day, Date.Now, storedAtORBefore) = 0 Then
+                ' nur bei aktuellen Projekten anmeckern ... 
+
+                Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                If invalidNeedNames.Count > 0 Then
+
+                    For Each iVName As String In invalidNeedNames
+                        Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                        msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                        outputCollection.Add(msgTxt)
+                    Next
+
+                End If
+
+            End If
+
 
 
             If Not IsNothing(hproj) Then
@@ -8809,4 +8862,6 @@ Public Module awinGeneralModules
         calcKeyMetricsOfProject = result
 
     End Function
+
+
 End Module

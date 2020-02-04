@@ -109,6 +109,8 @@
                 <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
                 <!--label="Import RPLAN RXF"-->
                 <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+                <!--label="Import Projects with Config-File"-->
+                <button id="PT4G1B9" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="es können eine oder mehrere Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
               </menu>
               <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->

@@ -872,6 +872,7 @@ Public Module Module1
         offlineData = 13
         customization = 14
         appearances = 15
+        projectWithConfig = 16
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -1003,6 +1004,7 @@ Public Module Module1
 
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
+    Public configfilesOrdner As String = "configfiles\"
     Public licFileName As String = requirementsOrdner & "License.xml"
     Public repMsgFileName As String = "ReportTexte"
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export

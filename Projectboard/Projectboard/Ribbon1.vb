@@ -616,6 +616,8 @@ Imports System.Web
                 If boardWasEmpty Or clearBoard Then
                     If leftborder - 12 > 0 Then
                         appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                    Else
+                        appInstance.ActiveWindow.ScrollColumn = 1
                     End If
                 End If
             End If
@@ -2049,6 +2051,7 @@ Imports System.Web
                     tmpLabel = "Organisation"
                 End If
 
+
             Case "PT4G1B11"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Custom Nutzer Rollen"
@@ -3051,6 +3054,12 @@ Imports System.Web
                     tmpLabel = "Prioritäten Liste..."
                 Else
                     tmpLabel = "Priority List..."
+                End If
+            Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt allg."
+                Else
+                    tmpLabel = "project generally"
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -6085,6 +6094,10 @@ Imports System.Web
 
                 ElseIf importedOrga.count > 0 Then
 
+                    ' TopNodes und OrgaTeamChilds bauen 
+                    Call importedOrga.allRoles.buildTopNodes()
+                    Call importedOrga.allRoles.buildOrgaTeamChilds()
+
                     ' jetzt wird die Orga als Setting weggespeichert ... 
                     Dim err As New clsErrorCodeMsg
                     Dim result As Boolean = False
@@ -6261,27 +6274,27 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportIstDaten(control As IRibbonControl)
 
+        Dim importDate As Date = Date.Now
+        Dim weitermachen As Boolean = False
         Dim selectedWB As String = ""
-
-        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
-        Dim anzFiles As Integer = listOfImportfiles.Count
-
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim outPutCollection As New Collection
+        Dim outPutline As String = ""
+        Dim lastrow As Integer
+        Dim result As Boolean = False
+        Dim listOfArchivFiles As New List(Of String)
+        Dim listOfArchivFilesAllg As New List(Of String)
         Dim dateiname As String = ""
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
+        Dim anzFiles As Integer = 0
 
-        Dim weiterMachen As Boolean = False
-
-        'Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
+        anzFiles = listOfImportfiles.Count
 
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
-            weiterMachen = True
+            weitermachen = True
 
         ElseIf anzFiles > 1 Then
             Dim getOrgaFile As New frmSelectImportFiles
@@ -6290,82 +6303,370 @@ Imports System.Web
 
             If returnValue = DialogResult.OK Then
                 selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
-                weiterMachen = True
+                weitermachen = True
             End If
-        Else
-            Call MsgBox("keine Istdaten vorhaben ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss folgender Namensgebung entsprechen:  Istdaten*.xls*")
+            'Else
+            '    Call MsgBox("keine Istdaten vorhaben ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss folgender Namensgebung entsprechen:  Istdaten*.xls*")
         End If
 
-        If weiterMachen Then
+        If weitermachen Then
 
             ' öffnen des LogFiles
             Call logfileOpen()
 
             dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
-
-            Try
-                ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Istdaten", selectedWB, -1)
-
-                ' Öffnen des Organisations-Files
-                appInstance.Workbooks.Open(dateiname)
-                Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
-
-                Dim outputCollection As New Collection
-
-                ' das Formular aufschalten mit 
-                '
-                Dim editActualDataMonth As New frmProvideActualDataMonth
-
-                If editActualDataMonth.ShowDialog = DialogResult.OK Then
-
-                    Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
-
-                    Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
-                    Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
-
-
-                    Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
-
-                End If
-
-
-                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
-
-                ' Schliessen des CustomUser Role-Files
-                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
-
-                'sessionConstellationP enthält alle Projekte aus dem Import 
-                Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-
-
-                If sessionConstellationP.count > 0 Then
-
-                    If projectConstellations.Contains(scenarioNameP) Then
-                        projectConstellations.Remove(scenarioNameP)
-                    End If
-
-                    projectConstellations.Add(sessionConstellationP)
-                    ' jetzt auf Projekt-Tafel anzeigen 
-                    Call loadSessionConstellation(scenarioNameP, False, True)
-
-                Else
-                    Call MsgBox("keine Projekte importiert ...")
-                End If
-
-                If ImportProjekte.Count > 0 Then
-                    ImportProjekte.Clear(False)
-                End If
-
-            Catch ex As Exception
-
-            End Try
+            result = readActualData(dateiname)
+            If result Then
+                listOfArchivFiles.Add(dateiname)
+            End If
 
             ' Schließen des LogFiles
             Call logfileSchliessen()
 
+            ' ImportDatei ins archive-Directory schieben
+
+            If listOfArchivFiles.Count > 0 Then
+                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.actualData))
+            End If
+
+
         End If
 
+
+        ' ===========================================================
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+        ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
+        Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+
+        ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
+        If allesOK Then
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim listOfImportfilesAllg As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, actualDataFile)
+            anzFiles = listOfImportfilesAllg.Count
+
+            If listOfImportfilesAllg.Count >= 1 Then
+                ' Vorbereitungen für die Aufnahme der verschiedenen Excel-File Daten in die unterschiedlichen Projekte
+                Dim editActualDataMonth As New frmInfoActualDataMonth
+                Dim lastValidMonth As Integer = 0  ' angegeben in dem Dialog
+                Dim IstdatenDate As Date
+                Dim curMonth As Integer = 0
+                Dim hrole As New clsRollenDefinition
+                Dim cacheProjekte As New clsProjekteAlle
+
+
+                If awinSettings.englishLanguage Then
+                    editActualDataMonth.Label1.Text = "Actual data including last month"
+                Else
+                    editActualDataMonth.Label1.Text = "Istdaten bis vorangegangenem Monat"
+                End If
+                ' Vorbesetzung des Datums für Istdaten ist aktuelles Datum
+                editActualDataMonth.MonatJahr.Value = Date.Now
+
+                If editActualDataMonth.ShowDialog = DialogResult.OK Then
+                    editActualDataMonth.MonatJahr.Value = Date.Now
+                    ' Istdaten immer vom Vormonat einlesen
+                    IstdatenDate = CDate(editActualDataMonth.MonatJahr.Text).AddMonths(-1)
+                End If
+
+
+                ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+                Dim istDatenReferatsliste() As Integer
+                Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+                ReDim istDatenReferatsliste(anzTopNodes - 1)
+                Dim i As Integer = 0
+                For i = 0 To anzTopNodes - 1
+                    istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+                Next
+
+                ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+                Dim referatsCollection As New Collection
+                For Each itemID As Integer In istDatenReferatsliste
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+                    If Not IsNothing(tmpRole) Then
+                        If Not referatsCollection.Contains(tmpRole.name) Then
+                            referatsCollection.Add(tmpRole.name, tmpRole.name)
+                        End If
+                    End If
+                Next
+
+                ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
+                Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+
+
+                ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
+                Dim projectRoleNames(,) As String = Nothing
+
+                ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
+                Dim projectRoleValues(,,) As Double = Nothing
+
+                Dim updatedProjects As Integer = 0
+
+                Dim logF_Fehler As Integer = 0
+                ' nimmt die Texte für die LogFile Zeile auf
+                ' Array kann beliebig lang werden 
+                Dim logArray() As String
+                Dim logDblArray() As Double
+
+
+
+                For Each tmpDatei As String In listOfImportfilesAllg
+
+                    Call logfileSchreiben("Einlesen der ActualData " & tmpDatei, "", anzFehler)
+
+
+                    result = readActualDataWithConfig(actualDataConfig, tmpDatei,
+                                                      IstdatenDate,
+                                                      cacheProjekte,
+                                                      validProjectNames, projectRoleNames,
+                                                      projectRoleValues,
+                                                      updatedProjects,
+                                                      outPutCollection)
+
+                    ' hier weitermachen
+
+                    If result Then
+                        ' hier: merken der erfolgreich importierten ActualData Files
+                        listOfArchivFilesAllg.Add(tmpDatei)
+                        ' Projekt in Importprojekte eintragen
+                    End If
+
+                Next
+
+                If listOfImportfilesAllg.Count = listOfArchivFilesAllg.Count Then           ' dann sind alle korrekt durchgelaufen
+
+                    ' jetzt kommt die zweite Bearbeitungs-Welle
+                    ' das Rausschreiben der Test Records 
+
+                    'Protokoll schreiben...
+                    ' tk 8.5.19 nicht mehr machen 
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                        Dim protocolLine As String = ""
+                        For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+
+                            ' jetzt schreiben 
+                            Dim teamID As Integer = -1
+                            Dim hilfsrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                            Dim curTagessatz As Double = hrole.tagessatzIntern
+
+                            ReDim logArray(3)
+                            logArray(0) = "Importiert wurde: "
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = rVKvP.Key & ": " & hilfsrole.name
+
+
+                            ReDim logDblArray(rVKvP.Value.Length - 1)
+                            For j As Integer = 0 To rVKvP.Value.Length - 1
+                                ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                                logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
+                            Next
+
+                            Call logfileSchreiben(logArray, logDblArray)
+                        Next
+
+                    Next
+                    ' Protokoll schreiben Ende ... 
+
+                    Dim gesamtIstValue As Double = 0.0
+
+                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                        Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                        Dim oldPlanValue As Double = 0.0
+                        Dim newIstValue As Double = 0.0
+
+                        lastValidMonth = getColumnOfDate(IstdatenDate)
+
+                        If Not IsNothing(hproj) Then
+                            ' es wird pro Projekt eine Variante erzeugt 
+                            Dim istDatenVName As String = ptVariantFixNames.acd.ToString
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+
+                            ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                            ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                            ' True: die Werte werden auf Null gesetzt 
+                            Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+
+                            'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
+                            'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
+                            newIstValue = calcIstValueOf(vPKvP.Value)
+
+                            gesamtIstValue = gesamtIstValue + newIstValue
+
+                            ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+
+                            Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                            Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                            ' Test tk 
+                            'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
+
+                            Dim abweichungGesamt As Double = 0.0
+                            If gesamtNachher <> checkNachher Then
+                                abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
+                            End If
+
+                            Dim abweichungIst As Double = 0.0
+                            If checkIstValue <> newIstValue Then
+                                abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
+                            End If
+
+                            If awinSettings.visboDebug Then
+                                If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                    ReDim logArray(3)
+                                    logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                    logArray(1) = ""
+                                    logArray(2) = vPKvP.Key
+                                    logArray(3) = ""
+
+                                    ReDim logDblArray(4)
+                                    logDblArray(0) = oldPlanValue
+                                    logDblArray(1) = newIstValue
+                                    logDblArray(2) = oldPlanValue - newIstValue
+                                    logDblArray(3) = checkIstValue
+                                    logDblArray(4) = gesamtNachher - checkNachher
+
+                                    Call logfileSchreiben(logArray, logDblArray)
+
+                                End If
+                            End If
+
+
+                            Dim jjjj As Integer = Year(IstdatenDate)
+                            Dim mm As Integer = Month(IstdatenDate)
+                            Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+
+                            With newProj
+                                newProj.actualDataUntil = DateSerial(jjjj, mm, tt)
+                                .variantName = ""   ' eliminieren von VariantenName acd
+                                .variantDescription = ""
+                            End With
+
+                            ' jetzt in die Import-Projekte eintragen 
+                            updatedProjects = updatedProjects + 1
+                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                        Else
+                            ReDim logArray(5)
+                            logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logfileSchreiben(logArray)
+                        End If
+
+                    Next
+
+                    ' tk Test 
+                    If awinSettings.visboDebug Then
+                        ReDim logArray(3)
+                        logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                        logArray(1) = ""
+                        logArray(2) = ""
+                        logArray(3) = ""
+
+                        ReDim logDblArray(0)
+                        logDblArray(0) = gesamtIstValue
+                        Call logfileSchreiben(logArray, logDblArray)
+                    End If
+
+
+                    logmessage = vbLf & "Projekte aktualisiert: " & updatedProjects
+                    outPutCollection.Add(logmessage)
+
+                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+                    outPutCollection.Add(logmessage)
+
+                    If outPutCollection.Count > 0 Then
+                        If awinSettings.englishLanguage Then
+                            Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
+                        Else
+                            Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                        End If
+
+                    End If
+
+
+
+                    '' Cursor auf Default setzen
+                    Cursor.Current = Cursors.Default
+
+
+                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                    Try
+                        Call importProjekteEintragen(importDate, True, False)
+
+                        ' ImportDatei ins archive-Directory schieben
+
+                        If listOfArchivFilesAllg.Count > 0 Then
+                            Call moveFilesInArchiv(listOfArchivFilesAllg, importOrdnerNames(PTImpExp.actualData))
+                        End If
+
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                        Else
+                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                        End If
+
+                    End Try
+
+
+                End If
+
+
+
+            Else
+                If awinSettings.englishLanguage Then
+                    outPutline = "No file to import actual data"
+                Else
+                    outPutline = "Es gibt keine Datei zum Importieren von Istdaten"
+                End If
+
+                Call MsgBox(outPutline)
+
+                Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
+            End If
+
+
+
+        Else
+            ' Fehlermeldung für Konfigurationsfile nicht vorhanden
+            If awinSettings.englishLanguage Then
+                outPutline = "Error: No configuration file found !"
+            Else
+                outPutline = "Fehler: Die Konfigurations-Datei fehlt !"
+            End If
+            Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
+
+            Call MsgBox(outPutline)
+
+        End If    ' allesOK
+
+
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6489,6 +6790,7 @@ Imports System.Web
     Public Sub PTImportKapas(control As IRibbonControl)
 
 
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -6518,7 +6820,7 @@ Imports System.Web
                 Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
 
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
-                Dim configCapaImport As String = awinPath & requirementsOrdner & "configCapaImport.xlsx"
+                Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
 
                 changedOrga.allRoles = RoleDefinitions
@@ -7027,20 +7329,6 @@ Imports System.Web
             For i = 1 To listofVorlagen.Count
                 dateiName = listofVorlagen.Item(i).ToString
 
-
-                ' '' ''Dim skip As Boolean = False
-
-
-                ' '' ''Try
-                ' '' ''    appInstance.Workbooks.Open(dateiName)
-                ' '' ''Catch ex1 As Exception
-                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
-                ' '' ''    skip = True
-                ' '' ''End Try
-
-                ' '' ''If Not skip Then
-                ' '' ''    pname = ""
-
                 hproj = New clsProjekt
 
                 ' Definition für ein eventuelles Mapping
@@ -7139,6 +7427,123 @@ Imports System.Web
 
 
 
+
+    End Sub
+    Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
+
+        Dim projectConfig As New SortedList(Of String, clsConfigProjectsImport)
+        Dim projectsFile As String = ""
+        Dim lastrow As Integer = 0
+        Dim outputString As String = ""
+        Dim dateiName As String = ""
+        Dim listofArchivAllg As New List(Of String)
+        Dim outPutCollection As New Collection
+
+        Dim outputLine As String = ""
+
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
+        Dim configProjectsImport As String = awinPath & configfilesOrdner & "configProjectImport.xlsx"
+
+        ' Read & check Config-File - ist evt.  in my.settings.xlsConfig festgehalten
+        Dim allesOK As Boolean = checkProjectImportConfig(configProjectsImport, projectsFile, projectConfig, lastrow, outPutCollection)
+
+        If allesOK Then
+
+            Dim getProjConfigImport As New frmSelectImportFiles
+
+            Dim returnValue As DialogResult
+
+
+            Call projektTafelInit()
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            getProjConfigImport.menueAswhl = PTImpExp.projectWithConfig
+            getProjConfigImport.importFileNames = projectsFile
+            returnValue = getProjConfigImport.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                Dim ok As Boolean = False
+                Dim importDate As Date = Date.Now
+                'Dim importDate As Date = "31.10.2013"
+                ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+                Dim listofVorlagen As Collection
+                listofVorlagen = getProjConfigImport.selImportFiles
+
+
+                '' ''dirName = awinPath & msprojectFilesOrdner
+                ' ''dirName = importOrdnerNames(PTImpExp.msproject)
+                ' ''listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear(False)
+
+                '' Cursor auf HourGlass setzen
+                Cursor.Current = Cursors.WaitCursor
+
+                Call logfileOpen()
+
+                ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+                Dim i As Integer
+
+                For i = 1 To listofVorlagen.Count
+                    dateiName = listofVorlagen.Item(i).ToString
+
+
+                    listofArchivAllg = readProjectsAllg(listofVorlagen, projectConfig, outPutCollection)
+
+                    If listofArchivAllg.Count > 0 Then
+                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.projectWithConfig))
+                    End If
+
+                Next
+
+                'Call logfileSchreiben(outPutCollection)
+                Call logfileSchliessen()
+
+
+
+
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
+
+
+                ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                Try
+                    ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
+                    ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
+                    Call importProjekteEintragen(importDate, True, False)
+
+                Catch ex As Exception
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                    Else
+                        Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                    End If
+
+                End Try
+
+            End If
+
+        End If
+
+        If outPutCollection.Count > 0 Then
+            If awinSettings.englishLanguage Then
+                Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
+            Else
+                Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+            End If
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 
@@ -8211,9 +8616,11 @@ Imports System.Web
         ' Window so positionieren, dass die Projekte sichtbar sind ...  
         If ShowProjekte.Count > 0 Then
             Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
-            If boardWasEmpty And Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+            If boardWasEmpty Then
                 If leftborder - 12 > 0 Then
                     appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
                 End If
             End If
         End If

@@ -13520,6 +13520,7 @@ Public Module Projekte
 
     End Function
 
+
     ''' <summary>
     ''' erstellt ein Projekt aus den angegebenen Parametern
     ''' </summary>
@@ -13544,6 +13545,9 @@ Public Module Projekte
     ''' <param name="costValues"></param>
     ''' <param name="phNames"></param>
     ''' <param name="przPhasenAnteile"></param>
+    ''' <param name="combinedName"></param>
+    ''' <param name="createBudget"></param>
+    ''' <param name="createCostsRolesAnyhow"></param>
     ''' <returns></returns>
     Public Function erstelleProjektausParametern(ByVal pName As String, ByVal vName As String, ByVal vorlagenName As String,
                                                  ByVal startDate As Date, ByVal endDate As Date,
@@ -13554,7 +13558,8 @@ Public Module Projekte
                                                  ByVal costNames() As String, ByVal costValues() As Double,
                                                  ByVal phNames() As String, ByVal przPhasenAnteile() As Double,
                                                  ByVal combinedName As Boolean,
-                                                 Optional ByVal createBudget As Boolean = False)
+                                                 Optional ByVal createBudget As Boolean = False,
+                                                 Optional ByVal createCostsRolesAnyhow As Boolean = False)
 
         Dim hproj As clsProjekt = New clsProjekt
 
@@ -13630,8 +13635,8 @@ Public Module Projekte
             Throw New Exception("in erstelle InventurProjekte: " & ex.Message)
         End Try
 
-        ' jetzt müssen die Rollen und Kostenarten besetzt werden  
-        If atleastOneRC Then
+        ' jetzt müssen die Rollen und Kostenarten besetzt werden evt. auch wenn keine Bedarfe definiert sind 
+        If atleastOneRC Or createCostsRolesAnyhow Then
             If przPhasenAnteile.Sum >= 0.99 Then
                 ' der Gesamt-Wert der Rollen soll auf die entsprechenden Phasen aufgeteilt werden 
                 Dim anzPhasen As Integer = phNames.Length
@@ -13643,7 +13648,7 @@ Public Module Projekte
 
                     If Not IsNothing(cphase) Then
                         If przPhasenAnteile(p) > 0 Then
-                            Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p))
+                            Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p),, createCostsRolesAnyhow)
                         End If
                     End If
 
@@ -13653,7 +13658,7 @@ Public Module Projekte
                 ' der Gesamt-Wert der Rollen soll auf die RootPhase aufgeteilt werden
                 Dim cphase As clsPhase = hproj.getPhase(1)
                 If Not IsNothing(cphase) Then
-                    Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues)
+                    Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues,,, createCostsRolesAnyhow)
                 End If
             End If
         End If

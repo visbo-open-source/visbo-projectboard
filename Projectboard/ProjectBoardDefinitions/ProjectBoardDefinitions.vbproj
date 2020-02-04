@@ -71,7 +71,9 @@
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
     <Compile Include="clsBewertungDB.vb" />
+    <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
+    <Compile Include="clsConfigProjectsImport.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
