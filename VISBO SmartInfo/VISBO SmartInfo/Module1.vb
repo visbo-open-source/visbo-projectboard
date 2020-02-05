@@ -462,9 +462,6 @@ Module Module1
                     Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
                     allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
-                    ' Behandeln der myUserRole 
-                    ' jetzt wird die für die Slide passende Rolle gesucht 
-                    myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
 
                 Else
                     With myCustomUserRole
@@ -475,51 +472,56 @@ Module Module1
                 End If
 
 
+
+
+                ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
+                If sld.Tags.Item("PRXYL").Length > 0 Then
+                    sld.Tags.Delete("PRXYL")
+                End If
+
+                If awinSettings.proxyURL.Length > 0 Then
+                    sld.Tags.Add("PRXYL", awinSettings.proxyURL)
+                End If
+
+                'Start of Calendar auslesen, damit Orga richtig interpretiert wird
+                If sld.Tags.Item("SOC").Length > 0 Then
+                    StartofCalendar = CDate(sld.Tags.Item("SOC"))
+                End If
+
+                tmpResult = True
+
+                ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
+                Dim currentOrga As New clsOrganisation
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                If Not IsNothing(currentOrga) Then
+
+
+                    If currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                    End If
+
+                End If
+
+
+                If Not IsNothing(currentOrga) Then
+                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                    RoleDefinitions = currentOrga.allRoles
+                    CostDefinitions = currentOrga.allCosts
+                End If
+
+                ' Behandeln der myUserRole 
+                ' jetzt wird die für die Slide passende Rolle gesucht 
+                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+
                 If meldungen.Count > 0 Then
                     Call MsgBox(meldungen.Item(1))
-                    'Call showOutPut(meldungen, "Error: Keine Berechtigung", "")
+                    tmpResult = False
                 Else
 
-                    ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
-                    If sld.Tags.Item("PRXYL").Length > 0 Then
-                        sld.Tags.Delete("PRXYL")
-                    End If
-
-                    If awinSettings.proxyURL.Length > 0 Then
-                        sld.Tags.Add("PRXYL", awinSettings.proxyURL)
-                    End If
-
-                    'Start of Calendar auslesen, damit Orga richtig interpretiert wird
-                    If sld.Tags.Item("SOC").Length > 0 Then
-                        StartofCalendar = CDate(sld.Tags.Item("SOC"))
-                    End If
-
-                    tmpResult = True
-
-                    ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
-                    Dim currentOrga As New clsOrganisation
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                    If Not IsNothing(currentOrga) Then
-
-
-                        If currentOrga.count > 0 Then
-                            validOrganisations.addOrga(currentOrga)
-                        End If
-
-                    End If
-
-
-                    If Not IsNothing(currentOrga) Then
-                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        RoleDefinitions = currentOrga.allRoles
-                        CostDefinitions = currentOrga.allCosts
-                    End If
-
-
-                    ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
-                    ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+                    '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
+                    'Call RoleDefinitions.buildTopNodes()
+                    'Call RoleDefinitions.buildOrgaTeamChilds()
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
@@ -601,8 +603,12 @@ Module Module1
 
                 Do While ix <= allMyCustomUserRoles.Count - 1 And Not found
                     If pptUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
-                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics
+                        found = (CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
+                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics) Or
+                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
+                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
 
                     ElseIf CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole Then
                         found = True

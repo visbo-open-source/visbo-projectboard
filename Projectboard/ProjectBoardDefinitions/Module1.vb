@@ -6162,12 +6162,13 @@ Public Module Module1
             roleBezeichner = itemNameID
 
         ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
-            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
-            Dim leadingblanks As String = ""
-            For i As Integer = 1 To indentLevel
-                leadingblanks = " " & leadingblanks
-            Next
-            roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
+            'Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
+            'Dim leadingblanks As String = ""
+            'For i As Integer = 1 To indentLevel
+            '    leadingblanks = " " & leadingblanks
+            'Next
+            'roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
+            roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
 
         ElseIf CostDefinitions.containsName(itemNameID) Then
             roleBezeichner = itemNameID
