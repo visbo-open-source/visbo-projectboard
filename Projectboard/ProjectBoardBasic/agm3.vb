@@ -1563,13 +1563,37 @@ Public Module agm3
                                                     projektKDNr = match.Value
                                                 Else
                                                     projektKDNr = Nothing
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "Attention: " & hrole.name & " Sheet: " & currentWS.Name & " Line: " & z.ToString & " no projectNo. given!"
+                                                    Else
+                                                        outputline = "Achtung: " & hrole.name & " Tabelle: " & currentWS.Name & " Zeile: " & z.ToString & " keine ProjektNr. angegeben!"
+                                                    End If
+                                                    oPCollection.Add(outputline)
+                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
                                                 End If
                                             End If
                                         End If
+                                    End If
+
+                                    If Not IsNothing(projektKDNr) Then
 
                                         Dim projektName As String = ""
                                         projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
+
                                         stundenTotal = CInt(currentWS.Cells(z, stdSpalteTotal).value)
+
+                                        ' Check mit der Summenbildung in der Zeile
+                                        Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 2), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
+                                        Dim stundenSumme As Integer = appInstance.WorksheetFunction.Sum(stdRange)
+                                        If stundenTotal <> stundenSumme Then
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "Attention: " & hrole.name & ": sum of the single values isn't the same as the value in '" & currentWS.Name & "' : " & hspalte
+                                            Else
+                                                outputline = "Achtung: " & hrole.name & "Die Summe der einzelnen Werte ist nicht gleich dem Eintrag in '" & currentWS.Name & "' : " & hspalte
+                                            End If
+                                            oPCollection.Add(outputline)
+                                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                        End If
 
                                         Dim pvkey As String
                                         If Not IsNothing(projektName) Then
@@ -1610,7 +1634,7 @@ Public Module agm3
 
                                             Else
                                                 ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
-                                                outputline = "There exists no project zu project No. '" & projektKDNr & "'"
+                                                outputline = "No project zu project No. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
                                                 oPCollection.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
 
