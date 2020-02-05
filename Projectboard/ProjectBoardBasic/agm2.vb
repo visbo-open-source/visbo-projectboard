@@ -5374,10 +5374,11 @@ Public Module agm2
 
                 Else
                     If ImportProjekte.Containskey(key) Then
-                        ImportProjekte.Remove(key)
+                        ImportProjekte.Remove(key, updateCurrentConstellation:=False)
                     End If
 
-                    ImportProjekte.Add(hproj)
+                    ' immer mit updateCurrentConstellation = false aufrufen, nur bei AlleProjekte bzw. bei ShowProjekte ggf mit optionaler Setzung aufrufen ..
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                 End If
 
@@ -5442,10 +5443,10 @@ Public Module agm2
 
                         Else
                             If ImportProjekte.Containskey(key) Then
-                                ImportProjekte.Remove(key)
+                                ImportProjekte.Remove(key, updateCurrentConstellation:=False)
                             End If
 
-                            ImportProjekte.Add(mapProj)
+                            ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
 
                         End If
 

@@ -1629,7 +1629,7 @@ Public Module agm3
                                             'result = False
 
                                         Else
-                                            cacheProjekte.Add(hproj)                    ' Projekt in cacheProjekte merken
+                                            cacheProjekte.Add(hproj, updateCurrentConstellation:=False)                    ' Projekt in cacheProjekte merken
 
                                             Dim projBeginn = getColumnOfDate(hproj.startDate)
                                             Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
@@ -2901,7 +2901,10 @@ Public Module agm3
                                                     Dim hilfe As Boolean = True
                                                 Next
 
-                                                ImportProjekte.Add(hproj)
+                                                ' Budget setzen 
+                                                Call hproj.setBudgetAsNeeded()
+
+                                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                                                 outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
                                                 meldungen.Add(outputline)

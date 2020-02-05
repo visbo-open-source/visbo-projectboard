@@ -3044,9 +3044,9 @@ Imports System.Web
 
             Case "PT4G1B7" ' Import Projekte (Batch)
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Batch Projekt-Erzeugung..."
+                    tmpLabel = "Erzeuge Projekte aus Liste (VISBO)"
                 Else
-                    tmpLabel = "Batch Project Creation..."
+                    tmpLabel = "Create Projects from list (VISBO)"
                 End If
 
             Case "PT4G1B5" ' Import Scenario Definition
@@ -3057,9 +3057,9 @@ Imports System.Web
                 End If
             Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt allg."
+                    tmpLabel = "Erzeuge Projekte aus Liste (konfiguriert)"
                 Else
-                    tmpLabel = "project generally"
+                    tmpLabel = "Create Projects from list (customized)"
                 End If
 
             Case "PT4G2" ' EXPORT
