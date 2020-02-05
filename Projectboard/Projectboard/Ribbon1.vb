@@ -6425,8 +6425,10 @@ Imports System.Web
 
                 For Each tmpDatei As String In listOfImportfilesAllg
 
-                    Call logfileSchreiben("Einlesen der ActualData " & tmpDatei, "", anzFehler)
+                    outPutline = "Einlesen der ActualData " & tmpDatei
+                    outPutCollection.Add(outPutline)
 
+                    Call logfileSchreiben(outPutline, "", anzFehler)
 
                     result = readActualDataWithConfig(actualDataConfig, tmpDatei,
                                                       IstdatenDate,
