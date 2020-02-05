@@ -6160,8 +6160,15 @@ Public Module Module1
 
         If repmsg.Contains(itemNameID) Then
             roleBezeichner = itemNameID
+
         ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
-            roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
+            Dim leadingblanks As String = ""
+            For i As Integer = 1 To indentLevel
+                leadingblanks = " " & leadingblanks
+            Next
+            roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
+
         ElseIf CostDefinitions.containsName(itemNameID) Then
             roleBezeichner = itemNameID
         Else
