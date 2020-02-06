@@ -3548,6 +3548,11 @@ Imports System.Web
                         chckVisibility = False
                     End If
 
+                Case "PT2G1M2" ' Zeile hinzufügen oder wegnehmen im MassEdit Ressource Cost 
+                    chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
+
                 Case "PTmassEdit" ' Charts und Info 
                     If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
                         chckVisibility = True
@@ -5663,7 +5668,7 @@ Imports System.Web
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True, False)
+                Call importProjekteEintragen(importDate, True, False, False)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5859,7 +5864,7 @@ Imports System.Web
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, True, True)
+                    Call importProjekteEintragen(importDate, True, True, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -5977,7 +5982,7 @@ Imports System.Web
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True, True)
+                Call importProjekteEintragen(importDate, True, True, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -6036,6 +6041,9 @@ Imports System.Web
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
+
+        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
+        Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
 
@@ -6126,6 +6134,8 @@ Imports System.Web
                             End If
                         End If
 
+                        listOfArchivFiles.Add(dateiname)
+
                         Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
                         Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
                     Else
@@ -6143,6 +6153,10 @@ Imports System.Web
 
         ' Schließen des LogFiles
         Call logfileSchliessen()
+
+        If listOfArchivFiles.Count > 0 Then
+            Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6515,6 +6529,7 @@ Imports System.Web
                             ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
                             Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
 
+
                             Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                             ' Test tk 
@@ -6616,7 +6631,7 @@ Imports System.Web
 
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                     Try
-                        Call importProjekteEintragen(importDate, True, False)
+                        Call importProjekteEintragen(importDate, True, False, False)
 
                         ' ImportDatei ins archive-Directory schieben
 
@@ -6692,6 +6707,9 @@ Imports System.Web
 
         Dim dateiname As String = ""
 
+        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
+        Dim listOfArchivFiles As New List(Of String)
+
         Dim weiterMachen As Boolean = False
 
         'Call projektTafelInit()
@@ -6765,6 +6783,9 @@ Imports System.Web
                         Call MsgBox("Error when writing Custom User Roles")
                         Call logfileSchreiben("Error when writing Custom User Roles ...", selectedWB, -1)
                     End If
+
+                    listOfArchivFiles.Add(dateiname)
+
                 Else
                     Call MsgBox("no roles found ...")
                 End If
@@ -6778,6 +6799,10 @@ Imports System.Web
 
         ' Schließen des LogFiles
         Call logfileSchliessen()
+
+        If listOfArchivFiles.Count > 0 Then
+            Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.customUserRoles))
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -7246,7 +7271,7 @@ Imports System.Web
 
 
             Try
-                Call importProjekteEintragen(importDate, True, False)
+                Call importProjekteEintragen(importDate, True, False, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -7408,7 +7433,7 @@ Imports System.Web
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                Call importProjekteEintragen(importDate, True, True)
+                Call importProjekteEintragen(importDate, True, True, True)
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -7513,7 +7538,7 @@ Imports System.Web
                 Try
                     ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate, True, False)
+                    Call importProjekteEintragen(importDate, True, False, False)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then

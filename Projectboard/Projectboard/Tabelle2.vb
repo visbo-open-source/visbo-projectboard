@@ -414,11 +414,19 @@ Public Class Tabelle2
 
                             For Each roleNameIDitem As String In frmMERoleCost.rolesToAdd
                                 Call meRCZeileEinfuegen(zeile, roleNameIDitem, True)
+
+                                ' neueZeile highlighten, ale Zeile to Normal
+                                Call highlightRow(zeile + 1, zeile)
+
                                 zeile = visboZustaende.oldRow
                             Next
 
                             For Each costNameIDitem As String In frmMERoleCost.costsToAdd
                                 Call meRCZeileEinfuegen(zeile, costNameIDitem, False)
+
+                                ' neueZeile highlighten, ale Zeile to Normal
+                                Call highlightRow(zeile + 1, zeile)
+
                                 zeile = visboZustaende.oldRow
                             Next
 

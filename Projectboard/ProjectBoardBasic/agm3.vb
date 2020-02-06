@@ -1748,7 +1748,7 @@ Public Module agm3
 
                                             Else
                                                 'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
-                                                outputline = "Die Rolle '" & hrole.name & "' ist nicht angelegt in Ihrem VISBO project warehouse"
+                                                outputline = "Role '" & hrole.name & "' does not exist in your organization"
                                                 oPCollection.Add(outputline)
                                                 result = False
                                             End If
@@ -2973,6 +2973,12 @@ Public Module agm3
 
                                                 ' Budget setzen 
                                                 Call hproj.setBudgetAsNeeded()
+
+                                                ' Beauftragen , weil aus Controlling Sheet kommt und Nummer hat 
+                                                If hproj.kundenNummer <> "" Then
+                                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                                End If
+
 
                                                 ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
