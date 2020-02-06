@@ -7531,6 +7531,10 @@ Imports System.Web
 
         End If
 
+
+        outputString = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        outPutCollection.Add(outputString)
+
         If outPutCollection.Count > 0 Then
             If awinSettings.englishLanguage Then
                 Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")

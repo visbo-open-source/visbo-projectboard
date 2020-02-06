@@ -1266,8 +1266,8 @@ Public Module agm3
                 Try
                     If appInstance.Worksheets.Count > 0 Then
 
-                        currentWS = configWB.Worksheets("VISBO Config")
                         'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                         Dim titleCol As Integer,
                             IdentCol As Integer,
@@ -1548,9 +1548,9 @@ Public Module agm3
                                     stdSpalteTotal = searcharea.Find(hspalte).Column
                                 Catch ex As Exception
                                     If awinSettings.englishLanguage Then
-                                        outputline = "in the sheet " & vstart.sheetDescript & " the value-column " & hspalte & " not found"
+                                        outputline = "Error: in the sheet " & vstart.sheetDescript & " the value-column " & hspalte & " not found"
                                     Else
-                                        outputline = "im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
+                                        outputline = "Error: im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
                                     End If
                                     oPCollection.Add(outputline)
                                     Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
@@ -1565,12 +1565,13 @@ Public Module agm3
                                     Dim vPersoName As clsConfigActualDataImport = ActualDataConfig("PersonalName")
                                     Dim personalName As String = currentWS.Cells(vPersoName.row.von, vPersoName.column.von).value
                                     hrole = RoleDefinitions.getRoledefByEmployeeNr(personalNumber)
+                                    Dim identical As Boolean = (personalName = hrole.name)
 
                                 Catch ex As Exception
                                     If awinSettings.englishLanguage Then
-                                        outputline = "in the sheet " & vstart.sheetDescript & "- there is something wrong with 'personal-No' or 'personal name'"
+                                        outputline = "Error: in the sheet " & vstart.sheetDescript & "- there is something wrong with 'personal-No' or 'personal name'"
                                     Else
-                                        outputline = "im Tabellenblatt " & vstart.sheetDescript & "- es gibt ein Fehler beim lesen der Personalnummer oder des Namens"
+                                        outputline = "Fehler: im Tabellenblatt " & vstart.sheetDescript & "- es gibt ein Fehler beim lesen der Personalnummer oder des Namens"
                                     End If
                                     oPCollection.Add(outputline)
                                     Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
@@ -1610,7 +1611,7 @@ Public Module agm3
                                                 Else
                                                     projektKDNr = Nothing
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "Attention: " & hrole.name & " Sheet: " & currentWS.Name & " Line: " & z.ToString & " no projectNo. given!"
+                                                        outputline = "Attention: " & hrole.name & " Sheet: " & currentWS.Name & " Line: " & z.ToString & " no project No. given!"
                                                     Else
                                                         outputline = "Achtung: " & hrole.name & " Tabelle: " & currentWS.Name & " Zeile: " & z.ToString & " keine ProjektNr. angegeben!"
                                                     End If
@@ -1633,9 +1634,9 @@ Public Module agm3
                                         Dim stundenSumme As Integer = appInstance.WorksheetFunction.Sum(stdRange)
                                         If stundenTotal <> stundenSumme Then
                                             If awinSettings.englishLanguage Then
-                                                outputline = "Attention: " & hrole.name & ": sum of the single values isn't the same as the value in '" & currentWS.Name & "' : " & hspalte
+                                                outputline = "Attention: " & hrole.name & ": in '" & currentWS.Name & "': sum of the single values (" & stundenSumme.ToString & ") isn 't the same as the value in column '" & hspalte & "' (" & stundenTotal.ToString & ")"
                                             Else
-                                                outputline = "Achtung: " & hrole.name & "Die Summe der einzelnen Werte ist nicht gleich dem Eintrag in '" & currentWS.Name & "' : " & hspalte
+                                                outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
                                             End If
                                             oPCollection.Add(outputline)
                                             Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
@@ -1662,9 +1663,9 @@ Public Module agm3
                                                 ' Meldung noch ins Logbuch, wenn die Namen nicht übereinstimmen
                                                 If Not pname_ok Then
                                                     If awinSettings.englishLanguage Then
-                                                        outputline = "projectname of projectNr. " & projektKDNr & " in the sheet is " & projektName & " in the DB it is " & pName
+                                                        outputline = "different projectnames of project No. '" & projektKDNr & "': in the sheet it's called '" & projektName & "' in the DB it's called '" & pName & "'"
                                                     Else
-                                                        outputline = "Projektname des Projektes Nr. " & projektKDNr & " in der ExcelTabelle ist " & projektName & " in der DB heißt das Projekt " & pName
+                                                        outputline = "Unterschiedlicher Projektname für Projekt Nr. '" & projektKDNr & "': in der ExcelTabelle heißt es '" & projektName & "' in der DB  '" & pName & "'"
                                                     End If
                                                     Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
                                                 End If
@@ -1757,12 +1758,13 @@ Public Module agm3
                                         'Fehler, es ist keine ProjektKDNr angegeben, Keine Istdaten hierzu einlesbar
                                         If stundenTotal <> 0 Then
                                             If awinSettings.englishLanguage Then
-                                                outputline = "there exists no project Nr. in line " & z.ToString
+                                                outputline = "Error: Actual Data cannot be imported: '" & hrole.name & "'/'" & currentWS.Name & "' There exists no project No. in line " & z.ToString
                                             Else
-                                                outputline = "es ist keine Projekt-Nummer in Zeile " & z.ToString
+                                                outputline = "Fehler: Istdaten sind zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
                                             End If
                                             oPCollection.Add(outputline)
                                             Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                            result = False
                                         End If
                                     End If      ' if ProjektKDNr = ""
 
@@ -1780,7 +1782,7 @@ Public Module agm3
 
                 Catch ex As Exception
                     actDataWB = Nothing
-                    Call MsgBox("1 " & ex.Message)
+                    Call MsgBox("1. " & ex.Message)
                 End Try
 
                 If Not IsNothing(actDataWB) Then
@@ -1790,7 +1792,7 @@ Public Module agm3
 
             End If
         Catch ex As Exception
-            Call MsgBox("2 " & ex.Message)
+            Call MsgBox("2. " & ex.Message)
         End Try
 
 
@@ -2807,7 +2809,8 @@ Public Module agm3
         Dim firstUrlzeile As Integer
         Dim lastSpalte As Integer
         Dim lastZeile As Integer
-        Dim anz_Proj As Integer = 0
+        Dim anz_Proj_created As Integer = 0
+        Dim anz_Proj_notCreated As Integer = 0
 
         ' Variables to create a Project
         Dim hproj As clsProjekt
@@ -2915,12 +2918,28 @@ Public Module agm3
                                                 Dim match As Match = regexpression.Match(projNumber_new)
                                                 If match.Success Then
                                                     projNumber_new = match.Value
+                                                Else
+                                                    projNumber_new = Nothing
                                                 End If
                                             End If
 
                                         End With
 
+                                        If IsNothing(projNumber_new) Then
+                                            If Not (i > lastZeile) Then
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "Couldn't find the projectnumber in line " & i.ToString & " of the inputfile"
+                                                Else
+                                                    outputline = "Fehler beim Herausfinden der Projektnummer in Zeile " & i.ToString & " des Inputfiles"
+                                                End If
+                                                'meldungen.Add(outputline)
+                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                noGo = noGo + 1
+                                                projNumber_new = projNumber
+                                            End If
+                                        Else
 
+                                        End If
 
                                         If projNumber_new <> projNumber And i > firstUrlzeile Then
                                             If noGo > 0 Then
@@ -2931,6 +2950,9 @@ Public Module agm3
                                                 End If
                                                 meldungen.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+                                                ' Zählen der aufgrund von fehlerhafter Definition o.ä. nicht erzeugten Projekten
+                                                anz_Proj_notCreated = anz_Proj_notCreated + 1
 
                                                 ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
                                                 roleListNameValues = New SortedList(Of String, Double())
@@ -2952,7 +2974,7 @@ Public Module agm3
                                                 ReDim przPhasenAnteile(1)
 
                                                 'erstelleProjektausParametern()
-                                                anz_Proj = anz_Proj + 1
+                                                anz_Proj_created = anz_Proj_created + 1
                                                 hproj = New clsProjekt
                                                 hproj = erstelleProjektausParametern(pName, vName, vorlagenName,
                                                                  startDate, endDate,
@@ -2977,7 +2999,7 @@ Public Module agm3
                                                 ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                                                 outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
-                                                meldungen.Add(outputline)
+                                                'meldungen.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
 
                                                 ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
@@ -3086,6 +3108,8 @@ Public Module agm3
                                                 Dim match As Match = regexpression.Match(projName)
                                                 If match.Success Then
                                                     projName = match.Value
+                                                Else
+                                                    projName = Nothing
                                                 End If
                                             End If
                                             pName = projName
@@ -3097,11 +3121,11 @@ Public Module agm3
                                         End With
                                     Catch ex As Exception
                                         If awinSettings.englishLanguage Then
-                                            outputline = "Couldn't find the projectname in line " & i.ToString & "of the inputfile"
+                                            outputline = "Couldn't find the projectname in line " & i.ToString & " of the inputfile"
                                         Else
                                             outputline = "Fehler beim Herausfinden des ProjektNamens in Zeile " & i.ToString & " des Inputfiles"
                                         End If
-                                        meldungen.Add(outputline)
+                                        'meldungen.Add(outputline)
                                         Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
@@ -3527,7 +3551,27 @@ Public Module agm3
 
         End Try
 
-        result = (anz_Proj = ImportProjekte.Count) And (anz_Proj > 0)
+        result = (anz_Proj_created = ImportProjekte.Count) And (anz_Proj_created > 0) And anz_Proj_notCreated <= 0
+
+
+        If awinSettings.englishLanguage Then
+            outputline = vbLf & anz_Proj_created.ToString & " projects created !"
+            meldungen.Add(outputline)
+            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+            outputline = anz_Proj_notCreated & " projects wurden N O T  created !"
+            meldungen.Add(outputline)
+            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+        Else
+            outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
+            meldungen.Add(outputline)
+            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+
+            outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
+            meldungen.Add(outputline)
+            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+        End If
+
 
         readProjectsWithConfig = result
     End Function
