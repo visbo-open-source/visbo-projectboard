@@ -16225,7 +16225,7 @@ Public Module agm2
                     Dim oldZeile As Integer = currentCell.Row
                     Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID, isRole)
                     ' neueZeile highlighten, ale Zeile to Normal
-                    Call highlightRow(oldZeile, oldZeile - 1)
+                    'Call highlightRow(oldZeile, oldZeile - 1)
                 Else
                     If awinSettings.englishLanguage Then
                         Call MsgBox("Delete not possible ... row is protected or contains actual data")
@@ -16720,7 +16720,7 @@ Public Module agm2
             Call meRCZeileEinfuegen(zeile, "", True)
 
             ' neueZeile highlighten, ale Zeile to Normal
-            Call highlightRow(zeile + 1, zeile)
+            'Call highlightRow(zeile + 1, zeile)
 
             ' jetzt den Blattschutz wiederherstellen ... 
             If Not awinSettings.meEnableSorting Then

@@ -3565,7 +3565,7 @@ Public Module agm3
             meldungen.Add(outputline)
             Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
 
-            outputline = anz_Proj_notCreated & " projects wurden N O T  created !"
+            outputline = anz_Proj_notCreated & " projects were N O T  created !"
             meldungen.Add(outputline)
             Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
         Else

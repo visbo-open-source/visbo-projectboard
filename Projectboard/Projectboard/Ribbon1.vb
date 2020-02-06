@@ -3548,14 +3548,12 @@ Imports System.Web
                         chckVisibility = False
                     End If
 
-                Case "PT2G1M2" ' Zeile hinzufügen oder wegnehmen im MassEdit Ressource Cost 
-                    chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
-                        myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
-                        myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
 
                 Case "PTmassEdit" ' Charts und Info 
                     If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                        chckVisibility = True
+                        chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
                     Else
                         chckVisibility = False
                     End If

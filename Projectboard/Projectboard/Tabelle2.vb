@@ -416,7 +416,7 @@ Public Class Tabelle2
                                 Call meRCZeileEinfuegen(zeile, roleNameIDitem, True)
 
                                 ' neueZeile highlighten, ale Zeile to Normal
-                                Call highlightRow(zeile + 1, zeile)
+                                'Call highlightRow(zeile + 1, zeile)
 
                                 zeile = visboZustaende.oldRow
                             Next
@@ -425,7 +425,7 @@ Public Class Tabelle2
                                 Call meRCZeileEinfuegen(zeile, costNameIDitem, False)
 
                                 ' neueZeile highlighten, ale Zeile to Normal
-                                Call highlightRow(zeile + 1, zeile)
+                                'Call highlightRow(zeile + 1, zeile)
 
                                 zeile = visboZustaende.oldRow
                             Next
@@ -1951,7 +1951,7 @@ Public Class Tabelle2
         Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
         If Target.Row <> oldRow Then
-            Call highlightRow(Target.Row, oldRow)
+            'Call highlightRow(Target.Row, oldRow)
 
             ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
             Call defineHeaderTitleOfRoleCost(Target.Row)
