@@ -5961,32 +5961,40 @@ Public Module Module1
                             Dim curItem As String = CStr(toDoCollectionR.Item(m))
                             Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
+
                             If isRole Then
 
-                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                Dim teamID As Integer = -1
+                                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
+
+                                If myCustomUserRole.isAllowedToSee(curRole.name) Then
+                                    curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
                                                                      outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
 
-                                If considerLapr Then
-                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                          outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
-                                Else
-                                    laprValue = 0.0
+                                    If considerLapr Then
+                                        laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
+                                    Else
+                                        laprValue = 0.0
+                                    End If
+
+                                    If considerFapr Then
+                                        faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
+                                    Else
+                                        faprValue = 0.0
+                                    End If
+
+                                    Dim zeilenItem As String = curItem
+
+
+                                    Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                              considerFapr, considerLapr)
+                                    tabelle.Rows.Add()
+                                    tabellenzeile = tabellenzeile + 1
                                 End If
 
-                                If considerFapr Then
-                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                          outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
-                                Else
-                                    faprValue = 0.0
-                                End If
 
-                                Dim zeilenItem As String = curItem
-
-
-                                Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
-                                                          considerFapr, considerLapr)
-                                tabelle.Rows.Add()
-                                tabellenzeile = tabellenzeile + 1
 
                             End If
 
@@ -6152,8 +6160,16 @@ Public Module Module1
 
         If repmsg.Contains(itemNameID) Then
             roleBezeichner = itemNameID
+
         ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
+            'Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
+            'Dim leadingblanks As String = ""
+            'For i As Integer = 1 To indentLevel
+            '    leadingblanks = " " & leadingblanks
+            'Next
+            'roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
             roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+
         ElseIf CostDefinitions.containsName(itemNameID) Then
             roleBezeichner = itemNameID
         Else

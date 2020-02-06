@@ -1306,7 +1306,7 @@ Public Module awinGeneralModules
 
                             ' das muss auch gemacht werden, wenn hproj.marker = true
                         ElseIf existsInSession Or hproj.marker = True Then
-                            AlleProjekte.Remove(vglName, False)
+                            AlleProjekte.Remove(vglName)
                             If ShowProjekte.contains(hproj.name) Then
                                 ShowProjekte.Remove(hproj.name, False)
                             End If
@@ -1336,8 +1336,8 @@ Public Module awinGeneralModules
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
                 If existsInSession Then
-                    AlleProjekte.Add(hproj, False)
-                    ShowProjekte.Add(hproj, False)
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.Add(hproj)
                 Else
                     AlleProjekte.Add(hproj)
                     ShowProjekte.Add(hproj)
@@ -3700,20 +3700,29 @@ Public Module awinGeneralModules
                 Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
                 ' das Portfolio Projekt
-                calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-
+                ' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
+                ' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
+                'calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
+                calculateAndStoreSummaryProjekt = True
+                Dim sproj As clsProjekt = Nothing
 
                 If calculateAndStoreSummaryProjekt Then
 
                     If Not IsNothing(oldSummaryP) Then
                         'budget = oldSummaryP.budgetWerte.Sum
                         budget = oldSummaryP.Erloes
+                        If budget = 0 Then
+                            budget = currentConstellation.getBudgetOfShownProjects
+                            oldSummaryP.Erloes = budget
+                        End If
+                        sproj = oldSummaryP
                     Else
                         budget = currentConstellation.getBudgetOfShownProjects
+                        sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
+                        sproj.variantName = tmpVariantName
                     End If
 
-                    Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
-                    sproj.variantName = tmpVariantName
+
 
 
                     If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
@@ -4151,10 +4160,10 @@ Public Module awinGeneralModules
                 End If
 
                 If AlleProjekte.Containskey(key) Then
-                    AlleProjekte.Remove(key)
+                    AlleProjekte.Remove(key, updateCurrentConstellation:=True)
                 End If
 
-                AlleProjekte.Add(hproj)
+                AlleProjekte.Add(hproj, updateCurrentConstellation:=True)
 
                 ' nur machen, wenn nicht von PPT aufgerufen 
                 If Not calledFromPPT Then
@@ -4336,12 +4345,12 @@ Public Module awinGeneralModules
 
                     If Not vExisted Then
                         If AlleProjekte.Containskey(keyV) Then
-                            AlleProjekte.Remove(keyV)
+                            AlleProjekte.Remove(keyV, updateCurrentConstellation:=True)
                         End If
                     End If
                     If Not bExisted Then
                         If AlleProjekte.Containskey(keyB) Then
-                            AlleProjekte.Remove(keyB)
+                            AlleProjekte.Remove(keyB, updateCurrentConstellation:=True)
                         End If
                     End If
                 End If
@@ -4473,11 +4482,11 @@ Public Module awinGeneralModules
 
             If IsNothing(hproj) Then
                 Dim key As String = calcProjektKey(pname, variantName)
-                AlleProjekte.Remove(key)
+                AlleProjekte.Remove(key, updateCurrentConstellation:=True)
 
             ElseIf hproj.variantName <> variantName Then
                 Dim key As String = calcProjektKey(pname, variantName)
-                AlleProjekte.Remove(key)
+                AlleProjekte.Remove(key, updateCurrentConstellation:=True)
 
             Else
                 ' es wird in Showprojekte und in AlleProjekte gelöscht, ausserdem auch auf der Projekt-Tafel 
@@ -7989,12 +7998,12 @@ Public Module awinGeneralModules
                             Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
 
                             If AlleProjekte.Containskey(hProjKey) Then
-                                AlleProjekte.Remove(hProjKey, False)
-                                AlleProjekte.Add(mProj, False)
+                                AlleProjekte.Remove(hProjKey)
+                                AlleProjekte.Add(mProj)
                                 ShowProjekte.Remove(hproj.name)
                                 ShowProjekte.Add(mProj)
                             Else
-                                AlleProjekte.Add(mProj, False)
+                                AlleProjekte.Add(mProj)
                                 ShowProjekte.Add(mProj)
                             End If
 
