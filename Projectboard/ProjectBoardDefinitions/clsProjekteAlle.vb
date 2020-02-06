@@ -359,6 +359,11 @@ Public Class clsProjekteAlle
                 With cItem
                     .projectName = project.name
                     .variantName = project.variantName
+
+                    If sortkey >= 2 Then
+                        .zeile = sortkey
+                    End If
+
                     .projectTyp = CType(project.projectType, ptPRPFType).ToString
                 End With
                 currentSessionConstellation.add(cItem, sKey:=sortkey)

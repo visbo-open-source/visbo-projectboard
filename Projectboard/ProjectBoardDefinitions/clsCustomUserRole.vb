@@ -34,8 +34,8 @@ Public Class clsCustomUserRole
                 _nonAllowance = {""}
 
             Case ptCustomUserRoles.OrgaAdmin
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M",
-                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1",
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "PT2G1split",
+                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1", "PT2G1M2B2",
                                  "PT2G2B2", "separator3", "PTfreezeB1", "PTfreezeB2",
                                  "PTview", "PTmassEdit",
                                  "PTfilter", "PTsort", "PT0G1s9",
