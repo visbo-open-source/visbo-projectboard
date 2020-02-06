@@ -3044,9 +3044,9 @@ Imports System.Web
 
             Case "PT4G1B7" ' Import Projekte (Batch)
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Batch Projekt-Erzeugung..."
+                    tmpLabel = "Erzeuge Projekte aus Liste (VISBO)"
                 Else
-                    tmpLabel = "Batch Project Creation..."
+                    tmpLabel = "Create Projects from list (VISBO)"
                 End If
 
             Case "PT4G1B5" ' Import Scenario Definition
@@ -3057,9 +3057,9 @@ Imports System.Web
                 End If
             Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt allg."
+                    tmpLabel = "Erzeuge Projekte aus Liste (konfiguriert)"
                 Else
-                    tmpLabel = "project generally"
+                    tmpLabel = "Create Projects from list (customized)"
                 End If
 
             Case "PT4G2" ' EXPORT
@@ -3548,9 +3548,12 @@ Imports System.Web
                         chckVisibility = False
                     End If
 
+
                 Case "PTmassEdit" ' Charts und Info 
                     If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                        chckVisibility = True
+                        chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
                     Else
                         chckVisibility = False
                     End If
@@ -5663,7 +5666,7 @@ Imports System.Web
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True, False)
+                Call importProjekteEintragen(importDate, True, False, False)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5859,7 +5862,7 @@ Imports System.Web
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, True, True)
+                    Call importProjekteEintragen(importDate, True, True, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -5977,7 +5980,7 @@ Imports System.Web
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, True, True)
+                Call importProjekteEintragen(importDate, True, True, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -6036,6 +6039,9 @@ Imports System.Web
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
+
+        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
+        Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
 
@@ -6126,6 +6132,8 @@ Imports System.Web
                             End If
                         End If
 
+                        listOfArchivFiles.Add(dateiname)
+
                         Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
                         Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
                     Else
@@ -6143,6 +6151,10 @@ Imports System.Web
 
         ' Schließen des LogFiles
         Call logfileSchliessen()
+
+        If listOfArchivFiles.Count > 0 Then
+            Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6515,6 +6527,7 @@ Imports System.Web
                             ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
                             Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
 
+
                             Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                             ' Test tk 
@@ -6616,7 +6629,7 @@ Imports System.Web
 
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                     Try
-                        Call importProjekteEintragen(importDate, True, False)
+                        Call importProjekteEintragen(importDate, True, False, False)
 
                         ' ImportDatei ins archive-Directory schieben
 
@@ -6655,9 +6668,9 @@ Imports System.Web
         Else
             ' Fehlermeldung für Konfigurationsfile nicht vorhanden
             If awinSettings.englishLanguage Then
-                outPutline = "Error: No configuration file found !"
+                outPutline = "Error: either no configuration file found or worng definitions !"
             Else
-                outPutline = "Fehler: Die Konfigurations-Datei fehlt !"
+                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
             End If
             Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
 
@@ -6691,6 +6704,9 @@ Imports System.Web
         Dim anzFiles As Integer = listOfImportfiles.Count
 
         Dim dateiname As String = ""
+
+        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
+        Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
 
@@ -6765,6 +6781,9 @@ Imports System.Web
                         Call MsgBox("Error when writing Custom User Roles")
                         Call logfileSchreiben("Error when writing Custom User Roles ...", selectedWB, -1)
                     End If
+
+                    listOfArchivFiles.Add(dateiname)
+
                 Else
                     Call MsgBox("no roles found ...")
                 End If
@@ -6778,6 +6797,10 @@ Imports System.Web
 
         ' Schließen des LogFiles
         Call logfileSchliessen()
+
+        If listOfArchivFiles.Count > 0 Then
+            Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.customUserRoles))
+        End If
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -7246,7 +7269,7 @@ Imports System.Web
 
 
             Try
-                Call importProjekteEintragen(importDate, True, False)
+                Call importProjekteEintragen(importDate, True, False, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -7408,7 +7431,7 @@ Imports System.Web
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
 
             Try
-                Call importProjekteEintragen(importDate, True, True)
+                Call importProjekteEintragen(importDate, True, True, True)
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -7509,17 +7532,11 @@ Imports System.Web
                 Call logfileSchliessen()
 
 
-
-
-                '' Cursor auf Default setzen
-                Cursor.Current = Cursors.Default
-
-
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                 Try
                     ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate, True, False)
+                    Call importProjekteEintragen(importDate, True, False, False)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
@@ -7530,9 +7547,16 @@ Imports System.Web
 
                 End Try
 
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
+
             End If
 
         End If
+
+
+        outputString = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        outPutCollection.Add(outputString)
 
         If outPutCollection.Count > 0 Then
             If awinSettings.englishLanguage Then

@@ -5374,10 +5374,11 @@ Public Module agm2
 
                 Else
                     If ImportProjekte.Containskey(key) Then
-                        ImportProjekte.Remove(key)
+                        ImportProjekte.Remove(key, updateCurrentConstellation:=False)
                     End If
 
-                    ImportProjekte.Add(hproj)
+                    ' immer mit updateCurrentConstellation = false aufrufen, nur bei AlleProjekte bzw. bei ShowProjekte ggf mit optionaler Setzung aufrufen ..
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                 End If
 
@@ -5442,10 +5443,10 @@ Public Module agm2
 
                         Else
                             If ImportProjekte.Containskey(key) Then
-                                ImportProjekte.Remove(key)
+                                ImportProjekte.Remove(key, updateCurrentConstellation:=False)
                             End If
 
-                            ImportProjekte.Add(mapProj)
+                            ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
 
                         End If
 
@@ -16221,7 +16222,10 @@ Public Module agm2
 
                 ' jetzt wird gelöscht, wenn es noch keine Ist-Daten gibt ..
                 If Not actualDataExists And Not isProtectedZeile Then
+                    Dim oldZeile As Integer = currentCell.Row
                     Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID, isRole)
+                    ' neueZeile highlighten, ale Zeile to Normal
+                    'Call highlightRow(oldZeile, oldZeile - 1)
                 Else
                     If awinSettings.englishLanguage Then
                         Call MsgBox("Delete not possible ... row is protected or contains actual data")
@@ -16716,7 +16720,7 @@ Public Module agm2
             Call meRCZeileEinfuegen(zeile, "", True)
 
             ' neueZeile highlighten, ale Zeile to Normal
-            Call highlightRow(zeile + 1, zeile)
+            'Call highlightRow(zeile + 1, zeile)
 
             ' jetzt den Blattschutz wiederherstellen ... 
             If Not awinSettings.meEnableSorting Then
@@ -16954,7 +16958,18 @@ Public Module agm2
                             Else
                                 isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
                             End If
+
+                        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            isProtectedbyOthers = True
+
+                            summeEditierenErlaubt = False
+                            protectionText = "Orga-Admin kann Daten nur sehen, nicht ändern ...  "
+                            If awinSettings.englishLanguage Then
+                                protectionText = "Orga-Admin may only view data ..."
+                            End If
+
                         Else
+
                             ' er kann es nur ändern, wenn er es für sich schützen kann 
                             Dim vNameToProtect As String = hproj.variantName
                             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
@@ -17389,6 +17404,7 @@ Public Module agm2
             Exit Function
         End Try
 
+
         Try
 
             ' Schreiben der Projekt-Informationen 
@@ -17680,21 +17696,22 @@ Public Module agm2
                     Dim protectionText As String = ""
                     'Dim wpItem As clsWriteProtectionItem
                     Dim isProtectedbyOthers As Boolean
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        isProtectedbyOthers = True
 
-                    isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        protectionText = "Orga-Admin kann Daten nur sehen, nicht ändern ...  "
+                        If awinSettings.englishLanguage Then
+                            protectionText = "Orga-Admin may only view data ..."
+                        End If
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                        If isProtectedbyOthers Then
 
+                            protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
-                    If isProtectedbyOthers Then
-
-                        ' tk 19.1.20 ist doch überhaupt nicht notwendig 
-                        ' nicht erfolgreich, weil durch anderen geschützt ... 
-                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        'wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        'writeProtections.upsert(wpItem)
-
-                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
-
+                        End If
                     End If
+
 
                     ' jetzt wird für jedes Element in der Hierarchy eine Zeile rausgeschrieben 
                     ' das ist jetzt die rootphase-NameID

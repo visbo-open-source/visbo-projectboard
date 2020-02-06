@@ -24,14 +24,14 @@ Public Class clsProjekteAlle
             If IsNothing(filteredBy) Then
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Value)
+                        tmpKopie.Add(kvp.Value, updateCurrentConstellation:=False)
                     End If
                 Next
             Else
                 ' nur die übernehmen, die auch in der Constellation enthalten sind 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If filteredBy.contains(kvp.Key, False) And Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Value)
+                        tmpKopie.Add(kvp.Value, updateCurrentConstellation:=False)
                     End If
                 Next
             End If
@@ -287,6 +287,7 @@ Public Class clsProjekteAlle
 
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
+    ''' in jedem clsPRojekteAlle Aufruf soll updateCurrentConstellation by default immer auf False sein 
     ''' später soll die Aufrufleiste bereinigt werden ... 
     ''' checkOnConflicts wird benötigt, um zu entscheiden, ob ein Summary Projekt-Konflkikt vorliegt. 
     ''' Eigentlich sollen bei allen AlleProjekte.add Aufrufen der checkOn auf true gesetzt sein 
@@ -358,6 +359,11 @@ Public Class clsProjekteAlle
                 With cItem
                     .projectName = project.name
                     .variantName = project.variantName
+
+                    If sortkey >= 2 Then
+                        .zeile = sortkey
+                    End If
+
                     .projectTyp = CType(project.projectType, ptPRPFType).ToString
                 End With
                 currentSessionConstellation.add(cItem, sKey:=sortkey)
