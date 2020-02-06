@@ -6655,9 +6655,9 @@ Imports System.Web
         Else
             ' Fehlermeldung für Konfigurationsfile nicht vorhanden
             If awinSettings.englishLanguage Then
-                outPutline = "Error: No configuration file found !"
+                outPutline = "Error: either no configuration file found or worng definitions !"
             Else
-                outPutline = "Fehler: Die Konfigurations-Datei fehlt !"
+                outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
             End If
             Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
 
@@ -7509,12 +7509,6 @@ Imports System.Web
                 Call logfileSchliessen()
 
 
-
-
-                '' Cursor auf Default setzen
-                Cursor.Current = Cursors.Default
-
-
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                 Try
                     ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
@@ -7529,6 +7523,9 @@ Imports System.Web
                     End If
 
                 End Try
+
+                '' Cursor auf Default setzen
+                Cursor.Current = Cursors.Default
 
             End If
 
