@@ -51,7 +51,8 @@ Public Module agm3
 
                     If appInstance.Worksheets.Count > 0 Then
 
-                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                         Dim titleCol As Integer,
                             IdentCol As Integer,
@@ -216,13 +217,21 @@ Public Module agm3
                             End With
                         Else
                             outputline = "Die Konfigurationsdatei stimmt nicht mit der erwarteten Struktur überein!"
+                            If awinSettings.englishLanguage Then
+                                outputline = "Configuration file does not have expected structure! please contact your sys-admin or VISBO"
+                            End If
                             oPCollection.Add(outputline)
                         End If
 
                     End If
 
                 Catch ex As Exception
-                    outputline = "Fehler beim Lesen der Konfigurationsdatei ..."
+                    If awinSettings.englishLanguage Then
+                        outputline = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputline = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
                     oPCollection.Add(outputline)
                 End Try
 
@@ -231,12 +240,18 @@ Public Module agm3
 
             Catch ex As Exception
                 outputline = "Die Konfigurationsdatei konnte nicht geöffnet werden - " & configFile
+                If awinSettings.englishLanguage Then
+                    outputline = "Config File could not be opened - please contact your sys-admin or VISBO"
+                End If
                 oPCollection.Add(outputline)
                 'Call MsgBox(outputline)
             End Try
         Else
             ' soll nur Info im Logbuch sein
             outputline = "Keine Konfigurationsdatei für Import Capacities vorhanden! - " & configFile
+            If awinSettings.englishLanguage Then
+                outputline = "There is no such config file: " & configFile
+            End If
             Call logfileSchreiben(outputline, "", -1)
         End If
 
@@ -281,7 +296,8 @@ Public Module agm3
 
                     If appInstance.Worksheets.Count > 0 Then
 
-                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                         Dim titleCol As Integer,
                             IdentCol As Integer,
@@ -1178,7 +1194,13 @@ Public Module agm3
                     End If
 
                 Catch ex As Exception
-
+                    If awinSettings.englishLanguage Then
+                        outputLine = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
+                    outputCollection.Add(outputLine)
                 End Try
 
                 ' configCapaImport - Konfigurationsfile schließen
@@ -1186,7 +1208,7 @@ Public Module agm3
 
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
-                    Call MsgBox("The configration-file " & configFile & "  to import the projects couldn't be opened.")
+                    Call MsgBox("The configration-file " & configFile & "  To import the projects couldn't be opened.")
                     outputLine = "The configrationfile " & configFile & "  to import the projects couldn't be opened."
                 Else
                     Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
@@ -1244,7 +1266,8 @@ Public Module agm3
                 Try
                     If appInstance.Worksheets.Count > 0 Then
 
-                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = configWB.Worksheets("VISBO Config")
+                        'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                         Dim titleCol As Integer,
                             IdentCol As Integer,
@@ -1310,6 +1333,10 @@ Public Module agm3
                                                 configLine.sheet.bis = CInt(.Cells(i, SNCol).value)
                                             Else
                                                 outputLine = configLine.Titel & " : Angabe für Sheet ist kein Range"
+                                                If awinSettings.englishLanguage Then
+                                                    outputLine = configLine.Titel & " : this is no range"
+                                                End If
+                                                outputCollection.Add(outputLine)
                                             End If
                                             configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
 
@@ -1324,6 +1351,10 @@ Public Module agm3
                                                     configLine.row.bis = CInt(.Cells(i, SNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    If awinSettings.englishLanguage Then
+                                                        outputLine = configLine.Titel & " : this is no range"
+                                                    End If
+                                                    outputCollection.Add(outputLine)
                                                 End If
                                             Else
                                                 configLine.column.von = CInt(.Cells(i, SNCol).value)
@@ -1342,6 +1373,10 @@ Public Module agm3
                                                     configLine.row.bis = CInt(.Cells(i, ZNCol).value)
                                                 Else
                                                     outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    If awinSettings.englishLanguage Then
+                                                        outputLine = configLine.Titel & " : this is no range"
+                                                    End If
+                                                    outputCollection.Add(outputLine)
                                                 End If
                                             Else
                                                 configLine.row.von = CInt(.Cells(i, ZNCol).value)
@@ -1367,13 +1402,24 @@ Public Module agm3
                     End If
 
                 Catch ex As Exception
+                    ' tk 5.2 es trat ein Fehler auf ... also Clear, weil das die ok / nicht ok Rückgabe Bedingung ist 
+                    ActualDataConfigs.Clear()
 
+                    If awinSettings.englishLanguage Then
+                        outputLine = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
+                    outputCollection.Add(outputLine)
                 End Try
 
                 ' configActualDataImport - Konfigurationsfile schließen
                 configWB.Close(SaveChanges:=False)
 
             Catch ex As Exception
+                ' tk 5.2 es trat ein Fehler auf ... also Clear, weil das die ok / nicht ok Rückgabe Bedingung ist 
+                ActualDataConfigs.Clear()
                 Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
             End Try
 
@@ -1653,7 +1699,7 @@ Public Module agm3
                                             'result = False
 
                                         Else
-                                            cacheProjekte.Add(hproj)                    ' Projekt in cacheProjekte merken
+                                            cacheProjekte.Add(hproj, updateCurrentConstellation:=False)                    ' Projekt in cacheProjekte merken
 
                                             Dim projBeginn = getColumnOfDate(hproj.startDate)
                                             Dim projEnde As Integer = getColumnOfDate(hproj.endeDate)
@@ -2925,7 +2971,10 @@ Public Module agm3
                                                     Dim hilfe As Boolean = True
                                                 Next
 
-                                                ImportProjekte.Add(hproj)
+                                                ' Budget setzen 
+                                                Call hproj.setBudgetAsNeeded()
+
+                                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
 
                                                 outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
                                                 meldungen.Add(outputline)

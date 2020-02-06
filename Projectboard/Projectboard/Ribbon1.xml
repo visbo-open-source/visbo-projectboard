@@ -31,7 +31,7 @@
             <!--label="Load from Database"-->
             <splitButton id="PT5G1split" size ="large">
               <!--<button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="DataFromDatabase"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />-->
-              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
+              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
               <menu id ="PT5G1M" >
                 <!--label="Portfolio/s"-->                
                 <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
@@ -109,13 +109,13 @@
                 <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
                 <!--label="Import RPLAN RXF"-->
                 <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
-                <!--label="Import Projects with Config-File"-->
-                <button id="PT4G1B9" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="es können eine oder mehrere Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
               </menu>
               <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->
               <menu id="PT4G1M1-3" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
-                <button id="PT4G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates erzeugt werden"/>
+                <button id="PT4G1B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="neue Projekte können auf Basis einer VISBO Liste in 'Import\Batch Projektlisten' erzeugt werden"/>
+                <!--label="Import Projects with Config-File"-->
+                <button id="PT4G1B9" imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction ="PTImportProjectsWithConfig" supertip ="neue Projekte können auf Basis von einer oder mehreren Excel-Dateien aus dem Folder 'Import\projects with config' gemäss vorhandener Konfigurationsdatei importiert werden" />
                 <menuSeparator id="menuSeparator2"/>
                 <!--label="Import Portfolio Definition"-->
                 <button id="PT4G1B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>

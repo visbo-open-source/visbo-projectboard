@@ -116,6 +116,8 @@ Public Class clsCustomUserRole
 
             isAllowed = (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Or
+                        (myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer) Or
+                        (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.Alles)
         Else
             Dim teamID As Integer
