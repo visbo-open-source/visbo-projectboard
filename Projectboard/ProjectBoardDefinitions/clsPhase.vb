@@ -2118,7 +2118,7 @@ Public Class clsPhase
     End Function
 
     ''' <summary>
-    ''' returns whether or not his role has resource needs where role ist not yet at the company or not any more. 
+    ''' returns whether or not this role has resource needs where role ist not yet at the company or not any more. 
     ''' </summary>
     ''' <param name="tmprole"></param>
     ''' <returns></returns>
@@ -2127,35 +2127,57 @@ Public Class clsPhase
         Dim tmpResult As Boolean = False
         Try
             Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmprole.uid)
-            Dim startOfEmployee As Integer = getColumnOfDate(currentRole.entryDate)
-            Dim leaveOFEmployee As Integer = getColumnOfDate(currentRole.exitDate)
+            ' nur bei Personen-Rollen oder Team-Roles relevant und zu prüfen  
 
-            ' wann ist es kritisch 
-            If startOfEmployee > startColumn Or leaveOFEmployee <= endColumn Then
-                If startOfEmployee > endColumn Or leaveOFEmployee <= startColumn Then
-                    ' nur dann ungültig, wenn es auch Werte > 0 gibt  
-                    tmpResult = tmprole.Xwerte.Sum > 0
+            If Not currentRole.isCombinedRole Or currentRole.isTeam Then
 
-                Else
-                    ' hier ist gesichert, dass StartOfEmployee <= endColumn ist ..
-                    For i As Integer = startColumn To startOfEmployee
-                        If tmprole.Xwerte(i - startColumn) > 0 Then
-                            tmpResult = True
-                            Exit For
-                        End If
-                    Next
+                Dim weiterMachen As Boolean = True
 
-                    If Not tmpResult And leaveOFEmployee <= endColumn Then
-                        For i As Integer = leaveOFEmployee To endColumn
-                            If tmprole.Xwerte(i - startColumn) > 0 Then
-                                tmpResult = True
-                                Exit For
-                            End If
-                        Next
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+
+                    Dim teamID As Integer = -1
+                    Dim myTopRoleID As Integer = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).UID
+
+                    If Not RoleDefinitions.hasAnyChildParentRelationsship(currentRole.UID, myTopRoleID) Then
+                        weiterMachen = False
                     End If
-
                 End If
+
+                If weiterMachen Then
+                    Dim startOfEmployee As Integer = getColumnOfDate(currentRole.entryDate)
+                    Dim leaveOFEmployee As Integer = getColumnOfDate(currentRole.exitDate)
+
+                    ' wann ist es kritisch 
+                    If startOfEmployee > startColumn Or leaveOFEmployee <= endColumn Then
+                        If startOfEmployee > endColumn Or leaveOFEmployee <= startColumn Then
+                            ' nur dann ungültig, wenn es auch Werte > 0 gibt  
+                            tmpResult = tmprole.Xwerte.Sum > 0
+
+                        Else
+                            ' hier ist gesichert, dass StartOfEmployee <= endColumn ist ..
+                            For i As Integer = startColumn To startOfEmployee
+                                If tmprole.Xwerte(i - startColumn) > 0 Then
+                                    tmpResult = True
+                                    Exit For
+                                End If
+                            Next
+
+                            If Not tmpResult And leaveOFEmployee <= endColumn Then
+                                For i As Integer = leaveOFEmployee To endColumn
+                                    If tmprole.Xwerte(i - startColumn) > 0 Then
+                                        tmpResult = True
+                                        Exit For
+                                    End If
+                                Next
+                            End If
+
+                        End If
+                    End If
+                End If
+
             End If
+
         Catch ex As Exception
             If awinSettings.visboDebug Then
                 Call MsgBox("Érror-Code 9973276-1")
