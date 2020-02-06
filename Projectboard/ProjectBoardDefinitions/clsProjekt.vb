@@ -3448,6 +3448,32 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' checks whether or not project has roles with resource needs where role has already left the company or is not yet part of the company
+    ''' returns a collection with names of Roles ; if empty there are no such roles
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function hasRolesWithInvalidNeeds() As Collection
+        Dim allInvalidNames As New Collection
+
+        For Each cphase As clsPhase In AllPhases
+            Dim invalidPhaseRoles As Collection = cphase.hasRolesWithInvalidNeeds
+
+            If invalidPhaseRoles.Count > 0 Then
+
+                For Each invalidName As String In invalidPhaseRoles
+                    If Not allInvalidNames.Contains(invalidName) Then
+                        allInvalidNames.Add(invalidName, invalidName)
+                    End If
+                Next
+
+            End If
+        Next
+
+
+        hasRolesWithInvalidNeeds = allInvalidNames
+    End Function
+
+    ''' <summary>
     ''' true, wenn die Anzahl Phase und die einzelnen PhaseNameIDs identisch sind und ebenso die Start- und Endezeitpunkte 
     ''' </summary>
     ''' <param name="vglProj"></param>

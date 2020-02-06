@@ -24,14 +24,14 @@ Public Class clsProjekteAlle
             If IsNothing(filteredBy) Then
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Value)
+                        tmpKopie.Add(kvp.Value, updateCurrentConstellation:=False)
                     End If
                 Next
             Else
                 ' nur die übernehmen, die auch in der Constellation enthalten sind 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
                     If filteredBy.contains(kvp.Key, False) And Not tmpKopie.Containskey(kvp.Key) Then
-                        tmpKopie.Add(kvp.Value)
+                        tmpKopie.Add(kvp.Value, updateCurrentConstellation:=False)
                     End If
                 Next
             End If
@@ -287,6 +287,7 @@ Public Class clsProjekteAlle
 
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
+    ''' in jedem clsPRojekteAlle Aufruf soll updateCurrentConstellation by default immer auf False sein 
     ''' später soll die Aufrufleiste bereinigt werden ... 
     ''' checkOnConflicts wird benötigt, um zu entscheiden, ob ein Summary Projekt-Konflkikt vorliegt. 
     ''' Eigentlich sollen bei allen AlleProjekte.add Aufrufen der checkOn auf true gesetzt sein 
@@ -358,6 +359,11 @@ Public Class clsProjekteAlle
                 With cItem
                     .projectName = project.name
                     .variantName = project.variantName
+
+                    If sortkey >= 2 Then
+                        .zeile = sortkey
+                    End If
+
                     .projectTyp = CType(project.projectType, ptPRPFType).ToString
                 End With
                 currentSessionConstellation.add(cItem, sKey:=sortkey)
@@ -896,6 +902,38 @@ Public Class clsProjekteAlle
                 getProject = Nothing
             End If
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt das Projekt zurück, das den angegebenen Schlüssel kdNr enthält
+    ''' </summary>
+    ''' <param name="kdNr">kdNr = kundenNummer</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectByKDNr(ByVal kdNr As String) As clsProjekt
+        Get
+            Dim tmpResult As clsProjekt = Nothing
+
+            If Not IsNothing(kdNr) Then
+
+                If kdNr <> "" Then
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                        If Not IsNothing(kvp.Value.kundenNummer) Then
+                            If kvp.Value.kundenNummer = kdNr Then
+                                tmpResult = kvp.Value
+                                Exit For
+                            End If
+                        End If
+
+                    Next
+                End If
+
+            End If
+
+            getProjectByKDNr = tmpResult
         End Get
     End Property
 

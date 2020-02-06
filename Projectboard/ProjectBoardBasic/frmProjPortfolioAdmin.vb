@@ -5130,5 +5130,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub OKButton_DockChanged(sender As Object, e As EventArgs) Handles OKButton.DockChanged
 
+    End Sub
 End Class

@@ -7,6 +7,8 @@ Imports Microsoft.Office.Interop.Excel
 'Imports System.ComponentModel
 'Imports System.Windows
 Imports System.Windows.Forms
+Imports System.Security.Principal
+Imports System.Text.RegularExpressions
 
 'Imports System
 'Imports System.Runtime.Serialization
@@ -1083,15 +1085,13 @@ Public Module awinGeneralModules
     ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
     ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean, ByVal getSomeValuesFromOldProj As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
         'Dim pname As String
-
-
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
@@ -1143,8 +1143,14 @@ Public Module awinGeneralModules
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
             ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
             ' wenn nein, wird es im Show-Modus ergänzt 
+            Dim searchPName As String = hproj.name
+            Dim searchVName As String = hproj.variantName
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' das hier muss gemacht werden, weil man ja wissen will, inwieweit sich das Projekt im Vergleich zur Baseline / pfv verändert werden 
+                searchVName = getDefaultVariantNameAccordingUserRole()
+            End If
 
-            vglName = calcProjektKey(hproj)
+            vglName = calcProjektKey(searchPName, searchVName)
             Try
                 cproj = AlleProjekte.getProject(vglName)
 
@@ -1152,7 +1158,7 @@ Public Module awinGeneralModules
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(hproj.name, hproj.variantName, Date.Now)
+                        cproj = awinReadProjectFromDatabase(searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
@@ -1163,31 +1169,39 @@ Public Module awinGeneralModules
                     ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
 
                     ' falls es sich um eine Variante handelt, muss jetzt geprüft werden, ob die Basis-Variante in Session oder DB existiert  
-                    Dim baseProj As clsProjekt = AlleProjekte.getProject(calcProjektKey(hproj.name, ""))
-                    If IsNothing(baseProj) Then
-                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
-                        If Not noDB Then
-                            baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                    Dim baseProj As clsProjekt = Nothing
+
+                    If searchVName <> "" Then
+                        ' dann muss evtl aus dem Basis Projekt was geholt werden 
+                        baseProj = AlleProjekte.getProject(calcProjektKey(hproj.name, ""))
+
+                        If IsNothing(baseProj) Then
+                            ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                            If Not noDB Then
+                                baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                            End If
                         End If
                     End If
 
-                    If hproj.VorlagenName = "" Then
-                        Try
-                            Dim anzVorlagen = Projektvorlagen.Count
-                            Dim vproj As clsProjektvorlage
-                            hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
 
-                            For i = 1 To anzVorlagen
-                                vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
-                                If vproj.farbe = hproj.farbe Then
-                                    hproj.VorlagenName = vproj.VorlagenName
-                                End If
-                            Next
+                    ' tk 6.2.20 das gar nicht mehr machen ...
+                    ''If hproj.VorlagenName = "" Then
+                    ''    Try
+                    ''        Dim anzVorlagen = Projektvorlagen.Count
+                    ''        Dim vproj As clsProjektvorlage
+                    ''        hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
 
-                        Catch ex1 As Exception
+                    ''        For i = 1 To anzVorlagen
+                    ''            vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
+                    ''            If vproj.farbe = hproj.farbe Then
+                    ''                hproj.VorlagenName = vproj.VorlagenName
+                    ''            End If
+                    ''        Next
 
-                        End Try
-                    End If
+                    ''    Catch ex1 As Exception
+
+                    ''    End Try
+                    ''End If
 
                     Try
                         With hproj
@@ -1208,9 +1222,7 @@ Public Module awinGeneralModules
                             ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
                             ' Inventur: erst mal auf geplant, sonst beauftragt 
                             '.Status = pStatus
-                            If IsNothing(baseProj) Then
-                                .Status = ProjektStatus(PTProjektStati.geplant)
-                            Else
+                            If Not IsNothing(baseProj) Then
                                 .Status = baseProj.Status
                             End If
 
@@ -1236,11 +1248,18 @@ Public Module awinGeneralModules
                     ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
 
                     Try
-                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
+                        If getSomeValuesFromOldProj Then
+                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
+                        End If
+
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
                     End Try
 
+                    ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
+                        cproj.variantName = hproj.variantName
+                    End If
 
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
                         ' das heisst, das Projekt hat sich verändert 
@@ -1296,7 +1315,7 @@ Public Module awinGeneralModules
 
                             ' das muss auch gemacht werden, wenn hproj.marker = true
                         ElseIf existsInSession Or hproj.marker = True Then
-                            AlleProjekte.Remove(vglName, False)
+                            AlleProjekte.Remove(vglName)
                             If ShowProjekte.contains(hproj.name) Then
                                 ShowProjekte.Remove(hproj.name, False)
                             End If
@@ -1326,8 +1345,8 @@ Public Module awinGeneralModules
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
                 If existsInSession Then
-                    AlleProjekte.Add(hproj, False)
-                    ShowProjekte.Add(hproj, False)
+                    AlleProjekte.Add(hproj)
+                    ShowProjekte.Add(hproj)
                 Else
                     AlleProjekte.Add(hproj)
                     ShowProjekte.Add(hproj)
@@ -1684,7 +1703,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="roleValues"></param>
     ''' <returns></returns>
-    Friend Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
+    Public Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
         Dim tmpResult As Double = 0.0
         Dim hrole As clsRollenDefinition = Nothing
 
@@ -3049,8 +3068,8 @@ Public Module awinGeneralModules
 
             If outPutCollection.Count > 0 Then
                 Call showOutPut(outPutCollection,
-                                "Meldungen",
-                                "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
+                                "Messages when reading Portfolio ",
+                                " ")
             End If
 
         End If
@@ -3079,7 +3098,7 @@ Public Module awinGeneralModules
         Dim vName As String = getVariantnameFromKey(key)
         Dim hproj As clsProjekt
         Dim tryZeile As Integer
-        Dim nvErrorMessage As String = ""
+        Dim nvErrorMessage As String = " does not exist in DB at " & storedAtOrBefore.ToShortDateString
 
 
         If AlleProjekte.Containskey(key) Then
@@ -3146,6 +3165,28 @@ Public Module awinGeneralModules
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtOrBefore, err)
 
                     If Not IsNothing(hproj) Then
+
+
+                        ' tk 4.2.20
+                        ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+                        ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+                        If DateDiff(DateInterval.Day, Date.Now, storedAtOrBefore) = 0 Then
+                            ' nur bei aktuellen Projekten anmeckern ... 
+
+                            Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                            If invalidNeedNames.Count > 0 Then
+
+                                For Each iVName As String In invalidNeedNames
+                                    Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                                    msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                                    outPutCollection.Add(msgTxt)
+                                Next
+
+                            End If
+
+                        End If
+
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         Dim newPosition As Integer = -1
                         If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
@@ -3259,8 +3300,7 @@ Public Module awinGeneralModules
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
                                 Optional ByVal ampelbeschreibung As String = "",
-                                Optional ByVal responsible As String = "",
-                                Optional ByRef ProjListe As clsProjekteAlle = Nothing) As clsProjekt
+                                Optional ByVal responsible As String = "") As clsProjekt
 
         Dim calculateBudget As Boolean = (budget <= -0.99)
         Dim gesamtbudget As Double = budget
@@ -3295,7 +3335,7 @@ Public Module awinGeneralModules
                 Dim isFirstProj As Boolean = True
                 Dim maxActualDate As Date = Date.MinValue
                 Dim unionVariantName As String = ""
-                ProjListe = New clsProjekteAlle
+
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
@@ -3313,9 +3353,6 @@ Public Module awinGeneralModules
                                                           projektListe, storedAtOrBefore)
                     End If
 
-
-                    ProjListe.Add(hproj, False)
-                    'projektListe.Add(hproj, False)
 
                     If Not IsNothing(hproj) Then
 
@@ -3668,20 +3705,29 @@ Public Module awinGeneralModules
                 Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
                 ' das Portfolio Projekt
-                calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-
+                ' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
+                ' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
+                'calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
+                calculateAndStoreSummaryProjekt = True
+                Dim sproj As clsProjekt = Nothing
 
                 If calculateAndStoreSummaryProjekt Then
 
                     If Not IsNothing(oldSummaryP) Then
                         'budget = oldSummaryP.budgetWerte.Sum
                         budget = oldSummaryP.Erloes
+                        If budget = 0 Then
+                            budget = currentConstellation.getBudgetOfShownProjects
+                            oldSummaryP.Erloes = budget
+                        End If
+                        sproj = oldSummaryP
                     Else
                         budget = currentConstellation.getBudgetOfShownProjects
+                        sproj = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
+                        sproj.variantName = tmpVariantName
                     End If
 
-                    Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
-                    sproj.variantName = tmpVariantName
+
 
 
                     If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
@@ -4075,6 +4121,27 @@ Public Module awinGeneralModules
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 
+            ' tk 4.2.20
+            ' hier muss geprüft werden, ob das Projekt Ressourcen-Zuordnungen für Mitarbeiter enthält, die noch gar nicht da sind bzw. zu dem Zeitpunkt schon weg sind.
+            ' es soll dann aber nur eine Warnung ausgegeben werden, sonst nichts weiter 
+            If Not calledFromPPT And Not IsNothing(hproj) And DateDiff(DateInterval.Day, Date.Now, storedAtORBefore) = 0 Then
+                ' nur bei aktuellen Projekten anmeckern ... 
+
+                Dim invalidNeedNames As Collection = hproj.hasRolesWithInvalidNeeds
+
+                If invalidNeedNames.Count > 0 Then
+
+                    For Each iVName As String In invalidNeedNames
+                        Dim msgTxt As String = "Projekt " & hproj.getShapeText & " enthält ungültige Ressourcen-Zuordnungen"
+                        msgTxt = msgTxt & vbLf & "Person ist noch nicht oder nicht mehr im Unternehmen: " & iVName
+                        outputCollection.Add(msgTxt)
+                    Next
+
+                End If
+
+            End If
+
+
 
             If Not IsNothing(hproj) Then
                 ' prüfen, ob AlleProjekte das Projekt bereits enthält 
@@ -4098,10 +4165,10 @@ Public Module awinGeneralModules
                 End If
 
                 If AlleProjekte.Containskey(key) Then
-                    AlleProjekte.Remove(key)
+                    AlleProjekte.Remove(key, updateCurrentConstellation:=True)
                 End If
 
-                AlleProjekte.Add(hproj)
+                AlleProjekte.Add(hproj, updateCurrentConstellation:=True)
 
                 ' nur machen, wenn nicht von PPT aufgerufen 
                 If Not calledFromPPT Then
@@ -4283,12 +4350,12 @@ Public Module awinGeneralModules
 
                     If Not vExisted Then
                         If AlleProjekte.Containskey(keyV) Then
-                            AlleProjekte.Remove(keyV)
+                            AlleProjekte.Remove(keyV, updateCurrentConstellation:=True)
                         End If
                     End If
                     If Not bExisted Then
                         If AlleProjekte.Containskey(keyB) Then
-                            AlleProjekte.Remove(keyB)
+                            AlleProjekte.Remove(keyB, updateCurrentConstellation:=True)
                         End If
                     End If
                 End If
@@ -4420,11 +4487,11 @@ Public Module awinGeneralModules
 
             If IsNothing(hproj) Then
                 Dim key As String = calcProjektKey(pname, variantName)
-                AlleProjekte.Remove(key)
+                AlleProjekte.Remove(key, updateCurrentConstellation:=True)
 
             ElseIf hproj.variantName <> variantName Then
                 Dim key As String = calcProjektKey(pname, variantName)
-                AlleProjekte.Remove(key)
+                AlleProjekte.Remove(key, updateCurrentConstellation:=True)
 
             Else
                 ' es wird in Showprojekte und in AlleProjekte gelöscht, ausserdem auch auf der Projekt-Tafel 
@@ -7936,12 +8003,12 @@ Public Module awinGeneralModules
                             Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
 
                             If AlleProjekte.Containskey(hProjKey) Then
-                                AlleProjekte.Remove(hProjKey, False)
-                                AlleProjekte.Add(mProj, False)
+                                AlleProjekte.Remove(hProjKey)
+                                AlleProjekte.Add(mProj)
                                 ShowProjekte.Remove(hproj.name)
                                 ShowProjekte.Add(mProj)
                             Else
-                                AlleProjekte.Add(mProj, False)
+                                AlleProjekte.Add(mProj)
                                 ShowProjekte.Add(mProj)
                             End If
 
@@ -8809,4 +8876,6 @@ Public Module awinGeneralModules
         calcKeyMetricsOfProject = result
 
     End Function
+
+
 End Module
