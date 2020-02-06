@@ -1085,7 +1085,7 @@ Public Module awinGeneralModules
     ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
     ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean, ByVal getSomeValuesFromOldProj As Boolean)
 
         Dim err As New clsErrorCodeMsg
 
@@ -1169,31 +1169,39 @@ Public Module awinGeneralModules
                     ' wenn es jetzt immer noch Nothing ist, dann existiert es weder in der Datenbank noch in der Session .... 
 
                     ' falls es sich um eine Variante handelt, muss jetzt geprüft werden, ob die Basis-Variante in Session oder DB existiert  
-                    Dim baseProj As clsProjekt = AlleProjekte.getProject(calcProjektKey(hproj.name, ""))
-                    If IsNothing(baseProj) Then
-                        ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
-                        If Not noDB Then
-                            baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                    Dim baseProj As clsProjekt = Nothing
+
+                    If searchVName <> "" Then
+                        ' dann muss evtl aus dem Basis Projekt was geholt werden 
+                        baseProj = AlleProjekte.getProject(calcProjektKey(hproj.name, ""))
+
+                        If IsNothing(baseProj) Then
+                            ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
+                            If Not noDB Then
+                                baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                            End If
                         End If
                     End If
 
-                    If hproj.VorlagenName = "" Then
-                        Try
-                            Dim anzVorlagen = Projektvorlagen.Count
-                            Dim vproj As clsProjektvorlage
-                            hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
 
-                            For i = 1 To anzVorlagen
-                                vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
-                                If vproj.farbe = hproj.farbe Then
-                                    hproj.VorlagenName = vproj.VorlagenName
-                                End If
-                            Next
+                    ' tk 6.2.20 das gar nicht mehr machen ...
+                    ''If hproj.VorlagenName = "" Then
+                    ''    Try
+                    ''        Dim anzVorlagen = Projektvorlagen.Count
+                    ''        Dim vproj As clsProjektvorlage
+                    ''        hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
 
-                        Catch ex1 As Exception
+                    ''        For i = 1 To anzVorlagen
+                    ''            vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
+                    ''            If vproj.farbe = hproj.farbe Then
+                    ''                hproj.VorlagenName = vproj.VorlagenName
+                    ''            End If
+                    ''        Next
 
-                        End Try
-                    End If
+                    ''    Catch ex1 As Exception
+
+                    ''    End Try
+                    ''End If
 
                     Try
                         With hproj
@@ -1214,9 +1222,7 @@ Public Module awinGeneralModules
                             ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
                             ' Inventur: erst mal auf geplant, sonst beauftragt 
                             '.Status = pStatus
-                            If IsNothing(baseProj) Then
-                                .Status = ProjektStatus(PTProjektStati.geplant)
-                            Else
+                            If Not IsNothing(baseProj) Then
                                 .Status = baseProj.Status
                             End If
 
@@ -1242,7 +1248,10 @@ Public Module awinGeneralModules
                     ' und in dem Fall können ja interaktiv bzw. über Export/Import Visbo Steckbrief Werte gesetzt worden sein 
 
                     Try
-                        Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
+                        If getSomeValuesFromOldProj Then
+                            Call awinAdjustValuesByExistingProj(hproj, cproj, existsInSession, importDate, tafelZeile, fileFrom3rdParty)
+                        End If
+
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
                     End Try

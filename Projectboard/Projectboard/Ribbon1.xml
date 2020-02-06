@@ -234,31 +234,36 @@
               <menuSeparator id="separator5" />
               <!--label="Variante zum Standard machen"-->
               <button id="PT2G1M1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
-            </menu>
-          <!--</splitButton>-->
-        </group>
-        <group id="PTeditoa" getVisible="chckVisibility">
-          <!-- nur für Orga-Admin-->
-          <splitButton id="PT2G2splitoa" size ="large">
-            <!--label="Modify Ressourcen und Kosten"-->
-            <button id="PT2G2oa" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
-            <menu id="PT2G2Moa" getVisible="chckVisibility">
+              <menuSeparator id="separator6" />
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
-              <menuSeparator id="separatoroa0"  />
-              <!--label="Schutz setzen / aufheben"-->
-              <button id="PT2G2B5oa" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
-              <!--label=" Variante Umbenennen"-->
-              <!--<button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>-->
-              <menuSeparator id="separatoroa1"  />
-              <!--label="Modify Attributes"-->
-              <button id="PT2G1M2B8oa" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Business Unit, Budget, strateg. Fit und Risiko Kennzahl editiert werden"/>
-              <menuSeparator id="separatoroa2"  />
               <!--label="den Status eines Projektes ändern"-->
               <button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>
             </menu>
-          </splitButton>
+          <!--</splitButton>-->
         </group>
+        <!--<group id="PTeditoa" getVisible="chckVisibility">
+          --><!-- nur für Orga-Admin--><!--
+          <splitButton id="PT2G2splitoa" size ="large">
+            --><!--label="Modify Ressourcen und Kosten"--><!--
+            <button id="PT2G2oa" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
+            <menu id="PT2G2Moa" getVisible="chckVisibility">
+              --><!--label=" Projekt Umbenennen"--><!--
+              --><!--<button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>--><!--
+              <menuSeparator id="separatoroa0"  />
+              --><!--label="Schutz setzen / aufheben"--><!--
+              <button id="PT2G2B5oa" imageMso="Lock" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="PT5SetWriteProtection" supertip ="temporären oder permanenten Schreibschutz für Projekte setzen"/>
+              --><!--label=" Variante Umbenennen"--><!--
+              --><!--<button id="PT2G1B3" getVisible="chckVisibility" getLabel="bestimmeLabel" enabled="false" supertip ="Eine Variante wird umbenannt. Das betrifft auch alle timestamps des Projektes. Ist die Variante von einer anderen Person geschützt, kann sie nicht umbenannt werden"/>--><!--
+              <menuSeparator id="separatoroa1"  />
+              --><!--label="Modify Attributes"--><!--
+              <button id="PT2G1M2B8oa" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Business Unit, Budget, strateg. Fit und Risiko Kennzahl editiert werden"/>
+              <menuSeparator id="separatoroa2"  />
+              --><!--label="den Status eines Projektes ändern"--><!--
+              --><!--<button id="PT2G1M1B4" getLabel ="bestimmeLabel" onAction="PT2ProjektStatusChange" supertip ="den Status eines Projektes ändern; es werden damit auch die Stati aller Varianten geändert"/>--><!--
+            </menu>
+          </splitButton>
+        </group>-->
       </tab>
       <!--label="View"-->
       <tab id="PTview" getVisible="chckVisibility" getLabel ="bestimmeLabel">
@@ -390,9 +395,9 @@
           <!--<separator id="PT0G1s7"/>
           <button id="PT7G1B1" label="Copy chart style" supertip ="muss noch programmiert werden"/>
           <button id="PT7G1B2" label="Paste chart style" supertip ="muss noch programmiert werden"/>-->
-          <separator id="PT0G1s9" getVisible="chckVisibility" />
+          <!--<separator id="PT0G1s9" getVisible="chckVisibility" />-->
           <!--label="Optimieren"-->
-          <button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>
+          <!--<button id="PTOPTB1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction ="PTOPTVariantenOptimieren" supertip="zu einem Portfolio-Chart die optimale Kombination von Projekt-Varianten ermitteln"/>-->
           <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <!--<separator id="PT0G1s8"/>
           --><!--- Cockpit--><!--
@@ -453,9 +458,9 @@
               <button id="PT1G1B4" imageMso="SaveAsPowerPointPotx" getLabel ="bestimmeLabel" onAction="PTStoreCurReportProfil" supertip ="Es wird die zuletzt verwendete Report-Definition in der Datei mit angegebenen Namen gespeichert"/>
             </menu>
           </splitButton>
-          <separator id="PT8G1s2"/>
+          <!--<separator id="PT8G1s2"/>-->
           <!--label="ReportGenTemplate erstellen"-->
-          <button id="PT1G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>
+          <!--<button id="PT1G1B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTCreateReportGenTemplate" supertip ="Es wird ein Template erstellt für die InputDatei, die den Batch-Report triggert"/>-->
         </group>
       </tab>
       <!--label="Einstellungen"-->
@@ -466,7 +471,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -475,7 +480,7 @@
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>
+      </tab>-->
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
@@ -513,7 +518,7 @@
         </group>
       </tab>
       <tab id="PTmassEdit" getVisible="chckVisibility" getLabel ="bestimmeLabel">
-        <group id="PT2G1M2">
+        <group id="PT2G1M2" >
           <!--label="Ressource/Kostenart hinzufügen"-->
           <button id="PT2G1M2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTzeileEinfuegen" supertip ="Platzhalter-Zeile einfügen, um dann der Projekt-Phase eine konkrete Ressource bzw. Kostenart zuzuordnen."/>
           <!--label="Ressource/Kostenart hinzufügen"--><!--
