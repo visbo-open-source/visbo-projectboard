@@ -2697,10 +2697,9 @@ Module Module1
                                             ' lade das Portfolio 
                                             Dim err As New clsErrorCodeMsg
                                             Dim realTimestamp As Date
-                                            Dim projListe As clsProjekteAlle = Nothing
                                             Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, curTimeStamp)
 
-                                            Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+                                            Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
 
                                             ' das neu berechnete SummaryProjekt hat den curTimeStamp
                                             hproj.timeStamp = curTimeStamp
@@ -3315,11 +3314,10 @@ Module Module1
                         Dim err As New clsErrorCodeMsg
                         Dim realTimestamp As Date
                         Dim hproj As clsProjekt
-                        Dim projListe As clsProjekteAlle = Nothing
                         Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
 
                         If Not IsNothing(aktConst) Then
-                            hproj = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+                            hproj = calcUnionProject(aktConst, False, curTimeStamp)
                         Else
                             hproj = Nothing
                         End If
