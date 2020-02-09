@@ -2697,10 +2697,10 @@ Module Module1
                                             ' lade das Portfolio 
                                             Dim err As New clsErrorCodeMsg
                                             Dim realTimestamp As Date
-                                            Dim projListe As clsProjekteAlle = Nothing
+
                                             Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, curTimeStamp)
 
-                                            Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+                                            Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
 
                                             ' das neu berechnete SummaryProjekt hat den curTimeStamp
                                             hproj.timeStamp = curTimeStamp
@@ -3315,11 +3315,11 @@ Module Module1
                         Dim err As New clsErrorCodeMsg
                         Dim realTimestamp As Date
                         Dim hproj As clsProjekt
-                        Dim projListe As clsProjekteAlle = Nothing
+
                         Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
 
                         If Not IsNothing(aktConst) Then
-                            hproj = calcUnionProject(aktConst, False, curTimeStamp, ProjListe:=projListe)
+                            hproj = calcUnionProject(aktConst, False, curTimeStamp)
                         Else
                             hproj = Nothing
                         End If
@@ -4247,6 +4247,7 @@ Module Module1
         End If
 
 
+
         ' die ganzen Vor-Klärungen machen ...
         With pptChart
 
@@ -4463,7 +4464,7 @@ Module Module1
         End With
 
 
-
+        ' tk das wurde am 7.2 auskommentiert, weil das komischerweise zu einer Skalierung der x-Achse geführt hat 
         ' Skalierung etc anpassen 
         With CType(pptChart, PowerPoint.Chart)
 
@@ -4472,9 +4473,9 @@ Module Module1
                 With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
-
-                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                    Dim newMaxScale As Double = CInt(System.Math.Max(tdatenreihe.Max, vdatenreihe.Max)) + 1
+                    If newMaxScale > curmaxScale Then
+                        .MaximumScale = newMaxScale + 10
                     End If
 
 
