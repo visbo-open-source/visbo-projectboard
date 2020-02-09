@@ -88,7 +88,11 @@ Public Class clsPhaseWeb
             ' jetzt die evtl vorhandenen Deliverables zuweisen ...
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
-                Me.deliverables.Add(tmpDeliverable)
+                'ur:07.02.2020: nur nicht leere Deliverables mitnehmen
+                '    Me.deliverables.Add(tmpDeliverable)
+                If tmpDeliverable <> "" Then
+                    Me.deliverables.Add(tmpDeliverable)
+                End If
             Next
 
 
@@ -188,7 +192,12 @@ Public Class clsPhaseWeb
                 If Me.deliverables.Count > 0 Then
                     For i = 1 To Me.deliverables.Count
                         Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
-                        .addDeliverable(tmpDeliverable)
+                        'ur:07.02.2020: nur nicht leere Deliverables mitnehmen
+                        '          .addDeliverable(tmpDeliverable)
+                        If tmpDeliverable <> "" Then
+                            .addDeliverable(tmpDeliverable)
+                        End If
+
                     Next
                 End If
             End If

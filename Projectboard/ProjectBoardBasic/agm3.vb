@@ -1220,7 +1220,7 @@ Public Module agm3
             End Try
         Else
             If awinSettings.englishLanguage Then
-                outputLine = "The configration-file don't exists!  -  " & configFile
+                outputLine = "The configration-file doen't exist!  -  " & configFile
             Else
                 outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
             End If

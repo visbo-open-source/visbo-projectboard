@@ -499,13 +499,21 @@ Public Class clsPhase
     Public ReadOnly Property getAllDeliverables(ByVal trennzeichen As String) As String
         Get
             Dim tmpDeliverables As String = ""
+            Dim tmp_i As Integer = 1
+
             For i As Integer = 1 To _deliverables.Count
-                If i = 1 Then
-                    tmpDeliverables = _deliverables.Item(i - 1)
-                Else
-                    tmpDeliverables = tmpDeliverables & trennzeichen &
-                        _deliverables.Item(i - 1)
+                ' ur:07.02.2020 nur nicht leere Deliverables sind relevant
+                If _deliverables.Item(i - 1) <> "" Then
+                    If tmp_i = 1 Then
+                        tmpDeliverables = _deliverables.Item(i - 1)
+                        tmp_i = tmp_i + 1
+                    Else
+                        tmpDeliverables = tmpDeliverables & trennzeichen &
+                            _deliverables.Item(i - 1)
+                        tmp_i = tmp_i + 1
+                    End If
                 End If
+
             Next
 
             getAllDeliverables = tmpDeliverables

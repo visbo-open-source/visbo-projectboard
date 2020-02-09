@@ -23351,6 +23351,7 @@ Public Module Projekte
                     ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
                     tmpDeliverables = cResult.getAllDeliverables(vbLf)
                     .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables

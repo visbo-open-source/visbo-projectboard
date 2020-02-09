@@ -93,7 +93,11 @@ Public Class clsResultWeb
                     If Me.deliverables.Count > 0 Then
                         For i = 1 To Me.deliverables.Count
                             Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
-                            .addDeliverable(tmpDeliverable)
+                            'ur:07.02.2020: nur nicht leere Deliverables mitnehmen
+                            '          .addDeliverable(tmpDeliverable)
+                            If tmpDeliverable <> "" Then
+                                .addDeliverable(tmpDeliverable)
+                            End If
                         Next
                     Else
                         ' evtl sind die noch in der Bewertung vergraben ... 
@@ -104,7 +108,10 @@ Public Class clsResultWeb
                                 If allDeliverables.Trim.Length > 0 Then
                                     Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
                                     For i = 1 To tmpstr.Length
-                                        .addDeliverable(tmpstr(i - 1))
+                                        ' ur:07.02.2020: nur nicht leere Deliverables mitnehmen
+                                        If tmpstr(i - 1) <> "" Then
+                                            .addDeliverable(tmpstr(i - 1))
+                                        End If
                                     Next
                                 End If
 
@@ -160,7 +167,11 @@ Public Class clsResultWeb
 
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
-                Me.deliverables.Add(tmpDeliverable)
+                'ur:07.02.2020: nur nicht leere Deliverables mitnehmen
+                '   Me.deliverables.Add(tmpDeliverable)
+                If tmpDeliverable <> "" Then
+                    Me.deliverables.Add(tmpDeliverable)
+                End If
             Next
 
             Try    ' evtl vorhandene Bewertungen kopieren .... 
