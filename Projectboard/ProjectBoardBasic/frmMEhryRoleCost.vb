@@ -331,24 +331,6 @@ Public Class frmMEhryRoleCost
                         End If
 
 
-                        ' 9.12.18 alter Stuff
-                        'topLevelNode.Text = cost.name
-
-                        'If Not IsNothing(hPhase) Then
-                        '    If Not IsNothing(hPhase.getCost(cost.name)) Then
-
-                        '        ' entsprechend kennzeichnen 
-                        '        topLevelNode.NodeFont = existingRoleFont
-                        '        topLevelNode.ForeColor = existingRoleColor
-
-                        '        If cost.name = rcName Then
-                        '            topLevelNode.Checked = True
-                        '        End If
-
-                        '    End If
-                        'End If
-
-
                     Next
                 End If
             End If
