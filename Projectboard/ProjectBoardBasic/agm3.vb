@@ -227,7 +227,7 @@ Public Module agm3
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
-                        outputline = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                        outputline = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
                     Else
                         outputline = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
                                     vbCrLf & " es fand kein Import statt "
@@ -1195,7 +1195,7 @@ Public Module agm3
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
-                        outputLine = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
                     Else
                         outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
                                     vbCrLf & " es fand kein Import statt "
@@ -1208,8 +1208,8 @@ Public Module agm3
 
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
-                    Call MsgBox("The configration-file " & configFile & "  To import the projects couldn't be opened.")
-                    outputLine = "The configrationfile " & configFile & "  to import the projects couldn't be opened."
+                    Call MsgBox("The configuration-file " & configFile & "  To import the projects couldn't be opened.")
+                    outputLine = "The configurationfile " & configFile & "  to import the projects couldn't be opened."
                 Else
                     Call MsgBox("Das Öffnen der Konfigurationsdatei " & configFile & " war nicht erfolgreich." &
                                 vbCrLf & " Die Projekte können somit nicht importiert werden")
@@ -1220,7 +1220,7 @@ Public Module agm3
             End Try
         Else
             If awinSettings.englishLanguage Then
-                outputLine = "The configration-file doen't exist!  -  " & configFile
+                outputLine = "The configuration-file doen't exist!  -  " & configFile
             Else
                 outputLine = "Die Konfigurationsdatei existiert nicht!  -  " & configFile
             End If
@@ -1406,7 +1406,7 @@ Public Module agm3
                     ActualDataConfigs.Clear()
 
                     If awinSettings.englishLanguage Then
-                        outputLine = "The configrationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
                     Else
                         outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
                                     vbCrLf & " es fand kein Import statt "
