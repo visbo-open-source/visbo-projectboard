@@ -1036,6 +1036,7 @@ Public Class Request
 
                     ' es existiert noch keine Planungsvariante zu diesem Projekt-die vpv-Standard wird nun gleich der pfv-Variante angelegt
                     If stdvpvs.Count <= 0 Then
+                        projekt.timeStamp = projekt.timeStamp.AddSeconds(5)
                         result = POSTOneVPv(vpid, projekt, userName, err)
                     Else
                         ' Create an Copy vpv mit neuer KeyMetrics
