@@ -1565,7 +1565,20 @@ Public Module agm3
                                     Dim vPersoName As clsConfigActualDataImport = ActualDataConfig("PersonalName")
                                     Dim personalName As String = currentWS.Cells(vPersoName.row.von, vPersoName.column.von).value
                                     hrole = RoleDefinitions.getRoledefByEmployeeNr(personalNumber)
-                                    Dim identical As Boolean = (personalName = hrole.name)
+                                    If IsNothing(hrole) Then
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "Error: in the sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName
+                                        Else
+                                            outputline = "Fehler: im Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName
+                                        End If
+                                        oPCollection.Add(outputline)
+                                        Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                        result = False
+                                        'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
+                                    End If
+                                    'Dim identical As Boolean = (personalName = hrole.name)
 
                                 Catch ex As Exception
                                     If awinSettings.englishLanguage Then
@@ -1675,13 +1688,22 @@ Public Module agm3
 
                                             ElseIf pNames.Count > 1 Then
                                                 ' Fehlermeldung, falls mehrer Projekte zu einer ProjektKdNr. existieren
-                                                outputline = "There exists more than one project zu project No. '" & projektKDNr & "'"
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "There exists more than one project to project No. '" & projektKDNr & "'"
+                                                Else
+                                                    outputline = "Zu Projekt-Nr. '" & projektKDNr & "'" & " existieren mehrer Projekte"
+                                                End If
+
                                                 oPCollection.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
 
                                             Else
                                                 ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
-                                                outputline = "No project zu project No. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "No project to project No. '" & projektKDNr & "' User: '" & hrole.name & "' month: '" & currentWS.Name & "'"
+                                                Else
+                                                    outputline = "Es existiert kein Projekt zu Projekt-Nr. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
+                                                End If
                                                 oPCollection.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
 
@@ -1749,7 +1771,12 @@ Public Module agm3
 
                                             Else
                                                 'Fehler, darf nur ein Name zu einer ProjektNr. existieren => TimeSheets nicht ins archiv
-                                                outputline = "Role '" & hrole.name & "' does not exist in your organization"
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "Role '" & hrole.name & "' does not exist in your organization"
+                                                Else
+                                                    outputline = hrole.name & " ist nicht in Ihrer Organisation enthalten!"
+                                                End If
+
                                                 oPCollection.Add(outputline)
                                                 result = False
                                             End If
@@ -1771,7 +1798,12 @@ Public Module agm3
                                 Next z          'nächste Zeile lesen
                             Else
                                 ' Infomeldung im Logbuch
-                                outputline = "Ende der Istdaten für '" & hrole.name & "' erreicht"
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Finished  reading actual-data of " & hrole.name
+                                Else
+                                    outputline = "Ende der Istdaten für '" & hrole.name & "' erreicht"
+                                End If
+
                                 Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
                                 Exit For
                             End If

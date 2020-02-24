@@ -6297,6 +6297,7 @@ Imports System.Web
         Dim result As Boolean = False
         Dim listOfArchivFiles As New List(Of String)
         Dim listOfArchivFilesAllg As New List(Of String)
+        Dim listOfErrorImportFilesAllg As New List(Of String)
         Dim dateiname As String = ""
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim anzFiles As Integer = 0
@@ -6436,8 +6437,12 @@ Imports System.Web
 
 
                 For Each tmpDatei As String In listOfImportfilesAllg
+                    If awinSettings.englishLanguage Then
+                        outPutline = "Reading actual-data " & tmpDatei
+                    Else
+                        outPutline = "Einlesen der ActualData " & tmpDatei
+                    End If
 
-                    outPutline = "Einlesen der ActualData " & tmpDatei
                     outPutCollection.Add(outPutline)
 
                     Call logfileSchreiben(outPutline, "", anzFehler)
@@ -6456,6 +6461,8 @@ Imports System.Web
                         ' hier: merken der erfolgreich importierten ActualData Files
                         listOfArchivFilesAllg.Add(tmpDatei)
                         ' Projekt in Importprojekte eintragen
+                    Else
+                        listOfErrorImportFilesAllg.Add(tmpDatei)
                     End If
 
                 Next
