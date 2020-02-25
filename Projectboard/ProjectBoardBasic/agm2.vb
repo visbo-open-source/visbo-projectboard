@@ -17867,7 +17867,8 @@ Public Module agm2
                             ElseIf cMilestone.ampelStatus = 3 Then
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
                             Else
-                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                ' keine Farbe 
+                                'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                             End If
 
 
@@ -17999,7 +18000,8 @@ Public Module agm2
                                 ElseIf cPhase.ampelStatus = 3 Then
                                     CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
                                 Else
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                    ' tk keine Farbe mehr 
+                                    'CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                                 End If
 
 

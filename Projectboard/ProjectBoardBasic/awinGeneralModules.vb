@@ -1446,9 +1446,7 @@ Public Module awinGeneralModules
 
         Try
             With hproj
-                .farbe = cproj.farbe
-                .Schrift = cproj.Schrift
-                .Schriftfarbe = cproj.Schriftfarbe
+
 
                 ' Änderung tk: das wird mit 28.12.16 nicht mehr benötigt ...  
                 '.earliestStart = cproj.earliestStart
@@ -1482,8 +1480,11 @@ Public Module awinGeneralModules
                 .timeStamp = importDate
                 .UID = cproj.UID
 
-                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden  
-                .VorlagenName = cproj.VorlagenName
+                ' tk 19.2.20 nur wenn der Vorlagen-Name was anderes ist 
+                If .VorlagenName = "" And cproj.VorlagenName <> "" Then
+                    .VorlagenName = cproj.VorlagenName
+                End If
+
 
                 If .Erloes > 0 Then
                     ' Workaround: 
@@ -1494,6 +1495,11 @@ Public Module awinGeneralModules
                 End If
 
                 If fileFrom3rdParty Then
+
+                    .farbe = cproj.farbe
+                    .Schrift = cproj.Schrift
+                    .Schriftfarbe = cproj.Schriftfarbe
+
                     If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
                         ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
                         Try
