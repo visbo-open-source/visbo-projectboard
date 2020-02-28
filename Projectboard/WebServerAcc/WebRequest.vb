@@ -1036,6 +1036,8 @@ Public Class Request
 
                     ' es existiert noch keine Planungsvariante zu diesem Projekt-die vpv-Standard wird nun gleich der pfv-Variante angelegt
                     If stdvpvs.Count <= 0 Then
+
+                        ' damit die Planungs-Variante nicht exakt den gleichen Timestamp wie die pfv hat 
                         projekt.timeStamp = projekt.timeStamp.AddSeconds(5)
                         result = POSTOneVPv(vpid, projekt, userName, err)
                     Else

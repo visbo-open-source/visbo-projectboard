@@ -664,8 +664,9 @@ Public Class clsRollen
             If Level = 0 Then
                 For Each roleID As Integer In _topLevelNodeIDs
                     If _allRollen.ContainsKey(roleID) Then
-                        If Not returnResult.Contains(_allRollen.Item(roleID).name) Then
-                            returnResult.Add(_allRollen.Item(roleID).name)
+                        Dim tmpName As String = _allRollen.Item(roleID).name
+                        If Not returnResult.Contains(tmpName) Then
+                            returnResult.Add(tmpName, tmpName)
                         End If
                     End If
                 Next
@@ -679,15 +680,17 @@ Public Class clsRollen
                     If subroleList.Count > 0 Then
                         For Each srKvP As KeyValuePair(Of Integer, Double) In subroleList
                             If _allRollen.ContainsKey(srKvP.Key) Then
-                                If Not returnResult.Contains(_allRollen.Item(srKvP.Key).name) Then
-                                    returnResult.Add(_allRollen.Item(srKvP.Key).name)
+                                Dim tmpName As String = _allRollen.Item(srKvP.Key).name
+                                If Not returnResult.Contains(tmpName) Then
+                                    returnResult.Add(tmpName, tmpName)
                                 End If
                             End If
                         Next
                     Else
                         If _allRollen.ContainsKey(roleID) Then
-                            If Not returnResult.Contains(_allRollen.Item(roleID).name) Then
-                                returnResult.Add(_allRollen.Item(roleID).name)
+                            Dim tmpName As String = _allRollen.Item(roleID).name
+                            If Not returnResult.Contains(tmpName) Then
+                                returnResult.Add(tmpName, tmpName)
                             End If
                         End If
                     End If

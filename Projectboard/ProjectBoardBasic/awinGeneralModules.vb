@@ -1143,10 +1143,12 @@ Public Module awinGeneralModules
             hproj = kvp.Value
 
             ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
-            If awinSettings.autoSetActualDataDate = True Then
-                ' das müssten den vorletzten Tag des Vormontas abgeben 
-                hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
-            End If
+            ' tk das darf hier nicht gemacht werden, weil man sonst nie initial Projekte eintragen kann und dann noch ändern kann 
+            ' das sollte erst beim Speichern gemacht werden ...  
+            'If awinSettings.autoSetActualDataDate = True Then
+            '    ' das müssten den vorletzten Tag des Vormontas abgeben 
+            '    hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
+            'End If
 
 
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
@@ -1453,9 +1455,7 @@ Public Module awinGeneralModules
 
         Try
             With hproj
-                .farbe = cproj.farbe
-                .Schrift = cproj.Schrift
-                .Schriftfarbe = cproj.Schriftfarbe
+
 
                 ' Änderung tk: das wird mit 28.12.16 nicht mehr benötigt ...  
                 '.earliestStart = cproj.earliestStart
@@ -1471,12 +1471,9 @@ Public Module awinGeneralModules
                 .Status = cproj.Status
 
                 ' 
-                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden  
-                If awinSettings.autoSetActualDataDate = False Then
-                    ' das müssten den vorletzten Tag des Vormontas abgeben 
-                    hproj.actualDataUntil = cproj.actualDataUntil
-                End If
-
+                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData von cProj übernommen werden 
+                ' das soll unabhängig vom autoSetActualData gemacht werden ... 
+                hproj.actualDataUntil = cproj.actualDataUntil
 
                 If existsInSession Then
                     .shpUID = cproj.shpUID
@@ -1492,8 +1489,11 @@ Public Module awinGeneralModules
                 .timeStamp = importDate
                 .UID = cproj.UID
 
-                ' tk 7.3.17 das soll jetzt nicht mehr gemacht werden  
-                .VorlagenName = cproj.VorlagenName
+                ' tk 19.2.20 nur wenn der Vorlagen-Name was anderes ist 
+                If .VorlagenName = "" And cproj.VorlagenName <> "" Then
+                    .VorlagenName = cproj.VorlagenName
+                End If
+
 
                 If .Erloes > 0 Then
                     ' Workaround: 
@@ -1504,6 +1504,11 @@ Public Module awinGeneralModules
                 End If
 
                 If fileFrom3rdParty Then
+
+                    .farbe = cproj.farbe
+                    .Schrift = cproj.Schrift
+                    .Schriftfarbe = cproj.Schriftfarbe
+
                     If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
                         ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
                         Try

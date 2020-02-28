@@ -9742,7 +9742,10 @@ Public Module Projekte
 
                 For Each kvp As KeyValuePair(Of Integer, Double) In tmpSubRoleListe
                     Dim tmpName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-                    ErgebnisListeR.Add(tmpName)
+                    If Not ErgebnisListeR.Contains(tmpName) Then
+                        ErgebnisListeR.Add(tmpName, tmpName)
+                    End If
+
                 Next
             Catch ex As Exception
 
@@ -9757,10 +9760,13 @@ Public Module Projekte
                     For Each roleID As Integer In tmpRoleListe
                         Dim tmpName As String = RoleDefinitions.getRoleDefByID(roleID).name
                         If tmpName.Length > 0 Then
-                            ErgebnisListeR.Add(tmpName)
+                            If Not ErgebnisListeR.Contains(tmpName) Then
+                                ErgebnisListeR.Add(tmpName, tmpName)
+                            End If
                         End If
                     Next
-                    usePieColors = False
+                    ' jetzt immer mit PieColors arbeiten 
+                    'usePieColors = False
                 End If
             Catch ex As Exception
 
@@ -9769,6 +9775,23 @@ Public Module Projekte
         Else
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
         End If
+
+        ' jetzt überprüfen, ob das Projekt überhaupt was enthält 
+        Dim noNeedToShow As New Collection
+        For Each tmpRoleName As String In ErgebnisListeR
+            If hproj.getRessourcenBedarf(tmpRoleName, True).Sum > 0 Then
+                ' ok 
+            Else
+                noNeedToShow.Add(tmpRoleName)
+            End If
+
+        Next
+
+        For Each tmpRoleName As String In noNeedToShow
+            If ErgebnisListeR.Contains(tmpRoleName) Then
+                ErgebnisListeR.Remove(tmpRoleName)
+            End If
+        Next
 
         If ErgebnisListeR.Count = 0 Then
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
@@ -10066,7 +10089,10 @@ Public Module Projekte
 
                 For Each kvp As KeyValuePair(Of Integer, Double) In tmpSubRoleListe
                     Dim tmpName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-                    ErgebnisListeR.Add(tmpName)
+                    If Not ErgebnisListeR.Contains(tmpName) Then
+                        ErgebnisListeR.Add(tmpName, tmpName)
+                    End If
+
                 Next
             Catch ex As Exception
 
@@ -10081,10 +10107,13 @@ Public Module Projekte
                     For Each roleID As Integer In tmpRoleListe
                         Dim tmpName As String = RoleDefinitions.getRoleDefByID(roleID).name
                         If tmpName.Length > 0 Then
-                            ErgebnisListeR.Add(tmpName)
+                            If Not ErgebnisListeR.Contains(tmpName) Then
+                                ErgebnisListeR.Add(tmpName, tmpName)
+                            End If
                         End If
                     Next
-                    usePieColors = False
+                    ' jetzt immer mit PieColors arbeiten 
+                    'usePieColors = False
                 End If
             Catch ex As Exception
 
@@ -10093,6 +10122,23 @@ Public Module Projekte
         Else
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
         End If
+
+        ' jetzt überprüfen, ob das Projekt überhaupt was enthält 
+        Dim noNeedToShow As New Collection
+        For Each tmpRoleName As String In ErgebnisListeR
+            If hproj.getRessourcenBedarf(tmpRoleName, True).Sum > 0 Then
+                ' ok 
+            Else
+                noNeedToShow.Add(tmpRoleName)
+            End If
+
+        Next
+
+        For Each tmpRoleName As String In noNeedToShow
+            If ErgebnisListeR.Contains(tmpRoleName) Then
+                ErgebnisListeR.Remove(tmpRoleName)
+            End If
+        Next
 
         If ErgebnisListeR.Count = 0 Then
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)

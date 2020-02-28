@@ -2037,9 +2037,14 @@ Public Module agm2
                     If colProduktlinie > 0 Then
 
                         Try
-                            Dim tmpBU As String
+                            Dim tmpBU As String = ""
                             If colProduktlinie > 0 Then
-                                tmpBU = CStr(CType(.Cells(zeile, colProduktlinie), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                If Not IsNothing(CType(.Cells(zeile, colProduktlinie), Global.Microsoft.Office.Interop.Excel.Range).Value) Then
+                                    tmpBU = CStr(CType(.Cells(zeile, colProduktlinie), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Else
+                                    tmpBU = ""
+                                End If
+
                             Else
                                 tmpBU = ""
                             End If
@@ -2306,7 +2311,7 @@ Public Module agm2
 
 
 
-                                        logMessage = "ungültiges Startdatum ..."
+                                        logMessage = "ungültiges Endedatum ..."
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
                                         logMessage = ""
 
@@ -2385,20 +2390,20 @@ Public Module agm2
                                 ' jetzt werden vorgangsklasse und Abkürzung rausgelesen 
                                 If colVorgangsKlasse > 0 Then
                                     Try
-
-                                        origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
-                                        If Not isMilestone Then
-                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
-                                            'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
-                                            '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                        If Not IsNothing(CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value) Then
+                                            origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
+                                            If Not isMilestone Then
+                                                txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
+                                                'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                            Else
+                                                txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, True)
+                                                'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                '        "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                            End If
                                         Else
-                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, True)
-                                            'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
-                                            '        "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                            origVorgangsKlasse = ""
                                         End If
-
-
-
 
                                     Catch ex As Exception
 
@@ -2413,7 +2418,12 @@ Public Module agm2
                                 If colAbbrev > 0 Then
                                     Try
 
-                                        txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
+                                        If Not IsNothing(CType(.Cells(curZeile, colAbbrev), Excel.Range).Value) Then
+                                            txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
+                                        Else
+                                            txtAbbrev = ""
+                                        End If
+
 
                                     Catch ex As Exception
                                         txtAbbrev = ""
@@ -2422,7 +2432,12 @@ Public Module agm2
 
                                 If colVerantwortlich > 0 Then
                                     Try
-                                        verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                        If Not IsNothing(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value) Then
+                                            verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                        Else
+                                            verantwortlich = ""
+                                        End If
+
                                     Catch ex As Exception
                                         verantwortlich = ""
                                     End Try
@@ -2431,7 +2446,12 @@ Public Module agm2
                                 ' jetzt %-Done auslesen 
                                 If colPercentDone > 0 Then
                                     Try
-                                        percentDone = CDbl(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value)
+                                        If Not IsNothing(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value) Then
+                                            percentDone = CDbl(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value)
+                                        Else
+                                            percentDone = 0.0
+                                        End If
+
                                     Catch ex As Exception
                                         percentDone = 0.0
                                     End Try
@@ -2440,7 +2460,12 @@ Public Module agm2
                                 ' jetzt Ampel-Farbe  auslesen 
                                 If colTrafficLight > 0 Then
                                     Try
-                                        ampel = CInt(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value)
+                                        If Not IsNothing(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value) Then
+                                            ampel = CInt(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value)
+                                        Else
+                                            ampel = 0
+                                        End If
+
                                     Catch ex As Exception
                                         ampel = 0
                                     End Try
@@ -2449,7 +2474,12 @@ Public Module agm2
                                 ' jetzt Ampel-Erläuterung  auslesen 
                                 If colTLExplanation > 0 Then
                                     Try
-                                        ampelExplanation = CStr(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value)
+                                        If Not IsNothing(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value) Then
+                                            ampelExplanation = CStr(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value)
+                                        Else
+                                            ampelExplanation = ""
+                                        End If
+
                                     Catch ex As Exception
                                         ampelExplanation = ""
                                     End Try
@@ -2458,7 +2488,12 @@ Public Module agm2
                                 ' jetzt Document Link auslesen 
                                 If colDocUrl > 0 Then
                                     Try
-                                        docURL = CStr(CType(.Cells(zeile, colDocUrl), Excel.Range).Value)
+                                        If Not IsNothing(CType(.Cells(curZeile, colDocUrl), Excel.Range).Value) Then
+                                            docURL = CStr(CType(.Cells(zeile, colDocUrl), Excel.Range).Value)
+                                        Else
+                                            docURL = ""
+                                        End If
+
                                     Catch ex As Exception
 
                                     End Try
@@ -17838,7 +17873,8 @@ Public Module agm2
                             ElseIf cMilestone.ampelStatus = 3 Then
                                 CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
                             Else
-                                CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                ' keine Farbe 
+                                'CType(currentWS.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                             End If
 
 
@@ -17970,7 +18006,8 @@ Public Module agm2
                                 ElseIf cPhase.ampelStatus = 3 Then
                                     CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeRed
                                 Else
-                                    CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
+                                    ' tk keine Farbe mehr 
+                                    'CType(.Cells(zeile, 7), Excel.Range).Interior.Color = visboFarbeNone
                                 End If
 
 
@@ -18924,7 +18961,13 @@ Public Module agm2
                 ' jetzt werden die Directories alle angelegt, sofern Sie nicht schon existieren ... 
                 For di As Integer = 0 To importOrdnerNames.Length - 1
                     Try
-                        My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
+
+                        If Not IsNothing(importOrdnerNames(di)) Then
+                            My.Computer.FileSystem.CreateDirectory(importOrdnerNames(di))
+                        Else
+                            importOrdnerNames(di) = "-"
+                        End If
+
                     Catch ex As Exception
 
                     End Try

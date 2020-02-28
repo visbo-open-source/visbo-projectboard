@@ -487,7 +487,9 @@ Public Class Tabelle3
                                         Dim colValue As Integer = CInt(Target.Value)
                                         Select Case colValue
                                             Case 0
-                                                Target.Interior.Color = visboFarbeNone
+                                                'Target.Interior.Color = visboFarbeNone
+                                                'Target.Interior.ColorIndex = -4142
+                                                Target.Interior.ColorIndex = XlColorIndex.xlColorIndexNone
                                             Case 1
                                                 Target.Interior.Color = visboFarbeGreen
                                             Case 2

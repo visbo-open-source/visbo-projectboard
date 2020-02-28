@@ -124,20 +124,23 @@ Public Class clsPhaseWeb
                 AllCosts.Add(newCost)
             Next
 
-
+            ' tk 18.2.20 führt zu Nicht mehr kennen der Bewertungen ...
             ' jetzt evtl vorhandene Bewertungen (bereits sortiert in bewertungsliste) abspeichern ... 
-            Try
-                For Each kvp As KeyValuePair(Of String, clsBewertung) In .bewertungsListe
+            ' entweder muss diese Schleife ausgeführt werden oder aber wie oben und in Phase geschehen 
+            ' die Zuweisungen .ampel = , .ampelerläuterung = 
+            ' Im Prinzip machen die dasselbe...
+            'Try
+            '    For Each kvp As KeyValuePair(Of String, clsBewertung) In .bewertungsListe
 
-                    Dim bWeb As New clsBewertungWeb
-                    bWeb.bewertung.Copyfrom(.getBewertung(i))
-                    bWeb.key = kvp.Key
-                    Me.AllBewertungen.Add(bWeb)
+            '        Dim bWeb As New clsBewertungWeb
+            '        bWeb.bewertung.Copyfrom(.getBewertung(i))
+            '        bWeb.key = kvp.Key
+            '        Me.AllBewertungen.Add(bWeb)
 
-                Next
-            Catch ex As Exception
+            '    Next
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
 
 
@@ -203,6 +206,7 @@ Public Class clsPhaseWeb
             End If
 
             ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
+            ' tk das ist redundant zu der Übernahme der Bewertungen 
             .ampelStatus = Me.ampelStatus
             .ampelErlaeuterung = Me.ampelErlaeuterung
 
@@ -288,22 +292,26 @@ Public Class clsPhaseWeb
 
             End Try
 
-            ' evtl vorhandene Bewertungen kopieren .... 
-            For b As Integer = 1 To Me.AllBewertungen.Count
+            '' tk 18.2.20 führt zu Nicht mehr kennen der Bewertungen ...
+            '' jetzt evtl vorhandene Bewertungen (bereits sortiert in bewertungsliste) abspeichern ... 
+            '' entweder muss diese Schleife ausgeführt werden oder aber wie oben und in Phase geschehen 
+            '' die Zuweisungen .ampel = , .ampelerläuterung = 
+            '' Im Prinzip machen die dasselbe...
+            'For b As Integer = 1 To Me.AllBewertungen.Count
 
-                Dim newb As New clsBewertung
-                Dim hBew As clsBewertungDB = Me.AllBewertungen.ElementAt(b - 1).bewertung
-                Dim hBewkey As String = Me.AllBewertungen.ElementAt(b - 1).key
-                hBew.CopyTo(newb)
+            '    Dim newb As New clsBewertung
+            '    Dim hBew As clsBewertungDB = Me.AllBewertungen.ElementAt(b - 1).bewertung
+            '    Dim hBewkey As String = Me.AllBewertungen.ElementAt(b - 1).key
+            '    hBew.CopyTo(newb)
 
-                Try
-                    .addBewertung(newb)
-                    '.bewertungsListe.Add(hBewkey, newb)
-                Catch ex As Exception
+            '    Try
+            '        .addBewertung(newb)
+            '        '.bewertungsListe.Add(hBewkey, newb)
+            '    Catch ex As Exception
 
-                End Try
+            '    End Try
 
-            Next
+            'Next
 
         End With
 

@@ -818,6 +818,10 @@ Public Class clsPhase
 
         Dim deltaOffset As Long = newOffsetInTagen - Me.startOffsetinDays
         Dim deltaDauer As Long = newDauerInTagen - Me.dauerInDays
+
+        ' Merken des Offsets Phase, die später Parent ihrer childs ist 
+        Dim parentPhaseOldOffset As Long = Me.startOffsetinDays
+
         Dim faktor As Double = 1.0
 
         If Me.dauerInDays > 0 Then
@@ -834,8 +838,10 @@ Public Class clsPhase
             For Each childPhaseNameID As String In hproj.hierarchy.getChildIDsOf(elemID, False)
 
                 Dim childPhase As clsPhase = hproj.getPhaseByID(childPhaseNameID)
+                Dim childPhaseDeltaOffset As Long = childPhase.startOffsetinDays - parentPhaseOldOffset
 
-                Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
+                'Dim newChildOffset As Long = CLng(faktor * childPhase.startOffsetinDays)
+                Dim newChildOffset As Long = newOffsetInTagen + CLng(faktor * childPhaseDeltaOffset)
                 Dim newChildDuration As Long = CLng(faktor * childPhase.dauerInDays)
 
                 Dim newCalculationNecessary As Boolean = (childPhase.getStartDate.Date <> parentProject.startDate.AddDays(newChildOffset).Date) Or
@@ -959,9 +965,6 @@ Public Class clsPhase
                 Catch ex As Exception
 
                 End Try
-
-
-
 
             Next
 

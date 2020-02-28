@@ -117,7 +117,7 @@
                 Dim anzCosts As Integer = oldCosts.Count
 
                 ' ist jede Kosten-ID im alten auch im Neuen ? 
-                For ixc As Integer = 1 To anzCosts
+                For ixc As Integer = 1 To anzCosts - 1
                     Dim oldCostDefinition As clsKostenartDefinition = oldCosts.getCostdef(ixc)
                     Dim newCostDefinition As clsKostenartDefinition = _allCosts.getCostDefByID(oldCostDefinition.UID)
                     If Not IsNothing(newCostDefinition) Then

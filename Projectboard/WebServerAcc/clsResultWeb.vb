@@ -120,6 +120,7 @@ Public Class clsResultWeb
                     End If
                 End If
 
+
                 For Each wBew As clsBewertungWeb In Me.bewertungen
                     Dim newb As New clsBewertung
 

@@ -7852,13 +7852,23 @@ Public Module Module1
     Public Function bestimmeRollenDiagrammTitel(ByVal rollenKennung As String) As String
 
         Dim tmpResult As String = ""
-
         Dim teamID As Integer
-        Try
-            tmpResult = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID).name
-        Catch ex As Exception
 
-        End Try
+        If rollenKennung.Contains("#") Then
+            If awinSettings.englishLanguage Then
+                tmpResult = "Rollen Übersicht"
+            Else
+                tmpResult = "Role Overview"
+            End If
+        Else
+            Try
+                tmpResult = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID).name
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
 
         bestimmeRollenDiagrammTitel = tmpResult
 

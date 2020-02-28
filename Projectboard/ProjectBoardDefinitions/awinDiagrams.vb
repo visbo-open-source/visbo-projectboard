@@ -599,6 +599,19 @@ Public Module awinDiagrams
                                 End If
                             Else
                                 legendName = prcName
+                                Dim teamID As Integer = -1
+                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
+                                If teamID <= 0 Then
+                                    legendName = tmpRole.name
+                                Else
+                                    Try
+                                        legendName = tmpRole.name & " (" & RoleDefinitions.getRoleDefByID(teamID).name & ")"
+                                    Catch ex As Exception
+                                        legendName = tmpRole.name
+                                    End Try
+
+                                End If
+
                             End If
 
                             'If repMessages.getmsg(275) <> "" Then
@@ -832,7 +845,7 @@ Public Module awinDiagrams
                         End If
                     End If
 
-                        If prcTyp = DiagrammTypen(1) Or
+                    If prcTyp = DiagrammTypen(1) Or
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -1003,10 +1016,24 @@ Public Module awinDiagrams
                 If prcTyp = DiagrammTypen(1) Then
                     ' Rolle 
                     Dim scInfo As New clsSmartPPTChartInfo
+                    Dim scInfoQ2 As String = prcName
+                    If myCollection.Count > 1 Then
+                        scInfoQ2 = ""
+                        Dim first As Boolean = True
+                        For Each roleItem In myCollection
+                            If first Then
+                                first = False
+                                scInfoQ2 = CStr(roleItem)
+                            Else
+                                scInfoQ2 = scInfoQ2 & "#" & CStr(roleItem)
+                            End If
+
+                        Next
+                    End If
                     With scInfo
                         .prPF = ptPRPFType.portfolio
                         .pName = currentConstellationName
-                        .q2 = prcName
+                        .q2 = scInfoQ2
                         .elementTyp = ptElementTypen.roles
                         .einheit = PTEinheiten.personentage
                         .chartTyp = PTChartTypen.Balken
@@ -1610,6 +1637,19 @@ Public Module awinDiagrams
                             End If
                         Else
                             legendName = prcName
+                            Dim teamID As Integer = -1
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
+                            If teamID <= 0 Then
+                                legendName = tmpRole.name
+                            Else
+                                Try
+                                    legendName = tmpRole.name & " (" & RoleDefinitions.getRoleDefByID(teamID).name & ")"
+                                Catch ex As Exception
+                                    legendName = tmpRole.name
+                                End Try
+
+                            End If
+
                         End If
 
                         With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -1823,10 +1863,26 @@ Public Module awinDiagrams
             If prcTyp = DiagrammTypen(1) And Not awinSettings.showValuesOfSelected Then
                 ' Rolle 
                 Dim scInfo As New clsSmartPPTChartInfo
+                Dim scInfoQ2 As String = prcName
+
+                If myCollection.Count > 1 Then
+                    scInfoQ2 = ""
+                    Dim first As Boolean = True
+                    For Each roleItem In myCollection
+                        If first Then
+                            first = False
+                            scInfoQ2 = CStr(roleItem)
+                        Else
+                            scInfoQ2 = scInfoQ2 & "#" & CStr(roleItem)
+                        End If
+
+                    Next
+                End If
+
                 With scInfo
                     .prPF = ptPRPFType.portfolio
                     .pName = currentConstellationName
-                    .q2 = prcName
+                    .q2 = scInfoQ2
                     .elementTyp = ptElementTypen.roles
                     .einheit = PTEinheiten.personentage
                     .chartTyp = PTChartTypen.Balken
