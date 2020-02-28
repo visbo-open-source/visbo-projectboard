@@ -4437,6 +4437,8 @@ Public Module agm2
         ' Diese Liste enthält keine Elemente, wenn das VISBO-Flag nicht definiert ist
         Dim visboFlagListe As New SortedList(Of String, Boolean)
 
+        Dim wbs_elemID_liste As New SortedList(Of String, String) ' diese Liste enthält fürs Mapping das WBS einer Task, elemID v. Visbo
+
 
         Dim outputCollection As New Collection
         Dim outputline As String = ""
@@ -5068,6 +5070,8 @@ Public Module agm2
                                 End If
                             End With
 
+                            ' ur:27.02.2020: liste aufbauen, die im mappingProject benötigt wird
+                            wbs_elemID_liste.Add(msTask.WBS, cphase.nameID)
 
                             Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
 
@@ -5272,6 +5276,8 @@ Public Module agm2
                                 Try
                                     With msPhase
                                         .addMilestone(cmilestone, origName:=origMsName)
+                                        ' ur: 27.2.2020: liste aufbauen, im mappingProject benötigt
+                                        wbs_elemID_liste.Add(msTask.WBS, cmilestone.nameID)
                                     End With
                                 Catch ex1 As Exception
                                     Throw New Exception(ex1.Message)
@@ -5409,7 +5415,7 @@ Public Module agm2
 
                     If visbo_mapping <> 0 Then
 
-                        mapProj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping)
+                        mapProj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping, wbs_elemID_liste)
 
                         If IsNothing(mapProj) Then
                             Call MsgBox("Kein Mapping erfolgt")
