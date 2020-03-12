@@ -2836,7 +2836,7 @@ Public Module agm3
         Dim costValues() As Double = Nothing
         Dim phNames() As String
         Dim przPhasenAnteile() As Double
-        Dim combinedName As Boolean = False
+        Dim combinedName As Boolean = True
         Dim createBudget As Boolean = True
         Dim createCostsRolesAnyhow As Boolean = True
 

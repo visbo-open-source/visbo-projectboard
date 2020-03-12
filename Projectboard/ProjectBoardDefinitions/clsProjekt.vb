@@ -1121,6 +1121,7 @@ Public Class clsProjekt
     ''' <remarks></remarks>
     Public ReadOnly Property getShapeText() As String
         Get
+
             If Not IsNothing(Me.variantName) Then
                 If Me.variantName.Length > 0 Then
                     getShapeText = Me.name & "[ " & Me.variantName & " ]"
