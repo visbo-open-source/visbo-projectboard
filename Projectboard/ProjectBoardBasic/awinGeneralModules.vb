@@ -821,8 +821,11 @@ Public Module awinGeneralModules
     ''' <param name="visbo_mapping">Definition des MSProject-CustomField</param>
     ''' <returns>gemapptes Projekt in VISBO-Struktur</returns>
     ''' <remarks></remarks>
-    Public Function mappingProject(ByVal msproj As MSProject.Project, ByVal mapStruktur As String, ByVal hproj As clsProjekt, _
-                                    ByVal visbo_mapping As MSProject.PjCustomField) As clsProjekt
+    Public Function mappingProject(ByVal msproj As MSProject.Project,
+                                   ByVal mapStruktur As String,
+                                   ByVal hproj As clsProjekt,
+                                   ByVal visbo_mapping As MSProject.PjCustomField,
+                                   ByVal wbs_elemID_liste As SortedList(Of String, String)) As clsProjekt
 
 
 
@@ -976,7 +979,10 @@ Public Module awinGeneralModules
 
                                 mPhase = New clsPhase(mproj)
 
-                                Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
+                                'ur: 27.02.2020: Korrektur des Mappings für BHTC und auch generell
+                                Dim elemID As String = wbs_elemID_liste(msTask.WBS)
+                                Dim hPhase As clsPhase = hproj.getPhaseByID(elemID)
+                                'Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
 
                                 hPhase.copyTo(mPhase, True)
                                 mPhase.nameID = mPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, False)
@@ -1017,7 +1023,10 @@ Public Module awinGeneralModules
 
                                 mMilestone = New clsMeilenstein(aktPhase)
 
-                                Dim hMilestone As clsMeilenstein = hproj.getMilestone(msTask.Name)
+                                'ur: 27.02.2020: Korrektur Mapping für BHTC hier nachgezogen
+                                Dim elemID As String = wbs_elemID_liste(msTask.WBS)
+                                Dim hMilestone As clsMeilenstein = hproj.getMilestoneByID(elemID)
+                                'Dim hMilestone As clsMeilenstein = hproj.getMilestone(msTask.Name)
 
                                 Dim newMSNameID As String = aktPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, True)
                                 hMilestone.copyTo(mMilestone, newMSNameID)
