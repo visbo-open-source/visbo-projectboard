@@ -13640,7 +13640,7 @@ Public Module Projekte
                 If combinedName Then
                     If Not IsNothing(projectNummer) Then
                         If projectNummer <> "" Then
-                            .name = pName & "_" & projectNummer.Trim
+                            .name = projectNummer.Trim & "_" & pName
                         Else
                             .name = pName
                         End If

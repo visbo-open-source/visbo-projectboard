@@ -1154,13 +1154,18 @@ Public Module awinGeneralModules
 
             vglName = calcProjektKey(searchPName, searchVName)
             Try
-                cproj = AlleProjekte.getProject(vglName)
+                If kvp.Value.kundenNummer = "" Then
+                    cproj = AlleProjekte.getProject(vglName)
+                Else
+                    cproj = AlleProjekte.getProjectByKDNr(kvp.Value.kundenNummer)
+                End If
+
 
                 If IsNothing(cproj) Then
                     ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                     existsInSession = False
                     If Not noDB Then
-                        cproj = awinReadProjectFromDatabase(searchPName, searchVName, Date.Now)
+                        cproj = awinReadProjectFromDatabase(kvp.Value.kundenNummer, searchPName, searchVName, Date.Now)
                     End If
                 Else
                     existsInSession = True
@@ -1180,7 +1185,7 @@ Public Module awinGeneralModules
                         If IsNothing(baseProj) Then
                             ' jetzt muss geprüft werden, ob das Projekt bereits in der Datenbank existiert ... 
                             If Not noDB Then
-                                baseProj = awinReadProjectFromDatabase(hproj.name, "", Date.Now)
+                                baseProj = awinReadProjectFromDatabase(kvp.Value.kundenNummer, hproj.name, "", Date.Now)
                             End If
                         End If
                     End If
@@ -1226,6 +1231,9 @@ Public Module awinGeneralModules
                             '.Status = pStatus
                             If Not IsNothing(baseProj) Then
                                 .Status = baseProj.Status
+                                If baseProj.name <> hproj.name Then
+
+                                End If
                             End If
 
                             .tfZeile = tafelZeile
@@ -1276,7 +1284,7 @@ Public Module awinGeneralModules
                         If Not noDB Then
                             Dim wpItem As clsWriteProtectionItem
 
-                            Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                            Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, searchVName)
 
                             If isProtectedbyOthers Then
 
@@ -1341,7 +1349,12 @@ Public Module awinGeneralModules
             ' sowohl auf der Plantafel eingetragen werden als auch in ShowProjekte und in alleProjekte eingetragen 
 
             ' bringe das neue Projekt in Showprojekte und in AlleProjekte
-
+            If Not IsNothing(cproj) Then
+                ' Fall Telair oder auch andere: wenn PNr angeben ist und die PNames aus DB und Import nicht übereinstimmen, dann gewinnt DB 
+                If cproj.name <> hproj.name Then
+                    hproj.name = cproj.name
+                End If
+            End If
 
 
             Try
@@ -1566,19 +1579,50 @@ Public Module awinGeneralModules
     ''' <param name="datum"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function awinReadProjectFromDatabase(ByVal pName As String, ByVal vName As String, ByVal datum As Date) As clsProjekt
+    Public Function awinReadProjectFromDatabase(ByVal pNr As String, ByVal pName As String, ByVal vName As String, ByVal datum As Date) As clsProjekt
 
         Dim err As New clsErrorCodeMsg
 
         Dim tmpResult As clsProjekt = Nothing
+        Dim allNames As Collection = Nothing
 
         '
         ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+
+        ' Stufe 1: gibt es die Projekt-Nummer bereits in der Datenbank? 
+        If pNr <> "" Then
+            Try
+                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                allNames = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(pNr, err)
+                If allNames.Count > 1 Then
+                    Dim errMsg As String = "Project-Number occurs more than once in DB:" & pNr
+
+                    Dim usedName As String = ""
+                    For Each tmpName As String In allNames
+                        If usedName = "" Then
+                            usedName = tmpName
+                        End If
+                        errMsg = errMsg & vbLf & tmpName
+                    Next
+                    errMsg = errMsg & vbLf & vbLf & "used name: " & usedName
+
+                    Call MsgBox(errMsg)
+
+                ElseIf allNames.Count = 1 Then
+                    pName = allNames.Item(1)
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
+
         Try
 
             If Not noDB Then
 
-                If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, datum, err) Then
 

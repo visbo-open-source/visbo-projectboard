@@ -6508,6 +6508,16 @@ Imports System.Web
 
                         If Not IsNothing(hproj) Then
                             ' es wird pro Projekt eine Variante erzeugt 
+
+                            ' wenn es noch nicht beauftragt ist ... dann beauftragen 
+                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                Try
+                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
                             Dim istDatenVName As String = ptVariantFixNames.acd.ToString
                             Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
