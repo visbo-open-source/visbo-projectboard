@@ -1261,6 +1261,7 @@ Public Module agm3
         If My.Computer.FileSystem.FileExists(configFile) Then
 
             Try
+
                 configWB = appInstance.Workbooks.Open(configFile)
 
                 Try
@@ -1450,7 +1451,7 @@ Public Module agm3
         Dim outputline As String = ""
         Dim ok As Boolean = False
         Dim result As Boolean = True
-        Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook
+        Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim regexpression As Regex
         Dim firstUrlTabelle As Integer
@@ -1474,7 +1475,8 @@ Public Module agm3
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
-                    actDataWB = appInstance.Workbooks.Open(tmpDatei)
+
+                    actDataWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
 
                     Dim vstart As clsConfigActualDataImport = ActualDataConfig("valueStart")
                     ' Auslesen erste Time-Sheet
@@ -2850,7 +2852,6 @@ Public Module agm3
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
 
                 Try
-
                     projectWB = appInstance.Workbooks.Open(tmpDatei)
 
                     Dim vstart As clsConfigProjectsImport = projectConfig("valueStart")
