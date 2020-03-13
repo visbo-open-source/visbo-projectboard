@@ -6626,7 +6626,7 @@ Imports System.Web
                     logmessage = vbLf & "Projekte aktualisiert: " & updatedProjects
                     outPutCollection.Add(logmessage)
 
-                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
                     outPutCollection.Add(logmessage)
 
                     If outPutCollection.Count > 0 Then
@@ -7584,7 +7584,7 @@ Imports System.Web
         End If
 
 
-        outputString = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        outputString = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
         outPutCollection.Add(outputString)
 
         If outPutCollection.Count > 0 Then

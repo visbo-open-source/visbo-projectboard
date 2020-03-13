@@ -12742,7 +12742,7 @@ Public Module agm2
                     "Projekte aktualisiert: " & updatedProjects
         outputCollection.Add(logmessage)
 
-        logmessage = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
         outputCollection.Add(logmessage)
 
         If outputCollection.Count > 0 Then
