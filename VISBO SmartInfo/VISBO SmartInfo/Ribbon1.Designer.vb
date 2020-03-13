@@ -267,6 +267,7 @@
         Me.Create_Button.Label = "Create from Template"
         Me.Create_Button.Name = "Create_Button"
         Me.Create_Button.ScreenTip = "creates report from template"
+        Me.Create_Button.Visible = False
         '
         'Ribbon1
         '

@@ -1261,6 +1261,7 @@ Public Module agm3
         If My.Computer.FileSystem.FileExists(configFile) Then
 
             Try
+
                 configWB = appInstance.Workbooks.Open(configFile)
 
                 Try
@@ -1450,7 +1451,7 @@ Public Module agm3
         Dim outputline As String = ""
         Dim ok As Boolean = False
         Dim result As Boolean = True
-        Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook
+        Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
         Dim regexpression As Regex
         Dim firstUrlTabelle As Integer
@@ -1803,8 +1804,8 @@ Public Module agm3
                                 End If
 
                             Else
-                                    ' Infomeldung im Logbuch
-                                    If awinSettings.englishLanguage Then
+                                ' Infomeldung im Logbuch
+                                If awinSettings.englishLanguage Then
                                     outputline = "Finished  reading actual-data of " & personalName
                                 Else
                                     outputline = "Ende der Istdaten für '" & personalName & "' erreicht"
@@ -2750,8 +2751,8 @@ Public Module agm3
                     Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                 End Try
 
-        'kapaWB.Close(SaveChanges:=False)
-        Catch ex As Exception
+                'kapaWB.Close(SaveChanges:=False)
+            Catch ex As Exception
 
             End Try
 
@@ -2874,7 +2875,7 @@ Public Module agm3
         Dim costValues() As Double = Nothing
         Dim phNames() As String
         Dim przPhasenAnteile() As Double
-        Dim combinedName As Boolean = False
+        Dim combinedName As Boolean = True
         Dim createBudget As Boolean = True
         Dim createCostsRolesAnyhow As Boolean = True
 
@@ -2888,7 +2889,7 @@ Public Module agm3
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
 
                 Try
-                    projectWB.UpdateLinks = XlUpdateLinks.xlUpdateLinksNever
+
                     projectWB = appInstance.Workbooks.Open(tmpDatei)
 
                     Dim vstart As clsConfigProjectsImport = projectConfig("valueStart")
