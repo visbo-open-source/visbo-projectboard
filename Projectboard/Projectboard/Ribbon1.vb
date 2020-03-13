@@ -6653,7 +6653,19 @@ Imports System.Web
 
                     End Try
 
+                Else
 
+                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
+                    outPutCollection.Add(logmessage)
+
+                    If outPutCollection.Count > 0 Then
+                        If awinSettings.englishLanguage Then
+                            Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
+                        Else
+                            Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                        End If
+
+                    End If
                 End If
 
 
