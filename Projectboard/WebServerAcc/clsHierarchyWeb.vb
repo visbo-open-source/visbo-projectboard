@@ -24,9 +24,10 @@ Public Class clsHierarchyWeb
             If elemID = rootPhaseName Then
                 elemID = rootPhaseNameDB
             End If
-            If elemID.Contains(punktName) Then
-                elemID = elemID.Replace(punktName, punktNameDB)
-            End If
+            ' ur: 11.03.2020: für RestServer ist diese Ersetzung nicht notwendig, da keine sortedList und damit auch kein Key mit "."
+            'If elemID.Contains(punktName) Then
+            '    elemID = elemID.Replace(punktName, punktNameDB)
+            'End If
             hryNode = hry.nodeItem(i)
 
             hryNodeWeb.hryNodeKey = elemID

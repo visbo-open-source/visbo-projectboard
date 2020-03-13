@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\VISBO Project Add-In\</Value>
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\VISBO Project Add-In</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Visbo Task Class</Value>
@@ -54,7 +54,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">TMS_View_local</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>
