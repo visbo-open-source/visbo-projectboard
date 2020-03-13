@@ -8738,7 +8738,17 @@ Public Module agm2
                             importedOrga = New clsOrganisation
 
                         Else
-
+                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ... 
+                            If Not IsNothing(oldOrga) Then
+                                If oldOrga.allRoles.Count > 0 Then
+                                    For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
+                                        Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
+                                        If Not IsNothing(importedRole) Then
+                                            importedRole.kapazitaet = kvp.Value.kapazitaet
+                                        End If
+                                    Next
+                                End If
+                            End If
                         End If
                     End If
 
