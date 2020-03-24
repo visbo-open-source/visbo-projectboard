@@ -19196,8 +19196,10 @@ Public Module agm2
             End Try
 
 
+            If awinSettings.databaseURL <> "" Then
 
-            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+                '' ur: 23.03.2020: nur noch Server notwendig
+                ''If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
                 noDB = False
 
@@ -19211,10 +19213,20 @@ Public Module agm2
 
 
                 If loginErfolgreich Then
+
                     ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
                     Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                    If listOfVCs.Count > 1 Then
+                    If listOfVCs.Count = 1 Then
+                        ' alles ok, nimm dieses  VC
+                        awinSettings.databaseName = listOfVCs.Item(0)
+                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                        If Not changeOK Then
+                            Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ...")
+                        End If
+
+                    ElseIf listOfVCs.Count > 1 Then
+                        ' wähle das gewünschte VC aus
                         Dim chooseVC As New frmSelectOneItem
                         chooseVC.itemsCollection = listOfVCs
                         If chooseVC.ShowDialog = DialogResult.OK Then
@@ -19222,12 +19234,13 @@ Public Module agm2
                             awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
                             Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
                             If Not changeOK Then
-                                Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                                Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ...")
                             End If
                         Else
-                            Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                            Throw New ArgumentException("no Selection of VISBO Center ... program ends  ...")
                         End If
-
+                    Else
+                        Throw New ArgumentException("You don't belong to any VISBO Center so far ... program ends  ...")
                     End If
 
                 End If

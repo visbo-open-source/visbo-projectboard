@@ -1,4 +1,6 @@
 ﻿
+Imports System.Diagnostics
+Imports Microsoft.VisualBasic.Logging
 Imports Microsoft.Office.Tools.Ribbon
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
@@ -304,15 +306,54 @@ Public Class Ribbon1
     Private Sub DBspeichern_Click(sender As Object, e As RibbonControlEventArgs) Handles DBspeichern.Click
 
         Try
+            Dim fname As String = "DBspeichern_Click"
+            Dim xxx As New FileLogTraceListener(fname)
+            Dim flfname As String = xxx.FullLogFileName
+
+            Dim logfile As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
+            My.Application.Log.DefaultFileLogWriter.AutoFlush = True
+
+            My.Application.Log.DefaultFileLogWriter.TraceOutputOptions = My.Application.Log.DefaultFileLogWriter.TraceOutputOptions Or
+                TraceOptions.Timestamp Or
+                TraceOptions.Callstack Or
+                TraceOptions.DateTime
+
+            'My.Application.Log.DefaultFileLogWriter.TraceOutputOptions = TraceOptions.Callstack
+
+            ' Activity tracing information
+            My.Application.Log.WriteEntry("Entering Button1_Click", TraceEventType.Start)
+
+            ' Tracing information
+            My.Application.Log.WriteEntry("In Button1_Click", TraceEventType.Information)
+
+            ' Create an exception to log.
+            Dim except As New ApplicationException
+            ' Exception information
+            My.Application.Log.WriteException(except)
+
+            ' Activity tracing information
+            My.Application.Log.WriteEntry("Leaving Button1_Click", TraceEventType.Stop)
+
+
+
             If Not awinsetTypen_Performed Then
                 '' Set cursor as hourglass
                 Cursor.Current = Cursors.WaitCursor
-                Try
-                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
+                Try
+                    Dim test As String = My.Application.Log.ToString
+
+                    My.Application.Log.WriteEntry("Entering TracingTest with argument " & fname & ".")
+
+                    ' Code to trace goes here.
+
+                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
                     awinSettings.databaseURL = My.Settings.mongoDBURL
+                    My.Application.Log.WriteEntry("VISBO Rest-Server " & awinSettings.databaseURL, TraceEventType.Information)
                     awinSettings.databaseName = My.Settings.mongoDBname
+                    My.Application.Log.WriteEntry("VISBO center " & awinSettings.databaseName, TraceEventType.Warning)
                     awinSettings.globalPath = My.Settings.globalPath
+                    My.Application.Log.WriteEntry("VISBO globalPath " & awinSettings.globalPath)
                     awinSettings.awinPath = My.Settings.awinPath
                     awinSettings.visboTaskClass = My.Settings.TaskClass
                     awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
@@ -327,6 +368,8 @@ Public Class Ribbon1
                     awinSettings.proxyURL = My.Settings.proxyServerURL
                     awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
+                    My.Application.Log.WriteEntry("Exiting TracingTest with argument " & fname & ".")
+                    My.Application.Log.DefaultFileLogWriter.Flush()
 
                     dbUsername = ""
                     dbPasswort = ""
@@ -338,7 +381,7 @@ Public Class Ribbon1
 
                     ' UserName - Password merken
                     If awinSettings.rememberUserPwd Then
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
                     End If
 
                 Catch ex As Exception
@@ -448,14 +491,14 @@ Public Class Ribbon1
 
                 Else
                     If awinSettings.englishLanguage Then
-                            Call MsgBox(" Please, contact your system administrator")
-                        Else
-                            Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
-                        End If
-
+                        Call MsgBox(" Please, contact your system administrator")
+                    Else
+                        Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
                     End If
 
                 End If
+
+            End If
 
         Catch ex As Exception
 

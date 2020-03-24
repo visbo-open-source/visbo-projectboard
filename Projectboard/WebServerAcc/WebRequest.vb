@@ -114,17 +114,18 @@ Public Class Request
                 token = loginAntwort.token
                 serverUriName = ServerURL
                 aktUser = loginAntwort.user
+                '????
                 ' VisboCenterID mit Name = databaseName wird gespeichert
                 aktVCid = GETvcid(databaseName)
 
                 If aktVCid = "" Then
-                    loginOK = False
-                    token = ""
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("User don't have access to this VisboCenter!" & vbLf & "Please contact your administrator")
-                    Else
-                        Call MsgBox("User hat keinen Zugriff zu diesem VisboCenter!" & vbLf & " Bitte kontaktieren Sie ihren Administrator")
-                    End If
+                    'loginOK = False
+                    'token = ""
+                    'If awinSettings.englishLanguage Then
+                    '    Call MsgBox("User don't have access to this VisboCenter!" & vbLf & "Please contact your administrator")
+                    'Else
+                    '    Call MsgBox("User hat keinen Zugriff zu diesem VisboCenter!" & vbLf & " Bitte kontaktieren Sie ihren Administrator")
+                    'End If
                 Else
                     ' alle vps dieses aktVCid lesen und im Cache speichern
                     Try
@@ -155,7 +156,7 @@ Public Class Request
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in PTWebRequestLogin" & typeRequest & ": " & ex.Message)
+            Throw New ArgumentException("Fehler in Login" & typeRequest & ": " & ex.Message)
         End Try
 
         login = loginOK

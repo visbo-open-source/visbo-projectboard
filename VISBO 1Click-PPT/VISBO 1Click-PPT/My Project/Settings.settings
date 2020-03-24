@@ -21,7 +21,7 @@
       <Value Profile="(Default)">https://dev.visbo.net/api</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Test-MS-VP01 RENAME</Value>
+      <Value Profile="(Default)">Demo Visbo KeyMetrics</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>

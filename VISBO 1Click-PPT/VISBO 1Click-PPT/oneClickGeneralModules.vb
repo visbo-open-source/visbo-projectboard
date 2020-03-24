@@ -80,12 +80,19 @@ Module oneClickGeneralModules
                                     End If
                                 End If
                             Else
-                                If awinSettings.englishLanguage Then
-                                    Call MsgBox("Error saving this project")
+                                Dim msgStr As String = ""
+                                If outputCollection.Count > 0 Then
+                                    For Each outputline In outputCollection
+                                        msgStr = msgStr & outputline & vbLf
+                                    Next
+                                    Call MsgBox(msgStr)
                                 Else
-                                    Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("Error saving this project")
+                                    Else
+                                        Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                    End If
                                 End If
-
                             End If
 
 
@@ -130,12 +137,21 @@ Module oneClickGeneralModules
                                 End If
 
                             Else
-                                If awinSettings.englishLanguage Then
-                                    Call MsgBox("Error saving this project")
+                                Dim msgStr As String = ""
+                                If outputCollection.Count > 0 Then
+                                    For Each outputline In outputCollection
+                                        msgStr = msgStr & outputline & vbLf
+                                    Next
+                                    Call MsgBox(msgStr)
                                 Else
-                                    Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("Error saving this project")
+                                    Else
+                                        Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                    End If
                                 End If
                             End If
+
                         Catch ex As Exception
                             If awinSettings.englishLanguage Then
                                 Throw New ArgumentException("Error saving the project: " & hproj.name)
