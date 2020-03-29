@@ -5621,20 +5621,24 @@ Public Module agm2
                     End Try
 
 
+                    projektAmpelFarbe = 0
+                    projektAmpelText = ""
+
                     ' Ampel-Farbe
-                    projektAmpelFarbe = CType(.Range("Bewertung").Value, Integer)
-                    If projektAmpelFarbe >= 0 And projektAmpelFarbe <= 3 Then
-                        ' zulässiger Wert
-                    Else
-                        projektAmpelFarbe = 0
-                    End If
+                    ' wenn das nicht existiert, soll es nicht zu Absturz führen ...
+                    Try
+                        projektAmpelFarbe = CType(.Range("Bewertung").Value, Integer)
+                        If projektAmpelFarbe >= 0 And projektAmpelFarbe <= 3 Then
+                            ' zulässiger Wert
+                        Else
+                            projektAmpelFarbe = 0
+                        End If
 
+                        projektAmpelText = CType(.Range("BewertgErläuterung").Value, String)
 
-                    ' Ampel-Bewertung 
-                    projektAmpelText = CType(.Range("BewertgErläuterung").Value, String)
-                    ' das kann jetzt noch gar nicht zugewiesen werden, weil es noch keine Phasen gibt
-                    ' Ampel-Beschreibung und Farbe ist jetzt Attribut der Phase(1), der Projekt-Phase
-                    'hproj.ampelErlaeuterung = ampelText
+                    Catch ex As Exception
+                        ' nichts weiter tun ...
+                    End Try
 
 
                 End With
@@ -11032,9 +11036,10 @@ Public Module agm2
 
 
         Dim colTaskName As Integer = 1
-        Dim colRolName As Integer = 2
-        Dim colValue As Integer = 3
-        Dim colEinheit As Integer = 4
+        Dim colBreadCrumb As Integer = 2
+        Dim colRoleCostName As Integer = 3
+        Dim colValue As Integer = 4
+        Dim colEinheit As Integer = 5
 
         Dim anzPhases As Integer = hproj.CountPhases
 
@@ -11053,6 +11058,7 @@ Public Module agm2
 
         ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
         Dim rolePhaseValues As New SortedList(Of String, Double())
+        Dim costPhaseValues As New SortedList(Of String, Double())
 
         ' wenn wenigstens ein Fehler beim Projekt auftritt , dann wird es nicht eingetragen 
         Dim atleastOneError As Boolean = False
@@ -11063,9 +11069,25 @@ Public Module agm2
 
             Try
 
-                Dim roleName As String = CStr(CType(ws.Cells(iz, colRolName), Excel.Range).Value).Trim
+                Dim roleCostName As String = CStr(CType(ws.Cells(iz, colRoleCostName), Excel.Range).Value).Trim
+
+                Dim breadCrumb As String = ""
+                If Not IsNothing(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value) Then
+                    breadCrumb = CStr(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value).Trim
+                End If
+
                 Dim roleNameID As String = ""
-                Dim phaseName As String = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+
+
+                'Dim phaseName As String = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+                Dim phaseName As String = "."
+                If Not IsNothing(CType(ws.Cells(iz, colTaskName), Excel.Range).Value) Then
+                    phaseName = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+                    If phaseName = "" Then
+                        phaseName = "."
+                    End If
+                End If
+
                 Dim phaseNameID As String = ""
                 Dim lastPhNameID As String = ""
                 Dim tmpValue As String = CType(ws.Cells(iz, colValue), Excel.Range).Value
@@ -11073,13 +11095,29 @@ Public Module agm2
                     tmpValue = tmpValue.Replace(".", ",")
                 End If
 
-                Dim value As Double = CDbl(tmpValue) / 8 ' weil Angabe in Stunden ... 
-                Dim lfdNr As Integer = 1
-                Dim cphase As clsPhase = hproj.getPhase(phaseName)
+                Dim value As Double = CDbl(tmpValue) ' im Default Angabe in PT  
+                Dim einheitIsEuro As Boolean = False
+
+
+                If Not IsNothing(CType(ws.Cells(iz, colEinheit), Excel.Range).Value) Then
+                    einheitIsEuro = (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "T€")
+                    If Not einheitIsEuro Then
+                        If ((CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "Std") Or (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "hrs")) Then
+                            ' Anzahl Stunden in PT umrechnen
+                            value = value / 8
+                        End If
+                    Else
+                        ' nichts weiter machen, die Umrechnung wird in setRolePhaseValues gemacht
+                    End If
+                Else
+                    ' einheit wird als Anzahl Personentage aufgefasst
+                End If
+
+                Dim cphase As clsPhase = hproj.getPhase(phaseName, breadcrumb:=breadCrumb)
 
                 If Not IsNothing(cphase) Then
 
-                    Call setRolePhaseValues(roleName, lfdNr, phaseName, value, hproj, phNameIDs, rolePhaseValues)
+                    Call setRolePhaseValues(roleCostName, phaseName, breadCrumb, value, einheitIsEuro, hproj, phNameIDs, rolePhaseValues, costPhaseValues)
                     ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
 
                 Else
@@ -11090,7 +11128,8 @@ Public Module agm2
 
 
             Catch ex As Exception
-
+                ' einfach nix machen und ignorieren 
+                CType(ws.Cells(iz, colTaskName), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
             End Try
 
         Next
@@ -11100,13 +11139,22 @@ Public Module agm2
 
             ' jetzt alle Rollen / Phasen Werte hinzufügen 
 
-            hproj = hproj.merge(rolePhaseValues, phNameIDs, True)
+            hproj = hproj.merge(rolePhaseValues, costPhaseValues, phNameIDs, True)
 
             ' tk test 
             For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
                 Dim teilErgebnis As Double = hproj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
                 If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
-                    logmessage = "TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+                    logmessage = kvp.Key & ": TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+                    outputcollection.Add(logmessage)
+                End If
+
+            Next
+
+            For Each kvp As KeyValuePair(Of String, Double()) In costPhaseValues
+                Dim teilErgebnis As Double = hproj.getKostenBedarf(kvp.Key).Sum
+                If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
+                    logmessage = kvp.Key & ": TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
                     outputcollection.Add(logmessage)
                 End If
 
@@ -11121,67 +11169,119 @@ Public Module agm2
     ''' <summary>
     ''' berechnet rekursiv den Monatsbedarf
     ''' </summary>
-    ''' <param name="roleName"></param>
-    ''' <param name="lfdNr"></param>
-    ''' <param name="phaseName"></param>
-    ''' <param name="value"></param>
+    ''' <param name="roleCostName">der Name der Orga-Einheit bzw. Kostenart </param>
+    ''' <param name="breadCrumb">wenn es den Phasen-Namen mehrfach gibt: der Breadcrumb, wenn leer, dann wird das erste Auftreten genommen</param>
+    ''' <param name="phaseName">der Phasen-Name, wenn es den mehrfach gibt, muss über BreadCrumb parent#parent#.. der eindeutige Name bestimmt sein </param>
+    ''' <param name="value">der Wert in Tausend Euro bz. Personen-Tage</param>
+    ''' <param name="einheitISEuro">wenn es sich um eine Orga-Einheit handelt und true: dann ist Value in Tausend Euro </param>
     ''' <param name="hproj"></param>
-    ''' <param name="phNameIDs"></param>
-    ''' <param name="rolePhaseValues"></param>
-    Private Sub setRolePhaseValues(ByVal roleName As String, ByVal lfdNr As Integer, ByVal phaseName As String, ByVal value As Double,
-                                   ByVal hproj As clsProjekt, ByVal phNameIDs As String(), ByRef rolePhaseValues As SortedList(Of String, Double()))
+    ''' <param name="phNameIDs">gibt die Liste der PhNameIDs zurück </param>
+    ''' <param name="rolePhaseValues">enthält die Werte für die Orga-Units, immer in PT</param>
+    ''' <param name="costPhaseValues">enthält die Werte der Kostenarten, immer in T€</param>
+    Private Sub setRolePhaseValues(ByVal roleCostName As String, ByVal phaseName As String, ByVal breadCrumb As String,
+                                   ByVal value As Double, ByVal einheitISEuro As Boolean,
+                                   ByVal hproj As clsProjekt, ByVal phNameIDs As String(),
+                                   ByRef rolePhaseValues As SortedList(Of String, Double()),
+                                   ByRef costPhaseValues As SortedList(Of String, Double()))
 
         Dim anzPhases As Integer = hproj.CountPhases
-        Dim cphase As clsPhase = hproj.getPhase(phaseName, lfdNr:=lfdNr)
-        Dim phValues() As Double
+        'Dim cphase As clsPhase = hproj.getPhase(phaseName, lfdNr:=lfdNr)
+        Dim cphase As clsPhase = hproj.getPhase(phaseName, breadcrumb:=breadCrumb)
+        Dim phaseNameID As String = cphase.nameID
 
-        ' es ist sichergestellt, dass cphase existiert 
+        If IsNothing(cphase) Then
+            Exit Sub
+        Else
+            Dim phValues() As Double
 
-        ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
-        If RoleDefinitions.containsName(roleName) Then
+            ' es ist sichergestellt, dass cphase existiert 
 
-            Dim phaseNameID As String = cphase.nameID
-            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-            ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
+            ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
+            If RoleDefinitions.containsName(roleCostName) Then
 
-            If (roleNameID.Length > 0) And (phaseNameID.Length > 0) Then
 
-                ' bestimme jetzt anhand phaseNameID den Index in der Integer
-                Dim found As Boolean = False
-                Dim ix As Integer = -1 ' wqird zu Beginn der Schleife erhöht, deshalb beginnen mit -1
+                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleCostName, "")
+                ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
 
-                Do While Not found And ix <= phNameIDs.Length - 1
-                    ix = ix + 1
-                    found = phaseNameID = phNameIDs(ix)
-                Loop
+                If (roleNameID.Length > 0) And (phaseNameID.Length > 0) Then
 
-                If found Then
-                    If rolePhaseValues.ContainsKey(roleNameID) Then
+                    ' bestimme jetzt anhand phaseNameID den Index in der Integer
+                    Dim found As Boolean = False
+                    Dim ix As Integer = -1 ' wqird zu Beginn der Schleife erhöht, deshalb beginnen mit -1
 
-                        phValues = rolePhaseValues.Item(roleNameID)
+                    Dim tagessatz As Double = 0.0
+                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
+                    If Not IsNothing(curRole) Then
+                        tagessatz = curRole.tagessatzIntern
+                        If tagessatz > 0 And einheitISEuro Then
+                            value = value / (tagessatz * 0.001)
+                        End If
+                    End If
 
-                        If phValues(ix) > 0 Then
-                            cphase = hproj.getPhase(phaseName, lfdNr:=lfdNr + 1)
-                            If IsNothing(cphase) Then
+                    Do While Not found And ix <= phNameIDs.Length - 1
+                        ix = ix + 1
+                        found = phaseNameID = phNameIDs(ix)
+                    Loop
+
+                    If found Then
+                        If rolePhaseValues.ContainsKey(roleNameID) Then
+
+                            phValues = rolePhaseValues.Item(roleNameID)
+
+                            If phValues(ix) > 0 Then
                                 phValues(ix) = phValues(ix) + value
                             Else
-                                Call setRolePhaseValues(roleName, lfdNr + 1, phaseName, value,
-                                                             hproj, phNameIDs, rolePhaseValues)
+                                phValues(ix) = value
                             End If
-                        Else
-                            phValues(ix) = value
-                        End If
 
-                    Else
-                        ReDim phValues(anzPhases - 1)
-                        phValues(ix) = value
-                        rolePhaseValues.Add(roleNameID, phValues)
+                        Else
+                            ReDim phValues(anzPhases - 1)
+                            phValues(ix) = value
+                            rolePhaseValues.Add(roleNameID, phValues)
+                        End If
                     End If
+
                 End If
 
-            End If
+            ElseIf CostDefinitions.containsName(roleCostName) Then
+                ' es handelt sich um eine Kostenart ..
+                Dim costName As String = roleCostName
+                ' is bereits ein Wert in rolePhaseValues eingetragen ... nur wenn es die überhaupt gibt, weitermachen 
 
+                If (costName.Length > 0) And (phaseNameID.Length > 0) Then
+
+                    ' bestimme jetzt anhand phaseNameID den Index in der Integer
+                    Dim found As Boolean = False
+                    Dim ix As Integer = -1 ' wqird zu Beginn der Schleife erhöht, deshalb beginnen mit -1
+
+                    Do While Not found And ix <= phNameIDs.Length - 1
+                        ix = ix + 1
+                        found = phaseNameID = phNameIDs(ix)
+                    Loop
+
+                    If found Then
+                        If costPhaseValues.ContainsKey(costName) Then
+
+                            phValues = costPhaseValues.Item(costName)
+
+                            If phValues(ix) > 0 Then
+                                phValues(ix) = phValues(ix) + value
+                            Else
+                                phValues(ix) = value
+                            End If
+
+                        Else
+                            ReDim phValues(anzPhases - 1)
+                            phValues(ix) = value
+                            costPhaseValues.Add(costName, phValues)
+                        End If
+                    End If
+
+                End If
+            End If
         End If
+
+
 
     End Sub
 
@@ -11618,7 +11718,7 @@ Public Module agm2
 
                             ' jetzt alle Rollen / Phasen Werte hinzufügen 
 
-                            newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+                            newProj = newProj.merge(rolePhaseValues, Nothing, phNameIDs, True)
 
                             ' tk test 
                             For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
@@ -11963,7 +12063,7 @@ Public Module agm2
                             For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
                                 addValues = addValues + kvp.Value.Sum
                             Next
-                            newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+                            newProj = newProj.merge(rolePhaseValues, Nothing, phNameIDs, True)
 
                             Dim bosvErgebnis As Double = newProj.getRessourcenBedarf("Grp-BOSV-KB", inclSubRoles:=True).Sum
 
@@ -13562,6 +13662,7 @@ Public Module agm2
                 For i = 0 To listOfImportfiles.Count - 1
 
                     Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+                    Dim colName As Integer = 2
                     endeZeile = 0
 
                     If Not IsNothing(dateiName) Then
@@ -13587,12 +13688,26 @@ Public Module agm2
 
                                         lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
 
+                                        ' bestimme jetzt die Spalte, wo der Name stehen sollte 
+                                        Dim dateFound As Boolean = False
+                                        Dim tmpSpalte As Integer = 2
+                                        Do While Not dateFound
+                                            If Not IsNothing(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
+                                                If IsDate(CType(currentWS.Cells(1, tmpSpalte), Excel.Range).Value) Then
+                                                    dateFound = True
+                                                    colName = tmpSpalte - 1
+                                                Else
+                                                    tmpSpalte = tmpSpalte + 1
+                                                End If
+                                            End If
+                                        Loop
+
                                         ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
                                         Dim aktzeile As Integer = 2
                                         Do While aktzeile < endeZeile
 
-                                            Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
+                                            Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colName), Excel.Range).Value)
 
                                             If Not IsNothing(subRoleName) Then
                                                 subRoleName = subRoleName.Trim
@@ -13604,7 +13719,7 @@ Public Module agm2
                                                     If Not subRole.isCombinedRole Then
 
                                                         Try
-                                                            spalte = 2
+                                                            spalte = colName + 1
                                                             tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
 
                                                             ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
@@ -21642,6 +21757,9 @@ Public Module agm2
                                 Else
                                     errMsg = "zeile: " & ix.ToString & " : " & ex.Message
                                 End If
+
+                                lastLevel = curLevel
+                                ix = ix + 1
 
                                 meldungen.Add(errMsg)
                                 CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed

@@ -1363,11 +1363,13 @@ Module Module1
 
                             Call aktualisiereSortedLists(tmpShape)
 
-                            If Not isPcardInvisible Then
-                                If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
-                                    tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                                End If
-                            End If
+                            ' tk 27.3.20 darf nicht wieder auf visible gesetzt werden ... 
+                            ' da sonst das unsichtbar machen von Phasen / Meilensteinen konterkariert wird  
+                            'If Not isPcardInvisible Then
+                            '    If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
+                            '        tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                            '    End If
+                            'End If
 
 
                         ElseIf isVISBOChartElement(tmpShape) Then
