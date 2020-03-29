@@ -81,11 +81,19 @@ Module oneClickGeneralModules
                                 End If
                             Else
                                 Dim msgStr As String = ""
+
                                 If outputCollection.Count > 0 Then
-                                    For Each outputline In outputCollection
-                                        msgStr = msgStr & outputline & vbLf
-                                    Next
-                                    Call MsgBox(msgStr)
+                                    If awinSettings.englishLanguage Then
+                                        Call showOutPut(outputCollection, "Publish to VISBO", "please check the notifications ...")
+                                    Else
+                                        Call showOutPut(outputCollection, "Publizieren in VISBO", "folgende Probleme sind aufgetaucht")
+                                    End If
+
+                                    'If outputCollection.Count > 0 Then
+                                    '    For Each outputline In outputCollection
+                                    '        msgStr = msgStr & outputline & vbLf
+                                    '    Next
+                                    '    Call MsgBox(msgStr)
                                 Else
                                     If awinSettings.englishLanguage Then
                                         Call MsgBox("Error saving this project")
@@ -138,11 +146,19 @@ Module oneClickGeneralModules
 
                             Else
                                 Dim msgStr As String = ""
+
                                 If outputCollection.Count > 0 Then
-                                    For Each outputline In outputCollection
-                                        msgStr = msgStr & outputline & vbLf
-                                    Next
-                                    Call MsgBox(msgStr)
+                                    If awinSettings.englishLanguage Then
+                                        Call showOutPut(outputCollection, "Publish to VISBO", "please check the notifications ...")
+                                    Else
+                                        Call showOutPut(outputCollection, "Publizieren in VISBO", "folgende Probleme sind aufgetaucht")
+                                    End If
+
+                                    'If outputCollection.Count > 0 Then
+                                    '    For Each outputline In outputCollection
+                                    '        msgStr = msgStr & outputline & vbLf
+                                    '    Next
+                                    '    Call MsgBox(msgStr)
                                 Else
                                     If awinSettings.englishLanguage Then
                                         Call MsgBox("Error saving this project")

@@ -19222,7 +19222,7 @@ Public Module agm2
                         awinSettings.databaseName = listOfVCs.Item(0)
                         Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
                         If Not changeOK Then
-                            Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ...")
+                            Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
 
                     ElseIf listOfVCs.Count > 1 Then
@@ -19234,13 +19234,18 @@ Public Module agm2
                             awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
                             Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
                             If Not changeOK Then
-                                Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ...")
+                                Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                             End If
                         Else
-                            Throw New ArgumentException("no Selection of VISBO Center ... program ends  ...")
+                            Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
                     Else
-                        Throw New ArgumentException("You don't belong to any VISBO Center so far ... program ends  ...")
+
+                        If Not IsNothing(xlsCustomization) Then
+                            ' Customization-File wird geschlossen
+                            xlsCustomization.Close(SaveChanges:=False)
+                        End If
+                        Throw New ArgumentException("You don't belong to any VISBO Center so far ... program ends  ..." & vbCrLf & "You want do be invited? - ")  ' & vbCrLf & "Please contact us: https://visbo.de/kontakt/")
                     End If
 
                 End If
@@ -19543,7 +19548,7 @@ Public Module agm2
                         awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
-                        Else
+                    Else
                             Call MsgBox("Es existiert keine Organisation im System!")
                         End If
 
@@ -19852,7 +19857,14 @@ Public Module agm2
                 msg = ex.Message
             Else
                 ' wird an der aufrufenden Stelle gemacht 
-                msg = "Fehler in awinsettypen " & special & vbLf & ex.Message
+                ' ur: 26032020: evt. ein formular aufschalten mit Click auf einen Hyperlink 
+                ' siehe https://www.herber.de/forum/archiv/784to788/784299_Email_als_Link_in_Msgbox.html
+
+                Dim outputline As String = "Fehler in awinsettypen " & special & vbCrLf & ex.Message
+                Dim oCollection As New Collection
+                oCollection.Add(outputline)
+                Call showOutPut(oCollection, "Startprobleme", "Please contact us")
+                'msg = "Fehler in awinsettypen " & special & vbCrLf & ex.Message
             End If
 
             Throw New ArgumentException(msg)

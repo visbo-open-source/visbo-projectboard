@@ -6137,8 +6137,8 @@ Imports System.Web
                         Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
                         Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
                     Else
-                        Call MsgBox("Error when writing Organisation")
-                        Call logfileSchreiben("Error when writing Organisation ...", selectedWB, -1)
+                        Call MsgBox("Error when writing Organisation :" & vbCrLf & err.errorMsg)
+                        Call logfileSchreiben("Error when writing Organisation ..." & err.errorMsg, selectedWB, -1)
                     End If
                 End If
             Catch ex As Exception
@@ -6807,8 +6807,8 @@ Imports System.Web
                         Call MsgBox("ok, Custom User Roles stored ...")
                         Call logfileSchreiben("Custom User Roles stored ...", selectedWB, -1)
                     Else
-                        Call MsgBox("Error when writing Custom User Roles")
-                        Call logfileSchreiben("Error when writing Custom User Roles ...", selectedWB, -1)
+                        Call MsgBox("Error when writing Custom User Roles: " & vbCrLf & err.errorMsg)
+                        Call logfileSchreiben("Error when writing Custom User Roles ..." & err.errorMsg, selectedWB, -1)
                     End If
 
                     listOfArchivFiles.Add(dateiname)
@@ -6901,8 +6901,8 @@ Imports System.Web
                         Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
 
                     Else
-                        Call MsgBox("Error when writing Organisation to Database")
-                        Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                        Call MsgBox("Error when writing Organisation to Database: " & vbCrLf & err.errorMsg)
+                        Call logfileSchreiben("Error when writing Organisation to Database..." & err.errorMsg, "", -1)
                     End If
 
 
@@ -6954,7 +6954,7 @@ Imports System.Web
 
         Dim selectedWB As String = ""
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
-
+        Dim err As New clsErrorCodeMsg
 
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Project Board Customization*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
@@ -7024,7 +7024,7 @@ Imports System.Web
                 ElseIf Not IsNothing(importedCustomization) Then
                     ' jetzt werden die Einstellungen als Setting weggespeichert ... 
                     ' alles ok 
-                    Dim err As New clsErrorCodeMsg
+
                     Dim ts As Date = CDate("1.1.1900")
                     Dim result As Boolean = False
                     Dim result1 As Boolean = False
@@ -7053,8 +7053,8 @@ Imports System.Web
                         Call MsgBox("ok, Customizations and CustomFieldDefinitions stored ...")
                         Call logfileSchreiben("Customizations and CustomFieldDefinitions stored ...", selectedWB, -1)
                     Else
-                        Call MsgBox("Error when writing Customizations or CustomfieldDefinitions")
-                        Call logfileSchreiben("Error when writing Customizations or Customfielddefinitions ...", selectedWB, -1)
+                        Call MsgBox("Error when writing Customizations or CustomfieldDefinitions:" & vbCrLf & err.errorMsg)
+                        Call logfileSchreiben("Error when writing Customizations or Customfielddefinitions ..." & err.errorMsg, selectedWB, -1)
                     End If
 
 
@@ -7068,7 +7068,7 @@ Imports System.Web
             Catch ex As Exception
                 Dim resultMessage As String = ex.Message
                 Call MsgBox(resultMessage)
-                Call logfileSchreiben("Error when writing Customizations ...", resultMessage, -1)
+                Call logfileSchreiben("Error when writing Customizations ..." & err.errorMsg, resultMessage, -1)
             End Try
         End If
 
@@ -7168,8 +7168,8 @@ Imports System.Web
                         Call MsgBox("ok, appearances stored ...")
                         Call logfileSchreiben("appearances stored ...", selectedWB, -1)
                     Else
-                        Call MsgBox("Error when writing appearances")
-                        Call logfileSchreiben("Error when writing appearances ...", selectedWB, -1)
+                        Call MsgBox("Error when writing appearances: " & vbCrLf & err.errorMsg)
+                        Call logfileSchreiben("Error when writing appearances ..." & err.errorMsg, selectedWB, -1)
                     End If
                 Else
                     Call MsgBox("no appearances found ...")

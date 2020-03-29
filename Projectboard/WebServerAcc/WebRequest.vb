@@ -60,7 +60,7 @@ Public Class Request
     Public Function login(ByVal ServerURL As String,
                           ByVal databaseName As String,
                           ByVal username As String,
-                          ByVal dbPasswort As String,
+                          ByRef dbPasswort As String,
                           ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim typeRequest As String = "/token/user/login"
@@ -114,7 +114,7 @@ Public Class Request
                 token = loginAntwort.token
                 serverUriName = ServerURL
                 aktUser = loginAntwort.user
-                '????
+
                 ' VisboCenterID mit Name = databaseName wird gespeichert
                 aktVCid = GETvcid(databaseName)
 
@@ -137,10 +137,13 @@ Public Class Request
 
                 End If
 
+
             Else
+
                 token = ""
                 serverUriName = ServerURL
                 aktUser = Nothing
+                dbPasswort = ""
                 If awinSettings.visboDebug Then
                     Call MsgBox("( " & CType(errcode, Integer).ToString & ") : " & errmsg & " : " & loginAntwort.message)
                 End If
