@@ -5810,16 +5810,28 @@ Public Module agm2
                             Dim responsible As String = ""
                             Dim percentDone As Double = 0.0
                             Dim bewertungsdatum As Date = importDatum
-                            Dim tbl As Excel.Range
-                            Dim rowOffset As Integer
-                            Dim columnOffset As Integer
+                            Dim tbl As Excel.Range = Nothing
+                            Dim rowOffset As Integer = 2
+                            Dim columnOffset As Integer = 1
 
 
                             .Unprotect(Password:="x")       ' Blattschutz aufheben
 
-                            tbl = .Range("ErgebnTabelle")
-                            rowOffset = tbl.Row
-                            columnOffset = tbl.Column
+                            ' hier entscheidet sich , worum es sich handelt ... 
+                            ' den neuen Termin steckbrief  der in Zeile 2 losgeht oder eben den alten 
+                            Try
+                                tbl = .Range("ErgebnTabelle")
+                                If Not IsNothing(tbl) Then
+                                    rowOffset = tbl.Row
+                                    columnOffset = tbl.Column
+                                Else
+                                    rowOffset = 2
+                                    columnOffset = 1
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
 
                             lastrow = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
@@ -5833,15 +5845,24 @@ Public Module agm2
                             Dim lastelemID As String = ""
                             Dim hilfselemID As String = ""
 
+                            ' wenn es keine Tabelle tbl gibt, dann gibt es keine verbundenen Zellen, 
+                            ' deswegen muss in diesem Fall die Spalte um 1 reduziert werden 
+                            Dim corrDeltaOffset As Integer = -1
+
 
                             ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
-                            Dim verbRange As Excel.Range
-                            Dim iv As Integer
+                            ' das gilt aber nur im alten Steckbrief, wo tbl <>Nothing
+                            If Not IsNothing(tbl) Then
+                                Dim verbRange As Excel.Range
+                                Dim iv As Integer
+                                corrDeltaOffset = 0
 
-                            For iv = 0 To lastrow - rowOffset + 1
-                                verbRange = .Range(.Cells(rowOffset + iv, columnOffset), .Cells(rowOffset + iv, columnOffset + 1))
-                                verbRange.Merge()
-                            Next
+                                For iv = 0 To lastrow - rowOffset + 1
+                                    verbRange = .Range(.Cells(rowOffset + iv, columnOffset), .Cells(rowOffset + iv, columnOffset + 1))
+                                    verbRange.Merge()
+                                Next
+
+                            End If
 
 
                             For zeile = rowOffset To lastrow
@@ -5900,12 +5921,12 @@ Public Module agm2
                                         isPhase = True
                                         isMeilenstein = False
                                         Try
-                                            startDate = CDate(CType(.Cells(zeile, columnOffset + 2), Excel.Range).Value)
+                                            startDate = CDate(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 2), Excel.Range).Value)
                                         Catch ex As Exception
                                             startDate = Date.MinValue
                                         End Try
                                         Try
-                                            endeDate = CDate(CType(.Cells(zeile, columnOffset + 3), Excel.Range).Value)
+                                            endeDate = CDate(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 3), Excel.Range).Value)
                                         Catch ex As Exception
                                             endeDate = Date.MinValue
                                         End Try
@@ -5913,7 +5934,7 @@ Public Module agm2
                                         ' das Feld %Done wird hier ausgelesen ...
                                         Try
                                             ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
-                                            percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                            percentDone = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 8), Excel.Range).Value, Double)
                                             If IsNothing(percentDone) Then
                                                 percentDone = 0.0
                                             End If
@@ -5924,7 +5945,7 @@ Public Module agm2
                                         ' das Feld document-Url wird hier ausgelesen ...
                                         Try
                                             ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
-                                            docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                            docURL = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 9), Excel.Range).Value, String)
                                             If IsNothing(docURL) Then
                                                 docURL = ""
                                             End If
@@ -5993,12 +6014,12 @@ Public Module agm2
                                 Else
                                     ' alle weiteren Phasen oder Meilensteine
                                     Try
-                                        startDate = CDate(CType(.Cells(zeile, columnOffset + 2), Excel.Range).Value)
+                                        startDate = CDate(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 2), Excel.Range).Value)
                                     Catch ex As Exception
                                         startDate = Date.MinValue
                                     End Try
                                     Try
-                                        endeDate = CDate(CType(.Cells(zeile, columnOffset + 3), Excel.Range).Value)
+                                        endeDate = CDate(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 3), Excel.Range).Value)
                                     Catch ex As Exception
                                         endeDate = Date.MinValue
                                     End Try
@@ -6051,7 +6072,7 @@ Public Module agm2
 
 
                                             Try
-                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 4), Excel.Range).Value, Integer)
                                                 If IsNothing(bewertungsAmpel) Then
                                                     bewertungsAmpel = 0
                                                 End If
@@ -6060,7 +6081,7 @@ Public Module agm2
                                             End Try
 
                                             Try
-                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 5), Excel.Range).Value, String)
                                                 If IsNothing(explanation) Then
                                                     explanation = ""
                                                 End If
@@ -6084,7 +6105,7 @@ Public Module agm2
                                             ' das Feld Deliverables wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk 2.11 deliverables ergänzt 
-                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 6), Excel.Range).Value, String)
                                                 If IsNothing(deliverables) Then
                                                     deliverables = ""
                                                 End If
@@ -6095,7 +6116,7 @@ Public Module agm2
                                             ' das Feld Responsible wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk 26.10.17 responsible ergänzt 
-                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 7), Excel.Range).Value, String)
                                                 If IsNothing(responsible) Then
                                                     responsible = ""
                                                 End If
@@ -6106,7 +6127,7 @@ Public Module agm2
                                             ' das Feld %Done wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
-                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 8), Excel.Range).Value, Double)
                                                 If IsNothing(percentDone) Then
                                                     percentDone = 0.0
                                                 End If
@@ -6117,7 +6138,7 @@ Public Module agm2
                                             ' das Feld document-Url wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
-                                                docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                                docURL = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 9), Excel.Range).Value, String)
                                                 If IsNothing(docURL) Then
                                                     docURL = ""
                                                 End If
@@ -6266,7 +6287,7 @@ Public Module agm2
                                             End If
 
                                             Try
-                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 4), Excel.Range).Value, Integer)
                                                 If IsNothing(bewertungsAmpel) Then
                                                     bewertungsAmpel = 0
                                                 End If
@@ -6280,7 +6301,7 @@ Public Module agm2
                                             End If
 
                                             Try
-                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 5), Excel.Range).Value, String)
                                                 If IsNothing(explanation) Then
                                                     explanation = ""
                                                 End If
@@ -6300,7 +6321,7 @@ Public Module agm2
 
                                             Try
                                                 ' Ergänzung tk 2.11 deliverables ergänzt 
-                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 6), Excel.Range).Value, String)
                                                 If IsNothing(deliverables) Then
                                                     deliverables = ""
                                                 End If
@@ -6311,7 +6332,7 @@ Public Module agm2
 
                                             Try
                                                 ' Ergänzung tk 26.10.17 responsible ergänzt 
-                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 7), Excel.Range).Value, String)
                                                 If IsNothing(responsible) Then
                                                     responsible = ""
                                                 End If
@@ -6322,7 +6343,7 @@ Public Module agm2
                                             ' das Feld %Done wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
-                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 8), Excel.Range).Value, Double)
                                                 If IsNothing(percentDone) Then
                                                     percentDone = 0.0
                                                 End If
@@ -6333,7 +6354,7 @@ Public Module agm2
                                             ' das Feld document-Url wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
-                                                docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                                docURL = CType(CType(.Cells(zeile, columnOffset + corrDeltaOffset + 9), Excel.Range).Value, String)
                                                 If IsNothing(docURL) Then
                                                     docURL = ""
                                                 End If
@@ -7156,6 +7177,7 @@ Public Module agm2
         Dim abstandAnfang As Double
         Dim abstandEnde As Double
         Dim lastSpaltenValue As Integer
+
 
         Dim dauerFaktor As Double = 1.0
         Dim refProj As New clsProjekt
@@ -11021,6 +11043,873 @@ Public Module agm2
 
         getAllianzTeamNameFromCell = tmpResult
     End Function
+
+    ''' <summary>
+    ''' liest Termine und Deliverables und evtl auch die Appearances ... 
+    ''' </summary>
+    ''' <param name="ws"></param>
+    ''' <param name="outputCollection"></param>
+    ''' <param name="hproj"></param>
+    Public Sub readVisboDatesAndDeliverableSheet(ByVal ws As Excel.Worksheet, ByRef outputCollection As Collection, ByRef hproj As clsProjekt)
+        Dim phaseHierarhy(19) As String
+        Dim currentHierarchy As Integer = 0
+        Dim zeile As Integer, spalte As Integer
+        Dim pName As String = " "
+        Dim phaseName As String = " "
+
+        Dim isMilestone As Boolean
+
+        Dim lastRow As Integer
+
+        Dim vglName As String = ""
+        Dim anfang As Integer, ende As Integer
+        Dim cphase As clsPhase
+        Dim cmilestone As clsMeilenstein
+        Dim cbewertung As clsBewertung
+
+        Dim tmpStr(20) As String
+
+
+
+
+
+        Dim startDate As Date
+        Dim startoffset As Long, duration As Long
+
+        Dim itemName As String = ""
+        Dim zufall As New Random(10)
+
+        Dim anzignored As Integer = 0
+
+
+        ' 
+        Dim logMessage As String = ""
+
+        ' ur: 1.12.2015: wird nun Public awinSettings.fullProtokoll As Boolean = True  
+        ' und damit global definiert, da auch in RXFImport benötigt.
+        ' Dim fullProtocol As Boolean = True
+
+
+        Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
+        Dim phaseIX As Integer = PhaseDefinitions.Count + 1
+        ' wird benötigt, um bei Phasen, die als doppelt erkannt wurden alle darunter liegenden Elemente auch zu ignorieren 
+        Dim lastDuplicateIndent As Integer = 1000000
+
+
+
+        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+
+        Dim colName As Integer
+        Dim colAnfang As Integer
+        Dim colEnde As Integer
+        Dim colDauer As Integer = -1
+        Dim colProduktlinie As Integer = -1
+        Dim colAbbrev As Integer = -1
+        Dim colVorgangsKlasse As Integer = -1
+        Dim colDescription As Integer = -1
+        Dim colVerantwortlich As Integer = -1
+        Dim colPercentDone As Integer = -1
+        Dim colTrafficLight As Integer = -1
+        Dim colTLExplanation As Integer = -1
+        Dim colDocUrl As Integer = -1
+        Dim colDeliv As Integer = -1
+
+        Dim pDescription As String = ""
+        Dim firstZeile As Excel.Range
+
+
+        Dim suchstr(14) As String
+        suchstr(ptPlanNamen.Name) = "Name"
+        suchstr(ptPlanNamen.Anfang) = "Start"
+        suchstr(ptPlanNamen.Ende) = "End"
+        suchstr(ptPlanNamen.Beschreibung) = "Description"
+        suchstr(ptPlanNamen.Vorgangsklasse) = "Appearance"
+        suchstr(ptPlanNamen.BusinessUnit) = "Business Unit"
+        suchstr(ptPlanNamen.Protocol) = "Übernommen als"
+        suchstr(ptPlanNamen.Dauer) = "Duration"
+        suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
+        suchstr(ptPlanNamen.percentDone) = "%-Done"
+        suchstr(ptPlanNamen.TrafficLight) = "traffic light"
+        suchstr(ptPlanNamen.TLExplanation) = "Explanation"
+        suchstr(ptPlanNamen.DocUrl) = "Document-Link"
+        suchstr(ptPlanNamen.Deliv) = "Deliverables"
+
+        zeile = 2
+        spalte = 5
+
+
+        With ws
+            firstZeile = CType(.Rows(1), Excel.Range)
+        End With
+
+
+
+        ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
+        Try
+            colName = firstZeile.Find(What:=suchstr(ptPlanNamen.Name), LookAt:=XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptPlanNamen.Anfang), LookAt:=XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptPlanNamen.Ende), LookAt:=XlLookAt.xlWhole).Column
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
+        End Try
+
+        Try
+            colDauer = firstZeile.Find(What:=suchstr(ptPlanNamen.Dauer), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colDauer = -1
+        End Try
+
+
+        Try
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptPlanNamen.BusinessUnit), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colProduktlinie = -1
+        End Try
+
+
+        Try
+            colAbbrev = firstZeile.Find(What:=suchstr(ptPlanNamen.Abkuerzung), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colAbbrev = -1
+        End Try
+
+        Try
+            colDescription = firstZeile.Find(What:=suchstr(ptPlanNamen.Beschreibung), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colAbbrev = -1
+        End Try
+
+        Try
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptPlanNamen.Vorgangsklasse), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colVorgangsKlasse = -1
+        End Try
+
+        Try
+            colVerantwortlich = firstZeile.Find(What:=suchstr(ptPlanNamen.Verantwortlich), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colVerantwortlich = -1
+        End Try
+
+        Try
+            colPercentDone = firstZeile.Find(What:=suchstr(ptPlanNamen.percentDone), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colPercentDone = -1
+        End Try
+
+        Try
+            colTrafficLight = firstZeile.Find(What:=suchstr(ptPlanNamen.TrafficLight), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colTrafficLight = -1
+        End Try
+
+        Try
+            colTLExplanation = firstZeile.Find(What:=suchstr(ptPlanNamen.TLExplanation), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colTLExplanation = -1
+        End Try
+
+        Try
+            colDocUrl = firstZeile.Find(What:=suchstr(ptPlanNamen.DocUrl), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colDocUrl = -1
+        End Try
+
+        Try
+            colDeliv = firstZeile.Find(What:=suchstr(ptPlanNamen.Deliv), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+            colDocUrl = -1
+        End Try
+
+        With ws
+
+            lastRow = System.Math.Max(CType(.Cells(40000, colName), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row,
+                                          CType(.Cells(40000, colAnfang), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row)
+        End With
+
+
+        Try
+
+            With ws
+
+                ' jetzt kommt der Check, ob Blanks als Indent verwendet werden oder echte Excel Indents
+                Dim stdIndent As Boolean = True
+                Dim stdIndentedRows As Integer = 0
+                Dim blankIndentedRows As Integer = 0
+                For ik As Integer = 1 To lastRow
+                    If CType(.Cells(ik, colName), Excel.Range).IndentLevel > 0 Then
+                        stdIndentedRows = stdIndentedRows + 1
+                    End If
+                    Dim tstString As String = CStr(CType(.Cells(ik, colName), Excel.Range).Value)
+                    If tstString.StartsWith(" ") Then
+                        blankIndentedRows = blankIndentedRows + 1
+                    End If
+                Next
+
+                If stdIndentedRows > blankIndentedRows Then
+                    stdIndent = True
+                Else
+                    stdIndent = False
+                End If
+
+                ' zeile ist an der Stelle 2
+                While zeile <= lastRow
+
+                    ' wenn es mit einem neuen Projekt beginnt, muss der lastDuplicateIndent zurückgesetzt sein 
+                    lastDuplicateIndent = 1000000
+
+                    anfang = zeile
+                    ende = lastRow
+
+
+                    ' prüfen, ob das Projekt überhaupt vollständig im Kalender liegt 
+                    ' wenn nein, dann nicht importieren 
+                    If DateDiff(DateInterval.Day, StartofCalendar, startDate) < 0 Then
+
+                        Dim errMsg As String
+                        If awinSettings.englishLanguage Then
+                            errMsg = "project start is earlier than start of calendar in Visual Board ... No Import ... "
+                        Else
+                            errMsg = "Projekt liegt vor dem Kalender-Anfang und wird deshalb nicht importiert"
+                        End If
+
+                        outputCollection.Add(errMsg)
+
+                    Else
+
+
+                        Dim itemStartDate As Date
+                        Dim itemEndDate As Date
+                        Dim ok As Boolean = True
+
+                        Dim curZeile As Integer
+                        Dim txtVorgangsKlasse As String
+                        Dim origVorgangsKlasse As String
+                        Dim txtAbbrev As String
+                        Dim verantwortlich As String = ""
+                        Dim percentDone As Double = 0.0
+                        Dim docURL As String = ""
+                        ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
+                        Dim origItem As String = ""
+                        Dim ampel As Integer = 0
+                        Dim ampelExplanation As String = ""
+
+                        Dim anzProcessedElements As Integer = 0
+
+                        ' jetzt wird die Import Hierarchie angelegt 
+                        Dim pHierarchy As New clsImportFileHierarchy
+                        Dim origHierarchy As New clsImportFileHierarchy
+
+                        ' 
+                        ' Schleife, um alle Elemente des Projektes auszulesen
+                        ' hier werden jetzt die einzelnen Zeilen = Phasen oder Meilensteine ausgelesen 
+                        For curZeile = anfang To ende
+
+                            origVorgangsKlasse = ""
+                            txtVorgangsKlasse = ""
+                            txtAbbrev = ""
+                            logMessage = ""
+                            verantwortlich = ""
+                            percentDone = 0.0
+                            ampel = 0
+                            ampelExplanation = ""
+
+                            Dim indentLevel As Integer
+
+                            Try
+
+                                Dim tmpName2 As String = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
+
+                                tmpStr = tmpName2.Split(New Char() {CChar("["), CChar("]")}, 5)
+                                origItem = tmpStr(0)
+
+                                If origItem.Trim.Length = 0 Then
+
+                                    'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                    '            "leerer String wird ignoriert .."
+                                    logMessage = "Zeile: " & curZeile & " : leerer String wird ignoriert .."
+                                    outputCollection.Add(logMessage)
+                                    ok = False
+
+                                Else
+
+                                    If stdIndent Then
+                                        indentLevel = CType(.Cells(curZeile, colName), Excel.Range).IndentLevel
+                                    Else
+                                        indentLevel = pHierarchy.getLevel(origItem)
+                                    End If
+
+                                    ' hier checken, ob indentlevel > lastduplicateIndent; 
+                                    ' wenn ja, dann protokollieren, Next for und lastduplicateIndent wieder auf hohen Wert setzen
+
+                                    If indentLevel > lastDuplicateIndent Then
+                                        ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
+                                        ' Protokollieren ...
+
+                                        'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                        '            "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
+
+                                        logMessage = "Zeile: " & curZeile & " : ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
+                                        outputCollection.Add(logMessage)
+                                        ok = False
+
+                                    Else
+                                        lastDuplicateIndent = 1000000
+
+                                        itemName = origItem.Trim
+
+                                        anzProcessedElements = anzProcessedElements + 1
+
+
+
+                                        logMessage = "ungültiges Endedatum ..."
+                                        itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                        logMessage = ""
+
+
+                                        If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
+                                            isMilestone = True
+                                            itemStartDate = itemEndDate
+                                        ElseIf CStr(CType(.Cells(curZeile, colAnfang), Excel.Range).Value).Trim = "" Then
+                                            isMilestone = True
+                                            itemStartDate = itemEndDate
+                                        Else
+                                            ' jetzt das Startdatum lesen 
+                                            logMessage = "ungültiges Startdatum ..."
+                                            itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                            logMessage = ""
+
+                                            If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
+                                                isMilestone = True
+                                            Else
+                                                isMilestone = False
+                                            End If
+                                        End If
+
+
+
+                                        ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
+                                        If isMilestone Then
+                                            If MilestoneDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf milestoneMappings.tobeIgnored(itemName) Then
+                                                'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                '                "nicht zugelassen (lt. Wörterbuch ignorieren)"
+
+                                                logMessage = "Zeile: " & curZeile & " : nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                outputCollection.Add(logMessage)
+                                                ok = False
+                                                lastDuplicateIndent = indentLevel
+                                            Else
+                                                ok = True
+                                            End If
+
+
+                                        Else
+
+                                            If PhaseDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf phaseMappings.tobeIgnored(itemName) Then
+                                                'CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
+                                                '                "nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                logMessage = "Zeile: " & curZeile & " : nicht zugelassen (lt. Wörterbuch ignorieren)"
+                                                outputCollection.Add(logMessage)
+                                                lastDuplicateIndent = indentLevel
+                                                ok = False
+                                            Else
+                                                ok = True
+
+                                            End If
+
+                                        End If
+
+                                    End If
+
+                                End If
+
+                            Catch ex As Exception
+                                itemName = ""
+                                ok = False
+                            End Try
+
+
+                            If ok Then
+
+
+                                startoffset = DateDiff(DateInterval.Day, hproj.startDate, itemStartDate)
+                                duration = DateDiff(DateInterval.Day, itemStartDate, itemEndDate) + 1
+
+
+                                ' jetzt werden vorgangsklasse und Abkürzung rausgelesen 
+                                If colVorgangsKlasse > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value) Then
+                                            origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
+                                            If Not isMilestone Then
+                                                txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
+                                                'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                            Else
+                                                txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, True)
+                                                'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                '        "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                            End If
+                                        Else
+                                            origVorgangsKlasse = ""
+                                        End If
+
+                                    Catch ex As Exception
+
+                                        'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                        '            "Fehler bei Abbildung auf Darstellungsklasse ... " & txtVorgangsKlasse.Trim
+
+                                    End Try
+                                End If
+
+
+                                ' jetzt wird die Abkürzung rausgelesen 
+                                If colAbbrev > 0 Then
+                                    Try
+
+                                        If Not IsNothing(CType(.Cells(curZeile, colAbbrev), Excel.Range).Value) Then
+                                            txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
+                                        Else
+                                            txtAbbrev = ""
+                                        End If
+
+
+                                    Catch ex As Exception
+                                        txtAbbrev = ""
+                                    End Try
+                                End If
+
+                                If colVerantwortlich > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value) Then
+                                            verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                        Else
+                                            verantwortlich = ""
+                                        End If
+
+                                    Catch ex As Exception
+                                        verantwortlich = ""
+                                    End Try
+                                End If
+
+                                ' jetzt %-Done auslesen 
+                                If colPercentDone > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value) Then
+                                            percentDone = CDbl(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value)
+                                        Else
+                                            percentDone = 0.0
+                                        End If
+
+                                    Catch ex As Exception
+                                        percentDone = 0.0
+                                    End Try
+                                End If
+
+                                ' jetzt Ampel-Farbe  auslesen 
+                                If colTrafficLight > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value) Then
+                                            ampel = CInt(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value)
+                                        Else
+                                            ampel = 0
+                                        End If
+
+                                    Catch ex As Exception
+                                        ampel = 0
+                                    End Try
+                                End If
+
+                                ' jetzt Ampel-Erläuterung  auslesen 
+                                If colTLExplanation > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value) Then
+                                            ampelExplanation = CStr(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value)
+                                        Else
+                                            ampelExplanation = ""
+                                        End If
+
+                                    Catch ex As Exception
+                                        ampelExplanation = ""
+                                    End Try
+                                End If
+
+                                ' jetzt Document Link auslesen 
+                                If colDocUrl > 0 Then
+                                    Try
+                                        If Not IsNothing(CType(.Cells(curZeile, colDocUrl), Excel.Range).Value) Then
+                                            docURL = CStr(CType(.Cells(zeile, colDocUrl), Excel.Range).Value)
+                                        Else
+                                            docURL = ""
+                                        End If
+
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+
+                                '
+                                ' jetzt muss protokolliert werden 
+                                Dim oLevel As Integer
+                                oLevel = origHierarchy.getLevel(origItem)
+                                Dim oBreadCrumb As String = origHierarchy.getFootPrint(oLevel)
+
+
+
+                                ' jetzt muss ggf die Phase in die Orig Hierarchie aufgenommen werden 
+                                If Not isMilestone Then
+
+                                    Dim ophase As clsPhase
+                                    ophase = New clsPhase(parent:=hproj)
+                                    ophase.nameID = calcHryElemKey(origItem.Trim, False)
+                                    'ophase.changeStartandDauer(startoffset, duration)
+
+                                    Try
+                                        origHierarchy.add(ophase, "dummy", oLevel)
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                                Dim stdName As String
+                                Dim parentElemName As String
+                                Dim parentNodeID As String
+                                Dim elemID As String
+
+                                ' If duration > 1 Or itemDauer > 0 Then
+                                If Not isMilestone Then
+                                    ' es handelt sich um eine Phase 
+
+
+                                    parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
+                                    ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
+                                    parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
+
+
+
+                                    ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+                                    Try
+
+                                        If Not PhaseDefinitions.Contains(itemName) Then
+                                            stdName = phaseMappings.mapToStdName(parentElemName, itemName)
+                                        Else
+                                            stdName = itemName
+                                        End If
+
+                                    Catch ex As Exception
+                                        stdName = itemName
+                                    End Try
+
+
+                                    Dim ok1 As Boolean = True
+
+
+                                    'Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
+                                    Dim parentPhase As clsPhase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                    Dim parentphaseName As String = ""
+
+                                    If Not IsNothing(parentPhase) Then
+                                        parentphaseName = parentPhase.name
+                                    End If
+
+
+                                    ' sollen Duplikate eliminiert werden ?
+                                    If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, False)) Then
+                                        ' nur dann kann es Duplikate geben 
+                                        If hproj.isCloneToParent(stdName, parentPhase.nameID, itemStartDate, itemEndDate, 0.97) Then
+                                            ok1 = False
+                                            logMessage = "Zeile " & curZeile & ": " & stdName & " ist Duplikat zu Parent " & parentPhase.name & " und wird ignoriert "
+
+                                        Else
+                                            Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(stdName, parentPhase.nameID,
+                                                                                                                 itemStartDate, itemEndDate, 0.97)
+
+                                            If duplicateSiblingID = "" Then
+                                                ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = "Zeile " & curZeile & ": " & stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) &
+                                                             " und wird ignoriert "
+                                            End If
+                                        End If
+
+
+
+                                    End If
+
+
+
+                                    ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
+                                    Dim ok2 As Boolean = True
+                                    If Not PhaseDefinitions.Contains(stdName) And Not missingPhaseDefinitions.Contains(stdName) Then
+
+                                        Dim hphaseDef As clsPhasenDefinition
+                                        hphaseDef = New clsPhasenDefinition
+
+                                        hphaseDef.darstellungsKlasse = txtVorgangsKlasse
+                                        hphaseDef.shortName = txtAbbrev
+                                        hphaseDef.name = stdName
+                                        hphaseDef.UID = phaseIX
+                                        phaseIX = phaseIX + 1 ' muss erst nach Zuweisung um eiens erhöht werden .. 
+
+                                        Try
+                                            missingPhaseDefinitions.Add(hphaseDef)
+                                        Catch ex As Exception
+
+                                        End Try
+
+
+
+                                    End If
+
+
+                                    If ok1 And ok2 Then
+
+                                        ' hier muss jetzt überprüft werden, ob es Geschwister mit gleichen Namen gibt
+                                        ' wenn ja , wird an den stdName solange eine ldfNR Ergänzung rangemacht, bis der NAme innerhalb der 
+                                        ' Geschwistergruppe eindeutig ist
+
+                                        ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase 
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            stdName = hproj.hierarchy.findUniqueGeschwisterName(parentNodeID, stdName, False)
+                                        End If
+
+                                        elemID = hproj.hierarchy.findUniqueElemKey(stdName, False)
+
+                                        ' das muss auf alle Fälle gemacht werden 
+                                        cphase = New clsPhase(parent:=hproj)
+
+                                        ' Änderung tk: jetzt muss die elemID in den Phasen Namen 
+                                        cphase.nameID = elemID
+                                        cphase.changeStartandDauer(startoffset, duration)
+
+                                        ' tk 26.11.17, den Wert für verantwortlich mitaufnehmen ...
+                                        cphase.verantwortlich = verantwortlich
+
+                                        ' Vorgangslasse eintragen 
+                                        cphase.appearance = txtVorgangsKlasse
+
+                                        ' percentDone eintragen 
+                                        cphase.percentDone = percentDone
+
+                                        ' ampel eintragen 
+                                        If ampel >= 0 And ampel <= 3 Then
+                                            cphase.ampelStatus = ampel
+                                        End If
+
+                                        ' ampel Erläuterung eintragen 
+                                        If ampelExplanation <> "" Then
+                                            cphase.ampelErlaeuterung = ampelExplanation
+                                        End If
+
+                                        ' Deliverable eintragen 
+
+
+                                        If docURL <> "" Then
+                                            cphase.DocURL = docURL
+                                        End If
+
+
+                                        ' der Aufbau der Hierarchie erfolgt in addphase
+                                        hproj.AddPhase(cphase, origName:=origItem.Trim,
+                                                       parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
+
+
+
+                                        Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+
+
+
+                                        ' nur wenn es aufgenommen ist, sollte es in die Hierarchie aufgenommen werden 
+                                        Try
+                                            pHierarchy.add(cphase, elemID, indentLevel)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    Else
+
+                                        outputCollection.Add(logMessage)
+
+                                        lastDuplicateIndent = indentLevel
+
+                                        anzignored = anzignored + 1
+
+                                    End If
+
+
+                                Else
+                                    ' hier kommt die Behandlung eines Meilensteins
+
+
+                                    Try
+
+                                        ' hole die Parentphase
+                                        cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                        cmilestone = New clsMeilenstein(parent:=cphase)
+                                        cbewertung = New clsBewertung
+
+
+                                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                        With cbewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = ampel
+                                            .datum = Date.Now
+                                            .description = ampelExplanation
+                                        End With
+
+
+                                        parentElemName = cphase.name
+                                        ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+
+                                        Try
+                                            If Not MilestoneDefinitions.Contains(itemName) Then
+                                                stdName = milestoneMappings.mapToStdName(parentElemName, itemName)
+                                            Else
+                                                stdName = itemName
+                                            End If
+
+                                        Catch ex As Exception
+                                            stdName = itemName
+                                        End Try
+
+                                        Dim ok1 As Boolean = True
+
+                                        If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(stdName, True)) Then
+                                            ' nur dann kann es Duplikate geben 
+                                            Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(stdName, cphase.nameID,
+                                                                                                                 itemStartDate, 0)
+
+                                            If duplicateSiblingID = "" Then
+                                                ok1 = True
+                                            Else
+                                                ok1 = False
+                                                logMessage = stdName & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) &
+                                                             " und wird ignoriert "
+                                            End If
+
+                                        End If
+
+
+                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist
+                                        Dim ok2 As Boolean = True
+                                        If Not MilestoneDefinitions.Contains(stdName) And Not missingMilestoneDefinitions.Contains(stdName) Then
+
+                                            Dim hMilestoneDef As New clsMeilensteinDefinition
+
+                                            With hMilestoneDef
+                                                .name = stdName
+                                                .belongsTo = parentElemName
+                                                .shortName = txtAbbrev
+                                                .darstellungsKlasse = txtVorgangsKlasse
+                                                .UID = milestoneIX
+                                            End With
+
+                                            milestoneIX = milestoneIX + 1
+
+                                            Try
+                                                missingMilestoneDefinitions.Add(hMilestoneDef)
+                                            Catch ex As Exception
+
+                                            End Try
+
+
+                                        End If
+
+                                        If ok1 And ok2 Then
+
+
+                                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilenstein und Phase 
+                                            If awinSettings.createUniqueSiblingNames Then
+                                                stdName = hproj.hierarchy.findUniqueGeschwisterName(cphase.nameID, stdName, True)
+                                            End If
+
+                                            elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
+
+
+                                            With cmilestone
+                                                .nameID = elemID
+                                                .setDate = itemEndDate
+                                                ' tk 26.11.17 
+                                                .verantwortlich = verantwortlich
+                                                .appearance = txtVorgangsKlasse
+                                                .percentDone = percentDone
+                                                .DocURL = docURL
+
+                                                If Not cbewertung Is Nothing Then
+                                                    .addBewertung(cbewertung)
+                                                End If
+                                            End With
+
+                                            If IsNothing(cphase.getMilestone(cmilestone.nameID)) Then
+
+                                                With cphase
+                                                    .addMilestone(cmilestone, origName:=origItem.Trim)
+                                                End With
+
+
+                                                ' neuer Breadcrumb 
+                                                'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+
+
+                                            Else
+
+                                                ' Meilenstein existiert in dieser Phase bereits .... 
+                                                logMessage = "Zeile " & curZeile & " : " &
+                                                        stdName.Trim & " existiert bereits: Datum 1: " & cphase.getMilestone(stdName).getDate.ToShortDateString &
+                                                        "   , Datum 2: " & cmilestone.getDate.ToShortDateString
+
+                                                outputCollection.Add(logMessage)
+
+                                            End If
+                                        Else
+
+                                            outputCollection.Add(logMessage)
+                                            anzignored = anzignored + 1
+
+                                        End If
+
+
+                                    Catch ex As Exception
+                                        logMessage = "Zeile " & curZeile & " : " & vbLf &
+                                                            ex.Message & ": " & vbLf & "Fehler in Zeile " & curZeile & ", Item-Name: " & itemName
+                                        outputCollection.Add(logMessage)
+                                    End Try
+
+
+                                End If
+
+                            Else
+
+                                outputCollection.Add(logMessage)
+                                anzignored = anzignored + 1
+                            End If
+
+                        Next
+
+                        zeile = ende + 1
+
+                    End If
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' gemacht um eine Tabelle mit Ressourcen Angaben einzulesen ...

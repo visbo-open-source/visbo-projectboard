@@ -6680,6 +6680,7 @@ Public Module awinDiagrams
                     .HasTitle = False
                     .MinimumScale = 0
 
+
                     ' führt immer zu Fehler 
                     'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
                     '    If titleFontSize - 4 >= 6 Then
