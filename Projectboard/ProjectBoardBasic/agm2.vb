@@ -6478,6 +6478,17 @@ Public Module agm2
                         Dim farbeAktuell As Object
                         Dim r As Integer, k As Integer
 
+                        Dim isNewSteckbriefFormat As Boolean = False
+                        Try
+                            If Not IsNothing(CType(.Cells(2, 1), Excel.Range).Value) Then
+                                If CStr(CType(.Cells(2, 1), Excel.Range).Value).Trim = "." Then
+                                    isNewSteckbriefFormat = True
+                                End If
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
 
                         .Unprotect(Password:="x")       ' Blattschutz aufheben
 
@@ -6489,7 +6500,14 @@ Public Module agm2
 
                         ' es muss das Maximum aus den beiden Spalten Pahse und Ressourcen gesucht werden
                         Dim lastrow1 As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
-                        Dim lastRow2 As Integer = CInt(CType(.Cells(40000, columnOffset + 2), Excel.Range).End(XlDirection.xlUp).Row)
+                        Dim lastRow2 As Integer
+
+                        If isNewSteckbriefFormat Then
+                            lastRow2 = CInt(CType(.Cells(40000, columnOffset + 1), Excel.Range).End(XlDirection.xlUp).Row)
+                        Else
+                            lastRow2 = CInt(CType(.Cells(40000, columnOffset + 2), Excel.Range).End(XlDirection.xlUp).Row)
+                        End If
+
                         Dim lastRow As Integer = System.Math.Max(lastrow1, lastRow2)
                         ' ´Verlängerung des Range "Phasen_des_Projekts" bis zur lastrow
                         rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastRow, oldrng.Column))
@@ -6504,17 +6522,27 @@ Public Module agm2
                             Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
                         Else
 
-                            ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
-                            Dim verbRange As Excel.Range
-                            Dim iv As Integer
+                            If Not isNewSteckbriefFormat Then
+                                ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
+                                Dim verbRange As Excel.Range
+                                Dim iv As Integer
 
-                            For iv = 0 To rng.Rows.Count - 1
-                                verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
-                                verbRange.Merge()
-                            Next
+                                For iv = 0 To rng.Rows.Count - 1
+                                    verbRange = .Range(.Cells(rng.Row + iv, rng.Column), .Cells(rng.Row + iv, rng.Column + 1))
+                                    verbRange.Merge()
 
-                            ressOff = gefundenRange.Column - rng.Column - 1
-                            ressSumOffset = gefundenRange.Column - rng.Column - 2
+                                Next
+
+                                ressOff = gefundenRange.Column - rng.Column - 1
+                                ressSumOffset = gefundenRange.Column - rng.Column - 2
+                            Else
+                                ressOff = gefundenRange.Column - rng.Column - 1 + 1
+                                ressSumOffset = gefundenRange.Column - rng.Column - 2 + 1
+                            End If
+
+
+
+
                             'Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
 
 
