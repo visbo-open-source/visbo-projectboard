@@ -5829,7 +5829,8 @@ Public Module agm2
                                     columnOffset = 1
                                 End If
                             Catch ex As Exception
-
+                                rowOffset = 2
+                                columnOffset = 1
                             End Try
 
 
