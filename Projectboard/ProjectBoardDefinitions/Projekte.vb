@@ -23253,13 +23253,32 @@ Public Module Projekte
             Dim cBewertung As clsBewertung = Nothing
             Dim phaseStart As Date
             Dim phaseEnde As Date
-            Dim tbl As Excel.Range
+            Dim tbl As Excel.Range = Nothing
             Dim itemNameID As String
             Dim tmpDeliverables As String
 
-            tbl = .Range("ErgebnTabelle")
-            rowOffset = tbl.Row
-            columnOffset = tbl.Column
+            ' wenn es keine Tabelle tbl gibt, dann gibt es keine verbundenen Zellen, 
+            ' deswegen muss in diesem Fall die Spalte um 1 reduziert werden 
+            Dim corrDeltaOffset As Integer = -1
+
+
+            Try
+                tbl = .Range("ErgebnTabelle")
+                If Not IsNothing(tbl) Then
+                    rowOffset = tbl.Row
+                    columnOffset = tbl.Column
+                    corrDeltaOffset = 0
+                Else
+                    rowOffset = 2
+                    columnOffset = 1
+                    corrDeltaOffset = -1
+                End If
+            Catch ex As Exception
+                rowOffset = 2
+                columnOffset = 1
+                corrDeltaOffset = -1
+            End Try
+
 
             zeile = 0
 
@@ -23306,15 +23325,15 @@ Public Module Projekte
                 End If
 
                 ' ur: 06.05 2015:Bezug fällt weg:.Cells(rowOffset + zeile, columnOffset + 2).value = ""
-                .Cells(rowOffset + zeile, columnOffset + 2).value = phaseStart
-                .Cells(rowOffset + zeile, columnOffset + 3).value = phaseEnde
-                .Cells(rowOffset + zeile, columnOffset + 4).value = "0"
+                .Cells(rowOffset + zeile, columnOffset + 2 + corrDeltaOffset).value = phaseStart
+                .Cells(rowOffset + zeile, columnOffset + 3 + corrDeltaOffset).value = phaseEnde
+                .Cells(rowOffset + zeile, columnOffset + 4 + corrDeltaOffset).value = "0"
 
                 ' Änderung tk 
-                .Cells(rowOffset + zeile, columnOffset + 4).value = cphase.ampelStatus
+                .Cells(rowOffset + zeile, columnOffset + 4 + corrDeltaOffset).value = cphase.ampelStatus
                 '.Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
-                .Cells(rowOffset + zeile, columnOffset + 5).value = cphase.ampelErlaeuterung
-                .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                .Cells(rowOffset + zeile, columnOffset + 5 + corrDeltaOffset).value = cphase.ampelErlaeuterung
+                .Cells(rowOffset + zeile, columnOffset + 5 + corrDeltaOffset).WrapText = True
 
                 'If cphase.bewertungsListe.Count > 0 Then
                 '    For Each kvp As KeyValuePair(Of String, clsBewertung) In cphase.bewertungsListe
@@ -23330,8 +23349,8 @@ Public Module Projekte
 
                 ' Änderung tk 2.11 Ergänzung um Deliverables 
                 tmpDeliverables = cphase.getAllDeliverables(vbLf)
-                .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
-                .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+                .Cells(rowOffset + zeile, columnOffset + 6 + corrDeltaOffset).value = tmpDeliverables
+                .Cells(rowOffset + zeile, columnOffset + 6 + corrDeltaOffset).WrapText = True
 
                 '
                 ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
@@ -23342,19 +23361,19 @@ Public Module Projekte
                 End Try
 
 
-                .Cells(rowOffset + zeile, columnOffset + 7).value = cphase.verantwortlich
-                .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone
-                .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
-                .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                .Cells(rowOffset + zeile, columnOffset + 7 + corrDeltaOffset).value = cphase.verantwortlich
+                .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).value = cphase.percentDone
+                .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).NumberFormat = "0%"
+                .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                 ' Änderung tk 11.5.18 Ergänzung Document Link 
 
                 If Not IsNothing(cphase.DocURL) Then
-                    .Cells(rowOffset + zeile, columnOffset + 9).value = cphase.DocURL
+                    .Cells(rowOffset + zeile, columnOffset + 9 + corrDeltaOffset).value = cphase.DocURL
                 End If
 
                 Try
                     For offs As Integer = 2 To 9
-                        .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .Cells(rowOffset + zeile, columnOffset + offs + corrDeltaOffset).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                     Next
                 Catch ex As Exception
 
@@ -23391,28 +23410,28 @@ Public Module Projekte
 
                     End With
                     '.Cells(rowOffset + zeile, columnOffset + 2).value = cResult.getDate
-                    .Cells(rowOffset + zeile, columnOffset + 3).value = cResult.getDate
-                    .Cells(rowOffset + zeile, columnOffset + 4).value = cBewertung.colorIndex
-                    .Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                    .Cells(rowOffset + zeile, columnOffset + 3 + corrDeltaOffset).value = cResult.getDate
+                    .Cells(rowOffset + zeile, columnOffset + 4 + corrDeltaOffset).value = cBewertung.colorIndex
+                    .Cells(rowOffset + zeile, columnOffset + 4 + corrDeltaOffset).interior.color = cBewertung.color
                     ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
-                    .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
-                    .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                    .Cells(rowOffset + zeile, columnOffset + 5 + corrDeltaOffset).value = cBewertung.description
+                    .Cells(rowOffset + zeile, columnOffset + 5 + corrDeltaOffset).WrapText = True
 
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
                     tmpDeliverables = cResult.getAllDeliverables(vbLf)
-                    .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
-                    .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+                    .Cells(rowOffset + zeile, columnOffset + 6 + corrDeltaOffset).value = tmpDeliverables
+                    .Cells(rowOffset + zeile, columnOffset + 6 + corrDeltaOffset).WrapText = True
 
                     ' Änderung tk 4.12. Schreiben verantwortlich und percentDone
-                    .Cells(rowOffset + zeile, columnOffset + 7).value = cResult.verantwortlich
+                    .Cells(rowOffset + zeile, columnOffset + 7 + corrDeltaOffset).value = cResult.verantwortlich
 
-                    .Cells(rowOffset + zeile, columnOffset + 8).value = cResult.percentDone
-                    .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
-                    .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).value = cResult.percentDone
+                    .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).NumberFormat = "0%"
+                    .Cells(rowOffset + zeile, columnOffset + 8 + corrDeltaOffset).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
                     ' Schreiben des Dokumenten-Links
                     If Not IsNothing(cResult.DocURL) Then
-                        .Cells(rowOffset + zeile, columnOffset + 9).value = cResult.DocURL
+                        .Cells(rowOffset + zeile, columnOffset + 9 + corrDeltaOffset).value = cResult.DocURL
                     End If
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
@@ -23428,7 +23447,7 @@ Public Module Projekte
 
 
                         For offs As Integer = 2 To 9
-                            .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                            .Cells(rowOffset + zeile, columnOffset + offs + corrDeltaOffset).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         Next
                     Catch ex As Exception
 
