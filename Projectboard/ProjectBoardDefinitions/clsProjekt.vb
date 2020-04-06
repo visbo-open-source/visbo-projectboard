@@ -3212,6 +3212,91 @@ Public Class clsProjekt
         updateProjectWithRessourcesFrom = ergebnisProjekt
     End Function
 
+    Public Function createVariantWithIDChecks(ByVal baseLineList As SortedList(Of String, String), ByVal lastProjList As SortedList(Of String, String)) As clsProjekt
+        Dim newproj As New clsProjekt
+
+        ' jetzt müssen die Attribute kopiert werden , allerdings ohne die Hierarchie 
+        With newproj
+            .name = Me.name
+            .farbe = Me.farbe
+            .Schrift = Schrift
+            .Schriftfarbe = Schriftfarbe
+            .VorlagenName = VorlagenName
+            .Risiko = _Risiko
+            .StrategicFit = _StrategicFit
+            .Erloes = Erloes
+            .description = _description
+            .variantName = _variantName
+            .variantDescription = _variantDescription
+            .volume = _volume
+            .complexity = _complexity
+            .businessUnit = _businessUnit
+            .projectType = _projectType
+            .StartOffset = _StartOffset
+            .startDate = _startDate
+            .earliestStartDate = _earliestStartDate
+            .latestStartDate = _latestStartDate
+            .earliestStart = _earliestStart
+            .latestStart = _latestStart
+            .leadPerson = _leadPerson
+            .Status = _Status
+            .extendedView = Me.extendedView
+            .actualDataUntil = Me.actualDataUntil
+            .kundenNummer = Me.kundenNummer
+            .vpID = Me.vpID
+
+        End With
+
+        ' jetzt müssen die Phasen komplett neu aufgebaut werden ...
+        ' analog dem Import aus awinImportProjectmitHry
+        Dim curBreadCrumb As String = ""
+        Dim curElemID As String = rootPhaseName
+        Dim newElemID As String = ""
+        Dim curName As String = ""
+        Dim curIndentLevel As Integer = 0
+        Dim nextNameID As String = ""
+        Dim abbruchLevel As Integer = 0
+
+        Do While curElemID <> ""
+
+            Dim cPhase As clsPhase = Nothing
+            Dim newPhase As clsPhase = Nothing
+            Dim cMilestone As clsMeilenstein = Nothing
+            Dim newMilestone As clsMeilenstein = Nothing
+            Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
+            Dim myBreadCrumb As String = hierarchy.getBreadCrumb(curElemID)
+
+            If Not isMilestone Then
+                ' es handelt sich um eine Phase
+                cPhase = getPhaseByID(curElemID)
+                newPhase = New clsPhase(parent:=newproj)
+
+            Else
+                ' es handelt sich um einen Meilenstein 
+                cMilestone = getMilestoneByID(curElemID)
+            End If
+
+            curElemID = hierarchy.getNextIdOfId(curElemID, curIndentLevel, abbruchLevel)
+
+        Loop
+
+
+
+
+        ' Anfangen mit rootPhaseName 
+
+        ' dann in der Schleife , hierarchy.getNexIDOfID
+
+
+        ' Ende Übernahme der Phasen ..
+
+        ' customFields übernehmen
+        Call newproj.copyCustomFieldsFrom(Me)
+
+        createVariantWithIDChecks = newproj
+    End Function
+
+
     Public Function createVariant(ByVal variantName As String, ByVal variantDescription As String) As clsProjekt
 
         Dim newproj As New clsProjekt
