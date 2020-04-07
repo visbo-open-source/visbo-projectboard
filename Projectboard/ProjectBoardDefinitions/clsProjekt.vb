@@ -3256,6 +3256,9 @@ Public Class clsProjekt
         Dim curIndentLevel As Integer = 0
         Dim nextNameID As String = ""
         Dim abbruchLevel As Integer = 0
+        Dim lastElemID As String = rootPhaseName
+
+        Dim currentListOFHryPhases As New List(Of clsPhase)
 
         Do While curElemID <> ""
 
@@ -3265,15 +3268,81 @@ Public Class clsProjekt
             Dim newMilestone As clsMeilenstein = Nothing
             Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
             Dim myBreadCrumb As String = hierarchy.getBreadCrumb(curElemID)
+            Dim myNameID As String = ""
 
             If Not isMilestone Then
                 ' es handelt sich um eine Phase
                 cPhase = getPhaseByID(curElemID)
+                curIndentLevel = hierarchy.getIndentLevel(curElemID)
                 newPhase = New clsPhase(parent:=newproj)
+
+                cPhase.copyTo(newPhase)
+
+
+                ' jetzt muss die NameID ggf neu betimmt werden 
+                If baseLineList.ContainsKey(myBreadCrumb) Then
+                    myNameID = baseLineList.Item(myBreadCrumb)
+                ElseIf lastProjList.ContainsKey(myBreadCrumb) Then
+                    myNameID = lastProjList.Item(myBreadCrumb)
+                Else
+                    If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
+                        myNameID = curElemID
+                    Else
+                        ' bestimme die ElemID, bis es passt 
+                        Dim tmpElemName As String = elemNameOfElemID(curElemID)
+                        Dim lfdNr As Integer = 2
+                        Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                        Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
+                            lfdNr = lfdNr + 1
+                            tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                        Loop
+
+                        myNameID = tmpElemID
+                    End If
+
+                End If
+
+                cPhase.nameID = myNameID
+
+                ' jetzt muss die Phase dem Projekt zugewiesen werden ... 
+                ' muss hier eine ParentID angegeben werden ? 
+                newproj.AddPhase(cPhase)
 
             Else
                 ' es handelt sich um einen Meilenstein 
                 cMilestone = getMilestoneByID(curElemID)
+                curIndentLevel = hierarchy.getIndentLevel(curElemID)
+                newMilestone = New clsMeilenstein(parent:=currentListOFHryPhases.ElementAt(curIndentLevel))
+
+
+                ' bestimme ggf die neue ID 
+                ' jetzt muss die NameID ggf neu betimmt werden 
+                If baseLineList.ContainsKey(myBreadCrumb) Then
+                    myNameID = baseLineList.Item(myBreadCrumb)
+                ElseIf lastProjList.ContainsKey(myBreadCrumb) Then
+                    myNameID = lastProjList.Item(myBreadCrumb)
+                Else
+                    If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
+                        myNameID = curElemID
+                    Else
+                        ' bestimme die ElemID, bis es passt 
+                        Dim tmpElemName As String = elemNameOfElemID(curElemID)
+                        Dim lfdNr As Integer = 2
+                        Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                        Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
+                            lfdNr = lfdNr + 1
+                            tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                        Loop
+
+                        myNameID = tmpElemID
+                    End If
+
+                End If
+
+                cMilestone.copyTo(newMilestone, optNameID:=myNameID)
+
+                ' jetzt den Meilenstein zur Phase hinzufügen  
+
             End If
 
             curElemID = hierarchy.getNextIdOfId(curElemID, curIndentLevel, abbruchLevel)
