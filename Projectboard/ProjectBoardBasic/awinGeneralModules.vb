@@ -1321,6 +1321,31 @@ Public Module awinGeneralModules
                         hproj.marker = False
                     End If
 
+                    ' jetzt müssen hier noch die ID's stabiliert werden: gleicher BreadCrumb hat immer gleiche ID 
+                    Dim baselineProj As clsProjekt = awinReadProjectFromDatabase(hproj.kundenNummer, hproj.name, ptVariantFixNames.pfv.ToString, Date.Now)
+                    Dim lastProj As clsProjekt = awinReadProjectFromDatabase(hproj.kundenNummer, hproj.name, "", Date.Now)
+
+
+                    Dim baseLineBreadCrumbIDList As New SortedList(Of String, String)
+                    Dim lastProjBreadCrumbIDList As New SortedList(Of String, String)
+
+                    If Not IsNothing(baselineProj) Then
+                        baseLineBreadCrumbIDList = baselineProj.getBreadCrumbIDList
+                    End If
+
+                    If Not IsNothing(lastProj) Then
+                        lastProjBreadCrumbIDList = lastProj.getBreadCrumbIDList
+                    End If
+
+                    ' hproj wird in den NameIDs nur angepasst, wenn es tatsächlich auch Änderungen gibt ... 
+                    If baseLineBreadCrumbIDList.Count + lastProjBreadCrumbIDList.Count > 0 Then
+                        Dim tmpProj As clsProjekt = hproj.ensureStableIDs(baseLineBreadCrumbIDList, lastProjBreadCrumbIDList)
+
+                        If Not IsNothing(tmpProj) Then
+                            hproj = tmpProj
+                        End If
+
+                    End If
 
                     anzAktualisierungen = anzAktualisierungen + 1
 

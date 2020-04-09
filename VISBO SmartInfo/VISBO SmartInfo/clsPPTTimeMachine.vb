@@ -549,16 +549,32 @@ Public Class clsPPTTimeMachine
 
                             Dim hkey As clsvpidVN = getVPIDVNfromString(_projectTSvpid.ElementAt(i).Key)
                             Dim vpid As String = getPnameFromKey(hkey.vpid)
+
                             Dim vName As String = getVariantnameFromKey(hkey.vname)
                             Dim key As String = vpid & vName
 
                             If IsNothing(pHistory) Then
+                                Try
+                                    pHistory = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                                Catch ex As Exception
+                                    ' wenn das Projekt mittlerweise gelöscht wurde und als Projekt unter gleichem Namen wieder in der Datenbank angelegt wurde ..
+                                    Dim pName As String = smartSlideLists.getPVNameByVPID(vpid)
+                                    pHistory = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                                End Try
 
-                                _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                                _projectTSvpid.Item(key) = pHistory
 
                             ElseIf pHistory.Count = 0 Then
 
-                                _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                                Try
+                                    _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
+                                Catch ex As Exception
+                                    ' wenn das Projekt mittlerweise gelöscht wurde und als Projekt unter gleichem Namen wieder in der Datenbank angelegt wurde ..
+                                    Dim pName As String = smartSlideLists.getPVNameByVPID(vpid)
+                                    pHistory = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
+                                    _projectTSvpid.Item(key) = pHistory
+                                End Try
+
 
                             End If
 

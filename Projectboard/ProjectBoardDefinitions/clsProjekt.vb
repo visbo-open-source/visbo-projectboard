@@ -3212,157 +3212,238 @@ Public Class clsProjekt
         updateProjectWithRessourcesFrom = ergebnisProjekt
     End Function
 
-    Public Function createVariantWithIDChecks(ByVal baseLineList As SortedList(Of String, String), ByVal lastProjList As SortedList(Of String, String)) As clsProjekt
-        Dim newproj As New clsProjekt
+    ''' <summary>
+    ''' wird benötigt für ensureStableIDs, erstellt die entsprechenden Input-Listen
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getBreadCrumbIDList() As SortedList(Of String, String)
 
-        ' jetzt müssen die Attribute kopiert werden , allerdings ohne die Hierarchie 
-        With newproj
-            .name = Me.name
-            .farbe = Me.farbe
-            .Schrift = Schrift
-            .Schriftfarbe = Schriftfarbe
-            .VorlagenName = VorlagenName
-            .Risiko = _Risiko
-            .StrategicFit = _StrategicFit
-            .Erloes = Erloes
-            .description = _description
-            .variantName = _variantName
-            .variantDescription = _variantDescription
-            .volume = _volume
-            .complexity = _complexity
-            .businessUnit = _businessUnit
-            .projectType = _projectType
-            .StartOffset = _StartOffset
-            .startDate = _startDate
-            .earliestStartDate = _earliestStartDate
-            .latestStartDate = _latestStartDate
-            .earliestStart = _earliestStart
-            .latestStart = _latestStart
-            .leadPerson = _leadPerson
-            .Status = _Status
-            .extendedView = Me.extendedView
-            .actualDataUntil = Me.actualDataUntil
-            .kundenNummer = Me.kundenNummer
-            .vpID = Me.vpID
+        Dim resultList As New SortedList(Of String, String)
 
-        End With
+        For Each kvp As KeyValuePair(Of String, clsHierarchyNode) In hierarchy.hryListe
+            Dim fullbreadCrumb As String = Me.getBcElemName(kvp.Key)
 
-        ' jetzt müssen die Phasen komplett neu aufgebaut werden ...
-        ' analog dem Import aus awinImportProjectmitHry
-        Dim curBreadCrumb As String = ""
-        Dim curElemID As String = rootPhaseName
-        Dim newElemID As String = ""
-        Dim curName As String = ""
-        Dim curIndentLevel As Integer = 0
-        Dim nextNameID As String = ""
-        Dim abbruchLevel As Integer = 0
-        Dim lastElemID As String = rootPhaseName
-
-        Dim currentListOFHryPhases As New List(Of clsPhase)
-
-        Do While curElemID <> ""
-
-            Dim cPhase As clsPhase = Nothing
-            Dim newPhase As clsPhase = Nothing
-            Dim cMilestone As clsMeilenstein = Nothing
-            Dim newMilestone As clsMeilenstein = Nothing
-            Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
-            Dim myBreadCrumb As String = hierarchy.getBreadCrumb(curElemID)
-            Dim myNameID As String = ""
-
-            If Not isMilestone Then
-                ' es handelt sich um eine Phase
-                cPhase = getPhaseByID(curElemID)
-                curIndentLevel = hierarchy.getIndentLevel(curElemID)
-                newPhase = New clsPhase(parent:=newproj)
-
-                cPhase.copyTo(newPhase)
-
-
-                ' jetzt muss die NameID ggf neu betimmt werden 
-                If baseLineList.ContainsKey(myBreadCrumb) Then
-                    myNameID = baseLineList.Item(myBreadCrumb)
-                ElseIf lastProjList.ContainsKey(myBreadCrumb) Then
-                    myNameID = lastProjList.Item(myBreadCrumb)
-                Else
-                    If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
-                        myNameID = curElemID
-                    Else
-                        ' bestimme die ElemID, bis es passt 
-                        Dim tmpElemName As String = elemNameOfElemID(curElemID)
-                        Dim lfdNr As Integer = 2
-                        Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                        Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
-                            lfdNr = lfdNr + 1
-                            tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                        Loop
-
-                        myNameID = tmpElemID
-                    End If
-
-                End If
-
-                cPhase.nameID = myNameID
-
-                ' jetzt muss die Phase dem Projekt zugewiesen werden ... 
-                ' muss hier eine ParentID angegeben werden ? 
-                newproj.AddPhase(cPhase)
-
-            Else
-                ' es handelt sich um einen Meilenstein 
-                cMilestone = getMilestoneByID(curElemID)
-                curIndentLevel = hierarchy.getIndentLevel(curElemID)
-                newMilestone = New clsMeilenstein(parent:=currentListOFHryPhases.ElementAt(curIndentLevel))
-
-
-                ' bestimme ggf die neue ID 
-                ' jetzt muss die NameID ggf neu betimmt werden 
-                If baseLineList.ContainsKey(myBreadCrumb) Then
-                    myNameID = baseLineList.Item(myBreadCrumb)
-                ElseIf lastProjList.ContainsKey(myBreadCrumb) Then
-                    myNameID = lastProjList.Item(myBreadCrumb)
-                Else
-                    If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
-                        myNameID = curElemID
-                    Else
-                        ' bestimme die ElemID, bis es passt 
-                        Dim tmpElemName As String = elemNameOfElemID(curElemID)
-                        Dim lfdNr As Integer = 2
-                        Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                        Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
-                            lfdNr = lfdNr + 1
-                            tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                        Loop
-
-                        myNameID = tmpElemID
-                    End If
-
-                End If
-
-                cMilestone.copyTo(newMilestone, optNameID:=myNameID)
-
-                ' jetzt den Meilenstein zur Phase hinzufügen  
-
+            If fullbreadCrumb <> "" Then
+                resultList.Add(fullbreadCrumb, kvp.Key)
             End If
 
-            curElemID = hierarchy.getNextIdOfId(curElemID, curIndentLevel, abbruchLevel)
+        Next
 
-        Loop
+        getBreadCrumbIDList = resultList
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="breadCrumbIDList"></param>
+    ''' <returns></returns>
+    Public Function anyDifferentIDs(ByVal breadCrumbIDList As SortedList(Of String, String)) As Boolean
+        Dim tmpResult = False
+        Dim ix As Integer = 0
+
+        If breadCrumbIDList.Count = 0 Then
+        Else
+            Do While tmpResult = False And ix < breadCrumbIDList.Count
+                Dim vglBreadCrumb As String = breadCrumbIDList.ElementAt(ix).Key
+                Dim vglNameID As String = breadCrumbIDList.ElementAt(ix).Value
+
+                If vglBreadCrumb = getBcElemName(vglNameID) Then
+                    ix = ix + 1
+                Else
+                    tmpResult = True
+                End If
+            Loop
+
+        End If
+
+        anyDifferentIDs = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' stellt anhand der sortierten Listen mit jeweils Key=breadcrumb, value=nameID sicher, dass ein und derselbe BreadCrumb immer die gleiche NameID hat
+    ''' wenn keine Anpasusngen notwendig waren: kommt Nothing zurück ... 
+    ''' </summary>
+    ''' <param name="baseLineList"></param>
+    ''' <param name="lastProjList"></param>
+    ''' <returns></returns>
+    Public Function ensureStableIDs(ByVal baseLineList As SortedList(Of String, String), ByVal lastProjList As SortedList(Of String, String)) As clsProjekt
+        Dim newproj As clsProjekt = Nothing
+
+        If anyDifferentIDs(baseLineList) Or anyDifferentIDs(lastProjList) Then
+            newproj = New clsProjekt
+            Try
+                With newproj
+                    .name = Me.name
+                    .farbe = Me.farbe
+                    .Schrift = Schrift
+                    .Schriftfarbe = Schriftfarbe
+                    .VorlagenName = VorlagenName
+                    .Risiko = _Risiko
+                    .StrategicFit = _StrategicFit
+                    .Erloes = Erloes
+                    .description = _description
+                    .variantName = _variantName
+                    .variantDescription = _variantDescription
+                    .volume = _volume
+                    .complexity = _complexity
+                    .businessUnit = _businessUnit
+                    .projectType = _projectType
+                    .StartOffset = _StartOffset
+                    .startDate = _startDate
+                    .earliestStartDate = _earliestStartDate
+                    .latestStartDate = _latestStartDate
+                    .earliestStart = _earliestStart
+                    .latestStart = _latestStart
+                    .leadPerson = _leadPerson
+                    .Status = _Status
+                    .extendedView = Me.extendedView
+                    .actualDataUntil = Me.actualDataUntil
+                    .kundenNummer = Me.kundenNummer
+                    .vpID = Me.vpID
+
+                End With
+
+                ' jetzt müssen die Phasen komplett neu aufgebaut werden ...
+                ' analog dem Import aus awinImportProjectmitHry
+                Dim curBreadCrumb As String = ""
+                Dim curElemID As String = rootPhaseName
+                Dim newElemID As String = ""
+                Dim curName As String = ""
+                Dim curIndentLevel As Integer = 0
+                Dim nextNameID As String = ""
+                Dim abbruchLevel As Integer = 0
+                Dim lastElemID As String = rootPhaseName
+
+                Dim listOFHryPhases As New List(Of clsPhase)
+
+
+                Do While curElemID <> ""
+
+                    Dim cPhase As clsPhase = Nothing
+                    Dim newPhase As clsPhase = Nothing
+                    Dim cMilestone As clsMeilenstein = Nothing
+                    Dim newMilestone As clsMeilenstein = Nothing
+                    Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
+                    Dim myFullBreadCrumb As String = getBcElemName(curElemID)
+                    Dim myNameID As String = ""
+
+                    If Not isMilestone Then
+                        ' es handelt sich um eine Phase
+                        cPhase = getPhaseByID(curElemID)
+                        curIndentLevel = hierarchy.getIndentLevel(curElemID)
+                        newPhase = New clsPhase(parent:=newproj)
+
+                        cPhase.copyTo(newPhase)
+
+
+                        ' jetzt muss die NameID ggf neu betimmt werden 
+                        If baseLineList.ContainsKey(myFullBreadCrumb) Then
+                            myNameID = baseLineList.Item(myFullBreadCrumb)
+                        ElseIf lastProjList.ContainsKey(myFullBreadCrumb) Then
+                            myNameID = lastProjList.Item(myFullBreadCrumb)
+                        Else
+                            If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
+                                myNameID = curElemID
+                            Else
+                                ' bestimme die ElemID, bis es passt 
+                                Dim tmpElemName As String = elemNameOfElemID(curElemID)
+                                Dim lfdNr As Integer = 2
+                                Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                                Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
+                                    lfdNr = lfdNr + 1
+                                    tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                                Loop
+
+                                myNameID = tmpElemID
+                            End If
+
+                        End If
+
+                        newPhase.nameID = myNameID
+
+                        ' jetzt muss die Phase dem Projekt zugewiesen werden ... 
+                        ' muss hier eine ParentID angegeben werden ? 
+                        Dim tmpParentID As String = ""
+
+                        If listOFHryPhases.Count - 1 >= curIndentLevel Then
+                            tmpParentID = listOFHryPhases.ElementAt(curIndentLevel).nameID
+                        End If
+
+
+                        newproj.AddPhase(newPhase, parentID:=tmpParentID)
+
+                        curIndentLevel = newproj.hierarchy.getIndentLevel(newPhase.nameID)
+
+                        If listOFHryPhases.Count <= curIndentLevel + 1 Then
+                            If listOFHryPhases.Count = 0 Then
+                                listOFHryPhases.Add(newPhase)
+                            Else
+                                listOFHryPhases.Item(curIndentLevel) = newPhase
+                            End If
+
+                            Do While listOFHryPhases.Count > curIndentLevel + 1
+                                listOFHryPhases.RemoveAt(listOFHryPhases.Count - 1)
+                            Loop
+                        Else
+                            listOFHryPhases.Add(newPhase)
+                        End If
+
+                    Else
+                        ' es handelt sich um einen Meilenstein 
+                        cMilestone = getMilestoneByID(curElemID)
+                        curIndentLevel = hierarchy.getIndentLevel(curElemID)
+                        newMilestone = New clsMeilenstein(parent:=listOFHryPhases.ElementAt(curIndentLevel - 1))
+
+
+                        ' bestimme ggf die neue ID 
+                        ' jetzt muss die NameID ggf neu betimmt werden 
+                        If baseLineList.ContainsKey(myFullBreadCrumb) Then
+                            myNameID = baseLineList.Item(myFullBreadCrumb)
+                        ElseIf lastProjList.ContainsKey(myFullBreadCrumb) Then
+                            myNameID = lastProjList.Item(myFullBreadCrumb)
+                        Else
+                            If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
+                                myNameID = curElemID
+                            Else
+                                ' bestimme die ElemID, bis es passt 
+                                Dim tmpElemName As String = elemNameOfElemID(curElemID)
+                                Dim lfdNr As Integer = 2
+                                Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                                Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
+                                    lfdNr = lfdNr + 1
+                                    tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
+                                Loop
+
+                                myNameID = tmpElemID
+                            End If
+
+                        End If
+
+                        cMilestone.copyTo(newMilestone, optNameID:=myNameID)
+
+                        ' jetzt den Meilenstein zur Phase hinzufügen  
+
+                    End If
+
+                    curElemID = hierarchy.getNextIdOfId(curElemID, curIndentLevel, abbruchLevel)
+
+                Loop
+
+                ' customFields übernehmen
+                Call newproj.copyCustomFieldsFrom(Me)
+            Catch ex As Exception
+                newproj = Nothing
+            End Try
+
+
+        Else
+            newproj = Nothing
+        End If
 
 
 
-
-        ' Anfangen mit rootPhaseName 
-
-        ' dann in der Schleife , hierarchy.getNexIDOfID
-
-
-        ' Ende Übernahme der Phasen ..
-
-        ' customFields übernehmen
-        Call newproj.copyCustomFieldsFrom(Me)
-
-        createVariantWithIDChecks = newproj
+        ensureStableIDs = newproj
     End Function
 
 

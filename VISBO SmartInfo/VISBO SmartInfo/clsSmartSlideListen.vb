@@ -302,6 +302,30 @@ Public Class clsSmartSlideListen
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt den Namen zurück, der urspünglich der vpid aus dem VIsbo Center zugeordnet war
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getPVNameByVPID(ByVal vpid As String) As String
+        Get
+            Dim found As Boolean = False
+            Dim ix As Integer = 0
+            Dim pvName As String = ""
+
+            Do While ix <= _projectList.Count - 1 And Not found
+                If _projectList.ElementAt(ix).Value = vpid Then
+                    found = True
+                    pvName = _projectList.ElementAt(ix).Key
+                Else
+                    ix = ix + 1
+                End If
+            Loop
+
+            getPVNameByVPID = pvName
+        End Get
+    End Property
     ''' <summary>
     ''' gibt die vpid des i.ten-Elements zurück
     ''' i läuft von 1.. count 
