@@ -3346,16 +3346,17 @@ Public Class clsProjekt
                             If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
                                 myNameID = curElemID
                             Else
-                                ' bestimme die ElemID, bis es passt 
+                                ' bestimme die neue ElemID 
                                 Dim tmpElemName As String = elemNameOfElemID(curElemID)
-                                Dim lfdNr As Integer = 2
-                                Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                                Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
-                                    lfdNr = lfdNr + 1
-                                    tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                                Loop
+                                ' bestimme die größte auftretende LfdNr in baseline und lastProj
 
-                                myNameID = tmpElemID
+                                Dim newLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone) + 1
+                                If newLfdNr = -1 Then
+                                    myNameID = curElemID
+                                Else
+                                    myNameID = calcHryElemKey(tmpElemName, isMilestone, newLfdNr)
+                                End If
+
                             End If
 
                         End If
@@ -3375,54 +3376,63 @@ Public Class clsProjekt
 
                         curIndentLevel = newproj.hierarchy.getIndentLevel(newPhase.nameID)
 
-                        If listOFHryPhases.Count <= curIndentLevel + 1 Then
-                            If listOFHryPhases.Count = 0 Then
-                                listOFHryPhases.Add(newPhase)
-                            Else
-                                listOFHryPhases.Item(curIndentLevel) = newPhase
-                            End If
+                        If curIndentLevel <= listOFHryPhases.Count - 1 Then
+                            listOFHryPhases.Item(curIndentLevel) = newPhase
 
-                            Do While listOFHryPhases.Count > curIndentLevel + 1
+                            Do While curIndentLevel < listOFHryPhases.Count - 1
                                 listOFHryPhases.RemoveAt(listOFHryPhases.Count - 1)
                             Loop
+
                         Else
                             listOFHryPhases.Add(newPhase)
                         End If
+
 
                     Else
                         ' es handelt sich um einen Meilenstein 
                         cMilestone = getMilestoneByID(curElemID)
                         curIndentLevel = hierarchy.getIndentLevel(curElemID)
-                        newMilestone = New clsMeilenstein(parent:=listOFHryPhases.ElementAt(curIndentLevel - 1))
+                        Dim parentPhase As clsPhase = listOFHryPhases.ElementAt(curIndentLevel - 1)
+
+                        If Not IsNothing(parentPhase) Then
+                            newMilestone = New clsMeilenstein(parent:=listOFHryPhases.ElementAt(curIndentLevel - 1))
 
 
-                        ' bestimme ggf die neue ID 
-                        ' jetzt muss die NameID ggf neu betimmt werden 
-                        If baseLineList.ContainsKey(myFullBreadCrumb) Then
-                            myNameID = baseLineList.Item(myFullBreadCrumb)
-                        ElseIf lastProjList.ContainsKey(myFullBreadCrumb) Then
-                            myNameID = lastProjList.Item(myFullBreadCrumb)
-                        Else
-                            If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
-                                myNameID = curElemID
+                            ' bestimme ggf die neue ID 
+                            ' jetzt muss die NameID ggf neu betimmt werden 
+                            If baseLineList.ContainsKey(myFullBreadCrumb) Then
+                                myNameID = baseLineList.Item(myFullBreadCrumb)
+                            ElseIf lastProjList.ContainsKey(myFullBreadCrumb) Then
+                                myNameID = lastProjList.Item(myFullBreadCrumb)
                             Else
-                                ' bestimme die ElemID, bis es passt 
-                                Dim tmpElemName As String = elemNameOfElemID(curElemID)
-                                Dim lfdNr As Integer = 2
-                                Dim tmpElemID As String = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                                Do Until Not baseLineList.ContainsValue(tmpElemID) And Not lastProjList.ContainsValue(tmpElemID)
-                                    lfdNr = lfdNr + 1
-                                    tmpElemID = calcHryElemKey(tmpElemName, isMilestone, lfdNr)
-                                Loop
+                                If Not baseLineList.ContainsValue(curElemID) And Not lastProjList.ContainsValue(curElemID) Then
+                                    myNameID = curElemID
+                                Else
+                                    ' bestimme die neue ElemID 
+                                    Dim tmpElemName As String = elemNameOfElemID(curElemID)
+                                    ' bestimme die größte auftretende LfdNr in baseline und lastProj
 
-                                myNameID = tmpElemID
+                                    Dim newLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone) + 1
+                                    If newLfdNr = -1 Then
+                                        myNameID = curElemID
+                                    Else
+                                        myNameID = calcHryElemKey(tmpElemName, isMilestone, newLfdNr)
+                                    End If
+                                End If
+
                             End If
 
+                            cMilestone.copyTo(newMilestone, optNameID:=myNameID)
+
+                            ' jetzt den Meilenstein zur Phase hinzufügen  
+                            parentPhase.addMilestone(newMilestone)
+
+                        Else
+                            ' darf eigentlich nicht sein .. 
+                            Call MsgBox("Error in ensureStableIDS ... cancelled")
                         End If
 
-                        cMilestone.copyTo(newMilestone, optNameID:=myNameID)
 
-                        ' jetzt den Meilenstein zur Phase hinzufügen  
 
                     End If
 
