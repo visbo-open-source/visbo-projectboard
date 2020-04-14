@@ -3583,9 +3583,11 @@ Public Class clsProjekt
     ''' Dimension double() und phaseNameIDs() muss gleich sein
     ''' </summary>
     ''' <param name="rolePhaseValues">enthält rcNameID als Key, dann die Summenwerte für die angegebenen Phasen</param>
+    ''' <param name="costPhaseValues">enthält CostName als key, dann die Summenwerte für die angegebenen Phasen</param>
     ''' <param name="phaseNameIDs"></param>
     ''' <returns></returns>
     Public Function merge(ByVal rolePhaseValues As SortedList(Of String, Double()),
+                          ByVal costPhaseValues As SortedList(Of String, Double()),
                           ByVal phaseNameIDs As String(),
                           ByVal addWhenexisting As Boolean) As clsProjekt
 
@@ -3599,14 +3601,28 @@ Public Class clsProjekt
             If Not IsNothing(cphase) Then
 
                 ' jetzt dieser Phase die Rollen und entsprechenden Werte zuordnen 
-                For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                If Not IsNothing(rolePhaseValues) Then
+                    For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
 
-                    Dim roleSumme As Double = kvp.Value(ip - 1)
-                    If roleSumme > 0 Then
-                        Call cphase.addCostRole(kvp.Key, roleSumme, True, addWhenexisting)
-                    End If
+                        Dim roleSumme As Double = kvp.Value(ip - 1)
+                        If roleSumme > 0 Then
+                            Call cphase.addCostRole(kvp.Key, roleSumme, True, addWhenexisting)
+                        End If
 
-                Next
+                    Next
+                End If
+
+                ' jetzt die Kostenarten aufnehmen 
+                If Not IsNothing(costPhaseValues) Then
+                    For Each kvp As KeyValuePair(Of String, Double()) In costPhaseValues
+
+                        Dim costSum As Double = kvp.Value(ip - 1)
+                        If costSum > 0 Then
+                            Call cphase.addCostRole(kvp.Key, costSum, False, addWhenexisting)
+                        End If
+
+                    Next
+                End If
 
             End If
         Next

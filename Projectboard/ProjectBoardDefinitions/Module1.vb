@@ -5726,8 +5726,23 @@ Public Module Module1
         ' steuert Einrückung ja, nein im Not Overview Modus 
         Dim einrueckung As Integer = 0
 
-        Dim tabelle As pptNS.Table
-        Dim anzSpalten As Integer
+        Dim tabelle As pptNS.Table = pptShape.Table
+        Dim anzSpalten As Integer = tabelle.Columns.Count
+        Dim reducedTable As Boolean = False
+
+        Try
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten <> 4 And anzSpalten <> 6 Then
+                Call MsgBox("Tabelle should have 6 columns ... exit ...")
+                Exit Sub
+            End If
+            If anzSpalten = 4 Then
+                reducedTable = True
+            End If
+        Catch ex As Exception
+            Exit Sub
+        End Try
 
 
         Dim bigType As Integer = ptReportBigTypes.tables
@@ -5815,239 +5830,236 @@ Public Module Module1
 
 
         Try
-            tabelle = pptShape.Table
-            anzSpalten = tabelle.Columns.Count
-            If anzSpalten = 6 Then
-                ' dann ist alles in Ordnung .. 
 
 
-                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
-                If tabelle.Rows.Count > 2 Then
-                    Do While tabelle.Rows.Count > 2
-                        tabelle.Rows(2).Delete()
-                    Loop
-                End If
+            ' dann ist alles in Ordnung .. 
 
-                ' jetzt die Werte in den 6 Spalten zurücksetzen 
-                Try
-                    With tabelle
-                        For i As Integer = 1 To 6
-                            .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
-                        Next
-                    End With
-                Catch ex As Exception
+            ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
+            If tabelle.Rows.Count > 2 Then
+                Do While tabelle.Rows.Count > 2
+                    tabelle.Rows(2).Delete()
+                Loop
+            End If
 
-                End Try
+            ' jetzt die Werte in den 6 Spalten zurücksetzen 
+            Try
+                With tabelle
+                    For i As Integer = 1 To 6
+                        .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
+                    Next
+                End With
+            Catch ex As Exception
+
+            End Try
 
 
-                Dim faprDate As Date = Date.MinValue
-                Dim laprDate As Date = Date.MinValue
-                Dim curDate As Date = Date.MinValue
+            Dim faprDate As Date = Date.MinValue
+            Dim laprDate As Date = Date.MinValue
+            Dim curDate As Date = Date.MinValue
 
-                If Not IsNothing(hproj) Then
-                    curDate = hproj.timeStamp
-                End If
-                If Not IsNothing(bproj) Then
-                    faprDate = bproj.timeStamp
-                End If
-                If Not IsNothing(lproj) Then
-                    laprDate = lproj.timeStamp
-                End If
+            If Not IsNothing(hproj) Then
+                curDate = hproj.timeStamp
+            End If
+            If Not IsNothing(bproj) Then
+                faprDate = bproj.timeStamp
+            End If
 
-                ' jetzt die Headerzeile schreiben 
-                Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+            If Not IsNothing(lproj) And Not reducedTable Then
+                laprDate = lproj.timeStamp
+            End If
 
-                Dim tabellenzeile As Integer = 2
-                Try
-                    ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
-                    If showEuro And (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+            ' jetzt die Headerzeile schreiben 
+            Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+
+            Dim tabellenzeile As Integer = 2
+            Try
+                ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
+                If showEuro And (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
                             myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Then
 
-                        ' Überblick zeichnen ... 
-                        Dim curPKI() As Double = {-1, -1, -1, -1}
-                        Dim faprPKI() As Double = {-1, -1, -1, -1}
-                        Dim laprPKI() As Double = {-1, -1, -1, -1}
+                    ' Überblick zeichnen ... 
+                    Dim curPKI() As Double = {-1, -1, -1, -1}
+                    Dim faprPKI() As Double = {-1, -1, -1, -1}
+                    Dim laprPKI() As Double = {-1, -1, -1, -1}
 
 
-                        Dim tmpValue As Double
-                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
+                    Dim tmpValue As Double
+                    Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
 
-                        If considerFapr Then
-                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
-                        End If
+                    If considerFapr Then
+                        Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
+                    End If
 
-                        If considerLapr Then
-                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
-                        End If
+                    If considerLapr And Not reducedTable Then
+                        Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
+                    End If
 
 
-                        ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+                    ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
 
-                        For i = 0 To 3
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
+                    For i = 0 To 3
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
                                                           considerFapr, considerLapr)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        Next
-
                         tabelle.Rows.Add()
                         tabellenzeile = tabellenzeile + 1
+                    Next
 
-                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                    tabelle.Rows.Add()
+                    tabellenzeile = tabellenzeile + 1
 
-                        Dim curItem As String = myCustomUserRole.specifics
-                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
 
-                        If isRole Then
+                    Dim curItem As String = myCustomUserRole.specifics
+                    Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
 
-                            curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                    If isRole Then
 
-                            If considerLapr Then
-                                laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
-                            Else
-                                laprValue = 0.0
-                            End If
+                        curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
 
-                            If considerFapr Then
-                                faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
-                            Else
-                                faprValue = 0.0
-                            End If
-
-                            Dim zeilenItem As String = curItem
-
-
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
-                                                      considerFapr, considerLapr)
-                            tabelle.Rows.Add()
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 2
-
+                        If considerLapr And Not reducedTable Then
+                            laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                        Else
+                            laprValue = 0.0
                         End If
+
+                        If considerFapr Then
+                            faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                        Else
+                            faprValue = 0.0
+                        End If
+
+                        Dim zeilenItem As String = curItem
+
+
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                      considerFapr, considerLapr)
+                        tabelle.Rows.Add()
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 2
 
                     End If
 
-                    ' ---------------------------------------------------------------------
-                    ' wenn dann noch Details gezeigt werden sollen ... 
-                    ' 
-                    If Not showOverviewOnly Then
+                End If
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                            ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
-                            Dim tmpNameID As String = myCustomUserRole.specifics
-                            If toDoCollectionR.Contains(tmpNameID) Then
-                                toDoCollectionR.Remove(tmpNameID)
-                            End If
+                ' ---------------------------------------------------------------------
+                ' wenn dann noch Details gezeigt werden sollen ... 
+                ' 
+                If Not showOverviewOnly Then
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                        ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
+                        Dim tmpNameID As String = myCustomUserRole.specifics
+                        If toDoCollectionR.Contains(tmpNameID) Then
+                            toDoCollectionR.Remove(tmpNameID)
                         End If
+                    End If
 
-                        einrueckung = 1
+                    einrueckung = 1
 
-                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
-                        Dim firstCost As Boolean = True
-
-
-                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
-                        'If anzRoles > 0 And anzCosts > 0 Then
-                        '    ' 
-                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
-                        '    tabelle.Rows.Add()
-                        '    tabellenzeile = tabellenzeile + 1
-                        'End If
-
-                        For m As Integer = 1 To toDoCollectionR.Count
-
-                            ' wegen Einrückung in Details ...
-                            Dim curItem As String = CStr(toDoCollectionR.Item(m))
-                            Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
+                    ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                    Dim firstCost As Boolean = True
 
 
-                            If isRole Then
+                    ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
+                    'If anzRoles > 0 And anzCosts > 0 Then
+                    '    ' 
+                    '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                    '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
+                    '    tabelle.Rows.Add()
+                    '    tabellenzeile = tabellenzeile + 1
+                    'End If
 
-                                Dim teamID As Integer = -1
-                                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
+                    For m As Integer = 1 To toDoCollectionR.Count
 
-                                If myCustomUserRole.isAllowedToSee(curRole.name) Then
-                                    curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                        ' wegen Einrückung in Details ...
+                        Dim curItem As String = CStr(toDoCollectionR.Item(m))
+                        Dim isRole As Boolean = RoleDefinitions.containsNameOrID(curItem)
+
+
+                        If isRole Then
+
+                            Dim teamID As Integer = -1
+                            Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
+
+                            If myCustomUserRole.isAllowedToSee(curRole.name) Then
+                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
                                                                      outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
 
-                                    If considerLapr Then
-                                        laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                If considerLapr And Not reducedTable Then
+                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
                                                                               outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
-                                    Else
-                                        laprValue = 0.0
-                                    End If
-
-                                    If considerFapr Then
-                                        faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
-                                    Else
-                                        faprValue = 0.0
-                                    End If
-
-                                    Dim zeilenItem As String = curItem
-
-
-                                    Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
-                                                              considerFapr, considerLapr)
-                                    tabelle.Rows.Add()
-                                    tabellenzeile = tabellenzeile + 1
-                                End If
-
-
-
-                            End If
-
-                        Next
-
-                        For m As Integer = 1 To toDoCollectionC.Count
-
-                            ' wegen Einrückung in Details ...
-                            Dim curItem As String = CStr(toDoCollectionC.Item(m))
-                            Dim isCost As Boolean = CostDefinitions.containsName(curItem)
-
-
-                            If isCost Then
-
-                                curValue = hproj.getKostenBedarf(curItem).Sum
-
-                                If considerLapr Then
-                                    laprValue = lproj.getKostenBedarf(curItem).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getKostenBedarf(curItem).Sum
+                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
 
                                 Dim zeilenItem As String = curItem
 
+
                                 Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
-                                                          considerFapr, considerLapr)
+                                                              considerFapr, considerLapr)
                                 tabelle.Rows.Add()
                                 tabellenzeile = tabellenzeile + 1
-
                             End If
 
 
-                        Next
+
+                        End If
+
+                    Next
+
+                    For m As Integer = 1 To toDoCollectionC.Count
+
+                        ' wegen Einrückung in Details ...
+                        Dim curItem As String = CStr(toDoCollectionC.Item(m))
+                        Dim isCost As Boolean = CostDefinitions.containsName(curItem)
 
 
-                    End If
+                        If isCost Then
 
-                    ' jetzt letzte Zeile löschen  ...
-                    tabelle.Rows(tabellenzeile).Delete()
-                    tabellenzeile = tabellenzeile - 1
+                            curValue = hproj.getKostenBedarf(curItem).Sum
 
-                Catch ex1 As Exception
+                            If considerLapr And Not reducedTable Then
+                                laprValue = lproj.getKostenBedarf(curItem).Sum
+                            Else
+                                laprValue = 0.0
+                            End If
 
-                End Try
-            Else
-                Throw New Exception("Tabelle should have 6 columns ... exit ...")
-            End If
+                            If considerFapr Then
+                                faprValue = bproj.getKostenBedarf(curItem).Sum
+                            Else
+                                faprValue = 0.0
+                            End If
+
+                            Dim zeilenItem As String = curItem
+
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+
+                        End If
+
+
+                    Next
+
+
+                End If
+
+                ' jetzt letzte Zeile löschen  ...
+                tabelle.Rows(tabellenzeile).Delete()
+                tabellenzeile = tabellenzeile - 1
+
+            Catch ex1 As Exception
+
+            End Try
+
         Catch ex As Exception
 
         End Try
@@ -6075,11 +6087,14 @@ Public Module Module1
                                                    ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
                                                    ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
 
+        ' wenn nur PRognose versus Beauftragung angezeigt werden soll, nicht auch noch der letzte Stand  
+        Dim smallTable As Boolean = table.Columns.Count = 4
         With table
 
-            Dim faprText As String
-            Dim laprText As String
-            Dim curText As String
+            Dim faprText As String = ""
+            Dim laprText As String = ""
+
+            Dim curText As String = ""
 
             If Not considerFapr Then
                 faprDate = Date.MinValue
@@ -6090,13 +6105,17 @@ Public Module Module1
             End If
 
             curText = addDateToText(table.Cell(1, 2).Shape.TextFrame2.TextRange.Text, curDate)
-            laprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, laprDate)
-            faprText = addDateToText(table.Cell(1, 5).Shape.TextFrame2.TextRange.Text, faprDate)
-
             table.Cell(1, 2).Shape.TextFrame2.TextRange.Text = curText
-            table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = laprText
-            table.Cell(1, 5).Shape.TextFrame2.TextRange.Text = faprText
 
+            If smallTable Then
+                faprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, faprDate)
+                table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = faprText
+            Else
+                laprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, laprDate)
+                faprText = addDateToText(table.Cell(1, 5).Shape.TextFrame2.TextRange.Text, faprDate)
+                table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = laprText
+                table.Cell(1, 5).Shape.TextFrame2.TextRange.Text = faprText
+            End If
 
         End With
 
@@ -6148,6 +6167,8 @@ Public Module Module1
         Dim nada As String = "-"
         Dim isPositiv As Boolean = False
 
+        Dim reducedTable As Boolean = (table.Columns.Count = 4)
+
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
         If awinSettings.englishLanguage Then
@@ -6188,7 +6209,7 @@ Public Module Module1
             deltaFMC = nada
         End If
 
-        If considerLapr Then
+        If considerLapr And Not reducedTable Then
             deltaLMC = (curValue - laprValue).ToString(dblFormat)
         Else
             deltaLMC = nada
@@ -6211,40 +6232,45 @@ Public Module Module1
             CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
 
             ' last Approved Value schreiben  
-            If considerLapr Then
-                cellText = laprValue.ToString(dblFormat)
-            Else
-                cellText = nada
-            End If
-            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+            Dim faprCol As Integer = 3
+            If Not reducedTable Then
+                faprCol = 5
 
-            ' Delta schreiben 
-            CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
-
-            ' ggf einfärben 
-            If System.Math.Abs(curValue - laprValue) <= 0.5 Then
-                ' nichts tun, ausser Farbe auf Nortmal setzen 
-                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
-                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
-
-            ElseIf considerLapr Then
-
-                If roleBezeichner = repmsg(0) Or roleBezeichner = repmsg(3) Then
-                    isPositiv = (curValue > laprValue + 0.5)
+                If considerLapr Then
+                    cellText = laprValue.ToString(dblFormat)
                 Else
-                    isPositiv = (laprValue > curValue + 0.5)
+                    cellText = nada
                 End If
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+                ' Delta schreiben 
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
+
+                ' ggf einfärben 
+                If System.Math.Abs(curValue - laprValue) <= 0.5 Then
+                    ' nichts tun, ausser Farbe auf Nortmal setzen 
+                    ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+                ElseIf considerLapr Then
+
+                    If roleBezeichner = repmsg(0) Or roleBezeichner = repmsg(3) Then
+                        isPositiv = (curValue > laprValue + 0.5)
+                    Else
+                        isPositiv = (laprValue > curValue + 0.5)
+                    End If
+
+                    ' Delta entsprechend einfärben 
+                    If isPositiv Then
+                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                    Else
+                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                    End If
 
 
-                ' Delta entsprechend einfärben 
-                If isPositiv Then
-                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
-                Else
-                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
                 End If
-
-
             End If
+
 
             ' first Approved Value schreiben  
             If considerFapr Then
@@ -6252,16 +6278,16 @@ Public Module Module1
             Else
                 cellText = nada
             End If
-            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+            CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
 
             ' Delta schreiben 
-            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
+            CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
 
             ' ggf einfärben 
             If System.Math.Abs(curValue - faprValue) <= 0.5 Then
                 ' nichts tun, ausser Farbe auf Nortmal setzen 
                 ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
-                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+                CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
 
             ElseIf considerFapr Then
                 ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
@@ -6273,9 +6299,9 @@ Public Module Module1
 
                 ' Delta entsprechend einfärben 
                 If isPositiv Then
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                    CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
                 Else
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                    CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
                 End If
 
             End If
