@@ -17819,7 +17819,10 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
-    ''' ebtimmt die höchste auftretende LfdNr in den IDs der beiden sortierten Listen
+    ''' bestimmt die höchste auftretende LfdNr in den IDs der beiden sortierten Listen
+    ''' -1 wenn der ElemName nicht existiert 
+    ''' 1 wenn er nur einmal existiert , also die Ergänzung "" ist
+    ''' die angegebene lfdNr sonst
     ''' wird benötigt für enableStableIDs
     ''' </summary>
     ''' <param name="baseLineList"></param>
@@ -17838,7 +17841,7 @@ Public Module Projekte
                     Dim tmpLfdNr As Integer = CInt(tmpStr(tmpStr.Length - 1))
                     tmpResult = System.Math.Max(tmpResult, tmpLfdNr)
                 Else
-                    tmpResult = 0
+                    tmpResult = 1
                 End If
             End If
 
@@ -17851,7 +17854,7 @@ Public Module Projekte
                     Dim tmpLfdNr As Integer = CInt(tmpStr(tmpStr.Length - 1))
                     tmpResult = System.Math.Max(tmpResult, tmpLfdNr)
                 Else
-                    tmpResult = 0
+                    tmpResult = 1
                 End If
             End If
 

@@ -934,14 +934,21 @@ Public Module awinGeneralModules
 
                 ' übernehmen der RootPhase aus vproj
                 Dim cphase As New clsPhase(mproj)
-                vproj.AllPhases.ElementAt(0).copyTo(cphase, True)
+                vproj.AllPhases.ElementAt(0).copyTo(cphase,
+                                                    withoutNameID:=True,
+                                                    withoutMS:=True,
+                                                    withoutRolesCosts:=True)
                 cphase.nameID = rootPhaseName
                 mproj.AddPhase(cphase)
 
                 For hi As Integer = 1 To vproj.AllPhases.Count - 1
 
                     Dim aktPhase As New clsPhase(mproj)
-                    vproj.AllPhases.ElementAt(hi).copyTo(aktPhase, True)
+                    vproj.AllPhases.ElementAt(hi).copyTo(aktPhase,
+                                                         withoutNameID:=True,
+                                                         withoutMS:=True,
+                                                         withoutRolesCosts:=True)
+
                     aktPhase.nameID = mproj.hierarchy.findUniqueElemKey(vproj.AllPhases.ElementAt(hi).name, False)
                     Dim parentID As String = vproj.hierarchy.getParentIDOfID(aktPhase.nameID)
 
@@ -984,7 +991,11 @@ Public Module awinGeneralModules
                                 Dim hPhase As clsPhase = hproj.getPhaseByID(elemID)
                                 'Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
 
-                                hPhase.copyTo(mPhase, True)
+                                hPhase.copyTo(mPhase,
+                                              withoutNameID:=True,
+                                              withoutMS:=True,
+                                              withoutRolesCosts:=True)
+
                                 mPhase.nameID = mPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, False)
                                 Try
                                     ' Berechnung Phasen-Start

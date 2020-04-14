@@ -3332,10 +3332,7 @@ Public Class clsProjekt
                         ' es handelt sich um eine Phase
                         cPhase = getPhaseByID(curElemID)
                         curIndentLevel = hierarchy.getIndentLevel(curElemID)
-                        newPhase = New clsPhase(parent:=newproj)
-
-                        cPhase.copyTo(newPhase)
-
+                        Dim parentID As String = hierarchy.getParentIDOfID(curElemID)
 
                         ' jetzt muss die NameID ggf neu betimmt werden 
                         If baseLineList.ContainsKey(myFullBreadCrumb) Then
@@ -3350,29 +3347,40 @@ Public Class clsProjekt
                                 Dim tmpElemName As String = elemNameOfElemID(curElemID)
                                 ' bestimme die größte auftretende LfdNr in baseline und lastProj
 
-                                Dim newLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone) + 1
-                                If newLfdNr = -1 Then
+                                Dim maxLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone)
+                                If maxLfdNr = -1 Then
                                     myNameID = curElemID
                                 Else
-                                    myNameID = calcHryElemKey(tmpElemName, isMilestone, newLfdNr)
+                                    myNameID = calcHryElemKey(tmpElemName, isMilestone, maxLfdNr + 1)
                                 End If
 
                             End If
 
                         End If
 
+                        newPhase = New clsPhase(parent:=newproj)
                         newPhase.nameID = myNameID
 
-                        ' jetzt muss die Phase dem Projekt zugewiesen werden ... 
-                        ' muss hier eine ParentID angegeben werden ? 
-                        Dim tmpParentID As String = ""
+                        ' ohne Meilensteine kopieren, die werden ja separat übernommen  
+                        cPhase.copyTo(newPhase, withoutNameID:=True, withoutMS:=True)
 
-                        If listOFHryPhases.Count - 1 >= curIndentLevel Then
-                            tmpParentID = listOFHryPhases.ElementAt(curIndentLevel).nameID
+                        If parentID <> "" Then
+                            If Not IsNothing(newproj.getPhaseByID(parentID)) Then
+                                ' alles ok 
+                            Else
+                                Dim found As Boolean = False
+                                Do While parentID <> "" And Not found
+                                    parentID = hierarchy.getParentIDOfID(parentID)
+
+                                    If parentID <> "" Then
+                                        found = Not IsNothing(newproj.getPhaseByID(parentID))
+                                    End If
+
+                                Loop
+                            End If
                         End If
 
-
-                        newproj.AddPhase(newPhase, parentID:=tmpParentID)
+                        newproj.AddPhase(newPhase, parentID:=parentID)
 
                         curIndentLevel = newproj.hierarchy.getIndentLevel(newPhase.nameID)
 
@@ -3412,11 +3420,11 @@ Public Class clsProjekt
                                     Dim tmpElemName As String = elemNameOfElemID(curElemID)
                                     ' bestimme die größte auftretende LfdNr in baseline und lastProj
 
-                                    Dim newLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone) + 1
-                                    If newLfdNr = -1 Then
+                                    Dim maxLfdNr As Integer = bestimmeLfdNrMax(baseLineList, lastProjList, tmpElemName, isMilestone)
+                                    If maxLfdNr = -1 Then
                                         myNameID = curElemID
                                     Else
-                                        myNameID = calcHryElemKey(tmpElemName, isMilestone, newLfdNr)
+                                        myNameID = calcHryElemKey(tmpElemName, isMilestone, maxLfdNr + 1)
                                     End If
                                 End If
 
