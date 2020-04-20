@@ -146,11 +146,18 @@ Public Class frmAuthentication
                 Else
                     messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
                 End If
-                benutzer.Text = ""
+                'benutzer.Text = ""
                 maskedPwd.Text = ""
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 benutzer.Focus()
+
+                If awinSettings.rememberUserPwd Then
+                    ' Username Passwort verschlüsselt merken
+                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                End If
+
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
                 ' login am Rest-Server/mongoDB hat funktioniert
@@ -160,11 +167,9 @@ Public Class frmAuthentication
                 dbPasswort = maskedPwd.Text
 
                 If awinSettings.rememberUserPwd Then
-
                     ' Username Passwort verschlüsselt merken
                     Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
                     awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
-
                 End If
 
                 messageBox.Text = ""
@@ -182,13 +187,21 @@ Public Class frmAuthentication
             Else
                 messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
             End If
-            benutzer.Text = ""
+            'benutzer.Text = ""
             maskedPwd.Text = ""
             dbUsername = benutzer.Text
             dbPasswort = maskedPwd.Text
             benutzer.Focus()
+
+            If awinSettings.rememberUserPwd Then
+                ' Username Passwort verschlüsselt merken
+                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+            End If
+
             DialogResult = System.Windows.Forms.DialogResult.Retry
         End Try
+
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load

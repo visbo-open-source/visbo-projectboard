@@ -5054,8 +5054,9 @@ Public Module awinGeneralModules
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
         If noDBAccess Then
-
-            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+            If awinSettings.databaseURL <> "" Then
+                '' ur: 23.03.2020: Angabe von VC nicht mehr nötig, es findet Auswahl statt
+                '' If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
                 ' jetzt prüfen , ob es bereits gespeicherte User-Credentials gibt 
                 If IsNothing(awinSettings.userNamePWD) Then
@@ -5098,7 +5099,7 @@ Public Module awinGeneralModules
             End If
         End If
 
-        logInToMongoDB = Not noDBAccess
+            logInToMongoDB = Not noDBAccess
 
     End Function
 
@@ -8845,9 +8846,9 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                             If awinSettings.englishLanguage Then
-                                outputline = "Error when saving: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
+                                outputline = "Error when saving: " & hproj.name & ", " & hproj.variantName & vbLf & ex.Message
                             Else
-                                outputline = "Fehler beim Speichern: " & hproj.name & ", " & hproj.variantName & ", " & ex.Message
+                                outputline = "Fehler beim Speichern: " & hproj.name & ", " & hproj.variantName & vbLf & ex.Message
                             End If
 
                             outputCollection.Add(outputline)

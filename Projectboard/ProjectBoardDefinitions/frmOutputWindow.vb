@@ -8,8 +8,9 @@
             ' hier muss es jetzt zerhackt werden ... 
             Dim tmpstr() As String = CStr(textCollection.Item(i)).Split(New Char() {CChar(vbLf), CChar(vbCr)})
             For ii As Integer = 0 To tmpstr.Length - 1
-                ListBoxOutput.Items.Add(tmpstr(ii))
+                Me.ListBoxOutput.Items.Add(tmpstr(ii))
             Next
+            'Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
 
         Next
 
@@ -23,4 +24,24 @@
         ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
 
     End Sub
+    Private Sub linkLabelKontakt_LinkClicked(ByVal sender As Object,
+                ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles LinkLabelKontakt.LinkClicked
+
+        ' Determine which link was clicked within the LinkLabel.
+        Me.LinkLabelKontakt.Links(LinkLabelKontakt.Links.IndexOf(e.Link)).Visited = True
+
+        ' Displays the appropriate link based on the value of the LinkData property of the Link object.
+        Dim target As String = CType(e.Link.LinkData, String)
+
+        ' If the value looks like a URL, navigate to it.
+        ' Otherwise, display it in a message box.
+        If (target IsNot Nothing) AndAlso (target.StartsWith("https")) Then
+            System.Diagnostics.Process.Start(target)
+        Else
+            Call MsgBox(("Item clicked: " + target))
+        End If
+
+    End Sub
+
+
 End Class
