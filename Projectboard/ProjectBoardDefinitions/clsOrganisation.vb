@@ -3,6 +3,9 @@
     Private _allCosts As clsKostenarten
     Private _validFrom As Date
 
+
+
+
     Public Property allRoles As clsRollen
         Get
             allRoles = _allRoles

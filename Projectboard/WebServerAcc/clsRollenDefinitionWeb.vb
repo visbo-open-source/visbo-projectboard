@@ -12,6 +12,9 @@ Public Class clsRollenDefinitionWeb
     Public isExternRole As Boolean
     Public isTeam As Boolean
 
+    ' 27.04.20 ur wird nun auch in der DB gespeichert
+    Public isTeamParent As Boolean
+
     ' 8.1.2020 dazugekommen
     Public aliases As String()
     Public employeeNr As String
@@ -86,7 +89,7 @@ Public Class clsRollenDefinitionWeb
                     Try
                         .addTeam(CInt(sr.key), tmpValue)
                     Catch ex As Exception
-                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                        Call MsgBox("1119765: not allowed to have team-Membership and Childs ..")
                     End Try
 
                 Next
@@ -108,6 +111,9 @@ Public Class clsRollenDefinitionWeb
             ' tk 23.11.18 
             .isExternRole = Me.isExternRole
             .isTeam = Me.isTeam
+
+            ' ur 27.04.20
+            .isTeamParent = Me.isTeamParent
 
             .tagessatzIntern = Me.tagessatzIntern
 
@@ -275,6 +281,8 @@ Public Class clsRollenDefinitionWeb
             ' tk 23.11.18 
             isExternRole = .isExternRole
             isTeam = .isTeam
+            ' ur 27.04.20 
+            isTeamParent = .isTeamParent
 
             ' tk 8.1.20
             aliases = .aliases
