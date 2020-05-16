@@ -278,7 +278,11 @@ Public Class clsPhase
 
             Try
                 ' administratives ...
-                If Me.nameID = vPhase.nameID Then
+                ' tk 16.5 Namensgleicheit reicht hier eigentlich
+                ' sonmst wird das bei ensureIDStability zur Ungleichheit führen 
+                ' und eine Phase, die alle Attribute identisch hat , aber in der lfd Nmmer abweicht , ist als identisch zusenen 
+                ' If Me.nameID = vPhase.nameID Then
+                If Me.name = vPhase.name Then
 
                     If Me.dauerInDays = vPhase.dauerInDays And
                             Me.startOffsetinDays = vPhase.startOffsetinDays Then

@@ -3270,6 +3270,7 @@ Public Class clsProjekt
     Public Function ensureStableIDs(ByVal baseLineList As SortedList(Of String, String), ByVal lastProjList As SortedList(Of String, String)) As clsProjekt
         Dim newproj As clsProjekt = Nothing
 
+        ' nur wenn es bereits Unterschiede gbt, etwas machen
         If anyDifferentIDs(baseLineList) Or anyDifferentIDs(lastProjList) Then
             newproj = New clsProjekt
             Try
@@ -3358,6 +3359,13 @@ Public Class clsProjekt
 
                         End If
 
+                        ' jetzt muss sichergestellt sein, dass es sich immer noch um die ID einer Phase handelt ... 
+                        If Not elemIDIstMeilenstein(myNameID) Then
+                            ' alles in Ordnung 
+                        Else
+                            myNameID = curElemID
+                        End If
+
                         newPhase = New clsPhase(parent:=newproj)
                         newPhase.nameID = myNameID
 
@@ -3428,6 +3436,13 @@ Public Class clsProjekt
                                     End If
                                 End If
 
+                            End If
+
+                            ' jetzt muss sichergestellt sein, dass es sich immer noch um die ID eines Meilensteinshandelt  ... 
+                            If elemIDIstMeilenstein(myNameID) Then
+                                ' alles in Ordnung 
+                            Else
+                                myNameID = curElemID
                             End If
 
                             cMilestone.copyTo(newMilestone, optNameID:=myNameID)
