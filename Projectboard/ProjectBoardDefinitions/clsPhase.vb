@@ -278,7 +278,11 @@ Public Class clsPhase
 
             Try
                 ' administratives ...
-                If Me.nameID = vPhase.nameID Then
+                ' tk 16.5 Namensgleicheit reicht hier eigentlich
+                ' sonmst wird das bei ensureIDStability zur Ungleichheit führen 
+                ' und eine Phase, die alle Attribute identisch hat , aber in der lfd Nmmer abweicht , ist als identisch zusenen 
+                ' If Me.nameID = vPhase.nameID Then
+                If Me.name = vPhase.name Then
 
                     If Me.dauerInDays = vPhase.dauerInDays And
                             Me.startOffsetinDays = vPhase.startOffsetinDays Then
@@ -2656,9 +2660,18 @@ Public Class clsPhase
     ''' mapping = false: alles wird übernommen
     ''' </summary>
     ''' <param name="newphase"></param>
-    ''' <param name="mapping"></param>
+    ''' <param name="withoutNameID">default false: kopiert auch die NameID</param>
+    ''' <param name="withoutMS">default false: kopiert inkl Meilensteine</param>
+    ''' <param name="withoutRolesCosts">default false: kopiert inkl Rollen und Kosten</param>
+    ''' <param name="withoutDeliverables">default false: kopiert inkl Deliverables</param>
+    ''' <param name="withoutBewertungen">default false: kopiert also inkl Bewertungen</param>
     ''' <remarks></remarks>
-    Public Sub copyTo(ByRef newphase As clsPhase, Optional ByVal mapping As Boolean = False)
+    Public Sub copyTo(ByRef newphase As clsPhase,
+                      Optional ByVal withoutNameID As Boolean = False,
+                      Optional ByVal withoutMS As Boolean = False,
+                      Optional ByVal withoutRolesCosts As Boolean = False,
+                      Optional ByVal withoutDeliverables As Boolean = False,
+                      Optional ByVal withoutBewertungen As Boolean = False)
 
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle
@@ -2681,7 +2694,7 @@ Public Class clsPhase
 
             ' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
             ' wird also bei Mapping nicht übernommen
-            If Not mapping Then
+            If Not withoutNameID Then
                 .nameID = nameID
             End If
 
@@ -2695,35 +2708,10 @@ Public Class clsPhase
             .farbe = farbe
             .verantwortlich = verantwortlich
             .percentDone = percentDone
-            '
-            ' Ende korrekt 25.11.19 
 
-            ' ---------------------------------------
-            ' fehlerhaft 25.11.19 , insbesondere bei appearance und farbe
-            '.earliestStart = Me._earliestStart
-            '.latestStart = Me._latestStart
-            '.offset = Me._offset
-
-            '' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
-            '' wird also bei Mapping nicht übernommen
-            'If Not mapping Then
-            '    .nameID = _nameID
-            'End If
-
-
-            '' sonstigen Elemente übernehmen 
-            '.shortName = Me._shortName
-            '.originalName = Me._originalName
-
-
-            '.appearance = Me._appearance
-            '.farbe = Me._color
-            '.verantwortlich = Me._verantwortlich
-            '.percentDone = Me._percentDone
-            ' Ende fehlerhaft 25.11.19 ---------------
 
             ' Rollen und kosten werden bei Mapping nicht übernommen
-            If Not mapping Then
+            If Not withoutRolesCosts Then
 
                 For r = 1 To Me.countRoles
                     'newrole = New clsRolle(relEnde - relStart)
@@ -2754,7 +2742,7 @@ Public Class clsPhase
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             ' Meilensteine werden bei Mapping nicht übernommen
-            If Not mapping Then
+            If Not withoutMS Then
 
                 For r = 1 To Me._allMilestones.Count
                     newresult = New clsMeilenstein(parent:=newphase)
@@ -2771,22 +2759,29 @@ Public Class clsPhase
 
 
             ' jetzt noch die evtl vorhandenen Bewertungen kopieren 
-            For b As Integer = 1 To Me._bewertungen.Count
-                Dim newb As New clsBewertung
-                Me.getBewertung(b).copyto(newb)
-                Try
-                    .addBewertung(newb)
-                Catch ex As Exception
+            If Not withoutBewertungen Then
+                For b As Integer = 1 To Me._bewertungen.Count
+                    Dim newb As New clsBewertung
+                    Me.getBewertung(b).copyto(newb)
+                    Try
+                        .addBewertung(newb)
+                    Catch ex As Exception
 
-                End Try
+                    End Try
 
-            Next
+                Next
+            End If
 
-            ' jetzt noch die Deliverables kopieren ... 
-            For i = 1 To Me.countDeliverables
-                Dim deli As String = Me.getDeliverable(i)
-                .addDeliverable(deli)
-            Next
+
+            If Not withoutDeliverables Then
+                ' jetzt noch die Deliverables kopieren ... 
+                For i = 1 To Me.countDeliverables
+                    Dim deli As String = Me.getDeliverable(i)
+                    .addDeliverable(deli)
+                Next
+
+            End If
+
 
 
         End With

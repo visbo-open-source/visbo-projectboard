@@ -49,7 +49,7 @@
               <!--label="Projekt/e"-->
               <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, werden alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
               <!--label="SaveAll-->
-              <button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolio-Definitionen werden gespeichert"/>
+              <!--<button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolio-Definitionen werden gespeichert"/>-->
             </menu>
             </splitButton>
             <!--label="Löschen"-->

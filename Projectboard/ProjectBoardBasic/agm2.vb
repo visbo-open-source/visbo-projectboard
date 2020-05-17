@@ -7011,6 +7011,11 @@ Public Module agm2
 
                     Dim outputCollection As New Collection
                     Call readVisboRessourcenSheet(wsRessourcen, outputCollection, hproj)
+
+                    If outputCollection.Count > 0 Then
+                        showOutPut(outputCollection, "Fehler bei Ressourcenbedarfe lesen", "")
+                    End If
+
                 Catch ex As Exception
                     wsRessourcen = Nothing
 
@@ -11982,71 +11987,84 @@ Public Module agm2
         Dim atleastOneError As Boolean = False
 
 
-
         For iz As Integer = firstRowOfProject To lastRowOfProject
 
             Try
-
+                Dim weitermachen As Boolean = False
                 Dim roleCostName As String = CStr(CType(ws.Cells(iz, colRoleCostName), Excel.Range).Value).Trim
 
-                Dim breadCrumb As String = ""
-                If Not IsNothing(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value) Then
-                    breadCrumb = CStr(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value).Trim
+                If RoleDefinitions.containsName(roleCostName) Then
+                    weitermachen = True
+                ElseIf CostDefinitions.containsName(roleCostName) Then
+                    weitermachen = True
+                Else
+                    atleastOneError = True
+                    logmessage = "Rolle oder Kostenart existiert nicht : " & roleCostName
+                    outputcollection.Add(logmessage)
                 End If
 
-                Dim roleNameID As String = ""
-
-
-                'Dim phaseName As String = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
-                Dim phaseName As String = "."
-                If Not IsNothing(CType(ws.Cells(iz, colTaskName), Excel.Range).Value) Then
-                    phaseName = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
-                    If phaseName = "" Then
-                        phaseName = "."
+                If weitermachen Then
+                    Dim breadCrumb As String = ""
+                    If Not IsNothing(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value) Then
+                        breadCrumb = CStr(CType(ws.Cells(iz, colBreadCrumb), Excel.Range).Value).Trim
                     End If
-                End If
 
-                Dim phaseNameID As String = ""
-                Dim lastPhNameID As String = ""
-                Dim tmpValue As String = CType(ws.Cells(iz, colValue), Excel.Range).Value
-                If tmpValue.Contains(".") Then
-                    tmpValue = tmpValue.Replace(".", ",")
-                End If
+                    'Dim phaseName As String = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+                    Dim phaseName As String = "."
+                    If Not IsNothing(CType(ws.Cells(iz, colTaskName), Excel.Range).Value) Then
+                        phaseName = CStr(CType(ws.Cells(iz, colTaskName), Excel.Range).Value).Trim
+                        If phaseName = "" Then
+                            phaseName = "."
+                        End If
+                    End If
 
-                Dim value As Double = CDbl(tmpValue) ' im Default Angabe in PT  
-                Dim einheitIsEuro As Boolean = False
+                    Dim phaseNameID As String = ""
+                    Dim lastPhNameID As String = ""
+                    Dim tmpValue As String = CType(ws.Cells(iz, colValue), Excel.Range).Value
+                    If tmpValue.Contains(".") Then
+                        tmpValue = tmpValue.Replace(".", ",")
+                    End If
+
+                    Dim value As Double = CDbl(tmpValue) ' im Default Angabe in PT  
+                    Dim einheitIsEuro As Boolean = False
 
 
-                If Not IsNothing(CType(ws.Cells(iz, colEinheit), Excel.Range).Value) Then
-                    einheitIsEuro = (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "T€")
-                    If Not einheitIsEuro Then
-                        If ((CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "Std") Or (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "hrs")) Then
-                            ' Anzahl Stunden in PT umrechnen
-                            value = value / 8
+                    If Not IsNothing(CType(ws.Cells(iz, colEinheit), Excel.Range).Value) Then
+                        einheitIsEuro = (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "T€")
+                        If Not einheitIsEuro Then
+                            If ((CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "Std") Or (CStr(CType(ws.Cells(iz, colEinheit), Excel.Range).Value).Trim = "hrs")) Then
+                                ' Anzahl Stunden in PT umrechnen
+                                value = value / 8
+                            End If
+                        Else
+                            ' nichts weiter machen, die Umrechnung wird in setRolePhaseValues gemacht
                         End If
                     Else
-                        ' nichts weiter machen, die Umrechnung wird in setRolePhaseValues gemacht
+                        ' einheit wird als Anzahl Personentage aufgefasst
                     End If
-                Else
-                    ' einheit wird als Anzahl Personentage aufgefasst
+
+                    Dim cphase As clsPhase = hproj.getPhase(phaseName, breadcrumb:=breadCrumb)
+
+                    If Not IsNothing(cphase) Then
+
+                        Call setRolePhaseValues(roleCostName, phaseName, breadCrumb, value, einheitIsEuro, hproj, phNameIDs, rolePhaseValues, costPhaseValues)
+                        ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
+
+                    Else
+                        ' einfach nix machen und ignorieren 
+                        atleastOneError = True
+                        logmessage = "Zeile " & iz & " -Phasen-Name existiert nicht: " & phaseName
+                        outputcollection.Add(logmessage)
+                        CType(ws.Cells(iz, colTaskName), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
+                    End If
                 End If
-
-                Dim cphase As clsPhase = hproj.getPhase(phaseName, breadcrumb:=breadCrumb)
-
-                If Not IsNothing(cphase) Then
-
-                    Call setRolePhaseValues(roleCostName, phaseName, breadCrumb, value, einheitIsEuro, hproj, phNameIDs, rolePhaseValues, costPhaseValues)
-                    ' nur wenn es sie überhaupt gibt , muss weitergemacht werden
-
-                Else
-                    ' einfach nix machen und ignorieren 
-                    CType(ws.Cells(iz, colTaskName), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                End If
-
 
 
             Catch ex As Exception
                 ' einfach nix machen und ignorieren 
+                atleastOneError = True
+                logmessage = "Zeile " & iz & " Fehler aufgetreten .. " & ex.Message
+                outputcollection.Add(logmessage)
                 CType(ws.Cells(iz, colTaskName), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
             End Try
 
@@ -12077,7 +12095,9 @@ Public Module agm2
                 End If
 
             Next
-
+        Else
+            logmessage = "keine Ressourcen importiert - bitte vorher Fehler korrigieren."
+            outputcollection.Add(logmessage)
         End If ' if not atleastOneError ...
 
 

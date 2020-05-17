@@ -5779,7 +5779,7 @@ Public Module Module1
         Try
 
             If q2 = "-1" Or q2 = "%used%" Then
-                takeITAsIs = True
+                'takeITAsIs = True
                 ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
                 toDoCollectionR = getCommonListOfRoleNameIDs(hproj, lproj, bproj)
                 toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj)
@@ -6183,13 +6183,13 @@ Public Module Module1
             roleBezeichner = itemNameID
 
         ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
-            'Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
-            'Dim leadingblanks As String = ""
-            'For i As Integer = 1 To indentLevel
-            '    leadingblanks = " " & leadingblanks
-            'Next
-            'roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
-            roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
+            Dim leadingblanks As String = ""
+            For i As Integer = 1 To indentLevel
+                leadingblanks = " " & leadingblanks
+            Next
+            roleBezeichner = leadingblanks & RoleDefinitions.getBezeichner(itemNameID)
+            'roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
 
         ElseIf CostDefinitions.containsName(itemNameID) Then
             roleBezeichner = itemNameID
