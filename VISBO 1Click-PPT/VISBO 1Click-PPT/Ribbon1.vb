@@ -302,6 +302,7 @@ Public Class Ribbon1
     End Sub
 
     Private Sub DBspeichern_Click(sender As Object, e As RibbonControlEventArgs) Handles DBspeichern.Click
+
         Try
             If Not awinsetTypen_Performed Then
                 '' Set cursor as hourglass
@@ -367,7 +368,6 @@ Public Class Ribbon1
                 '' Set cursor as hourglass
                 Cursor.Current = Cursors.WaitCursor
 
-
                 ' Dim reportAuswahl As New frmReportProfil
                 ' Dim hierarchiefenster As New frmHierarchySelection
                 Dim hproj As New clsProjekt
@@ -376,16 +376,26 @@ Public Class Ribbon1
                 'Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
 
-                ' Testen, ob der User die passende Lizenz besitzt
-                Dim user As String = myWindowsName
-                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+                Dim permissionOK As Boolean = False
 
-                ' Lesen des Lizenzen-Files
-                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+                If Not awinSettings.visboServer Then                                      ' nicht mit RestServer
 
-                ' Prüfen der Lizenzen
-                If lizenzen.validLicence(user, komponente) Then
+                    ' Testen, ob der User die passende Lizenz besitzt
+                    Dim user As String = myWindowsName
+                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
 
+                    ' Lesen des Lizenzen-Files
+                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+                    ' Prüfen der Lizenzen
+                    permissionOK = lizenzen.validLicence(user, komponente)
+
+                Else
+                    permissionOK = awinSettings.visboServer
+                End If
+
+
+                If permissionOK Then
 
                     ' Laden des aktuell geladenen Projektes und des eventuell gemappten
                     Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
@@ -438,14 +448,14 @@ Public Class Ribbon1
 
                 Else
                     If awinSettings.englishLanguage Then
-                        Call MsgBox(" Please, contact your system administrator")
-                    Else
-                        Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+                            Call MsgBox(" Please, contact your system administrator")
+                        Else
+                            Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+                        End If
+
                     End If
 
                 End If
-
-            End If
 
         Catch ex As Exception
 

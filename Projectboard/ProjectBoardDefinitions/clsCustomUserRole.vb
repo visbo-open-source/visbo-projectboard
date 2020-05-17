@@ -170,7 +170,8 @@ Public Class clsCustomUserRole
                 ElseIf _customUserRole = ptCustomUserRoles.ProjektLeitung Or
                        _customUserRole = ptCustomUserRoles.InternalViewer Or
                        _customUserRole = ptCustomUserRoles.PortfolioManager Or
-                       _customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                       _customUserRole = ptCustomUserRoles.OrgaAdmin Or
+                       _customUserRole = ptCustomUserRoles.Alles Then
                     isAllowed = True
                 Else
                     isAllowed = False
