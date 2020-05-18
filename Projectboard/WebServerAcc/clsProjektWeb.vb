@@ -185,29 +185,36 @@ Public Class clsProjektWeb
                 Me.customBoolFields.Add(hvar)
             Next
 
-            ' jetzt werden die keyMetrics übertragen
-            Me.keyMetrics.costCurrentActual = projekt.keyMetrics.costCurrentActual
-            Me.keyMetrics.costCurrentTotal = projekt.keyMetrics.costCurrentTotal
-            Me.keyMetrics.costBaseLastActual = projekt.keyMetrics.costBaseLastActual
-            Me.keyMetrics.costBaseLastTotal = projekt.keyMetrics.costBaseLastTotal
+            ' 20.04.30: ur: es wird am Client keine keyMetrics mehr angelegt
+            ' jetzt werden die keyMetrics übertragen, sofern am Client definiert
 
-            Me.keyMetrics.timeCompletionCurrentActual = projekt.keyMetrics.timeCompletionCurrentActual
-            Me.keyMetrics.timeCompletionBaseLastActual = projekt.keyMetrics.timeCompletionBaseLastActual
-            Me.keyMetrics.timeCompletionCurrentTotal = projekt.keyMetrics.timeCompletionCurrentTotal
-            Me.keyMetrics.timeCompletionBaseLastTotal = projekt.keyMetrics.timeCompletionBaseLastTotal
-            Me.keyMetrics.endDateCurrent = projekt.keyMetrics.endDateCurrent.ToUniversalTime
-            Me.keyMetrics.endDateBaseLast = projekt.keyMetrics.endDateBaseLast.ToUniversalTime
+            If (Not IsNothing(projekt.keyMetrics)) Then
+                Me.keyMetrics.costCurrentActual = projekt.keyMetrics.costCurrentActual
+                Me.keyMetrics.costCurrentTotal = projekt.keyMetrics.costCurrentTotal
+                Me.keyMetrics.costBaseLastActual = projekt.keyMetrics.costBaseLastActual
+                Me.keyMetrics.costBaseLastTotal = projekt.keyMetrics.costBaseLastTotal
 
-            Me.keyMetrics.deliverableCompletionCurrentActual = projekt.keyMetrics.deliverableCompletionCurrentActual
-            Me.keyMetrics.deliverableCompletionCurrentTotal = projekt.keyMetrics.deliverableCompletionCurrentTotal
+                Me.keyMetrics.timeCompletionCurrentActual = projekt.keyMetrics.timeCompletionCurrentActual
+                Me.keyMetrics.timeCompletionBaseLastActual = projekt.keyMetrics.timeCompletionBaseLastActual
+                Me.keyMetrics.timeCompletionCurrentTotal = projekt.keyMetrics.timeCompletionCurrentTotal
+                Me.keyMetrics.timeCompletionBaseLastTotal = projekt.keyMetrics.timeCompletionBaseLastTotal
+                Me.keyMetrics.endDateCurrent = projekt.keyMetrics.endDateCurrent.ToUniversalTime
+                Me.keyMetrics.endDateBaseLast = projekt.keyMetrics.endDateBaseLast.ToUniversalTime
 
-            Me.keyMetrics.deliverableCompletionBaseLastActual = projekt.keyMetrics.deliverableCompletionBaseLastActual
-            Me.keyMetrics.deliverableCompletionBaseLastTotal = projekt.keyMetrics.deliverableCompletionBaseLastTotal
+                Me.keyMetrics.deliverableCompletionCurrentActual = projekt.keyMetrics.deliverableCompletionCurrentActual
+                Me.keyMetrics.deliverableCompletionCurrentTotal = projekt.keyMetrics.deliverableCompletionCurrentTotal
 
-            Me.keyMetrics.timeDelayCurrentActual = projekt.keyMetrics.timeDelayCurrentActual
-            Me.keyMetrics.timeDelayCurrentTotal = projekt.keyMetrics.timeDelayCurrentTotal
-            Me.keyMetrics.deliverableDelayCurrentActual = projekt.keyMetrics.deliverableDelayCurrentActual
-            Me.keyMetrics.deliverableDelayCurrentTotal = projekt.keyMetrics.deliverableDelayCurrentTotal
+                Me.keyMetrics.deliverableCompletionBaseLastActual = projekt.keyMetrics.deliverableCompletionBaseLastActual
+                Me.keyMetrics.deliverableCompletionBaseLastTotal = projekt.keyMetrics.deliverableCompletionBaseLastTotal
+
+                Me.keyMetrics.timeDelayCurrentActual = projekt.keyMetrics.timeDelayCurrentActual
+                Me.keyMetrics.timeDelayCurrentTotal = projekt.keyMetrics.timeDelayCurrentTotal
+                Me.keyMetrics.deliverableDelayCurrentActual = projekt.keyMetrics.deliverableDelayCurrentActual
+                Me.keyMetrics.deliverableDelayCurrentTotal = projekt.keyMetrics.deliverableDelayCurrentTotal
+            Else
+                Me.keyMetrics = Nothing
+            End If
+
 
         End With
 
@@ -349,35 +356,45 @@ Public Class clsProjektWeb
 
             ' ergänzt 14.10.2019: keyMetrics für HTML5 in vpv-long gespeichert
             ' jetzt werden die keyMetrics übertragen
-            .keyMetrics.costCurrentActual = Me.keyMetrics.costCurrentActual
-            .keyMetrics.costCurrentTotal = Me.keyMetrics.costCurrentTotal
-            .keyMetrics.costBaseLastActual = Me.keyMetrics.costBaseLastActual
-            .keyMetrics.costBaseLastTotal = Me.keyMetrics.costBaseLastTotal
-            .keyMetrics.timeCompletionCurrentActual = Me.keyMetrics.timeCompletionCurrentActual
-            .keyMetrics.timeCompletionBaseLastActual = Me.keyMetrics.timeCompletionBaseLastActual
-            .keyMetrics.timeCompletionCurrentTotal = Me.keyMetrics.timeCompletionCurrentTotal
-            .keyMetrics.timeCompletionBaseLastTotal = Me.keyMetrics.timeCompletionBaseLastTotal
 
-            If IsNothing(Me.keyMetrics.endDateCurrent) Then
-                .keyMetrics.endDateCurrent = Date.MinValue
+            ' nur anlegen, wenn Me.keyMetrics Werte enthält
+            If (Not IsNothing(Me.keyMetrics)) Then
+
+                .keyMetrics = New clsKeyMetrics
+                .keyMetrics.costCurrentActual = Me.keyMetrics.costCurrentActual
+                .keyMetrics.costCurrentTotal = Me.keyMetrics.costCurrentTotal
+                .keyMetrics.costBaseLastActual = Me.keyMetrics.costBaseLastActual
+                .keyMetrics.costBaseLastTotal = Me.keyMetrics.costBaseLastTotal
+                .keyMetrics.timeCompletionCurrentActual = Me.keyMetrics.timeCompletionCurrentActual
+                .keyMetrics.timeCompletionBaseLastActual = Me.keyMetrics.timeCompletionBaseLastActual
+                .keyMetrics.timeCompletionCurrentTotal = Me.keyMetrics.timeCompletionCurrentTotal
+                .keyMetrics.timeCompletionBaseLastTotal = Me.keyMetrics.timeCompletionBaseLastTotal
+
+                If IsNothing(Me.keyMetrics.endDateCurrent) Then
+                    .keyMetrics.endDateCurrent = Date.MinValue
+                Else
+                    .keyMetrics.endDateCurrent = Me.keyMetrics.endDateCurrent.ToLocalTime
+                End If
+                If IsNothing(Me.keyMetrics.endDateBaseLast) Then
+                    .keyMetrics.endDateBaseLast = Date.MinValue
+                Else
+                    .keyMetrics.endDateBaseLast = Me.keyMetrics.endDateBaseLast.ToLocalTime
+                End If
+
+                .keyMetrics.deliverableCompletionCurrentActual = Me.keyMetrics.deliverableCompletionCurrentActual
+                .keyMetrics.deliverableCompletionCurrentTotal = Me.keyMetrics.deliverableCompletionCurrentTotal
+                .keyMetrics.deliverableCompletionBaseLastActual = Me.keyMetrics.deliverableCompletionBaseLastActual
+                .keyMetrics.deliverableCompletionBaseLastTotal = Me.keyMetrics.deliverableCompletionBaseLastTotal
+
+                .keyMetrics.timeDelayCurrentActual = Me.keyMetrics.timeDelayCurrentActual
+                .keyMetrics.timeDelayCurrentTotal = Me.keyMetrics.timeDelayCurrentTotal
+                .keyMetrics.deliverableDelayCurrentActual = Me.keyMetrics.deliverableDelayCurrentActual
+                .keyMetrics.deliverableDelayCurrentTotal = Me.keyMetrics.deliverableDelayCurrentTotal
             Else
-                .keyMetrics.endDateCurrent = Me.keyMetrics.endDateCurrent.ToLocalTime
-            End If
-            If IsNothing(Me.keyMetrics.endDateBaseLast) Then
-                .keyMetrics.endDateBaseLast = Date.MinValue
-            Else
-                .keyMetrics.endDateBaseLast = Me.keyMetrics.endDateBaseLast.ToLocalTime
+                .keyMetrics = Nothing
             End If
 
-            .keyMetrics.deliverableCompletionCurrentActual = Me.keyMetrics.deliverableCompletionCurrentActual
-            .keyMetrics.deliverableCompletionCurrentTotal = Me.keyMetrics.deliverableCompletionCurrentTotal
-            .keyMetrics.deliverableCompletionBaseLastActual = Me.keyMetrics.deliverableCompletionBaseLastActual
-            .keyMetrics.deliverableCompletionBaseLastTotal = Me.keyMetrics.deliverableCompletionBaseLastTotal
 
-            .keyMetrics.timeDelayCurrentActual = Me.keyMetrics.timeDelayCurrentActual
-            .keyMetrics.timeDelayCurrentTotal = Me.keyMetrics.timeDelayCurrentTotal
-            .keyMetrics.deliverableDelayCurrentActual = Me.keyMetrics.deliverableDelayCurrentActual
-            .keyMetrics.deliverableDelayCurrentTotal = Me.keyMetrics.deliverableDelayCurrentTotal
 
 
             If IsNothing(Me.actualDataUntil) Then
@@ -411,6 +428,7 @@ Public Class clsProjektWeb
         customStringFields = New List(Of clsStringString)
         customBoolFields = New List(Of clsStringBoolean)
 
+        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
         keyMetrics = New clsKeyMetrics
     End Sub
 
