@@ -934,14 +934,21 @@ Public Module awinGeneralModules
 
                 ' übernehmen der RootPhase aus vproj
                 Dim cphase As New clsPhase(mproj)
-                vproj.AllPhases.ElementAt(0).copyTo(cphase, True)
+                vproj.AllPhases.ElementAt(0).copyTo(cphase,
+                                                    withoutNameID:=True,
+                                                    withoutMS:=True,
+                                                    withoutRolesCosts:=True)
                 cphase.nameID = rootPhaseName
                 mproj.AddPhase(cphase)
 
                 For hi As Integer = 1 To vproj.AllPhases.Count - 1
 
                     Dim aktPhase As New clsPhase(mproj)
-                    vproj.AllPhases.ElementAt(hi).copyTo(aktPhase, True)
+                    vproj.AllPhases.ElementAt(hi).copyTo(aktPhase,
+                                                         withoutNameID:=True,
+                                                         withoutMS:=True,
+                                                         withoutRolesCosts:=True)
+
                     aktPhase.nameID = mproj.hierarchy.findUniqueElemKey(vproj.AllPhases.ElementAt(hi).name, False)
                     Dim parentID As String = vproj.hierarchy.getParentIDOfID(aktPhase.nameID)
 
@@ -984,7 +991,11 @@ Public Module awinGeneralModules
                                 Dim hPhase As clsPhase = hproj.getPhaseByID(elemID)
                                 'Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
 
-                                hPhase.copyTo(mPhase, True)
+                                hPhase.copyTo(mPhase,
+                                              withoutNameID:=True,
+                                              withoutMS:=True,
+                                              withoutRolesCosts:=True)
+
                                 mPhase.nameID = mPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, False)
                                 Try
                                     ' Berechnung Phasen-Start
@@ -1321,6 +1332,57 @@ Public Module awinGeneralModules
                         hproj.marker = False
                     End If
 
+                    ' jetzt müssen hier noch die ID's stabiliert werden: gleicher BreadCrumb hat immer gleiche ID 
+                    Dim baselineProj As clsProjekt = awinReadProjectFromDatabase(hproj.kundenNummer, hproj.name, ptVariantFixNames.pfv.ToString, Date.Now)
+                    Dim lastProj As clsProjekt = awinReadProjectFromDatabase(hproj.kundenNummer, hproj.name, "", Date.Now)
+
+
+                    Dim baseLineBreadCrumbIDList As New SortedList(Of String, String)
+                    Dim lastProjBreadCrumbIDList As New SortedList(Of String, String)
+                    Dim myBreadCrumbList As SortedList(Of String, String) = hproj.getBreadCrumbIDList
+
+                    If Not IsNothing(baselineProj) Then
+                        baseLineBreadCrumbIDList = baselineProj.getBreadCrumbIDList
+                    End If
+
+                    If Not IsNothing(lastProj) Then
+                        lastProjBreadCrumbIDList = lastProj.getBreadCrumbIDList
+                    End If
+
+                    ' hproj wird in den NameIDs nur angepasst, wenn es tatsächlich auch Änderungen gibt ... 
+                    If baseLineBreadCrumbIDList.Count + lastProjBreadCrumbIDList.Count > 0 Then
+                        Dim tmpProj As clsProjekt = hproj.ensureStableIDs(baseLineBreadCrumbIDList, lastProjBreadCrumbIDList)
+
+                        ' hier kommt die Prüfung ... 
+                        If Not IsNothing(tmpProj) Then
+
+                            Dim tmpBreadCrumbList As SortedList(Of String, String) = tmpProj.getBreadCrumbIDList
+                            Dim outPutCollection As Collection = checkIDStability(tmpProj, baselineProj, lastProj)
+
+                            ' wenn outputCollection keine Fehlermeldungen enthält , dann wird das tmpProj übernommen ..
+                            If outPutCollection.Count > 0 Then
+                                Call showOutPut(outPutCollection, "Fehler bei Enable Stable IDs", "")
+                            Else
+                                ' dann soll es übernommen werden .. 
+                                ' wenn es denn identisch ist ... 
+                                If tmpProj.isIdenticalTo(hproj) Then
+                                    ' nur die Ids haben sich ja jetzt geändert
+                                    Dim wasMarked As Boolean = hproj.marker
+                                    hproj = tmpProj
+                                    hproj.marker = wasMarked
+                                Else
+                                    Dim msgTxt As String = "Warnung 176345620 - interne Id Korrektur wurde nicht übernommen ..."
+                                    If awinSettings.englishLanguage Then
+                                        msgTxt = "Warning 176345620 - internal ID correction not applied ..."
+                                    End If
+                                    Call MsgBox(msgTxt)
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
 
                     anzAktualisierungen = anzAktualisierungen + 1
 
@@ -1447,6 +1509,80 @@ Public Module awinGeneralModules
         ImportProjekte.Clear(False)
 
     End Sub
+
+    ''' <summary>
+    ''' prüft ob die IDs tatsächlich alle stabil sind
+    ''' stabil heisst: jede Id aus der Baseline bzw. lastvpv , die im hproj existiert, hat den jeweils gleichen Breadcrumb
+    ''' wenn Collection.count = 0 dann alles ok
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="baseLineProj">das Baseline Projekt</param>
+    ''' <param name="lastProj">das last Projekt </param>
+    ''' <returns></returns>
+    Private Function checkIDStability(ByVal hproj As clsProjekt,
+                                      ByVal baseLineProj As clsProjekt,
+                                      ByVal lastProj As clsProjekt) As Collection
+
+        ' die Prüfung, ob auch alle IDs jetzt die gleiche BreadCrumb haben 
+        Dim result As New Collection
+        Dim logMessage As String = ""
+
+        Dim baseLineBreadCrumbIDList As New SortedList(Of String, String)
+        Dim lastProjBreadCrumbIDList As New SortedList(Of String, String)
+
+        If Not IsNothing(baseLineProj) Then
+            baseLineBreadCrumbIDList = baseLineProj.getBreadCrumbIDList
+        End If
+
+        If Not IsNothing(lastProj) Then
+            lastProjBreadCrumbIDList = lastProj.getBreadCrumbIDList
+        End If
+
+        For Each tstKvp As KeyValuePair(Of String, String) In baseLineBreadCrumbIDList
+            If elemIDIstMeilenstein(tstKvp.Value) Then
+                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
+                If Not IsNothing(tstMS) Then
+                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
+                        logMessage = "baseline ungleich: " & tstMS.nameID & "; " & tstKvp.Key
+                        result.Add(logMessage)
+                    End If
+                End If
+            Else
+                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
+                If Not IsNothing(tstPh) Then
+                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
+                        logMessage = "baseline ungleich: " & tstPh.nameID & "; " & tstKvp.Key
+                        result.Add(logMessage)
+                    End If
+                End If
+            End If
+
+        Next
+
+        For Each tstKvp As KeyValuePair(Of String, String) In lastProjBreadCrumbIDList
+            If elemIDIstMeilenstein(tstKvp.Value) Then
+                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
+                If Not IsNothing(tstMS) Then
+                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
+                        logMessage = "lastproj ungleich: " & tstMS.nameID & "; " & tstKvp.Key
+                        result.Add(logMessage)
+                    End If
+                End If
+            Else
+                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
+                If Not IsNothing(tstPh) Then
+                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
+                        logMessage = "baseline ungleich: " & tstPh.nameID & "; " & tstKvp.Key
+                        result.Add(logMessage)
+                    End If
+                End If
+            End If
+
+        Next
+
+        checkIDStability = result
+    End Function
+
 
     ''' <summary>
     ''' übernimmt vom existierenden Projekt einige Werte 
@@ -7989,9 +8125,16 @@ Public Module awinGeneralModules
                 ' es handelt sich bereits um die pfv Variante 
                 ' prüfen auf Rolle 
                 formerVName = hproj.variantName
+
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    hproj.variantName = ptVariantFixNames.pfv.ToString
+                    If hproj.variantName = "" Then
+                        hproj.variantName = ptVariantFixNames.pfv.ToString
+                    End If
+
+                    ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
+                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                 End If
+
                 ' das wurde rausgenommen, weil darin in AlleProjekte.Add die UpdateConstellation geändetr wurde , so dass dort die pfv-Variante referneziert war
                 'Call changeVariantNameAccordingUserRole(hproj)
 
@@ -8030,7 +8173,7 @@ Public Module awinGeneralModules
                     ' nimmt das ggf zu mergende Projekt auf
                     Dim mProj As clsProjekt = Nothing
 
-                    Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+                    'Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
                     ''ur: 15.1.2020: wird nun ja im Server erledigt
 
@@ -8229,9 +8372,16 @@ Public Module awinGeneralModules
                         ' prüfen auf Rolle 
 
                         formerVName = hproj.variantName
+
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                            hproj.variantName = ptVariantFixNames.pfv.ToString
+                            If hproj.variantName = "" Then
+                                hproj.variantName = ptVariantFixNames.pfv.ToString
+                            End If
+
+                            ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
+                            hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                         End If
+
                         'Call changeVariantNameAccordingUserRole(hproj)
 
                         Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
@@ -8695,7 +8845,12 @@ Public Module awinGeneralModules
 
                             Dim formerVName As String = hproj.variantName
                             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                hproj.variantName = ptVariantFixNames.pfv.ToString
+                                If hproj.variantName = "" Then
+                                    hproj.variantName = ptVariantFixNames.pfv.ToString
+                                End If
+
+                                ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
+                                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                             End If
                             'Call changeVariantNameAccordingUserRole(hproj)
 
@@ -8704,7 +8859,6 @@ Public Module awinGeneralModules
                             ' ur: 14.2.2019: wieder zurückgeändert
                             '' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
                             If demoModusHistory Then
-
                                 hproj.timeStamp = historicDate
                             Else
                                 hproj.timeStamp = jetzt
@@ -8740,7 +8894,7 @@ Public Module awinGeneralModules
 
                                 Dim mproj As clsProjekt = Nothing
 
-                                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+                                'Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
                                 ''ur: 15.1.2020: wird nun ja im Server erledigt
 

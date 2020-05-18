@@ -17818,6 +17818,51 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' bestimmt die höchste auftretende LfdNr in den IDs der beiden sortierten Listen
+    ''' -1 wenn der ElemName nicht existiert 
+    ''' 1 wenn er nur einmal existiert , also die Ergänzung "" ist
+    ''' die angegebene lfdNr sonst
+    ''' wird benötigt für enableStableIDs
+    ''' </summary>
+    ''' <param name="baseLineList"></param>
+    ''' <param name="lastProjList"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <returns></returns>
+    Public Function bestimmeLfdNrMax(ByVal baseLineList As SortedList(Of String, String), ByVal lastProjList As SortedList(Of String, String), ByVal elemName As String, ByVal isMilestone As Boolean) As Integer
+        Dim tmpResult As Integer = -1
+        Dim found As Boolean = False
+
+        For Each kvp As KeyValuePair(Of String, String) In baseLineList
+            If elemNameOfElemID(kvp.Value) = elemName And elemIDIstMeilenstein(kvp.Value) = isMilestone Then
+                Dim tmpStr() As String = kvp.Value.Split(New Char() {CChar("§")})
+                If tmpStr(tmpStr.Length - 1) <> "" Then
+                    Dim tmpLfdNr As Integer = CInt(tmpStr(tmpStr.Length - 1))
+                    tmpResult = System.Math.Max(tmpResult, tmpLfdNr)
+                Else
+                    tmpResult = 1
+                End If
+            End If
+
+        Next
+
+        For Each kvp As KeyValuePair(Of String, String) In lastProjList
+            If elemNameOfElemID(kvp.Value) = elemName And elemIDIstMeilenstein(kvp.Value) = isMilestone Then
+                Dim tmpStr() As String = kvp.Value.Split(New Char() {CChar("§")})
+                If tmpStr(tmpStr.Length - 1) <> "" Then
+                    Dim tmpLfdNr As Integer = CInt(tmpStr(tmpStr.Length - 1))
+                    tmpResult = System.Math.Max(tmpResult, tmpLfdNr)
+                Else
+                    tmpResult = 1
+                End If
+            End If
+
+        Next
+
+        bestimmeLfdNrMax = tmpResult
+    End Function
+
     Public Function berechneOptimierungsWert(ByRef currentProjektListe As clsProjekte, ByRef DiagrammTyp As String, ByRef myCollection As Collection) As Double
         Dim value As Double
         Dim kennzahl1 As Double

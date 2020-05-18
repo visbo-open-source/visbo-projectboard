@@ -2103,7 +2103,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Analysen"
                 Else
-                    tmpLabel = "Analyzes"
+                    tmpLabel = "Analyses"
                 End If
 
             Case "PT3G1B1" 'Ampeln
@@ -2233,7 +2233,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Analysen"
                 Else
-                    tmpLabel = "Analyzes"
+                    tmpLabel = "Analyses"
                 End If
 
             Case "PT0G1B0" ' Projekt-Ampel
@@ -2247,7 +2247,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Meilenstein-Ampel"
                 Else
-                    tmpLabel = "Milestone Trafficlights"
+                    tmpLabel = "Milestone Trafficlight"
                 End If
 
             Case "PT0G1M0" ' Planelemente visualisieren
@@ -2314,7 +2314,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Personal Bedarfe"
                 Else
-                    tmpLabel = "Ressource Needs"
+                    tmpLabel = "Resource Needs"
                 End If
 
             Case "PT0G1M1B2" ' Kosten Bedarfe
@@ -2573,7 +2573,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einzelprojekte"
                 Else
-                    tmpLabel = "Singleprojects"
+                    tmpLabel = "Single Projects"
                 End If
 
             Case "PT2G1M0" ' Neues Projekt anlegen
@@ -3120,10 +3120,10 @@ Imports System.Web
             Case "PT5G1" ' Load from Database
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden von DB "
+                    tmpLabel = "Laden VISBO "
 
                 Else
-                    tmpLabel = "Load from Database"
+                    tmpLabel = "Load from VISBO"
                 End If
 
             Case "PT5G1B1" ' Portfolio/s
@@ -3174,9 +3174,9 @@ Imports System.Web
 
             Case "PT5G2" ' Speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Speichern in DB"
+                    tmpLabel = "Speichern in VISBO"
                 Else
-                    tmpLabel = "Save to Database"
+                    tmpLabel = "Save to VISBO"
                 End If
 
             Case "Pt5G2B1" ' Portfolio/s
@@ -3211,9 +3211,9 @@ Imports System.Web
 
             Case "PT5G3" ' Löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Löschen aus DB"
+                    tmpLabel = "Löschen in VISBO"
                 Else
-                    tmpLabel = "Delete in Database"
+                    tmpLabel = "Delete in VISBO"
                 End If
 
             Case "Pt5G3B1" ' Multiprojekt-Szenario
@@ -3225,9 +3225,9 @@ Imports System.Web
 
             Case "PT5G3M" ' Löschen aus Datenbank 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Löschen aus DB"
+                    tmpLabel = "Löschen in VISBO"
                 Else
-                    tmpLabel = "Delete in Database"
+                    tmpLabel = "Delete in VISBO"
                 End If
 
             Case "PT5G3M2" ' Projekte/Varianten

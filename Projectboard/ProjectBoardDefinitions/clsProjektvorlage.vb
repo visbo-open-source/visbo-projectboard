@@ -2662,27 +2662,6 @@
 
             End If
 
-
-
-            ' alter Code
-            'found = False
-            'i = 1
-            'While i <= AllPhases.Count And Not found
-            '    If name = AllPhases.Item(i - 1).name Then
-            '        found = True
-            '        index = i
-            '    Else
-            '        i = i + 1
-            '    End If
-
-            'End While
-
-            'If found Then
-            '    getPhase = AllPhases.Item(index - 1)
-            'Else
-            '    getPhase = Nothing
-            'End If
-
         End Get
 
     End Property
