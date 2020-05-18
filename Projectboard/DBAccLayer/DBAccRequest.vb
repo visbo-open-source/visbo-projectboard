@@ -1892,58 +1892,58 @@ Public Class Request
         removeFilterFromDB = result
 
     End Function
+    ' tk 17.5.20 wird mit OrgaVC Setting nicht mehr benötigt
+    '''' <summary>
+    '''' liest die Rollendefinitionen aus der Datenbank aus Collection vcrole
+    '''' </summary>
+    '''' <param name="storedAtOrBefore"></param>
+    '''' <returns></returns>
+    'Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsRollen
 
-    ''' <summary>
-    ''' liest die Rollendefinitionen aus der Datenbank aus Collection vcrole
-    ''' </summary>
-    ''' <param name="storedAtOrBefore"></param>
-    ''' <returns></returns>
-    Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsRollen
+    '    Dim result As New clsRollen()
 
-        Dim result As New clsRollen()
+    '    Try
 
-        Try
+    '        If usedWebServer Then
+    '            Try
+    '                result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
 
-            If usedWebServer Then
-                Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
+    '                If result.Count <= 0 Then
 
-                    If result.Count <= 0 Then
+    '                    Select Case err.errorCode
 
-                        Select Case err.errorCode
+    '                        Case 200 ' success
+    '                                 ' nothing to do
 
-                            Case 200 ' success
-                                     ' nothing to do
+    '                        Case 401 ' Token is expired
+    '                            loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+    '                            If loginErfolgreich Then
+    '                                result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
+    '                            End If
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
-                                End If
+    '                        Case Else ' all others
+    '                            Throw New ArgumentException(err.errorMsg)
+    '                    End Select
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+    '                End If
 
-                    End If
-
-                Catch ex As Exception
-                    Throw New ArgumentException(ex.Message)
-                End Try
+    '            Catch ex As Exception
+    '                Throw New ArgumentException(ex.Message)
+    '            End Try
 
 
-            Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(storedAtOrBefore)
-            End If
+    '        Else 'es wird eine MongoDB direkt adressiert
+    '            result = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(storedAtOrBefore)
+    '        End If
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-            Throw New ArgumentException("retrieveRolesFromDB: " & ex.Message)
-        End Try
+    '        Throw New ArgumentException("retrieveRolesFromDB: " & ex.Message)
+    '    End Try
 
-        retrieveRolesFromDB = result
+    '    retrieveRolesFromDB = result
 
-    End Function
+    'End Function
 
 
 
@@ -1998,111 +1998,112 @@ Public Class Request
 
     End Function
 
+    ''tk ist nicht mehr notwendig , deprecated
 
-    ''' <summary>
-    ''' speichert eine Rolle in der Datenbank; 
-    ''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
-    ''' andernfalls wird die Rolle Replaced 
-    ''' </summary>
-    ''' <param name="role"></param>
-    ''' <param name="insertNewDate"></param>
-    ''' <param name="ts"></param>
-    ''' <returns></returns>
-    Public Function storeRoleDefinitionToDB(ByVal role As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime, ByRef err As clsErrorCodeMsg) As Boolean
-        Dim result As Boolean = False
+    '''' <summary>
+    '''' speichert eine Rolle in der Datenbank; 
+    '''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+    '''' andernfalls wird die Rolle Replaced 
+    '''' </summary>
+    '''' <param name="role"></param>
+    '''' <param name="insertNewDate"></param>
+    '''' <param name="ts"></param>
+    '''' <returns></returns>
+    'Public Function storeRoleDefinitionToDB(ByVal role As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime, ByRef err As clsErrorCodeMsg) As Boolean
+    '    Dim result As Boolean = False
 
-        Try
+    '    Try
 
-            If usedWebServer Then
-                Try
-                    result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
+    '        If usedWebServer Then
+    '            Try
+    '                result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
 
-                    If result = False Then
+    '                If result = False Then
 
-                        Select Case err.errorCode
+    '                    Select Case err.errorCode
 
-                            Case 200 ' success
-                                     ' nothing to do
+    '                        Case 200 ' success
+    '                                 ' nothing to do
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
-                                End If
+    '                        Case 401 ' Token is expired
+    '                            loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+    '                            If loginErfolgreich Then
+    '                                result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
+    '                            End If
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+    '                        Case Else ' all others
+    '                            Throw New ArgumentException(err.errorMsg)
+    '                    End Select
 
-                    End If
+    '                End If
 
-                Catch ex As Exception
-                    Throw New ArgumentException(ex.Message)
-                End Try
+    '            Catch ex As Exception
+    '                Throw New ArgumentException(ex.Message)
+    '            End Try
 
-            Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
-            End If
+    '        Else 'es wird eine MongoDB direkt adressiert
+    '            result = CType(DBAcc, MongoDbAccess.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
+    '        End If
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-            Throw New ArgumentException("storeRoleDefinitionToDB: " & ex.Message)
-        End Try
+    '        Throw New ArgumentException("storeRoleDefinitionToDB: " & ex.Message)
+    '    End Try
 
-        storeRoleDefinitionToDB = result
-    End Function
-    ''' <summary>
-    '''  speichert eine Kostenart In der Datenbank; 
-    '''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
-    '''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
-    ''' </summary>
-    ''' <param name="cost"></param>
-    ''' <param name="insertNewDate"></param>
-    ''' <param name="ts"></param>
-    ''' <returns></returns>
-    Public Function storeCostDefinitionToDB(ByVal cost As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime, ByRef err As clsErrorCodeMsg) As Boolean
+    '    storeRoleDefinitionToDB = result
+    'End Function
+    '''' <summary>
+    ''''  speichert eine Kostenart In der Datenbank; 
+    ''''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
+    ''''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
+    '''' </summary>
+    '''' <param name="cost"></param>
+    '''' <param name="insertNewDate"></param>
+    '''' <param name="ts"></param>
+    '''' <returns></returns>
+    'Public Function storeCostDefinitionToDB(ByVal cost As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime, ByRef err As clsErrorCodeMsg) As Boolean
 
-        Dim result As Boolean = False
-        Try
+    '    Dim result As Boolean = False
+    '    Try
 
-            If usedWebServer Then
-                Try
-                    result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
-                    If result = False Then
+    '        If usedWebServer Then
+    '            Try
+    '                result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
+    '                If result = False Then
 
-                        Select Case err.errorCode
+    '                    Select Case err.errorCode
 
-                            Case 200 ' success
-                                     ' nothing to do
+    '                        Case 200 ' success
+    '                                 ' nothing to do
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
-                                End If
+    '                        Case 401 ' Token is expired
+    '                            loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+    '                            If loginErfolgreich Then
+    '                                result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
+    '                            End If
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+    '                        Case Else ' all others
+    '                            Throw New ArgumentException(err.errorMsg)
+    '                    End Select
 
-                    End If
+    '                End If
 
-                Catch ex As Exception
-                    Throw New ArgumentException(ex.Message)
-                End Try
+    '            Catch ex As Exception
+    '                Throw New ArgumentException(ex.Message)
+    '            End Try
 
 
-            Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)
-            End If
+    '        Else 'es wird eine MongoDB direkt adressiert
+    '            result = CType(DBAcc, MongoDbAccess.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)
+    '        End If
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-            Throw New ArgumentException("storeCostDefinitionToDB: " & ex.Message)
-        End Try
-        storeCostDefinitionToDB = result
+    '        Throw New ArgumentException("storeCostDefinitionToDB: " & ex.Message)
+    '    End Try
+    '    storeCostDefinitionToDB = result
 
-    End Function
+    'End Function
 
     ''' <summary>
     ''' speichert Projekt-Dependencies in DB 

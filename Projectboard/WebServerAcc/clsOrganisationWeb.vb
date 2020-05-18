@@ -5,6 +5,9 @@ Public Class clsOrganisationWeb
     Private _allCosts As List(Of clsKostenartDefinitionWeb)
     Private _validFrom As Date
 
+    ' tk ergänzt am 17.5 , um die Orga effizienter speichern zu können 
+    'Private _OrgaStartOfCalendar As Date
+
     Public Property allRoles As List(Of clsRollenDefinitionWeb)
         Get
             allRoles = _allRoles
@@ -38,6 +41,17 @@ Public Class clsOrganisationWeb
         End Set
     End Property
 
+    'Public Property OrgaStartOfCalendar As Date
+    '    Get
+    '        OrgaStartOfCalendar = _OrgaStartOfCalendar
+    '    End Get
+    '    Set(value As Date)
+    '        If Not IsNothing(value) Then
+    '            _OrgaStartOfCalendar = value
+    '        End If
+    '    End Set
+    'End Property
+
     Public ReadOnly Property count As Integer
         Get
             count = _allRoles.Count + _allCosts.Count
@@ -48,6 +62,9 @@ Public Class clsOrganisationWeb
     Public Sub copyFrom(ByVal orgaDef As clsOrganisation)
 
         With orgaDef
+
+            Me.validFrom = .validFrom.ToUniversalTime
+            'Me.OrgaStartOfCalendar = StartofCalendar
 
             If .allRoles.Count >= 1 Then
                 For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In .allRoles.liste
@@ -71,7 +88,7 @@ Public Class clsOrganisationWeb
                 Next
             End If
 
-            Me.validFrom = .validFrom.ToUniversalTime
+
 
         End With
     End Sub
@@ -80,9 +97,13 @@ Public Class clsOrganisationWeb
 
         With orgaDef
 
+            .validFrom = Me.validFrom.ToLocalTime
+
+
             If Me.allRoles.Count >= 1 Then
                 For Each rdweb As clsRollenDefinitionWeb In Me.allRoles
                     Dim rd As New clsRollenDefinition
+                    'rdweb.copyTo(rd, OrgaStartOfCalendar)
                     rdweb.copyTo(rd)
                     .allRoles.Add(rd)
                 Next
@@ -96,7 +117,7 @@ Public Class clsOrganisationWeb
                 Next
             End If
 
-            .validFrom = Me.validFrom.ToLocalTime
+
 
         End With
     End Sub
@@ -214,6 +235,8 @@ Public Class clsOrganisationWeb
         _allRoles = New List(Of clsRollenDefinitionWeb)
         _allCosts = New List(Of clsKostenartDefinitionWeb)
         _validFrom = Date.Now.Date
+
+
     End Sub
     '' besser? as list(of clsRollendefinitionWeb)
     'Public Property roles As List(Of clsRollenDefinitionWeb)

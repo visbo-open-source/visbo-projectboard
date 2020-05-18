@@ -3,6 +3,10 @@
     Private _allCosts As clsKostenarten
     Private _validFrom As Date
 
+    ' tk ergänzt am 17.5, um die Orga effizienter speichern zu können
+    'Private _OrgaStartOfCalendar As Date
+
+
     Public Property allRoles As clsRollen
         Get
             allRoles = _allRoles
@@ -35,6 +39,23 @@
             End If
         End Set
     End Property
+
+    '''' <summary>
+    '''' ist aktuell nur readOnly 
+    '''' beim Setzen von OrgaStartOfCalendar muss die _allRoles.Kapazitäten entsprechend umsetzen. 
+    '''' das ist für später geplant
+    '''' </summary>
+    '''' <returns></returns>
+    'Public Property OrgaStartOfCalendar As Date
+    '    Get
+    '        OrgaStartOfCalendar = _OrgaStartOfCalendar
+    '    End Get
+    '    Set(value As Date)
+    '        If Not IsNothing(value) Then
+    '            _OrgaStartOfCalendar = value
+    '        End If
+    '    End Set
+    'End Property
 
     Public ReadOnly Property count As Integer
         Get
@@ -159,5 +180,7 @@
         _allRoles = New clsRollen
         _allCosts = New clsKostenarten
         _validFrom = Date.Now.Date
+
+        '_OrgaStartOfCalendar = StartofCalendar
     End Sub
 End Class

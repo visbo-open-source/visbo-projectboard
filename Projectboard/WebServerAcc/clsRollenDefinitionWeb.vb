@@ -33,222 +33,272 @@ Public Class clsRollenDefinitionWeb
     Public externeKapazitaet() As Double = Nothing
 
 
-
-    Public timestamp As Date
-
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
     Public startOfCal As Date
 
+    ' war vorher : Public Sub copyTo(ByRef roleDef As clsRollenDefinition, ByVal orgaStartOfCalendar As Date)
     Public Sub copyTo(ByRef roleDef As clsRollenDefinition)
 
-        With roleDef
-            If subRoleIDs.Count >= 1 Then
-                ' wegen Mongo müssen die Keys in String Format sein ... 
 
-                For Each sr As clsSubRoleID In Me.subRoleIDs
-                    Dim tmpValue As Double = 1.0
-                    If IsNumeric(sr.value) Then
-                        tmpValue = CDbl(sr.value)
-                        If tmpValue >= 0 And tmpValue <= 1.0 Then
-                            ' alles ok
-                        Else
-                            tmpValue = 1.0
-                        End If
+        If subRoleIDs.Count >= 1 Then
+            ' wegen Mongo müssen die Keys in String Format sein ... 
+
+            For Each sr As clsSubRoleID In Me.subRoleIDs
+                Dim tmpValue As Double = 1.0
+                If IsNumeric(sr.value) Then
+                    tmpValue = CDbl(sr.value)
+                    If tmpValue >= 0 And tmpValue <= 1.0 Then
+                        ' alles ok
                     Else
                         tmpValue = 1.0
                     End If
+                Else
+                    tmpValue = 1.0
+                End If
 
-                    Try
-                        .addSubRole(CInt(sr.key), tmpValue)
-                    Catch ex As Exception
-                        Call MsgBox("1119765: not allowed to have both team-Membership and Childs ..")
-                    End Try
+                Try
+                    roleDef.addSubRole(CInt(sr.key), tmpValue)
+                Catch ex As Exception
+                    Call MsgBox("1119765: not allowed to have both team-Membership and Childs ..")
+                End Try
 
-                Next
-            End If
+            Next
+        End If
 
-            ' tk 23.11.18 dazugekommen 
-            If teamIDs.Count >= 1 Then
-                ' wegen Mongo müssen die Keys in String Format sein ... 
+        ' tk 23.11.18 dazugekommen 
+        If teamIDs.Count >= 1 Then
+            ' wegen Mongo müssen die Keys in String Format sein ... 
 
-                For Each sr As clsSubRoleID In Me.teamIDs
-                    Dim tmpValue As Double = 1.0
-                    If IsNumeric(sr.value) Then
-                        tmpValue = CDbl(sr.value)
-                        If tmpValue >= 0 And tmpValue <= 1.0 Then
-                            ' alles ok
-                        Else
-                            tmpValue = 1.0
-                        End If
+            For Each sr As clsSubRoleID In Me.teamIDs
+                Dim tmpValue As Double = 1.0
+                If IsNumeric(sr.value) Then
+                    tmpValue = CDbl(sr.value)
+                    If tmpValue >= 0 And tmpValue <= 1.0 Then
+                        ' alles ok
                     Else
                         tmpValue = 1.0
                     End If
-                    Try
-                        .addTeam(CInt(sr.key), tmpValue)
-                    Catch ex As Exception
-                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
-                    End Try
-
-                Next
-            End If
-
-            .UID = Me.uid
-            .name = Me.name
-            .farbe = Me.farbe
-            .defaultKapa = Me.defaultKapa
-
-            ' tk 8.1.20
-            .aliases = Me.aliases
-            .defaultDayCapa = Me.defaultDayCapa
-            .employeeNr = Me.employeeNr
-            .entryDate = Me.entryDate.ToLocalTime
-            .exitDate = Me.exitDate.ToLocalTime
-
-
-            ' tk 23.11.18 
-            .isExternRole = Me.isExternRole
-            .isTeam = Me.isTeam
-
-            .tagessatzIntern = Me.tagessatzIntern
-
-            '.tagessatzExtern = Me.tagessatzExtern
-            Dim lenDB As Integer = Me.kapazitaet.Length
-            Dim lenSession As Integer = .kapazitaet.Length
-
-            Dim anzMon As Long = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar)
-            If anzMon = 0 Then
-                '  aber vorher checken ob die Dimensionen gleich sind 
-
-                If lenDB = lenSession Then
-                    ' einfach kopieren ...
-                    .kapazitaet = Me.kapazitaet
-                    '.externeKapazitaet = Me.externeKapazitaet
-                ElseIf lenDB < lenSession Then
-                    For i As Integer = 0 To lenDB
-                        .kapazitaet(i) = Me.kapazitaet(i)
-                        '.externeKapazitaet(i) = Me.externeKapazitaet(i)
-                    Next
-                    ' jetzt hinten auffüllen ..
-                    For i As Integer = lenDB + 1 To lenSession - 1
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
                 Else
-                    For i As Integer = 0 To lenSession - 1
-                        .kapazitaet(i) = Me.kapazitaet(i)
-                        '.externeKapazitaet(i) = Me.externeKapazitaet(i)
-                    Next
+                    tmpValue = 1.0
                 End If
+                Try
+                    roleDef.addTeam(CInt(sr.key), tmpValue)
+                Catch ex As Exception
+                    Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                End Try
 
-            ElseIf anzMon < 0 Then
-                ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach vorne verschoben 
-                ' also vorne auffülen
-                anzMon = -1 * anzMon
+            Next
+        End If
 
-                If lenDB = lenSession Then
-                    For i As Integer = 0 To CInt(anzMon)
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
+        roleDef.UID = Me.uid
+        roleDef.name = Me.name
+        roleDef.farbe = Me.farbe
+        roleDef.defaultKapa = Me.defaultKapa
 
-                    For i As Integer = CInt(anzMon + 1) To lenSession - 1
-                        .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
-                    Next
-                ElseIf lenDB < lenSession Then
-                    ' Länge in der Datenbank ist kleiner als Länger in der Session 
-                    For i As Integer = 0 To CInt(anzMon)
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
-
-                    For i As Integer = CInt(anzMon + 1) To lenDB - 1
-                        .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
-                    Next
-
-                    For i As Integer = lenDB To lenSession - 1
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
+        ' tk 8.1.20
+        roleDef.aliases = Me.aliases
+        roleDef.defaultDayCapa = Me.defaultDayCapa
+        roleDef.employeeNr = Me.employeeNr
+        roleDef.entryDate = Me.entryDate.ToLocalTime
+        roleDef.exitDate = Me.exitDate.ToLocalTime
 
 
-                Else
-                    ' Länge in der Datenbank ist größer als Länge in der Session 
-                    For i As Integer = 0 To CInt(anzMon)
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
+        ' tk 23.11.18 
+        roleDef.isExternRole = Me.isExternRole
+        roleDef.isTeam = Me.isTeam
 
-                    For i As Integer = CInt(anzMon + 1) To lenSession - 1
-                        .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
-                    Next
+        roleDef.tagessatzIntern = Me.tagessatzIntern
 
-                End If
+        '.tagessatzExtern = Me.tagessatzExtern
+        Dim nrWebCapaValues As Integer = 0
+        If Not IsNothing(Me.kapazitaet) Then
+            nrWebCapaValues = Me.kapazitaet.Length
+        End If
 
-
-
-            Else
-                ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach hinten verschoben 
-                ' also ggf. hinten auffüllen 
-
-                If lenDB = lenSession Then
-
-                    ' eas Null-Element hat keine Bedeutung 
-                    .kapazitaet(0) = 0
-                    '.externeKapazitaet(0) = 0
-
-                    For i As Integer = 1 To CInt(lenSession - anzMon - 1)
-                        .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
-                    Next
-
-                    For i As Integer = CInt(lenSession - anzMon) To lenSession - 1
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
-
-                ElseIf lenDB < lenSession Then
-                    ' Länge in der Datenbank ist kleiner als Länge in der Session 
-                    For i As Integer = 0 To CInt(anzMon)
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
-
-                    For i As Integer = CInt(anzMon + 1) To lenDB - 1 - CInt(anzMon)
-                        .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
-                    Next
-
-                    For i As Integer = lenDB To lenSession - 1
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
+        Dim lenSession As Integer = roleDef.kapazitaet.Length
+        Dim lenDB As Integer = nrWebCapaValues
 
 
-                Else
-                    ' Länge in der Datenbank ist größer als Länge in der Session 
-                    For i As Integer = 0 To CInt(anzMon)
-                        .kapazitaet(i) = Me.defaultKapa
-                        '.externeKapazitaet(i) = 0
-                    Next
+        ' wenn es jetzt Werte gibt ...
+        ' neue Variante 
+        ' erst mal mit dem Default vorbesetzen 
+        ' Neu 17.5.20
+        For i As Integer = 1 To lenSession - 1
+            roleDef.kapazitaet(i) = roleDef.defaultKapa
+        Next
 
-                    For i As Integer = CInt(anzMon + 1) To lenSession - 1 - CInt(anzMon)
-                        .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
-                    Next
+        ' jetzt die vom Default abweichenden Werte speichern ... 
+        Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
 
-                End If
+        For i As Integer = startingIndex To lenDB
+            roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex)
+        Next
 
 
-            End If
-        End With
+        'If orgaStartOfCalendar <> Date.MinValue Then
+        '    ' neue Variante 
+        '    ' erst mal mit dem Default vorbesetzen 
+        '    ' Neu 17.5.20
+        '    For i As Integer = 1 To lenSession - 1
+        '        roleDef.kapazitaet(i) = roleDef.defaultKapa
+        '    Next
+
+        '    ' jetzt die vom Default abweichenden Werte speichern ... 
+        '    Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+
+        '    For i As Integer = startingIndex To lenDB
+        '        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex)
+        '    Next
+
+        'Else
+        '    ' alte Variante 
+        '    Dim anzMon As Long = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar)
+        '    If anzMon = 0 Then
+        '        '  aber vorher checken ob die Dimensionen gleich sind 
+
+        '        If lenDB = lenSession Then
+        '            ' einfach kopieren ...
+        '            roleDef.kapazitaet = Me.kapazitaet
+        '            '.externeKapazitaet = Me.externeKapazitaet
+        '        ElseIf lenDB < lenSession Then
+        '            For i As Integer = 0 To lenDB
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i)
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet(i)
+        '            Next
+        '            ' jetzt hinten auffüllen ..
+        '            For i As Integer = lenDB + 1 To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+        '        Else
+        '            For i As Integer = 0 To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i)
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet(i)
+        '            Next
+        '        End If
+
+        '    ElseIf anzMon < 0 Then
+        '        ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach vorne verschoben 
+        '        ' also vorne auffülen
+        '        anzMon = -1 * anzMon
+
+        '        If lenDB = lenSession Then
+        '            For i As Integer = 0 To CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '            For i As Integer = CInt(anzMon + 1) To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+        '            Next
+        '        ElseIf lenDB < lenSession Then
+        '            ' Länge in der Datenbank ist kleiner als Länger in der Session 
+        '            For i As Integer = 0 To CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '            For i As Integer = CInt(anzMon + 1) To lenDB - 1
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+        '            Next
+
+        '            For i As Integer = lenDB To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+
+        '        Else
+        '            ' Länge in der Datenbank ist größer als Länge in der Session 
+        '            For i As Integer = 0 To CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '            For i As Integer = CInt(anzMon + 1) To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+        '            Next
+
+        '        End If
+
+
+
+        '    Else
+        '        ' der StartOfCalendar wurde in der Multiprojekt-Tafel mittlerweile nach hinten verschoben 
+        '        ' also ggf. hinten auffüllen 
+
+        '        If lenDB = lenSession Then
+
+        '            ' eas Null-Element hat keine Bedeutung 
+        '            roleDef.kapazitaet(0) = 0
+        '            '.externeKapazitaet(0) = 0
+
+        '            For i As Integer = 1 To CInt(lenSession - anzMon - 1)
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+        '            Next
+
+        '            For i As Integer = CInt(lenSession - anzMon) To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '        ElseIf lenDB < lenSession Then
+        '            ' Länge in der Datenbank ist kleiner als Länge in der Session 
+        '            For i As Integer = 0 To CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '            For i As Integer = CInt(anzMon + 1) To lenDB - 1 - CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+        '            Next
+
+        '            For i As Integer = lenDB To lenSession - 1
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+
+        '        Else
+        '            ' Länge in der Datenbank ist größer als Länge in der Session 
+        '            For i As Integer = 0 To CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.defaultKapa
+        '                '.externeKapazitaet(i) = 0
+        '            Next
+
+        '            For i As Integer = CInt(anzMon + 1) To lenSession - 1 - CInt(anzMon)
+        '                roleDef.kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
+        '                '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+        '            Next
+
+        '        End If
+
+
+        '    End If
+
+        '    ' Ende alte Variante 
+        'End If
+
+
+
+        ' alt 17.5.20
+
+
     End Sub
 
     Public Sub copyFrom(ByVal roleDef As clsRollenDefinition)
         With roleDef
 
+            Dim dbKapa() As Double = Nothing
+            ' damit wird festgelegt, ab wo im kapazitaet240 Array die dbKApa Werte zu platzieren sind ...
+            Dim startOfNonStandardValues As Date = Date.MinValue
+
+            ' jetzt die SubRoles übernehmen 
             If .getSubRoleCount >= 1 Then
                 For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
                     Dim sr As New clsSubRoleID
@@ -256,6 +306,55 @@ Public Class clsRollenDefinitionWeb
                     sr.value = kvp.Value.ToString
                     Me.subRoleIDs.Add(sr)
                 Next
+
+            Else
+                ' das kann nur bei Blättern der Fall sein, alle übergeordneten Orga-Units, also solche die Kinder haben, bekommen ihre Kapa aus den "Blättern"
+                ' nachsehen, ob es irgendwelche Non-Default Kapa Werte gibt 
+                Dim anzahlMonate As Integer = roleDef.kapazitaet.Length - 1
+
+
+                Dim startingIndex As Integer = -1
+                Dim endingIndex As Integer = anzahlMonate + 1
+
+
+
+                For i As Integer = 1 To anzahlMonate
+                    If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                        startingIndex = i
+                        Exit For
+                    End If
+                Next
+
+                If startingIndex = -1 Then
+                    ' alle Kapa-Werte sind Standard 
+                    ' das heisst man kann es bei den Voreinstellungen lassen 
+                    ' 
+                    dbKapa = Nothing
+                    startOfNonStandardValues = Date.MinValue
+
+                Else
+                    ' startingIndex kann jetzt nur Werte zwischen 1 und 240 haben ..
+                    endingIndex = anzahlMonate
+
+                    For i As Integer = anzahlMonate To startingIndex Step -1
+                        If roleDef.kapazitaet(i) <> roleDef.defaultKapa Then
+                            endingIndex = i
+                            Exit For
+                        End If
+                    Next
+
+                    ' es soll wie bei kapazitaet(240) sein kapazitaet (0) ist nicht relevant, es beginnt bei dbKapa(1) 
+                    Dim dbDim As Integer = endingIndex - startingIndex + 1
+
+                    ReDim dbKapa(dbDim)
+
+                    ' Array aufbauen 
+                    For i As Integer = 1 To dbDim
+                        dbKapa(i) = roleDef.kapazitaet(i + startingIndex)
+                    Next
+
+                End If
+
             End If
 
             If .getTeamCount >= 1 Then
@@ -284,13 +383,18 @@ Public Class clsRollenDefinitionWeb
             exitDate = .exitDate.ToUniversalTime
 
             tagessatzIntern = .tagessatzIntern
-            kapazitaet = .kapazitaet
+
+            ' tk 17.5.20 effiziente Organisation
+            ' jetzt nur den Array übergeben, der die vom Default abweichenden Werte enthält 
+            'kapazitaet = .kapazitaet
+            kapazitaet = dbKapa
+            ' dieser startOfCal gibt jetzt an, wo der Array genau zu beginnen hat ...
+            startOfCal = startOfNonStandardValues.ToUniversalTime
+
 
             ' tk 3.12.18 wird nicht mehr benötigt ...
             tagessatzExtern = Nothing
             externeKapazitaet = Nothing
-            ' Id wird beim Server von der MongoDB selbst erzeugt
-            'Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
         End With
     End Sub
@@ -374,7 +478,6 @@ Public Class clsRollenDefinitionWeb
         entryDate = Date.MinValue.ToUniversalTime
         exitDate = CDate("31.12.2200").ToUniversalTime
 
-        timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
 
@@ -392,7 +495,6 @@ Public Class clsRollenDefinitionWeb
         entryDate = Date.MinValue.ToUniversalTime
         exitDate = CDate("31.12.2200").ToUniversalTime
 
-        timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
 

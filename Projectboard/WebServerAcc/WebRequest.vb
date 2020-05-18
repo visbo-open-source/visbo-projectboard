@@ -2237,134 +2237,135 @@ Public Class Request
     End Function
 
 
+    ' tk nicht mehr notwendig , weil Rollen nicht mehr separat in DB gespeichert werden 
+    '''' <summary>
+    '''' liest die Rollendefinitionen aus der Datenbank 
+    '''' </summary>
+    '''' <param name="storedAtOrBefore"></param>
+    '''' <returns></returns>
+    'Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsRollen
 
-    ''' <summary>
-    ''' liest die Rollendefinitionen aus der Datenbank 
-    ''' </summary>
-    ''' <param name="storedAtOrBefore"></param>
-    ''' <returns></returns>
-    Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsRollen
+    '    Dim result As New clsRollen()
 
-        Dim result As New clsRollen()
+    '    Try
+    '        If storedAtOrBefore <= Date.MinValue Then
+    '            storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime()
+    '        Else
+    '            storedAtOrBefore = storedAtOrBefore.ToUniversalTime()
+    '        End If
 
-        Try
-            If storedAtOrBefore <= Date.MinValue Then
-                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime()
-            Else
-                storedAtOrBefore = storedAtOrBefore.ToUniversalTime()
-            End If
+    '        Dim allRoles As New List(Of clsVCrole)
 
-            Dim allRoles As New List(Of clsVCrole)
+    '        ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
+    '        allRoles = GETallVCrole(aktVCid, err)
 
-            ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
-            allRoles = GETallVCrole(aktVCid, err)
+    '        For Each role As clsVCrole In allRoles
+    '            Dim roleDef As New clsRollenDefinition
+    '            role.copyTo(roleDef)
+    '            result.Add(roleDef)
+    '        Next
 
-            For Each role As clsVCrole In allRoles
-                Dim roleDef As New clsRollenDefinition
-                role.copyTo(roleDef)
-                result.Add(roleDef)
-            Next
+    '        ' hier werden die topLevelNodeIDs zusammen gesammelt
+    '        result.buildTopNodes()
 
-            ' hier werden die topLevelNodeIDs zusammen gesammelt
-            result.buildTopNodes()
+    '    Catch ex As Exception
+    '        Throw New ArgumentException(ex.Message)
+    '    End Try
+    '    retrieveRolesFromDB = result
 
-        Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
-        End Try
-        retrieveRolesFromDB = result
+    'End Function
 
-    End Function
+    ' tk 17.5.2020 ist nicht mehr notwendig, früher wurden die Rollen gespeichert - jetzt wird das als komplettes Setting gespeichert ..
+    '''' <summary>
+    '''' speichert eine Rolle in der Datenbank; 
+    '''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+    '''' andernfalls wird die Rolle Replaced 
+    '''' </summary>
+    '''' <param name="roleDef"></param>
+    '''' <param name="insertNewDate"></param>
+    '''' <param name="ts"></param>
+    '''' <returns></returns>
+    'Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition,
+    '                                        ByVal insertNewDate As Boolean,
+    '                                        ByVal ts As DateTime,
+    '                                        ByRef err As clsErrorCodeMsg) As Boolean
 
-    ''' <summary>
-    ''' speichert eine Rolle in der Datenbank; 
-    ''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
-    ''' andernfalls wird die Rolle Replaced 
-    ''' </summary>
-    ''' <param name="roleDef"></param>
-    ''' <param name="insertNewDate"></param>
-    ''' <param name="ts"></param>
-    ''' <returns></returns>
-    Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition,
-                                            ByVal insertNewDate As Boolean,
-                                            ByVal ts As DateTime,
-                                            ByRef err As clsErrorCodeMsg) As Boolean
+    '    Dim result As Boolean = False
 
-        Dim result As Boolean = False
+    '    Try
+    '        Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
 
-        Try
-            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+    '        Dim role As New clsVCrole
+    '        role.copyFrom(roleDef)
+    '        role.timestamp = timestamp
 
-            Dim role As New clsVCrole
-            role.copyFrom(roleDef)
-            role.timestamp = timestamp
+    '        If insertNewDate Then
+    '            result = POSTOneVCrole(aktVCid, role, err)
+    '        Else
+    '            If VRScache.VCrole.ContainsKey(role.name) Then
+    '                role._id = VRScache.VCrole(role.name)._id
+    '                result = PUTOneVCrole(aktVCid, role, err)
+    '            End If
 
-            If insertNewDate Then
-                result = POSTOneVCrole(aktVCid, role, err)
-            Else
-                If VRScache.VCrole.ContainsKey(role.name) Then
-                    role._id = VRScache.VCrole(role.name)._id
-                    result = PUTOneVCrole(aktVCid, role, err)
-                End If
+    '            If result = False Then ' Rolle ist noch nicht vorhanden im VisboCenter, also neu erzeugen
+    '                result = POSTOneVCrole(aktVCid, role, err)
+    '            End If
+    '        End If
 
-                If result = False Then ' Rolle ist noch nicht vorhanden im VisboCenter, also neu erzeugen
-                    result = POSTOneVCrole(aktVCid, role, err)
-                End If
-            End If
+    '    Catch ex As Exception
+    '        Throw New ArgumentException(ex.Message)
+    '    End Try
 
-        Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
-        End Try
-
-        storeRoleDefinitionToDB = result
-    End Function
-
-
-
-    ''' <summary>
-    '''  speichert eine Kostenart In der Datenbank; 
-    '''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
-    '''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
-    ''' </summary>
-    ''' <param name="costDef"></param>
-    ''' <param name="insertNewDate"></param>
-    ''' <param name="ts"></param>
-    ''' <returns></returns>
-    Public Function storeCostDefinitionToDB(ByVal costDef As clsKostenartDefinition,
-                                            ByVal insertNewDate As Boolean,
-                                            ByVal ts As DateTime,
-                                            ByRef err As clsErrorCodeMsg) As Boolean
-
-        Dim result As Boolean = False
-
-        Try
-            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
-
-            Dim cost As New clsVCcost
-            cost.copyFrom(costDef)
-            cost.timestamp = timestamp
-
-            If insertNewDate Then
-                result = POSTOneVCcost(aktVCid, cost, err)
-            Else
-
-                If VRScache.VCcost.ContainsKey(cost.name) Then
-                    cost._id = VRScache.VCcost(cost.name)._id
-                    result = PUTOneVCcost(aktVCid, cost, err)
-                End If
-
-                If result = False Then  ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
-                    result = POSTOneVCcost(aktVCid, cost, err)
-                End If
-            End If
-
-        Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
-        End Try
+    '    storeRoleDefinitionToDB = result
+    'End Function
 
 
-        storeCostDefinitionToDB = result
 
-    End Function
+    '''' <summary>
+    ''''  speichert eine Kostenart In der Datenbank; 
+    ''''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
+    ''''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
+    '''' </summary>
+    '''' <param name="costDef"></param>
+    '''' <param name="insertNewDate"></param>
+    '''' <param name="ts"></param>
+    '''' <returns></returns>
+    'Public Function storeCostDefinitionToDB(ByVal costDef As clsKostenartDefinition,
+    '                                        ByVal insertNewDate As Boolean,
+    '                                        ByVal ts As DateTime,
+    '                                        ByRef err As clsErrorCodeMsg) As Boolean
+
+    '    Dim result As Boolean = False
+
+    '    Try
+    '        Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+
+    '        Dim cost As New clsVCcost
+    '        cost.copyFrom(costDef)
+    '        cost.timestamp = timestamp
+
+    '        If insertNewDate Then
+    '            result = POSTOneVCcost(aktVCid, cost, err)
+    '        Else
+
+    '            If VRScache.VCcost.ContainsKey(cost.name) Then
+    '                cost._id = VRScache.VCcost(cost.name)._id
+    '                result = PUTOneVCcost(aktVCid, cost, err)
+    '            End If
+
+    '            If result = False Then  ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
+    '                result = POSTOneVCcost(aktVCid, cost, err)
+    '            End If
+    '        End If
+
+    '    Catch ex As Exception
+    '        Throw New ArgumentException(ex.Message)
+    '    End Try
+
+
+    '    storeCostDefinitionToDB = result
+
+    'End Function
 
 
 
