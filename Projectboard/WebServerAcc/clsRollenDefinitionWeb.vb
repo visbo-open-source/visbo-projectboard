@@ -109,30 +109,46 @@ Public Class clsRollenDefinitionWeb
 
         roleDef.tagessatzIntern = Me.tagessatzIntern
 
-        '.tagessatzExtern = Me.tagessatzExtern
-        Dim nrWebCapaValues As Integer = 0
-        If Not IsNothing(Me.kapazitaet) Then
-            nrWebCapaValues = Me.kapazitaet.Length
+        ' jetzt die Übernahme der Kapazitäten 
+        ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
+        ' ebenso Rollen, die nur den Default Wert haben 
+
+        ' hier muss auch nur was gemacht werden, wenn subRoleId.count = 0 
+        If subRoleIDs.Count = 0 Then
+
+            Dim nrWebCapaValues As Integer
+            If Not IsNothing(Me.kapazitaet) Then
+                nrWebCapaValues = Me.kapazitaet.Length - 1
+            Else
+                nrWebCapaValues = 0
+            End If
+
+            Dim lenSession As Integer = roleDef.kapazitaet.Length
+
+
+
+            ' ' vorbesetzen mit dem Default Wert
+            For i As Integer = 1 To lenSession - 1
+                roleDef.kapazitaet(i) = roleDef.defaultKapa
+            Next
+
+            ' das muss jetzt nur gemacht werden, wenn es überhaupt vom Default abweichende Werte gibt 
+            ' jetzt die vom Default abweichenden Werte speichern, sofern es welche gibt ... 
+
+            If Not IsNothing(Me.kapazitaet) Then
+                Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+
+                For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                    roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+                Next
+            End If
+
+        Else
+            ' andernfalls beim kapazitaet(240): jeder Wert ist bereits Null, wie es sein soll ...
         End If
 
-        Dim lenSession As Integer = roleDef.kapazitaet.Length
-        Dim lenDB As Integer = nrWebCapaValues
 
 
-        ' wenn es jetzt Werte gibt ...
-        ' neue Variante 
-        ' erst mal mit dem Default vorbesetzen 
-        ' Neu 17.5.20
-        For i As Integer = 1 To lenSession - 1
-            roleDef.kapazitaet(i) = roleDef.defaultKapa
-        Next
-
-        ' jetzt die vom Default abweichenden Werte speichern ... 
-        Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
-
-        For i As Integer = startingIndex To lenDB
-            roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex)
-        Next
 
 
         'If orgaStartOfCalendar <> Date.MinValue Then
@@ -334,6 +350,8 @@ Public Class clsRollenDefinitionWeb
 
                 Else
                     ' startingIndex kann jetzt nur Werte zwischen 1 und 240 haben ..
+                    startOfNonStandardValues = StartofCalendar.AddMonths(startingIndex - 1)
+
                     endingIndex = anzahlMonate
 
                     For i As Integer = anzahlMonate To startingIndex Step -1
@@ -350,7 +368,7 @@ Public Class clsRollenDefinitionWeb
 
                     ' Array aufbauen 
                     For i As Integer = 1 To dbDim
-                        dbKapa(i) = roleDef.kapazitaet(i + startingIndex)
+                        dbKapa(i) = roleDef.kapazitaet(i + startingIndex - 1)
                     Next
 
                 End If
