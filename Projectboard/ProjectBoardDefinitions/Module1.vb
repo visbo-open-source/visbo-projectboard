@@ -647,6 +647,15 @@ Public Module Module1
         onlymyteammembers = 3
     End Enum
 
+    ''' <summary>
+    ''' Unterschediung ob alle Rollen, nur die internen oder nur die externen
+    ''' </summary>
+    Public Enum PTrt
+        all = 0
+        intern = 1
+        extern = 2
+    End Enum
+
     Public Enum PThis
         current = 0
         vorlage = 1
@@ -5695,6 +5704,9 @@ Public Module Module1
         Dim toDoCollectionC As New Collection
         Dim showEuro As Boolean = True
 
+        Dim internExternDistinction As Boolean = False
+        Dim timeFrameDefined As Boolean = (showRangeRight > 0 And showRangeRight > showRangeLeft)
+
         Dim outPutCollection As New Collection
 
         If q1 = "PT" Then
@@ -5702,20 +5714,22 @@ Public Module Module1
         End If
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss", "int. Personnel Costs", "ext. Personnel Costs"}
         Else
-            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose", "int. Personalkosten", "ext. Personalkosten"}
         End If
 
 
 
 
-        Dim txtPKI(3) As String
+        Dim txtPKI(5) As String
 
         txtPKI(0) = repmsg(0) ' Budget
         txtPKI(1) = repmsg(1) ' Personalkosten
         txtPKI(2) = repmsg(2) ' Sonstige Kosten
         txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
+        txtPKI(4) = repmsg(4) ' int. Personalkosten
+        txtPKI(5) = repmsg(5) ' ext. PErsonalkosten 
 
         Dim curValue As Double = -1.0 ' not defined
         Dim faprValue As Double = -1.0 ' first approved version 
@@ -5786,38 +5800,44 @@ Public Module Module1
             Else
                 ' es sind im q2 eine durch vblf bzw vbcr getrennte Rollen und Kosten angegeben
                 If q2 <> "" Then
-                    Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
-                    Dim isRole As Boolean = False
-                    Dim isCost As Boolean = False
+                    If q2 = "intern-extern" Then
+                        ' jetzt wird ein Overview gemacht mit Unterscheidung intern / extern
+                        internExternDistinction = True
+                    Else
+                        Dim tmpStr() As String = q2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
+                        Dim isRole As Boolean = False
+                        Dim isCost As Boolean = False
 
-                    For Each tmpName As String In tmpStr
-                        isRole = RoleDefinitions.containsNameOrID(tmpName)
+                        For Each tmpName As String In tmpStr
+                            isRole = RoleDefinitions.containsNameOrID(tmpName)
 
-                        If IsNumeric(tmpName) And isRole Then
-                            Dim teamID As Integer = -1
-                            tmpName = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).name
-                        End If
-
-                        If Not isRole Then
-                            isCost = CostDefinitions.containsName(tmpName)
-                        End If
-
-                        If isRole Then
-                            Dim teamID As Integer = -1
-                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
-                            If Not toDoCollectionR.Contains(roleNameID) Then
-                                toDoCollectionR.Add(roleNameID)
+                            If IsNumeric(tmpName) And isRole Then
+                                Dim teamID As Integer = -1
+                                tmpName = RoleDefinitions.getRoleDefByIDKennung(tmpName, teamID).name
                             End If
-                        ElseIf isCost Then
-                            If Not toDoCollectionC.Contains(tmpName) Then
-                                toDoCollectionC.Add(tmpName)
-                            End If
-                        Else
-                            Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
-                            outPutCollection.Add(outPutLine)
-                        End If
 
-                    Next
+                            If Not isRole Then
+                                isCost = CostDefinitions.containsName(tmpName)
+                            End If
+
+                            If isRole Then
+                                Dim teamID As Integer = -1
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpName, "")
+                                If Not toDoCollectionR.Contains(roleNameID) Then
+                                    toDoCollectionR.Add(roleNameID)
+                                End If
+                            ElseIf isCost Then
+                                If Not toDoCollectionC.Contains(tmpName) Then
+                                    toDoCollectionC.Add(tmpName)
+                                End If
+                            Else
+                                Dim outPutLine As String = "Rolle / Kostenart nicht bekannt: " & tmpName
+                                outPutCollection.Add(outPutLine)
+                            End If
+
+                        Next
+                    End If
+
 
                 End If
 
@@ -5878,34 +5898,92 @@ Public Module Module1
                             myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Then
 
                     ' Überblick zeichnen ... 
-                    Dim curPKI() As Double = {-1, -1, -1, -1}
-                    Dim faprPKI() As Double = {-1, -1, -1, -1}
-                    Dim laprPKI() As Double = {-1, -1, -1, -1}
+                    Dim curPKI() As Double = {-1, -1, -1, -1, -1, -1}
+                    Dim faprPKI() As Double = {-1, -1, -1, -1, -1, -1}
+                    Dim laprPKI() As Double = {-1, -1, -1, -1, -1, -1}
 
+                    If timeFrameDefined Then
+                        curPKI(0) = System.Math.Round(trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum, mode:=MidpointRounding.ToEven)
 
-                    Dim tmpValue As Double
-                    Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
+                        If considerFapr Then
+                            faprPKI(0) = System.Math.Round(trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        End If
 
-                    If considerFapr Then
-                        Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
+                        If considerLapr And Not reducedTable Then
+                            laprPKI(0) = System.Math.Round(trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        End If
+
+                    Else
+                        Dim tmpValue As Double
+                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
+
+                        If considerFapr Then
+                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
+                        End If
+
+                        If considerLapr And Not reducedTable Then
+                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
+                        End If
                     End If
 
-                    If considerLapr And Not reducedTable Then
-                        Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
-                    End If
+
+                    ' müssen die internen / externen unterschieden werden ? 
 
 
-                    ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+                    If internExternDistinction Then
+                        curPKI(4) = hproj.getAllPersonalKosten(PTrt.intern).Sum
+                        curPKI(5) = hproj.getAllPersonalKosten(PTrt.extern).Sum
 
-                    For i = 0 To 3
-                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
-                                                          considerFapr, considerLapr)
+                        If considerFapr Then
+                            faprPKI(4) = bproj.getAllPersonalKosten(PTrt.intern).Sum
+                            faprPKI(5) = bproj.getAllPersonalKosten(PTrt.extern).Sum
+                        End If
+
+                        If considerLapr And Not reducedTable Then
+                            laprPKI(4) = lproj.getAllPersonalKosten(PTrt.intern).Sum
+                            laprPKI(5) = lproj.getAllPersonalKosten(PTrt.extern).Sum
+                        End If
+
+                        ' schreibe Budget 
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
+                                                              considerFapr, considerLapr)
                         tabelle.Rows.Add()
                         tabellenzeile = tabellenzeile + 1
-                    Next
 
-                    tabelle.Rows.Add()
-                    tabellenzeile = tabellenzeile + 1
+                        ' schreibe interne Kosten 
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(4), faprPKI(4), laprPKI(4), curPKI(4),
+                                                              considerFapr, considerLapr)
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+
+                        ' schreibe externe Kosten 
+                        Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(5), faprPKI(5), laprPKI(5), curPKI(5),
+                                                              considerFapr, considerLapr)
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+
+                        For i = 2 To 3
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
+                                                              considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        Next
+
+                    Else
+                        ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+
+                        For i = 0 To 3
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
+                                                              considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        Next
+                    End If
+
+                    If Not showOverviewOnly Then
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+                    End If
 
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
 
@@ -6148,6 +6226,43 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt zu einem beliebigen Array der ab einem bestimmten columnOfStart beginnt den Array zurück der die Länge showrangeright - showrangeleft + 1 hat
+    ''' Das Ergebnis ist 
+    ''' </summary>
+    ''' <param name="inputArray"></param>
+    ''' <param name="columnOfStart"></param>
+    ''' <returns></returns>
+    Public Function trimToShowTimeRange(ByVal inputArray() As Double, ByVal columnOfStart As Integer) As Double()
+
+        Dim resultArray() As Double = Nothing
+        If showRangeRight > 0 And showRangeLeft > showRangeRight Then
+
+            Dim zeitraum As Integer = showRangeRight - showRangeLeft
+            ReDim resultArray(zeitraum)
+            Dim anfang As Integer = columnOfStart
+            Dim ende As Integer = columnOfStart + inputArray.Length - 1
+
+            Dim anzLoops As Integer = 0
+            Dim ix As Integer
+            Dim ixZeitraum As Integer
+            Call awinIntersectZeitraum(anfang, ende, ixZeitraum, ix, anzLoops)
+
+            If anzLoops > 0 Then
+                For i As Integer = 0 To anzLoops - 1
+                    resultArray(ixZeitraum + i) = inputArray(ix + i)
+                Next
+            End If
+
+        Else
+            resultArray = inputArray
+        End If
+
+        trimToShowTimeRange = resultArray
+
+
+    End Function
+
+    ''' <summary>
     ''' schreibt eine Zeile in die Tabelle BudgetCost Approved Versions versus curVersion
     ''' </summary>
     ''' <param name="table"></param>
@@ -6171,11 +6286,19 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
+
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss", "int. Personnel Costs", "ext. Personnel Costs"}
         Else
-            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose", "int. Personalkosten", "ext. Personalkosten"}
         End If
+
+        ' old seit 28.05.20 
+        'If awinSettings.englishLanguage Then
+        '    repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+        'Else
+        '    repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        'End If
 
         Dim roleBezeichner As String = ""
 

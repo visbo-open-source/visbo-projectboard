@@ -4640,7 +4640,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllPersonalKosten() As Double()
+    Public ReadOnly Property getAllPersonalKosten(ByVal Optional mode As PTrt = 0) As Double()
 
         Get
             Dim costValues() As Double
@@ -4685,16 +4685,23 @@
                         For r = 1 To anzRollen
                             role = .getRole(r)
 
-                            With role
-                                tagessatz = .tagessatzIntern
-                                dimension = .getDimension
-                                ReDim tempArray(dimension)
-                                tempArray = .Xwerte
-                                For i = phasenStart To phasenStart + dimension
-                                    costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
-                                Next i
+                            If mode = PTrt.all Or
+                                (mode = PTrt.intern And Not role.isExtern) Or
+                                (mode = PTrt.extern And role.isExtern) Then
 
-                            End With ' role
+                                With role
+                                    tagessatz = .tagessatzIntern
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
+                                    tempArray = .Xwerte
+                                    For i = phasenStart To phasenStart + dimension
+                                        costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
+                                    Next i
+
+                                End With ' role
+
+                            End If
+
 
                         Next r
 

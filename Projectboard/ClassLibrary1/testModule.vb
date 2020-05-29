@@ -4243,6 +4243,7 @@ Public Module testModule
 
                     Select Case kennzeichnung
 
+
                         ' die drei folgenden gehören zusammen ... bzw. treten meist zusammen auf. 
                         ' nämlich in der Portfolio Roadmap 
                         Case "ProjectCard"
