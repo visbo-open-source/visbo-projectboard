@@ -4133,6 +4133,7 @@ Public Module testModule
                         kennzeichnung = "Rolle" Or
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
+                        kennzeichnung = "TotalCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
                         kennzeichnung = "Stand:" Or
@@ -6189,7 +6190,47 @@ Public Module testModule
                         '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                         '    End If
 
+                        Case "TotalCost"
+                            myCollection.Clear()
+                            myCollection.Add("TotalCost")
 
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = chartHeight  ' height of all charts
+                            hwidth = chartWidth   ' width of all charts
+                            obj = Nothing
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            reportObj = obj
+
+                            ' wird in createprc.. gemacht ... andernfalls wird eine ggf rote Markierung im Title überschreiben ... 
+                            'With reportObj
+                            '    .Chart.ChartTitle.Font.Size = pptSize
+                            'End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+                            ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "Kostenart"
 

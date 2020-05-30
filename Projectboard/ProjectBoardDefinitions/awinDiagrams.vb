@@ -464,7 +464,12 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(2) Then
                             ' Kostenarten 
                             einheit = " T€"
-                            If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                            If prcName = "TotalCost" Then
+                                objektFarbe = visboFarbeOrange
+                                isPersCost = False
+                                datenreihe = ShowProjekte.getTotalCostValuesInMonth
+
+                            ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
 
                                 ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                                 isPersCost = True
@@ -1274,6 +1279,12 @@ Public Module awinDiagrams
         Else
             If prcTyp = DiagrammTypen(1) Then
                 diagramTitle = bestimmeRollenDiagrammTitel(CStr(myCollection.Item(1)))
+            ElseIf prcTyp = DiagrammTypen(2) Then
+                If myCollection.Count > 1 Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
+                Else
+                    diagramTitle = CStr(myCollection.Item(1))
+                End If
             Else
                 diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
@@ -1453,7 +1464,12 @@ Public Module awinDiagrams
 
                 ElseIf prcTyp = DiagrammTypen(2) Then
                     einheit = " T€"
-                    If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                    If prcName = "TotalCost" Then
+                        objektFarbe = visboFarbeOrange
+                        isPersCost = False
+                        datenreihe = ShowProjekte.getTotalCostValuesInMonth
+
+                    ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
                         ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                         isPersCost = True
                         objektFarbe = CostDefinitions.getCostdef(prcName).farbe

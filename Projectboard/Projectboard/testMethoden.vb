@@ -231,8 +231,8 @@ Module testMethoden
 
                     ix = 0
                     For Each roleID As Integer In testRoleIDs
-                        array1 = kvp.Value.getRessourcenBedarf(roleID, True, False, False)
-                        array2 = aggregatedProject.getRessourcenBedarf(roleID, True, False, False)
+                        array1 = kvp.Value.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False, takeITAsIs:=False)
+                        array2 = aggregatedProject.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False, takeITAsIs:=False)
 
                         If arraysAreDifferent(array1, array2) Then
                             errMsg = "Unterschiede Projekt / Aggregated Projekt: )" & kvp.Value.name

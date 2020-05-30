@@ -5707,6 +5707,13 @@ Public Module Module1
         Dim internExternDistinction As Boolean = False
         Dim timeFrameDefined As Boolean = (showRangeRight > 0 And showRangeRight > showRangeLeft)
 
+        Dim timeFrameNotation As String = ""
+        If timeFrameDefined Then
+            timeFrameNotation = textZeitraum(showRangeLeft, showRangeRight)
+        Else
+            ' keinen Zeitraum angegeben , da Projekte hproj, bproj, lproj unterschiedlich lang sein können 
+        End If
+
         Dim outPutCollection As New Collection
 
         If q1 = "PT" Then
@@ -5714,9 +5721,9 @@ Public Module Module1
         End If
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss", "int. Personnel Costs", "ext. Personnel Costs"}
+            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs"}
         Else
-            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose", "int. Personalkosten", "ext. Personalkosten"}
+            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten"}
         End If
 
 
@@ -5889,7 +5896,7 @@ Public Module Module1
             End If
 
             ' jetzt die Headerzeile schreiben 
-            Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+            Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr, timeFrameNotation:=timeFrameNotation)
 
             Dim tabellenzeile As Integer = 2
             Try
@@ -5902,47 +5909,105 @@ Public Module Module1
                     Dim faprPKI() As Double = {-1, -1, -1, -1, -1, -1}
                     Dim laprPKI() As Double = {-1, -1, -1, -1, -1, -1}
 
-                    If timeFrameDefined Then
-                        curPKI(0) = System.Math.Round(trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                    curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
+                    curPKI(1) = trimToShowTimeRange(hproj.getAllPersonalKosten, hproj.Start).Sum
+                    curPKI(2) = trimToShowTimeRange(hproj.getGesamtAndereKosten, hproj.Start).Sum
+                    curPKI(3) = curPKI(0) - (curPKI(1) + curPKI(2))
 
-                        If considerFapr Then
-                            faprPKI(0) = System.Math.Round(trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        End If
-
-                        If considerLapr And Not reducedTable Then
-                            laprPKI(0) = System.Math.Round(trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        End If
-
-                    Else
-                        Dim tmpValue As Double
-                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
-
-                        If considerFapr Then
-                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
-                        End If
-
-                        If considerLapr And Not reducedTable Then
-                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
-                        End If
+                    If considerFapr Then
+                        faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
+                        faprPKI(1) = trimToShowTimeRange(bproj.getAllPersonalKosten, bproj.Start).Sum
+                        faprPKI(2) = trimToShowTimeRange(bproj.getGesamtAndereKosten, bproj.Start).Sum
+                        faprPKI(3) = faprPKI(0) - (faprPKI(1) + faprPKI(2))
                     End If
+
+                    If considerLapr And Not reducedTable Then
+                        laprPKI(0) = trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum
+                        laprPKI(1) = trimToShowTimeRange(lproj.getAllPersonalKosten, lproj.Start).Sum
+                        laprPKI(2) = trimToShowTimeRange(lproj.getGesamtAndereKosten, lproj.Start).Sum
+                        laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
+                    End If
+
+                    'If timeFrameDefined Then
+                    '    curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
+                    '    curPKI(1) = trimToShowTimeRange(hproj.getAllPersonalKosten, hproj.Start).Sum
+                    '    curPKI(2) = trimToShowTimeRange(hproj.getGesamtAndereKosten, hproj.Start).Sum
+                    '    curPKI(3) = curPKI(0) - (curPKI(1) + curPKI(2))
+
+                    '    If considerFapr Then
+                    '        faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
+                    '        faprPKI(1) = trimToShowTimeRange(bproj.getAllPersonalKosten, bproj.Start).Sum
+                    '        faprPKI(2) = trimToShowTimeRange(bproj.getGesamtAndereKosten, bproj.Start).Sum
+                    '        faprPKI(3) = faprPKI(0) - (faprPKI(1) + faprPKI(2))
+                    '    End If
+
+                    '    If considerLapr And Not reducedTable Then
+                    '        laprPKI(0) = trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum
+                    '        laprPKI(1) = trimToShowTimeRange(lproj.getAllPersonalKosten, lproj.Start).Sum
+                    '        laprPKI(2) = trimToShowTimeRange(lproj.getGesamtAndereKosten, lproj.Start).Sum
+                    '        laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
+                    '    End If
+
+                    'Else
+                    '    Dim tmpValue As Double
+                    '    Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
+
+                    '    If considerFapr Then
+                    '        Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
+                    '    End If
+
+                    '    If considerLapr And Not reducedTable Then
+                    '        Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
+                    '    End If
+                    'End If
 
 
                     ' müssen die internen / externen unterschieden werden ? 
 
 
                     If internExternDistinction Then
-                        curPKI(4) = hproj.getAllPersonalKosten(PTrt.intern).Sum
-                        curPKI(5) = hproj.getAllPersonalKosten(PTrt.extern).Sum
+
+                        curPKI(4) = trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.intern), hproj.Start).Sum
+                        curPKI(5) = trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.extern), hproj.Start).Sum
 
                         If considerFapr Then
-                            faprPKI(4) = bproj.getAllPersonalKosten(PTrt.intern).Sum
-                            faprPKI(5) = bproj.getAllPersonalKosten(PTrt.extern).Sum
+                            faprPKI(4) = trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.intern), bproj.Start).Sum
+                            faprPKI(5) = trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.extern), bproj.Start).Sum
                         End If
 
                         If considerLapr And Not reducedTable Then
-                            laprPKI(4) = lproj.getAllPersonalKosten(PTrt.intern).Sum
-                            laprPKI(5) = lproj.getAllPersonalKosten(PTrt.extern).Sum
+                            laprPKI(4) = trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.intern), lproj.Start).Sum
+                            laprPKI(5) = trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.extern), lproj.Start).Sum
                         End If
+
+                        'If timeFrameDefined Then
+                        '    curPKI(4) = System.Math.Round(trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.intern), hproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        '    curPKI(5) = System.Math.Round(trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.extern), hproj.Start).Sum, mode:=MidpointRounding.ToEven)
+
+                        '    If considerFapr Then
+                        '        faprPKI(4) = System.Math.Round(trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.intern), bproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        '        faprPKI(5) = System.Math.Round(trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.extern), bproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        '    End If
+
+                        '    If considerLapr And Not reducedTable Then
+                        '        laprPKI(4) = System.Math.Round(trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.intern), lproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        '        laprPKI(5) = System.Math.Round(trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.extern), lproj.Start).Sum, mode:=MidpointRounding.ToEven)
+                        '    End If
+                        'Else
+                        '    curPKI(4) = System.Math.Round(hproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
+                        '    curPKI(5) = System.Math.Round(hproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
+
+                        '    If considerFapr Then
+                        '        faprPKI(4) = System.Math.Round(bproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
+                        '        faprPKI(5) = System.Math.Round(bproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
+                        '    End If
+
+                        '    If considerLapr And Not reducedTable Then
+                        '        laprPKI(4) = System.Math.Round(lproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
+                        '        laprPKI(5) = System.Math.Round(lproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
+                        '    End If
+                        'End If
+
 
                         ' schreibe Budget 
                         Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(0), faprPKI(0), laprPKI(0), curPKI(0),
@@ -5992,16 +6057,16 @@ Public Module Module1
 
                     If isRole Then
 
-                        curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                        curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro), hproj.Start).Sum
 
                         If considerLapr And Not reducedTable Then
-                            laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                            laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro), lproj.Start).Sum
                         Else
                             laprValue = 0.0
                         End If
 
                         If considerFapr Then
-                            faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
+                            faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro), bproj.Start).Sum
                         Else
                             faprValue = 0.0
                         End If
@@ -6060,19 +6125,19 @@ Public Module Module1
                             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(curItem, teamID)
 
                             If myCustomUserRole.isAllowedToSee(curRole.name) Then
-                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                     outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
+                                curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                     outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), hproj.Start).Sum
 
                                 If considerLapr And Not reducedTable Then
-                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
+                                    laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), lproj.Start).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
+                                    faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), bproj.Start).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
@@ -6101,16 +6166,16 @@ Public Module Module1
 
                         If isCost Then
 
-                            curValue = hproj.getKostenBedarf(curItem).Sum
+                            curValue = trimToShowTimeRange(hproj.getKostenBedarf(curItem), hproj.Start).Sum
 
                             If considerLapr And Not reducedTable Then
-                                laprValue = lproj.getKostenBedarf(curItem).Sum
+                                laprValue = trimToShowTimeRange(lproj.getKostenBedarf(curItem), lproj.Start).Sum
                             Else
                                 laprValue = 0.0
                             End If
 
                             If considerFapr Then
-                                faprValue = bproj.getKostenBedarf(curItem).Sum
+                                faprValue = trimToShowTimeRange(bproj.getKostenBedarf(curItem), bproj.Start).Sum
                             Else
                                 faprValue = 0.0
                             End If
@@ -6163,7 +6228,8 @@ Public Module Module1
     ''' <param name="curDate"></param>
     Private Sub schreibeAPVCVHeaderZeile(ByRef table As pptNS.Table,
                                                    ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
-                                                   ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+                                                   ByVal considerFapr As Boolean, ByVal considerLapr As Boolean,
+                                                   Optional ByVal timeFrameNotation As String = "")
 
         ' wenn nur PRognose versus Beauftragung angezeigt werden soll, nicht auch noch der letzte Stand  
         Dim smallTable As Boolean = table.Columns.Count = 4
@@ -6180,6 +6246,14 @@ Public Module Module1
 
             If Not considerLapr Then
                 laprDate = Date.MinValue
+            End If
+
+            ' soll eine timeFrameAnnotation gemacht werden ? 
+            If timeFrameNotation = "" Then
+                ' nichts tun 
+            Else
+                curText = addTextToText(table.Cell(1, 1).Shape.TextFrame2.TextRange.Text, timeFrameNotation)
+                table.Cell(1, 1).Shape.TextFrame2.TextRange.Text = curText
             End If
 
             curText = addDateToText(table.Cell(1, 2).Shape.TextFrame2.TextRange.Text, curDate)
@@ -6208,21 +6282,43 @@ Public Module Module1
     Private Function addDateToText(ByVal header As String, ByVal myDate As Date) As String
 
         Dim tmpResult As String = ""
-        Dim dateString As String = ""
+        Dim dateTxt As String = ""
         Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
 
         If DateDiff(DateInterval.Day, Date.MinValue, myDate) > 0 Then
-            dateString = "(" & myDate.ToShortDateString & ")"
+            dateTxt = "(" & myDate.ToShortDateString & ")"
         End If
 
         If tmpStr(0).EndsWith(vbVerticalTab) Then
-            tmpResult = tmpStr(0) & dateString
+            tmpResult = tmpStr(0) & dateTxt
         Else
-            tmpResult = tmpStr(0) & vbVerticalTab & dateString
+            tmpResult = tmpStr(0) & vbVerticalTab & dateTxt
         End If
 
 
         addDateToText = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' ergänzt den String header um vbVerticalTab (myDate.toString)
+    ''' </summary>
+    ''' <param name="header"></param>
+    ''' <param name="addON"></param>
+    ''' <returns></returns>
+    Private Function addTextToText(ByVal header As String, ByVal addOn As String) As String
+
+        Dim tmpResult As String = ""
+        Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
+
+
+        If tmpStr(0).EndsWith(vbVerticalTab) Then
+            tmpResult = tmpStr(0) & addOn
+        Else
+            tmpResult = tmpStr(0) & vbVerticalTab & addOn
+        End If
+
+
+        addTextToText = tmpResult
     End Function
 
     ''' <summary>
@@ -6235,7 +6331,7 @@ Public Module Module1
     Public Function trimToShowTimeRange(ByVal inputArray() As Double, ByVal columnOfStart As Integer) As Double()
 
         Dim resultArray() As Double = Nothing
-        If showRangeRight > 0 And showRangeLeft > showRangeRight Then
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
             Dim zeitraum As Integer = showRangeRight - showRangeLeft
             ReDim resultArray(zeitraum)
@@ -6281,6 +6377,10 @@ Public Module Module1
         Dim cellText As String = "-"
         Dim nada As String = "-"
         Dim isPositiv As Boolean = False
+        ' gibt an, ob es sich um di eErgebnjis Zeile handelt, dann muss sie grün oder rot dargestellt werden 
+        Dim ergebnisZeile As Boolean = False
+
+
 
         Dim reducedTable As Boolean = (table.Columns.Count = 4)
 
@@ -6288,10 +6388,11 @@ Public Module Module1
         Dim repmsg() As String
 
         If awinSettings.englishLanguage Then
-            repmsg = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss", "int. Personnel Costs", "ext. Personnel Costs"}
+            repmsg = {"Budget", " - Personnel Costs", " - Other Costs", "= Profit/Loss", " - int. Personnel Costs", " - ext. Personnel Costs"}
         Else
-            repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose", "int. Personalkosten", "ext. Personalkosten"}
+            repmsg = {"Budget", " - Personalkosten", " - Sonstige Kosten", "= Ergebnis-Prognose", " - int. Personalkosten", " - ext. Personalkosten"}
         End If
+
 
         ' old seit 28.05.20 
         'If awinSettings.englishLanguage Then
@@ -6304,6 +6405,7 @@ Public Module Module1
 
         If repmsg.Contains(itemNameID) Then
             roleBezeichner = itemNameID
+            ergebnisZeile = (itemNameID = repmsg(3))
 
         ElseIf RoleDefinitions.containsNameOrID(itemNameID) Then
             Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(itemNameID)
@@ -6354,6 +6456,16 @@ Public Module Module1
             cellText = curValue.ToString(dblFormat)
             CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
 
+            If ergebnisZeile Then
+                If curValue > 0 Then
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                ElseIf curValue < 0 Then
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                    CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                End If
+            End If
+
             ' last Approved Value schreiben  
             Dim faprCol As Integer = 3
             If Not reducedTable Then
@@ -6365,6 +6477,16 @@ Public Module Module1
                     cellText = nada
                 End If
                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+                If ergebnisZeile And considerLapr Then
+                    If laprValue > 0 Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                    ElseIf laprValue < 0 Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                    End If
+                End If
 
                 ' Delta schreiben 
                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
@@ -6402,6 +6524,16 @@ Public Module Module1
                 cellText = nada
             End If
             CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            If ergebnisZeile And considerFapr Then
+                If faprValue > 0 Then
+                    CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                    CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                ElseIf laprValue < 0 Then
+                    CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                    CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoCTrue
+                End If
+            End If
 
             ' Delta schreiben 
             CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
