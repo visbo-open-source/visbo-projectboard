@@ -5666,6 +5666,12 @@ Public Module agm2
 
                         .Unprotect(Password:="x")       ' Blattschutz aufheben
 
+                        ' Projekt_Typ
+                        Try
+                            hproj.VorlagenName = CType(.Range("Projekt_Typ").Value, String)
+                        Catch ex As Exception
+
+                        End Try
 
                         '   Varianten-Name
                         Try
@@ -16007,14 +16013,14 @@ Public Module agm2
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
                             If roleNameIDCollection.Count = 0 Then
-                                relevant = True
+                                relevant = considerAll
                             Else
 
-                                relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
-                                'Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
-                                '    relevant = True
-                                'End If
+
+                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
+                                    relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
@@ -16073,7 +16079,7 @@ Public Module agm2
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
                             If costNameCollection.Count = 0 Then
-                                relevant = True
+                                relevant = considerAll
                             Else
                                 ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
                                 If costNameCollection.Contains(costName) Then

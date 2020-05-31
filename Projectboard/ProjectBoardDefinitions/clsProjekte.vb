@@ -1449,7 +1449,7 @@ Public Class clsProjekte
 
                                 Try
 
-                                    tempArray = hproj.getRessourcenBedarf(elemName)
+                                    tempArray = hproj.getRessourcenBedarf(elemName, inclSubRoles:=True)
 
                                 Catch ex As Exception
 
