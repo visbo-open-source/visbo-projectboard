@@ -2709,6 +2709,9 @@ Public Class clsPhase
             .verantwortlich = verantwortlich
             .percentDone = percentDone
 
+            ' tk 1.6.2020 das wird vor dem Übertragen der Rollen gemacht 
+            ' bis 1.6 war das nach if Not WithoutRolesCosts ...
+            .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             ' Rollen und kosten werden bei Mapping nicht übernommen
             If Not withoutRolesCosts Then
@@ -2739,7 +2742,7 @@ Public Class clsPhase
             ' die evtl. enstehende Inkonsistenz zwischen Längen der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
             ' und nur korrigiert , wenn explizit gewünscht (Parameter awinsettings.autoCorrectBedarfe = true 
 
-            .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
+            '.changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             ' Meilensteine werden bei Mapping nicht übernommen
             If Not withoutMS Then

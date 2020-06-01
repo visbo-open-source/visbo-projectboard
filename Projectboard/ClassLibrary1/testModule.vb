@@ -4133,6 +4133,7 @@ Public Module testModule
                         kennzeichnung = "Rolle" Or
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
+                        kennzeichnung = "TotalCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
                         kennzeichnung = "Stand:" Or
@@ -4242,6 +4243,7 @@ Public Module testModule
                     Dim nameList As New Collection
 
                     Select Case kennzeichnung
+
 
                         ' die drei folgenden gehören zusammen ... bzw. treten meist zusammen auf. 
                         ' nämlich in der Portfolio Roadmap 
@@ -6188,7 +6190,47 @@ Public Module testModule
                         '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                         '    End If
 
+                        Case "TotalCost"
+                            myCollection.Clear()
+                            myCollection.Add("TotalCost")
 
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = chartHeight  ' height of all charts
+                            hwidth = chartWidth   ' width of all charts
+                            obj = Nothing
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            reportObj = obj
+
+                            ' wird in createprc.. gemacht ... andernfalls wird eine ggf rote Markierung im Title überschreiben ... 
+                            'With reportObj
+                            '    .Chart.ChartTitle.Font.Size = pptSize
+                            'End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+                            ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "Kostenart"
 
@@ -8487,8 +8529,10 @@ Public Module testModule
 
         For m As Integer = showRangeLeft To showRangeRight
             With tabelle
-                CType(.Cell(neededZeilen, m - showRangeLeft + 1 + spaltenOffset), pptNS.Cell).Shape.TextFrame2.TextRange.Text =
+                CType(.Cell(1, m - showRangeLeft + 1 + spaltenOffset), pptNS.Cell).Shape.TextFrame2.TextRange.Text =
                             startDate.AddMonths(m).ToString("MMM yy", repCult)
+                'CType(.Cell(neededZeilen, m - showRangeLeft + 1 + spaltenOffset), pptNS.Cell).Shape.TextFrame2.TextRange.Text =
+                '            startDate.AddMonths(m).ToString("MMM yy", repCult)
             End With
         Next m
 
@@ -19899,29 +19943,29 @@ Public Module testModule
         Dim errorShape As pptNS.ShapeRange = Nothing
 
 
-        Dim dinFormatA(4, 1) As Double
+        'Dim dinFormatA(4, 1) As Double
         Dim querFormat As Boolean
-        Dim curFormatSize(1) As Double
+        'Dim curFormatSize(1) As Double
 
 
-        dinFormatA(0, 0) = 3120.0
-        dinFormatA(0, 1) = 2206.15
+        'dinFormatA(0, 0) = 3120.0
+        'dinFormatA(0, 1) = 2206.15
 
-        dinFormatA(1, 0) = 2206.15
-        dinFormatA(1, 1) = 1560.0
+        'dinFormatA(1, 0) = 2206.15
+        'dinFormatA(1, 1) = 1560.0
 
-        dinFormatA(2, 0) = 1560.0
-        dinFormatA(2, 1) = 1103.0
+        'dinFormatA(2, 0) = 1560.0
+        'dinFormatA(2, 1) = 1103.0
 
-        dinFormatA(3, 0) = 1103.0
-        dinFormatA(3, 1) = 780.0
+        'dinFormatA(3, 0) = 1103.0
+        'dinFormatA(3, 1) = 780.0
 
-        dinFormatA(4, 0) = 780.0
-        dinFormatA(4, 1) = 540.0
+        'dinFormatA(4, 0) = 780.0
+        'dinFormatA(4, 1) = 540.0
 
-        ' Ende Übernahme
+        '' Ende Übernahme
 
-        Dim format As Integer = 4
+        'Dim format As Integer = 4
         'Dim tmpslideID As Integer
 
 
@@ -19944,59 +19988,59 @@ Public Module testModule
             End If
 
 
-            curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
-            curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
+            'curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
+            'curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
 
             ' jetzt werden die DinA Formate gesetzt 
             ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
-            Dim paperSizeRatio As Double
-            If pptFirstTime Then
+            'Dim paperSizeRatio As Double
+            'If pptFirstTime Then
 
 
-                If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+            '    If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
 
-                    If querFormat Then
-                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
-                        dinFormatA(4, 0) = curFormatSize(0)
-                        dinFormatA(4, 1) = curFormatSize(1)
-                    Else
-                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
-                        dinFormatA(4, 1) = curFormatSize(0)
-                        dinFormatA(4, 0) = curFormatSize(1)
-                    End If
+            '        If querFormat Then
+            '            paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+            '            dinFormatA(4, 0) = curFormatSize(0)
+            '            dinFormatA(4, 1) = curFormatSize(1)
+            '        Else
+            '            paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+            '            dinFormatA(4, 1) = curFormatSize(0)
+            '            dinFormatA(4, 0) = curFormatSize(1)
+            '        End If
 
-                    dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
-                    dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+            '        dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+            '        dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
 
-                ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
-                    If querFormat Then
-                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
-                        dinFormatA(3, 0) = curFormatSize(0)
-                        dinFormatA(3, 1) = curFormatSize(1)
+            '    ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+            '        If querFormat Then
+            '            paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+            '            dinFormatA(3, 0) = curFormatSize(0)
+            '            dinFormatA(3, 1) = curFormatSize(1)
 
-                    Else
-                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
-                        dinFormatA(3, 1) = curFormatSize(0)
-                        dinFormatA(3, 0) = curFormatSize(1)
-                    End If
+            '        Else
+            '            paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+            '            dinFormatA(3, 1) = curFormatSize(0)
+            '            dinFormatA(3, 0) = curFormatSize(1)
+            '        End If
 
-                    dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
-                    dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+            '        dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+            '        dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
 
-                Else
-                    ''Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
-                    Call MsgBox(repMessages.getmsg(8))
-                    'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
-                End If
+            '    Else
+            '        ''Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+            '        Call MsgBox(repMessages.getmsg(8))
+            '        'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+            '    End If
 
 
-                For i = 2 To 0 Step -1
-                    dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
-                    dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
-                Next
-            Else
-                ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
-            End If
+            '    For i = 2 To 0 Step -1
+            '        dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+            '        dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+            '    Next
+            'Else
+            '    ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
+            'End If
 
 
             ' wenn Kalenderlinie oder Legendenlinie über Container rausragt: anpassen ! 
@@ -20135,107 +20179,116 @@ Public Module testModule
             If (availableSpace < neededSpace And awinSettings.mppOnePage) Or
                (availableSpace < neededSpace And awinSettings.mppExtendedMode) Then
 
-                Dim ix As Integer = format
-                Dim ok As Boolean = True
-                ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
 
-                Dim sizeMemory() As Single
-                Dim relativeSizeMemory As New SortedList(Of String, Double())
-
-                With rds
-                    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
-                                                 .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                                 .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                                 .phaseVorlagenShape, .milestoneVorlagenShape,
-                                                 .projectVorlagenShape, .ampelVorlagenShape)
-                End With
-
-
-                If pptApp.Version = "14.0" Then
-                    ' muss nichts machen
-
+                ' tk 30.5.2020
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Contenct does not fit to page ... please modify your selections")
                 Else
-
-                    relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
-
+                    Call MsgBox("Inhalt kann nicht auf der Seite dargestellt werden ... bitte Auswahl anpassen ...")
                 End If
+                Exit Sub
+                '' diesen ganzen Zirkus nicht mehr machen, wenn es nicht drauf passt - beenden 
+                'Dim ix As Integer = format
+                'Dim ok As Boolean = True
+                '' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                'Dim sizeMemory() As Single
+                'Dim relativeSizeMemory As New SortedList(Of String, Double())
+
+                'With rds
+                '    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
+                '                                 .MsDescVorlagenShape, .MsDateVorlagenShape,
+                '                                 .PhDescVorlagenShape, .PhDateVorlagenShape,
+                '                                 .phaseVorlagenShape, .milestoneVorlagenShape,
+                '                                 .projectVorlagenShape, .ampelVorlagenShape)
+                'End With
 
 
-                Do While availableSpace < neededSpace And ix > 0
+                'If pptApp.Version = "14.0" Then
+                '    ' muss nichts machen
 
-                    With pptCurrentPresentation
+                'Else
 
-                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+                '    relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
 
-                        If querFormat Then
-                            .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
-                            .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
-                        Else
-                            .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
-                            .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
-                        End If
+                'End If
 
 
-                    End With
+                'Do While availableSpace < neededSpace And ix > 0
 
-                    curHeight = pptCurrentPresentation.PageSetup.SlideHeight
-                    curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+                '    With pptCurrentPresentation
 
-                    ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
-                    ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+                '        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
 
-                    If pptApp.Version = "14.0" Then
-                        ' muss nichts machen
-                    Else
-
-                        Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
-                    End If
-
-                    ' jetzt wieder die Koordinaten neu berechnen 
-                    Call rds.bestimmeZeichenKoordinaten()
-
-                    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
-
-                    If availableSpace < neededSpace Then
-                        ix = ix - 1
-                    End If
-
-                Loop
-
-                ix = ix - 1
-                If ix < 0 Then
-                    ix = 0
-                End If
-
-                ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                If pptApp.Version = "14.0" Then
-                    With rds
-                        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
-                                            .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                            .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                            .phaseVorlagenShape, .milestoneVorlagenShape,
-                                            .projectVorlagenShape, .ampelVorlagenShape)
-                    End With
+                '        If querFormat Then
+                '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                '        Else
+                '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                '        End If
 
 
-                End If
+                '    End With
+
+                '    curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                '    curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+                '    ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                '    ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
+                '    If pptApp.Version = "14.0" Then
+                '        ' muss nichts machen
+                '    Else
+
+                '        Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
+                '    End If
+
+                '    ' jetzt wieder die Koordinaten neu berechnen 
+                '    Call rds.bestimmeZeichenKoordinaten()
+
+                '    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
+
+                '    If availableSpace < neededSpace Then
+                '        ix = ix - 1
+                '    End If
+
+                'Loop
+
+                'ix = ix - 1
+                'If ix < 0 Then
+                '    ix = 0
+                'End If
+
+                '' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                'If pptApp.Version = "14.0" Then
+                '    With rds
+                '        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
+                '                            .MsDescVorlagenShape, .MsDateVorlagenShape,
+                '                            .PhDescVorlagenShape, .PhDateVorlagenShape,
+                '                            .phaseVorlagenShape, .milestoneVorlagenShape,
+                '                            .projectVorlagenShape, .ampelVorlagenShape)
+                '    End With
 
 
-                ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
-                ' entsprechend um den errechneten Faktor anpassen
+                'End If
 
-                Dim enlargeTxtFaktor As Double = curHeight / oldHeight
-                Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
 
-                ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
-                ' 
-                With rds
-                    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
-                    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+                '' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                '' entsprechend um den errechneten Faktor anpassen
 
-                    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
-                    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
-                End With
+                'Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                'Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
+
+                '' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                '' 
+                'With rds
+                '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+
+                '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                'End With
 
             End If
 

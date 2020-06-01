@@ -4701,10 +4701,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getRessourcenBedarf(qualifier, True)
+                        werteB = vProj.getRessourcenBedarf(qualifier, inclSubRoles:=True)
                     End If
 
-                    werteC = hproj.getRessourcenBedarf(qualifier, True)
+                    werteC = hproj.getRessourcenBedarf(qualifier, inclSubRoles:=True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -6434,9 +6434,9 @@ Public Module Projekte
                             vdatenreihe = vglProj.getAlleRessourcen
                         End If
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarf(rcName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(rcName, inclSubRoles:=True)
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, True)
+                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, inclSubRoles:=True)
                         End If
                     End If
                 End If
@@ -7068,7 +7068,7 @@ Public Module Projekte
                 If roleName = "" Then
                     tdatenreihe = hproj.getAlleRessourcen
                 Else
-                    tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True)
                 End If
 
             Else
@@ -7140,7 +7140,7 @@ Public Module Projekte
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAlleRessourcen
                     Else
-                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, inclSubRoles:=True)
                     End If
                 Else
                     If roleName = "" Then
@@ -9779,7 +9779,7 @@ Public Module Projekte
         ' jetzt überprüfen, ob das Projekt überhaupt was enthält 
         Dim noNeedToShow As New Collection
         For Each tmpRoleName As String In ErgebnisListeR
-            If hproj.getRessourcenBedarf(tmpRoleName, True).Sum > 0 Then
+            If hproj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum > 0 Then
                 ' ok 
             Else
                 noNeedToShow.Add(tmpRoleName)
@@ -10126,7 +10126,7 @@ Public Module Projekte
         ' jetzt überprüfen, ob das Projekt überhaupt was enthält 
         Dim noNeedToShow As New Collection
         For Each tmpRoleName As String In ErgebnisListeR
-            If hproj.getRessourcenBedarf(tmpRoleName, True).Sum > 0 Then
+            If hproj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum > 0 Then
                 ' ok 
             Else
                 noNeedToShow.Add(tmpRoleName)
@@ -25208,11 +25208,17 @@ Public Module Projekte
                         If mycollection.Count = CostDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
 
+                        ElseIf CInt(mycollection.Count) = 1 And CStr(mycollection.Item(1)) = "TotalCost" Then
+                            IDkennung = IDkennung & "#Alle"
+
                         Else
 
                             For i = 1 To mycollection.Count
                                 cName = CStr(mycollection.Item(i))
-                                IDkennung = IDkennung & "#" & CostDefinitions.getCostdef(cName).UID.ToString
+                                If CostDefinitions.containsName(cName) Then
+                                    IDkennung = IDkennung & "#" & CostDefinitions.getCostdef(cName).UID.ToString
+                                End If
+
                             Next
 
                         End If
