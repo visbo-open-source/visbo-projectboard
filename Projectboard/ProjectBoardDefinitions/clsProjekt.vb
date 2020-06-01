@@ -4198,7 +4198,8 @@ Public Class clsProjekt
 
                             End If
 
-
+                        Else
+                            ' do nothing - curPhase remains as it is ... 
                         End If
 
                     End If
@@ -4212,6 +4213,8 @@ Public Class clsProjekt
         For p As Integer = 1 To oldProj.CountPhases
             Dim oldPhase As clsPhase = oldProj.getPhase(p)
             Dim columnOfPhaseStart As Integer = getColumnOfDate(oldPhase.getStartDate)
+            ' wird benötigt, wenn eine Phase gar nicht mehr existiert und sie in der RootPhase aufgenommen werden muss 
+            Dim deltaIndex As Integer = 0
 
             If columnOfPhaseStart <= columnOFActualData Then
 
@@ -4220,36 +4223,35 @@ Public Class clsProjekt
                     Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(oldRole.uid, oldRole.teamID)
                     Dim keyValue As String = oldPhase.nameID & "#" & roleNameID
                     Dim curPhase As clsPhase = getPhaseByID(oldPhase.nameID)
+
+                    If IsNothing(curPhase) Then
+                        ' es gibt demnach im alten Projekt Ist-Daten zu Phasen, die jetzt gar nicht mehr existieren ... 
+                        ' die müssen jetzt alle der Root-Phase zugeschlagen werden
+                        curPhase = getPhaseByID(rootPhaseName)
+                        deltaIndex = columnOfPhaseStart - getColumnOfDate(curPhase.getStartDate)
+                    End If
+
                     Dim laenge As Integer = curPhase.relEnde - curPhase.relStart + 1
-                    Dim endIndex As Integer = System.Math.Min(columnOFActualData - getColumnOfDate(oldPhase.getStartDate), laenge - 1)
+                    Dim endIndex As Integer = System.Math.Min(columnOFActualData - getColumnOfDate(oldPhase.getStartDate), oldRole.getDimension)
                     If endIndex < 0 Then
                         endIndex = 0
                     End If
 
                     If Not doneKeyValues.Contains(keyValue) Then
-                        ' muss ergänzt werden 
-                        ' existiert die Phase ? 
-                        If IsNothing(curPhase) Then
-                            ' RootPhase holen ... 
-                            curPhase = getPhaseByID(rootPhaseName)
-                        End If
 
-                        Dim newRole As New clsRolle(laenge)
+                        Dim newRole As New clsRolle(laenge - 1)
                         With newRole
                             .uid = oldRole.uid
                             .teamID = oldRole.teamID
                             For ix As Integer = 0 To endIndex
-
+                                .Xwerte(ix + deltaIndex) = oldRole.Xwerte(ix)
                             Next
                         End With
-                        Call oldRole.CopyTo(newRole)
 
                         curPhase.addRole(newRole)
+                        doneKeyValues.Add(keyValue)
 
                     End If
-
-
-
 
                 Next
 

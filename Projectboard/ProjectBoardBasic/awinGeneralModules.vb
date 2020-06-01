@@ -1355,20 +1355,25 @@ Public Module awinGeneralModules
                             If outPutCollection.Count > 0 Then
                                 Call showOutPut(outPutCollection, "Fehler bei Enable Stable IDs", "")
                             Else
-                                ' dann soll es übernommen werden .. 
-                                ' wenn es denn identisch ist ... 
-                                If tmpProj.isIdenticalTo(hproj) Then
-                                    ' nur die Ids haben sich ja jetzt geändert
-                                    Dim wasMarked As Boolean = hproj.marker
-                                    hproj = tmpProj
-                                    hproj.marker = wasMarked
-                                Else
-                                    Dim msgTxt As String = "Warnung 176345620 - interne Id Korrektur wurde nicht übernommen ..."
-                                    If awinSettings.englishLanguage Then
-                                        msgTxt = "Warning 176345620 - internal ID correction not applied ..."
-                                    End If
-                                    Call MsgBox(msgTxt)
-                                End If
+
+                                Dim wasMarked As Boolean = hproj.marker
+                                hproj = tmpProj
+                                hproj.marker = wasMarked
+
+                                '' dann soll es übernommen werden .. 
+                                '' wenn es denn identisch ist ... 
+                                'If tmpProj.isIdenticalTo(hproj) Then
+                                '    ' nur die Ids haben sich ja jetzt geändert
+                                '    Dim wasMarked As Boolean = hproj.marker
+                                '    hproj = tmpProj
+                                '    hproj.marker = wasMarked
+                                'Else
+                                '    Dim msgTxt As String = "Warnung 176345620 - interne Id Korrektur wurde nicht übernommen ..."
+                                '    If awinSettings.englishLanguage Then
+                                '        msgTxt = "Warning 176345620 - internal ID correction not applied ..."
+                                '    End If
+                                '    Call MsgBox(msgTxt)
+                                'End If
 
                             End If
 
