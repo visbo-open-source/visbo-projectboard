@@ -4131,6 +4131,140 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' alle Ist-Daten aus oldProj werden dem aktuellen Projekt übertragen
+    ''' es bleiben nur die Werte ab Monat ActualDataUntil +1 erhalten, alle anderen werden entweder auf Null gesetzt oder aber aus oldProj übernommen 
+    ''' dabei werden nur die Werte  awinsettings.Istdaten berücksichtigt. 
+    ''' Vorbedingung: vPID müssen gleich sein, VPID darf nicht leer sein
+    ''' alle Termine, die in der Vergangenheit liegen und wo Ist-Daten liegen sind im jetzigen Projekt gleich 
+    ''' </summary>
+    ''' <param name="oldProj"></param>
+    Public Sub mergeActualValues(ByVal oldProj As clsProjekt)
+
+        Dim columnOFActualData As Integer = getColumnOfDate(oldProj.actualDataUntil)
+        Dim considerAllRoles As Boolean = (awinSettings.ActualdataOrgaUnits = "")
+        Dim actualDataParentIDs As Integer() = Nothing
+        Dim doneKeyValues As New List(Of String)
+
+        If Not considerAllRoles Then
+            actualDataParentIDs = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+        End If
+
+
+        If vpID <> oldProj.vpID Or vpID = "" Then
+            Throw New ArgumentException("VPIDs need to be identical and must not be empty string")
+            Exit Sub
+        End If
+
+        If columnOFActualData < Start Then
+            ' kann nicht sein .. 
+            Throw New ArgumentException("Projekt starts later than actualDataUntil Date ... Nothing to merge")
+            Exit Sub
+        End If
+
+        ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
+        For p As Integer = 1 To CountPhases
+            Dim curPhase As clsPhase = getPhase(p)
+            Dim oldPhase As clsPhase = oldProj.getPhaseByID(curPhase.nameID)
+            Dim columnOfPhaseStart As Integer = getColumnOfDate(curPhase.getStartDate)
+
+            If columnOfPhaseStart <= columnOFActualData Then
+
+                For r = 1 To curPhase.countRoles
+                    Dim curRole As clsRolle = curPhase.getRole(r)
+
+
+                    If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                        Dim endIndex As Integer = System.Math.Min(columnOFActualData - columnOfPhaseStart, curRole.getDimension)
+
+                        For ix As Integer = 0 To endIndex
+                            curRole.Xwerte(ix) = 0
+                        Next
+
+                        ' jetzt aus dem alten Stand oldProj die entsprechenden Werte holen 
+                        If Not IsNothing(oldPhase) Then
+                            Dim oldRole As clsRolle = oldPhase.getRole(curRole.name, curRole.teamID)
+                            If Not IsNothing(oldRole) Then
+                                endIndex = System.Math.Min(columnOFActualData - columnOfPhaseStart, oldRole.getDimension)
+                                For ix As Integer = 0 To endIndex
+                                    curRole.Xwerte(ix) = oldRole.Xwerte(ix)
+                                Next
+
+                                ' übernehme in die Liste der abgearbeiteten Paare: Phase-NameID, RoleNameID 
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(curRole.uid, curRole.teamID)
+                                Dim keyValue As String = curPhase.nameID & "#" & roleNameID
+                                If Not doneKeyValues.Contains(keyValue) Then
+                                    doneKeyValues.Add(keyValue)
+                                End If
+
+                            End If
+
+
+                        End If
+
+                    End If
+                Next
+            End If
+
+        Next
+
+        ' jetzt müssen die Ist-Werte aller alten Rollen, die nicht mehr im neuen existieren, in das neue übernommen werden 
+        ' wenn die zugehörige Phase nicht mehr existiert, werden die Werte in der rootphase aufgesammelt 
+        For p As Integer = 1 To oldProj.CountPhases
+            Dim oldPhase As clsPhase = oldProj.getPhase(p)
+            Dim columnOfPhaseStart As Integer = getColumnOfDate(oldPhase.getStartDate)
+
+            If columnOfPhaseStart <= columnOFActualData Then
+
+                For r As Integer = 1 To oldPhase.countRoles
+                    Dim oldRole As clsRolle = oldPhase.getRole(r)
+                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(oldRole.uid, oldRole.teamID)
+                    Dim keyValue As String = oldPhase.nameID & "#" & roleNameID
+                    Dim curPhase As clsPhase = getPhaseByID(oldPhase.nameID)
+                    Dim laenge As Integer = curPhase.relEnde - curPhase.relStart + 1
+                    Dim endIndex As Integer = System.Math.Min(columnOFActualData - getColumnOfDate(oldPhase.getStartDate), laenge - 1)
+                    If endIndex < 0 Then
+                        endIndex = 0
+                    End If
+
+                    If Not doneKeyValues.Contains(keyValue) Then
+                        ' muss ergänzt werden 
+                        ' existiert die Phase ? 
+                        If IsNothing(curPhase) Then
+                            ' RootPhase holen ... 
+                            curPhase = getPhaseByID(rootPhaseName)
+                        End If
+
+                        Dim newRole As New clsRolle(laenge)
+                        With newRole
+                            .uid = oldRole.uid
+                            .teamID = oldRole.teamID
+                            For ix As Integer = 0 To endIndex
+
+                            Next
+                        End With
+                        Call oldRole.CopyTo(newRole)
+
+                        curPhase.addRole(newRole)
+
+                    End If
+
+
+
+
+                Next
+
+            End If
+
+        Next
+
+
+
+
+
+
+    End Sub
+
+    ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
     ''' </summary>

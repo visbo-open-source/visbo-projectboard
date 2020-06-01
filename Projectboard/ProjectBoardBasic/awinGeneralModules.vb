@@ -1153,14 +1153,6 @@ Public Module awinGeneralModules
             fullName = kvp.Key
             hproj = kvp.Value
 
-            ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
-            ' tk das darf hier nicht gemacht werden, weil man sonst nie initial Projekte eintragen kann und dann noch ändern kann 
-            ' das sollte erst beim Speichern gemacht werden ...  
-            'If awinSettings.autoSetActualDataDate = True Then
-            '    ' das müssten den vorletzten Tag des Vormontas abgeben 
-            '    hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
-            'End If
-
 
             ' jetzt muss überprüft werden, ob dieses Projekt bereits in AlleProjekte / Showprojekte existiert 
             ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
@@ -1383,6 +1375,19 @@ Public Module awinGeneralModules
                         End If
 
                     End If
+
+                    ' jetzt sicherstellen, dass das Projekt die Ist-Daten aus dem alten Projekt bekommt.  
+                    Try
+                        Call hproj.mergeActualValues(cproj)
+                    Catch ex As Exception
+                        ' nichts tun ... 
+                        Dim msgTxt As String = "Warnung 599 - der Merge der Ist-Daten konnte nicht durchgeführt werden ... Projekt wurde ohne Merge importiert."
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Warning 599 - Merge of Actual Data failed ... project was imported without merging."
+                        End If
+                        Call MsgBox(msgTxt)
+                    End Try
+
 
                     anzAktualisierungen = anzAktualisierungen + 1
 
@@ -1624,6 +1629,13 @@ Public Module awinGeneralModules
                 ' das soll unabhängig vom autoSetActualData gemacht werden ... 
                 hproj.actualDataUntil = cproj.actualDataUntil
 
+                ' übernehme die VPID 
+                hproj.vpID = cproj.vpID
+
+                ' übernehme die Kunden-Nummer 
+                hproj.kundenNummer = cproj.kundenNummer
+
+
                 If existsInSession Then
                     .shpUID = cproj.shpUID
                     ' in diesem Fall heisst es ja genaus, dann ist es auch in der sortListe der Constellations bereits vorhanden ...
@@ -1681,9 +1693,6 @@ Public Module awinGeneralModules
                         hproj.Erloes = cproj.Erloes
                     End If
 
-                    If hproj.actualDataUntil = Date.MinValue And cproj.actualDataUntil > cproj.startDate Then
-                        hproj.actualDataUntil = cproj.actualDataUntil
-                    End If
 
                     If hproj.ampelStatus = 0 And hproj.ampelErlaeuterung = "" And cproj.ampelStatus > 0 Then
                         hproj.ampelStatus = cproj.ampelStatus
@@ -1694,9 +1703,6 @@ Public Module awinGeneralModules
                         hproj.description = cproj.description
                     End If
 
-                    If hproj.kundenNummer = "" And cproj.kundenNummer <> "" Then
-                        hproj.kundenNummer = cproj.kundenNummer
-                    End If
 
                     hproj.Risiko = cproj.Risiko
                     hproj.StrategicFit = cproj.StrategicFit
