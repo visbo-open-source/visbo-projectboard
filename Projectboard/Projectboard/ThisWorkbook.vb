@@ -146,7 +146,7 @@ Public Class ThisWorkbook
 
             appInstance.EnableEvents = True
 
-            Call MsgBox(ex.Message)
+            '   Call MsgBox(ex.Message)
             appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
@@ -156,10 +156,6 @@ Public Class ThisWorkbook
 
         anzahlCalls = 0
 
-
-        'Call awinRightClickinPortfolioAendern()
-        ' Änderung 19.1.15 Right Click in den Charts de-aktivieren für BMW 
-        'Call awinRightClickinPRCCharts()
 
     End Sub
 

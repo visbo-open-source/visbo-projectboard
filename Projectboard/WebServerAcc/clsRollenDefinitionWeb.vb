@@ -12,6 +12,9 @@ Public Class clsRollenDefinitionWeb
     Public isExternRole As Boolean
     Public isTeam As Boolean
 
+    ' 27.04.20 ur wird nun auch in der DB gespeichert
+    Public isTeamParent As Boolean
+
     ' 8.1.2020 dazugekommen
     Public aliases As String()
     Public employeeNr As String
@@ -124,7 +127,6 @@ Public Class clsRollenDefinitionWeb
             End If
 
             Dim lenSession As Integer = roleDef.kapazitaet.Length
-
 
 
             ' ' vorbesetzen mit dem Default Wert
@@ -392,6 +394,8 @@ Public Class clsRollenDefinitionWeb
             ' tk 23.11.18 
             isExternRole = .isExternRole
             isTeam = .isTeam
+            ' ur 27.04.20 
+            isTeamParent = .isTeamParent
 
             ' tk 8.1.20
             aliases = .aliases

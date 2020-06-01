@@ -3,9 +3,9 @@
     Private _allCosts As clsKostenarten
     Private _validFrom As Date
 
+
     ' tk ergänzt am 17.5, um die Orga effizienter speichern zu können
     'Private _OrgaStartOfCalendar As Date
-
 
     Public Property allRoles As clsRollen
         Get

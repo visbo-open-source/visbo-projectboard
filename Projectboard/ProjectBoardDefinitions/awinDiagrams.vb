@@ -527,7 +527,7 @@ Public Module awinDiagrams
                                 If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
                                     'ur: 20190722
                                     'objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
-                                    objektFarbe = appearanceDefinitions.Item("Meielnstein Default").FGcolor
+                                    objektFarbe = appearanceDefinitions.Item("Meilenstein Default").FGcolor
                                 Else
                                     objektFarbe = awinSettings.AmpelNichtBewertet
                                 End If

@@ -7268,7 +7268,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        keyMetrics = New clsKeyMetrics
+        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
+        'keyMetrics = New clsKeyMetrics
 
         _updatedAt = ""
 
@@ -7307,8 +7308,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        keyMetrics = New clsKeyMetrics
-
+        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
+        'keyMetrics = New clsKeyMetrics
         _updatedAt = ""
 
     End Sub
@@ -7346,7 +7347,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        keyMetrics = New clsKeyMetrics
+        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
+        'keyMetrics = New clsKeyMetrics
 
         _updatedAt = ""
 
