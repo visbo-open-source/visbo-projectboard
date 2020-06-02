@@ -224,7 +224,7 @@ Public Class Ribbon
 
                     awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
 
-                    awinSettings.allianzIstDatenReferate = customizations.allianzIstDatenReferate
+                    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
 
                     awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 

@@ -4156,8 +4156,7 @@ Public Class clsProjekt
         End If
 
         If columnOFActualData < Start Then
-            ' kann nicht sein .. 
-            Throw New ArgumentException("Projekt starts later than actualDataUntil Date ... Nothing to merge")
+            ' dann ist er schon fertig - es gibt nichts zu tun 
             Exit Sub
         End If
 
