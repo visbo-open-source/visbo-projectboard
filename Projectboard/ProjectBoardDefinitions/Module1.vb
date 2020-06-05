@@ -5704,6 +5704,7 @@ Public Module Module1
         Dim toDoCollectionC As New Collection
         Dim showEuro As Boolean = True
 
+
         Dim internExternDistinction As Boolean = False
         Dim timeFrameDefined As Boolean = (showRangeRight > 0 And showRangeRight > showRangeLeft)
 
@@ -5765,6 +5766,9 @@ Public Module Module1
             Exit Sub
         End Try
 
+        ' jetzt die Normal-Farbe bestimmen, die nach jedem table.rows.add auf dei neue Zeile angewenet werden muss, 
+        ' andernfalls sind werden die Zell-Farben der vorherigen ZZeile genommen ... 
+        ' 
 
         Dim bigType As Integer = ptReportBigTypes.tables
         Dim compID As Integer = PTpptTableTypes.prBudgetCostAPVCV
@@ -5928,39 +5932,6 @@ Public Module Module1
                         laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
                     End If
 
-                    'If timeFrameDefined Then
-                    '    curPKI(0) = trimToShowTimeRange(hproj.budgetWerte, hproj.Start).Sum
-                    '    curPKI(1) = trimToShowTimeRange(hproj.getAllPersonalKosten, hproj.Start).Sum
-                    '    curPKI(2) = trimToShowTimeRange(hproj.getGesamtAndereKosten, hproj.Start).Sum
-                    '    curPKI(3) = curPKI(0) - (curPKI(1) + curPKI(2))
-
-                    '    If considerFapr Then
-                    '        faprPKI(0) = trimToShowTimeRange(bproj.budgetWerte, bproj.Start).Sum
-                    '        faprPKI(1) = trimToShowTimeRange(bproj.getAllPersonalKosten, bproj.Start).Sum
-                    '        faprPKI(2) = trimToShowTimeRange(bproj.getGesamtAndereKosten, bproj.Start).Sum
-                    '        faprPKI(3) = faprPKI(0) - (faprPKI(1) + faprPKI(2))
-                    '    End If
-
-                    '    If considerLapr And Not reducedTable Then
-                    '        laprPKI(0) = trimToShowTimeRange(lproj.budgetWerte, lproj.Start).Sum
-                    '        laprPKI(1) = trimToShowTimeRange(lproj.getAllPersonalKosten, lproj.Start).Sum
-                    '        laprPKI(2) = trimToShowTimeRange(lproj.getGesamtAndereKosten, lproj.Start).Sum
-                    '        laprPKI(3) = laprPKI(0) - (laprPKI(1) + laprPKI(2))
-                    '    End If
-
-                    'Else
-                    '    Dim tmpValue As Double
-                    '    Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
-
-                    '    If considerFapr Then
-                    '        Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
-                    '    End If
-
-                    '    If considerLapr And Not reducedTable Then
-                    '        Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
-                    '    End If
-                    'End If
-
 
                     ' müssen die internen / externen unterschieden werden ? 
 
@@ -5980,33 +5951,6 @@ Public Module Module1
                             laprPKI(5) = trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.extern), lproj.Start).Sum
                         End If
 
-                        'If timeFrameDefined Then
-                        '    curPKI(4) = System.Math.Round(trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.intern), hproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        '    curPKI(5) = System.Math.Round(trimToShowTimeRange(hproj.getAllPersonalKosten(PTrt.extern), hproj.Start).Sum, mode:=MidpointRounding.ToEven)
-
-                        '    If considerFapr Then
-                        '        faprPKI(4) = System.Math.Round(trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.intern), bproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        '        faprPKI(5) = System.Math.Round(trimToShowTimeRange(bproj.getAllPersonalKosten(PTrt.extern), bproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        '    End If
-
-                        '    If considerLapr And Not reducedTable Then
-                        '        laprPKI(4) = System.Math.Round(trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.intern), lproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        '        laprPKI(5) = System.Math.Round(trimToShowTimeRange(lproj.getAllPersonalKosten(PTrt.extern), lproj.Start).Sum, mode:=MidpointRounding.ToEven)
-                        '    End If
-                        'Else
-                        '    curPKI(4) = System.Math.Round(hproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
-                        '    curPKI(5) = System.Math.Round(hproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
-
-                        '    If considerFapr Then
-                        '        faprPKI(4) = System.Math.Round(bproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
-                        '        faprPKI(5) = System.Math.Round(bproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
-                        '    End If
-
-                        '    If considerLapr And Not reducedTable Then
-                        '        laprPKI(4) = System.Math.Round(lproj.getAllPersonalKosten(PTrt.intern).Sum, mode:=MidpointRounding.ToEven)
-                        '        laprPKI(5) = System.Math.Round(lproj.getAllPersonalKosten(PTrt.extern).Sum, mode:=MidpointRounding.ToEven)
-                        '    End If
-                        'End If
 
 
                         ' schreibe Budget 
@@ -6452,9 +6396,12 @@ Public Module Module1
             ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
             Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
 
+
             ' Current Value schreiben 
             cellText = curValue.ToString(dblFormat)
             CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoFalse
 
             If ergebnisZeile Then
                 If curValue > 0 Then
@@ -6476,7 +6423,11 @@ Public Module Module1
                 Else
                     cellText = nada
                 End If
+
                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoFalse
+
 
                 If ergebnisZeile And considerLapr Then
                     If laprValue > 0 Then
@@ -6490,6 +6441,8 @@ Public Module Module1
 
                 ' Delta schreiben 
                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoFalse
 
                 ' ggf einfärben 
                 If System.Math.Abs(curValue - laprValue) <= 0.5 Then
@@ -6523,7 +6476,10 @@ Public Module Module1
             Else
                 cellText = nada
             End If
+
             CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+            CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+            CType(.Cell(zeile, faprCol), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoFalse
 
             If ergebnisZeile And considerFapr Then
                 If faprValue > 0 Then
@@ -6537,6 +6493,8 @@ Public Module Module1
 
             ' Delta schreiben 
             CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
+            CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+            CType(.Cell(zeile, faprCol + 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Bold = MsoTriState.msoFalse
 
             ' ggf einfärben 
             If System.Math.Abs(curValue - faprValue) <= 0.5 Then

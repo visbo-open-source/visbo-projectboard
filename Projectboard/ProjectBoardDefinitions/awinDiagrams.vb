@@ -469,6 +469,11 @@ Public Module awinDiagrams
                                 isPersCost = False
                                 datenreihe = ShowProjekte.getTotalCostValuesInMonth
 
+                            ElseIf prcName = "OtherCost" Then
+                                objektFarbe = visboFarbeOrange
+                                isPersCost = False
+                                datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPersonalCosts:=False)
+
                             ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
 
                                 ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten

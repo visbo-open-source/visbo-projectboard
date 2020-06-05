@@ -4134,6 +4134,7 @@ Public Module testModule
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "TotalCost" Or
+                        kennzeichnung = "OtherCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
                         kennzeichnung = "Stand:" Or
@@ -6189,6 +6190,48 @@ Public Module testModule
                         '    Else
                         '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                         '    End If
+
+                        Case "OtherCost"
+                            myCollection.Clear()
+                            myCollection.Add("OtherCost")
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = chartHeight  ' height of all charts
+                            hwidth = chartWidth   ' width of all charts
+                            obj = Nothing
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            reportObj = obj
+
+                            ' wird in createprc.. gemacht ... andernfalls wird eine ggf rote Markierung im Title überschreiben ... 
+                            'With reportObj
+                            '    .Chart.ChartTitle.Font.Size = pptSize
+                            'End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+                            ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "TotalCost"
                             myCollection.Clear()
@@ -16928,16 +16971,44 @@ Public Module testModule
                         lastProjectName = hproj.name
                         .Name = .Name & .Id
 
+                        ' neu tk 3.6.20
+
                         If awinSettings.mppEnableSmartPPT Then
+                            'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                            '                                          True)
+                            'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                            '                                       False)
+                            'Dim originalName As String = cphase.originalName
+
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
+
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
 
                             Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
-
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+
+                        ' alt 
+
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                                Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                                Nothing, Nothing,
+                        '                                hproj.startDate, hproj.endeDate,
+                        '                                hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
                     End With
                 Else
@@ -16954,16 +17025,36 @@ Public Module testModule
                         lastProjectName = hproj.name
                         .Name = .Name & .Id
 
+                        ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
 
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
+
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+                        ' alt tk 3.6.20
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                                Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                                Nothing, Nothing,
+                        '                                hproj.startDate, hproj.endeDate,
+                        '                                hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
                     End With
                 End If
@@ -17041,19 +17132,45 @@ Public Module testModule
                         .Width = CSng(x2 - x1)
                         .Name = .Name & .Id
 
-                        '.Title = hproj.getShapeText
-                        '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                        Try
+                            .Line.ForeColor.RGB = hproj.farbe
+                        Catch ex As Exception
 
+                        End Try
+
+
+
+                        ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                   Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                   Nothing, Nothing,
-                                                   hproj.startDate, hproj.endeDate,
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                   hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
 
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
+
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+
+                        ' alt tk 3.6.20
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                           Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                           Nothing, Nothing,
+                        '                           hproj.startDate, hproj.endeDate,
+                        '                           hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                           hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
 
                         ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
