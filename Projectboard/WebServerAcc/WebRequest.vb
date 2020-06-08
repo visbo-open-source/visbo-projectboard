@@ -59,6 +59,7 @@ Public Class Request
     ''' <param name="dbPasswort"></param>
     Public Function login(ByVal ServerURL As String,
                           ByVal databaseName As String,
+                          ByRef VCid As String,
                           ByVal username As String,
                           ByRef dbPasswort As String,
                           ByRef err As clsErrorCodeMsg) As Boolean
@@ -119,6 +120,21 @@ Public Class Request
                 aktVCid = GETvcid(databaseName)
 
                 If aktVCid = "" Then
+                    ' try to get the VC with vcid = VCid
+                    Dim listOfVC As List(Of clsVC) = GETallVC("")
+                    For Each vc In listOfVC
+                        If vc._id = VCid Then
+                            aktVCid = vc._id
+                            databaseName = vc.name
+                            Try
+                                Dim err1 As New clsErrorCodeMsg
+                                VRScache.VPsN = GETallVP(aktVCid, err1, ptPRPFType.all)
+                            Catch ex As Exception
+
+                            End Try
+                            Exit For
+                        End If
+                    Next
                     'loginOK = False
                     'token = ""
                     'If awinSettings.englishLanguage Then
@@ -134,6 +150,9 @@ Public Class Request
                     Catch ex As Exception
 
                     End Try
+
+                    ' VCid des VC mit Namen databaseName an den Aufruf übergeben
+                    VCid = aktVCid
 
                 End If
 
@@ -6566,7 +6585,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="vcName"></param>
     ''' <returns></returns>
-    Public Function updateActualVC(ByVal vcName As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function updateActualVC(ByVal vcName As String, ByRef vcID As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -6579,6 +6598,7 @@ Public Class Request
                 VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
             End If
 
+            vcID = aktVCid
             result = (aktVCid <> "")
 
         Catch ex As Exception

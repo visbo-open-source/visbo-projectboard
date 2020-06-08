@@ -1072,14 +1072,18 @@ Module Module1
 
 
 
-                If .Tags.Item("DBURL") = awinSettings.databaseURL And
-                    .Tags.Item("DBNAME") = awinSettings.databaseName And Not noDBAccessInPPT Then
+                If ((.Tags.Item("DBURL") = awinSettings.databaseURL And
+                        .Tags.Item("DBNAME") = awinSettings.databaseName) Or
+                        (.Tags.Item("DBURL") = awinSettings.databaseURL And
+                        .Tags.Item("VCid") = awinSettings.VCid)) And
+                        Not noDBAccessInPPT Then
                     ' nichts machen, user ist schon berechtigt ...
                 Else
                     noDBAccessInPPT = True
                     awinSettings.proxyURL = .Tags.Item("PRXYL")
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
+                    awinSettings.VCid = .Tags.Item("VCid")
                     awinSettings.DBWithSSL = (.Tags.Item("DBSSL") = "True")
                     awinSettings.visboServer = (.Tags.Item("REST") = "True")
                 End If
@@ -1235,6 +1239,9 @@ Module Module1
             If .Tags.Item("PREV").Length > 0 Then
                 smartSlideLists.prevDate = CDate(.Tags.Item("PREV"))
             End If
+            If .Tags.Item("VCid").Length > 0 Then
+                smartSlideLists.slideVCid = .Tags.Item("VCid")
+            End If
 
             If .Tags.Item("DBURL").Length > 0 And
                 .Tags.Item("DBNAME").Length > 0 Then
@@ -1243,11 +1250,13 @@ Module Module1
                 smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
 
                 If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or
-                    awinSettings.databaseName <> smartSlideLists.slideDBName Then
+                    awinSettings.databaseName <> smartSlideLists.slideDBName Or
+                    awinSettings.VCid <> smartSlideLists.slideVCid Then
 
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = smartSlideLists.slideDBUrl
                     awinSettings.databaseName = smartSlideLists.slideDBName
+                    awinSettings.VCid = smartSlideLists.slideVCid
 
                 End If
             End If

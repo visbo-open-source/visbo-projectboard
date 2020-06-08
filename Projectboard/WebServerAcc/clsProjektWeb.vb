@@ -233,6 +233,8 @@ Public Class clsProjektWeb
 
             ' tk 11.5.19 , Me.vpid hat den glkeichen Inhalt wie vp._id
             .vpID = Me.vpid
+            ' ur: 07.06.2020: Me._id ist die vpv._id dieser ProjektVersion
+            .Id = Me._id
 
             .timeStamp = Me.timestamp.ToLocalTime
 

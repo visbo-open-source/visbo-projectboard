@@ -50,7 +50,7 @@ Public Class frmAuthentication
                     databaseAcc = hrequest
                 End If
 
-                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd, err)
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, user, pwd, err)
 
                 If Not ok Then
                     If awinSettings.englishLanguage Then
@@ -138,7 +138,7 @@ Public Class frmAuthentication
                 databaseAcc = hrequest
             End If
 
-            Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd, err)
+            Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, awinSettings.VCid, user, pwd, err)
 
             If Not ok Then
                 If awinSettings.englishLanguage Then

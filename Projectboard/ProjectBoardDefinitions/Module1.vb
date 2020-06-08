@@ -4352,6 +4352,13 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If awinSettings.databaseName.Length > 0 Then
+                        If .Tags.Item("VCID").Length > 0 Then
+                            .Tags.Delete("VCID")
+                        End If
+                        .Tags.Add("VCID", awinSettings.VCid)
+                    End If
+
                     If Not IsNothing(awinSettings.proxyURL) Then
                         If awinSettings.proxyURL.Length > 0 Then
                             If .Tags.Item("PRXYC").Length > 0 Then

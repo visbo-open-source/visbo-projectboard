@@ -6453,7 +6453,6 @@ Public Module awinDiagrams
         Dim pname As String = sCInfo.pName
 
 
-
         '
         ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
@@ -6474,6 +6473,7 @@ Public Module awinDiagrams
             End If
             Exit Sub
         End If
+
 
         ' jetzt die Farbe bestimme
         Dim balkenFarbe As Integer = bestimmeBalkenFarbe(sCInfo)
@@ -6743,6 +6743,35 @@ Public Module awinDiagrams
 
         ' jetzt das Excel wieder schliessen 
         tmpWB.Close(SaveChanges:=False)
+
+        ' 
+        ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+        '
+        ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+        '
+        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & sCInfo.hproj.vpID & "?vpvid=" & sCInfo.hproj.Id
+
+        Call createHyperlinkInPPT(currentSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
+
+        ''Dim myShapes As PowerPoint.Shapes = currentSlide.Shapes
+        ''Dim visboWebPictureImage As Object = My.Resources.ResourceManager.GetObject("visboWEB")
+
+        ''Dim myHyperlink As PowerPoint.Shape = myShapes.AddShape(Type:=MsoAutoShapeType.msoShapeCloud, Left:=left, Top:=top, Width:=60, Height:=40)
+        ''myHyperlink.Fill.BackColor.RGB = visboFarbeBlau
+        ''myHyperlink.Fill.ForeColor.RGB = visboFarbeBlau
+        ''myHyperlink.TextFrame.TextRange.Font.Size = 9
+        ''myHyperlink.TextFrame.TextRange.Font.Color.RGB = XlRgbColor.rgbWhite
+        ''myHyperlink.TextFrame.TextRange.Text = "VISBO"
+        ''With myHyperlink.TextFrame.TextRange
+        ''    With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
+        ''        .Action = PowerPoint.PpActionType.ppActionHyperlink
+        ''        .Hyperlink.Address = hyperlinkURL
+        ''    End With
+        ''End With
+        '' ' Link-Shape nach vorne holen 
+        ''myHyperlink.ZOrder(MsoZOrderCmd.msoBringToFront)
+
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
 
@@ -7521,6 +7550,34 @@ Public Module awinDiagrams
         bestimmeChartDiagramTitle = tmpResult
 
     End Function
+
+    Public Sub createHyperlinkInPPT(ByRef pptSlide As PowerPoint.Slide, ByVal hyperLinkURL As String, ByVal left As Single, ByVal top As Single, ByVal width As Single, ByVal height As Single)
+
+        Dim myShapes As PowerPoint.Shapes = pptSlide.Shapes
+        Dim visboWebPictureImage As Object = My.Resources.ResourceManager.GetObject("visboWEB")
+
+
+        Dim myHyperlink As PowerPoint.Shape = myShapes.AddShape(Type:=MsoAutoShapeType.msoShapeRoundedRectangle, Left:=left, Top:=top, Width:=width, Height:=height)
+        myHyperlink.Fill.BackColor.RGB = visboFarbeBlau
+        myHyperlink.Fill.ForeColor.RGB = visboFarbeBlau
+        'myHyperlink.TextFrame.TextRange.Font.Size = 9
+        'myHyperlink.TextFrame.TextRange.Font.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+        'myHyperlink.Fill.Visible = MsoTriState.msoTrue
+        'myHyperlink.Fill.UserPicture("C:\Users\Koytek\Pictures\visbo-favicon- 150x 150")
+        'myHyperlink.Fill.TextureTile = MsoTriState.msoFalse
+
+        With myHyperlink
+            With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
+                .Action = PowerPoint.PpActionType.ppActionHyperlink
+                .Hyperlink.Address = hyperLinkURL
+                .Hyperlink.AddToFavorites()
+            End With
+        End With
+        ' Link-Shape nach vorne holen 
+        myHyperlink.ZOrder(MsoZOrderCmd.msoBringToFront)
+
+    End Sub
+
 
 
 End Module

@@ -50,6 +50,7 @@ Public Class clsSmartSlideListen
 
     Private _slideDBUrl As String
     Private _slideDBName As String
+    Private _slideVCid As String
 
 
 
@@ -127,6 +128,19 @@ Public Class clsSmartSlideListen
                 _slideDBName = value
             Else
                 _slideDBName = ""
+            End If
+        End Set
+    End Property
+
+    Public Property slideVCid As String
+        Get
+            slideVCid = _slideVCid
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _slideVCid = value
+            Else
+                _slideVCid = ""
             End If
         End Set
     End Property
@@ -1467,6 +1481,7 @@ Public Class clsSmartSlideListen
         _prevDate = Date.MinValue
         _slideDBUrl = ""
         _slideDBName = ""
+        _slideVCid = ""
     End Sub
 
 End Class

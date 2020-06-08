@@ -47,6 +47,7 @@ Public Class clsawinSettings
     Public Property kapaEinheit As String
 
     Public Property databaseName As String
+    Public Property VCid As String
     Public Property databaseURL As String
     Public Property proxyURL As String
 

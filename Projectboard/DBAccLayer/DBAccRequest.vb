@@ -27,6 +27,7 @@ Public Class Request
     Private DBAcc As Object
     Private dbname As String
     Private dburl As String
+    Private vcid As String
     Private uname As String
     Private pwd As String
 
@@ -38,7 +39,8 @@ Public Class Request
     ''' <param name="databaseName">entspricht beim Visbo-Rest-Server dem VisboCenter</param>
     ''' <param name="username"></param>
     ''' <param name="dbPasswort"></param>
-    Public Function login(ByVal URL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String, ByRef err As clsErrorCodeMsg) As Boolean
+    ''' <param name="VCid"></param>
+    Public Function login(ByVal URL As String, ByVal databaseName As String, ByRef VCid As String, ByVal username As String, ByVal dbPasswort As String, ByRef err As clsErrorCodeMsg) As Boolean
 
 
         Dim loginOK As Boolean = False
@@ -47,20 +49,22 @@ Public Class Request
             If usedWebServer Then
 
                 Dim access As New WebServerAcc.Request
-                loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort, err:=err)
+                loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, VCid:=VCid, username:=username, dbPasswort:=dbPasswort, err:=err)
                 If loginOK Then
                     DBAcc = access
                     dbname = databaseName
+                    VCid = VCid
                     dburl = URL
                     uname = username
                     pwd = dbPasswort
                 Else
                     If err.errorCode = 407 Then   ' Proxy-Authentifizierung required
                         ' try is once more
-                        loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort, err:=err)
+                        loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, VCid:=VCid, username:=username, dbPasswort:=dbPasswort, err:=err)
                         If loginOK Then
                             DBAcc = access
                             dbname = databaseName
+                            VCid = VCid
                             dburl = URL
                             uname = username
                             pwd = dbPasswort
@@ -228,7 +232,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore, err)
                                 End If
@@ -326,7 +330,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
                                 End If
@@ -384,7 +388,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName, err)
                                 End If
@@ -451,7 +455,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName, vpid,
                                                                                        zeitraumStart, zeitraumEnde,
@@ -499,7 +503,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
                                 End If
@@ -561,7 +565,7 @@ Public Class Request
                             Case 200 ' success
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, vpid, storedAtOrBefore, err)
                                 End If
@@ -618,7 +622,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
                                 End If
@@ -670,7 +674,7 @@ Public Class Request
                                 ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).removeCompleteProjectFromDB(pname, err)
                                 End If
@@ -734,7 +738,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err, attrToStore)
                                 End If
@@ -791,7 +795,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
                                 End If
@@ -852,7 +856,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err, fromReST)
                                 End If
@@ -909,7 +913,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
                                                                                              storedEarliest, storedLatest, err, vpid)
@@ -966,7 +970,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
                                 End If
@@ -1026,7 +1030,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
                                 End If
@@ -1085,7 +1089,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
                                 End If
@@ -1148,7 +1152,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
                                 End If
@@ -1206,7 +1210,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
                                 End If
@@ -1262,7 +1266,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
                                 End If
@@ -1321,7 +1325,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsOfOneConstellationFromDB(portfolioName, vpid, err, storedAtOrBefore)
                                 End If
@@ -1382,7 +1386,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
@@ -1439,7 +1443,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstVersionOfOneConstellationFromDB(portfolioName, vpid, timestamp,
                                                                                                              err, storedAtOrBefore)
@@ -1493,7 +1497,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
                                 End If
@@ -1546,7 +1550,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrievePortfolioNamesFromDB(storedAtOrBefore, err)
                                 End If
@@ -1597,7 +1601,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
                                 End If
@@ -1652,7 +1656,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
                                 End If
@@ -1760,7 +1764,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
                                 End If
@@ -1813,7 +1817,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
                                 End If
@@ -1968,7 +1972,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
                                 End If
@@ -2161,7 +2165,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
                                 End If
@@ -2221,7 +2225,7 @@ Public Class Request
                                      ' nothing to do
 
                                 Case 401 ' Token is expired
-                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                     If loginErfolgreich Then
                                         result = CType(DBAcc, WebServerAcc.Request).retrieveAllVCSettingFromDB(err,
                                                                                            appearanceResult,
@@ -2271,7 +2275,7 @@ Public Class Request
                                      ' nothing to do
 
                                 Case 401 ' Token is expired
-                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                     If loginErfolgreich Then
                                         result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
                                     End If
@@ -2318,7 +2322,7 @@ Public Class Request
                                      ' nothing to do
 
                                 Case 401 ' Token is expired
-                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                     If loginErfolgreich Then
                                         result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
                                     End If
@@ -2369,7 +2373,7 @@ Public Class Request
                                      ' nothing to do
 
                                 Case 401 ' Token is expired
-                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                     If loginErfolgreich Then
                                         result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB(err)
                                     End If
@@ -2430,7 +2434,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveCustomizationFromDB(name, timestamp, refnext, err)
                                 End If
@@ -2489,7 +2493,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveAppearancesFromDB(name, timestamp, refnext, err)
                                 End If
@@ -2538,7 +2542,7 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveVCsForUser(err)
                                 End If
@@ -2586,7 +2590,7 @@ Public Class Request
 
                         Case 401 ' Token is expired
 
-                            loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                            loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                             If loginErfolgreich Then
                                 result = CType(DBAcc, WebServerAcc.Request).evaluateCostsOfProject(projectname,
                                                                                variantName,
@@ -2610,7 +2614,7 @@ Public Class Request
     End Function
 
 
-    Public Function updateActualVC(ByVal vcName As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function updateActualVC(ByVal vcName As String, ByRef vcID As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Try
@@ -2618,7 +2622,7 @@ Public Class Request
             If usedWebServer Then
                 Try
                     dbname = vcName
-                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, err)
+                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, vcID, err)
                     result = (dbname = awinSettings.databaseName)
 
                     If Not result Then
@@ -2629,9 +2633,9 @@ Public Class Request
                                      ' nothing to do
 
                             Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                loginErfolgreich = login(dburl, dbname, vcID, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).updateActualVC(vcName, vcID, err)
                                 End If
 
                             Case Else ' all others

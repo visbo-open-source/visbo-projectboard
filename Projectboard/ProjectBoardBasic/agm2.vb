@@ -20273,7 +20273,7 @@ Public Module agm2
                     If listOfVCs.Count = 1 Then
                         ' alles ok, nimm dieses  VC
                         awinSettings.databaseName = listOfVCs.Item(0)
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                         If Not changeOK Then
                             Throw New ArgumentException("No access to this VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
@@ -20285,7 +20285,7 @@ Public Module agm2
                         If chooseVC.ShowDialog = DialogResult.OK Then
                             ' alles ok 
                             awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, awinSettings.VCid, err)
                             If Not changeOK Then
                                 Throw New ArgumentException("bad Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                             End If
