@@ -2903,7 +2903,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTotalCostValuesInMonth() As Double()
+    Public ReadOnly Property getTotalCostValuesInMonth(Optional ByVal includingPersonalCosts As Boolean = True) As Double()
         Get
             Dim costValues() As Double
             Dim zeitraum As Integer
@@ -2915,6 +2915,10 @@ Public Class clsProjekte
             ReDim costValues(zeitraum)
 
             Dim anzCosts As Integer = CostDefinitions.Count
+            ' die Persoanlkosten sind immer der letzte Eintrag in der Liste der Kostenarten ... 
+            If Not includingPersonalCosts Then
+                anzCosts = anzCosts - 1
+            End If
 
             For k As Integer = 1 To anzCosts
                 tempArray = Me.getCostValuesInMonth(k)

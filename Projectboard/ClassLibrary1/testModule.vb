@@ -4082,6 +4082,7 @@ Public Module testModule
                             If tmpStr.Length > 1 Then
                                 qualifier = tmpStr(1).Trim
                             End If
+
                         Else
                             kennzeichnung = "nicht identifizierbar"
                         End If
@@ -4134,6 +4135,7 @@ Public Module testModule
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "TotalCost" Or
+                        kennzeichnung = "OtherCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
                         kennzeichnung = "Stand:" Or
@@ -4338,6 +4340,9 @@ Public Module testModule
 
                         Case "Multiprojektsicht"
 
+                            ' wenn Multiprojektsicht(Datum1 - Datum2) und die Option DrawAllIfOneIsInTimeSpan angegeben ist, dann zeichnet 
+                            ' das Programm auch über ShowRangeLeft und ShowrangeRight hinaus 
+
                             Try
                                 Dim tmpProjekt As New clsProjekt
 
@@ -4351,7 +4356,7 @@ Public Module testModule
                                                               selectedPhases, selectedMilestones,
                                                               translateToRoleNames(selectedRoles), selectedCosts,
                                                               selectedBUs, selectedTyps,
-                                                              worker, e, True, False, tmpProjekt, kennzeichnung, minCal)
+                                                              worker, e, True, False, tmpProjekt, kennzeichnung, minCal, qualifier)
                                 .TextFrame2.TextRange.Text = ""
                                 '.ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
@@ -6189,6 +6194,48 @@ Public Module testModule
                         '    Else
                         '        .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                         '    End If
+
+                        Case "OtherCost"
+                            myCollection.Clear()
+                            myCollection.Add("OtherCost")
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = chartHeight  ' height of all charts
+                            hwidth = chartWidth   ' width of all charts
+                            obj = Nothing
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            reportObj = obj
+
+                            ' wird in createprc.. gemacht ... andernfalls wird eine ggf rote Markierung im Title überschreiben ... 
+                            'With reportObj
+                            '    .Chart.ChartTitle.Font.Size = pptSize
+                            'End With
+
+                            ''reportObj.Copy()
+                            ''newShapeRange = pptSlide.Shapes.Paste
+                            newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+                            ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "TotalCost"
                             myCollection.Clear()
@@ -16928,16 +16975,44 @@ Public Module testModule
                         lastProjectName = hproj.name
                         .Name = .Name & .Id
 
+                        ' neu tk 3.6.20
+
                         If awinSettings.mppEnableSmartPPT Then
+                            'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                            '                                          True)
+                            'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                            '                                       False)
+                            'Dim originalName As String = cphase.originalName
+
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
+
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
 
                             Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
-
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+
+                        ' alt 
+
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                                Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                                Nothing, Nothing,
+                        '                                hproj.startDate, hproj.endeDate,
+                        '                                hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
                     End With
                 Else
@@ -16954,16 +17029,36 @@ Public Module testModule
                         lastProjectName = hproj.name
                         .Name = .Name & .Id
 
+                        ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                        Nothing, Nothing,
-                                                        hproj.startDate, hproj.endeDate,
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
 
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
+
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+                        ' alt tk 3.6.20
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                                Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                                Nothing, Nothing,
+                        '                                hproj.startDate, hproj.endeDate,
+                        '                                hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
                     End With
                 End If
@@ -17041,19 +17136,45 @@ Public Module testModule
                         .Width = CSng(x2 - x1)
                         .Name = .Name & .Id
 
-                        '.Title = hproj.getShapeText
-                        '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                        Try
+                            .Line.ForeColor.RGB = hproj.farbe
+                        Catch ex As Exception
 
+                        End Try
+
+
+
+                        ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                   Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                   Nothing, Nothing,
-                                                   hproj.startDate, hproj.endeDate,
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
-                                                   hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+                            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                            Dim shortText As String = hproj.name
+                            Dim originalName As String = Nothing
 
+                            Dim bestShortName As String = hproj.kundenNummer
+                            Dim bestLongName As String = hproj.getShapeText
+
+
+                            Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            hproj.startDate, hproj.endeDate,
+                                            hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                                            hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
+
+
+                        ' alt tk 3.6.20
+                        'If awinSettings.mppEnableSmartPPT Then
+
+                        '    Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                        '                           Nothing, hproj.getShapeText, Nothing, Nothing,
+                        '                           Nothing, Nothing,
+                        '                           hproj.startDate, hproj.endeDate,
+                        '                           hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                        '                           hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                        'End If
 
 
                         ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
@@ -19932,7 +20053,35 @@ Public Module testModule
                                              ByVal isMultiprojektSicht As Boolean,
                                              ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt,
                                              ByVal kennzeichnung As String,
-                                             ByVal minCal As Boolean)
+                                             ByVal minCal As Boolean,
+                                             Optional ByVal qualifier As String = "")
+
+        Dim PPTStartOfCalendarFixum As Date = Date.MinValue
+        Dim PPTEndOFCalendarFixum As Date = Date.MinValue
+
+        If qualifier <> "" Then
+            ' es gibt evtl eine Angabe
+            Try
+                Dim tmpstr() As String = qualifier.Split(New Char() {CChar("-")})
+                If tmpstr.Length = 2 Then
+
+                    PPTStartOfCalendarFixum = CDate(tmpstr(0))
+                    PPTEndOFCalendarFixum = CDate(tmpstr(1))
+
+                    Dim startNichtVorEnde As Boolean = DateDiff(DateInterval.Month, PPTStartOfCalendarFixum, PPTEndOFCalendarFixum) <= 0
+                    Dim startPPTVorStartCal As Boolean = DateDiff(DateInterval.Month, PPTStartOfCalendarFixum, StartofCalendar) > 0
+
+                    If startNichtVorEnde Or startPPTVorStartCal Then
+                        qualifier = ""
+                        PPTStartOfCalendarFixum = Date.MinValue
+                        PPTEndOFCalendarFixum = Date.MinValue
+                    End If
+                End If
+            Catch ex As Exception
+                PPTStartOfCalendarFixum = Date.MinValue
+                PPTEndOFCalendarFixum = Date.MinValue
+            End Try
+        End If
 
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
         awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
@@ -20075,290 +20224,296 @@ Public Module testModule
                                           pptStartofCalendar, pptEndOfCalendar)
 
             ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+            ' wenn jetzt qualifier mit Datum1 - Datum2 angegeben wurde 
+            If PPTEndOFCalendarFixum > StartofCalendar Then
+                ' alle weiteren Plausibilitäts-Prüfungen wurden am Anfang, beim Setzen von PPTEndofCalendarFixum gemacht
+                pptStartofCalendar = PPTStartOfCalendarFixum
+                pptEndOfCalendar = PPTEndOFCalendarFixum
+            End If
 
             Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
 
 
-            ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
-            If pptFirstTime And zeilenhoehe_sav = 0.0 Then
+                ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
+                If pptFirstTime And zeilenhoehe_sav = 0.0 Then
 
-                Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
-                zeilenhoehe_sav = rds.zeilenHoehe
-                ' tk alt: 26.11.16
-                'With rds
+                    Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+                    zeilenhoehe_sav = rds.zeilenHoehe
+                    ' tk alt: 26.11.16
+                    'With rds
 
-                '    zeilenhoehe = bestimmeMppZeilenHoehe(.pptSlide, .phaseVorlagenShape, .milestoneVorlagenShape,
-                '                                        selectedPhases.Count, selectedMilestones.Count, _
-                '                                        .MsDescVorlagenShape, .MsDateVorlagenShape, _
-                '                                        .PhDescVorlagenShape, .PhDateVorlagenShape,
-                '                                        .projectNameVorlagenShape, _
-                '                                        .durationArrowShape, .durationTextShape)
-                'End With
+                    '    zeilenhoehe = bestimmeMppZeilenHoehe(.pptSlide, .phaseVorlagenShape, .milestoneVorlagenShape,
+                    '                                        selectedPhases.Count, selectedMilestones.Count, _
+                    '                                        .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                    '                                        .PhDescVorlagenShape, .PhDateVorlagenShape,
+                    '                                        .projectNameVorlagenShape, _
+                    '                                        .durationArrowShape, .durationTextShape)
+                    'End With
 
-                ' ur: 1.12.2016
-            ElseIf zeilenhoehe_sav <> 0.0 And rds.zeilenHoehe = 0.0 Then
+                    ' ur: 1.12.2016
+                ElseIf zeilenhoehe_sav <> 0.0 And rds.zeilenHoehe = 0.0 Then
 
-                Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
-                zeilenhoehe_sav = rds.zeilenHoehe
-            Else
-                Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
-
-            End If
-
-
-            Dim hproj As New clsProjekt
-            Dim hhproj As New clsProjekt
-            Dim maxZeilen As Integer = 0
-            Dim anzZeilen As Integer = 0
-            Dim gesamtAnzZeilen As Integer = 0
-            Dim projekthoehe As Double = zeilenhoehe_sav
-
-            If awinSettings.mppExtendedMode Then
-
-                ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
-                For Each kvp As KeyValuePair(Of Double, String) In projCollection
-                    Try
-
-                        hproj = AlleProjekte.getProject(kvp.Value)
-                    Catch ex As Exception
-
-                    End Try
-
-                    anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
-
-                    maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
-                    gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
-
-                Next
-
-
-            Else
-                projekthoehe = zeilenhoehe_sav
-            End If
-
-            '
-            ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
-            '
-            Call rds.calcRelDisTxtToElm()
-
-
-            '
-            ' bestimme das Format  
-
-            Dim neededSpace As Double
-
-
-            If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
-                If awinSettings.mppOnePage Then
-                    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+                    Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+                    zeilenhoehe_sav = rds.zeilenHoehe
                 Else
-                    neededSpace = maxZeilen * zeilenhoehe_sav
+                    Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
+
                 End If
-            Else
-                neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
-            End If
+
+
+                Dim hproj As New clsProjekt
+                Dim hhproj As New clsProjekt
+                Dim maxZeilen As Integer = 0
+                Dim anzZeilen As Integer = 0
+                Dim gesamtAnzZeilen As Integer = 0
+                Dim projekthoehe As Double = zeilenhoehe_sav
+
+                If awinSettings.mppExtendedMode Then
+
+                    ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
+                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                        Try
+
+                            hproj = AlleProjekte.getProject(kvp.Value)
+                        Catch ex As Exception
+
+                        End Try
+
+                        anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+
+                        maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
+                        gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
+
+                    Next
+
+
+                Else
+                    projekthoehe = zeilenhoehe_sav
+                End If
+
+                '
+                ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+                '
+                Call rds.calcRelDisTxtToElm()
+
+
+                '
+                ' bestimme das Format  
+
+                Dim neededSpace As Double
+
+
+                If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
+                    If awinSettings.mppOnePage Then
+                        neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
+                    Else
+                        neededSpace = maxZeilen * zeilenhoehe_sav
+                    End If
+                Else
+                    neededSpace = projCollection.Count * zeilenhoehe_sav ' für normale Berichte hier: projekthoehe = zeilenhoehe
+                End If
 
 
 
 
-            Dim availableSpace As Double
-            availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
+                Dim availableSpace As Double
+                availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
 
-            Dim oldHeight As Double
-            Dim oldwidth As Double
+                Dim oldHeight As Double
+                Dim oldwidth As Double
 
-            oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
-            oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
-
-
-            Dim curHeight As Double = oldHeight
-            Dim curWidth As Double = oldwidth
+                oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
 
 
+                Dim curHeight As Double = oldHeight
+                Dim curWidth As Double = oldwidth
 
-            If (availableSpace < neededSpace And awinSettings.mppOnePage) Or
+
+
+                If (availableSpace < neededSpace And awinSettings.mppOnePage) Or
                (availableSpace < neededSpace And awinSettings.mppExtendedMode) Then
 
 
-                ' tk 30.5.2020
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Contenct does not fit to page ... please modify your selections")
-                Else
-                    Call MsgBox("Inhalt kann nicht auf der Seite dargestellt werden ... bitte Auswahl anpassen ...")
-                End If
-                Exit Sub
-                '' diesen ganzen Zirkus nicht mehr machen, wenn es nicht drauf passt - beenden 
-                'Dim ix As Integer = format
-                'Dim ok As Boolean = True
-                '' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
-
-                'Dim sizeMemory() As Single
-                'Dim relativeSizeMemory As New SortedList(Of String, Double())
-
-                'With rds
-                '    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
-                '                                 .MsDescVorlagenShape, .MsDateVorlagenShape,
-                '                                 .PhDescVorlagenShape, .PhDateVorlagenShape,
-                '                                 .phaseVorlagenShape, .milestoneVorlagenShape,
-                '                                 .projectVorlagenShape, .ampelVorlagenShape)
-                'End With
-
-
-                'If pptApp.Version = "14.0" Then
-                '    ' muss nichts machen
-
-                'Else
-
-                '    relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
-
-                'End If
-
-
-                'Do While availableSpace < neededSpace And ix > 0
-
-                '    With pptCurrentPresentation
-
-                '        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-
-                '        If querFormat Then
-                '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
-                '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
-                '        Else
-                '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
-                '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
-                '        End If
-
-
-                '    End With
-
-                '    curHeight = pptCurrentPresentation.PageSetup.SlideHeight
-                '    curWidth = pptCurrentPresentation.PageSetup.SlideWidth
-
-                '    ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
-                '    ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
-
-                '    If pptApp.Version = "14.0" Then
-                '        ' muss nichts machen
-                '    Else
-
-                '        Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
-                '    End If
-
-                '    ' jetzt wieder die Koordinaten neu berechnen 
-                '    Call rds.bestimmeZeichenKoordinaten()
-
-                '    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
-
-                '    If availableSpace < neededSpace Then
-                '        ix = ix - 1
-                '    End If
-
-                'Loop
-
-                'ix = ix - 1
-                'If ix < 0 Then
-                '    ix = 0
-                'End If
-
-                '' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                'If pptApp.Version = "14.0" Then
-                '    With rds
-                '        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
-                '                            .MsDescVorlagenShape, .MsDateVorlagenShape,
-                '                            .PhDescVorlagenShape, .PhDateVorlagenShape,
-                '                            .phaseVorlagenShape, .milestoneVorlagenShape,
-                '                            .projectVorlagenShape, .ampelVorlagenShape)
-                '    End With
-
-
-                'End If
-
-
-                '' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
-                '' entsprechend um den errechneten Faktor anpassen
-
-                'Dim enlargeTxtFaktor As Double = curHeight / oldHeight
-                'Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
-
-                '' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
-                '' 
-                'With rds
-                '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
-                '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
-
-                '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
-                '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
-                'End With
-
-            End If
-
-
-            If pptFirstTime Then
-
-                'ur: 25.03.2015: sichern der im Format veränderten Folie
-                pptslide.Copy()
-                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
-                pptFirstTime = False
-                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
-
-            End If
-
-            ' zeichne den Kalender
-            'Dim calendargroup As pptNS.Shape = Nothing
-
-            Try
-
-                With rds
-
-
-                    ' das demnächst abändern auf 
-                    Call zeichne3RowsCalendar(rds, minCal)
-                    'Call zeichne3RowsCalendar(rds, calendargroup)
-
-
-                    'Call zeichnePPTCalendar(pptslide, calendargroup, _
-                    '                    pptStartofCalendar, pptEndOfCalendar, _
-                    '                    .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
-                    '                    .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
-                    '                    .drawingAreaBottom)
-
-                End With
-
-
-
-            Catch ex As Exception
-
-            End Try
-
-
-            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
-            ' zeichne die Projekte 
-
-            ' jetzt wird das Slide gekennzeichnet als Smart Slide
-
-            ' jetzt wird hier die Date Info eingetragen ... 
-            Dim smartInfoCRD As Date = Date.MinValue
-            Try
-                For Each kvp As KeyValuePair(Of Double, String) In projCollection
-                    Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
-                    If Not IsNothing(tmpProj) Then
-                        If smartInfoCRD < tmpProj.timeStamp Then
-                            smartInfoCRD = tmpProj.timeStamp
-                        End If
+                    ' tk 30.5.2020
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Contenct does not fit to page ... please modify your selections")
+                    Else
+                        Call MsgBox("Inhalt kann nicht auf der Seite dargestellt werden ... bitte Auswahl anpassen ...")
                     End If
-                Next
-            Catch ex As Exception
+                    Exit Sub
+                    '' diesen ganzen Zirkus nicht mehr machen, wenn es nicht drauf passt - beenden 
+                    'Dim ix As Integer = format
+                    'Dim ok As Boolean = True
+                    '' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
 
-            End Try
+                    'Dim sizeMemory() As Single
+                    'Dim relativeSizeMemory As New SortedList(Of String, Double())
+
+                    'With rds
+                    '    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
+                    '                                 .MsDescVorlagenShape, .MsDateVorlagenShape,
+                    '                                 .PhDescVorlagenShape, .PhDateVorlagenShape,
+                    '                                 .phaseVorlagenShape, .milestoneVorlagenShape,
+                    '                                 .projectVorlagenShape, .ampelVorlagenShape)
+                    'End With
 
 
-            Call addSmartPPTSlideCalInfo(pptslide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+                    'If pptApp.Version = "14.0" Then
+                    '    ' muss nichts machen
 
-            Try
+                    'Else
+
+                    '    relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
+
+                    'End If
+
+
+                    'Do While availableSpace < neededSpace And ix > 0
+
+                    '    With pptCurrentPresentation
+
+                    '        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                    '        If querFormat Then
+                    '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                    '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                    '        Else
+                    '            .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                    '            .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                    '        End If
+
+
+                    '    End With
+
+                    '    curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                    '    curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+                    '    ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                    '    ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
+                    '    If pptApp.Version = "14.0" Then
+                    '        ' muss nichts machen
+                    '    Else
+
+                    '        Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
+                    '    End If
+
+                    '    ' jetzt wieder die Koordinaten neu berechnen 
+                    '    Call rds.bestimmeZeichenKoordinaten()
+
+                    '    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
+
+                    '    If availableSpace < neededSpace Then
+                    '        ix = ix - 1
+                    '    End If
+
+                    'Loop
+
+                    'ix = ix - 1
+                    'If ix < 0 Then
+                    '    ix = 0
+                    'End If
+
+                    '' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                    'If pptApp.Version = "14.0" Then
+                    '    With rds
+                    '        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
+                    '                            .MsDescVorlagenShape, .MsDateVorlagenShape,
+                    '                            .PhDescVorlagenShape, .PhDateVorlagenShape,
+                    '                            .phaseVorlagenShape, .milestoneVorlagenShape,
+                    '                            .projectVorlagenShape, .ampelVorlagenShape)
+                    '    End With
+
+
+                    'End If
+
+
+                    '' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                    '' entsprechend um den errechneten Faktor anpassen
+
+                    'Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                    'Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
+
+                    '' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                    '' 
+                    'With rds
+                    '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                    '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+
+                    '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                    '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                    'End With
+
+                End If
+
+
+                If pptFirstTime Then
+
+                    'ur: 25.03.2015: sichern der im Format veränderten Folie
+                    pptslide.Copy()
+                    pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                    pptFirstTime = False
+                    legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+
+                End If
+
+                ' zeichne den Kalender
+                'Dim calendargroup As pptNS.Shape = Nothing
+
+                Try
+
+                    With rds
+
+
+                        ' das demnächst abändern auf 
+                        Call zeichne3RowsCalendar(rds, minCal)
+                        'Call zeichne3RowsCalendar(rds, calendargroup)
+
+
+                        'Call zeichnePPTCalendar(pptslide, calendargroup, _
+                        '                    pptStartofCalendar, pptEndOfCalendar, _
+                        '                    .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                        '                    .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                        '                    .drawingAreaBottom)
+
+                    End With
 
 
 
-                Call zeichnePPTprojects(pptslide, projCollection, objectsDone,
+                Catch ex As Exception
+
+                End Try
+
+
+                ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+                ' zeichne die Projekte 
+
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide
+
+                ' jetzt wird hier die Date Info eingetragen ... 
+                Dim smartInfoCRD As Date = Date.MinValue
+                Try
+                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                        If Not IsNothing(tmpProj) Then
+                            If smartInfoCRD < tmpProj.timeStamp Then
+                                smartInfoCRD = tmpProj.timeStamp
+                            End If
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+                Call addSmartPPTSlideCalInfo(pptslide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+
+                Try
+
+
+
+                    Call zeichnePPTprojects(pptslide, projCollection, objectsDone,
                                 rds,
                                 selectedPhases, selectedMilestones, selectedRoles, selectedCosts,
                                 worker, e)
@@ -20369,69 +20524,69 @@ Public Module testModule
 
 
 
-            Catch ex As Exception
+                Catch ex As Exception
 
-                If Not IsNothing(rds.errorVorlagenShape) Then
-                    ''rds.errorVorlagenShape.Copy()
-                    ''errorShape = pptslide.Shapes.Paste
-                    errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
+                    If Not IsNothing(rds.errorVorlagenShape) Then
+                        ''rds.errorVorlagenShape.Copy()
+                        ''errorShape = pptslide.Shapes.Paste
+                        errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
 
-                    With errorShape.Item(1)
-                        .TextFrame2.TextRange.Text = ex.Message
-                    End With
-                Else
-                    ' erstmal sonst nichts 
-                End If
-
-
-            End Try
+                        With errorShape.Item(1)
+                            .TextFrame2.TextRange.Text = ex.Message
+                        End With
+                    Else
+                        ' erstmal sonst nichts 
+                    End If
 
 
-            ' zeichne die Legende 
-            If awinSettings.mppShowLegend Then
-                Try
+                End Try
 
-                    With rds
-                        Call zeichnePPTlegende(pptslide,
+
+                ' zeichne die Legende 
+                If awinSettings.mppShowLegend Then
+                    Try
+
+                        With rds
+                            Call zeichnePPTlegende(pptslide,
                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts,
                                         .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom,
                                         .legendLineShape, .legendStartShape,
                                         .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape,
                                         .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
 
-                    End With
-
-
-                Catch ex As Exception
-
-                    If Not IsNothing(rds.errorVorlagenShape) Then
-                        ''rds.errorVorlagenShape.Copy()
-                        ''errorShape = pptslide.Shapes.Paste
-                        errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
-
-                        With errorShape.Item(1)
-                            .TextFrame2.TextRange.Text = ex.Message
                         End With
-                    End If
-
-                End Try
-
-            End If
 
 
+                    Catch ex As Exception
+
+                        If Not IsNothing(rds.errorVorlagenShape) Then
+                            ''rds.errorVorlagenShape.Copy()
+                            ''errorShape = pptslide.Shapes.Paste
+                            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
+                            With errorShape.Item(1)
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End With
+                        End If
+
+                    End Try
+
+                End If
 
 
-        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            ''rds.errorVorlagenShape.Copy()
-            ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
 
-            With errorShape.Item(1)
-                .TextFrame2.TextRange.Text = missingShapes
-            End With
-        Else
-            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
-            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
+
+            ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+                ''rds.errorVorlagenShape.Copy()
+                ''errorShape = pptslide.Shapes.Paste
+                errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
+                With errorShape.Item(1)
+                    .TextFrame2.TextRange.Text = missingShapes
+                End With
+            Else
+                'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+                Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
 
         ' jetzt werden alle Shapes invisible gesetzt  ... 

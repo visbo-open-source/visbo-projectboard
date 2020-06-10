@@ -6109,11 +6109,19 @@ Imports System.Web
                     Dim result As Boolean = False
                     ' ute -> überprüfen bzw. fertigstellen ... 
                     Dim orgaName As String = ptSettingTypes.organisation.ToString
-                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+
+                    ' andere Rollen als Orga-Admin können Orga einlesen, aber eben nicht speichern ! 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
                                                                                     CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                     orgaName,
                                                                                     importedOrga.validFrom,
                                                                                     err)
+
+                    Else
+                        result = True
+                    End If
+
 
                     If result = True Then
                         ' importierte Organisation in die Liste der validOrganisations aufnehmen
@@ -6134,8 +6142,14 @@ Imports System.Web
 
                         listOfArchivFiles.Add(dateiname)
 
-                        Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
-                        Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                            Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ...")
+                            Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
+                        Else
+                            Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " temporarily loaded ...")
+                            Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " temporarily loaded ...", selectedWB, -1)
+                        End If
+
                     Else
                         Call MsgBox("Error when writing Organisation")
                         Call logfileSchreiben("Error when writing Organisation ...", selectedWB, -1)
@@ -6886,25 +6900,36 @@ Imports System.Web
                     Dim result As Boolean = False
                     ' ute -> überprüfen bzw. fertigstellen ... 
                     Dim orgaName As String = ptSettingTypes.organisation.ToString
-                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
                                                                                 CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                 orgaName,
                                                                                 changedOrga.validFrom,
                                                                                 err)
 
-                    If result = True Then
-                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                        If result = True Then
+                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                            ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                            Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                            ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                            Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
+                        Else
+                            Call MsgBox("Error when writing Organisation to Database")
+                            Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                        End If
+
+                    Else
+                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
+                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                         ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                         Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                         ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
                         Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
-
-                    Else
-                        Call MsgBox("Error when writing Organisation to Database")
-                        Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
                     End If
-
 
                 Else
                     Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
