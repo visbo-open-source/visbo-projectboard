@@ -6744,15 +6744,15 @@ Public Module awinDiagrams
         ' jetzt das Excel wieder schliessen 
         tmpWB.Close(SaveChanges:=False)
 
-        ' 
-        ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
-        '
-        ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
-        '
-        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & sCInfo.hproj.vpID & "?vpvid=" & sCInfo.hproj.Id
+        '' 
+        '' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+        ''
+        '' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+        ''
+        'Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+        'Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & sCInfo.hproj.vpID & "?vpvid=" & sCInfo.hproj.Id
 
-        Call createHyperlinkInPPT(currentSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
+        'Call createHyperlinkInPPT(currentSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
 
         ''Dim myShapes As PowerPoint.Shapes = currentSlide.Shapes
         ''Dim visboWebPictureImage As Object = My.Resources.ResourceManager.GetObject("visboWEB")

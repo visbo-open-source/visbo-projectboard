@@ -1877,6 +1877,15 @@ Public Module testModule
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
                                     Call zeichneProjektTabelleZiele(pptShape, hproj, sMilestones, "", "")
                                     'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
+                                    ' 
+                                    ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+                                    '
+                                    ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                    '
+                                    Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                    Dim projektTabelleZieleURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
+
+                                    Call createHyperlinkInPPT(pptSlide, projektTabelleZieleURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                 Catch ex As Exception
@@ -2136,6 +2145,16 @@ Public Module testModule
                                         appInstance.ScreenUpdating = False
 
                                         Call createProjektChartInPPT(smartChartInfo, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                        ' 
+                                        ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+                                        '
+                                        ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                        '
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
+
+                                        Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
+
 
                                         appInstance.ScreenUpdating = formerSU
 
@@ -4352,6 +4371,22 @@ Public Module testModule
                                                               selectedBUs, selectedTyps,
                                                               worker, e, True, False, tmpProjekt, kennzeichnung, minCal)
                                 .TextFrame2.TextRange.Text = ""
+                                ' 
+                                ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+                                '
+                                ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                '
+                                If Not IsNothing(currentSessionConstellation.vpID) Then
+                                    ' only to do, if the portfolio exists in the DB - the vpID is an MongoDBID
+                                    Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                    Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=ProjectBoard"
+
+                                    Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+
+                                End If
+
+
+
                                 '.ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
                                 .TextFrame2.TextRange.Text = ex.Message
@@ -6121,6 +6156,17 @@ Public Module testModule
                                         appInstance.ScreenUpdating = False
 
                                         Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                        ' 
+                                        ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+                                        '
+                                        ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                                        '
+                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity"
+
+                                        Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+
+
 
                                         appInstance.ScreenUpdating = formerSU
                                     End If
@@ -10250,6 +10296,7 @@ Public Module testModule
 
                     Dim cResult As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
                     Dim cBewertung As clsBewertung = cResult.getBewertung(1)
+
 
                     With tabelle
                         ' Farbe und laufende Nummer eintragen 
