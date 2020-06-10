@@ -289,15 +289,22 @@ Public Class clsPPTTimeMachine
 
                 If _projectTSvpid.ContainsKey(key) Then
                     Dim myHistory As clsProjektHistorie = _projectTSvpid.Item(key)
-                    If IsNothing(myHistory) Then
+                    Dim goGetIt As Boolean = False
 
+
+                    If IsNothing(myHistory) Then
+                        goGetIt = True
+                    ElseIf myHistory.Count = 0 Then
+                        goGetIt = True
+                    End If
+
+                    If goGetIt Then
                         ' von Cache oder Datenbank holen 
                         Dim vName As String = getVariantnameFromKey(pvName)
 
                         ' ProjektHistorie von Cache oder Datenbank holen
                         _projectTSvpid.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB("", vName, Date.MinValue, Date.Now, err, vpid)
                         myHistory = _projectTSvpid.Item(key)
-
                     End If
 
                     ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 

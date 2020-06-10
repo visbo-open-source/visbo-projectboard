@@ -107,142 +107,149 @@ Public Class clsPPTShapes
                 ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
                 If .Title.Length > 0 Then
 
-                    ' Anmerkung: es ist wichtig den Properties die Zuweisung zu machen, andernfalls werden ggf die im Set Bereich definierten 
-                    ' Aktionen nicht durchgeführt ...
-                    Select Case .Title
+                    If .Title.StartsWith("Multiprojektsicht") Then
+                        containerShape = pptShape
+                    Else
+                        ' Anmerkung: es ist wichtig den Properties die Zuweisung zu machen, andernfalls werden ggf die im Set Bereich definierten 
+                        ' Aktionen nicht durchgeführt ...
+                        Select Case .Title
 
-                        Case "MilestoneDescription"
-                            MsDescVorlagenShape = pptShape
+                            Case "MilestoneDescription"
+                                MsDescVorlagenShape = pptShape
 
-                        Case "ProjectName"
-                            projectNameVorlagenShape = pptShape
+                            Case "ProjectName"
+                                projectNameVorlagenShape = pptShape
 
-                        Case "CalendarLine"
-                            calendarLineShape = pptShape
+                            Case "CalendarLine"
+                                calendarLineShape = pptShape
 
-                        Case "QuarterMonthinCal"
-                            quarterMonthVorlagenShape = pptShape
+                            Case "QuarterMonthinCal"
+                                quarterMonthVorlagenShape = pptShape
 
-                        Case "YearInCal"
-                            yearVorlagenShape = pptShape
+                            Case "YearInCal"
+                                yearVorlagenShape = pptShape
 
-                        Case "ProjectForm"
-                            projectVorlagenShape = pptShape
+                            Case "ProjectForm"
+                                projectVorlagenShape = pptShape
 
-                        Case "PhaseForm"
-                            phaseVorlagenShape = pptShape
+                            Case "PhaseForm"
+                                phaseVorlagenShape = pptShape
 
-                        Case "MilestoneForm"
-                            milestoneVorlagenShape = pptShape
+                            Case "MilestoneForm"
+                                milestoneVorlagenShape = pptShape
 
-                        Case "Ampel"
-                            ampelVorlagenShape = pptShape
+                            Case "Ampel"
+                                ampelVorlagenShape = pptShape
 
-                        Case "Jahres-Trennstrich"
-                            calendarYearSeparator = pptShape
+                            Case "Jahres-Trennstrich"
+                                calendarYearSeparator = pptShape
 
-                        Case "Quartals-Trennstrich"
-                            calendarQuartalSeparator = pptShape
+                            Case "Quartals-Trennstrich"
+                                calendarQuartalSeparator = pptShape
 
-                        Case "Horizontale"
-                            horizontalLineShape = pptShape
+                            Case "Horizontale"
+                                horizontalLineShape = pptShape
 
-                        Case "TodayLine"
-                            todayLineShape = pptShape
+                            Case "TodayLine"
+                                todayLineShape = pptShape
 
-                        Case "LegendLine"
-                            legendLineShape = pptShape
+                            Case "LegendLine"
+                                legendLineShape = pptShape
 
-                        Case "LegendStart"
-                            legendStartShape = pptShape
+                            Case "LegendStart"
+                                legendStartShape = pptShape
 
-                        Case "LegendText"
-                            legendTextVorlagenShape = pptShape
+                            Case "LegendText"
+                                legendTextVorlagenShape = pptShape
 
-                        Case "LegendPhase"
-                            legendPhaseVorlagenShape = pptShape
+                            Case "LegendPhase"
+                                legendPhaseVorlagenShape = pptShape
 
-                        Case "LegendMilestone"
-                            legendMilestoneVorlagenShape = pptShape
+                            Case "LegendMilestone"
+                                legendMilestoneVorlagenShape = pptShape
 
-                        Case "Multiprojektsicht"
-                            containerShape = pptShape
+                            Case "Multiprojektsicht"
+                                containerShape = pptShape
 
-                        Case "Multivariantensicht"
-                            containerShape = pptShape
+                            Case "Multivariantensicht"
+                                containerShape = pptShape
 
-                        Case "Einzelprojektsicht"
-                            containerShape = pptShape
+                            Case "Einzelprojektsicht"
+                                containerShape = pptShape
 
-                        Case "AllePlanElemente"
-                            containerShape = pptShape
+                            Case "AllePlanElemente"
+                                containerShape = pptShape
 
                             ' alle Hierarchie-Stufe 1 Objekte sind Swimlanes
-                        Case "Swimlanes"
-                            containerShape = pptShape
+                            Case "Swimlanes"
+                                containerShape = pptShape
 
-                        Case "Swimlanes2"
-                            containerShape = pptShape
+                            Case "Swimlanes2"
+                                containerShape = pptShape
 
-                        Case "MilestoneCategories"
-                            containerShape = pptShape
+                            Case "MilestoneCategories"
+                                containerShape = pptShape
 
-                        Case "CalendarHeight"
-                            calendarHeightShape = pptShape
+                            Case "CalendarHeight"
+                                calendarHeightShape = pptShape
 
-                        Case "MilestoneDate"
-                            MsDateVorlagenShape = pptShape
+                            Case "MilestoneDate"
+                                MsDateVorlagenShape = pptShape
 
-                        Case "PhaseDescription"
-                            PhDescVorlagenShape = pptShape
+                            Case "PhaseDescription"
+                                PhDescVorlagenShape = pptShape
 
-                        Case "PhaseDate"
-                            PhDateVorlagenShape = pptShape
+                            Case "PhaseDate"
+                                PhDateVorlagenShape = pptShape
 
-                        Case "CalendarStep"
-                            ' optional
-                            calendarStepShape = pptShape
+                            Case "CalendarStep"
+                                ' optional
+                                calendarStepShape = pptShape
 
-                        Case "CalendarMark"
-                            ' optional 
-                            calendarMarkShape = pptShape
+                            Case "CalendarMark"
+                                ' optional 
+                                calendarMarkShape = pptShape
 
-                        Case "Fehlermeldung"
-                            ' optional 
-                            errorVorlagenShape = pptShape
+                            Case "Fehlermeldung"
+                                ' optional 
+                                errorVorlagenShape = pptShape
 
-                        Case "LegendBuColor"
-                            ' optional
-                            legendBuColorShape = pptShape
+                            Case "LegendBuColor"
+                                ' optional
+                                legendBuColorShape = pptShape
 
-                        Case "buColorShape"
-                            ' optional
-                            buColorShape = pptShape
+                            Case "buColorShape"
+                                ' optional
+                                buColorShape = pptShape
 
-                        Case "rowDifferentiator"
-                            ' optional
-                            rowDifferentiatorShape = pptShape
+                            Case "rowDifferentiator"
+                                ' optional
+                                rowDifferentiatorShape = pptShape
 
-                        Case "PhaseDelimiter"
-                            ' optional 
-                            phaseDelimiterShape = pptShape
+                            Case "PhaseDelimiter"
+                                ' optional 
+                                phaseDelimiterShape = pptShape
 
-                        Case "durationArrow"
-                            ' optional
-                            durationArrowShape = pptShape
+                            Case "durationArrow"
+                                ' optional
+                                durationArrowShape = pptShape
 
-                        Case "durationText"
-                            ' optional 
-                            durationTextShape = pptShape
+                            Case "durationText"
+                                ' optional 
+                                durationTextShape = pptShape
 
-                        Case "SegmentText"
-                            ' mandatory für Swimlanes2 
-                            segmentVorlagenShape = pptShape
+                            Case "SegmentText"
+                                ' mandatory für Swimlanes2 
+                                segmentVorlagenShape = pptShape
 
-                        Case Else
+                            Case Else
 
 
-                    End Select
+                        End Select
+                    End If
+
+
+
                 End If
 
 

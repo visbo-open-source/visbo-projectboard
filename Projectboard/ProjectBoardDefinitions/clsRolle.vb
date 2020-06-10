@@ -218,6 +218,15 @@ Public Class clsRolle
 
     End Property
 
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei der Rolle um eine externe Ressource handelt ...
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property isExtern() As Boolean
+        Get
+            isExtern = RoleDefinitions.getRoleDefByID(_uid).isExternRole
+        End Get
+    End Property
 
     Public ReadOnly Property tagessatzIntern() As Double
 

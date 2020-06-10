@@ -5666,6 +5666,12 @@ Public Module agm2
 
                         .Unprotect(Password:="x")       ' Blattschutz aufheben
 
+                        ' Projekt_Typ
+                        Try
+                            hproj.VorlagenName = CType(.Range("Projekt_Typ").Value, String)
+                        Catch ex As Exception
+
+                        End Try
 
                         '   Varianten-Name
                         Try
@@ -8617,7 +8623,7 @@ Public Module agm2
 
                 importedCustomization.missingDefinitionColor = awinSettings.missingDefinitionColor
 
-                importedCustomization.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+                importedCustomization.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
                 importedCustomization.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 
@@ -12251,7 +12257,7 @@ Public Module agm2
         Dim newProj As clsProjekt = Nothing
         Dim projektKundenNummer As String = ""
 
-        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
+        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
 
 
         ' welche Rollen sollen gelöscht werden; die werden dann danach gesetzt, ob es sich um einen Ressource-Manager handelt, 
@@ -12743,7 +12749,7 @@ Public Module agm2
         Dim deleteRoles As New Collection
 
         ' jetzt werden die aufgebaut ...
-        If awinSettings.allianzIstDatenReferate = "" Then
+        If awinSettings.ActualdataOrgaUnits = "" Then
 
             deleteRoles.Add("D-BOSV-KB0")
             deleteRoles.Add("D-BOSV-KB1")
@@ -12752,7 +12758,7 @@ Public Module agm2
             deleteRoles.Add("Grp-BOSV-KB")
 
         Else
-            Dim tmpStr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
+            Dim tmpStr() As String = awinSettings.ActualdataOrgaUnits.Split(New Char() {CChar(";")})
             For Each tmpRCName As String In tmpStr
                 If RoleDefinitions.containsName(tmpRCName.Trim) Then
                     deleteRoles.Add(tmpRCName.Trim)
@@ -13051,7 +13057,7 @@ Public Module agm2
                                   ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
-        Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
+        Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -16007,14 +16013,14 @@ Public Module agm2
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
                             If roleNameIDCollection.Count = 0 Then
-                                relevant = True
+                                relevant = considerAll
                             Else
 
-                                relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
-                                'Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
-                                '    relevant = True
-                                'End If
+
+                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
+                                    relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
@@ -16073,7 +16079,7 @@ Public Module agm2
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
                             If costNameCollection.Count = 0 Then
-                                relevant = True
+                                relevant = considerAll
                             Else
                                 ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
                                 If costNameCollection.Contains(costName) Then
@@ -18889,7 +18895,7 @@ Public Module agm2
 
                             ' jetzt muss die genaue ID reingeschrieben werden
                             CType(currentWS.Cells(zeile, 4), Excel.Range).AddComment(Text:=msNameID)
-                                CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
+                            CType(currentWS.Cells(zeile, 4), Excel.Range).Comment.Visible = False
 
 
                             ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
@@ -20476,7 +20482,7 @@ Public Module agm2
 
                         awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
 
-                        awinSettings.allianzIstDatenReferate = customizations.allianzIstDatenReferate
+                        awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
 
                         awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
 
@@ -20662,11 +20668,11 @@ Public Module agm2
 
 
                 '  Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
-                If awinSettings.allianzIstDatenReferate <> "" And awinSettings.readCostRolesFromDB Then
-                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzIstDatenReferate)
-                    Dim tmpstr() As String = awinSettings.allianzIstDatenReferate.Split(New Char() {CChar(";")})
+                If awinSettings.ActualdataOrgaUnits <> "" And awinSettings.readCostRolesFromDB Then
+                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+                    Dim tmpstr() As String = awinSettings.ActualdataOrgaUnits.Split(New Char() {CChar(";")})
                     If idArray.Length <> tmpstr.Length Then
-                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.allianzIstDatenReferate
+                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.ActualdataOrgaUnits
                         Call MsgBox(errMsg)
                         Throw New ArgumentException(errMsg)
                     End If
@@ -23012,10 +23018,10 @@ Public Module agm2
                 End Try
 
                 Try
-                    awinSettings.allianzIstDatenReferate = CStr(.Range("AllianzIstdaten").Value).Trim
+                    awinSettings.ActualdataOrgaUnits = CStr(.Range("Istdaten").Value).Trim
 
                 Catch ex As Exception
-                    awinSettings.allianzIstDatenReferate = ""
+                    awinSettings.ActualdataOrgaUnits = ""
                 End Try
 
                 Try
@@ -23679,7 +23685,7 @@ Public Module agm2
 
         customizations.missingDefinitionColor = awinSettings.missingDefinitionColor
 
-        customizations.allianzIstDatenReferate = awinSettings.allianzIstDatenReferate
+        customizations.allianzIstDatenReferate = awinSettings.ActualdataOrgaUnits
 
         customizations.autoSetActualDataDate = awinSettings.autoSetActualDataDate
 

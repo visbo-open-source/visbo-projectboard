@@ -464,7 +464,17 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(2) Then
                             ' Kostenarten 
                             einheit = " T€"
-                            If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                            If prcName = "TotalCost" Then
+                                objektFarbe = visboFarbeOrange
+                                isPersCost = False
+                                datenreihe = ShowProjekte.getTotalCostValuesInMonth
+
+                            ElseIf prcName = "OtherCost" Then
+                                objektFarbe = visboFarbeOrange
+                                isPersCost = False
+                                datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPersonalCosts:=False)
+
+                            ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
 
                                 ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                                 isPersCost = True
@@ -1274,6 +1284,12 @@ Public Module awinDiagrams
         Else
             If prcTyp = DiagrammTypen(1) Then
                 diagramTitle = bestimmeRollenDiagrammTitel(CStr(myCollection.Item(1)))
+            ElseIf prcTyp = DiagrammTypen(2) Then
+                If myCollection.Count > 1 Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
+                Else
+                    diagramTitle = CStr(myCollection.Item(1))
+                End If
             Else
                 diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
@@ -1453,7 +1469,17 @@ Public Module awinDiagrams
 
                 ElseIf prcTyp = DiagrammTypen(2) Then
                     einheit = " T€"
-                    If prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
+                    If prcName = "TotalCost" Then
+                        objektFarbe = visboFarbeOrange
+                        isPersCost = False
+                        datenreihe = ShowProjekte.getTotalCostValuesInMonth
+
+                    ElseIf prcName = "OtherCost" Then
+                        objektFarbe = visboFarbeOrange
+                        isPersCost = False
+                        datenreihe = ShowProjekte.getTotalCostValuesInMonth(includingPersonalCosts:=False)
+
+                    ElseIf prcName = CostDefinitions.getCostdef(CostDefinitions.Count).name Then
                         ' es handelt sich um die Personalkosten, deshalb muss unterschieden werden zwischen internen und externen Kosten
                         isPersCost = True
                         objektFarbe = CostDefinitions.getCostdef(prcName).farbe
@@ -6656,41 +6682,44 @@ Public Module awinDiagrams
             .SetElement(Microsoft.Office.Core.MsoChartElementType.msoElementPrimaryValueAxisShow)
 
             Try
-                With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
+                Dim xAchse As PowerPoint.Axis = CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
 
-                    .HasTitle = False
+                xAchse.HasTitle = False
+                xAchse.TickLabels.Font.Size = 10
 
-                    ' tk 9.7.19 führt zu Fehler
-                    'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
-                    '    If titleFontSize - 4 >= 6 Then
-                    '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
-                    '    Else
-                    '        .Format.TextFrame2.TextRange.Font.Size = 6
-                    '    End If
-                    'End If
+                ' tk 9.7.19 führt zu Fehler
+                'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
+                '    If titleFontSize - 4 >= 6 Then
+                '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                '    Else
+                '        .Format.TextFrame2.TextRange.Font.Size = 6
+                '    End If
+                'End If
 
-                End With
             Catch ex As Exception
 
             End Try
 
             Try
-                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                Dim yAchse As PowerPoint.Axis = CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
 
-                    .HasTitle = False
-                    .MinimumScale = 0
+                yAchse.HasTitle = False
+                yAchse.MinimumScale = 0
+
+                yAchse.TickLabels.Font.Size = 10
+
+                ' 
+
+                ' führt immer zu Fehler 
+                'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
+                '    If titleFontSize - 4 >= 6 Then
+                '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                '    Else
+                '        .Format.TextFrame2.TextRange.Font.Size = 6
+                '    End If
+                'End If
 
 
-                    ' führt immer zu Fehler 
-                    'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
-                    '    If titleFontSize - 4 >= 6 Then
-                    '        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
-                    '    Else
-                    '        .Format.TextFrame2.TextRange.Font.Size = 6
-                    '    End If
-                    'End If
-
-                End With
             Catch ex As Exception
 
             End Try
@@ -7252,16 +7281,16 @@ Public Module awinDiagrams
                 If awinSettings.englishLanguage Then
                     tmpResult = "Actual-to-date"
                 Else
-                    tmpResult = "Actual-to-date"
+                    tmpResult = "Ist-Werte"
                     'tmpResult = "Ist-Werte (AC)"
                 End If
 
             Case "IS"
                 'Ist Werte 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Actual-to-date (Sum of Portfolio)"
+                    tmpResult = "Actual-to-date (Sum OF Portfolio"
                 Else
-                    tmpResult = "Actual-to-date (Sum of Portfolio)"
+                    tmpResult = "Ist-Werte (Summe Portfolio)"
                     'tmpResult = "Ist-Werte (Portfolio Summe)"
                 End If
 
@@ -7270,7 +7299,7 @@ Public Module awinDiagrams
                 If awinSettings.englishLanguage Then
                     tmpResult = "Estimate-to-Complete"
                 Else
-                    tmpResult = "Estimate-to-Complete"
+                    tmpResult = "Forecast (ETC)"
                     ' tmpResult = "Planung (ETC)"
                 End If
 
@@ -7279,34 +7308,42 @@ Public Module awinDiagrams
                 If awinSettings.englishLanguage Then
                     tmpResult = "Monthly Needs (Sum of Portfolio)"
                 Else
-                    tmpResult = "Monthly Needs (Sum of Portfolio)"
+                    tmpResult = "monatl. Bedarfe (alle Projekte des Portfolios)"
                     'tmpResult = "Planung (Portfolio Summe)"
                 End If
 
             Case "B"
                 ' Beauftragung 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Planned Value, Baseline"
+                    tmpResult = "Baseline"
                 Else
-                    tmpResult = "Planned Value, Baseline"
+                    tmpResult = "Baseline"
                     ' tmpResult = "Baseline"
                 End If
 
             Case "C"
                 ' Capacity  
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Total Capa"
+                    tmpResult = "Total Capa (intern+extern)"
                 Else
-                    tmpResult = "Total Capa"
+                    tmpResult = "Gesamt Kapazität (intern+extern)"
                     'tmpResult = "Gesmat-Kapazität"
                 End If
 
             Case "CI"
-                ' interne Capacity 
+                ' Capacity  
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Intern Capa"
+                    tmpResult = "intern Capacity"
                 Else
-                    tmpResult = "Intern Capa"
+                    tmpResult = "interne Kapazität"
+                    'tmpResult = "Gesmat-Kapazität"
+                End If
+
+            Case "OC" ' Other Cost
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Sum of Portfolio"
+                Else
+                    tmpResult = "Summe Portfolio"
                     'tmpResult = "interne Kapa"
                 End If
             Case Else

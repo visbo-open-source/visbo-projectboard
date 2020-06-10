@@ -1032,6 +1032,7 @@ Public Class clsRollen
 
     ''' <summary>
     ''' überprüft, ob die angegebene roleNameID in der Form roleID;teamID bzw roleId Kind einer der angegebenen Sammelrollen ist
+    ''' wenn summaryRoleIDS = Nothing und roleNAmeID tatsächlich existiert, dann true
     ''' </summary>
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleIDs"></param>
@@ -1042,19 +1043,26 @@ Public Class clsRollen
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
 
-        Dim roleID As Integer = Me.parseRoleNameID(roleNameID, teamID)
-        If summaryRoleIDs.Contains(roleID) Then
-            tmpResult = True
-
+        ' tk 1.6.20 , wenn das mit Nothing aufgerufen wird, dann ist das true 
+        If IsNothing(summaryRoleIDs) Then
+            tmpResult = RoleDefinitions.containsNameOrID(roleNameID)
         Else
-            For Each summaryRoleID As Integer In summaryRoleIDs
-                tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds = includingVirtualChilds)
-                If tmpResult = True Then
-                    Exit For
-                End If
-            Next
+            Dim roleID As Integer = Me.parseRoleNameID(roleNameID, teamID)
+            If summaryRoleIDs.Contains(roleID) Then
+                tmpResult = True
 
+            Else
+                For Each summaryRoleID As Integer In summaryRoleIDs
+                    tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds = includingVirtualChilds)
+                    If tmpResult = True Then
+                        Exit For
+                    End If
+                Next
+
+            End If
         End If
+
+
         hasAnyChildParentRelationsship = tmpResult
     End Function
 
