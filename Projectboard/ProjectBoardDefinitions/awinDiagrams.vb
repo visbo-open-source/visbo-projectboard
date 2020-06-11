@@ -5987,6 +5987,26 @@ Public Module awinDiagrams
 
     End Function
 
+    ''' <summary>
+    ''' selbe Funktion wie oben, nur dass jetzt die Werte für ShowrangeLeft und Right übergeben werden können
+    ''' </summary>
+    ''' <param name="anfang"></param>
+    ''' <param name="ende"></param>
+    ''' <param name="fromDatecol"></param>
+    ''' <param name="toDateCol"></param>
+    ''' <returns></returns>
+    Function istBereichInTimezone(ByVal anfang As Integer, ByVal ende As Integer, ByVal fromDatecol As Integer, ByVal toDateCol As Integer) As Boolean
+
+
+        If ((ende) < fromDatecol) Or (anfang > toDateCol) Then
+            istBereichInTimezone = False
+        Else
+            istBereichInTimezone = True
+        End If
+
+
+    End Function
+
 
 
     Sub diagramsVisible(ByVal show As Boolean)
@@ -7132,6 +7152,50 @@ Public Module awinDiagrams
                     Exit Sub
                 End If
 
+            Case ptElementTypen.internExternShort
+                ' in internExternShort :
+                ' tdatenreihe: Interne Kosten
+                ' vdatenreihe: Externe Kosten 
+                ' internKapa-Datenreihe: Kurzarbeiter-Geld
+
+
+            Case ptElementTypen.fullRolesAndCost
+                ' in fullRoleAndCost
+                ' tdatenreihe: Interne Kosten
+                ' vdatenreihe: Externe Kosten 
+                ' internKapa-Datenreihe: Kurzarbeiter-Geld
+
+                Try
+
+                    tmpTdatenreihe = ShowProjekte.getOtherCostValuesInMonth()
+
+
+                    ' jetzt die externen Kosten berechnen 
+                    Dim tmpResult As Double() = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.extern)
+                    For i As Integer = 0 To tmpResult.Length - 1
+                        tmpTdatenreihe(i) = tmpTdatenreihe(i) + tmpResult(i)
+                    Next
+
+                    ' jetzt die vollen Kosten der Organisation berechnen : interne Mitarbeiter müssen jeden Monat bezahlt werden 
+                    tmpResult = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+                    For i As Integer = 0 To tmpResult.Length - 1
+                        tmpTdatenreihe(i) = tmpTdatenreihe(i) + tmpResult(i)
+                    Next
+
+                    ' wenn Kurzarbeit möglich ist 
+                    Dim ShorttermQuota As Double = 0.67
+                    Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+
+                    ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+                    For i As Integer = 0 To tmpResult.Length - 1
+                        tmpTdatenreihe(i) = tmpTdatenreihe(i) - (1 - ShorttermQuota) * notUtilizedCapacity(i)
+                    Next
+
+                Catch ex As Exception
+
+                End Try
+
+
             Case Else
                 errMsg = "not yet implemented: " & scInfo.elementTyp.ToString
                 Exit Sub
@@ -7141,100 +7205,109 @@ Public Module awinDiagrams
         ' Ende tDatenreihe Bestimmung
 
         ' jetzt muss in tdatenreihe bzw. vdatenreihe umkopiert werden
+        ' aber nur , wenn nicht fullRolesAndCost bzw. InternExternShort 
 
-        For ix As Integer = 0 + hprojOffset To tmpTdatenreihe.Length - 1 + hprojOffset
-            tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
-        Next
 
-        If scInfo.prPF = ptPRPFType.portfolio Then
-            For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
-                vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
-            Next
+        If scInfo.elementTyp = ptElementTypen.internExternShort Or
+                scInfo.elementTyp = ptElementTypen.fullRolesAndCost Then
+            ' nichts weiter machen ... 
         Else
-            If Not IsNothing(scInfo.vglProj) Then
+            For ix As Integer = 0 + hprojOffset To tmpTdatenreihe.Length - 1 + hprojOffset
+                tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
+            Next
+
+            If scInfo.prPF = ptPRPFType.portfolio Then
                 For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
                     vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
                 Next
+            Else
+                If Not IsNothing(scInfo.vglProj) Then
+                    For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
+                        vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
+                    Next
+                End If
             End If
-        End If
 
 
-        ' wenn kumuliert werden soll, dann wird es jetzt hier gemacht ... 
-        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            ReDim tmpTdatenreihe(plen - 1)
-            ReDim tmpVdatenreihe(plen - 1)
+            ' wenn kumuliert werden soll, dann wird es jetzt hier gemacht ... 
+            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+                ReDim tmpTdatenreihe(plen - 1)
+                ReDim tmpVdatenreihe(plen - 1)
 
-            Dim cumulatedValue As Double = 0.0
-            For ix As Integer = 0 To plen - 1
-                cumulatedValue = cumulatedValue + tdatenreihe(ix)
-                tmpTdatenreihe(ix) = cumulatedValue
-            Next
-
-            tdatenreihe = tmpTdatenreihe
-
-            ' die Vorgabe Werte 
-            If Not IsNothing(scInfo.vglProj) Then
-                cumulatedValue = 0.0
+                Dim cumulatedValue As Double = 0.0
                 For ix As Integer = 0 To plen - 1
-                    cumulatedValue = cumulatedValue + vdatenreihe(ix)
-                    tmpVdatenreihe(ix) = cumulatedValue
+                    cumulatedValue = cumulatedValue + tdatenreihe(ix)
+                    tmpTdatenreihe(ix) = cumulatedValue
                 Next
 
-                vdatenreihe = tmpVdatenreihe
+                tdatenreihe = tmpTdatenreihe
+
+                ' die Vorgabe Werte 
+                If Not IsNothing(scInfo.vglProj) Then
+                    cumulatedValue = 0.0
+                    For ix As Integer = 0 To plen - 1
+                        cumulatedValue = cumulatedValue + vdatenreihe(ix)
+                        tmpVdatenreihe(ix) = cumulatedValue
+                    Next
+
+                    vdatenreihe = tmpVdatenreihe
+                End If
+
+
             End If
 
+            '
+            ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+            Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
 
-        End If
-
-        '
-        ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
-        Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
-
-        Dim considerIstDaten As Boolean = False
-        Dim actualdataIndex As Integer = -1
-
-        If scInfo.prPF = ptPRPFType.project Then
-
-            considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
-
-        Else
-            ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception
-            If ShowProjekte.actualDataUntil >= StartofCalendar Then
-                Dim adu As Integer = getColumnOfDate(ShowProjekte.actualDataUntil)
-                considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= pstart
-            End If
-
-        End If
-
-        If considerIstDaten Then
-
-            Call tdatenreihe.CopyTo(istDatenReihe, 0)
+            Dim considerIstDaten As Boolean = False
+            Dim actualdataIndex As Integer = -1
 
             If scInfo.prPF = ptPRPFType.project Then
-                actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+
+                considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+
             Else
-                actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - pstart
+                ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception
+                If ShowProjekte.actualDataUntil >= StartofCalendar Then
+                    Dim adu As Integer = getColumnOfDate(ShowProjekte.actualDataUntil)
+                    considerIstDaten = getColumnOfDate(ShowProjekte.actualDataUntil) >= pstart
+                End If
+
             End If
 
-            ' die Prognose Daten bereinigen
-            ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
+            If considerIstDaten Then
 
-            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-                For ix As Integer = 0 To actualdataIndex - 1
-                    prognoseDatenReihe(ix) = 0
+                Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                If scInfo.prPF = ptPRPFType.project Then
+                    actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+                Else
+                    actualdataIndex = getColumnOfDate(ShowProjekte.actualDataUntil) - pstart
+                End If
+
+                ' die Prognose Daten bereinigen
+                ' der erste Prognose-Wert soll gleich dem letzten Ist-Wert sein, nur dann sieht es gut aus 
+
+                If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+                    For ix As Integer = 0 To actualdataIndex - 1
+                        prognoseDatenReihe(ix) = 0
+                    Next
+                Else
+                    For ix As Integer = 0 To actualdataIndex
+                        prognoseDatenReihe(ix) = 0
+                    Next
+                End If
+
+
+                For ix = actualdataIndex + 1 To plen - 1
+                    istDatenReihe(ix) = 0
                 Next
-            Else
-                For ix As Integer = 0 To actualdataIndex
-                    prognoseDatenReihe(ix) = 0
-                Next
+
             End If
-
-
-            For ix = actualdataIndex + 1 To plen - 1
-                istDatenReihe(ix) = 0
-            Next
-
         End If
+
+
 
     End Sub
 
@@ -7315,6 +7388,22 @@ Public Module awinDiagrams
                     tmpResult = "Sum of Portfolio"
                 Else
                     tmpResult = "Summe Portfolio"
+                    'tmpResult = "interne Kapa"
+                End If
+
+            Case "TC" ' total Cost
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Sum of Portfolio"
+                Else
+                    tmpResult = "Summe Portfolio"
+                    'tmpResult = "interne Kapa"
+                End If
+
+            Case "FC" ' total Cost
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Sum of all intern employees"
+                Else
+                    tmpResult = "Summe interner Mitarbeiter"
                     'tmpResult = "interne Kapa"
                 End If
             Case Else
@@ -7485,6 +7574,7 @@ Public Module awinDiagrams
                     ' hier ist es egal, was qualifier2 ist 
                     qualifier2 = repmsg(0)
 
+
                 Case Else
                     tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString
             End Select
@@ -7498,6 +7588,14 @@ Public Module awinDiagrams
             Select Case scInfo.elementTyp
                 Case ptElementTypen.roles
                     qualifier2 = bestimmeRollenDiagrammTitel(scInfo.q2)
+
+                Case ptElementTypen.fullRolesAndCost
+
+                    If awinSettings.englishLanguage Then
+                        qualifier2 = repmsg(0) & " (Full)"
+                    Else
+                        qualifier2 = repmsg(0) & " (Voll)"
+                    End If
 
                 Case ptElementTypen.costs
                     qualifier2 = scInfo.q2

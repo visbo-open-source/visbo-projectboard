@@ -4104,6 +4104,7 @@ Public Module testModule
                         kennzeichnung = "Projekt-Tafel Phasen" Or
                         kennzeichnung = "Tabelle Zielerreichung" Or
                         kennzeichnung = "Tabelle Projektstatus" Or
+                        kennzeichnung = "Tabelle Cashflow6Details" Or
                         kennzeichnung = "Tabelle Projektabhängigkeiten" Or
                         kennzeichnung = "Übersicht Besser/Schlechter" Or
                         kennzeichnung = "Tabelle Besser/Schlechter" Or
@@ -4135,6 +4136,7 @@ Public Module testModule
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "TotalCost" Or
+                        kennzeichnung = "FullCost" Or
                         kennzeichnung = "OtherCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
@@ -4810,6 +4812,15 @@ Public Module testModule
                             Catch ex As Exception
                                 objectsDone = objectsToDo + 1
                                 Call MsgBox("Fehler bei Report-Erstellung ... Code X3678")
+                            End Try
+
+                        Case "Tabelle Cashflow6Details"
+
+                            Try
+                                Call zeichneTableCashFlow6Details(pptShape)
+
+                            Catch ex As Exception
+
                             End Try
 
                         Case "Tabelle Portfolioliste"
@@ -6108,6 +6119,7 @@ Public Module testModule
                                         End If
 
                                         .einheit = PTEinheiten.personentage
+                                        .elementTyp = ptElementTypen.roles
                                         .pName = currentConstellationName
                                         .vName = ""
                                         .vpid = currentSessionConstellation.vpID
@@ -6132,6 +6144,60 @@ Public Module testModule
                                     End If
 
                                 End If
+
+
+                                boxName = ""
+                                notYetDone = False
+
+                            Catch ex As Exception
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End Try
+
+                        Case "FullCost"
+
+
+                            Try
+
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
+
+                                'If qualifier <> "" Then
+                                Dim smartChartInfo As New clsSmartPPTChartInfo
+                                With smartChartInfo
+
+                                    If showRangeLeft > 0 Then
+                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    End If
+                                    If showRangeRight > 0 Then
+                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                    End If
+
+                                    .einheit = PTEinheiten.euro
+                                    .elementTyp = ptElementTypen.fullRolesAndCost
+                                    .pName = currentConstellationName
+                                    .vName = ""
+                                    .vpid = currentSessionConstellation.vpID
+                                    .prPF = ptPRPFType.portfolio
+                                    '.q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                    .q2 = ""
+                                    .bigType = ptReportBigTypes.charts
+
+                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                    .hproj = Nothing
+                                    .vglProj = Nothing
+
+
+                                End With
+
+
+                                Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                appInstance.ScreenUpdating = False
+
+                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                appInstance.ScreenUpdating = formerSU
+
+                                'End If
 
 
                                 boxName = ""

@@ -407,6 +407,8 @@ Public Module Module1
         milestones = 5
         mta = 6
         rolesAndCost = 7
+        fullRolesAndCost = 8
+        internExternShort = 9
     End Enum
 
 
@@ -2433,6 +2435,36 @@ Public Module Module1
                 ix = 0
                 If ende >= showRangeRight Then
                     anzahl = showRangeRight - anfang + 1
+                Else
+                    anzahl = ende - anfang + 1
+                End If
+            End If
+        Else
+            anzahl = 0
+        End If
+
+
+    End Sub
+
+    Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, ByVal fromDateCol As Integer, ByVal toDateCol As Integer,
+                                    ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
+
+
+
+        If istBereichInTimezone(anfang, ende, fromDateCol, toDateCol) Then
+            If anfang <= fromDateCol Then
+                ixZeitraum = 0
+                ix = fromDateCol - anfang
+                If ende >= toDateCol Then
+                    anzahl = toDateCol - fromDateCol + 1
+                Else
+                    anzahl = ende - fromDateCol + 1
+                End If
+            Else
+                ixZeitraum = anfang - fromDateCol
+                ix = 0
+                If ende >= toDateCol Then
+                    anzahl = toDateCol - anfang + 1
                 Else
                     anzahl = ende - anfang + 1
                 End If
@@ -5685,6 +5717,130 @@ Public Module Module1
 
 
     ''' <summary>
+    ''' zeichnet die Cash-Flow Tabelle 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    Public Sub zeichneTableCashFlow6Details(ByRef pptShape As pptNS.Shape)
+        Try
+            Dim tabelle As pptNS.Table = pptShape.Table
+            Dim anzSpalten As Integer = tabelle.Columns.Count
+            Dim anzZeilen As Integer = tabelle.Rows.Count
+            Dim zeile As Integer
+            Dim formatierung As String = "#,##0"
+
+            Dim otherCost As Double() = Nothing
+            Dim personalCost As Double() = Nothing
+            Dim totalCost As Double() = Nothing
+            Dim orgaFullCost As Double() = Nothing
+
+            Dim restCost As Double() = Nothing
+            Dim cashflow As Double() = Nothing
+
+            Dim notUtilizedCapacity As Double() = Nothing
+
+
+
+            Dim ix As Integer
+
+            Dim reducedTable As Boolean = False
+
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten <> 7 Then
+                Call MsgBox("Tabelle should have 7 columns ... exit ...")
+                Exit Sub
+            End If
+
+            If anzZeilen <> 7 Then
+                Call MsgBox("Tabelle should have 7 rows ... exit ...")
+                Exit Sub
+            End If
+
+            Dim invoices() As Double
+            ' jetzt werden die Rechnungen ermittelt ... 
+            ReDim invoices(5)
+            zeile = 2
+
+            For ix = 1 To invoices.Length
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = invoices(ix - 1).ToString(formatierung)
+            Next
+
+
+            ' jetzt Zufluss KUG 
+            Dim ShorttermQuota As Double = 0.67
+            notUtilizedCapacity = ShowProjekte.getCostoValuesInMonth()
+
+            Dim kugCome As Double() = Nothing
+            Dim kugGo As Double() = Nothing
+
+            ReDim kugCome(5)
+
+            kugCome(0) = 0
+
+            ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+            For i As Integer = 1 To notUtilizedCapacity.Length - 1
+                kugCome(i) = notUtilizedCapacity(i - 1) * ShorttermQuota
+            Next
+
+            zeile = 3
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugCome(ix - 1).ToString(formatierung)
+            Next
+
+
+            ' jetzt Abfluss Sonst, interne Kosten, etxerne Kosten
+
+            totalCost = ShowProjekte.getTotalCostValuesInMonth
+            zeile = 4
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
+            Next
+
+
+            ' jetzt KUG Abfluss oder non-utilized capacity 
+            zeile = 5
+            ReDim kugGo(5)
+
+            For ix = 1 To 6
+                kugGo(ix - 1) = ShorttermQuota * notUtilizedCapacity(ix - 1)
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
+            Next
+
+            zeile = 6
+            orgaFullCost = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+
+            Dim internPersonellCost As Double() = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern)
+
+            ReDim restCost(5)
+            For ix = 1 To 6
+                restCost(ix - 1) = orgaFullCost(ix - 1) - (internPersonellCost(ix - 1) + notUtilizedCapacity(ix - 1))
+                If restCost(ix) < 0 Then
+                    restCost(ix) = 0
+                End If
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
+            Next
+
+
+            ' jetzt wird Cash-Flow kumuliert geschrieben 
+            zeile = 7
+            ReDim cashflow(5)
+            For ix = 1 To 6
+                If ix = 1 Then
+                    cashflow(ix - 1) = invoices(ix - 1) + kugCome(ix - 1) - (totalCost(ix - 1) + kugGo(ix - 1) + restCost(ix - 1))
+                Else
+                    cashflow(ix - 1) = cashflow(ix - 2) + invoices(ix - 1) + kugCome(ix - 1) - (totalCost(ix - 1) + kugGo(ix - 1) + restCost(ix - 1))
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
+            Next
+
+
+        Catch ex As Exception
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
     ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
     ''' wenn q1=0 und q2=0 , dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet
     ''' wenn q1=-1, q2=-1 , dann wird %used" gezeichnet 
@@ -6300,6 +6456,34 @@ Public Module Module1
         trimToShowTimeRange = resultArray
 
 
+    End Function
+
+    Public Function trimToTimeRange(ByVal inputArray() As Double, ByVal columnOfStart As Integer, ByVal fromDateCol As Integer, ByVal toDateCol As Integer) As Double()
+
+        Dim resultArray() As Double = Nothing
+        If fromDateCol > 0 And toDateCol >= fromDateCol Then
+
+            Dim zeitraum As Integer = toDateCol - fromDateCol
+            ReDim resultArray(zeitraum)
+            Dim anfang As Integer = columnOfStart
+            Dim ende As Integer = columnOfStart + inputArray.Length - 1
+
+            Dim anzLoops As Integer = 0
+            Dim ix As Integer
+            Dim ixZeitraum As Integer
+            Call awinIntersectZeitraum(anfang, ende, ixZeitraum, ix, anzLoops)
+
+            If anzLoops > 0 Then
+                For i As Integer = 0 To anzLoops - 1
+                    resultArray(ixZeitraum + i) = inputArray(ix + i)
+                Next
+            End If
+
+        Else
+            resultArray = inputArray
+        End If
+
+        trimToTimeRange = resultArray
     End Function
 
     ''' <summary>
