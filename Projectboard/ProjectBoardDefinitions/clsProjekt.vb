@@ -4865,6 +4865,106 @@ Public Class clsProjekt
 
     End Property
 
+    ''' <summary>
+    ''' liefert einen Array zurück, der die prognostizierten Zahlungseingänge für den Cash-Flow enthält; d.h der Array kann länger sein als das Projekt ... 
+    ''' Ergänzung für später: muss die Vertrags-Strafen auch gleich aufnehmen ... 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getInvoices() As Double()
+        Get
+            Dim invoiceValues() As Double = Nothing
+            Dim tempArray As Double() = Nothing
+
+            ' dieser Array nimmt die Werte auf, der key steht dabei für den relativen Monat des Projektes, key=0 im ersten Monat des Projektes 
+            Dim resultArray As New SortedList(Of Integer, Double)
+
+
+            ' bestimme die Länge des Invoice-Arrays
+
+
+            If _Dauer > 0 Then
+
+                ReDim invoiceValues(_Dauer - 1)
+                ' bestimme die Länge des Invoice-Arrays
+                Dim projectStartCol As Integer = getColumnOfDate(startDate)
+                Dim invoiceRelCol As Integer = -1
+
+                For p = 1 To CountPhases
+                    Dim curPhase As clsPhase = getPhase(p)
+                    If curPhase.invoice.Key > 0 Then
+                        invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
+                        If resultArray.ContainsKey(invoiceRelCol) Then
+                            resultArray.Item(invoiceRelCol) = resultArray.Item(invoiceRelCol) + curPhase.invoice.Key
+                        Else
+                            resultArray.Add(invoiceRelCol, curPhase.invoice.Key)
+                        End If
+                    End If
+
+                    For msIx As Integer = 1 To curPhase.countMilestones
+
+                        Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
+                        If curMilestone.invoice.Key > 0 Then
+                            invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
+                            If resultArray.ContainsKey(invoiceRelCol) Then
+                                resultArray.Item(invoiceRelCol) = resultArray.Item(invoiceRelCol) + curMilestone.invoice.Key
+                            Else
+                                resultArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+                            End If
+                        End If
+
+                    Next msIX
+
+                Next p
+
+                If resultArray.Count > 0 Then
+                    Dim resultDimension As Integer = System.Math.Max(_Dauer - 1, resultArray.Last.Key)
+                    ReDim invoiceValues(resultDimension)
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In resultArray
+                        invoiceValues(kvp.Key) = kvp.Value
+                    Next
+
+                Else
+                    invoiceValues = Nothing
+                End If
+
+
+            End If
+
+            getInvoices = invoiceValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
+    ''' </summary>
+    ''' <param name="name"></param>
+    Public Sub setMilestoneInvoices(ByVal name As String)
+
+        Dim msNameIndices() As Integer
+        msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
+        Dim anzMilestones As Integer = msNameIndices.Length
+
+        If anzMilestones = 0 Or msNameIndices(0) = 0 Then
+            Exit Sub
+        End If
+
+
+        Try
+            Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
+            For Each msID As Integer In msNameIndices
+                Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
+                Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
+
+                curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
+            Next
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' gibt den Bedarf der Rolle in dem Monat X an; X=1 entspricht StartofCalendar usw.

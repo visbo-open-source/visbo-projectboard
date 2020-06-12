@@ -2729,6 +2729,50 @@ Public Class clsProjekte
         End Get
     End Property
 
+    Public ReadOnly Property getInvoices() As Double()
+        Get
+            Dim invoiceValues() As Double = Nothing
+            Dim tempArray() As Double
+            Dim zeitraum As Integer
+            Dim prAnfang As Integer, prEnde As Integer
+
+            Dim anzLoops As Integer = 0
+            Dim ixZeitraum As Integer, ix As Integer
+
+
+            Dim hproj As clsProjekt = Nothing
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim invoiceValues(zeitraum)
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                hproj = kvp.Value
+
+                prAnfang = hproj.Start + hproj.StartOffset
+
+                tempArray = hproj.getInvoices
+
+                If Not IsNothing(tempArray) Then
+                    prEnde = prAnfang + tempArray.Length - 1
+
+                    Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                    If anzLoops > 0 Then
+
+                        For i = 0 To anzLoops - 1
+                            invoiceValues(ixZeitraum + i) = invoiceValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+                    End If
+                End If
+
+
+            Next
+
+            getInvoices = invoiceValues
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt über alle betrachteten Projekte die Earned Values zurück; 
     ''' </summary>

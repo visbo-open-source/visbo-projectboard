@@ -21,6 +21,9 @@ Public Class clsResultWeb
     Public deliverables As List(Of String)
     Public percentDone As Double
 
+    ' tk 2.6.2020
+    Public invoice As KeyValuePair(Of Double, Integer)
+
     'Friend Property fileLink As Uri
 
     Friend ReadOnly Property bewertungsCount As Integer
@@ -77,6 +80,10 @@ Public Class clsResultWeb
 
                 If Not IsNothing(Me.percentDone) Then
                     .percentDone = Me.percentDone
+                End If
+
+                If Not IsNothing(Me.invoice) Then
+                    .invoice = Me.invoice
                 End If
 
                 Try
@@ -165,6 +172,9 @@ Public Class clsResultWeb
             Me.alternativeColor = .individualColor
 
             Me.percentDone = .percentDone
+
+            'Me.invoice = .invoice
+            Me.invoice = New KeyValuePair(Of Double, Integer)(10.5, 30)
 
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
@@ -255,6 +265,8 @@ Public Class clsResultWeb
         deliverables = New List(Of String)
         docURL = ""
         docUrlAppID = ""
+
+        invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
 
     End Sub
 

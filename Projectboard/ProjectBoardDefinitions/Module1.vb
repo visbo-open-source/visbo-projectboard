@@ -1552,8 +1552,11 @@ Public Module Module1
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
             Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+
             tmpResult.Add(kvp.Key, newProj)
         Next
+
+
 
         prepProjectsForRoles = tmpResult
 
@@ -1579,6 +1582,14 @@ Public Module Module1
                 End If
 
             End If
+
+            ' tk 12.06.2020 
+
+            ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
+            If tmpResult.name.StartsWith("E_Kunde") Then
+                Call tmpResult.setMilestoneInvoices("Finalization")
+            End If
+
         End If
 
         prepProjectForRoles = tmpResult
@@ -5756,9 +5767,9 @@ Public Module Module1
                 Exit Sub
             End If
 
-            Dim invoices() As Double
+            Dim invoices() As Double = ShowProjekte.getInvoices
             ' jetzt werden die Rechnungen ermittelt ... 
-            ReDim invoices(5)
+            'ReDim invoices(5)
             zeile = 2
 
             For ix = 1 To invoices.Length
