@@ -7588,33 +7588,33 @@ Public Module awinDiagrams
 
     End Function
 
-    Public Sub createHyperlinkInPPT(ByRef pptSlide As PowerPoint.Slide, ByVal hyperLinkURL As String, ByVal left As Single, ByVal top As Single, ByVal width As Single, ByVal height As Single)
+    Public Sub createHyperlinkInPPT(ByRef pptSlide As PowerPoint.Slide, ByVal hyperLinkURL As String, ByVal left As Single, ByVal top As Single,
+                                    ByVal width As Single, ByVal height As Single, Optional ByVal subURL As String = "")
+
+
+        'Dim visboPicture As String = "C:\Users\Koytek\Pictures\visbo-favicon-150x150.jpg"
+        ' read VisboPicture from Ressources - not from Filesystem
+        Dim visboWebPictureObject As Object = My.Resources.ResourceManager.GetObject("visboWEB")
+        Dim visboWebPictureImage As System.Drawing.Image = CType(visboWebPictureObject, System.Drawing.Image)
+        ' save the VisboPicture in a file in the filesystem
+        visboWebPictureImage.Save(awinPath & "visbo.jpg", System.Drawing.Imaging.ImageFormat.Jpeg)
+        Dim visboPicture As String = awinPath & "visbo.jpg"
 
         Dim myShapes As PowerPoint.Shapes = pptSlide.Shapes
-        Dim visboWebPictureImage As Object = My.Resources.ResourceManager.GetObject("visboWEB")
-
-
         Dim myHyperlink As PowerPoint.Shape = myShapes.AddShape(Type:=MsoAutoShapeType.msoShapeRoundedRectangle, Left:=left, Top:=top, Width:=width, Height:=height)
-        myHyperlink.Fill.BackColor.RGB = visboFarbeBlau
-        myHyperlink.Fill.ForeColor.RGB = visboFarbeBlau
-        'myHyperlink.TextFrame.TextRange.Font.Size = 9
-        'myHyperlink.TextFrame.TextRange.Font.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
-        'myHyperlink.Fill.Visible = MsoTriState.msoTrue
-        'myHyperlink.Fill.UserPicture("C:\Users\Koytek\Pictures\visbo-favicon- 150x 150")
-        'myHyperlink.Fill.TextureTile = MsoTriState.msoFalse
-
+        myHyperlink.Fill.UserPicture(visboPicture)
         With myHyperlink
             With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
                 .Action = PowerPoint.PpActionType.ppActionHyperlink
                 .Hyperlink.Address = hyperLinkURL
+                .Hyperlink.ScreenTip = "Go To Visbo-WEB"
                 .Hyperlink.AddToFavorites()
+                .Hyperlink.SubAddress = subURL
             End With
         End With
         ' Link-Shape nach vorne holen 
         myHyperlink.ZOrder(MsoZOrderCmd.msoBringToFront)
 
     End Sub
-
-
 
 End Module

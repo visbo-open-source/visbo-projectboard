@@ -1883,9 +1883,9 @@ Public Module testModule
                                     ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                     '
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                    Dim projektTabelleZieleURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
+                                    Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
 
-                                    Call createHyperlinkInPPT(pptSlide, projektTabelleZieleURL, left:=left, top:=top, width:=20, height:=20)
+                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                 Catch ex As Exception
@@ -2151,9 +2151,9 @@ Public Module testModule
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
-                                        Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
+                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                         appInstance.ScreenUpdating = formerSU
@@ -4386,9 +4386,9 @@ Public Module testModule
                                 If Not IsNothing(currentSessionConstellation.vpID) Then
                                     ' only to do, if the portfolio exists in the DB - the vpID is an MongoDBID
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                    Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=ProjectBoard"
+                                    Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=KeyMetrics"
 
-                                    Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
                                 End If
 
@@ -6169,9 +6169,9 @@ Public Module testModule
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity"
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity"
 
-                                        Call createHyperlinkInPPT(pptSlide, projectBedarfChartURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
 
 
@@ -6315,6 +6315,21 @@ Public Module testModule
                                 .Width = CSng(width * 0.96)
                                 .Height = CSng(height * 0.96)
                             End With
+
+                            ' 
+                            ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
+                            '
+                            ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
+                            '
+                            ' TODO: TotalCost gibt es im UI noch nicht
+                            'Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                            'Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpView/" & currentSessionConstellation.vpID
+
+                            'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=newShapeRange.Item(1).Left,
+                            '                          top:=newShapeRange.Item(1).Top, width:=20, height:=20)
+
+                            Dim picObj As Object = My.Resources.ResourceManager.GetObject("zoom_in.png")
+                            picObj = CType(picObj, PowerPoint.Shape)
 
                             'Call awinDeleteChart(reportObj)
                             ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
