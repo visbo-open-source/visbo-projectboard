@@ -18266,6 +18266,31 @@ Public Module testModule
 
         End If
 
+        ' tk 13.6.20 ggf invoices anzeigen ...
+        Dim showInvoices As Boolean = True
+        If MS.invoice.Key > 0 And showInvoices And Not awinSettings.mppShowMsName Then
+
+            Dim invoiceText As String = MS.invoice.Key.ToString("##0.#") & " T€"
+            copiedShape = pptCopypptPaste(rds.MsDescVorlagenShape, pptslide)
+
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = invoiceText
+                .Top = CSng(milestoneGrafikYPos) + CSng(rds.yOffsetMsToText)
+                '.Left = CSng(x1) - .Width / 2
+                .Left = CSng(x1) - .Width / 2
+                '.Name = .Name & .Id
+                Try
+                    .Name = msShapeName & PTpptAnnotationType.invoice
+                Catch ex As Exception
+
+                End Try
+
+                .Title = "Invoice"
+                .AlternativeText = ""
+            End With
+        End If
+
         ' jetzt muss ggf das Datum angebracht werden 
 
         Dim msDateText As String

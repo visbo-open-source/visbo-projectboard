@@ -734,6 +734,7 @@ Public Module Module1
         calloutLU = 3
         calloutRC = 4
         calloutMV = 5
+        invoice = 6
     End Enum
 
     Public Enum PTpptTableTypes
@@ -5747,6 +5748,10 @@ Public Module Module1
             Dim restCost As Double() = Nothing
             Dim cashflow As Double() = Nothing
 
+            Dim farbePositiv As Long = awinSettings.AmpelGruen
+            Dim farbeNeutral As Long = awinSettings.AmpelNichtBewertet
+            Dim farbeNegativ As Long = awinSettings.AmpelRot
+
             Dim notUtilizedCapacity As Double() = Nothing
 
 
@@ -5774,6 +5779,15 @@ Public Module Module1
 
             For ix = 1 To invoices.Length
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = invoices(ix - 1).ToString(formatierung)
+                ' Zufluss: grün
+                If invoices(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
             Next
 
 
@@ -5796,6 +5810,15 @@ Public Module Module1
             zeile = 3
             For ix = 1 To 6
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugCome(ix - 1).ToString(formatierung)
+
+                ' Zufluss: grün
+                If kugCome(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
             Next
 
 
@@ -5805,6 +5828,14 @@ Public Module Module1
             zeile = 4
             For ix = 1 To 6
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
+                ' Abfluss: rot
+                If totalCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
             Next
 
 
@@ -5815,6 +5846,16 @@ Public Module Module1
             For ix = 1 To 6
                 kugGo(ix - 1) = ShorttermQuota * notUtilizedCapacity(ix - 1)
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
+
+                ' Abfluss: rot
+                If kugGo(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
             Next
 
             zeile = 6
@@ -5825,10 +5866,20 @@ Public Module Module1
             ReDim restCost(5)
             For ix = 1 To 6
                 restCost(ix - 1) = orgaFullCost(ix - 1) - (internPersonellCost(ix - 1) + notUtilizedCapacity(ix - 1))
-                If restCost(ix) < 0 Then
-                    restCost(ix) = 0
+                If restCost(ix - 1) < 0 Then
+                    restCost(ix - 1) = 0
                 End If
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
+
+                ' Abfluss: rot
+                If restCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
             Next
 
 
@@ -5843,6 +5894,17 @@ Public Module Module1
                 End If
 
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
+
+                ' Ergebnis: je nachdem ...grün oder rot ...
+                If cashflow(ix - 1) < 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                ElseIf cashflow(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
             Next
 
 
