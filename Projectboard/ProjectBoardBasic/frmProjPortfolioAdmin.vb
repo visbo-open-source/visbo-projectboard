@@ -185,7 +185,13 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
-                .OKButton.Visible = False
+                .OKButton.Visible = True
+                If awinSettings.englishLanguage Then
+                    .OKButton.Text = "Select as template"
+                Else
+                    .OKButton.Text = "als Vorlage wählen"
+                End If
+
 
                 '.lblVersionen1.Visible = False
                 '.lblVersionen2.Visible = False
@@ -1311,6 +1317,30 @@ Public Class frmProjPortfolioAdmin
             End Select
 
             stopRecursion = False
+        ElseIf aKtionskennung = PTTvActions.loadProjectAsTemplate Then
+            stopRecursion = True
+
+            Select Case treeLevel
+                Case 0
+                    If node.Checked Then
+                        Dim anzKnoten As Integer = TreeViewProjekte.Nodes.Count
+                        For i As Integer = 1 To anzKnoten
+                            Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
+                            If tmpNode.Name <> node.Name And tmpNode.Text <> node.Text Then
+                                tmpNode.Checked = False
+                            End If
+                        Next
+                    End If
+
+                    Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                Case 1
+
+                    Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+            End Select
+
+
+            stopRecursion = False
 
         End If
 
@@ -1923,6 +1953,87 @@ Public Class frmProjPortfolioAdmin
                         Call replaceProjectVariant(pName, selectedVariantName, False, True, 0)
 
                     End If
+
+                    ' jetzt den Text des ParentNodes aktualisieren  
+                    Call bestimmeNodeAppearance(projektNode, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
+
+            End Select
+        ElseIf actionCode = PTTvActions.loadProjectAsTemplate Then
+
+            Select Case TreeLevel
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+                    Dim pName As String = getProjectNameOfTreeNode(node.Text)
+                    Dim variantNames As Collection = AlleProjekte.getVariantNames(pName, False)
+                    Dim selectedVariantName As String = ""
+
+                    If variantNames.Count > 0 Then
+                        selectedVariantName = CStr(variantNames.Item(1))
+                    End If
+
+                    If node.Checked Then
+                        ' wurde neu hinzugefügt 
+                        ' war bereits vorher irgendwann mal eine Variante gewählt ?
+
+
+                        Dim selectionExisted As Boolean = False
+                        For j = 1 To node.Nodes.Count
+                            childNode = node.Nodes.Item(j - 1)
+                            If childNode.Checked Then
+                                selectionExisted = True
+                                selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
+                            End If
+                        Next
+
+                        If Not selectionExisted And node.Nodes.Count > 0 Then
+                            childNode = node.Nodes.Item(0)
+                            childNode.Checked = True
+                            selectedVariantName = getVariantNameOfTreeNode(childNode.Text)
+                        End If
+
+                    Else
+                        ' wurde abgewählt 
+                        ' nichts weiter tun 
+                    End If
+
+                    ' jetzt den Text des Projekt-Knotens aktualisieren  
+                    Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
+
+
+                Case 1 ' Variante ist selektiert / nicht selektiert 
+
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim selectedVariantName As String = node.Text
+                    Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
+
+                    ' es kann immer nur eine Variante selektiert sein; wenn die bisher aktive de-selektiert wird, 
+                    ' wird Standard auf checked gesetzt 
+
+                    If node.Checked = True Then
+
+                        ' alle anderen Varianten auf Unchecked setzen 
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If projektNode.Nodes.Item(i).Text <> selectedVariantName Then
+                                projektNode.Nodes.Item(i).Checked = False
+                            End If
+                        Next
+
+                    Else
+
+                        ' die Standard Variante auf Checked setzen 
+                        ' bzw. was besser ist, den ersten Child-Knoten 
+                        ' das funktioniert nämlich auch dann, wenn keine Variante mit Name "" existiert 
+                        If projektNode.Nodes.Count > 0 Then
+                            projektNode.Nodes.Item(0).Checked = True
+                            selectedVariantName = getVariantNameOfTreeNode(projektNode.Nodes.Item(0).Text)
+                        Else
+                            ' darf eigentlich gar nicht vorkommen 
+                            selectedVariantName = ""
+                        End If
+
+
+
+                    End If
+
 
                     ' jetzt den Text des ParentNodes aktualisieren  
                     Call bestimmeNodeAppearance(projektNode, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)

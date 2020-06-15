@@ -1355,10 +1355,14 @@ Public Class clsProjekt
         Try
             Dim a As Integer = Me.dauerInDays
             Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+
             Call Me.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
-            If tmpERG < 0 Then
-                neededBudget = -1 * tmpERG
-            End If
+
+            neededBudget = tmpPK + tmpOK
+            ' tk 15.6.2020 die folgende Zeile setzt doch nicht das richtige Budget !? 
+            'If tmpERG < 0 Then
+            '    neededBudget = -1 * tmpERG
+            'End If
             Erloes = neededBudget
         Catch ex As Exception
 
