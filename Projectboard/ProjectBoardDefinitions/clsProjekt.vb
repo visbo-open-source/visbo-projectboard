@@ -4937,6 +4937,37 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' setzt alle Traffic-Lights, %Done, Verantwortlichkeiten etc. zurück 
+    ''' </summary>
+    Public Sub resetTrafficLightsEtc()
+
+        For p As Integer = 1 To CountPhases
+
+            Dim curPhase As clsPhase = getPhase(p)
+
+            curPhase.verantwortlich = ""
+            curPhase.ampelStatus = 0
+            curPhase.ampelErlaeuterung = ""
+            curPhase.percentDone = 0
+            curPhase.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+            curPhase.penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+
+            For mIX As Integer = 1 To curPhase.countMilestones
+                Dim curMS As clsMeilenstein = curPhase.getMilestone(mIX)
+                curMS.verantwortlich = ""
+                curMS.ampelStatus = 0
+                curMS.ampelErlaeuterung = ""
+                curMS.percentDone = 0
+                curMS.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+                curMS.penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+            Next
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
     ''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
     ''' </summary>
     ''' <param name="name"></param>

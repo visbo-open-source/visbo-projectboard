@@ -860,6 +860,7 @@ Public Module Module1
         delAllExceptFromDB = 9
         setWriteProtection = 10
         loadPVInPPT = 11
+        loadProjectAsTemplate = 12
     End Enum
 
     ''' <summary>

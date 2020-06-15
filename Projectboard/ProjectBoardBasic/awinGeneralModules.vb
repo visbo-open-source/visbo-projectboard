@@ -901,7 +901,9 @@ Public Module awinGeneralModules
 
         If vMapping Then
 
-            vproj = erstelleProjektAusVorlage("TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
+            ' es wird kein existierendes Projekt als Vorlage verwendet 
+            Dim myProject As clsProjekt = Nothing
+            vproj = erstelleProjektAusVorlage(myProject, "TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
                                      hproj.StrategicFit, hproj.Risiko, Nothing, hproj.description, hproj.businessUnit)
 
             If Not IsNothing(vproj) Then
@@ -2178,7 +2180,9 @@ Public Module awinGeneralModules
                             startDate = CDate("01.01.2020")
                             endDate = CDate("31.12.2020")
                         End If
-                        oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "", kdNr:=projektKDNr)
+                        ' es wird kein existierendes Projekt als Vorlage verwendet 
+                        Dim myProject As clsProjekt = Nothing
+                        oldProj = erstelleProjektAusVorlage(myProject, pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "", kdNr:=projektKDNr)
 
                         If Not IsNothing(oldProj) Then
                             oldProj.kundenNummer = projektKDNr

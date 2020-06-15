@@ -13368,6 +13368,7 @@ Public Module Projekte
     '
     ''' <summary>
     ''' trägt ein neues Projekt in Showprojekte ein
+    ''' wenn myProject nicht Nothing ist, dann wird das als Vorlage hergenommen 
     ''' </summary>
     ''' <param name="pname">Projektname</param>
     ''' <param name="vorlagenName">Vorlagen-Name</param>
@@ -13381,14 +13382,15 @@ Public Module Projekte
     ''' <param name="risk">Wert für das Risiko</param>
     ''' <param name="profitUserAskedFor">der Ergebnis Forecast in Prozent der Gesamtkosten, den der Nutzer gerne sehen möchte</param>
     ''' <remarks></remarks>
-    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
+    Public Sub TrageivProjektein(ByVal myProject As clsProjekt,
+                                ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
                                  ByVal endedate As Date, ByVal budgetVorgabe As Double,
                                  ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
                                  ByVal kurzBeschreibung As String, ByVal kdNummer As String)
 
         Dim hproj As clsProjekt = Nothing
 
-        hproj = erstelleProjektAusVorlage(pname, vorlagenName, startdate, endedate, budgetVorgabe,
+        hproj = erstelleProjektAusVorlage(myProject, pname, vorlagenName, startdate, endedate, budgetVorgabe,
                                   tafelZeile, sfit, risk, profitUserAskedFor,
                                   kurzBeschreibung, "", kdNr:=kdNummer)
 
@@ -13459,7 +13461,7 @@ Public Module Projekte
     ''' <param name="kurzBeschreibung">Kurzbeschreibung des Projektes</param>
     ''' <param name="kdNr">Frei-Text für vom Kunden vergebene Projekt-Nummer; wird beim Input auf Zulässigkeit überprüft  </param>
     ''' <returns></returns>
-    Public Function erstelleProjektAusVorlage(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
+    Public Function erstelleProjektAusVorlage(ByVal myproject As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
                                 ByVal endedate As Date, ByVal budgetVorgabe As Double,
                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
                                 ByVal kurzBeschreibung As String, ByVal buName As String, Optional ByVal kdNr As String = "") As clsProjekt
@@ -13487,14 +13489,20 @@ Public Module Projekte
 
         hproj = New clsProjekt
 
-        If Projektvorlagen.Contains(vorlagenName) Then
+        If Projektvorlagen.Contains(vorlagenName) Or Not IsNothing(myproject) Then
             ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
             If IsNothing(profitUserAskedFor) Then
                 ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
             Else
                 If IsNumeric(profitUserAskedFor) Then
                     'Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).Erloes
+                    Dim referenceBudget As Double
+                    If Not IsNothing(myproject) Then
+                        referenceBudget = myproject.Erloes
+                    Else
+                        referenceBudget = Projektvorlagen.getProject(vorlagenName).Erloes
+                    End If
+
                     If referenceBudget > 0 Then
                         'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
                         'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
@@ -13517,7 +13525,23 @@ Public Module Projekte
 
         Try
             ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
-            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
+            If Not IsNothing(myproject) Then
+                Dim projVorlage As New clsProjektvorlage
+                projVorlage.VorlagenName = myproject.name
+                projVorlage.Schrift = myproject.Schrift
+                projVorlage.Schriftfarbe = myproject.Schriftfarbe
+                projVorlage.farbe = myproject.farbe
+                projVorlage.earliestStart = -6
+                projVorlage.latestStart = 6
+                projVorlage.Erloes = myproject.Erloes
+                projVorlage.AllPhases = myproject.AllPhases
+                projVorlage.hierarchy = myproject.hierarchy
+
+                projVorlage.korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
+            Else
+                Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
+            End If
+
 
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")

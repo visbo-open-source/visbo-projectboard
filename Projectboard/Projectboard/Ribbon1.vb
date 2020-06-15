@@ -1356,11 +1356,173 @@ Imports System.Web
 
     End Sub
 
+    Sub PT2ProjektNeuBasisProjekt(control As IRibbonControl)
+        Dim err As New clsErrorCodeMsg
+        Dim returnValue As DialogResult
+        Dim newProj As clsProjekt = Nothing
+
+        Dim weiterMachen As Boolean = False
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' tk 14.6 als erstes wird jetzt ein einziges Projekt gewählt ... 
+        Dim selectProjectAsVorlage As New frmProjPortfolioAdmin
+        Try
+
+            With selectProjectAsVorlage
+
+                .aKtionskennung = PTTvActions.loadProjectAsTemplate
+
+            End With
+
+            returnValue = selectProjectAsVorlage.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                weiterMachen = True
+                Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+
+                newProj = hproj.aggregateForPortfolioMgr(idArray)
+
+                ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
+                Call newProj.setBudgetAsNeeded()
+
+                ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
+                ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
+
+                Call newProj.resetTrafficLightsEtc()
+
+                ' actualDatauntil zurücksetzen
+                newProj.actualDataUntil = Date.MinValue
+
+            Else
+                weiterMachen = False
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+        If weiterMachen Then
+            Dim ProjektEingabe As New frmProjektEingabe1
+            ProjektEingabe.existingProjAsTemplate = newProj
+
+            Dim zeile As Integer = 0
+
+            Dim pNrDoesNotExistYet As Boolean = True
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            Call projektTafelInit()
+
+
+            enableOnUpdate = False
+
+
+            returnValue = ProjektEingabe.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                With ProjektEingabe
+
+                    Dim profitUserAskedFor As String = Nothing
+                    If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
+                        profitUserAskedFor = .profitAskedFor.Text
+                    End If
+
+
+                    If Not noDB Then
+
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                            If .txtbx_pNr.Text <> "" Then
+
+                                Try
+                                    pNrDoesNotExistYet = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(.txtbx_pNr.Text, err).Count = 0
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+                            If pNrDoesNotExistYet Then
+
+                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
+
+                                    ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+
+
+
+                                    Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                       CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                       5.0, 5.0, profitUserAskedFor,
+                                                       CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+                                Else
+                                    Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                                End If
+
+                            Else
+                                Call MsgBox(" Projekt-Nummer '" & .txtbx_pNr.Text & "' existiert bereits in der Datenbank!")
+                            End If
+
+
+                        Else
+
+                            Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                            appInstance.ScreenUpdating = True
+
+                            ' Projekt soll trotzdem angezeigt werden
+                            Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                   CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                   5.0, 5.0, profitUserAskedFor,
+                                                   CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+
+                        End If
+
+                    Else
+
+                        appInstance.ScreenUpdating = True
+
+                        ' Projekt soll trotzdem angezeigt werden
+                        Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                   CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                   5.0, 5.0, profitUserAskedFor,
+                                                   CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+
+                    End If
+
+                End With
+            End If
+
+            ''If Not currentConstellationName.EndsWith("(*)") Then
+            ''    currentConstellationName = currentConstellationName & " (*)"
+            ''End If
+
+            ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
+            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
+            End If
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
+    End Sub
+
     Sub PT2ProjektNeu(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
 
         Dim ProjektEingabe As New frmProjektEingabe1
+        ' es wird kein existierendes Projekt als Template gewählt .. .
+        ProjektEingabe.existingProjAsTemplate = Nothing
+
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
 
@@ -1405,7 +1567,7 @@ Imports System.Web
                                 ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                    CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                    5.0, 5.0, profitUserAskedFor,
                                                    CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
@@ -1424,7 +1586,7 @@ Imports System.Web
                         appInstance.ScreenUpdating = True
 
                         ' Projekt soll trotzdem angezeigt werden
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                        Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                5.0, 5.0, profitUserAskedFor,
                                                CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
@@ -1436,7 +1598,7 @@ Imports System.Web
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden
-                    Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                    Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                5.0, 5.0, profitUserAskedFor,
                                                CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))

@@ -43,6 +43,9 @@ Public Class frmProjPortfolioAdmin
 
     Private toolTippsAreShowing As Integer
 
+    ' tk 14.6.2020 wenn ActionKennung gleich selectPRojectasTemplate 
+    Public selProjectAsTemplate As clsProjekt = Nothing
+
     ' um den Fehler im bestimmeNode zu umgehen 
 
 
@@ -70,7 +73,14 @@ Public Class frmProjPortfolioAdmin
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Public aKtionskennung As Integer
 
+    Public Sub New()
 
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+
+    End Sub
 
     Private Sub frmProjPortfolioAdmin_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
 
@@ -154,6 +164,40 @@ Public Class frmProjPortfolioAdmin
 
                 chkbxPermanent.Visible = False
 
+            ElseIf aKtionskennung = PTTvActions.loadProjectAsTemplate Then
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    .Text = "Projekt als Vorlage wählen"
+                Else
+                    .Text = "Select project to be template"
+                End If
+
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
+
+                .SelectionSet.Visible = False
+                .SelectionReset.Visible = False
+
+                .collapseCompletely.Visible = True
+                .expandCompletely.Visible = True
+
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
+
+                .dropboxScenarioNames.Visible = False
+                .OKButton.Visible = False
+
+                '.lblVersionen1.Visible = False
+                '.lblVersionen2.Visible = False
+                '.versionsToKeep.Visible = False
+
+                onlyActive.Visible = False
+                onlyInactive.Visible = False
+                backToInit.Visible = False
+
+                storeToDBasWell.Visible = False
+
+                chkbxPermanent.Visible = False
 
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
@@ -2950,6 +2994,45 @@ Public Class frmProjPortfolioAdmin
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
 
+        ElseIf aKtionskennung = PTTvActions.loadProjectAsTemplate Then
+
+            With TreeViewProjekte
+
+                anzahlProjekte = .Nodes.Count
+
+                For p = 1 To anzahlProjekte
+                    projektNode = .Nodes.Item(p - 1)
+
+                    If projektNode.Checked Then
+                        pname = getProjectNameOfTreeNode(projektNode.Text)
+                        variantName = ""
+
+                        anzahlVarianten = projektNode.Nodes.Count
+                        For v = 1 To anzahlVarianten
+                            variantNode = projektNode.Nodes.Item(v - 1)
+                            If variantNode.Checked Then
+                                variantName = getVariantNameOfTreeNode(variantNode.Text)
+                            End If
+                        Next
+
+                        ' checken, ob es existiert, sonst weitermachen 
+                        selProjectAsTemplate = AlleProjekte.getProject(pname, variantName)
+                        If Not IsNothing(selProjectAsTemplate) Then
+                            Exit For
+                        End If
+
+                    End If
+                Next
+
+                ' Cursor auf Normal-Cursor setzen ... 
+                Me.Cursor = Cursors.Arrow
+
+                DialogResult = Windows.Forms.DialogResult.OK
+                MyBase.Close()
+            End With
+
+
+
         ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
             If dropboxScenarioNames.Text <> "" Then
@@ -3086,7 +3169,7 @@ Public Class frmProjPortfolioAdmin
                 selectedProjekte.Add(hproj, False)
             End If
 
-        Else
+        ElseIf aKtionskennung <> PTTvActions.loadProjectAsTemplate Then
             ' jetzt muss die Caption neu gesetzt werden ...
             If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
                 Try

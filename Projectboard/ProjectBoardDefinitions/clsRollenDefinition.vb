@@ -184,6 +184,8 @@
             result = columnOfEntryDate <= toDateCol And columnOfExitDate >= fromDateCol
         End If
 
+        isActiveRole = result
+
     End Function
 
     ''' <summary>
