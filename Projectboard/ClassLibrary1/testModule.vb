@@ -6161,6 +6161,11 @@ Public Module testModule
                                     If smartChartInfo.q2 <> "" Then
                                         Dim formerSU As Boolean = appInstance.ScreenUpdating
                                         appInstance.ScreenUpdating = False
+                                        Dim roleID As String = RoleDefinitions.parseRoleNameID(smartChartInfo.q2, -1).ToString
+                                        Dim paramRoleIDToAppend As String = ""
+                                        If roleID <> "" Then
+                                            paramRoleIDToAppend = "&roleID=" & roleID
+                                        End If
 
                                         Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
                                         ' 
@@ -6169,7 +6174,7 @@ Public Module testModule
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity"
+                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
                                         Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
