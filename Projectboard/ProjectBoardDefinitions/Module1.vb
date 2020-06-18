@@ -527,6 +527,7 @@ Public Module Module1
         erster = 0
         letzter = 1
         standVom = 2
+        noComparison = 3
     End Enum
 
     Public Enum PTEinheiten
@@ -5743,8 +5744,8 @@ Public Module Module1
 
             Dim otherCost As Double() = Nothing
             Dim personalCost As Double() = Nothing
-            Dim totalCost As Double() = Nothing
-            Dim orgaFullCost As Double() = Nothing
+
+
 
             Dim restCost As Double() = Nothing
             Dim cashflow As Double() = Nothing
@@ -5753,8 +5754,12 @@ Public Module Module1
             Dim farbeNeutral As Long = awinSettings.AmpelNichtBewertet
             Dim farbeNegativ As Long = awinSettings.AmpelRot
 
-            Dim notUtilizedCapacity As Double() = Nothing
 
+            ' jetzt Zufluss KUG 
+            Dim ShorttermQuota As Double = 0.0
+            If awinSettings.kurzarbeitActivated Then
+                ShorttermQuota = 0.67
+            End If
 
 
             Dim ix As Integer
@@ -5774,8 +5779,93 @@ Public Module Module1
             End If
 
             Dim invoices() As Double = ShowProjekte.getInvoices
-            ' jetzt werden die Rechnungen ermittelt ... 
-            'ReDim invoices(5)
+            Dim totalCost As Double() = ShowProjekte.getTotalCostValuesInMonth
+            Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+            Dim internPersonellCost As Double() = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern)
+
+            ' tk 17.6.20 Checks ....
+            Dim checkExternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.extern)
+            Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
+            Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(False)
+
+
+            Dim saveShowrangeLeft As Integer = showRangeLeft
+            Dim rngOffset As Integer = 0
+            If showRangeLeft > 1 Then
+                showRangeLeft = showRangeLeft - 1
+                rngOffset = 1
+            End If
+            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+            showRangeLeft = saveShowrangeLeft
+
+
+            Dim kugCome As Double() = Nothing
+            Dim kugGo As Double() = Nothing
+
+            ReDim kugCome(5)
+            ReDim kugGo(5)
+            ReDim restCost(5)
+            ReDim cashflow(5)
+
+
+            ' jetzt muss das für den jeweiligen Monat kommende Kurzarbeiter-Geld berechnet werden. 
+            For i As Integer = 0 To kugCome.Length - 1
+
+
+                If awinSettings.kurzarbeitActivated Then
+
+                    ' KugCome(i) adressiert den Folge-Monat, von notUtilizedCapacity(i) 
+                    kugCome(i) = notUtilizedCapacity(i) * ShorttermQuota
+
+                    ' kugGo(i) adressiert den gleichen Monat wie notUtilizedCapacity(i+1) !
+                    kugGo(i) = notUtilizedCapacity(i + 1) * ShorttermQuota
+
+                    ' Rest Kosten 
+                    ' orga..etc(ix) adressiert den gleichen Monat wie notUtilizedCapacity(ix+1) !
+                    restCost(i) = orgaFullCost(i) - (internPersonellCost(i) + notUtilizedCapacity(i + 1))
+
+                    If restCost(i) < 0 Then
+                        restCost(i) = 0
+                    End If
+
+                    If i = 0 Then
+                        cashflow(i) = invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    Else
+                        cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    End If
+                Else
+                    cashflow(i) = invoices(i) - (orgaFullCost(i) + checkSonstCost(i) + checkExternCost(ix))
+                End If
+
+
+            Next
+
+
+
+            Dim checkTotalCost(5) As Double
+            For ix = 0 To 5
+                checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
+                If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
+                    Call MsgBox("Unterschiede ! Intern und extern")
+                End If
+            Next
+
+
+
+            Dim testCashFlow As Double() = ShowProjekte.getCashFlow
+
+            For ix = 1 To 5
+                testCashFlow(ix) = testCashFlow(ix - 1) + testCashFlow(ix)
+            Next
+
+            If arraysAreDifferent(testCashFlow, cashflow) Then
+                Call MsgBox("Unterschiede Cash-Flow Berechnung!")
+            End If
+
+            ' tk Ende 17.6 Checks
+
+
+
             zeile = 2
 
             For ix = 1 To invoices.Length
@@ -5792,22 +5882,6 @@ Public Module Module1
             Next
 
 
-            ' jetzt Zufluss KUG 
-            Dim ShorttermQuota As Double = 0.67
-            notUtilizedCapacity = ShowProjekte.getCostoValuesInMonth()
-
-            Dim kugCome As Double() = Nothing
-            Dim kugGo As Double() = Nothing
-
-            ReDim kugCome(5)
-
-            kugCome(0) = 0
-
-            ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
-            For i As Integer = 1 To notUtilizedCapacity.Length - 1
-                kugCome(i) = notUtilizedCapacity(i - 1) * ShorttermQuota
-            Next
-
             zeile = 3
             For ix = 1 To 6
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugCome(ix - 1).ToString(formatierung)
@@ -5823,9 +5897,7 @@ Public Module Module1
             Next
 
 
-            ' jetzt Abfluss Sonst, interne Kosten, etxerne Kosten
 
-            totalCost = ShowProjekte.getTotalCostValuesInMonth
             zeile = 4
             For ix = 1 To 6
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
@@ -5842,10 +5914,8 @@ Public Module Module1
 
             ' jetzt KUG Abfluss oder non-utilized capacity 
             zeile = 5
-            ReDim kugGo(5)
-
             For ix = 1 To 6
-                kugGo(ix - 1) = ShorttermQuota * notUtilizedCapacity(ix - 1)
+
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
 
                 ' Abfluss: rot
@@ -5860,16 +5930,8 @@ Public Module Module1
             Next
 
             zeile = 6
-            orgaFullCost = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
-
-            Dim internPersonellCost As Double() = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern)
-
-            ReDim restCost(5)
             For ix = 1 To 6
-                restCost(ix - 1) = orgaFullCost(ix - 1) - (internPersonellCost(ix - 1) + notUtilizedCapacity(ix - 1))
-                If restCost(ix - 1) < 0 Then
-                    restCost(ix - 1) = 0
-                End If
+
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
 
                 ' Abfluss: rot
@@ -5886,13 +5948,8 @@ Public Module Module1
 
             ' jetzt wird Cash-Flow kumuliert geschrieben 
             zeile = 7
-            ReDim cashflow(5)
+
             For ix = 1 To 6
-                If ix = 1 Then
-                    cashflow(ix - 1) = invoices(ix - 1) + kugCome(ix - 1) - (totalCost(ix - 1) + kugGo(ix - 1) + restCost(ix - 1))
-                Else
-                    cashflow(ix - 1) = cashflow(ix - 2) + invoices(ix - 1) + kugCome(ix - 1) - (totalCost(ix - 1) + kugGo(ix - 1) + restCost(ix - 1))
-                End If
 
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
 

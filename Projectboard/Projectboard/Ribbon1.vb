@@ -2877,6 +2877,13 @@ Imports System.Web
                     tmpLabel = "Details"
                 End If
 
+            Case "PT4G2M3B3" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auslastung Rollen"
+                Else
+                    tmpLabel = "Utilization Roles"
+                End If
+
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -7996,7 +8003,21 @@ Imports System.Web
         End If
 
     End Sub
+    Public Sub exportExcelKuGDetails(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
+        Call projektTafelInit()
+
+        Try
+            Call writeProjektKuGDetailsToExcel(showRangeLeft, showRangeRight)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+    End Sub
     ''' <summary>
     ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 
     ''' </summary>

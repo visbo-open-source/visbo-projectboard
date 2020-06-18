@@ -157,6 +157,7 @@
                   <!--<button id="PT4G2M3B1" label="Exportieren" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte im sogenannten Massen-Edit bearbeiten"/>-->
                   <button id="PT4G2M3B1" getLabel ="bestimmeLabel" onAction="exportExcelSumme" supertip ="pro Projekt wird eine Übersichtszeile exportiert"/>
                   <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
+                  <button id="PT4G2M3B3" getLabel ="bestimmeLabel" onAction="exportExcelKuGDetails" supertip ="pro Interner Person werden die Auslastungswerte ausgegeben, um auf der Basis die Kurzarbeit zu beantragen"/>
                   <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
                 </menu>
               </menu>              

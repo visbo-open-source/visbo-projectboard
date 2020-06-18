@@ -3955,7 +3955,11 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            If IsNothing(pptCurrentPresentation) Then
+                Throw New Exception("Probleme mit Powerpoint Template")
+            Else
+                ' nichts tun
+            End If
         End Try
 
 

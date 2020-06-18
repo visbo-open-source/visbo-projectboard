@@ -6450,7 +6450,7 @@ Public Module awinDiagrams
         If sCInfo.prPF = ptPRPFType.portfolio Then
             considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
         ElseIf sCInfo.prPF = ptPRPFType.project Then
-            considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
+            considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison
         End If
 
 
@@ -6572,8 +6572,9 @@ Public Module awinDiagrams
                 End If
 
             Else
-                If sCInfo.hproj.hasActualValues Then
+                If sCInfo.hproj.hasActualValues And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison Then
                     dontShowPlanung = getColumnOfDate(sCInfo.hproj.actualDataUntil) >= getColumnOfDate(sCInfo.hproj.endeDate)
+
                 End If
             End If
 
@@ -6644,7 +6645,7 @@ Public Module awinDiagrams
                 End If
 
             Else
-                If Not IsNothing(sCInfo.vglProj) Then
+                If Not IsNothing(sCInfo.vglProj) And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison Then
 
                     'series
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
@@ -7265,7 +7266,7 @@ Public Module awinDiagrams
 
             If scInfo.prPF = ptPRPFType.project Then
 
-                considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+                considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate And scInfo.vergleichsTyp <> PTVergleichsTyp.noComparison
 
             Else
                 ' die Abfrage muss rein, sonst gibt es beim getColumnOfDate eine Exception

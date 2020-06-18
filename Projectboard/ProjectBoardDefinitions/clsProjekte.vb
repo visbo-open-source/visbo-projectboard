@@ -2773,6 +2773,68 @@ Public Class clsProjekte
         End Get
     End Property
 
+    Public ReadOnly Property getCashFlow() As Double()
+        Get
+            Dim saveShowrangeLeft As Integer = showRangeLeft
+
+            Dim zeitraum As Integer = showRangeRight - showRangeLeft
+            Dim kugCome As Double()
+            Dim kugGo As Double()
+
+            Dim shortTermQuota As Double = 0.67
+
+            ReDim kugCome(zeitraum)
+            ReDim kugGo(zeitraum)
+
+            Dim cashFlowValues As Double() = Nothing
+            ReDim cashFlowValues(zeitraum)
+            'Dim cashFlowValues1 As Double() = Nothing
+            'ReDim cashFlowValues1(zeitraum)
+
+            Dim invoices() As Double = ShowProjekte.getInvoices
+
+            ' den Vormonat mit betrachten 
+
+            If awinSettings.kurzarbeitActivated Then
+
+            End If
+            If showRangeLeft > 1 Then
+                showRangeLeft = showRangeLeft - 1
+            End If
+            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+            showRangeLeft = saveShowrangeLeft
+
+            Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+            Dim externCost As Double() = getCostGpValuesInMonth(PTrt.extern)
+            Dim otherCost As Double() = getTotalCostValuesInMonth(False)
+
+            ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+            For i As Integer = 0 To zeitraum
+                kugCome(i) = notUtilizedCapacity(i) * shortTermQuota
+                kugGo(i) = notUtilizedCapacity(i + 1) * shortTermQuota
+            Next
+
+            If awinSettings.kurzarbeitActivated Then
+                For i As Integer = 0 To zeitraum
+                    ' notUtilizedCapacity(i+1) adressiert den gleichen Monat wie invoices(i)
+                    cashFlowValues(i) = invoices(i) + kugCome(i) - (kugGo(i) + externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1))
+                    'cashFlowValues1(i) = invoices(i) + kugCome(i) - (externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1) * (1 - shortTermQuota))
+                Next
+                'If arraysAreDifferent(cashFlowValues, cashFlowValues1) Then
+                '    Call MsgBox("Stop , unterschiedliche Werte")
+                'End If
+
+            Else
+                For i As Integer = 0 To zeitraum
+                    cashFlowValues(i) = invoices(i) - (externCost(i) + otherCost(i) + orgaFullCost(i))
+                Next
+            End If
+
+
+            getCashFlow = cashFlowValues
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt über alle betrachteten Projekte die Earned Values zurück; 
     ''' </summary>

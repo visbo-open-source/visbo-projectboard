@@ -15837,6 +15837,194 @@ Public Module agm2
     End Sub
 
     ''' <summary>
+    ''' schreibt auslastungs-Werte in eine Excel Datei ... 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    Public Sub writeProjektKuGDetailsToExcel(ByVal von As Integer, ByVal bis As Integer)
+
+        appInstance.EnableEvents = False
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = True
+
+
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+
+
+        Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " KUG " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 3
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim ersteZeile As Excel.Range
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Ressourcen-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Type"
+
+
+
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 6
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+            Next
+
+
+        End With
+
+        Dim ws As Excel.Worksheet = CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+        zeile = 2
+        Dim zeitraum As Integer = bis - von
+
+        For i As Integer = 1 To RoleDefinitions.Count
+
+            Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+            Dim myCollection As New Collection
+            myCollection.Add(curRole.name)
+            Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
+            Dim bedarfsValues() As Double = ShowProjekte.getRoleValuesInMonth(curRole.name, considerAllSubRoles:=True)
+            Dim auslastungsValues() As Double
+
+            ReDim auslastungsValues(zeitraum)
+
+            For ix As Integer = 0 To zeitraum - 1
+                If kapaValues(ix) > 0 Then
+                    auslastungsValues(ix) = 1 - bedarfsValues(ix) / kapaValues(ix)
+                End If
+            Next
+
+
+
+            For p As Integer = 1 To 3
+
+                If p = 1 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kapa [PT]"
+                    editRange.Value = kapaValues
+                    zeile = zeile + 1
+
+                ElseIf p = 2 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Bedarf [PT]"
+                    editRange.Value = bedarfsValues
+                    zeile = zeile + 1
+
+                ElseIf p = 3 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kurzarbeit (%)"
+                    editRange.Value = auslastungsValues
+                    editRange.NumberFormat = "0.0%"
+                    zeile = zeile + 1
+
+                End If
+            Next
+
+
+        Next
+
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt die Projekt-Details in eine Excel Datei
     ''' dabei werden nur die Rollen / Kosten-Bedarfe rausgeschrieben, die in der myCollection angegeben sind
     ''' Bei Rollen werden auch alle Rollen rausgeschrieben, die Kind oder Kindeskind einer angegebenen Rolle sind    ''' 
