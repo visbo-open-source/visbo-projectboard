@@ -296,6 +296,12 @@ Public Module awinDiagrams
                 diagramTitle = "Category " & splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
 
+        ElseIf prcTyp = DiagrammTypen(9) Then
+            ' Cash-Flow
+
+            chtobjName = calcChartKennung("pf", PTpfdk.Cashflow, myCollection)
+            diagramTitle = "Cash-Flow"
+
         Else
             chtobjName = repMessages.getmsg(114)
             diagramTitle = repMessages.getmsg(114)
@@ -373,6 +379,7 @@ Public Module awinDiagrams
                     Dim sumRoleShowsPlaceHolderAndAssigned As Boolean
                     Dim pvName As String = ""
                     Dim type As Integer = -1
+
                     For r = 1 To myCollection.Count
 
                         pvName = ""
@@ -495,6 +502,7 @@ Public Module awinDiagrams
                                 objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                                 datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
                             End If
+
                         ElseIf prcTyp = DiagrammTypen(4) Then
                             ' Portfolio Charts wie Ergebnis 
 
@@ -561,6 +569,12 @@ Public Module awinDiagrams
                             End If
 
                             datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
+
+                        ElseIf prcTyp = DiagrammTypen(9) Then
+                            ' Cash-Flow
+                            einheit = " T€"
+                            objektFarbe = visboFarbeOrange
+                            datenreihe = ShowProjekte.getCashFlow
                         End If
 
                         If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
@@ -636,7 +650,6 @@ Public Module awinDiagrams
 
 
                             If prcTyp = DiagrammTypen(5) Then
-
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
                                 ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
 
@@ -656,7 +669,24 @@ Public Module awinDiagrams
                                     .HasDataLabels = False
                                 End With
 
+                            ElseIf prcTyp = DiagrammTypen(9) Then
+                                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                                    .Name = legendName
+                                    .Interior.Color = objektFarbe
+                                    .Values = datenreihe
+                                    .XValues = Xdatenreihe
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
+                                    .HasDataLabels = False
+                                    For ip As Integer = 0 To datenreihe.Length - 1
+                                        If datenreihe(ip) < 0 Then
+                                            .Points(ip + 1).interior.color = visboFarbeRed
+                                        Else
+                                            .Points(ip + 1).interior.color = visboFarbeGreen
+                                        End If
+                                    Next
 
+
+                                End With
                             Else
 
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
@@ -678,53 +708,54 @@ Public Module awinDiagrams
 
                                     Else
                                         .Name = legendName
-                                    End If
-
-                                    .Interior.Color = objektFarbe
-                                    .Values = datenreihe
-                                    .XValues = Xdatenreihe
-                                    If myCollection.Count = 1 Then
-                                        If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
-                                            .ChartType = Excel.XlChartType.xlColumnStacked
-                                        Else
-                                            .ChartType = Excel.XlChartType.xlColumnClustered
-                                        End If
-                                    Else
-                                        .ChartType = Excel.XlChartType.xlColumnStacked
-                                    End If
-                                    .HasDataLabels = False
-                                End With
-
-                                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
-                                    ' alle anderen zeigen 
-                                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-
-                                        ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
-                                        If repMessages.getmsg(277) <> "" Then
-                                            .Name = legendName & ": " & repMessages.getmsg(277)
-                                        Else
-                                            If awinSettings.englishLanguage Then
-                                                .Name = legendName & ": assigned"
-                                            Else
-                                                .Name = legendName & ": zugeordnet"
-                                            End If
                                         End If
 
-                                        .Interior.Color = awinSettings.AmpelNichtBewertet
-                                        .Values = edatenreihe
+                                        .Interior.Color = objektFarbe
+                                        .Values = datenreihe
                                         .XValues = Xdatenreihe
-                                        .ChartType = Excel.XlChartType.xlColumnStacked
+                                        If myCollection.Count = 1 Then
+                                            If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
+                                                .ChartType = Excel.XlChartType.xlColumnStacked
+                                            Else
+                                                .ChartType = Excel.XlChartType.xlColumnClustered
+                                            End If
+                                        Else
+                                            .ChartType = Excel.XlChartType.xlColumnStacked
+                                        End If
                                         .HasDataLabels = False
-
                                     End With
+
+                                    If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                                        ' alle anderen zeigen 
+                                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
+                                            ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
+                                            If repMessages.getmsg(277) <> "" Then
+                                                .Name = legendName & ": " & repMessages.getmsg(277)
+                                            Else
+                                                If awinSettings.englishLanguage Then
+                                                    .Name = legendName & ": assigned"
+                                                Else
+                                                    .Name = legendName & ": zugeordnet"
+                                                End If
+                                            End If
+
+                                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                                            .Values = edatenreihe
+                                            .XValues = Xdatenreihe
+                                            .ChartType = Excel.XlChartType.xlColumnStacked
+                                            .HasDataLabels = False
+
+                                        End With
+
+                                    End If
 
                                 End If
 
                             End If
 
-                        End If
+                        Next r
 
-                    Next r
 
                     ' wenn es sich um die weighted Variante handelt
                     If isWeightedValues Then
@@ -945,7 +976,15 @@ Public Module awinDiagrams
 
                 With newChtObj
                     .Name = chtobjName
-                    .Chart.Axes(Excel.XlAxisType.xlValue).minimumScale = 0
+                    If prcTyp = DiagrammTypen(9) Then
+
+                        .Chart.Axes(Excel.XlAxisType.xlCategory).HasTitle = False
+                        .Chart.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.Constants.xlLow
+                        .Chart.HasLegend = False
+
+                    Else
+                        .Chart.Axes(Excel.XlAxisType.xlValue).minimumScale = 0
+                    End If
                 End With
 
 
@@ -1060,7 +1099,8 @@ Public Module awinDiagrams
 
                     newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
 
-                    If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If startRedGreen > 0 And lengthRedGreen > 0 And seriesSumDatenreihe.Sum <> 0 Then
+
                         If seriesSumDatenreihe.Sum < kdatenreihe.Sum Then
                             ' die aktuelle Summe muss grün eingefärbt werden 
                             newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
@@ -1071,8 +1111,42 @@ Public Module awinDiagrams
 
                     End If
 
+                ElseIf prcTyp = DiagrammTypen(9) Then
+                    ' Cashflow 
+                    Dim scInfo As New clsSmartPPTChartInfo
+                    Dim scInfoQ2 As String = prcName
 
+                    With scInfo
+                        .prPF = ptPRPFType.portfolio
+                        .pName = currentConstellationName
+                        .q2 = scInfoQ2
+                        .elementTyp = ptElementTypen.cashflow
+                        .einheit = PTEinheiten.euro
+                        .chartTyp = PTChartTypen.Balken
+                        .vergleichsTyp = PTVergleichsTyp.noComparison
+                        .vergleichsArt = PTVergleichsArt.none
+                    End With
 
+                    Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRedGreen, lengthRedGreen)
+
+                    ' ---- hier dann final den Titel setzen 
+
+                    newChtObj.Chart.HasTitle = True
+                    newChtObj.Chart.ChartTitle.Text = newDiagramTitle
+
+                    newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
+
+                    If startRedGreen > 0 And lengthRedGreen > 0 Then
+                        If seriesSumDatenreihe.Sum > 0 Then
+                            ' die aktuelle Summe muss grün eingefärbt werden 
+                            newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
+
+                        Else
+                            ' die aktuelle Summe muss rot eingefärbt werden 
+                            newChtObj.Chart.ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                        End If
+
+                    End If
                 Else
                     newChtObj.Chart.ChartTitle.Text = diagramTitle & titleSumme
                 End If
@@ -1085,8 +1159,6 @@ Public Module awinDiagrams
 
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
-
-
 
 
 
@@ -1278,6 +1350,7 @@ Public Module awinDiagrams
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
 
+
             Else
                 diagramTitle = repMessages.getmsg(114)
             End If
@@ -1290,6 +1363,9 @@ Public Module awinDiagrams
                 Else
                     diagramTitle = CStr(myCollection.Item(1))
                 End If
+            ElseIf prcTyp = DiagrammTypen(9) Then
+                ' Cash-Flow
+                diagramTitle = "Cash-Flow"
             Else
                 diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
@@ -1568,6 +1644,12 @@ Public Module awinDiagrams
 
                     datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
 
+                ElseIf prcTyp = DiagrammTypen(9) Then
+                    ' Cash-Flow
+                    einheit = " T€"
+                    objektFarbe = visboFarbeOrange
+                    datenreihe = ShowProjekte.getCashFlow
+
                 End If
 
 
@@ -1625,6 +1707,29 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
 
+                    ElseIf prcTyp = DiagrammTypen(9) Then
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                            If awinSettings.englishLanguage Then
+                                .Name = "Sum over all projects"
+                            Else
+                                .Name = "Summe über alle Projekte"
+                            End If
+
+                            .Interior.Color = objektFarbe
+                            .Values = datenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Excel.XlChartType.xlColumnStacked
+                            .HasDataLabels = False
+                            For ip As Integer = 0 To datenreihe.Length - 1
+                                If datenreihe(ip) < 0 Then
+                                    .Points(ip + 1).interior.color = visboFarbeRed
+                                Else
+                                    .Points(ip + 1).interior.color = visboFarbeGreen
+                                End If
+                            Next
+
+
+                        End With
 
                     Else
 
@@ -1935,7 +2040,42 @@ Public Module awinDiagrams
 
                 End If
 
+            ElseIf prcTyp = DiagrammTypen(9) Then
+                ' Cashflow 
+                Dim scInfo As New clsSmartPPTChartInfo
+                Dim scInfoQ2 As String = prcName
 
+                With scInfo
+                    .prPF = ptPRPFType.portfolio
+                    .pName = currentConstellationName
+                    .q2 = scInfoQ2
+                    .elementTyp = ptElementTypen.cashflow
+                    .einheit = PTEinheiten.euro
+                    .chartTyp = PTChartTypen.Balken
+                    .vergleichsTyp = PTVergleichsTyp.noComparison
+                    .vergleichsArt = PTVergleichsArt.none
+                End With
+
+                Dim newDiagramTitle As String = bestimmeChartDiagramTitle(scInfo, seriesSumDatenreihe.Sum, kdatenreihe.Sum, startRedGreen, lengthRedGreen)
+
+                ' ---- hier dann final den Titel setzen 
+
+                .HasTitle = True
+                .ChartTitle.Text = newDiagramTitle
+
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
+
+                If startRedGreen > 0 And lengthRedGreen > 0 Then
+                    If seriesSumDatenreihe.Sum > 0 Then
+                        ' die aktuelle Summe muss grün eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbGreen
+
+                    Else
+                        ' die aktuelle Summe muss rot eingefärbt werden 
+                        .ChartTitle.Format.TextFrame2.TextRange.Characters(startRedGreen, lengthRedGreen).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+                    End If
+
+                End If
 
             Else
                 .ChartTitle.Text = diagramTitle & titleSumme
@@ -7619,21 +7759,26 @@ Public Module awinDiagrams
             qualifier2 = leadingAddOn & qualifier2
 
             startRed = 0
-            lengthRed = 0
-
+            lengthRed = tsum.ToString("##,##0.").Length
             If vergleichslinieExists And (tsum > 1.025 * vsum Or tsum < 0.975 * vsum) Then
                 startRed = qualifier2.Length + 3
-                lengthRed = tsum.ToString("##,##0.").Length
             End If
 
             If scInfo.prPF = ptPRPFType.portfolio Then
-                Dim txt As String() = {"Bedarf", "Kapa"}
+                Dim txt As String() = {"Bedarf", "Kapa", "Summe"}
                 startRed = startRed + 7
                 If awinSettings.englishLanguage Then
                     startRed = startRed - 1
-                    txt = {"Needs", "Capa"}
+                    txt = {"Needs", "Capa", "Sum"}
                 End If
-                tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                If scInfo.elementTyp = ptElementTypen.cashflow Then
+                    qualifier2 = qualifier2 & " (" & txt(2) & "="
+                    startRed = qualifier2.Length + 1
+                    tmpResult = qualifier2 & tsum.ToString("##,##0.") & zaehlEinheit & ")"
+                Else
+                    tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                End If
+
             Else
                 startRed = startRed + 4
                 tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"

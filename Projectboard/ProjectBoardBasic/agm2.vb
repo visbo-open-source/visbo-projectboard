@@ -20271,6 +20271,7 @@ Public Module agm2
             DiagrammTypen(6) = "Meilenstein Trendanalyse"
             DiagrammTypen(7) = "Phasen-Kategorie"
             DiagrammTypen(8) = "Meilenstein-Kategorie"
+            DiagrammTypen(9) = "Cash-Flow"
 
 
             Try

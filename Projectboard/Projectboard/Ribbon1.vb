@@ -2308,6 +2308,13 @@ Imports System.Web
                 'Else
                 '    tmpLabel = "Select by Structure..."
                 'End If
+            Case "PTXG1B9" ' Cash-Flow zeigen
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Cash-Flow"
+                Else
+                    tmpLabel = "Cash-Flow"
+                End If
 
             Case "PTOPTB1" ' Optimieren 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -10791,6 +10798,62 @@ Imports System.Web
 
     End Sub
 
+    Sub PT0ShowCashFlow(control As IRibbonControl)
+
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim obj As Excel.ChartObject = Nothing
+        Dim myCollection As New Collection
+
+        Call projektTafelInit()
+
+
+
+        If ShowProjekte.Count > 0 Then
+
+            If Not (showRangeRight > showRangeLeft) Then
+                showRangeLeft = getColumnOfDate(Date.Now) + 1
+                showRangeRight = showRangeLeft + 5
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            ElseIf showRangeLeft <> getColumnOfDate(Date.Now) + 1 Or showRangeRight <> showRangeLeft + 5 Then
+                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+                showRangeLeft = getColumnOfDate(Date.Now) + 1
+                showRangeRight = showRangeLeft + 5
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            End If
+
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+
+            myCollection.Add("Cashflow")
+
+            Try
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+                Call awinCreateprcCollectionDiagram(myCollection, obj, top, left, width, height, False, DiagrammTypen(9), False)
+
+                If thereAreAnyCharts(PTwindows.mptpf) Then
+                    Call showVisboWindow(PTwindows.mptpf)
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("keine Information vorhanden")
+            End Try
+
+            appInstance.ScreenUpdating = True
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfolios first ...")
+            Else
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+            End If
+        End If
+
+    End Sub
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
         Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung

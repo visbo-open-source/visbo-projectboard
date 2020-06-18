@@ -25264,6 +25264,12 @@ Public Module Projekte
                             IDkennung = IDkennung & "#" & cName
                         End If
 
+                    Case PTpfdk.Cashflow
+
+                        If mycollection.Count > 0 Then
+                            cName = CStr(mycollection.Item(1))
+                            IDkennung = IDkennung & "#" & cName
+                        End If
                 End Select
             Catch ex As Exception
 

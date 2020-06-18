@@ -409,6 +409,7 @@ Public Module Module1
         rolesAndCost = 7
         fullRolesAndCost = 8
         internExternShort = 9
+        cashflow = 10
     End Enum
 
 
@@ -521,6 +522,7 @@ Public Module Module1
     Public Enum PTVergleichsArt
         beauftragung = 0
         planungsstand = 1
+        none = 2
     End Enum
 
     Public Enum PTVergleichsTyp
@@ -560,6 +562,7 @@ Public Module Module1
         FitRisikoDependency = 20
         PhaseCategories = 21
         MilestoneCategories = 22
+        Cashflow = 23
     End Enum
 
     ' Enumeration Projekt Diagramm Kennungen 
@@ -968,7 +971,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(8) As String
+    Public DiagrammTypen(9) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(4) As String
@@ -1840,7 +1843,7 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Kosten Then
+                If CInt(tmpStr(1)) = PTpfdk.Kosten Or CInt(tmpStr(1)) = PTpfdk.Cashflow Then
 
                     found = True
 
