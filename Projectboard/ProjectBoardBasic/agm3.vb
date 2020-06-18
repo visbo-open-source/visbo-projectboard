@@ -1477,8 +1477,10 @@ Public Module agm3
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
-
+                    appInstance.DisplayAlerts = False
                     actDataWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
+                    actDataWB.Final = False
+                    appInstance.DisplayAlerts = True
 
                     Dim vstart As clsConfigActualDataImport = ActualDataConfig("valueStart")
                     ' Auslesen erste Time-Sheet
