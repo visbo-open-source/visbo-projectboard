@@ -158,6 +158,7 @@
                   <button id="PT4G2M3B1" getLabel ="bestimmeLabel" onAction="exportExcelSumme" supertip ="pro Projekt wird eine Übersichtszeile exportiert"/>
                   <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
                   <button id="PT4G2M3B3" getLabel ="bestimmeLabel" onAction="exportExcelKuGDetails" supertip ="pro Interner Person werden die Auslastungswerte ausgegeben, um auf der Basis die Kurzarbeit zu beantragen"/>
+                  <button id="PT4G2M3B4" getLabel ="bestimmeLabel" onAction="exportExcelPlanning" supertip ="Projekte mit monatlichen Ressourcen-/Kostenbedarfen ausleiten"/>
                   <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
                 </menu>
               </menu>              
@@ -474,7 +475,7 @@
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->
-      <tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTTestfunktionen" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTTestG1" >
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
@@ -483,7 +484,7 @@
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
           <button id="PTTestAPIvsClient" label="compare API versus Client Berechnung"  onAction ="PTTestAPI_Client" />
         </group>
-      </tab>
+      </tab>-->
       <!--label="Help"-->
       <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 

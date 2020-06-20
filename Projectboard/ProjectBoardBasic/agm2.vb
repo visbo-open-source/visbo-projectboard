@@ -16886,48 +16886,20 @@ Public Module agm2
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub writeProjektsForSequencing(ByVal roleCostCollection As Collection)
+    Public Sub writeProjektsForSequencing(ByVal roleCollection As Collection, ByVal costCollection As Collection)
 
         Dim err As New clsErrorCodeMsg
 
         appInstance.EnableEvents = False
 
         Dim newWB As Excel.Workbook
-        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
+        Dim considerAll As Boolean = (roleCollection.Count = 0 And costCollection.Count = 0)
 
-        Dim roleCollection As New Collection
-        Dim costCollection As New Collection
         Dim vorgabeValue As Double = 0.0
         Dim aktuellValue As Double = 0.0
         Dim vorgabeProj As clsProjekt = Nothing
         Dim roleNames As String = ""
         Dim costNames As String = ""
-
-        If Not considerAll Then
-            For Each itemName As String In roleCostCollection
-                If RoleDefinitions.containsName(itemName) Then
-                    If Not roleCollection.Contains(itemName) Then
-                        roleCollection.Add(itemName, itemName)
-                        If roleNames = "" Then
-                            roleNames = vbLf & itemName
-                        Else
-                            roleNames = roleNames & "; " & itemName
-                        End If
-                    End If
-                ElseIf CostDefinitions.containsName(itemName) Then
-                    If Not costCollection.Contains(itemName) Then
-                        costCollection.Add(itemName, itemName)
-                        If costNames = "" Then
-                            costNames = vbLf & itemName
-                        Else
-                            costNames = costNames & "; " & itemName
-                        End If
-                    End If
-                End If
-            Next
-            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
-            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
-        End If
 
         Dim fNameExtension As String = ""
         ' den Dateinamen bestimmen ...
@@ -16949,7 +16921,7 @@ Public Module agm2
         If considerAll Then
             expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
         Else
-            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\Overview " & fNameExtension & ".xlsx"
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
         End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 

@@ -535,6 +535,7 @@ Public Module Module1
     Public Enum PTEinheiten
         personentage = 0
         euro = 1
+        hrs = 2
     End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 

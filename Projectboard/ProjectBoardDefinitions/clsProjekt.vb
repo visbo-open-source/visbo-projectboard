@@ -5043,6 +5043,70 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' gibt die Ressourcenbedarfe des Projektes im Zeitraum für die angegebene Rolle zurück , bewertet in PT oder in T€ 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="inclSubRoles">optional: incl all subroles, Default: false</param>
+    ''' <param name="outPutInEuro">wenn true, werden die Werte in Euro umgerechnet</param> 
+    ''' <returns></returns>
+    Public ReadOnly Property getResourceValuesInTimeFrame(ByVal von As Integer, ByVal bis As Integer,
+                                                          ByVal roleNameID As String,
+                                                          Optional ByVal inclSubRoles As Boolean = False,
+                                                          Optional ByVal outPutInEuro As Boolean = False) As Double()
+        Get
+            Dim ergebnisValues() As Double
+            Dim timeFrame As Integer = bis - von
+            ReDim ergebnisValues(timeFrame)
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+            Dim valueArray() As Double
+
+            If projektDauer > 0 Then
+
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getRessourcenBedarf(roleNameID, inclSubRoles:=inclSubRoles, outPutInEuro:=outPutInEuro)
+                ' hier werden die Werte übernommen, die in den Zeitraum fallen ...
+                ergebnisValues = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+
+            End If
+
+            getResourceValuesInTimeFrame = ergebnisValues
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Kostenbedarfe des Projektes im Zeitraum für die angegebene Kostenart zurück , immer in T€ 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="costName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCostValuesInTimeFrame(ByVal von As Integer, ByVal bis As Integer,
+                                                          ByVal costName As String) As Double()
+        Get
+            Dim ergebnisValues() As Double
+            Dim timeFrame As Integer = bis - von
+            ReDim ergebnisValues(timeFrame)
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+            Dim valueArray() As Double
+
+            If projektDauer > 0 Then
+
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getKostenBedarf(costName)
+                ' hier werden die Werte übernommen, die in den Zeitraum fallen ...
+                ergebnisValues = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+
+            End If
+
+            getCostValuesInTimeFrame = ergebnisValues
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Summe aller Ressourcen des Projektes im angegebenen Zeitraum zurück  
     ''' </summary>
     ''' <param name="von"></param>

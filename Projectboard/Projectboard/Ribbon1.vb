@@ -2891,6 +2891,13 @@ Imports System.Web
                     tmpLabel = "Utilization Roles"
                 End If
 
+            Case "PT4G2M3B4" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Offline Planungs Daten"
+                Else
+                    tmpLabel = "Offline Planning Data"
+                End If
+
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -7941,8 +7948,9 @@ Imports System.Web
         enableOnUpdate = False
 
         Dim roleCostCollection As New Collection
+        Dim costCollection As New Collection
         Try
-            Call writeProjektsForSequencing(roleCostCollection)
+            Call writeProjektsForSequencing(roleCostCollection, costCollection)
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
@@ -7952,6 +7960,71 @@ Imports System.Web
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
     End Sub
+
+    Public Sub ExportExcelPlanning(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
+
+        End If
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            ' jetzt muss die myCollection aus den rolesToAdd und costsToAdd aufgebaut werden ; 
+            ' erstmal werden nur die rolesToAdd berücksichtigt
+
+            Dim roleCollection As New Collection
+
+            For Each element As String In frmMERoleCost.rolesToAdd
+
+                Dim teamID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
+                If Not IsNothing(tmpRole) Then
+                    roleCollection.Add(tmpRole.name)
+                End If
+
+            Next
+
+            Dim costCollection As New Collection
+            For Each element As String In frmMERoleCost.costsToAdd
+                Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(element)
+                If Not IsNothing(tmpCost) Then
+                    costCollection.Add(tmpCost.name)
+                End If
+            Next
+
+
+            Try
+                Call writeYearInitialPlanningSupportToExcel(showRangeLeft, showRangeRight, roleCollection, costCollection, PTEinheiten.hrs)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+    End Sub
+
 
     ''' <summary>
     ''' schreibt pro Projekt eine Zeile ...
@@ -7984,21 +8057,29 @@ Imports System.Web
             ' jetzt muss die myCollection aus den rolesToAdd und costsToAdd aufgebaut werden ; 
             ' erstmal werden nur die rolesToAdd berücksichtigt
 
-            Dim myCollection As New Collection
+            Dim roleCollection As New Collection
 
             For Each element As String In frmMERoleCost.rolesToAdd
 
                 Dim teamID As Integer = -1
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
                 If Not IsNothing(tmpRole) Then
-                    myCollection.Add(tmpRole.name)
+                    roleCollection.Add(tmpRole.name)
                 End If
 
             Next
 
+            Dim costCollection As New Collection
+            For Each element As String In frmMERoleCost.costsToAdd
+                Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(element)
+                If Not IsNothing(tmpCost) Then
+                    costCollection.Add(tmpCost.name)
+                End If
+            Next
+
 
             Try
-                Call writeProjektsForSequencing(myCollection)
+                Call writeProjektsForSequencing(roleCollection, costCollection)
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
