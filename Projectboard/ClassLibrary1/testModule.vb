@@ -6173,11 +6173,12 @@ Public Module testModule
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
-                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
+                                        If Not IsNothing(smartChartInfo.vpid) Then
+                                            Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
-
+                                            Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                        End If
 
 
                                         appInstance.ScreenUpdating = formerSU
