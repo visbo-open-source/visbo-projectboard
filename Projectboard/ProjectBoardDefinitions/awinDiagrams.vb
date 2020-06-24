@@ -7780,7 +7780,9 @@ Public Module awinDiagrams
                 End If
 
             Else
-                startRed = startRed + 4
+                If startRed > 0 Then
+                    startRed = startRed + 4
+                End If
                 tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
             End If
             ' tk 18.1 20 alt .. 

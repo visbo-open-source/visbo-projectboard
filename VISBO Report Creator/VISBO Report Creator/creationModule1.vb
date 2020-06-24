@@ -2910,6 +2910,12 @@ Module creationModule1
                 With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
 
                     .HasTitle = False
+                    If titleFontSize - 4 >= 6 Then
+                        .TickLabels.Font.Size = titleFontSize - 4
+                    Else
+                        .TickLabels.Font.Size = 6
+                    End If
+
 
                     ' tk 9.7.19 führt zu Fehler
                     'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
@@ -2930,6 +2936,12 @@ Module creationModule1
 
                     .HasTitle = False
                     .MinimumScale = 0
+
+                    If titleFontSize - 4 >= 6 Then
+                        .TickLabels.Font.Size = titleFontSize - 4
+                    Else
+                        .TickLabels.Font.Size = 6
+                    End If
 
                     ' führt immer zu Fehler 
                     'If .Format.TextFrame2.HasText = MsoTriState.msoCTrue Then
