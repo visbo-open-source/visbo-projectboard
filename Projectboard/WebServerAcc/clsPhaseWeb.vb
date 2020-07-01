@@ -39,8 +39,8 @@ Public Class clsPhaseWeb
     Public appearance As String
 
     ' tk ergänzt am 12,6,20
-    Private invoice As KeyValuePair(Of Double, Integer)
-    Private penalty As KeyValuePair(Of Date, Double)
+    Public invoice As KeyValuePair(Of Double, Integer)
+    Public penalty As KeyValuePair(Of Date, Double)
 
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultWeb
 
