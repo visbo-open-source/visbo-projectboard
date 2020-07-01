@@ -38,6 +38,10 @@ Public Class clsPhaseWeb
     Public originalName As String
     Public appearance As String
 
+    ' tk ergänzt am 12,6,20
+    Public invoice As KeyValuePair(Of Double, Integer)
+    Public penalty As KeyValuePair(Of Date, Double)
+
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultWeb
 
         Get
@@ -142,7 +146,8 @@ Public Class clsPhaseWeb
 
             'End Try
 
-
+            Me.invoice = .invoice
+            Me.penalty = .penalty
 
 
         End With
@@ -313,6 +318,14 @@ Public Class clsPhaseWeb
 
             'Next
 
+            If Not IsNothing(Me.invoice) Then
+                .invoice = Me.invoice
+            End If
+
+            If Not IsNothing(Me.penalty) Then
+                .penalty = Me.penalty
+            End If
+
         End With
 
     End Sub
@@ -357,6 +370,9 @@ Public Class clsPhaseWeb
 
         docURL = ""
         docUrlAppID = ""
+
+        invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+        penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 0.0)
 
     End Sub
 End Class

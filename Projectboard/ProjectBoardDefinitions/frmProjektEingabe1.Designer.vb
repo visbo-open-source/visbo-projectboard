@@ -45,6 +45,7 @@ Partial Class frmProjektEingabe1
         Me.txtbx_description = New System.Windows.Forms.TextBox()
         Me.txtbx_pNr = New System.Windows.Forms.TextBox()
         Me.lbl_Number = New System.Windows.Forms.Label()
+        Me.lbl_selProjName = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'OKButton
@@ -289,12 +290,22 @@ Partial Class frmProjektEingabe1
         Me.lbl_Number.TabIndex = 46
         Me.lbl_Number.Text = "Nummer"
         '
+        'lbl_selProjName
+        '
+        Me.lbl_selProjName.AutoSize = True
+        Me.lbl_selProjName.Location = New System.Drawing.Point(482, 7)
+        Me.lbl_selProjName.Name = "lbl_selProjName"
+        Me.lbl_selProjName.Size = New System.Drawing.Size(174, 16)
+        Me.lbl_selProjName.TabIndex = 47
+        Me.lbl_selProjName.Text = "<Projekt-Name selektieren>"
+        '
         'frmProjektEingabe1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(827, 327)
+        Me.Controls.Add(Me.lbl_selProjName)
         Me.Controls.Add(Me.lbl_Number)
         Me.Controls.Add(Me.txtbx_pNr)
         Me.Controls.Add(Me.txtbx_description)
@@ -349,4 +360,5 @@ Partial Class frmProjektEingabe1
     Public WithEvents txtbx_description As Windows.Forms.TextBox
     Public WithEvents txtbx_pNr As Windows.Forms.TextBox
     Public WithEvents lbl_Number As Windows.Forms.Label
+    Friend WithEvents lbl_selProjName As Windows.Forms.Label
 End Class

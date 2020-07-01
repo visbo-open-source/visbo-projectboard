@@ -407,6 +407,9 @@ Public Module Module1
         milestones = 5
         mta = 6
         rolesAndCost = 7
+        fullRolesAndCost = 8
+        internExternShort = 9
+        cashflow = 10
     End Enum
 
 
@@ -519,17 +522,20 @@ Public Module Module1
     Public Enum PTVergleichsArt
         beauftragung = 0
         planungsstand = 1
+        none = 2
     End Enum
 
     Public Enum PTVergleichsTyp
         erster = 0
         letzter = 1
         standVom = 2
+        noComparison = 3
     End Enum
 
     Public Enum PTEinheiten
         personentage = 0
         euro = 1
+        hrs = 2
     End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 
@@ -557,6 +563,7 @@ Public Module Module1
         FitRisikoDependency = 20
         PhaseCategories = 21
         MilestoneCategories = 22
+        Cashflow = 23
     End Enum
 
     ' Enumeration Projekt Diagramm Kennungen 
@@ -732,6 +739,7 @@ Public Module Module1
         calloutLU = 3
         calloutRC = 4
         calloutMV = 5
+        invoice = 6
     End Enum
 
     Public Enum PTpptTableTypes
@@ -857,6 +865,7 @@ Public Module Module1
         delAllExceptFromDB = 9
         setWriteProtection = 10
         loadPVInPPT = 11
+        loadProjectAsTemplate = 12
     End Enum
 
     ''' <summary>
@@ -963,7 +972,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(8) As String
+    Public DiagrammTypen(9) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(4) As String
@@ -1550,8 +1559,11 @@ Public Module Module1
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
             Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+
             tmpResult.Add(kvp.Key, newProj)
         Next
+
+
 
         prepProjectsForRoles = tmpResult
 
@@ -1577,6 +1589,14 @@ Public Module Module1
                 End If
 
             End If
+
+            ' tk 12.06.2020 
+
+            ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
+            If tmpResult.name.StartsWith("E_Kunde") Then
+                Call tmpResult.setMilestoneInvoices("Finalization")
+            End If
+
         End If
 
         prepProjectForRoles = tmpResult
@@ -1824,7 +1844,7 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Kosten Then
+                If CInt(tmpStr(1)) = PTpfdk.Kosten Or CInt(tmpStr(1)) = PTpfdk.Cashflow Then
 
                     found = True
 
@@ -2433,6 +2453,36 @@ Public Module Module1
                 ix = 0
                 If ende >= showRangeRight Then
                     anzahl = showRangeRight - anfang + 1
+                Else
+                    anzahl = ende - anfang + 1
+                End If
+            End If
+        Else
+            anzahl = 0
+        End If
+
+
+    End Sub
+
+    Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, ByVal fromDateCol As Integer, ByVal toDateCol As Integer,
+                                    ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
+
+
+
+        If istBereichInTimezone(anfang, ende, fromDateCol, toDateCol) Then
+            If anfang <= fromDateCol Then
+                ixZeitraum = 0
+                ix = fromDateCol - anfang
+                If ende >= toDateCol Then
+                    anzahl = toDateCol - fromDateCol + 1
+                Else
+                    anzahl = ende - fromDateCol + 1
+                End If
+            Else
+                ixZeitraum = anfang - fromDateCol
+                ix = 0
+                If ende >= toDateCol Then
+                    anzahl = toDateCol - anfang + 1
                 Else
                     anzahl = ende - anfang + 1
                 End If
@@ -5692,6 +5742,247 @@ Public Module Module1
 
 
     ''' <summary>
+    ''' zeichnet die Cash-Flow Tabelle 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    Public Sub zeichneTableCashFlow6Details(ByRef pptShape As pptNS.Shape)
+        Try
+            Dim tabelle As pptNS.Table = pptShape.Table
+            Dim anzSpalten As Integer = tabelle.Columns.Count
+            Dim anzZeilen As Integer = tabelle.Rows.Count
+            Dim zeile As Integer
+            Dim formatierung As String = "#,##0"
+
+            Dim otherCost As Double() = Nothing
+            Dim personalCost As Double() = Nothing
+
+
+
+            Dim restCost As Double() = Nothing
+            Dim cashflow As Double() = Nothing
+
+            Dim farbePositiv As Long = awinSettings.AmpelGruen
+            Dim farbeNeutral As Long = awinSettings.AmpelNichtBewertet
+            Dim farbeNegativ As Long = awinSettings.AmpelRot
+
+
+            ' jetzt Zufluss KUG 
+            Dim ShorttermQuota As Double = 0.0
+            If awinSettings.kurzarbeitActivated Then
+                ShorttermQuota = 0.67
+            End If
+
+
+            Dim ix As Integer
+
+            Dim reducedTable As Boolean = False
+
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten <> 7 Then
+                Call MsgBox("Tabelle should have 7 columns ... exit ...")
+                Exit Sub
+            End If
+
+            If anzZeilen <> 7 Then
+                Call MsgBox("Tabelle should have 7 rows ... exit ...")
+                Exit Sub
+            End If
+
+            Dim invoices() As Double = ShowProjekte.getInvoices
+            Dim totalCost As Double() = ShowProjekte.getTotalCostValuesInMonth
+            Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+            Dim internPersonellCost As Double() = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern)
+
+            ' tk 17.6.20 Checks ....
+            Dim checkExternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.extern)
+            Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
+            Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(False)
+
+
+            Dim saveShowrangeLeft As Integer = showRangeLeft
+            Dim rngOffset As Integer = 0
+            If showRangeLeft > 1 Then
+                showRangeLeft = showRangeLeft - 1
+                rngOffset = 1
+            End If
+            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+            showRangeLeft = saveShowrangeLeft
+
+
+            Dim kugCome As Double() = Nothing
+            Dim kugGo As Double() = Nothing
+
+            ReDim kugCome(5)
+            ReDim kugGo(5)
+            ReDim restCost(5)
+            ReDim cashflow(5)
+
+
+            ' jetzt muss das für den jeweiligen Monat kommende Kurzarbeiter-Geld berechnet werden. 
+            For i As Integer = 0 To kugCome.Length - 1
+
+
+                If awinSettings.kurzarbeitActivated Then
+
+                    ' KugCome(i) adressiert den Folge-Monat, von notUtilizedCapacity(i) 
+                    kugCome(i) = notUtilizedCapacity(i) * ShorttermQuota
+
+                    ' kugGo(i) adressiert den gleichen Monat wie notUtilizedCapacity(i+1) !
+                    kugGo(i) = notUtilizedCapacity(i + 1) * ShorttermQuota
+
+                    ' Rest Kosten 
+                    ' orga..etc(ix) adressiert den gleichen Monat wie notUtilizedCapacity(ix+1) !
+                    restCost(i) = orgaFullCost(i) - (internPersonellCost(i) + notUtilizedCapacity(i + 1))
+
+                    If restCost(i) < 0 Then
+                        restCost(i) = 0
+                    End If
+
+                    If i = 0 Then
+                        cashflow(i) = invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    Else
+                        cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    End If
+                Else
+                    cashflow(i) = invoices(i) - (orgaFullCost(i) + checkSonstCost(i) + checkExternCost(ix))
+                End If
+
+
+            Next
+
+
+
+            Dim checkTotalCost(5) As Double
+            For ix = 0 To 5
+                checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
+                If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
+                    Call MsgBox("Unterschiede ! Intern und extern")
+                End If
+            Next
+
+
+
+            Dim testCashFlow As Double() = ShowProjekte.getCashFlow
+
+            For ix = 1 To 5
+                testCashFlow(ix) = testCashFlow(ix - 1) + testCashFlow(ix)
+            Next
+
+            If arraysAreDifferent(testCashFlow, cashflow) Then
+                Call MsgBox("Unterschiede Cash-Flow Berechnung!")
+            End If
+
+            ' tk Ende 17.6 Checks
+
+
+
+            zeile = 2
+
+            For ix = 1 To invoices.Length
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = invoices(ix - 1).ToString(formatierung)
+                ' Zufluss: grün
+                If invoices(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
+            Next
+
+
+            zeile = 3
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugCome(ix - 1).ToString(formatierung)
+
+                ' Zufluss: grün
+                If kugCome(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+            Next
+
+
+
+            zeile = 4
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
+                ' Abfluss: rot
+                If totalCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+            Next
+
+
+            ' jetzt KUG Abfluss oder non-utilized capacity 
+            zeile = 5
+            For ix = 1 To 6
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
+
+                ' Abfluss: rot
+                If kugGo(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
+            Next
+
+            zeile = 6
+            For ix = 1 To 6
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
+
+                ' Abfluss: rot
+                If restCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+
+            Next
+
+
+            ' jetzt wird Cash-Flow kumuliert geschrieben 
+            zeile = 7
+
+            For ix = 1 To 6
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
+
+                ' Ergebnis: je nachdem ...grün oder rot ...
+                If cashflow(ix - 1) < 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                ElseIf cashflow(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+            Next
+
+
+        Catch ex As Exception
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
     ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
     ''' wenn q1=0 und q2=0 , dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet
     ''' wenn q1=-1, q2=-1 , dann wird %used" gezeichnet 
@@ -6307,6 +6598,34 @@ Public Module Module1
         trimToShowTimeRange = resultArray
 
 
+    End Function
+
+    Public Function trimToTimeRange(ByVal inputArray() As Double, ByVal columnOfStart As Integer, ByVal fromDateCol As Integer, ByVal toDateCol As Integer) As Double()
+
+        Dim resultArray() As Double = Nothing
+        If fromDateCol > 0 And toDateCol >= fromDateCol Then
+
+            Dim zeitraum As Integer = toDateCol - fromDateCol
+            ReDim resultArray(zeitraum)
+            Dim anfang As Integer = columnOfStart
+            Dim ende As Integer = columnOfStart + inputArray.Length - 1
+
+            Dim anzLoops As Integer = 0
+            Dim ix As Integer
+            Dim ixZeitraum As Integer
+            Call awinIntersectZeitraum(anfang, ende, ixZeitraum, ix, anzLoops)
+
+            If anzLoops > 0 Then
+                For i As Integer = 0 To anzLoops - 1
+                    resultArray(ixZeitraum + i) = inputArray(ix + i)
+                Next
+            End If
+
+        Else
+            resultArray = inputArray
+        End If
+
+        trimToTimeRange = resultArray
     End Function
 
     ''' <summary>

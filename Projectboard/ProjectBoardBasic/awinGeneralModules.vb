@@ -901,7 +901,9 @@ Public Module awinGeneralModules
 
         If vMapping Then
 
-            vproj = erstelleProjektAusVorlage("TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
+            ' es wird kein existierendes Projekt als Vorlage verwendet 
+            Dim myProject As clsProjekt = Nothing
+            vproj = erstelleProjektAusVorlage(myProject, "TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
                                      hproj.StrategicFit, hproj.Risiko, Nothing, hproj.description, hproj.businessUnit)
 
             If Not IsNothing(vproj) Then
@@ -1105,7 +1107,10 @@ Public Module awinGeneralModules
     ''' <param name="drawPlanTafel">sollen die PRojekte gezeichnet werden</param>
     ''' <param name="fileFrom3rdParty">stammt der Import von einer 3rd Party ab, müssen also evtl Ressourcen etc ergänzt werden</param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean, ByVal fileFrom3rdParty As Boolean, ByVal getSomeValuesFromOldProj As Boolean)
+    Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean,
+                                       ByVal fileFrom3rdParty As Boolean,
+                                       ByVal getSomeValuesFromOldProj As Boolean,
+                                       Optional ByVal calledFromActualDataImport As Boolean = False)
 
         Dim err As New clsErrorCodeMsg
 
@@ -1381,17 +1386,21 @@ Public Module awinGeneralModules
 
                     End If
 
-                    ' jetzt sicherstellen, dass das Projekt die Ist-Daten aus dem alten Projekt bekommt.  
-                    Try
-                        Call hproj.mergeActualValues(cproj)
-                    Catch ex As Exception
-                        ' nichts tun ... 
-                        Dim msgTxt As String = "Warnung 599 - der Merge der Ist-Daten konnte nicht durchgeführt werden ... Projekt wurde ohne Merge importiert."
-                        If awinSettings.englishLanguage Then
-                            msgTxt = "Warning 599 - Merge of Actual Data failed ... project was imported without merging."
-                        End If
-                        Call MsgBox(msgTxt)
-                    End Try
+                    If Not calledFromActualDataImport Then
+
+                        ' jetzt sicherstellen, dass das Projekt die Ist-Daten aus dem alten Projekt bekommt.  
+                        Try
+                            Call hproj.mergeActualValues(cproj)
+                        Catch ex As Exception
+                            ' nichts tun ... 
+                            Dim msgTxt As String = "Warnung 599 - der Merge der Ist-Daten konnte nicht durchgeführt werden ... Projekt wurde ohne Merge importiert."
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Warning 599 - Merge of Actual Data failed ... project was imported without merging."
+                            End If
+                            Call MsgBox(msgTxt)
+                        End Try
+
+                    End If
 
 
                     anzAktualisierungen = anzAktualisierungen + 1
@@ -1437,6 +1446,11 @@ Public Module awinGeneralModules
                 End If
             End If
 
+            ' tk 12.6.20
+            ' jetzt Testweise die Meilensteine Invoice Setzungen vornehmen 
+            If hproj.name.StartsWith("E_Kunde") Then
+                hproj.setMilestoneInvoices("Finalization")
+            End If
 
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
@@ -2173,7 +2187,9 @@ Public Module awinGeneralModules
                             startDate = CDate("01.01.2020")
                             endDate = CDate("31.12.2020")
                         End If
-                        oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "", kdNr:=projektKDNr)
+                        ' es wird kein existierendes Projekt als Vorlage verwendet 
+                        Dim myProject As clsProjekt = Nothing
+                        oldProj = erstelleProjektAusVorlage(myProject, pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "", kdNr:=projektKDNr)
 
                         If Not IsNothing(oldProj) Then
                             oldProj.kundenNummer = projektKDNr

@@ -10,11 +10,15 @@ Public Class frmProjektEingabe1
     Private endMsOffset As Integer = 0
     Private vproj As clsProjektvorlage
 
+
     Private dontFire As Boolean = False
 
     Public calcProjektStart As Date = Date.Now
     Public calcProjektEnde As Date = Date.Now.AddMonths(6)
     Public newProjektDauer As Integer = 0
+
+    Public existingProjAsTemplate As clsProjekt = Nothing
+
 
     Private Sub frmProjektEingabe1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
@@ -47,6 +51,21 @@ Public Class frmProjektEingabe1
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .txtbx_pNr.Text = ""
+
+            ' tk 14.6.2020 
+            If Not IsNothing(existingProjAsTemplate) Then
+                .vorlagenDropbox.Visible = False
+                .vorlagenDropbox.Enabled = False
+                .lbl_selProjName.Visible = True
+                .lbl_selProjName.Enabled = True
+                .lbl_selProjName.Top = .vorlagenDropbox.Top
+                If awinSettings.englishLanguage Then
+                    .lbl_selProjName.Text = "Click to select Project-Name"
+                End If
+            Else
+                .lbl_selProjName.Visible = False
+                .lbl_selProjName.Enabled = False
+            End If
 
         End With
     End Sub
@@ -618,58 +637,113 @@ Public Class frmProjektEingabe1
     ''' <remarks></remarks>
     Private Sub setParametersOfVorlage()
 
-        ' jetzt das Vorlagen Projekt bestimmen 
-        vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
+        If IsNothing(existingProjAsTemplate) Then
+            ' jetzt das Vorlagen Projekt bestimmen 
+            vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
 
 
-        If vproj.getSummeKosten > 0 Then
-            Me.lblProfitField.Visible = True
-            Me.profitAskedFor.Visible = True
-            Me.profitAskedFor.Text = "0"
+            If vproj.getSummeKosten > 0 Then
+                Me.lblProfitField.Visible = True
+                Me.profitAskedFor.Visible = True
+                Me.profitAskedFor.Text = "0"
+            Else
+                Me.lblProfitField.Visible = False
+                Me.profitAskedFor.Visible = False
+                Me.profitAskedFor.Text = "0"
+            End If
+
+            If IsNothing(vproj) Then
+                Throw New ArgumentException("Vorlage" & vorlagenDropbox.Text & " existiert nicht ...")
+            End If
+
+            ' jetzt die Dauer der Vorlage bestimmen 
+            dauerVorlage = vproj.dauerInDays
+
+
+            ' jetzt die listOfMilestones bestimmen
+            Try
+                listOFMilestones = Projektvorlagen.getProject(vorlagenDropbox.Text).getMilestones
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt die Start- und End-Milestone Dropboxen aufbauen 
+            startMilestoneDropbox.Items.Clear()
+            endMilestoneDropbox.Items.Clear()
+
+            startMilestoneDropbox.Items.Add("Projektstart")
+            For Each kvp As KeyValuePair(Of Date, String) In listOFMilestones
+                Dim msName As String = elemNameOfElemID(kvp.Value)
+                startMilestoneDropbox.Items.Add(msName)
+                endMilestoneDropbox.Items.Add(msName)
+            Next kvp
+            endMilestoneDropbox.Items.Add("Projektende")
+
+            startMilestoneDropbox.Text = "Projektstart"
+            endMilestoneDropbox.Text = "Projektende"
+
+            ' die Offsets bestimmen 
+            startMsOffset = 0
+            endMsOffset = dauerVorlage - 1
         Else
-            Me.lblProfitField.Visible = False
-            Me.profitAskedFor.Visible = False
-            Me.profitAskedFor.Text = "0"
+
+            If existingProjAsTemplate.getSummeKosten > 0 Then
+                Me.lblProfitField.Visible = True
+                Me.profitAskedFor.Visible = True
+                Me.profitAskedFor.Text = "0"
+            Else
+                Me.lblProfitField.Visible = False
+                Me.profitAskedFor.Visible = False
+                Me.profitAskedFor.Text = "0"
+            End If
+
+            ' jetzt die Dauer der Vorlage bestimmen 
+            dauerVorlage = existingProjAsTemplate.dauerInDays
+
+
+            ' jetzt die listOfMilestones bestimmen
+            Try
+                listOFMilestones = existingProjAsTemplate.getMilestones
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt die Start- und End-Milestone Dropboxen aufbauen 
+            startMilestoneDropbox.Items.Clear()
+            endMilestoneDropbox.Items.Clear()
+
+            startMilestoneDropbox.Items.Add("Projektstart")
+            For Each kvp As KeyValuePair(Of Date, String) In listOFMilestones
+                Dim msName As String = elemNameOfElemID(kvp.Value)
+                startMilestoneDropbox.Items.Add(msName)
+                endMilestoneDropbox.Items.Add(msName)
+            Next kvp
+            endMilestoneDropbox.Items.Add("Projektende")
+
+            startMilestoneDropbox.Text = "Projektstart"
+            endMilestoneDropbox.Text = "Projektende"
+
+            ' die Offsets bestimmen 
+            startMsOffset = 0
+            endMsOffset = dauerVorlage - 1
+
         End If
-
-        If IsNothing(vproj) Then
-            Throw New ArgumentException("Vorlage" & vorlagenDropbox.Text & " existiert nicht ...")
-        End If
-
-        ' jetzt die Dauer der Vorlage bestimmen 
-        dauerVorlage = vproj.dauerInDays
-
-
-        ' jetzt die listOfMilestones bestimmen
-        Try
-            listOFMilestones = Projektvorlagen.getProject(vorlagenDropbox.Text).getMilestones
-        Catch ex As Exception
-
-        End Try
-
-        ' jetzt die Start- und End-Milestone Dropboxen aufbauen 
-        startMilestoneDropbox.Items.Clear()
-        endMilestoneDropbox.Items.Clear()
-
-        startMilestoneDropbox.Items.Add("Projektstart")
-        For Each kvp As KeyValuePair(Of Date, String) In listOFMilestones
-            Dim msName As String = elemNameOfElemID(kvp.Value)
-            startMilestoneDropbox.Items.Add(msName)
-            endMilestoneDropbox.Items.Add(msName)
-        Next kvp
-        endMilestoneDropbox.Items.Add("Projektende")
-
-        startMilestoneDropbox.Text = "Projektstart"
-        endMilestoneDropbox.Text = "Projektende"
-
-        ' die Offsets bestimmen 
-        startMsOffset = 0
-        endMsOffset = dauerVorlage - 1
 
 
     End Sub
 
     Private Sub txtbx_pNr_TextChanged(sender As Object, e As EventArgs) Handles txtbx_pNr.TextChanged
+
+    End Sub
+
+    Private Sub lbl_selProjName_Click(sender As Object, e As EventArgs) Handles lbl_selProjName.Click
+        ' hier muss das Auswahl-Fenster zum Laden eines Projektes aus der Session geöffnet werden  
+
+
+
+    End Sub
+
+    Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
 
     End Sub
 End Class

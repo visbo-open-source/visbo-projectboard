@@ -4,6 +4,10 @@ Imports System.Globalization
 
 Public Class clsawinSettings
     ' Chart Settings 
+
+    ' tk 17.6.2020 
+    ' Kurzarbeit aktiviert oder nicht 
+    Public Property kurzarbeitActivated As Boolean
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
     Public Property fontsizeItems As Integer
@@ -278,6 +282,8 @@ Public Class clsawinSettings
     Sub New()
 
         ReDim _importSettings(17)
+
+        _kurzarbeitActivated = True
         _ActualdataOrgaUnits = ""
 
         _autoSetActualDataDate = False

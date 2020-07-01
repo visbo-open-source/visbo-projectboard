@@ -3975,7 +3975,11 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            If IsNothing(pptCurrentPresentation) Then
+                Throw New Exception("Probleme mit Powerpoint Template")
+            Else
+                ' nichts tun
+            End If
         End Try
 
 
@@ -4124,6 +4128,7 @@ Public Module testModule
                         kennzeichnung = "Projekt-Tafel Phasen" Or
                         kennzeichnung = "Tabelle Zielerreichung" Or
                         kennzeichnung = "Tabelle Projektstatus" Or
+                        kennzeichnung = "Tabelle Cashflow6Details" Or
                         kennzeichnung = "Tabelle Projektabhängigkeiten" Or
                         kennzeichnung = "Übersicht Besser/Schlechter" Or
                         kennzeichnung = "Tabelle Besser/Schlechter" Or
@@ -4155,6 +4160,7 @@ Public Module testModule
                         kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "TotalCost" Or
+                        kennzeichnung = "FullCost" Or
                         kennzeichnung = "OtherCost" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
@@ -4846,6 +4852,15 @@ Public Module testModule
                             Catch ex As Exception
                                 objectsDone = objectsToDo + 1
                                 Call MsgBox("Fehler bei Report-Erstellung ... Code X3678")
+                            End Try
+
+                        Case "Tabelle Cashflow6Details"
+
+                            Try
+                                Call zeichneTableCashFlow6Details(pptShape)
+
+                            Catch ex As Exception
+
                             End Try
 
                         Case "Tabelle Portfolioliste"
@@ -6144,6 +6159,7 @@ Public Module testModule
                                         End If
 
                                         .einheit = PTEinheiten.personentage
+                                        .elementTyp = ptElementTypen.roles
                                         .pName = currentConstellationName
                                         .vName = ""
                                         .vpid = currentSessionConstellation.vpID
@@ -6185,6 +6201,60 @@ Public Module testModule
                                     End If
 
                                 End If
+
+
+                                boxName = ""
+                                notYetDone = False
+
+                            Catch ex As Exception
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End Try
+
+                        Case "FullCost"
+
+
+                            Try
+
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
+
+                                'If qualifier <> "" Then
+                                Dim smartChartInfo As New clsSmartPPTChartInfo
+                                With smartChartInfo
+
+                                    If showRangeLeft > 0 Then
+                                        .zeitRaumLeft = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    End If
+                                    If showRangeRight > 0 Then
+                                        .zeitRaumRight = StartofCalendar.AddMonths(showRangeRight - 1)
+                                    End If
+
+                                    .einheit = PTEinheiten.euro
+                                    .elementTyp = ptElementTypen.fullRolesAndCost
+                                    .pName = currentConstellationName
+                                    .vName = ""
+                                    .vpid = currentSessionConstellation.vpID
+                                    .prPF = ptPRPFType.portfolio
+                                    '.q2 = bestimmeRoleQ2(qualifier, selectedRoles)
+                                    .q2 = ""
+                                    .bigType = ptReportBigTypes.charts
+
+                                    ' bei Portfolio Charts gibt es kein hproj oder vproj 
+                                    .hproj = Nothing
+                                    .vglProj = Nothing
+
+
+                                End With
+
+
+                                Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                appInstance.ScreenUpdating = False
+
+                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                appInstance.ScreenUpdating = formerSU
+
+                                'End If
 
 
                                 boxName = ""
@@ -18267,6 +18337,31 @@ Public Module testModule
             End With
 
 
+        End If
+
+        ' tk 13.6.20 ggf invoices anzeigen ...
+        Dim showInvoices As Boolean = True
+        If MS.invoice.Key > 0 And showInvoices And Not awinSettings.mppShowMsName Then
+
+            Dim invoiceText As String = MS.invoice.Key.ToString("##0.#") & " T€"
+            copiedShape = pptCopypptPaste(rds.MsDescVorlagenShape, pptslide)
+
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = invoiceText
+                .Top = CSng(milestoneGrafikYPos) + CSng(rds.yOffsetMsToText)
+                '.Left = CSng(x1) - .Width / 2
+                .Left = CSng(x1) - .Width / 2
+                '.Name = .Name & .Id
+                Try
+                    .Name = msShapeName & PTpptAnnotationType.invoice
+                Catch ex As Exception
+
+                End Try
+
+                .Title = "Invoice"
+                .AlternativeText = ""
+            End With
         End If
 
         ' jetzt muss ggf das Datum angebracht werden 

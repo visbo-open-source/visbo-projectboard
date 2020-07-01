@@ -21,6 +21,10 @@ Public Class clsResultWeb
     Public deliverables As List(Of String)
     Public percentDone As Double
 
+    ' tk 2.6.2020
+    Public invoice As KeyValuePair(Of Double, Integer)
+    Public penalty As KeyValuePair(Of Date, Double)
+
     'Friend Property fileLink As Uri
 
     Friend ReadOnly Property bewertungsCount As Integer
@@ -79,6 +83,13 @@ Public Class clsResultWeb
                     .percentDone = Me.percentDone
                 End If
 
+                If Not IsNothing(Me.invoice) Then
+                    .invoice = Me.invoice
+                End If
+
+                If Not IsNothing(Me.penalty) Then
+                    .penalty = Me.penalty
+                End If
                 Try
                     If Not IsNothing(Me.alternativeColor) Then
                         .farbe = CInt(Me.alternativeColor)
@@ -165,6 +176,11 @@ Public Class clsResultWeb
             Me.alternativeColor = .individualColor
 
             Me.percentDone = .percentDone
+
+            'Me.invoice = .invoice
+            Me.invoice = New KeyValuePair(Of Double, Integer)(10.5, 30)
+            'Me.penalty = .penalty
+            Me.penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 10.5)
 
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
@@ -255,6 +271,9 @@ Public Class clsResultWeb
         deliverables = New List(Of String)
         docURL = ""
         docUrlAppID = ""
+
+        invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+        penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 0.0)
 
     End Sub
 

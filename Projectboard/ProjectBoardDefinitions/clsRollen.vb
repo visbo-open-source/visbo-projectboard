@@ -781,6 +781,52 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' calculates for all intern employees fullCost, consisting of defaultKapa per month , multiplied with generalCostFactor multiplied with dayRate
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getFullCost(ByVal von As Integer, ByVal bis As Integer) As Double()
+        Get
+            Dim tmpResult(0) As Double
+            If von > 0 And bis >= von Then
+                ReDim tmpResult(bis - von)
+                ' correction faktor: multiply default value with correctionfaktor to get the cash-flow relevant value per Month
+                ' company have to pay full cost , including illness, holiday, general cost factor,  
+                Dim generalCostFactor As Double = 1.15
+
+
+                For Each topLEvelID As Integer In _topLevelNodeIDs
+                    Dim roleName As String = getRoleDefByID(topLEvelID).name
+                    Dim listOfAllChilds As SortedList(Of Integer, Double) = getSubRoleIDsOf(roleName)
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfAllChilds
+                        Dim curRole As clsRollenDefinition = getRoleDefByID(kvp.Key)
+                        If Not IsNothing(curRole) Then
+                            If Not (curRole.isExternRole Or curRole.isCombinedRole) Then
+
+                                Dim columnOfEntryDate As Integer = getColumnOfDate(curRole.entryDate)
+                                Dim columnOfExitDate As Integer = getColumnOfDate(curRole.exitDate)
+
+                                ' dann und nur dann handelt es sich um eine interne Person, die im Zeitraum auch aktiv beschäftigt und nicht extern ist 
+                                For i As Integer = von To bis
+                                    If i >= columnOfEntryDate And i < columnOfExitDate Then
+                                        ' dann und nur dann muss die Person bezahlt werden ... 
+                                        tmpResult(i - von) = tmpResult(i - von) + curRole.defaultKapa * generalCostFactor * curRole.tagessatzIntern / 1000
+                                    End If
+                                Next
+
+                            End If
+                        End If
+                    Next
+                Next
+
+            End If
+            getFullCost = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt eine Collection zurück, die nur die Rollen enthält , die Sammelrollen sind
     ''' </summary>
     ''' <value></value>

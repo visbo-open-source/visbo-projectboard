@@ -2736,6 +2736,7 @@
 
     End Property
 
+
     ''' <summary>
     ''' berechnet den monatlichen Ressourcenbedarf , ggf in Euro 
     ''' wenn "" für die Rolle angegeben ist: dann berechnet er einfach den gesamten Personalbedarf  

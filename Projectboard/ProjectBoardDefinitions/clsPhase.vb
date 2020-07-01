@@ -48,6 +48,45 @@ Public Class clsPhase
     Private _allRoles As List(Of clsRolle)
     Private _allCosts As List(Of clsKostenart)
 
+    ' tk ergänzt am 12,6,20
+    Private _invoice As KeyValuePair(Of Double, Integer)
+    Private _penalty As KeyValuePair(Of Date, Double)
+
+    ''' <summary>
+    ''' liest / schreibt den Betrag, der beim Erreichen dieses Meilensteins als Rechnung gestellt werden kann 
+    ''' key: Summe in T€
+    ''' Value: Terms of payment
+    ''' Vorsicht: kann Nothing sein. 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property invoice As KeyValuePair(Of Double, Integer)
+        Get
+            invoice = _invoice
+        End Get
+        Set(value As KeyValuePair(Of Double, Integer))
+            If Not IsNothing(value) Then
+                If value.Key >= 0 And value.Value >= 0 Then
+                    _invoice = value
+                End If
+            Else
+                _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+            End If
+        End Set
+    End Property
+
+    Public Property penalty As KeyValuePair(Of Date, Double)
+        Get
+            penalty = _penalty
+        End Get
+        Set(value As KeyValuePair(Of Date, Double))
+            If Not IsNothing(value) Then
+                _penalty = value
+            Else
+                _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0.0)
+            End If
+        End Set
+    End Property
+
     ''' <summary>
     ''' löscht alle Rollen der Phase
     ''' </summary>
@@ -1586,6 +1625,42 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' gets the penalty value, Read-Only
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPenaltyValue As Double
+        Get
+            getPenaltyValue = _penalty.Value
+        End Get
+    End Property
+    Public ReadOnly Property getPenaltyDate As Date
+        Get
+            getPenaltyDate = _penalty.Key
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gets the amount of invoice, due at the end of the phase
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPaymentValue As Double
+        Get
+            getPaymentValue = _invoice.Key
+        End Get
+    End Property
+    ''' <summary>
+    ''' gets the date of payment/cash arrival 
+    ''' is termsofpayments days later than end of phase
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPaymentDate As Date
+        Get
+            getPaymentDate = getEndDate.AddDays(_invoice.Value)
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
     ''' <value></value>
@@ -2709,6 +2784,10 @@ Public Class clsPhase
             .verantwortlich = verantwortlich
             .percentDone = percentDone
 
+            ' tk 2.6.20
+            .invoice = _invoice
+            .penalty = _penalty
+
             ' tk 1.6.2020 das wird vor dem Übertragen der Rollen gemacht 
             ' bis 1.6 war das nach if Not WithoutRolesCosts ...
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
@@ -3597,8 +3676,9 @@ Public Class clsPhase
         _offset = 0
         _earliestStart = -999
         _latestStart = -999
-        
 
+        _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+        _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
 
 
 
@@ -3654,7 +3734,11 @@ Public Class clsPhase
         _offset = 0
         _earliestStart = -999
         _latestStart = -999
-        
+
+        _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+        _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+
+
 
     End Sub
 
