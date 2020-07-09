@@ -38,7 +38,7 @@
         If (target IsNot Nothing) AndAlso (target.StartsWith("https")) Then
             System.Diagnostics.Process.Start(target)
         Else
-            Call MsgBox(("Item clicked: " + target))
+            'Call MsgBox(("Item clicked: " + target))
         End If
 
     End Sub
