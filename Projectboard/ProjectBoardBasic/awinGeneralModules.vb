@@ -1440,11 +1440,7 @@ Public Module awinGeneralModules
                 End If
             End If
 
-            ' tk 12.6.20
-            ' jetzt Testweise die Meilensteine Invoice Setzungen vornehmen 
-            If hproj.name.StartsWith("E_Kunde") Then
-                hproj.setMilestoneInvoices("Finalization")
-            End If
+
 
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)

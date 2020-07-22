@@ -18840,6 +18840,9 @@ Public Module agm2
 
         ' wieviele Spalten werden hier angezeigt ... 
         Dim anzSpalten As Integer = 12
+        If awinSettings.enableInvoices Then
+            anzSpalten = 16
+        End If
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -18926,6 +18929,14 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Responsible"
                     CType(.Cells(1, 11), Excel.Range).Value = "% Done"
                     CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Invoice Value"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Term of payment"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Penalty Value"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Penalty Date"
+                    End If
+
+
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
@@ -18940,6 +18951,12 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Verantwortlich"
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                     CType(.Cells(1, 12), Excel.Range).Value = "Link zum Dokument/Ordner"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Rechnungs-Betrag"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Zahlungsziel"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Vertrags-Strafe"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Datum Vertrags-Strafe"
+                    End If
                 End If
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
@@ -19063,7 +19080,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
-                            Dim isPastElement As Boolean = DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0
+                            Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
                             ' Ende-Datum 
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
@@ -19117,7 +19134,6 @@ Public Module agm2
                             End If
 
 
-
                             ' Lieferumfänge
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                             If isProtectedbyOthers Then
@@ -19156,6 +19172,39 @@ Public Module agm2
                                 'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                            End If
+
+                            ' wenn Meilensteine Invoices / Penalties haben können 
+                            If awinSettings.enableInvoices Then
+                                ' der Rechnungsbetrag und Zahlungsziel 
+                                If Not IsNothing(cMilestone.invoice) Then
+                                    If cMilestone.invoice.Key > 0 Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cMilestone.invoice.Key
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cMilestone.invoice.Value
+                                    End If
+                                End If
+
+                                ' die Penalty und das Penalty Date
+                                If Not IsNothing(cMilestone.penalty) Then
+                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
+                                    End If
+                                End If
+
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                End If
+
+
                             End If
 
 
@@ -19290,6 +19339,39 @@ Public Module agm2
                                 End If
 
 
+                                ' wenn Phasen Invoices / Penalties haben können 
+                                If awinSettings.enableInvoices Then
+                                    ' der Rechnungsbetrag und Zahlungsziel 
+                                    If Not IsNothing(cPhase.invoice) Then
+                                        If cPhase.invoice.Key > 0 Then
+                                            CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cPhase.invoice.Key
+                                            CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cPhase.invoice.Value
+                                        End If
+                                    End If
+
+                                    ' die Penalty und das Penalty Date
+                                    If Not IsNothing(cPhase.penalty) Then
+                                        If cPhase.penalty.Key < Date.MaxValue Then
+                                            CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
+                                            CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key
+                                        End If
+                                    End If
+
+                                    If isProtectedbyOthers Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                    Else
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                    End If
+
+
+                                End If
+
                             End With
                         End If
 
@@ -19309,10 +19391,11 @@ Public Module agm2
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
 
+
             Dim firstHundredColumns As Excel.Range = Nothing
 
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(12)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten)), Excel.Range)
                 infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
 
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
@@ -19339,7 +19422,7 @@ Public Module agm2
                 End With
 
                 ' percent Done 
-                With CType(infoBlock.Columns(11), Excel.Range)
+                With CType(infoDataBlock.Columns(11), Excel.Range)
                     .NumberFormat = "0#%"
                 End With
 
@@ -23170,6 +23253,12 @@ Public Module agm2
                     awinSettings.actualDataMonth = CDate(.Range("ActualDataMonth").Value)
                 Catch ex As Exception
                     awinSettings.actualDataMonth = Date.MinValue
+                End Try
+
+                Try
+                    awinSettings.enableInvoices = CBool(.Range("enableInvoices").Value)
+                Catch ex As Exception
+                    awinSettings.enableInvoices = False
                 End Try
 
                 ' tk 23.12.18 deprecated

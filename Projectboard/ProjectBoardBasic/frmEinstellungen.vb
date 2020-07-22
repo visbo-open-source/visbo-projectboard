@@ -15,6 +15,7 @@ Public Class frmEinstellungen
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
+        chkbxInvoices.Checked = awinSettings.enableInvoices
 
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             loadPFV.Checked = awinSettings.loadPFV
@@ -80,6 +81,7 @@ Public Class frmEinstellungen
             chkboxPropAnpass.Text = "adjust ressource needs proportionally"
             chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
             chkboxAmpel.Text = "show traffic lights"
+            chkbxInvoices.Text = "Edit Invoices & Penalties"
             Label1.Text = "Language for Reports"
         Else
             GroupBox1.Text = "Vergleich mit welcher Version"
@@ -93,6 +95,7 @@ Public Class frmEinstellungen
             chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
+            chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"
             Label1.Text = "Sprache für Reports"
         End If
 
@@ -180,5 +183,11 @@ Public Class frmEinstellungen
 
     End Sub
 
-
+    Private Sub chkbxInvoices_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxInvoices.CheckedChanged
+        If chkbxInvoices.Checked Then
+            awinSettings.enableInvoices = True
+        Else
+            awinSettings.enableInvoices = False
+        End If
+    End Sub
 End Class

@@ -27,6 +27,10 @@ Public Class Tabelle3
         responsible = 9
         percentDone = 10
         documentLink = 11
+        invoiceValue = 12
+        invoiceTerm = 13
+        penaltyValue = 14
+        penaltyDate = 15
     End Enum
 
     ' enthält die Spalten, wo die einzelnen Felder stehen , korreliert mit der Enum allianzSpalten
@@ -53,6 +57,10 @@ Public Class Tabelle3
         col(PTmeTe.responsible) = 10
         col(PTmeTe.percentDone) = 11
         col(PTmeTe.documentLink) = 12
+        col(PTmeTe.invoiceValue) = 13
+        col(PTmeTe.invoiceTerm) = 14
+        col(PTmeTe.penaltyValue) = 15
+        col(PTmeTe.penaltyDate) = 16
 
         ' initial setzen der Spalten ... 
 
@@ -611,6 +619,123 @@ Public Class Tabelle3
                                 Target.Value = visboZustaende.oldValue
                             End If
 
+                        Case col(PTmeTe.invoiceValue)
+                            Dim myValue As Double = 0.0
+
+                            If Not IsNothing(Target.Value) Then
+                                If IsNumeric(Target.Value) Then
+                                    If CDbl(Target.Value) >= 0 Then
+                                        myValue = CDbl(Target.Value)
+
+                                        If visboZustaende.currentZeileIsMilestone Then
+                                            Dim newInvoice As New KeyValuePair(Of Double, Integer)(myValue, cMilestone.invoice.Value)
+                                            If myValue = 0 Then
+                                                newInvoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+                                                ' Terms of payment anpassen 
+                                                meWS.Cells(currentZeile, currentColumn + 1).value = ""
+                                            End If
+                                            cMilestone.invoice = newInvoice
+                                        Else
+                                            Dim newInvoice As New KeyValuePair(Of Double, Integer)(myValue, cphase.invoice.Value)
+                                            If myValue = 0 Then
+                                                newInvoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+                                                ' Terms of payment anpassen 
+                                                meWS.Cells(currentZeile, currentColumn + 1).value = ""
+                                            End If
+                                            cphase.invoice = newInvoice
+                                        End If
+                                    Else
+                                        Target.Value = visboZustaende.oldValue
+                                    End If
+                                Else
+                                    Target.Value = visboZustaende.oldValue
+                                End If
+                            Else
+                                Target.Value = visboZustaende.oldValue
+                            End If
+
+                        Case col(PTmeTe.invoiceTerm)
+                            Dim myValue As Integer = 0
+
+                            If Not IsNothing(Target.Value) Then
+                                If IsNumeric(Target.Value) Then
+                                    If CInt(Target.Value) > 0 Then
+                                        myValue = CInt(Target.Value)
+
+                                        If visboZustaende.currentZeileIsMilestone Then
+                                            Dim newInvoice As New KeyValuePair(Of Double, Integer)(cMilestone.invoice.Key, myValue)
+                                            cMilestone.invoice = newInvoice
+                                        Else
+                                            Dim newInvoice As New KeyValuePair(Of Double, Integer)(cphase.invoice.Key, myValue)
+                                            cphase.invoice = newInvoice
+                                        End If
+                                    Else
+                                        Target.Value = visboZustaende.oldValue
+                                    End If
+                                Else
+                                    Target.Value = visboZustaende.oldValue
+                                End If
+                            Else
+                                Target.Value = visboZustaende.oldValue
+                            End If
+
+                        Case col(PTmeTe.penaltyDate)
+                            Dim myValue As Date = Date.MinValue
+
+                            If Not IsNothing(Target.Value) Then
+                                If IsDate(Target.Value) Then
+                                    If CDate(Target.Value) > hproj.startDate Then
+                                        myValue = CDate(Target.Value)
+
+                                        If visboZustaende.currentZeileIsMilestone Then
+                                            Dim newPenalty As New KeyValuePair(Of Date, Double)(myValue, cMilestone.penalty.Value)
+                                            cMilestone.penalty = newPenalty
+                                        Else
+                                            Dim newPenalty As New KeyValuePair(Of Date, Double)(myValue, cphase.penalty.Value)
+                                            cphase.penalty = newPenalty
+                                        End If
+                                    Else
+                                        Target.Value = visboZustaende.oldValue
+                                    End If
+                                Else
+                                    Target.Value = visboZustaende.oldValue
+                                End If
+                            Else
+                                Target.Value = visboZustaende.oldValue
+                            End If
+
+                        Case col(PTmeTe.penaltyValue)
+                            Dim myValue As Double = 0.0
+
+                            If Not IsNothing(Target.Value) Then
+                                If IsNumeric(Target.Value) Then
+                                    If CDbl(Target.Value) >= 0 Then
+                                        myValue = CDbl(Target.Value)
+
+                                        If visboZustaende.currentZeileIsMilestone Then
+                                            Dim newPenalty As New KeyValuePair(Of Date, Double)(cMilestone.penalty.Key, myValue)
+                                            If myValue = 0 Then
+                                                newPenalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
+                                                meWS.Cells(currentZeile, currentColumn + 1).value = ""
+                                            End If
+                                            cMilestone.penalty = newPenalty
+                                        Else
+                                            Dim newPenalty As New KeyValuePair(Of Date, Double)(cphase.penalty.Key, myValue)
+                                            If myValue = 0 Then
+                                                newPenalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
+                                                meWS.Cells(currentZeile, currentColumn + 1).value = ""
+                                            End If
+                                            cphase.penalty = newPenalty
+                                        End If
+                                    Else
+                                        Target.Value = visboZustaende.oldValue
+                                    End If
+                                Else
+                                    Target.Value = visboZustaende.oldValue
+                                End If
+                            Else
+                                Target.Value = visboZustaende.oldValue
+                            End If
 
                         Case Else
                             ' nichs tun , nicht erlaubt ..

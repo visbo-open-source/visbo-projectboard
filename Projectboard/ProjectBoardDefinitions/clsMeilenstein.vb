@@ -64,7 +64,7 @@ Public Class clsMeilenstein
             If Not IsNothing(value) Then
                 _penalty = value
             Else
-                _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0.0)
+                _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0.0)
             End If
         End Set
     End Property
@@ -884,7 +884,7 @@ Public Class clsMeilenstein
         _verantwortlich = ""
 
         _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
-        _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+        _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
 
         offset = 0
         

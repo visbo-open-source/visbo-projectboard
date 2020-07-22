@@ -205,6 +205,8 @@ Public Class clsawinSettings
 
     Public Property allowSumEditing As Boolean
 
+    Public Property enableInvoices As Boolean
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
@@ -414,6 +416,8 @@ Public Class clsawinSettings
 
         _englishLanguage = False
         _allowSumEditing = True
+
+        _enableInvoices = False
 
         _considerRiskFee = False
 

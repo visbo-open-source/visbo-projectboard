@@ -2749,7 +2749,7 @@ Public Class clsProjekte
 
                 prAnfang = hproj.Start + hproj.StartOffset
 
-                tempArray = hproj.getInvoices
+                tempArray = hproj.getInvoicesPenalties
 
                 If Not IsNothing(tempArray) Then
                     prEnde = prAnfang + tempArray.Length - 1
