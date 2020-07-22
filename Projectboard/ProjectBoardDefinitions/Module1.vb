@@ -5733,6 +5733,49 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet im PPT Report die Tabelle mit den Werten Interne , Externe, Sonst Kosten 
+    ''' Tabelle muss 2 Zeilen , drei Spalten haben
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    Public Sub zeichneTableIntExtOther(ByRef pptShape As pptNS.Shape)
+        Dim tabelle As pptNS.Table = pptShape.Table
+        Dim anzSpalten As Integer = tabelle.Columns.Count
+        Dim anzZeilen As Integer = tabelle.Rows.Count
+
+        Dim formatierung As String = "#,##0"
+
+        tabelle.Cell(2, 1).Shape.TextFrame2.TextRange.Text = "n.a"
+        tabelle.Cell(2, 2).Shape.TextFrame2.TextRange.Text = "n.a"
+        tabelle.Cell(2, 3).Shape.TextFrame2.TextRange.Text = "n.a"
+
+        anzSpalten = tabelle.Columns.Count
+        If anzSpalten <> 3 Then
+            Call MsgBox("Tabelle should have 3 columns ... exit ...")
+            Exit Sub
+        End If
+
+        If anzZeilen <> 2 Then
+            Call MsgBox("Tabelle should have 2 rows ... exit ...")
+            Exit Sub
+        End If
+
+        Try
+            Dim internPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern).Sum
+            tabelle.Cell(2, 1).Shape.TextFrame2.TextRange.Text = internPersonellCost.ToString(formatierung) & " T€"
+
+            Dim externPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.extern).Sum
+            tabelle.Cell(2, 2).Shape.TextFrame2.TextRange.Text = externPersonellCost.ToString(formatierung) & " T€"
+
+            Dim otherCost As Double = ShowProjekte.getOtherCostValuesInMonth.Sum
+            tabelle.Cell(2, 3).Shape.TextFrame2.TextRange.Text = otherCost.ToString(formatierung) & " T€"
+
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' zeichnet die Cash-Flow Tabelle 
@@ -5770,7 +5813,6 @@ Public Module Module1
 
             Dim reducedTable As Boolean = False
 
-            tabelle = pptShape.Table
             anzSpalten = tabelle.Columns.Count
             If anzSpalten <> 7 Then
                 Call MsgBox("Tabelle should have 7 columns ... exit ...")
@@ -5862,8 +5904,21 @@ Public Module Module1
                 testCashFlow(ix) = testCashFlow(ix - 1) + testCashFlow(ix)
             Next
 
-            If arraysAreDifferent(testCashFlow, cashflow) Then
-                Call MsgBox("Unterschiede Cash-Flow Berechnung!")
+            Dim atLeastOneDifference As Boolean = False
+
+            For ix = 0 To 5
+                If System.Math.Abs(testCashFlow(ix) - cashflow(ix)) > 0.01 Then
+                    atLeastOneDifference = True
+                End If
+            Next
+
+            If atLeastOneDifference Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Differences in Calculation Liquidity!")
+                Else
+                    Call MsgBox("Unterschiede in Berechnung der Liquidität!")
+                End If
+
             End If
 
             ' tk Ende 17.6 Checks

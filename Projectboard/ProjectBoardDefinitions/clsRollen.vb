@@ -793,7 +793,8 @@ Public Class clsRollen
                 ReDim tmpResult(bis - von)
                 ' correction faktor: multiply default value with correctionfaktor to get the cash-flow relevant value per Month
                 ' company have to pay full cost , including illness, holiday, general cost factor,  
-                Dim generalCostFactor As Double = 1.15
+                ' tk 26.6 das muss parametrisiert werden ... 
+                Dim generalCostFactor As Double = 1.22
 
 
                 For Each topLEvelID As Integer In _topLevelNodeIDs

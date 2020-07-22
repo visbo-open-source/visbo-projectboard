@@ -2311,9 +2311,9 @@ Imports System.Web
             Case "PTXG1B9" ' Cash-Flow zeigen
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Cash-Flow"
+                    tmpLabel = "Veränderung Liquidität"
                 Else
-                    tmpLabel = "Cash-Flow"
+                    tmpLabel = "Change Liquidity"
                 End If
 
             Case "PTOPTB1" ' Optimieren 
@@ -6555,7 +6555,9 @@ Imports System.Web
         Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
         Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
+
         If allesOK Then
 
             Call projektTafelInit()
@@ -6668,6 +6670,23 @@ Imports System.Web
 
                     ' jetzt kommt die zweite Bearbeitungs-Welle
                     ' das Rausschreiben der Test Records 
+                    'Dim referenzPortfolioName As String = "2020 Projekte aktiv"
+                    'Dim curTimeStamp As Date = Date.MinValue
+                    'Dim err As New clsErrorCodeMsg
+                    'Dim referenzPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName, "", curTimeStamp, err, storedAtOrBefore:=Date.Now)
+
+                    ' jetzt sollte hier überprüft werden
+                    ' gibt es Projekte im Referenz-Portfolio, die keine Ist-Daten erhalten haben - dann sollte jetzt ggf. hier ein Nuller Eintrag im array für diese Projekte erfolgen 
+                    ' tk - noch zu tun 
+                    ' 
+
+                    'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In referenzPortfolio.Liste
+                    '    Dim tmpPName As String = getPnameFromKey(kvp.Key)
+                    '    If Not validProjectNames.ContainsKey(tmpPName) Then
+                    '        ' jetzt muss für dieses Projekt ohne Ist-Daten ein Null-Istdaten-Array erstellt werden .. 
+                    '        Dim arrayLength As Integer = 
+                    '    End If
+                    'Next
 
                     'Protokoll schreiben...
                     ' tk 8.5.19 nicht mehr machen 
@@ -6699,6 +6718,10 @@ Imports System.Web
 
                     Next
                     ' Protokoll schreiben Ende ... 
+
+
+
+                    ' dann prüfen: gibt es Projekte, die in ActualData liegen, aber nicht im Referenz Portfolio , dann sollte empfohlen werden, diese Projekte in das aktive Referenz Portfolio aufzunehmen 
 
                     Dim gesamtIstValue As Double = 0.0
 

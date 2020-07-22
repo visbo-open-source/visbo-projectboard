@@ -4109,6 +4109,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle Zielerreichung" Or
                         kennzeichnung = "Tabelle Projektstatus" Or
                         kennzeichnung = "Tabelle Cashflow6Details" Or
+                        kennzeichnung = "Tabelle Intern-Extern-Sonst" Or
                         kennzeichnung = "Tabelle Projektabhängigkeiten" Or
                         kennzeichnung = "Übersicht Besser/Schlechter" Or
                         kennzeichnung = "Tabelle Besser/Schlechter" Or
@@ -4816,6 +4817,14 @@ Public Module testModule
                             Catch ex As Exception
                                 objectsDone = objectsToDo + 1
                                 Call MsgBox("Fehler bei Report-Erstellung ... Code X3678")
+                            End Try
+
+                        Case "Tabelle Intern-Extern-Sonst"
+                            Try
+                                Call zeichneTableIntExtOther(pptShape)
+
+                            Catch ex As Exception
+
                             End Try
 
                         Case "Tabelle Cashflow6Details"
@@ -6142,7 +6151,11 @@ Public Module testModule
                                         Dim formerSU As Boolean = appInstance.ScreenUpdating
                                         appInstance.ScreenUpdating = False
 
-                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                        Dim noLegend As Boolean = False
+                                        If qualifier2 = "noLegend" Then
+                                            noLegend = True
+                                        End If
+                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape, noLegend:=noLegend)
 
                                         appInstance.ScreenUpdating = formerSU
                                     End If
@@ -6319,7 +6332,9 @@ Public Module testModule
                             hheight = chartHeight  ' height of all charts
                             hwidth = chartWidth   ' width of all charts
                             obj = Nothing
-                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            Dim noLegend As Boolean = qualifier2 = "noLegend"
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize, noLegend:=noLegend)
 
                             reportObj = obj
 

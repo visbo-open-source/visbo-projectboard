@@ -3876,6 +3876,7 @@ Public Module agm3
             typeStrings = {"Capacity", "Baseline", "Planning"}
         End If
 
+        Dim formatierung As String = "#,##0.##"
         Dim typBezeichner As String = ""
 
         If vglType = PTVergleichsArt.planungsstand Then
@@ -3928,6 +3929,8 @@ Public Module agm3
 
         Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
         editRange.Value = values
+        editRange.NumberFormat = formatierung
+
 
     End Sub
 

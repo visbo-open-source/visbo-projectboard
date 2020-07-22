@@ -128,7 +128,9 @@ Public Module awinDiagrams
     ''' <param name="prcTyp"></param>
     ''' <remarks>myCollection am 23.5 per byval übergeben, damit im Falle der Rollen myCollection ausgeweitet werden kann ...</remarks>
     Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
-                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean, Optional ByVal givenTitleSize As Double = 12.0)
+                                       ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean,
+                                       Optional ByVal givenTitleSize As Double = 12.0,
+                                       Optional ByVal noLegend As Boolean = False)
 
         Dim von As Integer, bis As Integer
 
@@ -300,7 +302,12 @@ Public Module awinDiagrams
             ' Cash-Flow
 
             chtobjName = calcChartKennung("pf", PTpfdk.Cashflow, myCollection)
-            diagramTitle = "Cash-Flow"
+            If awinSettings.englishLanguage Then
+                diagramTitle = "Change Liquidity"
+            Else
+                diagramTitle = "Veränderung Liquidität"
+            End If
+
 
         Else
             chtobjName = repMessages.getmsg(114)
@@ -708,53 +715,53 @@ Public Module awinDiagrams
 
                                     Else
                                         .Name = legendName
-                                        End If
-
-                                        .Interior.Color = objektFarbe
-                                        .Values = datenreihe
-                                        .XValues = Xdatenreihe
-                                        If myCollection.Count = 1 Then
-                                            If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
-                                                .ChartType = Excel.XlChartType.xlColumnStacked
-                                            Else
-                                                .ChartType = Excel.XlChartType.xlColumnClustered
-                                            End If
-                                        Else
-                                            .ChartType = Excel.XlChartType.xlColumnStacked
-                                        End If
-                                        .HasDataLabels = False
-                                    End With
-
-                                    If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
-                                        ' alle anderen zeigen 
-                                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-
-                                            ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
-                                            If repMessages.getmsg(277) <> "" Then
-                                                .Name = legendName & ": " & repMessages.getmsg(277)
-                                            Else
-                                                If awinSettings.englishLanguage Then
-                                                    .Name = legendName & ": assigned"
-                                                Else
-                                                    .Name = legendName & ": zugeordnet"
-                                                End If
-                                            End If
-
-                                            .Interior.Color = awinSettings.AmpelNichtBewertet
-                                            .Values = edatenreihe
-                                            .XValues = Xdatenreihe
-                                            .ChartType = Excel.XlChartType.xlColumnStacked
-                                            .HasDataLabels = False
-
-                                        End With
-
                                     End If
+
+                                    .Interior.Color = objektFarbe
+                                    .Values = datenreihe
+                                    .XValues = Xdatenreihe
+                                    If myCollection.Count = 1 Then
+                                        If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
+                                            .ChartType = Excel.XlChartType.xlColumnStacked
+                                        Else
+                                            .ChartType = Excel.XlChartType.xlColumnClustered
+                                        End If
+                                    Else
+                                        .ChartType = Excel.XlChartType.xlColumnStacked
+                                    End If
+                                    .HasDataLabels = False
+                                End With
+
+                                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                                    ' alle anderen zeigen 
+                                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
+                                        ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
+                                        If repMessages.getmsg(277) <> "" Then
+                                            .Name = legendName & ": " & repMessages.getmsg(277)
+                                        Else
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": assigned"
+                                            Else
+                                                .Name = legendName & ": zugeordnet"
+                                            End If
+                                        End If
+
+                                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                                        .Values = edatenreihe
+                                        .XValues = Xdatenreihe
+                                        .ChartType = Excel.XlChartType.xlColumnStacked
+                                        .HasDataLabels = False
+
+                                    End With
 
                                 End If
 
                             End If
 
-                        Next r
+                        End If
+
+                    Next r
 
 
                     ' wenn es sich um die weighted Variante handelt
@@ -960,14 +967,15 @@ Public Module awinDiagrams
 
                     Else
 
-                        'ElseIf lastSC > 1 Then
+                        If Not noLegend Then
+                            newChtObj.Chart.HasLegend = True
 
-                        newChtObj.Chart.HasLegend = True
+                            newChtObj.Chart.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+                            newChtObj.Chart.Legend.Font.Size = awinSettings.fontsizeLegend
+                        Else
+                            newChtObj.Chart.HasLegend = False
+                        End If
 
-                        newChtObj.Chart.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                        newChtObj.Chart.Legend.Font.Size = awinSettings.fontsizeLegend
-                        'Else
-                        '    .HasLegend = False
                     End If
 
                 End With
@@ -1365,7 +1373,12 @@ Public Module awinDiagrams
                 End If
             ElseIf prcTyp = DiagrammTypen(9) Then
                 ' Cash-Flow
-                diagramTitle = "Cash-Flow"
+                If awinSettings.englishLanguage Then
+                    diagramTitle = "Change Liquidity"
+                Else
+                    diagramTitle = "Veränderung Liquidität"
+                End If
+
             Else
                 diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
@@ -2084,19 +2097,6 @@ Public Module awinDiagrams
             ' lastSC muss  bestimmt werden 
             lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-
-            ' Änderung 18.3.15 tk: bei einem Update muss überhaupt nix geändert werden, was LEgende angeht ; 
-            ' die ist entweder da und soll da bleiben oder sie ist nicht da und soll auch nicht kommen 
-            'If isCockpitChart Then
-            '    .HasLegend = False
-            'ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
-            '    .HasLegend = True
-            '    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
-            '    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-            '    '.Legend.Font.Size = awinSettings.fontsizeLegend
-            'Else
-            '    .HasLegend = False
-            'End If
 
         End With
 
@@ -6560,7 +6560,7 @@ Public Module awinDiagrams
     ''' <param name="chartContainer"></param>
     Public Sub createProjektChartInPPT(ByVal sCInfo As clsSmartPPTChartInfo,
                                       ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
-                                      ByVal chartContainer As PowerPoint.Shape)
+                                      ByVal chartContainer As PowerPoint.Shape, Optional ByVal noLegend As Boolean = False)
 
         ' Festlegen der Titel Schriftgrösse
         Dim titleFontSize As Single = 14
@@ -6886,17 +6886,22 @@ Public Module awinDiagrams
             End Try
 
             Try
-                .HasLegend = True
-                With .Legend
-                    .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
+                If Not noLegend Then
+                    .HasLegend = True
+                    With .Legend
+                        .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
 
-                    If titleFontSize - 4 >= 6 Then
-                        .Font.Size = titleFontSize - 4
-                    Else
-                        .Font.Size = 6
-                    End If
+                        If titleFontSize - 4 >= 6 Then
+                            .Font.Size = titleFontSize - 4
+                        Else
+                            .Font.Size = 6
+                        End If
 
-                End With
+                    End With
+                Else
+                    .HasLegend = False
+                End If
+
             Catch ex As Exception
 
             End Try
@@ -7762,6 +7767,9 @@ Public Module awinDiagrams
             lengthRed = tsum.ToString("##,##0.").Length
             If vergleichslinieExists And (tsum > 1.025 * vsum Or tsum < 0.975 * vsum) Then
                 startRed = qualifier2.Length + 3
+            Else
+                ' keine Farbe anzeigen
+                lengthRed = 0
             End If
 
             If scInfo.prPF = ptPRPFType.portfolio Then
