@@ -1355,10 +1355,14 @@ Public Class clsProjekt
         Try
             Dim a As Integer = Me.dauerInDays
             Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+
             Call Me.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
-            If tmpERG < 0 Then
-                neededBudget = -1 * tmpERG
-            End If
+
+            neededBudget = tmpPK + tmpOK
+            ' tk 15.6.2020 die folgende Zeile setzt doch nicht das richtige Budget !? 
+            'If tmpERG < 0 Then
+            '    neededBudget = -1 * tmpERG
+            'End If
             Erloes = neededBudget
         Catch ex As Exception
 
@@ -4865,6 +4869,174 @@ Public Class clsProjekt
 
     End Property
 
+    ''' <summary>
+    ''' liefert einen Array zurück, der die prognostizierten Zahlungseingänge für den Cash-Flow enthält; d.h der Array kann länger sein als das Projekt ... 
+    ''' es werden dabei auch die Vertrags-Strafen berücksichtigt  
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getInvoicesPenalties() As Double()
+        Get
+            Dim invoiceValues() As Double = Nothing
+            Dim penaltyValues() As Double = Nothing
+
+            ' dieser Array nimmt die Werte auf, der key steht dabei für den relativen Monat des Projektes, key=0 im ersten Monat des Projektes 
+            Dim invoiceArray As New SortedList(Of Integer, Double)
+            Dim penaltyArray As New SortedList(Of Integer, Double)
+
+            ' bestimme die Länge des Invoice-Arrays
+
+
+            If _Dauer > 0 Then
+
+                ReDim invoiceValues(_Dauer - 1)
+                ReDim penaltyValues(_Dauer - 1)
+                ' bestimme die Länge des Invoice-Arrays
+
+                Dim projectStartCol As Integer = getColumnOfDate(startDate)
+                Dim invoiceRelCol As Integer = -1
+                Dim penaltyRelCol As Integer = -1
+
+                For p = 1 To CountPhases
+                    Dim curPhase As clsPhase = getPhase(p)
+                    ' kann Rechnung gesteltl werden ? 
+                    If curPhase.invoice.Key > 0 Then
+                        invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
+                        If invoiceArray.ContainsKey(invoiceRelCol) Then
+                            invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curPhase.invoice.Key
+                        Else
+                            invoiceArray.Add(invoiceRelCol, curPhase.invoice.Key)
+                        End If
+                    End If
+
+                    ' Penalty relevant ?
+                    If curPhase.penalty.Key <= curPhase.getEndDate Then
+                        penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
+                        If penaltyArray.ContainsKey(penaltyRelCol) Then
+                            penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curPhase.penalty.Value
+                        Else
+                            penaltyArray.Add(penaltyRelCol, curPhase.penalty.Value)
+                        End If
+                    End If
+
+                    For msIx As Integer = 1 To curPhase.countMilestones
+
+                        Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
+                        If curMilestone.invoice.Key > 0 Then
+                            invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
+                            If invoiceArray.ContainsKey(invoiceRelCol) Then
+                                invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curMilestone.invoice.Key
+                            Else
+                                invoiceArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+                            End If
+                        End If
+
+                        ' Penalty relevant ?
+                        If curMilestone.penalty.Key <= curMilestone.getDate Then
+                            penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
+                            If penaltyArray.ContainsKey(penaltyRelCol) Then
+                                penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curMilestone.penalty.Value
+                            Else
+                                penaltyArray.Add(penaltyRelCol, curMilestone.penalty.Value)
+                            End If
+                        End If
+
+                    Next msIx
+
+                Next p
+
+                If invoiceArray.Count > 0 Or penaltyArray.Count > 0 Then
+
+                    Dim lenInvoices As Integer = 0
+                    Dim lenPenalties As Integer = 0
+                    If invoiceArray.Count > 0 Then
+                        lenInvoices = invoiceArray.Last.Key
+                    End If
+                    If penaltyArray.Count > 0 Then
+                        lenPenalties = penaltyArray.Last.Key
+                    End If
+                    Dim invPenMax As Integer = System.Math.Max(lenInvoices, lenPenalties)
+                    Dim resultDimension As Integer = System.Math.Max(_Dauer - 1, invPenMax)
+                    ReDim invoiceValues(resultDimension)
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In invoiceArray
+                        invoiceValues(kvp.Key) = kvp.Value
+                    Next
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In penaltyArray
+                        invoiceValues(kvp.Key) = invoiceValues(kvp.Key) - kvp.Value
+                    Next
+
+                Else
+                    invoiceValues = Nothing
+                End If
+
+            End If
+
+            getInvoicesPenalties = invoiceValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' setzt alle Traffic-Lights, %Done, Verantwortlichkeiten etc. zurück 
+    ''' </summary>
+    Public Sub resetTrafficLightsEtc()
+
+        For p As Integer = 1 To CountPhases
+
+            Dim curPhase As clsPhase = getPhase(p)
+
+            curPhase.verantwortlich = ""
+            curPhase.ampelStatus = 0
+            curPhase.ampelErlaeuterung = ""
+            curPhase.percentDone = 0
+            curPhase.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+            curPhase.penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
+
+            For mIX As Integer = 1 To curPhase.countMilestones
+                Dim curMS As clsMeilenstein = curPhase.getMilestone(mIX)
+                curMS.verantwortlich = ""
+                curMS.ampelStatus = 0
+                curMS.ampelErlaeuterung = ""
+                curMS.percentDone = 0
+                curMS.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+                curMS.penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
+            Next
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
+    ''' </summary>
+    ''' <param name="name"></param>
+    Public Sub setMilestoneInvoices(ByVal name As String)
+
+        Dim msNameIndices() As Integer
+        msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
+        Dim anzMilestones As Integer = msNameIndices.Length
+
+        If anzMilestones = 0 Or msNameIndices(0) = 0 Then
+            Exit Sub
+        End If
+
+
+        Try
+            Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
+            For Each msID As Integer In msNameIndices
+                Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
+                Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
+
+                curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
+            Next
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' gibt den Bedarf der Rolle in dem Monat X an; X=1 entspricht StartofCalendar usw.
@@ -4904,6 +5076,70 @@ Public Class clsProjekt
 
             getBedarfeInMonth = tmpValue
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Ressourcenbedarfe des Projektes im Zeitraum für die angegebene Rolle zurück , bewertet in PT oder in T€ 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="inclSubRoles">optional: incl all subroles, Default: false</param>
+    ''' <param name="outPutInEuro">wenn true, werden die Werte in Euro umgerechnet</param> 
+    ''' <returns></returns>
+    Public ReadOnly Property getResourceValuesInTimeFrame(ByVal von As Integer, ByVal bis As Integer,
+                                                          ByVal roleNameID As String,
+                                                          Optional ByVal inclSubRoles As Boolean = False,
+                                                          Optional ByVal outPutInEuro As Boolean = False) As Double()
+        Get
+            Dim ergebnisValues() As Double
+            Dim timeFrame As Integer = bis - von
+            ReDim ergebnisValues(timeFrame)
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+            Dim valueArray() As Double
+
+            If projektDauer > 0 Then
+
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getRessourcenBedarf(roleNameID, inclSubRoles:=inclSubRoles, outPutInEuro:=outPutInEuro)
+                ' hier werden die Werte übernommen, die in den Zeitraum fallen ...
+                ergebnisValues = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+
+            End If
+
+            getResourceValuesInTimeFrame = ergebnisValues
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Kostenbedarfe des Projektes im Zeitraum für die angegebene Kostenart zurück , immer in T€ 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="costName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCostValuesInTimeFrame(ByVal von As Integer, ByVal bis As Integer,
+                                                          ByVal costName As String) As Double()
+        Get
+            Dim ergebnisValues() As Double
+            Dim timeFrame As Integer = bis - von
+            ReDim ergebnisValues(timeFrame)
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
+            Dim start As Integer = Me.Start
+            Dim valueArray() As Double
+
+            If projektDauer > 0 Then
+
+                ReDim valueArray(projektDauer - 1)
+                valueArray = Me.getKostenBedarf(costName)
+                ' hier werden die Werte übernommen, die in den Zeitraum fallen ...
+                ergebnisValues = calcArrayIntersection(von, bis, start, start + projektDauer - 1, valueArray)
+
+            End If
+
+            getCostValuesInTimeFrame = ergebnisValues
         End Get
     End Property
 

@@ -152,8 +152,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt zurück, ob die Rolle im gegebenen Zeitraum showrangeLEft , showRangeRight überhaupt aktiv ist 
-    ''' kann später noch beschleunigt werden, in dem man columnEntryDate und columnExitDate als integer speichert ; aber nur temporär in der Session, nicht in der Datenbank 
+    ''' returns true, when role is active during timeframe given by showrangeleft and showrangeRight
     ''' </summary>
     ''' <returns></returns>
     Public Function isActiveRole() As Boolean
@@ -167,6 +166,26 @@
         End If
 
         isActiveRole = result
+    End Function
+
+    ''' <summary>
+    ''' returns true, when role is active during timeframe given by fromDateCol and toDateCol
+    ''' </summary>
+    ''' <param name="fromDateCol"></param>
+    ''' <param name="toDateCol"></param>
+    ''' <returns></returns>
+    Public Function isActiveRole(ByVal fromDateCol As Integer, ByVal toDateCol As Integer) As Boolean
+        Dim result As Boolean = True
+
+        If fromDateCol > 0 And toDateCol >= fromDateCol Then
+            Dim columnOfEntryDate As Integer = getColumnOfDate(entryDate)
+            Dim columnOfExitDate As Integer = getColumnOfDate(exitDate)
+
+            result = columnOfEntryDate <= toDateCol And columnOfExitDate >= fromDateCol
+        End If
+
+        isActiveRole = result
+
     End Function
 
     ''' <summary>

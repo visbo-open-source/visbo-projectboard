@@ -1356,11 +1356,173 @@ Imports System.Web
 
     End Sub
 
+    Sub PT2ProjektNeuBasisProjekt(control As IRibbonControl)
+        Dim err As New clsErrorCodeMsg
+        Dim returnValue As DialogResult
+        Dim newProj As clsProjekt = Nothing
+
+        Dim weiterMachen As Boolean = False
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' tk 14.6 als erstes wird jetzt ein einziges Projekt gewählt ... 
+        Dim selectProjectAsVorlage As New frmProjPortfolioAdmin
+        Try
+
+            With selectProjectAsVorlage
+
+                .aKtionskennung = PTTvActions.loadProjectAsTemplate
+
+            End With
+
+            returnValue = selectProjectAsVorlage.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                weiterMachen = True
+                Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+
+                newProj = hproj.aggregateForPortfolioMgr(idArray)
+
+                ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
+                Call newProj.setBudgetAsNeeded()
+
+                ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
+                ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
+
+                Call newProj.resetTrafficLightsEtc()
+
+                ' actualDatauntil zurücksetzen
+                newProj.actualDataUntil = Date.MinValue
+
+            Else
+                weiterMachen = False
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+        If weiterMachen Then
+            Dim ProjektEingabe As New frmProjektEingabe1
+            ProjektEingabe.existingProjAsTemplate = newProj
+
+            Dim zeile As Integer = 0
+
+            Dim pNrDoesNotExistYet As Boolean = True
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            Call projektTafelInit()
+
+
+            enableOnUpdate = False
+
+
+            returnValue = ProjektEingabe.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                With ProjektEingabe
+
+                    Dim profitUserAskedFor As String = Nothing
+                    If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
+                        profitUserAskedFor = .profitAskedFor.Text
+                    End If
+
+
+                    If Not noDB Then
+
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                            If .txtbx_pNr.Text <> "" Then
+
+                                Try
+                                    pNrDoesNotExistYet = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(.txtbx_pNr.Text, err).Count = 0
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+                            If pNrDoesNotExistYet Then
+
+                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
+
+                                    ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+
+
+
+                                    Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                       CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                       5.0, 5.0, profitUserAskedFor,
+                                                       CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+                                Else
+                                    Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                                End If
+
+                            Else
+                                Call MsgBox(" Projekt-Nummer '" & .txtbx_pNr.Text & "' existiert bereits in der Datenbank!")
+                            End If
+
+
+                        Else
+
+                            Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                            appInstance.ScreenUpdating = True
+
+                            ' Projekt soll trotzdem angezeigt werden
+                            Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                   CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                   5.0, 5.0, profitUserAskedFor,
+                                                   CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+
+                        End If
+
+                    Else
+
+                        appInstance.ScreenUpdating = True
+
+                        ' Projekt soll trotzdem angezeigt werden
+                        Call TrageivProjektein(newProj, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                                   CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                                   5.0, 5.0, profitUserAskedFor,
+                                                   CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
+
+                    End If
+
+                End With
+            End If
+
+            ''If Not currentConstellationName.EndsWith("(*)") Then
+            ''    currentConstellationName = currentConstellationName & " (*)"
+            ''End If
+
+            ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
+            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
+            If currentConstellationName <> calcLastSessionScenarioName() Then
+                currentConstellationName = calcLastSessionScenarioName()
+            End If
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
+    End Sub
+
     Sub PT2ProjektNeu(control As IRibbonControl)
 
         Dim err As New clsErrorCodeMsg
 
         Dim ProjektEingabe As New frmProjektEingabe1
+        ' es wird kein existierendes Projekt als Template gewählt .. .
+        ProjektEingabe.existingProjAsTemplate = Nothing
+
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
 
@@ -1405,7 +1567,7 @@ Imports System.Web
                                 ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                    CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                    5.0, 5.0, profitUserAskedFor,
                                                    CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
@@ -1424,7 +1586,7 @@ Imports System.Web
                         appInstance.ScreenUpdating = True
 
                         ' Projekt soll trotzdem angezeigt werden
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                        Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                5.0, 5.0, profitUserAskedFor,
                                                CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
@@ -1436,7 +1598,7 @@ Imports System.Web
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden
-                    Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                    Call TrageivProjektein(Nothing, .projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
                                                5.0, 5.0, profitUserAskedFor,
                                                CStr(.txtbx_description.Text), CStr(.txtbx_pNr.Text))
@@ -2146,6 +2308,13 @@ Imports System.Web
                 'Else
                 '    tmpLabel = "Select by Structure..."
                 'End If
+            Case "PTXG1B9" ' Cash-Flow zeigen
+
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Veränderung Liquidität"
+                Else
+                    tmpLabel = "Change Liquidity"
+                End If
 
             Case "PTOPTB1" ' Optimieren 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2713,6 +2882,20 @@ Imports System.Web
                     tmpLabel = "Details"
                 Else
                     tmpLabel = "Details"
+                End If
+
+            Case "PT4G2M3B3" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auslastung Rollen"
+                Else
+                    tmpLabel = "Utilization Roles"
+                End If
+
+            Case "PT4G2M3B4" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Offline Planungs Daten"
+                Else
+                    tmpLabel = "Offline Planning Data"
                 End If
 
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
@@ -6372,7 +6555,9 @@ Imports System.Web
         Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
         Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
+
         If allesOK Then
 
             Call projektTafelInit()
@@ -6485,6 +6670,23 @@ Imports System.Web
 
                     ' jetzt kommt die zweite Bearbeitungs-Welle
                     ' das Rausschreiben der Test Records 
+                    'Dim referenzPortfolioName As String = "2020 Projekte aktiv"
+                    'Dim curTimeStamp As Date = Date.MinValue
+                    'Dim err As New clsErrorCodeMsg
+                    'Dim referenzPortfolio As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName, "", curTimeStamp, err, storedAtOrBefore:=Date.Now)
+
+                    ' jetzt sollte hier überprüft werden
+                    ' gibt es Projekte im Referenz-Portfolio, die keine Ist-Daten erhalten haben - dann sollte jetzt ggf. hier ein Nuller Eintrag im array für diese Projekte erfolgen 
+                    ' tk - noch zu tun 
+                    ' 
+
+                    'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In referenzPortfolio.Liste
+                    '    Dim tmpPName As String = getPnameFromKey(kvp.Key)
+                    '    If Not validProjectNames.ContainsKey(tmpPName) Then
+                    '        ' jetzt muss für dieses Projekt ohne Ist-Daten ein Null-Istdaten-Array erstellt werden .. 
+                    '        Dim arrayLength As Integer = 
+                    '    End If
+                    'Next
 
                     'Protokoll schreiben...
                     ' tk 8.5.19 nicht mehr machen 
@@ -6516,6 +6718,10 @@ Imports System.Web
 
                     Next
                     ' Protokoll schreiben Ende ... 
+
+
+
+                    ' dann prüfen: gibt es Projekte, die in ActualData liegen, aber nicht im Referenz Portfolio , dann sollte empfohlen werden, diese Projekte in das aktive Referenz Portfolio aufzunehmen 
 
                     Dim gesamtIstValue As Double = 0.0
 
@@ -6660,7 +6866,9 @@ Imports System.Web
 
                     ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                     Try
-                        Call importProjekteEintragen(importDate, True, False, False)
+                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False,
+                                                     getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
+
 
                         ' ImportDatei ins archive-Directory schieben
 
@@ -7589,7 +7797,7 @@ Imports System.Web
                 Try
                     ' es muss der Parameter FileFrom3RdParty auf False gesetzt sein
                     ' dieser Parameter bewirkt, dass die alten Ressourcen-Zuordnungen aus der Datenbank übernommen werden, wenn das eingelesene File eine Ressourcen Summe von 0 hat. 
-                    Call importProjekteEintragen(importDate, True, False, False)
+                    Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False, getSomeValuesFromOldProj:=False, calledFromActualDataImport:=False)
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
@@ -7765,8 +7973,9 @@ Imports System.Web
         enableOnUpdate = False
 
         Dim roleCostCollection As New Collection
+        Dim costCollection As New Collection
         Try
-            Call writeProjektsForSequencing(roleCostCollection)
+            Call writeProjektsForSequencing(roleCostCollection, costCollection)
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
@@ -7776,6 +7985,71 @@ Imports System.Web
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
     End Sub
+
+    Public Sub ExportExcelPlanning(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
+
+        End If
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+            ' jetzt muss die myCollection aus den rolesToAdd und costsToAdd aufgebaut werden ; 
+            ' erstmal werden nur die rolesToAdd berücksichtigt
+
+            Dim roleCollection As New Collection
+
+            For Each element As String In frmMERoleCost.rolesToAdd
+
+                Dim teamID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
+                If Not IsNothing(tmpRole) Then
+                    roleCollection.Add(tmpRole.name)
+                End If
+
+            Next
+
+            Dim costCollection As New Collection
+            For Each element As String In frmMERoleCost.costsToAdd
+                Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(element)
+                If Not IsNothing(tmpCost) Then
+                    costCollection.Add(tmpCost.name)
+                End If
+            Next
+
+
+            Try
+                Call writeYearInitialPlanningSupportToExcel(showRangeLeft, showRangeRight, roleCollection, costCollection, PTEinheiten.hrs)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+    End Sub
+
 
     ''' <summary>
     ''' schreibt pro Projekt eine Zeile ...
@@ -7808,21 +8082,29 @@ Imports System.Web
             ' jetzt muss die myCollection aus den rolesToAdd und costsToAdd aufgebaut werden ; 
             ' erstmal werden nur die rolesToAdd berücksichtigt
 
-            Dim myCollection As New Collection
+            Dim roleCollection As New Collection
 
             For Each element As String In frmMERoleCost.rolesToAdd
 
                 Dim teamID As Integer = -1
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
                 If Not IsNothing(tmpRole) Then
-                    myCollection.Add(tmpRole.name)
+                    roleCollection.Add(tmpRole.name)
                 End If
 
             Next
 
+            Dim costCollection As New Collection
+            For Each element As String In frmMERoleCost.costsToAdd
+                Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(element)
+                If Not IsNothing(tmpCost) Then
+                    costCollection.Add(tmpCost.name)
+                End If
+            Next
+
 
             Try
-                Call writeProjektsForSequencing(myCollection)
+                Call writeProjektsForSequencing(roleCollection, costCollection)
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
@@ -7834,7 +8116,21 @@ Imports System.Web
         End If
 
     End Sub
+    Public Sub exportExcelKuGDetails(control As IRibbonControl)
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
+        Call projektTafelInit()
+
+        Try
+            Call writeProjektKuGDetailsToExcel(showRangeLeft, showRangeRight)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+    End Sub
     ''' <summary>
     ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 
     ''' </summary>
@@ -10608,6 +10904,62 @@ Imports System.Web
 
     End Sub
 
+    Sub PT0ShowCashFlow(control As IRibbonControl)
+
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim obj As Excel.ChartObject = Nothing
+        Dim myCollection As New Collection
+
+        Call projektTafelInit()
+
+
+
+        If ShowProjekte.Count > 0 Then
+
+            If Not (showRangeRight > showRangeLeft) Then
+                showRangeLeft = getColumnOfDate(Date.Now) + 1
+                showRangeRight = showRangeLeft + 5
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            ElseIf showRangeLeft <> getColumnOfDate(Date.Now) + 1 Or showRangeRight <> showRangeLeft + 5 Then
+                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+                showRangeLeft = getColumnOfDate(Date.Now) + 1
+                showRangeRight = showRangeLeft + 5
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            End If
+
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+
+            myCollection.Add("Cashflow")
+
+            Try
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+                Call awinCreateprcCollectionDiagram(myCollection, obj, top, left, width, height, False, DiagrammTypen(9), False)
+
+                If thereAreAnyCharts(PTwindows.mptpf) Then
+                    Call showVisboWindow(PTwindows.mptpf)
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("keine Information vorhanden")
+            End Try
+
+            appInstance.ScreenUpdating = True
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfolios first ...")
+            Else
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
+            End If
+        End If
+
+    End Sub
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
         Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung

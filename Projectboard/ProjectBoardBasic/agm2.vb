@@ -15837,6 +15837,194 @@ Public Module agm2
     End Sub
 
     ''' <summary>
+    ''' schreibt auslastungs-Werte in eine Excel Datei ... 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    Public Sub writeProjektKuGDetailsToExcel(ByVal von As Integer, ByVal bis As Integer)
+
+        appInstance.EnableEvents = False
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = True
+
+
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+
+
+        Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " KUG " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 3
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim ersteZeile As Excel.Range
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Ressourcen-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Type"
+
+
+
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 6
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+            Next
+
+
+        End With
+
+        Dim ws As Excel.Worksheet = CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+        zeile = 2
+        Dim zeitraum As Integer = bis - von
+
+        For i As Integer = 1 To RoleDefinitions.Count
+
+            Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+            Dim myCollection As New Collection
+            myCollection.Add(curRole.name)
+            Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
+            Dim bedarfsValues() As Double = ShowProjekte.getRoleValuesInMonth(curRole.name, considerAllSubRoles:=True)
+            Dim auslastungsValues() As Double
+
+            ReDim auslastungsValues(zeitraum)
+
+            For ix As Integer = 0 To zeitraum - 1
+                If kapaValues(ix) > 0 Then
+                    auslastungsValues(ix) = 1 - bedarfsValues(ix) / kapaValues(ix)
+                End If
+            Next
+
+
+
+            For p As Integer = 1 To 3
+
+                If p = 1 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kapa [PT]"
+                    editRange.Value = kapaValues
+                    zeile = zeile + 1
+
+                ElseIf p = 2 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Bedarf [PT]"
+                    editRange.Value = bedarfsValues
+                    zeile = zeile + 1
+
+                ElseIf p = 3 Then
+
+                    Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+
+                    CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kurzarbeit (%)"
+                    editRange.Value = auslastungsValues
+                    editRange.NumberFormat = "0.0%"
+                    zeile = zeile + 1
+
+                End If
+            Next
+
+
+        Next
+
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt die Projekt-Details in eine Excel Datei
     ''' dabei werden nur die Rollen / Kosten-Bedarfe rausgeschrieben, die in der myCollection angegeben sind
     ''' Bei Rollen werden auch alle Rollen rausgeschrieben, die Kind oder Kindeskind einer angegebenen Rolle sind    ''' 
@@ -16698,48 +16886,20 @@ Public Module agm2
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub writeProjektsForSequencing(ByVal roleCostCollection As Collection)
+    Public Sub writeProjektsForSequencing(ByVal roleCollection As Collection, ByVal costCollection As Collection)
 
         Dim err As New clsErrorCodeMsg
 
         appInstance.EnableEvents = False
 
         Dim newWB As Excel.Workbook
-        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
+        Dim considerAll As Boolean = (roleCollection.Count = 0 And costCollection.Count = 0)
 
-        Dim roleCollection As New Collection
-        Dim costCollection As New Collection
         Dim vorgabeValue As Double = 0.0
         Dim aktuellValue As Double = 0.0
         Dim vorgabeProj As clsProjekt = Nothing
         Dim roleNames As String = ""
         Dim costNames As String = ""
-
-        If Not considerAll Then
-            For Each itemName As String In roleCostCollection
-                If RoleDefinitions.containsName(itemName) Then
-                    If Not roleCollection.Contains(itemName) Then
-                        roleCollection.Add(itemName, itemName)
-                        If roleNames = "" Then
-                            roleNames = vbLf & itemName
-                        Else
-                            roleNames = roleNames & "; " & itemName
-                        End If
-                    End If
-                ElseIf CostDefinitions.containsName(itemName) Then
-                    If Not costCollection.Contains(itemName) Then
-                        costCollection.Add(itemName, itemName)
-                        If costNames = "" Then
-                            costNames = vbLf & itemName
-                        Else
-                            costNames = costNames & "; " & itemName
-                        End If
-                    End If
-                End If
-            Next
-            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
-            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
-        End If
 
         Dim fNameExtension As String = ""
         ' den Dateinamen bestimmen ...
@@ -16761,7 +16921,7 @@ Public Module agm2
         If considerAll Then
             expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
         Else
-            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\Overview " & fNameExtension & ".xlsx"
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
         End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
@@ -18680,6 +18840,9 @@ Public Module agm2
 
         ' wieviele Spalten werden hier angezeigt ... 
         Dim anzSpalten As Integer = 12
+        If awinSettings.enableInvoices Then
+            anzSpalten = 16
+        End If
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -18766,6 +18929,14 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Responsible"
                     CType(.Cells(1, 11), Excel.Range).Value = "% Done"
                     CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Invoice Value"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Term of payment"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Penalty Value"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Penalty Date"
+                    End If
+
+
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
@@ -18780,6 +18951,12 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Verantwortlich"
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                     CType(.Cells(1, 12), Excel.Range).Value = "Link zum Dokument/Ordner"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Rechnungs-Betrag"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Zahlungsziel"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Vertrags-Strafe"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Datum Vertrags-Strafe"
+                    End If
                 End If
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
@@ -18903,7 +19080,7 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
-                            Dim isPastElement As Boolean = DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0
+                            Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
                             ' Ende-Datum 
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
@@ -18957,7 +19134,6 @@ Public Module agm2
                             End If
 
 
-
                             ' Lieferumfänge
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                             If isProtectedbyOthers Then
@@ -18996,6 +19172,39 @@ Public Module agm2
                                 'CType(currentWS.Cells(zeile, 12), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
+                            End If
+
+                            ' wenn Meilensteine Invoices / Penalties haben können 
+                            If awinSettings.enableInvoices Then
+                                ' der Rechnungsbetrag und Zahlungsziel 
+                                If Not IsNothing(cMilestone.invoice) Then
+                                    If cMilestone.invoice.Key > 0 Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cMilestone.invoice.Key
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cMilestone.invoice.Value
+                                    End If
+                                End If
+
+                                ' die Penalty und das Penalty Date
+                                If Not IsNothing(cMilestone.penalty) Then
+                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
+                                    End If
+                                End If
+
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                End If
+
+
                             End If
 
 
@@ -19130,6 +19339,39 @@ Public Module agm2
                                 End If
 
 
+                                ' wenn Phasen Invoices / Penalties haben können 
+                                If awinSettings.enableInvoices Then
+                                    ' der Rechnungsbetrag und Zahlungsziel 
+                                    If Not IsNothing(cPhase.invoice) Then
+                                        If cPhase.invoice.Key > 0 Then
+                                            CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cPhase.invoice.Key
+                                            CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cPhase.invoice.Value
+                                        End If
+                                    End If
+
+                                    ' die Penalty und das Penalty Date
+                                    If Not IsNothing(cPhase.penalty) Then
+                                        If cPhase.penalty.Key < Date.MaxValue Then
+                                            CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
+                                            CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key
+                                        End If
+                                    End If
+
+                                    If isProtectedbyOthers Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                    Else
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                    End If
+
+
+                                End If
+
                             End With
                         End If
 
@@ -19149,10 +19391,11 @@ Public Module agm2
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
 
+
             Dim firstHundredColumns As Excel.Range = Nothing
 
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(12)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten)), Excel.Range)
                 infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
 
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
@@ -19179,7 +19422,7 @@ Public Module agm2
                 End With
 
                 ' percent Done 
-                With CType(infoBlock.Columns(11), Excel.Range)
+                With CType(infoDataBlock.Columns(11), Excel.Range)
                     .NumberFormat = "0#%"
                 End With
 
@@ -20083,6 +20326,7 @@ Public Module agm2
             DiagrammTypen(6) = "Meilenstein Trendanalyse"
             DiagrammTypen(7) = "Phasen-Kategorie"
             DiagrammTypen(8) = "Meilenstein-Kategorie"
+            DiagrammTypen(9) = "Cash-Flow"
 
 
             Try
@@ -23034,6 +23278,12 @@ Public Module agm2
                     awinSettings.actualDataMonth = CDate(.Range("ActualDataMonth").Value)
                 Catch ex As Exception
                     awinSettings.actualDataMonth = Date.MinValue
+                End Try
+
+                Try
+                    awinSettings.enableInvoices = CBool(.Range("enableInvoices").Value)
+                Catch ex As Exception
+                    awinSettings.enableInvoices = False
                 End Try
 
                 ' tk 23.12.18 deprecated

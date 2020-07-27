@@ -31,6 +31,44 @@ Public Class clsMeilenstein
     Private _deliverables As List(Of String)
     Private _bewertungen As SortedList(Of String, clsBewertung)
 
+    Private _invoice As KeyValuePair(Of Double, Integer)
+    Private _penalty As KeyValuePair(Of Date, Double)
+
+    ''' <summary>
+    ''' liest / schreibt den Betrag, der beim Erreichen dieses Meilensteins als Rechnung gestellt werden kann 
+    ''' key: Summe in T€
+    ''' Value: Terms of payment
+    ''' Vorsicht: kann Nothing sein. 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property invoice As KeyValuePair(Of Double, Integer)
+        Get
+            invoice = _invoice
+        End Get
+        Set(value As KeyValuePair(Of Double, Integer))
+            If Not IsNothing(value) Then
+                If value.Key >= 0 And value.Value >= 0 Then
+                    _invoice = value
+                End If
+            Else
+                _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+            End If
+        End Set
+    End Property
+
+    Public Property penalty As KeyValuePair(Of Date, Double)
+        Get
+            penalty = _penalty
+        End Get
+        Set(value As KeyValuePair(Of Date, Double))
+            If Not IsNothing(value) Then
+                _penalty = value
+            Else
+                _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0.0)
+            End If
+        End Set
+    End Property
+
     ''' <summary>
     ''' es wird eine PercentDone Regelung eingeführt , mit der beurteilt werden kann, wie wit die Ergebnisse bereits sind  
     ''' </summary>
@@ -117,6 +155,7 @@ Public Class clsMeilenstein
                     Me.DocUrlAppID = vglMS.DocUrlAppID And
                     Me.percentDone = vglMS.percentDone Then
                 stillOK = True
+
 
                 ' prüfen auf Deliverables ... 
                 Dim MeDelis As String = Me.getAllDeliverables("#")
@@ -572,6 +611,31 @@ Public Class clsMeilenstein
         End Get
     End Property
 
+    Public ReadOnly Property getPenaltyValue As Double
+        Get
+            getPenaltyValue = _penalty.Value
+        End Get
+    End Property
+    Public ReadOnly Property getPenaltyDate As Date
+        Get
+            getPenaltyDate = _penalty.Key
+        End Get
+    End Property
+
+    Public ReadOnly Property getPaymentValue As Double
+        Get
+            getPaymentValue = _invoice.Key
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt das Datum des vorauss Geldeingangs wieder
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPaymentDate As Date
+        Get
+            getPaymentDate = getDate.AddDays(_invoice.Value)
+        End Get
+    End Property
 
 
     ''' <summary>
@@ -715,6 +779,11 @@ Public Class clsMeilenstein
             .verantwortlich = Me._verantwortlich
             .percentDone = Me._percentDone
 
+            ' tk 2.6.20
+            .invoice = _invoice
+            .penalty = _penalty
+
+
             For i = 1 To Me._bewertungen.Count
                 Dim newb As New clsBewertung
                 Me.getBewertung(i).copyto(newb)
@@ -813,6 +882,9 @@ Public Class clsMeilenstein
         End Try
 
         _verantwortlich = ""
+
+        _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
+        _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
 
         offset = 0
         

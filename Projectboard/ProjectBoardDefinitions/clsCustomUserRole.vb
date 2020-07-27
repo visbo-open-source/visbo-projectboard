@@ -316,7 +316,7 @@ Public Class clsCustomUserRole
     Public Function getAggregationRoleIDs() As Integer()
         Dim result() As Integer = Nothing
 
-        If specifics <> "" And _customUserRole = ptCustomUserRoles.PortfolioManager Then
+        If specifics <> "" And (_customUserRole = ptCustomUserRoles.PortfolioManager Or _customUserRole = ptCustomUserRoles.ProjektLeitung) Then
 
             Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
             Dim i As Integer = 0

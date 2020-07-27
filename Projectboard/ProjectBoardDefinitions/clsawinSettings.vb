@@ -4,6 +4,10 @@ Imports System.Globalization
 
 Public Class clsawinSettings
     ' Chart Settings 
+
+    ' tk 17.6.2020 
+    ' Kurzarbeit aktiviert oder nicht 
+    Public Property kurzarbeitActivated As Boolean
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
     Public Property fontsizeItems As Integer
@@ -202,6 +206,8 @@ Public Class clsawinSettings
 
     Public Property allowSumEditing As Boolean
 
+    Public Property enableInvoices As Boolean
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
@@ -278,6 +284,8 @@ Public Class clsawinSettings
     Sub New()
 
         ReDim _importSettings(17)
+
+        _kurzarbeitActivated = True
         _ActualdataOrgaUnits = ""
 
         _autoSetActualDataDate = False
@@ -409,6 +417,8 @@ Public Class clsawinSettings
 
         _englishLanguage = False
         _allowSumEditing = True
+
+        _enableInvoices = False
 
         _considerRiskFee = False
 

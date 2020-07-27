@@ -1477,8 +1477,10 @@ Public Module agm3
         Try
             If My.Computer.FileSystem.FileExists(tmpDatei) Then
                 Try
-
+                    appInstance.DisplayAlerts = False
                     actDataWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
+                    actDataWB.Final = False
+                    appInstance.DisplayAlerts = True
 
                     Dim vstart As clsConfigActualDataImport = ActualDataConfig("valueStart")
                     ' Auslesen erste Time-Sheet
@@ -3620,4 +3622,316 @@ Public Module agm3
 
         readProjectsWithConfig = result
     End Function
+
+
+    Public Sub writeYearInitialPlanningSupportToExcel(ByVal von As Integer, ByVal bis As Integer,
+                                                      ByVal roleCollection As Collection, ByVal costCollection As Collection,
+                                                      ByVal unit As PTEinheiten)
+        appInstance.EnableEvents = False
+
+        ' wenn CostCollection was enthält , dann wird unit automatisch auf Euro gesetzt 
+        ' andernfalls wäre die Ressourcen in PT, die Kostenarten Zahlen in T€ zu interpretieren und das ist strange 
+        If Not IsNothing(costCollection) Then
+            If costCollection.Count > 0 Then
+                unit = PTEinheiten.euro
+            End If
+        End If
+
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = True
+
+
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " planning " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 7
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim ersteZeile As Excel.Range
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Project-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Project-Number"
+            CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+            CType(.Cells(1, 4), Excel.Range).Value = "Business-Unit"
+
+            If unit = PTEinheiten.euro Then
+                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-/Cost-Name"
+            ElseIf unit = PTEinheiten.hrs Then
+                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-Name"
+            ElseIf unit = PTEinheiten.personentage Then
+                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-Name"
+            Else
+                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-/Cost-Name"
+            End If
+
+            CType(.Cells(1, 6), Excel.Range).Value = "Type"
+
+            ' damit das beim programmatischen auslesen auch berücksichtigt werden kann 
+            CType(.Cells(1, 6), Excel.Range).ClearComments()
+            CType(.Cells(1, 6), Excel.Range).AddComment(unit.ToString)
+
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+            Next
+
+
+        End With
+
+        Dim ws As Excel.Worksheet = CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+        zeile = 2
+        Dim zeitraum As Integer = bis - von
+
+
+        If Not IsNothing(roleCollection) Then
+
+            For i As Integer = 1 To roleCollection.Count
+
+                Dim roleNameID As String = roleCollection.Item(i)
+                Dim teamID As Integer = -1
+                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
+
+                Dim myCollection As New Collection From {curRole.name}
+
+                Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.none, kapaValues)
+
+                zeile = zeile + 1
+
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, kvp.Value.timeStamp)
+                    Dim baselineValues() As Double = Nothing
+
+                    If Not IsNothing(beauftragung) Then
+                        ' jetzt die Werte für die Beauftragung schreiben 
+                        baselineValues = beauftragung.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
+                        Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.beauftragung, baselineValues)
+
+                        zeile = zeile + 1
+                    End If
+
+                    Dim planValues() As Double = kvp.Value.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
+                    Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, kvp.Value,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, planValues)
+
+                    zeile = zeile + 1
+
+                Next
+
+
+            Next
+
+        End If
+
+        If Not IsNothing(costCollection) Then
+            For i As Integer = 1 To costCollection.Count
+
+
+                Dim curCost As clsKostenartDefinition = CostDefinitions.getCostdef(costCollection.Item(i))
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, kvp.Value.timeStamp)
+                    Dim baselineValues() As Double = Nothing
+
+                    If Not IsNothing(beauftragung) Then
+                        ' jetzt die Werte für die Beauftragung schreiben 
+                        baselineValues = beauftragung.getCostValuesInTimeFrame(von, bis, curCost.name)
+                        Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, baselineValues)
+
+                        zeile = zeile + 1
+                    End If
+
+                    Dim bedarfsValues() As Double = kvp.Value.getCostValuesInTimeFrame(von, bis, curCost.name)
+
+                    Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, kvp.Value,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.planungsstand, bedarfsValues)
+
+                    zeile = zeile + 1
+
+                Next
+
+
+
+            Next
+
+        End If
+
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt im Export von writeYearInitialPlanningSupport eine Zeile von Kapazität, Planung oder Beauftragungs-Wert
+    ''' </summary>
+    ''' <param name="wbName"></param>
+    ''' <param name="wsName"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="startSpalteDaten"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="curRole"></param>
+    ''' <param name="curCost"></param>
+    ''' <param name="unit"></param>
+    ''' <param name="vglType"></param>
+    ''' <param name="values"></param>
+    Private Sub writePlanningDataRow(ByVal wbName As String, ByVal wsName As String, ByVal zeile As Integer, ByVal startSpalteDaten As Integer, ByVal hproj As clsProjekt,
+                                     ByVal von As Integer, ByVal bis As Integer, ByVal curRole As clsRollenDefinition, ByVal curCost As clsKostenartDefinition,
+                                     ByVal unit As PTEinheiten, ByVal vglType As PTVergleichsArt, ByVal values As Double())
+
+        Dim typeStrings As String() = {"Kapazität", "Beauftragung", "Planung"}
+        If awinSettings.englishLanguage Then
+            typeStrings = {"Capacity", "Baseline", "Planning"}
+        End If
+
+        Dim formatierung As String = "#,##0.##"
+        Dim typBezeichner As String = ""
+
+        If vglType = PTVergleichsArt.planungsstand Then
+            typBezeichner = typeStrings(2)
+        ElseIf vglType = PTVergleichsArt.beauftragung Then
+            typBezeichner = typeStrings(1)
+        ElseIf vglType = PTVergleichsArt.none Then
+            typBezeichner = typeStrings(0)
+        End If
+
+        Dim ws As Excel.Worksheet = CType(appInstance.Workbooks.Item(wbName).Worksheets(wsName), Excel.Worksheet)
+
+        ' wenn es eine Rolle ist, müssen die Values ggf umgerechnet werden ... 
+        If Not IsNothing(curRole) Then
+            If unit = PTEinheiten.euro Then
+                For ix As Integer = 0 To values.Length - 1
+                    values(ix) = values(ix) * curRole.tagessatzIntern
+                Next
+            ElseIf unit = PTEinheiten.hrs Then
+                For ix As Integer = 0 To values.Length - 1
+                    values(ix) = values(ix) * 8
+                Next
+            End If
+        End If
+
+
+        If Not vglType = PTVergleichsArt.none And Not IsNothing(hproj) Then
+            CType(ws.Cells(zeile, 1), Excel.Range).Value = hproj.name
+            CType(ws.Cells(zeile, 2), Excel.Range).Value = hproj.kundenNummer
+            CType(ws.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+            CType(ws.Cells(zeile, 4), Excel.Range).Value = hproj.businessUnit
+        End If
+
+        If Not IsNothing(curRole) Then
+            CType(ws.Cells(zeile, 5), Excel.Range).Value = curRole.name
+        ElseIf Not IsNothing(curCost) Then
+            CType(ws.Cells(zeile, 5), Excel.Range).Value = curCost.name
+        End If
+
+
+        If unit = PTEinheiten.personentage Then
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [PT]"
+        ElseIf unit = PTEinheiten.euro Then
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [T€]"
+        ElseIf unit = PTEinheiten.hrs Then
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [Hrs]"
+        Else
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & "[?]"
+        End If
+
+        Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+        editRange.Value = values
+        editRange.NumberFormat = formatierung
+
+
+    End Sub
+
 End Module
