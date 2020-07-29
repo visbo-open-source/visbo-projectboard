@@ -4135,6 +4135,64 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' wird für alle Projekte aufgerufen, die im aktuellen Portfolio vorkommen, für die es aber keine Ist-Daten gab. 
+    ''' setzt alle Werte zwischen actualDatauntil des Projektes und newActualDataUntil  auf Null
+    ''' aber nur die Rollen, die in awinsettings.ActualdataOrgaUnits aufgeführt sind. 
+    ''' gibt false zurück, wenn nicht erfolgreich
+    ''' </summary>
+    ''' <param name="newActualDataUntil"></param>
+    Public Function setNewActualValuesToNull(ByVal newActualDataUntil As Date) As Boolean
+        Dim result As Boolean = True
+
+        Try
+            Dim columnOFActualData As Integer = getColumnOfDate(actualDataUntil)
+            Dim columnOFNewActualData As Integer = getColumnOfDate(newActualDataUntil)
+
+            Dim considerAllRoles As Boolean = (awinSettings.ActualdataOrgaUnits = "")
+            Dim actualDataParentIDs As Integer() = Nothing
+
+            If Not considerAllRoles Then
+                actualDataParentIDs = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+            End If
+
+            If columnOFNewActualData > columnOFActualData Then
+                ' nur dann muss etwas gemacht werden 
+
+                ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
+                For p As Integer = 1 To CountPhases
+                    Dim curPhase As clsPhase = getPhase(p)
+                    Dim columnOfPhaseStart As Integer = getColumnOfDate(curPhase.getStartDate)
+                    Dim columnOfPhaseEnd As Integer = getColumnOfDate(curPhase.getEndDate)
+
+                    If columnOfPhaseStart <= columnOFNewActualData And columnOfPhaseEnd > columnOFActualData Then
+                        ' dann gibt es was zu tun 
+                        For r = 1 To curPhase.countRoles
+                            Dim curRole As clsRolle = curPhase.getRole(r)
+
+                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+
+                                Dim startIndex As Integer = System.Math.Max(0, columnOFActualData - columnOfPhaseStart + 1)
+                                Dim endIndex As Integer = System.Math.Min(columnOFNewActualData - columnOfPhaseStart, curRole.getDimension)
+
+                                For ix As Integer = startIndex To endIndex
+                                    curRole.Xwerte(ix) = 0
+                                Next
+
+                            End If
+                        Next
+                    End If
+
+                Next
+            End If
+
+        Catch ex As Exception
+            result = False
+        End Try
+
+        setNewActualValuesToNull = result
+
+    End Function
+    ''' <summary>
     ''' alle Ist-Daten aus oldProj werden dem aktuellen Projekt übertragen
     ''' es bleiben nur die Werte ab Monat ActualDataUntil +1 erhalten, alle anderen werden entweder auf Null gesetzt oder aber aus oldProj übernommen 
     ''' dabei werden nur die Werte  awinsettings.Istdaten berücksichtigt. 
@@ -4272,6 +4330,7 @@ Public Class clsProjekt
     ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
+    ''' wird in ImportAllianzIstDaten verwendet 
     ''' </summary>
     ''' <param name="phNameID"></param>
     ''' <param name="actualValues"></param>

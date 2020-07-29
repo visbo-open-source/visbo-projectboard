@@ -27,22 +27,24 @@ Partial Class frmInfoActualDataMonth
         Me.MonatJahr = New System.Windows.Forms.DateTimePicker()
         Me.okBtn = New System.Windows.Forms.Button()
         Me.cancelBtn = New System.Windows.Forms.Button()
+        Me.lbl_refPortfolioName = New System.Windows.Forms.Label()
+        Me.listOfPortfolioNames = New System.Windows.Forms.ListBox()
         Me.SuspendLayout()
         '
         'Label1
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(12, 24)
+        Me.Label1.Location = New System.Drawing.Point(12, 60)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(220, 15)
+        Me.Label1.Size = New System.Drawing.Size(235, 15)
         Me.Label1.TabIndex = 1
-        Me.Label1.Text = "Ist-Daten bis vorangegangenem Monat"
+        Me.Label1.Text = "Ist-Daten bis einschließlich Vor-Monat zu  "
         '
         'MonatJahr
         '
         Me.MonatJahr.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.MonatJahr.Location = New System.Drawing.Point(238, 24)
+        Me.MonatJahr.Location = New System.Drawing.Point(253, 60)
         Me.MonatJahr.Name = "MonatJahr"
         Me.MonatJahr.Size = New System.Drawing.Size(82, 20)
         Me.MonatJahr.TabIndex = 2
@@ -52,7 +54,7 @@ Partial Class frmInfoActualDataMonth
         '
         Me.okBtn.BackColor = System.Drawing.SystemColors.ButtonFace
         Me.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.okBtn.Location = New System.Drawing.Point(15, 55)
+        Me.okBtn.Location = New System.Drawing.Point(46, 103)
         Me.okBtn.Name = "okBtn"
         Me.okBtn.Size = New System.Drawing.Size(95, 23)
         Me.okBtn.TabIndex = 5
@@ -63,19 +65,39 @@ Partial Class frmInfoActualDataMonth
         '
         Me.cancelBtn.BackColor = System.Drawing.SystemColors.ButtonFace
         Me.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.cancelBtn.Location = New System.Drawing.Point(225, 55)
+        Me.cancelBtn.Location = New System.Drawing.Point(202, 103)
         Me.cancelBtn.Name = "cancelBtn"
         Me.cancelBtn.Size = New System.Drawing.Size(95, 23)
         Me.cancelBtn.TabIndex = 6
         Me.cancelBtn.Text = "Cancel"
         Me.cancelBtn.UseVisualStyleBackColor = False
         '
+        'lbl_refPortfolioName
+        '
+        Me.lbl_refPortfolioName.AutoSize = True
+        Me.lbl_refPortfolioName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_refPortfolioName.Location = New System.Drawing.Point(12, 8)
+        Me.lbl_refPortfolioName.Name = "lbl_refPortfolioName"
+        Me.lbl_refPortfolioName.Size = New System.Drawing.Size(106, 15)
+        Me.lbl_refPortfolioName.TabIndex = 7
+        Me.lbl_refPortfolioName.Text = "Referenz-Portfolio"
+        '
+        'listOfPortfolioNames
+        '
+        Me.listOfPortfolioNames.FormattingEnabled = True
+        Me.listOfPortfolioNames.Location = New System.Drawing.Point(15, 28)
+        Me.listOfPortfolioNames.Name = "listOfPortfolioNames"
+        Me.listOfPortfolioNames.Size = New System.Drawing.Size(320, 17)
+        Me.listOfPortfolioNames.TabIndex = 8
+        '
         'frmInfoActualDataMonth
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(348, 90)
+        Me.ClientSize = New System.Drawing.Size(357, 138)
+        Me.Controls.Add(Me.listOfPortfolioNames)
+        Me.Controls.Add(Me.lbl_refPortfolioName)
         Me.Controls.Add(Me.cancelBtn)
         Me.Controls.Add(Me.okBtn)
         Me.Controls.Add(Me.MonatJahr)
@@ -91,4 +113,6 @@ Partial Class frmInfoActualDataMonth
     Friend WithEvents cancelBtn As Windows.Forms.Button
     Public WithEvents MonatJahr As Windows.Forms.DateTimePicker
     Public WithEvents Label1 As Windows.Forms.Label
+    Public WithEvents lbl_refPortfolioName As Windows.Forms.Label
+    Public WithEvents listOfPortfolioNames As Windows.Forms.ListBox
 End Class

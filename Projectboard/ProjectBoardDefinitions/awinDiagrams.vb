@@ -7781,6 +7781,13 @@ Public Module awinDiagrams
                 Case ptElementTypen.milestones
                     qualifier2 = splitHryFullnameTo1(scInfo.q2)
 
+                Case ptElementTypen.cashflow
+                    If awinSettings.englishLanguage Then
+                        qualifier2 = "Change in Liquidity"
+                    Else
+                        qualifier2 = "Veränderung Liquidität"
+                    End If
+
                 Case Else
                     qualifier2 = scInfo.q2
             End Select
@@ -7808,9 +7815,11 @@ Public Module awinDiagrams
                     startRed = startRed - 1
                     txt = {"Needs", "Capa", "Sum"}
                 End If
+
                 If scInfo.elementTyp = ptElementTypen.cashflow Then
                     qualifier2 = qualifier2 & " (" & txt(2) & "="
                     startRed = qualifier2.Length + 1
+                    lengthRed = tsum.ToString("##,##0.").Length
                     tmpResult = qualifier2 & tsum.ToString("##,##0.") & zaehlEinheit & ")"
                 Else
                     tmpResult = qualifier2 & " (" & txt(0) & "=" & tsum.ToString("##,##0.") & "/" & txt(1) & "=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
