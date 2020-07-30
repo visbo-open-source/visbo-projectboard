@@ -2778,6 +2778,166 @@ Public Module agm3
     End Function
 
     ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="actualDataConfig"></param>
+    ''' <param name="tmpDatei"></param>
+    ''' <param name="oPCollection"></param>
+    ''' <returns></returns>
+    Public Function readCalendarReferenceFile(ByVal actualDataConfig As SortedList(Of String, clsConfigActualDataImport),
+                                             ByVal tmpDatei As String,
+                                             ByRef special As clsOtherCalendar,
+                                             ByRef oPCollection As Collection) As Boolean
+
+        Dim err As New clsErrorCodeMsg
+        Dim outputline As String = ""
+        Dim ok As Boolean = False
+        Dim result As Boolean = True
+        Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim regexpression As Regex
+        Dim firstUrlTabelle As Integer
+        Dim firstUrlspalte As Integer
+        Dim firstUrlzeile As Integer
+        Dim lastSpalte As Integer
+        Dim lastZeile As Integer
+        Dim hproj As New clsProjekt
+        Dim pName As String = ""
+        Dim anz_Proj As Integer = 0
+        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        Dim t As Integer = 0  ' tabellenIndex
+        Dim hrole As clsRollenDefinition = Nothing
+        Dim personalName As String = ""
+        Dim personalNumber As String = ""
+        Dim curmonth As Integer
+        Dim stundenTotal As Integer = 0 ' Stundenangabe in einer Zeile
+        Dim monat As String = ""
+        Dim jahr As String = ""
+        Dim yyyymm As String = ""
+
+        ' ======================
+        ' vorarbeit der Definitionen geleistet
+        ' ======================
+        Try
+            If My.Computer.FileSystem.FileExists(tmpDatei) Then
+                Try
+                    ' Folgendes nur nötig, wenn die tmpDatei mit Signatur versehen ist
+                    appInstance.DisplayAlerts = False
+                    actDataWB = appInstance.Workbooks.Open(tmpDatei, UpdateLinks:=0)
+                    actDataWB.Final = False
+                    appInstance.DisplayAlerts = True
+
+                    Dim vstart As clsConfigActualDataImport = actualDataConfig("valueStart")
+                    ' Auslesen erste Time-Sheet
+                    firstUrlTabelle = vstart.sheet.von
+                    firstUrlspalte = vstart.column.von
+                    firstUrlzeile = vstart.row.von
+
+                    ' Schleife über alle Tabellenblätter eines ausgewählten Excel-Files (hier = einer Rolle)
+                    For t = 0 To vstart.sheet.bis
+
+                        If Not IsNothing(vstart.sheet.von + t) Then
+                            currentWS = CType(appInstance.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            If Not IsNothing(vstart.sheetDescript) Then
+                                ok = (vstart.sheetDescript.Contains(currentWS.Name))
+                            Else
+                                ok = True
+                            End If
+                        End If
+
+                        If Not ok Then
+                            If awinSettings.englishLanguage Then
+                                outputline = "the sheet " & currentWS.Name & " doesn't match with the configuration"
+                            Else
+                                outputline = "das Tabellenblatt " & currentWS.Name & " passt nicht zur Konfiguration"
+                            End If
+                            oPCollection.Add(outputline)
+                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            result = False
+                            Exit For ' keine weiteren Tabellenblätter mehr lesen - Fehler aufgetreten
+                        End If
+
+                        If IsNothing(currentWS) Then
+                            If awinSettings.englishLanguage Then
+                                outputline = "the sheet " & vstart.sheetDescript & " doesn't exists in this workbook"
+                            Else
+                                outputline = "das Tabellenblatt " & vstart.sheetDescript & " ist nicht vorhanden"
+                            End If
+                            oPCollection.Add(outputline)
+                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            result = False
+                        Else
+                            ' passendes Worksheet gefunden
+
+                            Try
+                                ' Find Month
+                                monat = currentWS.Cells(actualDataConfig("months").row.von, actualDataConfig("months").column.von).value
+                                Dim vglMonat As String = currentWS.Name
+                                Dim validm As Boolean = (vglMonat.Contains(monat) Or monat.Contains(vglMonat))
+                                ' find Year
+                                jahr = currentWS.Cells(actualDataConfig("years").row.von, actualDataConfig("years").column.von).value
+                                Dim vglJahr As String = currentWS.Name
+                                Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
+                                Dim xxx As Date = "01." & monat & " " & jahr
+                                curmonth = getColumnOfDate(xxx)
+                                yyyymm = Format(xxx, "yyyy mm")
+
+                            Catch ex As Exception
+                                outputline = "Error looking for month/year"
+                                oPCollection.Add(outputline)
+                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                result = False
+                            End Try
+
+                            ' Find Wertespalte - auf jedem Tabellenblatt evt. anders
+                            Dim hspalte As String = actualDataConfig("Total").columnDescript
+                            Dim stdSpalteTotal As Integer = 0
+                            Try
+                                Dim überschriftenzeile As Integer = actualDataConfig("Überschriften").row.von
+                                searcharea = currentWS.Rows(überschriftenzeile)          ' Zeile über... enthält die verschieden Spaltendescript
+                                stdSpalteTotal = searcharea.Find(hspalte).Column
+                                Dim filaWD As New clsFirstWDLastWD
+                                Dim lastWorkDay As Date = currentWS.Cells(überschriftenzeile, stdSpalteTotal - 3).value.ToString & "." & monat & " " & jahr
+                                Dim hmonth As String = MonthName(Month(DateAdd(DateInterval.Month, -1, lastWorkDay)), Abbreviate:=True)
+                                Dim firstWorkDay As Date = currentWS.Cells(überschriftenzeile, 6).value.ToString & "." & hmonth & " " & jahr
+                                filaWD.lastWorkDay = lastWorkDay
+                                filaWD.firstWorkDay = firstWorkDay
+                                special.otherCal.Add(yyyymm, filaWD)
+                            Catch ex As Exception
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Error: in the sheet " & vstart.sheetDescript & " the value-column " & hspalte & " not found"
+                                Else
+                                    outputline = "Error: im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
+                                End If
+                                oPCollection.Add(outputline)
+                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                result = False
+                            End Try
+
+                        End If
+
+                    Next t    ' nächste Tabelle des Excel-Inputfiles
+
+                Catch ex As Exception
+                    actDataWB = Nothing
+                    Call MsgBox("1. " & ex.Message)
+                End Try
+
+                If Not IsNothing(actDataWB) Then
+                    actDataWB.Close(SaveChanges:=False)
+                End If
+
+
+            End If
+        Catch ex As Exception
+            Call MsgBox("2. " & ex.Message)
+        End Try
+
+
+        readCalendarReferenceFile = result
+    End Function
+
+    ''' <summary>
     ''' liest Projekte gemäß Konfiguration ein 
     ''' </summary>
     ''' <param name="listOfProjectFiles"></param>

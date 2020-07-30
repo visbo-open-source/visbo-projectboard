@@ -2,9 +2,6 @@
     Public Property capacityFile As String
     Public Property hoursPerDay As Integer
     Public Property anzMonths As Integer
-    'Public Property month As Integer
-    'Public Property year As Integer
-    'Public Property role As Integer
 
     Public Property Titel As String
     Public Property Identifier As String
