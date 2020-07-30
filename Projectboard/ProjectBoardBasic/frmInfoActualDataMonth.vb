@@ -23,6 +23,7 @@ Public Class frmInfoActualDataMonth
 
         ' jetzt die Referenz-Portfolio Dropbox mit Namen besetzen 
         If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+            Dim Err As New clsErrorCodeMsg
             Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, Err)
 
             For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
