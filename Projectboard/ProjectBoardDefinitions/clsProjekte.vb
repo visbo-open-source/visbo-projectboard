@@ -2775,6 +2775,9 @@ Public Class clsProjekte
 
     Public ReadOnly Property getCashFlow() As Double()
         Get
+
+            awinSettings.kurzarbeitActivated = True
+
             Dim saveShowrangeLeft As Integer = showRangeLeft
 
             Dim zeitraum As Integer = showRangeRight - showRangeLeft
@@ -2796,12 +2799,10 @@ Public Class clsProjekte
 
                 ' den Vormonat mit betrachten 
 
-                If awinSettings.kurzarbeitActivated Then
-
-                End If
                 If showRangeLeft > 1 Then
                     showRangeLeft = showRangeLeft - 1
                 End If
+
                 Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
                 showRangeLeft = saveShowrangeLeft
 

@@ -581,7 +581,8 @@ Public Module awinDiagrams
                             ' Cash-Flow
                             einheit = " T€"
                             objektFarbe = visboFarbeOrange
-                            datenreihe = ShowProjekte.getCashFlow
+                            datenreihe = ShowProjekte.getCashFlow()
+
                         End If
 
                         If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
@@ -985,9 +986,11 @@ Public Module awinDiagrams
                 With newChtObj
                     .Name = chtobjName
                     If prcTyp = DiagrammTypen(9) Then
-
                         .Chart.Axes(Excel.XlAxisType.xlCategory).HasTitle = False
                         .Chart.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.Constants.xlLow
+
+                        .Chart.Axes(Excel.XlAxisType.xlValue).MajorUnit = 50
+
                         .Chart.HasLegend = False
 
                     Else
@@ -2116,7 +2119,12 @@ Public Module awinDiagrams
                 .MaximumScaleIsAuto = True
                 '.MaximumScale = hmxWert + 1
             End With
+        ElseIf prcTyp = DiagrammTypen(9) Then
+            With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                .MaximumScaleIsAuto = True
+            End With
         Else
+
             hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)
             If hmxWert > currentScale Then
                 With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)

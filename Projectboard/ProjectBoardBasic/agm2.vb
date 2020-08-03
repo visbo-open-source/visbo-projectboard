@@ -18782,8 +18782,8 @@ Public Module agm2
                             If spix <= actualdataRelColumn Then
                                 ' tk 19.1.20
                                 ' .Interior.Color = awinSettings.AmpelNichtBewertet
-                                .Interior.Color = XlRgbColor.rgbGray
-                                .Font.Color = XlRgbColor.rgbWhite
+                                .Interior.Color = XlRgbColor.rgbLightGrey
+                                .Font.Color = XlRgbColor.rgbBlack
                             Else
 
                                 If Not isProtectedbyOthers Then
@@ -19103,9 +19103,10 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
                             If isPastElement Then
                                 ' Sperren ...
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbBlack
+
                                 CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
                                 'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
@@ -19254,8 +19255,8 @@ Public Module agm2
                                 CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Font.Color = XlRgbColor.rgbBlack
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                                 Else
                                     If isProtectedbyOthers Then
@@ -19272,8 +19273,8 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbBlack
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
@@ -19368,9 +19369,9 @@ Public Module agm2
 
                                     ' die Penalty und das Penalty Date
                                     If Not IsNothing(cPhase.penalty) Then
-                                        If cPhase.penalty.Key < Date.MaxValue Then
+                                        If cPhase.penalty.Key > StartofCalendar Then
                                             CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
-                                            CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key
+                                            CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key.Date
                                         End If
                                     End If
 

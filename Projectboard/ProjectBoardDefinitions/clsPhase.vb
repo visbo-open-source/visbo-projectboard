@@ -398,12 +398,25 @@ Public Class clsPhase
 
                 ' jetzt die Rollen, Kosten, Milestones und Bewertungen abfragen 
                 If stillOK Then
-                        ' sind die Rollen identisch 
+                    ' sind die Rollen identisch 
+                    ix = 1
+                    Do While stillOK And ix <= Me.countRoles
+                        Dim MeRole As clsRolle = Me.getRole(ix)
+                        Dim vglRole As clsRolle = vPhase.getRole(ix)
+                        If MeRole.isIdenticalTo(vglRole) Then
+                            ix = ix + 1
+                        Else
+                            stillOK = False
+                        End If
+                    Loop
+
+                    If stillOK Then
+                        ' sind die Kostenarten identisch ?
                         ix = 1
-                        Do While stillOK And ix <= Me.countRoles
-                            Dim MeRole As clsRolle = Me.getRole(ix)
-                            Dim vglRole As clsRolle = vPhase.getRole(ix)
-                            If MeRole.isIdenticalTo(vglRole) Then
+                        Do While stillOK And ix <= Me.countCosts
+                            Dim MeCost As clsKostenart = Me.getCost(ix)
+                            Dim vglCost As clsKostenart = vPhase.getCost(ix)
+                            If MeCost.isIdenticalTo(vglCost) Then
                                 ix = ix + 1
                             Else
                                 stillOK = False
@@ -411,12 +424,12 @@ Public Class clsPhase
                         Loop
 
                         If stillOK Then
-                            ' sind die Kostenarten identisch ?
+                            ' sind die Phasen Bewertungen identisch?
                             ix = 1
-                            Do While stillOK And ix <= Me.countCosts
-                                Dim MeCost As clsKostenart = Me.getCost(ix)
-                                Dim vglCost As clsKostenart = vPhase.getCost(ix)
-                                If MeCost.isIdenticalTo(vglCost) Then
+                            Do While stillOK And ix <= Me.bewertungsCount
+                                Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                                Dim vglBewertung As clsBewertung = vPhase.getBewertung(ix)
+                                If MeBewertung.isIdenticalTo(vglBewertung) Then
                                     ix = ix + 1
                                 Else
                                     stillOK = False
@@ -424,37 +437,32 @@ Public Class clsPhase
                             Loop
 
                             If stillOK Then
-                                ' sind die Phasen Bewertungen identisch?
+                                ' jetzt die Meilensteine, Bewertungen und Deliverables prüfen ... 
                                 ix = 1
-                                Do While stillOK And ix <= Me.bewertungsCount
-                                    Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
-                                    Dim vglBewertung As clsBewertung = vPhase.getBewertung(ix)
-                                    If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                Do While stillOK And ix <= Me.countMilestones
+                                    Dim MeMs As clsMeilenstein = Me.getMilestone(ix)
+                                    Dim vglMs As clsMeilenstein = vPhase.getMilestone(ix)
+                                    If MeMs.isIdenticalTo(vglMs) Then
                                         ix = ix + 1
                                     Else
                                         stillOK = False
                                     End If
                                 Loop
-
-                                If stillOK Then
-                                    ' jetzt die Meilensteine, Bewertungen und Deliverables prüfen ... 
-                                    ix = 1
-                                    Do While stillOK And ix <= Me.countMilestones
-                                        Dim MeMs As clsMeilenstein = Me.getMilestone(ix)
-                                        Dim vglMs As clsMeilenstein = vPhase.getMilestone(ix)
-                                        If MeMs.isIdenticalTo(vglMs) Then
-                                            ix = ix + 1
-                                        Else
-                                            stillOK = False
-                                        End If
-                                    Loop
-                                End If
-
                             End If
 
                         End If
 
                     End If
+
+                End If
+
+                ' jetzt die Invoices und Penalties abfragen 
+                If stillOK Then
+                    stillOK = Me.invoice.Key = vPhase.invoice.Key And
+                        Me.invoice.Value = vPhase.invoice.Value And
+                        Me.penalty.Key = vPhase.penalty.Key And
+                        Me.penalty.Value = vPhase.penalty.Value
+                End If
 
 
 

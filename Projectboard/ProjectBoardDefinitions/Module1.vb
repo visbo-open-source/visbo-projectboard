@@ -1593,9 +1593,9 @@ Public Module Module1
             ' tk 12.06.2020 
 
             ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
-            If tmpResult.name.StartsWith("E_Kunde") Then
-                Call tmpResult.setMilestoneInvoices("Finalization")
-            End If
+            'If tmpResult.name.StartsWith("E_Kunde") Then
+            '    Call tmpResult.setMilestoneInvoices("Finalization")
+            'End If
 
         End If
 

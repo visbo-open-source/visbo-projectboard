@@ -5004,47 +5004,72 @@ Public Class clsProjekt
 
                 For p = 1 To CountPhases
                     Dim curPhase As clsPhase = getPhase(p)
+
                     ' kann Rechnung gesteltl werden ? 
                     If curPhase.invoice.Key > 0 Then
+
                         invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
-                        If invoiceArray.ContainsKey(invoiceRelCol) Then
-                            invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curPhase.invoice.Key
-                        Else
-                            invoiceArray.Add(invoiceRelCol, curPhase.invoice.Key)
+
+                        If invoiceRelCol > 0 Then
+                            If invoiceArray.ContainsKey(invoiceRelCol) Then
+                                invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curPhase.invoice.Key
+                            Else
+                                invoiceArray.Add(invoiceRelCol, curPhase.invoice.Key)
+                            End If
                         End If
+
                     End If
 
                     ' Penalty relevant ?
-                    If curPhase.penalty.Key <= curPhase.getEndDate Then
-                        penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
-                        If penaltyArray.ContainsKey(penaltyRelCol) Then
-                            penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curPhase.penalty.Value
-                        Else
-                            penaltyArray.Add(penaltyRelCol, curPhase.penalty.Value)
+                    If curPhase.penalty.Key > StartofCalendar Then
+                        If curPhase.penalty.Key <= curPhase.getEndDate Then
+                            penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
+
+                            If penaltyRelCol > 0 Then
+                                If penaltyArray.ContainsKey(penaltyRelCol) Then
+                                    penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curPhase.penalty.Value
+                                Else
+                                    penaltyArray.Add(penaltyRelCol, curPhase.penalty.Value)
+                                End If
+                            End If
+
                         End If
                     End If
+
 
                     For msIx As Integer = 1 To curPhase.countMilestones
 
                         Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
+
                         If curMilestone.invoice.Key > 0 Then
                             invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
-                            If invoiceArray.ContainsKey(invoiceRelCol) Then
-                                invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curMilestone.invoice.Key
-                            Else
-                                invoiceArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+
+                            If invoiceRelCol > 0 Then
+                                If invoiceArray.ContainsKey(invoiceRelCol) Then
+                                    invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curMilestone.invoice.Key
+                                Else
+                                    invoiceArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+                                End If
                             End If
+
                         End If
 
                         ' Penalty relevant ?
-                        If curMilestone.penalty.Key <= curMilestone.getDate Then
-                            penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
-                            If penaltyArray.ContainsKey(penaltyRelCol) Then
-                                penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curMilestone.penalty.Value
-                            Else
-                                penaltyArray.Add(penaltyRelCol, curMilestone.penalty.Value)
+                        If curMilestone.penalty.Key > StartofCalendar Then
+                            If curMilestone.penalty.Key <= curMilestone.getDate Then
+                                penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
+
+                                If penaltyRelCol > 0 Then
+                                    If penaltyArray.ContainsKey(penaltyRelCol) Then
+                                        penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curMilestone.penalty.Value
+                                    Else
+                                        penaltyArray.Add(penaltyRelCol, curMilestone.penalty.Value)
+                                    End If
+                                End If
+
                             End If
                         End If
+
 
                     Next msIx
 
@@ -5114,35 +5139,35 @@ Public Class clsProjekt
 
     End Sub
 
-    ''' <summary>
-    ''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
-    ''' </summary>
-    ''' <param name="name"></param>
-    Public Sub setMilestoneInvoices(ByVal name As String)
+    '''' <summary>
+    '''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
+    '''' </summary>
+    '''' <param name="name"></param>
+    'Public Sub setMilestoneInvoices(ByVal name As String)
 
-        Dim msNameIndices() As Integer
-        msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
-        Dim anzMilestones As Integer = msNameIndices.Length
+    '    Dim msNameIndices() As Integer
+    '    msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
+    '    Dim anzMilestones As Integer = msNameIndices.Length
 
-        If anzMilestones = 0 Or msNameIndices(0) = 0 Then
-            Exit Sub
-        End If
-
-
-        Try
-            Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
-            For Each msID As Integer In msNameIndices
-                Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
-                Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
-
-                curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
-            Next
-        Catch ex As Exception
-
-        End Try
+    '    If anzMilestones = 0 Or msNameIndices(0) = 0 Then
+    '        Exit Sub
+    '    End If
 
 
-    End Sub
+    '    Try
+    '        Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
+    '        For Each msID As Integer In msNameIndices
+    '            Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
+    '            Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
+
+    '            curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
+    '        Next
+    '    Catch ex As Exception
+
+    '    End Try
+
+
+    'End Sub
 
     ''' <summary>
     ''' gibt den Bedarf der Rolle in dem Monat X an; X=1 entspricht StartofCalendar usw.
