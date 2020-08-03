@@ -6632,12 +6632,19 @@ Imports System.Web
 
                     ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
                     Dim istDatenReferatsliste() As Integer
-                    Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
-                    ReDim istDatenReferatsliste(anzTopNodes - 1)
-                    Dim i As Integer = 0
-                    For i = 0 To anzTopNodes - 1
-                        istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
-                    Next
+
+                    If awinSettings.ActualdataOrgaUnits = "" Then
+                        Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+                        ReDim istDatenReferatsliste(anzTopNodes - 1)
+                        Dim i As Integer = 0
+                        For i = 0 To anzTopNodes - 1
+                            istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+                        Next
+                    Else
+                        istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+                    End If
+
+
 
                     ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
                     Dim referatsCollection As New Collection
@@ -6860,9 +6867,31 @@ Imports System.Web
                             End If
                         Next
 
+                        ' hier sollte noch ergänzt werdne
+                        ' PRotokollieren welche Orga-Units denn ersetzt werden 
+                        For Each substituteUnit As String In referatsCollection
+                            ReDim logArray(5)
+                            ' ins Protokoll eintragen 
+                            logArray(0) = " Planwerte für Organisations-Unit werden ersetzt durch Istdaten: "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = " Plan values for organizational unit are being replaced by Actual Data: "
+                            End If
+                            logArray(1) = ""
+                            logArray(2) = substituteUnit
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logfileSchreiben(logArray)
+
+                            ' im Output anzeigen ... 
+                            logmessage = logArray(0) & substituteUnit
+                            outPutCollection.Add(logmessage)
+
+                        Next
+
 
                         'Protokoll schreiben...
-                        ' tk 8.5.19 nicht mehr machen 
+                        ' 
                         For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
                             Dim protocolLine As String = ""
@@ -6896,8 +6925,6 @@ Imports System.Web
                         ' Protokoll schreiben Ende ... 
 
 
-
-                        ' dann prüfen: gibt es Projekte, die in ActualData liegen, aber nicht im Referenz Portfolio , dann sollte empfohlen werden, diese Projekte in das aktive Referenz Portfolio aufzunehmen 
 
                         Dim gesamtIstValue As Double = 0.0
 
@@ -6957,6 +6984,8 @@ Imports System.Web
                                     abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
                                 End If
 
+                                ' für Test 
+                                'awinSettings.visboDebug = True
                                 If awinSettings.visboDebug Then
                                     If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
                                         ReDim logArray(3)
@@ -6979,6 +7008,7 @@ Imports System.Web
 
                                     End If
                                 End If
+
 
 
                                 Dim jjjj As Integer = Year(IstdatenDate)

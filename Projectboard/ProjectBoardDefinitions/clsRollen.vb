@@ -759,9 +759,8 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
-    ''' gibt eine Liste zurück an internen Mitarbeitern, die im angegebenen Zeitraum aktiv sind
-    ''' wird z.B im ActualDataImport von Telair benutzt, um festzustellen, welche TimeSheets fehlen 
-    ''' Returns Nothing, wenn es keine aktiven Internen im Zeitraum gibt ..
+    ''' returns a list of intern employyes which are employed during the given timeframe and do have a default capacity of > 0  
+    ''' Returns Nothing, if  es keine aktiven Internen im Zeitraum gibt ..
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property getActiveInterns(ByVal vonDate As Date, ByVal bisDate As Date) As Integer()
@@ -774,7 +773,7 @@ Public Class clsRollen
                 If Not tmpRole.isCombinedRole Then
                     If Not tmpRole.isExternRole Then
 
-                        If tmpRole.isActiveRole Then
+                        If tmpRole.isActiveRole And tmpRole.defaultKapa > 0 Then
 
                             Try
                                 tmpList.Add(tmpRole.UID, True)
