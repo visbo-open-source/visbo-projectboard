@@ -23469,6 +23469,7 @@ Public Module agm2
         Dim lastrow As Integer = 0
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim calendarReference As New clsOtherCalendar
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
@@ -23499,7 +23500,6 @@ Public Module agm2
                 Dim calendarRefFile As String = kapaConfig("CalendarReferenceFile").Inputfile
                 If Not (IsNothing(calendarRefFile) Or calendarRefFile = "") And My.Computer.FileSystem.FileExists(calendarRefFile) Then
                     ' read CalendarReferenceFile for correct Calendar for Capacities
-                    Dim calendarReference As New clsOtherCalendar
                     result = readCalendarReferenceFile(actualDataConfig, calendarRefFile, calendarReference, meldungen)
                 Else
                     outputline = "Calendar-Reference-File does not exist! " & calendarRefFile
@@ -23507,16 +23507,20 @@ Public Module agm2
                 End If
             End If
 
-
             ' Dateien mit WildCards lesen
             listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
                          FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
+
+            If IsNothing(calendarReference) Or (Not IsNothing(calendarReference) And calendarReference.otherCal.Count = 0) Then
+
+                ' there is no calendarReference to consider for importing capacities
                 If listOfFiles.Count >= 1 Then
 
                     For Each tmpDatei As String In listOfFiles
+
                         Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                        result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+                        result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, calendarReference, meldungen)
 
                         If result Then
                             ' hier: merken der erfolgreich importierten KapaFiles
@@ -23524,7 +23528,6 @@ Public Module agm2
                         Else
 
                         End If
-
                     Next
 
                 Else
@@ -23542,8 +23545,24 @@ Public Module agm2
                     Call logfileSchreiben(outputline, "", anzFehler)
                 End If
             Else
-                ' irgendetwas mit ConfigFile falsch
+                ' there is a calendarReference to consider
+                ' the beginning and the end of the calendar in the capafile an the actualData are different
+
+                ' look for the first beginning and ending and the take the actualData
+                For Each kvp As KeyValuePair(Of String, clsFirstWDLastWD) In calendarReference.otherCal
+                    Dim beginning As Date = kvp.Value.firstWorkDay
+                    Dim ending As Date = kvp.Value.lastWorkDay
+                    ' search for the relevant inputfiles
+
+
+                Next
+
             End If
+
+
+        Else
+            ' irgendetwas mit ConfigFile falsch
+        End If
 
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
 

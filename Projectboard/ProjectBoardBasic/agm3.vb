@@ -2287,7 +2287,7 @@ Public Module agm3
     ''' </summary>
     ''' <remarks></remarks>
     Friend Function readAvailabilityOfRoleWithConfig(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport),
-                                                ByVal kapaFileName As String,
+                                                ByVal kapaFileName As String, ByVal calendarReference As clsOtherCalendar,
                                                 ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
@@ -2617,10 +2617,24 @@ Public Module agm3
                                                                             fehler = True
                                                                             Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
                                                                         End If
-                                                                    ElseIf (CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value = "") Then
+                                                                    Else
+                                                                        Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
+                                                                        If workHours = "" Then
+                                                                            ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                            anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+                                                                        End If
+                                                                        If kapaConfig("valueSign").regex = "RegEx" Then
+                                                                            regexpression = New Regex(kapaConfig("valueSign").content)
+                                                                            If Not IsNothing(workHours) Then
+                                                                                Dim match As Match = regexpression.Match(workHours)
+                                                                                If match.Success Then
+                                                                                    workHours = match.Value
+                                                                                    ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
+                                                                                    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
+                                                                                End If
+                                                                            End If
+                                                                        End If
 
-                                                                        ' Feld ist weiss, oder hat keine Farbe, keine Zahl und keinen "/": also ist es Arbeitstag mit Default-Std pro Tag 
-                                                                        anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                     End If
 
                                                                 Else
@@ -2795,20 +2809,8 @@ Public Module agm3
         Dim result As Boolean = True
         Dim actDataWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
-        Dim regexpression As Regex
-        Dim firstUrlTabelle As Integer
-        Dim firstUrlspalte As Integer
-        Dim firstUrlzeile As Integer
-        Dim lastSpalte As Integer
-        Dim lastZeile As Integer
-        Dim hproj As New clsProjekt
-        Dim pName As String = ""
-        Dim anz_Proj As Integer = 0
         Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
         Dim t As Integer = 0  ' tabellenIndex
-        Dim hrole As clsRollenDefinition = Nothing
-        Dim personalName As String = ""
-        Dim personalNumber As String = ""
         Dim curmonth As Integer
         Dim stundenTotal As Integer = 0 ' Stundenangabe in einer Zeile
         Dim monat As String = ""
@@ -2828,13 +2830,10 @@ Public Module agm3
                     appInstance.DisplayAlerts = True
 
                     Dim vstart As clsConfigActualDataImport = actualDataConfig("valueStart")
-                    ' Auslesen erste Time-Sheet
-                    firstUrlTabelle = vstart.sheet.von
-                    firstUrlspalte = vstart.column.von
-                    firstUrlzeile = vstart.row.von
+
 
                     ' Schleife über alle Tabellenblätter eines ausgewählten Excel-Files (hier = einer Rolle)
-                    For t = 0 To vstart.sheet.bis
+                    For t = 0 To vstart.sheet.bis - vstart.sheet.von
 
                         If Not IsNothing(vstart.sheet.von + t) Then
                             currentWS = CType(appInstance.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -2868,7 +2867,6 @@ Public Module agm3
                             result = False
                         Else
                             ' passendes Worksheet gefunden
-
                             Try
                                 ' Find Month
                                 monat = currentWS.Cells(actualDataConfig("months").row.von, actualDataConfig("months").column.von).value
@@ -2879,8 +2877,8 @@ Public Module agm3
                                 Dim vglJahr As String = currentWS.Name
                                 Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
                                 Dim xxx As Date = "01." & monat & " " & jahr
+                                yyyymm = Format(xxx, "yyyy/MM")
                                 curmonth = getColumnOfDate(xxx)
-                                yyyymm = Format(xxx, "yyyy mm")
 
                             Catch ex As Exception
                                 outputline = "Error looking for month/year"
