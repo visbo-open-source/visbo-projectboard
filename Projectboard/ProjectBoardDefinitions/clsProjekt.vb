@@ -4138,10 +4138,11 @@ Public Class clsProjekt
     ''' wird für alle Projekte aufgerufen, die im aktuellen Portfolio vorkommen, für die es aber keine Ist-Daten gab. 
     ''' setzt alle Werte zwischen actualDatauntil des Projektes und newActualDataUntil  auf Null
     ''' aber nur die Rollen, die in awinsettings.ActualdataOrgaUnits aufgeführt sind. 
+    ''' restFromScratch steuert, ob alles von anfang an zurückgesetzt wird oder nur der Anteil, der seit old_actualDatauntil ist 
     ''' gibt false zurück, wenn nicht erfolgreich
     ''' </summary>
     ''' <param name="newActualDataUntil"></param>
-    Public Function setNewActualValuesToNull(ByVal newActualDataUntil As Date) As Boolean
+    Public Function setNewActualValuesToNull(ByVal newActualDataUntil As Date, ByVal resetfromScratch As Boolean) As Boolean
         Dim result As Boolean = True
 
         Try
@@ -4154,6 +4155,8 @@ Public Class clsProjekt
             If Not considerAllRoles Then
                 actualDataParentIDs = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
             End If
+
+
 
             If columnOFNewActualData > columnOFActualData Then
                 ' nur dann muss etwas gemacht werden 
@@ -4169,14 +4172,30 @@ Public Class clsProjekt
                         For r = 1 To curPhase.countRoles
                             Dim curRole As clsRolle = curPhase.getRole(r)
 
-                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                            ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+                            Dim criteriaFulfilled As Boolean = True
 
-                                Dim startIndex As Integer = System.Math.Max(0, columnOFActualData - columnOfPhaseStart + 1)
-                                Dim endIndex As Integer = System.Math.Min(columnOFNewActualData - columnOfPhaseStart, curRole.getDimension)
+                            If awinSettings.ExternRessourcesWithActualData = True Then
+                                criteriaFulfilled = True
+                            Else
+                                criteriaFulfilled = Not curRole.isExtern
+                            End If
 
-                                For ix As Integer = startIndex To endIndex
-                                    curRole.Xwerte(ix) = 0
-                                Next
+                            If criteriaFulfilled Then
+
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                                    Dim startIndex As Integer = 0
+                                    If Not resetfromScratch Then
+                                        startIndex = System.Math.Max(0, columnOFActualData - columnOfPhaseStart + 1)
+                                    End If
+
+                                    Dim endIndex As Integer = System.Math.Min(columnOFNewActualData - columnOfPhaseStart, curRole.getDimension)
+
+                                    For ix As Integer = startIndex To endIndex
+                                        curRole.Xwerte(ix) = 0
+                                    Next
+                                End If
+
 
                             End If
                         Next
@@ -4193,6 +4212,7 @@ Public Class clsProjekt
 
     End Function
     ''' <summary>
+    ''' wird in ImportProjekteEintragen aufgerufen: stellt sicher, dass die existierenden Ist-Daten nicht durch einen Import von steckbrief überschrieben werden ... 
     ''' alle Ist-Daten aus oldProj werden dem aktuellen Projekt übertragen
     ''' es bleiben nur die Werte ab Monat ActualDataUntil +1 erhalten, alle anderen werden entweder auf Null gesetzt oder aber aus oldProj übernommen 
     ''' dabei werden nur die Werte  awinsettings.Istdaten berücksichtigt. 
@@ -4330,7 +4350,7 @@ Public Class clsProjekt
     ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
-    ''' wird in ImportAllianzIstDaten verwendet 
+    ''' wird in ImportAllianzIstDaten verwendet und in ImportIstdaten
     ''' </summary>
     ''' <param name="phNameID"></param>
     ''' <param name="actualValues"></param>
@@ -4423,11 +4443,24 @@ Public Class clsProjekt
             End If
 
             If isRole Then
+
+                ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+                Dim criteriaFulfilled As Boolean = True
+
+                If awinSettings.ExternRessourcesWithActualData = True Then
+                    criteriaFulfilled = True
+                Else
+                    criteriaFulfilled = Not tmpRole.isExternRole
+                End If
+
                 Dim roleName As String = tmpRole.name
 
-                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCostCollection) Then
-                    tmpResult = True
+                If criteriaFulfilled Then
+                    If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCostCollection) Then
+                        tmpResult = True
+                    End If
                 End If
+
             Else
                 ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
                 tmpResult = roleCostCollection.Contains(roleCostName)
@@ -4580,6 +4613,7 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' wenn für Externe Rollen keine Istdaten eingelesen werden: passiert nur für Rollen, die nicht als Extern gekennzeichnet sind 
     ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
@@ -4592,46 +4626,59 @@ Public Class clsProjekt
         Dim teamID As Integer = -1
         Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
+
         If Not IsNothing(currentRoleDef) Then
-            Dim roleUID As Integer = currentRoleDef.UID
-            Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+            ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+            Dim criteriaFulfilled As Boolean = True
 
-            For Each phNameID As String In listOfPhases
+            If awinSettings.ExternRessourcesWithActualData = True Then
+                criteriaFulfilled = True
+            Else
+                criteriaFulfilled = Not currentRoleDef.isExternRole
+            End If
 
-                Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
-                If Not IsNothing(cPhase) Then
-                    With cPhase
+            If criteriaFulfilled Then
+                Dim roleUID As Integer = currentRoleDef.UID
+                Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-                        If .relStart <= relMonthCol Then
-                            ' jetzt die Werte auslesen und ggf. auf Null setzen 
-                            'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
-                            Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
+                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
 
-                            If Not IsNothing(cRole) Then
-                                Dim oldSum As Double = 0.0
-                                Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
+                For Each phNameID As String In listOfPhases
 
-                                For ix As Integer = 0 To ende - .relStart
-                                    oldSum = oldSum + cRole.Xwerte(ix)
+                    Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+                    If Not IsNothing(cPhase) Then
+                        With cPhase
 
-                                    ' hier werden ggf die Werte zurückgesetzt 
-                                    If resetValuesToNull Then
-                                        cRole.Xwerte(ix) = 0
-                                    End If
+                            If .relStart <= relMonthCol Then
+                                ' jetzt die Werte auslesen und ggf. auf Null setzen 
+                                'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
+                                Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
 
-                                Next
+                                If Not IsNothing(cRole) Then
+                                    Dim oldSum As Double = 0.0
+                                    Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
 
-                                tmpValue = tmpValue + oldSum * tagessatz
+                                    For ix As Integer = 0 To ende - .relStart
+                                        oldSum = oldSum + cRole.Xwerte(ix)
+
+                                        ' hier werden ggf die Werte zurückgesetzt 
+                                        If resetValuesToNull Then
+                                            cRole.Xwerte(ix) = 0
+                                        End If
+
+                                    Next
+
+                                    tmpValue = tmpValue + oldSum * tagessatz
+                                End If
+
                             End If
 
-                        End If
+                        End With
 
-                    End With
-
-                End If
-            Next
+                    End If
+                Next
+            End If
 
         End If
 

@@ -28,7 +28,7 @@ Partial Class frmInfoActualDataMonth
         Me.okBtn = New System.Windows.Forms.Button()
         Me.cancelBtn = New System.Windows.Forms.Button()
         Me.lbl_refPortfolioName = New System.Windows.Forms.Label()
-        Me.listOfPortfolioNames = New System.Windows.Forms.ListBox()
+        Me.comboBxPortfolio = New System.Windows.Forms.ComboBox()
         Me.SuspendLayout()
         '
         'Label1
@@ -82,13 +82,13 @@ Partial Class frmInfoActualDataMonth
         Me.lbl_refPortfolioName.TabIndex = 7
         Me.lbl_refPortfolioName.Text = "Referenz-Portfolio"
         '
-        'listOfPortfolioNames
+        'comboBxPortfolio
         '
-        Me.listOfPortfolioNames.FormattingEnabled = True
-        Me.listOfPortfolioNames.Location = New System.Drawing.Point(15, 28)
-        Me.listOfPortfolioNames.Name = "listOfPortfolioNames"
-        Me.listOfPortfolioNames.Size = New System.Drawing.Size(320, 17)
-        Me.listOfPortfolioNames.TabIndex = 8
+        Me.comboBxPortfolio.FormattingEnabled = True
+        Me.comboBxPortfolio.Location = New System.Drawing.Point(13, 27)
+        Me.comboBxPortfolio.Name = "comboBxPortfolio"
+        Me.comboBxPortfolio.Size = New System.Drawing.Size(322, 21)
+        Me.comboBxPortfolio.TabIndex = 8
         '
         'frmInfoActualDataMonth
         '
@@ -96,7 +96,7 @@ Partial Class frmInfoActualDataMonth
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(357, 138)
-        Me.Controls.Add(Me.listOfPortfolioNames)
+        Me.Controls.Add(Me.comboBxPortfolio)
         Me.Controls.Add(Me.lbl_refPortfolioName)
         Me.Controls.Add(Me.cancelBtn)
         Me.Controls.Add(Me.okBtn)
@@ -114,5 +114,5 @@ Partial Class frmInfoActualDataMonth
     Public WithEvents MonatJahr As Windows.Forms.DateTimePicker
     Public WithEvents Label1 As Windows.Forms.Label
     Public WithEvents lbl_refPortfolioName As Windows.Forms.Label
-    Public WithEvents listOfPortfolioNames As Windows.Forms.ListBox
+    Public WithEvents comboBxPortfolio As Windows.Forms.ComboBox
 End Class
