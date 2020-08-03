@@ -15,7 +15,7 @@ Public Class frmInfoActualDataMonth
     Private Sub frmInfoActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ' zugelassenen Min und Max-Werte für das Datum setzen 
         MonatJahr.MinDate = StartofCalendar
-        MonatJahr.MaxDate = Date.Now
+        MonatJahr.MaxDate = Date.Now.Date.AddHours(23)
 
         ' Default setzen 
         ' Vorbesetzung des Datums für Istdaten ist aktuelles Datum
@@ -25,10 +25,19 @@ Public Class frmInfoActualDataMonth
         If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
             Dim Err As New clsErrorCodeMsg
             Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, Err)
+            Dim firstName As String = ""
+            Dim firstItem As Boolean = True
 
             For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
-                listOfPortfolioNames.Items.Add(kvp.Key)
+                comboBxPortfolio.Items.Add(kvp.Key)
+                If firstItem Then
+                    firstName = kvp.Key
+                    firstItem = False
+                End If
             Next
+
+            comboBxPortfolio.SelectedItem = firstName
+
 
         End If
 
@@ -49,4 +58,6 @@ Public Class frmInfoActualDataMonth
 
 
     End Sub
+
+
 End Class

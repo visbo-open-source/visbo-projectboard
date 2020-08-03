@@ -8804,14 +8804,31 @@ Public Module agm2
                             importedOrga = New clsOrganisation
 
                         Else
-                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ... 
+                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
+                            ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
                             If Not IsNothing(oldOrga) Then
                                 If oldOrga.allRoles.Count > 0 Then
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
                                         Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
+
                                         If Not IsNothing(importedRole) Then
                                             importedRole.kapazitaet = kvp.Value.kapazitaet
                                         End If
+
+                                        ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                        If importedRole.entryDate > StartofCalendar Then
+                                            Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                            For ix As Integer = 1 To tmpix - 1
+                                                importedRole.kapazitaet(ix) = 0
+                                            Next
+                                        End If
+
+                                        Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
+
+                                        For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
+                                            importedRole.kapazitaet(ix) = 0
+                                        Next
+
                                     Next
                                 End If
                             End If

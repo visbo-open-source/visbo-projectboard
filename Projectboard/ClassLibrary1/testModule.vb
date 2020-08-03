@@ -1885,7 +1885,8 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
 
-                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                 Catch ex As Exception
@@ -2153,7 +2154,8 @@ Public Module testModule
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                         Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                        'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                         appInstance.ScreenUpdating = formerSU
@@ -4395,7 +4397,8 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=KeyMetrics"
 
-                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
                                 End If
 
@@ -6206,7 +6209,8 @@ Public Module testModule
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                         Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                        ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                        'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
 
 
