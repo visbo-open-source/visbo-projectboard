@@ -6206,12 +6206,14 @@ Public Module testModule
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
-                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
-                                        ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
-                                        'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                        If Not IsNothing(smartChartInfo.vpid) Then
+                                            Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
+                                            ' tk 3.8. rausgenommen, solange es noch Differenzen gibt 
+                                            'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                        End If
 
 
                                         appInstance.ScreenUpdating = formerSU

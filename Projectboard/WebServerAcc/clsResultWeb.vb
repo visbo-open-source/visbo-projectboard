@@ -177,10 +177,10 @@ Public Class clsResultWeb
 
             Me.percentDone = .percentDone
 
-            'Me.invoice = .invoice
-            Me.invoice = New KeyValuePair(Of Double, Integer)(10.5, 30)
-            'Me.penalty = .penalty
-            Me.penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 10.5)
+            Me.invoice = .invoice
+            ' Me.invoice = New KeyValuePair(Of Double, Integer)(10.5, 30)
+            Me.penalty = .penalty
+            ' Me.penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 10.5)
 
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
