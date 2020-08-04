@@ -8109,10 +8109,11 @@ Public Module agm2
         Dim listOfpNames As New SortedList(Of String, String)
         Dim pName As String = ""
         Dim variantName As String = ""
+        Dim projectNr As String = ""
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
-        'Dim startSpalte As Integer
+
 
         Dim geleseneProjekte As Integer
 
@@ -8146,6 +8147,8 @@ Public Module agm2
                 firstZeile = CType(.Rows(1), Excel.Range)
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
+                Dim portfolioZeile As Integer = 2
+
                 While zeile <= lastRow
 
                     ' Kommentare zurücksetzen ...
@@ -8155,29 +8158,70 @@ Public Module agm2
 
                     End Try
 
-                    ' hier muss jetzt alles zurückgesetzt werden 
-                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
+                    Dim commentMsg As String = ""
+
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    projectNr = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     If IsNothing(pName) Then
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
-                    ElseIf pName.Trim.Length < 2 Then
-
-                        Try
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
-                        Catch ex As Exception
-
-                        End Try
-
-
+                        pName = ""
                     Else
-                        variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If IsNothing(variantName) Then
-                            variantName = ""
+                        pName = pName.Trim
                         End If
 
+                    If IsNothing(variantName) Then
+                        variantName = ""
+                    Else
+                        variantName = variantName.Trim
+                    End If
+
+                    If IsNothing(projectNr) Then
+                        projectNr = ""
+                    Else
+                        projectNr = projectNr.Trim
+                    End If
+
+
+                    Dim notYetDone As Boolean = True
+
+                    ' Prio 1: gibt es das Projekt mit der Nummer ? 
+                    If projectNr <> "" Then
+                        Dim pCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projectNr, err)
+
+                        If pCollection.Count = 1 Then
+
+                            pName = CStr(pCollection.Item(1))
+                            ' das Projekt gibt es , zumindest in der "" Variante
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now, err) Then
+                                ' alles ok 
+
+                                Dim cItem As New clsConstellationItem
+
+                                With cItem
+                                    .projectName = pName
+                                    .variantName = variantName
+                                    .show = True
+                                    .projectTyp = ptPRPFType.project.ToString
+                                    .zeile = portfolioZeile
+                                End With
+
+                                newC.add(cItem)
+                                notYetDone = False
+                                portfolioZeile = portfolioZeile + 1
+
+                            Else
+                                commentMsg = "es gibt kein Projekt mit dieser Projekt-Nummer und Variante "
+                            End If
+
+                        ElseIf pCollection.Count > 1 Then
+                            commentMsg = "Projekt-Nummer nicht eindeutig ... "
+                        End If
+
+                    End If
+
+                    ' Prio 2: gibt es das Projekt mit diesem Namen, Varianten-Namen ? 
+                    If notYetDone And pName <> "" Then
 
                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now, err) Then
                             ' als Constellation Item aufnehmen 
@@ -8188,13 +8232,21 @@ Public Module agm2
                                 .variantName = variantName
                                 .show = True
                                 .projectTyp = ptPRPFType.project.ToString
-                                .zeile = zeile
+                                .zeile = portfolioZeile
                             End With
 
                             newC.add(cItem)
+                            notYetDone = False
+                            portfolioZeile = portfolioZeile + 1
 
+                        Else
+                            commentMsg = "ein Projekt mit diesem Namen, Varianten-Namen existiert nicht ..."
                         End If
+                    End If
 
+
+                    If notYetDone Then
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).AddComment("does not exist ...")
                     End If
 
                     geleseneProjekte = geleseneProjekte + 1
