@@ -64,7 +64,7 @@ Public Class clsMeilenstein
             If Not IsNothing(value) Then
                 _penalty = value
             Else
-                _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0.0)
+                _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0.0)
             End If
         End Set
     End Property
@@ -136,14 +136,16 @@ Public Class clsMeilenstein
     ''' <remarks></remarks>
     Public ReadOnly Property isIdenticalTo(ByVal vglMS As clsMeilenstein) As Boolean
         Get
+
+
             Dim stillOK As Boolean = False
             Dim ix As Integer = 1
 
-
-            ' prüfen auf allgemeine Attribute ... 
-            ' tk 16.5.20 NAmensgleichheit reicht hier, weil ansonsten bei de rKorrekt der NameIDs ensureStableIDs eine Ungleichiet auftritt 
-            'If Me.nameID = vglMS.nameID And
-            If Me.name = vglMS.name And
+            Try
+                ' prüfen auf allgemeine Attribute ... 
+                ' tk 16.5.20 NAmensgleichheit reicht hier, weil ansonsten bei de rKorrekt der NameIDs ensureStableIDs eine Ungleichiet auftritt 
+                'If Me.nameID = vglMS.nameID And
+                If Me.name = vglMS.name And
                     Me.shortName = vglMS.shortName And
                     Me.originalName = vglMS.originalName And
                     Me.appearance = vglMS.appearance And
@@ -154,31 +156,45 @@ Public Class clsMeilenstein
                     Me.DocURL = vglMS.DocURL And
                     Me.DocUrlAppID = vglMS.DocUrlAppID And
                     Me.percentDone = vglMS.percentDone Then
-                stillOK = True
+                    stillOK = True
 
 
-                ' prüfen auf Deliverables ... 
-                Dim MeDelis As String = Me.getAllDeliverables("#")
-                Dim vglDelis As String = vglMS.getAllDeliverables("#")
+                    ' prüfen auf Deliverables ... 
+                    Dim MeDelis As String = Me.getAllDeliverables("#")
+                    Dim vglDelis As String = vglMS.getAllDeliverables("#")
 
-                If MeDelis = vglDelis Then
-                    ' prüfen auf Bewertungen ... 
-                    ix = 1
-                    Do While stillOK And ix <= Me.bewertungsCount
-                        Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
-                        Dim vglBewertung As clsBewertung = vglMS.getBewertung(ix)
-                        If MeBewertung.isIdenticalTo(vglBewertung) Then
-                            ix = ix + 1
-                        Else
-                            stillOK = False
-                        End If
-                    Loop
+                    If MeDelis = vglDelis Then
+                        ' prüfen auf Bewertungen ... 
+                        ix = 1
+                        Do While stillOK And ix <= Me.bewertungsCount
+                            Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                            Dim vglBewertung As clsBewertung = vglMS.getBewertung(ix)
+                            If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
+
+                    End If
+
+
 
                 End If
 
+                ' jetzt die Invoices und Penalties abfragen 
+                If stillOK Then
+                    stillOK = Me.invoice.Key = vglMS.invoice.Key And
+                        Me.invoice.Value = vglMS.invoice.Value And
+                        Me.penalty.Key = vglMS.penalty.Key And
+                        Me.penalty.Value = vglMS.penalty.Value
+                End If
 
 
-            End If
+            Catch ex As Exception
+                stillOK = False
+            End Try
+
 
 
             isIdenticalTo = stillOK
@@ -884,7 +900,7 @@ Public Class clsMeilenstein
         _verantwortlich = ""
 
         _invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
-        _penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+        _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
 
         offset = 0
         

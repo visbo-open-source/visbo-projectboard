@@ -2749,7 +2749,7 @@ Public Class clsProjekte
 
                 prAnfang = hproj.Start + hproj.StartOffset
 
-                tempArray = hproj.getInvoices
+                tempArray = hproj.getInvoicesPenalties
 
                 If Not IsNothing(tempArray) Then
                     prEnde = prAnfang + tempArray.Length - 1
@@ -2775,6 +2775,9 @@ Public Class clsProjekte
 
     Public ReadOnly Property getCashFlow() As Double()
         Get
+
+            awinSettings.kurzarbeitActivated = True
+
             Dim saveShowrangeLeft As Integer = showRangeLeft
 
             Dim zeitraum As Integer = showRangeRight - showRangeLeft
@@ -2791,44 +2794,48 @@ Public Class clsProjekte
             'Dim cashFlowValues1 As Double() = Nothing
             'ReDim cashFlowValues1(zeitraum)
 
-            Dim invoices() As Double = ShowProjekte.getInvoices
+            Try
+                Dim invoices() As Double = ShowProjekte.getInvoices
 
-            ' den Vormonat mit betrachten 
+                ' den Vormonat mit betrachten 
 
-            If awinSettings.kurzarbeitActivated Then
+                If showRangeLeft > 1 Then
+                    showRangeLeft = showRangeLeft - 1
+                End If
 
-            End If
-            If showRangeLeft > 1 Then
-                showRangeLeft = showRangeLeft - 1
-            End If
-            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
-            showRangeLeft = saveShowrangeLeft
+                Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+                showRangeLeft = saveShowrangeLeft
 
-            Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
-            Dim externCost As Double() = getCostGpValuesInMonth(PTrt.extern)
-            Dim otherCost As Double() = getTotalCostValuesInMonth(False)
+                Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
+                Dim externCost As Double() = getCostGpValuesInMonth(PTrt.extern)
+                Dim otherCost As Double() = getTotalCostValuesInMonth(False)
 
-            ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
-            For i As Integer = 0 To zeitraum
-                kugCome(i) = notUtilizedCapacity(i) * shortTermQuota
-                kugGo(i) = notUtilizedCapacity(i + 1) * shortTermQuota
-            Next
-
-            If awinSettings.kurzarbeitActivated Then
+                ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
                 For i As Integer = 0 To zeitraum
-                    ' notUtilizedCapacity(i+1) adressiert den gleichen Monat wie invoices(i)
-                    cashFlowValues(i) = invoices(i) + kugCome(i) - (kugGo(i) + externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1))
-                    'cashFlowValues1(i) = invoices(i) + kugCome(i) - (externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1) * (1 - shortTermQuota))
+                    kugCome(i) = notUtilizedCapacity(i) * shortTermQuota
+                    kugGo(i) = notUtilizedCapacity(i + 1) * shortTermQuota
                 Next
-                'If arraysAreDifferent(cashFlowValues, cashFlowValues1) Then
-                '    Call MsgBox("Stop , unterschiedliche Werte")
-                'End If
 
-            Else
-                For i As Integer = 0 To zeitraum
-                    cashFlowValues(i) = invoices(i) - (externCost(i) + otherCost(i) + orgaFullCost(i))
-                Next
-            End If
+                If awinSettings.kurzarbeitActivated Then
+                    For i As Integer = 0 To zeitraum
+                        ' notUtilizedCapacity(i+1) adressiert den gleichen Monat wie invoices(i)
+                        cashFlowValues(i) = invoices(i) + kugCome(i) - (kugGo(i) + externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1))
+                        'cashFlowValues1(i) = invoices(i) + kugCome(i) - (externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1) * (1 - shortTermQuota))
+                    Next
+                    'If arraysAreDifferent(cashFlowValues, cashFlowValues1) Then
+                    '    Call MsgBox("Stop , unterschiedliche Werte")
+                    'End If
+
+                Else
+                    For i As Integer = 0 To zeitraum
+                        cashFlowValues(i) = invoices(i) - (externCost(i) + otherCost(i) + orgaFullCost(i))
+                    Next
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Fehler")
+            End Try
+
 
 
             getCashFlow = cashFlowValues
@@ -4473,10 +4480,10 @@ Public Class clsProjekte
 
                 If weitermachen Then
 
-                    If Not tmpRole.isExternRole Then
+                    If Not IsNothing(tmpRole) Then
                         Dim dailyRate As Double = tmpRole.tagessatzIntern
 
-                        If Not IsNothing(tmpRole) Then
+                        If Not tmpRole.isExternRole Then
                             Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
 
                             roleName = tmpRole.name
@@ -4507,13 +4514,7 @@ Public Class clsProjekte
                                                  (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
 
-                                    'If roleValues(ix) < kapaValues(ix) Then
-                                    '    ' interne Ressourcen kosten , können aber nicht verrechnet werden 
-                                    '    costValues(ix) = costValues(ix) +
-                                    '                 (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                                    'Else
-                                    '    ' keine Opportunity Kosten 
-                                    'End If
+
                                 End If
 
 

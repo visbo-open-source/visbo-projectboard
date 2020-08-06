@@ -1885,7 +1885,8 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
 
-                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                 Catch ex As Exception
@@ -2153,7 +2154,8 @@ Public Module testModule
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                         Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                        'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                         appInstance.ScreenUpdating = formerSU
@@ -4129,6 +4131,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle Zielerreichung" Or
                         kennzeichnung = "Tabelle Projektstatus" Or
                         kennzeichnung = "Tabelle Cashflow6Details" Or
+                        kennzeichnung = "Tabelle Intern-Extern-Sonst" Or
                         kennzeichnung = "Tabelle Projektabhängigkeiten" Or
                         kennzeichnung = "Übersicht Besser/Schlechter" Or
                         kennzeichnung = "Tabelle Besser/Schlechter" Or
@@ -4394,7 +4397,8 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=KeyMetrics"
 
-                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
+                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
                                 End If
 
@@ -4852,6 +4856,14 @@ Public Module testModule
                             Catch ex As Exception
                                 objectsDone = objectsToDo + 1
                                 Call MsgBox("Fehler bei Report-Erstellung ... Code X3678")
+                            End Try
+
+                        Case "Tabelle Intern-Extern-Sonst"
+                            Try
+                                Call zeichneTableIntExtOther(pptShape)
+
+                            Catch ex As Exception
+
                             End Try
 
                         Case "Tabelle Cashflow6Details"
@@ -6183,17 +6195,24 @@ Public Module testModule
                                             paramRoleIDToAppend = "&roleID=" & roleID
                                         End If
 
-                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                        Dim noLegend As Boolean = False
+                                        If qualifier2 = "noLegend" Then
+                                            noLegend = True
+                                        End If
+                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape, noLegend:=noLegend)
                                         ' 
                                         ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
+
                                         If Not IsNothing(smartChartInfo.vpid) Then
                                             Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                             Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
-                                            Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                            ' tk 3.8. rausgenommen, solange es noch Differenzen gibt 
+                                            'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
                                         End If
 
 
@@ -6372,7 +6391,9 @@ Public Module testModule
                             hheight = chartHeight  ' height of all charts
                             hwidth = chartWidth   ' width of all charts
                             obj = Nothing
-                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize)
+
+                            Dim noLegend As Boolean = qualifier2 = "noLegend"
+                            Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True, pptSize, noLegend:=noLegend)
 
                             reportObj = obj
 

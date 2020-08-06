@@ -13,6 +13,51 @@ Public Class frmInfoActualDataMonth
     End Sub
 
     Private Sub frmInfoActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' zugelassenen Min und Max-Werte für das Datum setzen 
         MonatJahr.MinDate = StartofCalendar
+        MonatJahr.MaxDate = Date.Now.Date.AddHours(23)
+
+        ' Default setzen 
+        ' Vorbesetzung des Datums für Istdaten ist aktuelles Datum
+        MonatJahr.Value = Date.Now
+
+        ' jetzt die Referenz-Portfolio Dropbox mit Namen besetzen 
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+            Dim Err As New clsErrorCodeMsg
+            Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, Err)
+            Dim firstName As String = ""
+            Dim firstItem As Boolean = True
+
+            For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
+                comboBxPortfolio.Items.Add(kvp.Key)
+                If firstItem Then
+                    firstName = kvp.Key
+                    firstItem = False
+                End If
+            Next
+
+            comboBxPortfolio.SelectedItem = firstName
+
+
+        End If
+
+        Call languageSettings()
     End Sub
+
+    Private Sub Label1_Click(sender As Object, e As EventArgs) Handles Label1.Click
+
+    End Sub
+
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            Label1.Text = "Actual data including last month to"
+            lbl_refPortfolioName.Text = "Reference-Portfolio"
+            okBtn.Text = "Import Data"
+        End If
+
+
+    End Sub
+
+
 End Class

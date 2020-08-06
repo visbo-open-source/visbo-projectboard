@@ -1147,7 +1147,9 @@ Public Module awinGeneralModules
         anzAktualisierungen = 0
         anzNeuProjekte = 0
 
+        ' tk wenn es Namensänderungen gibt, dann sollen die hier angezeigt werden ... 
 
+        Dim nameChangeCollection As New Collection
 
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
@@ -1208,25 +1210,6 @@ Public Module awinGeneralModules
                     End If
 
 
-                    ' tk 6.2.20 das gar nicht mehr machen ...
-                    ''If hproj.VorlagenName = "" Then
-                    ''    Try
-                    ''        Dim anzVorlagen = Projektvorlagen.Count
-                    ''        Dim vproj As clsProjektvorlage
-                    ''        hproj.VorlagenName = Projektvorlagen.Liste.Last.Value.VorlagenName
-
-                    ''        For i = 1 To anzVorlagen
-                    ''            vproj = Projektvorlagen.Liste.ElementAt(i - 1).Value
-                    ''            If vproj.farbe = hproj.farbe Then
-                    ''                hproj.VorlagenName = vproj.VorlagenName
-                    ''            End If
-                    ''        Next
-
-                    ''    Catch ex1 As Exception
-
-                    ''    End Try
-                    ''End If
-
                     Try
                         With hproj
                             ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
@@ -1286,6 +1269,17 @@ Public Module awinGeneralModules
                     ' jetzt sicherstellen, dass der Vergleich nicht einfach aufgrund Unterschied im VarantName zu einem Unterschied, damit Markierung führt ... 
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And hproj.variantName <> cproj.variantName Then
                         cproj.variantName = hproj.variantName
+                    End If
+
+                    ' evtl ist jetzt der Name ein anderer , weil über P-Nr aus Datenbank geholt  
+                    If Not IsNothing(cproj) Then
+                        ' Fall Telair oder auch andere: wenn PNr angeben ist und die PNames aus DB und Import nicht übereinstimmen, dann gewinnt DB 
+                        If cproj.name <> hproj.name Then
+                            Dim txtMsg As String = "from " & hproj.name & " to " & cproj.name
+                            nameChangeCollection.Add(txtMsg)
+
+                            hproj.name = cproj.name
+                        End If
                     End If
 
                     If Not hproj.isIdenticalTo(vProj:=cproj) Then
@@ -1386,7 +1380,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    If Not calledFromActualDataImport Then
+                    If (Not calledFromActualDataImport) And (myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager) Then
 
                         ' jetzt sicherstellen, dass das Projekt die Ist-Daten aus dem alten Projekt bekommt.  
                         Try
@@ -1446,11 +1440,7 @@ Public Module awinGeneralModules
                 End If
             End If
 
-            ' tk 12.6.20
-            ' jetzt Testweise die Meilensteine Invoice Setzungen vornehmen 
-            If hproj.name.StartsWith("E_Kunde") Then
-                hproj.setMilestoneInvoices("Finalization")
-            End If
+
 
             Try
                 vglName = calcProjektKey(hproj.name, hproj.variantName)
@@ -1482,6 +1472,8 @@ Public Module awinGeneralModules
 
         Next
 
+
+
         If ImportProjekte.Count < 1 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox(" no projects imported ...")
@@ -1493,14 +1485,26 @@ Public Module awinGeneralModules
 
             If awinSettings.englishLanguage Then
 
-                Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf &
+                Dim txtMsg As String = ImportProjekte.Count & " projects were read " & vbLf & vbLf &
                         anzNeuProjekte.ToString & " New projects" & vbLf &
-                        anzAktualisierungen.ToString & " project updates")
+                        anzAktualisierungen.ToString & " project updates"
+                nameChangeCollection.Add(txtMsg)
+                'Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf &
+                '        anzNeuProjekte.ToString & " New projects" & vbLf &
+                '        anzAktualisierungen.ToString & " project updates")
             Else
 
-                Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & vbLf & vbLf &
+                Dim txtMsg As String = "es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & vbLf & vbLf &
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf &
-                        anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+                        anzAktualisierungen.ToString & " Projekt-Aktualisierungen"
+
+                nameChangeCollection.Add(txtMsg)
+
+            End If
+
+            If nameChangeCollection.Count > 0 Then
+                Dim headerMsg As String = "project Names were changed to DB-Names"
+                Call showOutPut(nameChangeCollection, headerMsg, "")
             End If
 
 
@@ -1529,6 +1533,8 @@ Public Module awinGeneralModules
             'Call storeSessionConstellation("Last")
 
         End If
+
+
 
         ImportProjekte.Clear(False)
 
@@ -1567,7 +1573,7 @@ Public Module awinGeneralModules
                 Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
                 If Not IsNothing(tstMS) Then
                     If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich: " & tstMS.nameID & "; " & tstKvp.Key
+                        logMessage = "baseline ungleich:   " & tstMS.nameID & "; " & tstKvp.Key
                         result.Add(logMessage)
                     End If
                 End If
@@ -1575,7 +1581,7 @@ Public Module awinGeneralModules
                 Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
                 If Not IsNothing(tstPh) Then
                     If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich: " & tstPh.nameID & "; " & tstKvp.Key
+                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Key
                         result.Add(logMessage)
                     End If
                 End If
@@ -1588,7 +1594,7 @@ Public Module awinGeneralModules
                 Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
                 If Not IsNothing(tstMS) Then
                     If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
-                        logMessage = "lastproj ungleich: " & tstMS.nameID & "; " & tstKvp.Key
+                        logMessage = "lastproj ungleich " & tstMS.nameID & "; " & tstKvp.Key
                         result.Add(logMessage)
                     End If
                 End If
@@ -1596,7 +1602,7 @@ Public Module awinGeneralModules
                 Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
                 If Not IsNothing(tstPh) Then
                     If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich: " & tstPh.nameID & "; " & tstKvp.Key
+                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Key
                         result.Add(logMessage)
                     End If
                 End If
@@ -1609,7 +1615,8 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
-    ''' übernimmt vom existierenden Projekt einige Werte 
+    ''' übernimmt vom existierenden Projekt einige Werte wie Kundennummer, vpID, actualDataUntil: für VISBO steckbriefe oder Fremdsysteme
+    ''' wenn vom Fremdsystem kommt: dann werden , wenn überhaupt keine Ressourcen (z.B MS Project)  da sind, die Ressourcen des vorherigen Standes genommen
     ''' ist vor allem dann relevant wenn nur ein RPLAN Excel mit gerademal Terminen eingelesen wird ....
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -1697,7 +1704,7 @@ Public Module awinGeneralModules
                                 hproj = tmpProj
                             End If
                         Catch ex As Exception
-                            Call MsgBox("resources from former version could not be copied ... ")
+                            Call MsgBox("resources from former version could Not be copied ... ")
                         End Try
 
                     End If
@@ -1765,7 +1772,7 @@ Public Module awinGeneralModules
                 ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
                 allNames = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(pNr, err)
                 If allNames.Count > 1 Then
-                    Dim errMsg As String = "Project-Number occurs more than once in DB:" & pNr
+                    Dim errMsg As String = "Project-Number occurs more than once in DB" & pNr
 
                     Dim usedName As String = ""
                     For Each tmpName As String In allNames
@@ -1774,7 +1781,7 @@ Public Module awinGeneralModules
                         End If
                         errMsg = errMsg & vbLf & tmpName
                     Next
-                    errMsg = errMsg & vbLf & vbLf & "used name: " & usedName
+                    errMsg = errMsg & vbLf & vbLf & "used name " & usedName
 
                     Call MsgBox(errMsg)
 
@@ -2106,7 +2113,7 @@ Public Module awinGeneralModules
                         ' in der Datenbank gibt es mehrere Projekte, denen diese Projekt-Kundennummer zugeordnet ist : Fehler ! 
                         ' Eintrag in Log-File 
                         ReDim logArray(1 + pNames.Count)
-                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt:  "
+                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt  "
                         logArray(1) = projektKDNr
 
 
@@ -2135,7 +2142,7 @@ Public Module awinGeneralModules
                                     fctResult = True
 
                                     ReDim logArray(3)
-                                    logArray(0) = "lookupTable: erfolgreiches Mapping"
+                                    logArray(0) = "lookupTable erfolgreiches Mapping"
                                     logArray(1) = projektKDNr
                                     logArray(2) = pname
                                     logArray(3) = visboDBname
@@ -2197,7 +2204,7 @@ Public Module awinGeneralModules
                             fctResult = True
 
                             ReDim logArray(4)
-                            logArray(0) = "neu angelegtes Projekt: "
+                            logArray(0) = "neu angelegtes Projekt:  "
                             logArray(1) = projektKDNr
                             logArray(2) = pname
                             logArray(3) = ""
@@ -2210,7 +2217,7 @@ Public Module awinGeneralModules
                         Else
                             fctResult = False
                             ReDim logArray(2)
-                            logArray(0) = "Fehler beim Neu-Anlegen eines Projektes aus Istdaten:"
+                            logArray(0) = "Fehler beim Neu-Anlegen eines Projektes aus Istdaten"
                             logArray(1) = projektKDNr
                             logArray(2) = pname
 
@@ -2281,7 +2288,7 @@ Public Module awinGeneralModules
 
                 If testProjekte.contains(hproj.name) Then
                     ' darf eigentlich n icht sein 
-                    Call MsgBox("Fehler ?: " & hproj.name)
+                    Call MsgBox("Fehler ? " & hproj.name)
                 Else
                     testProjekte.Add(hproj)
                 End If
@@ -2347,7 +2354,7 @@ Public Module awinGeneralModules
                 Dim i As Integer = 1
                 While i <= completeStr.Length And resultValue = True
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType("", Char)}, 2)
 
                     If roleCostStr.Length = 2 Then
 
@@ -2613,8 +2620,8 @@ Public Module awinGeneralModules
                                                 ReDim logmsg(3)
                                                 logmsg(0) = "Projekt existiert unter anderem Namen in VISBO Datenbank - bitte in Rupi-Liste  umbenennen!"
                                                 logmsg(1) = impProjekt.kundenNummer
-                                                logmsg(2) = "VISBO DB - Name: " & vglProj.name
-                                                logmsg(3) = "neuer Name: " & newName
+                                                logmsg(2) = "VISBO DB - Name " & vglProj.name
+                                                logmsg(3) = "neuer Name " & newName
                                                 Call logfileSchreiben(logmsg)
                                             Else
                                                 ' kann eigentlich nicht sein 
@@ -2654,7 +2661,7 @@ Public Module awinGeneralModules
                                 End If
 
 
-                            Else
+        Else
                                 ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
                                 ' jetzt in AlleProjekte eintragen ... 
                                 AlleProjekte.Add(impProjekt)

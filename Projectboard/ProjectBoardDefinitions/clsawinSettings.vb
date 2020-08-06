@@ -206,6 +206,8 @@ Public Class clsawinSettings
 
     Public Property allowSumEditing As Boolean
 
+
+
     ' Settings für Report-Message-Language
     Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
@@ -251,9 +253,7 @@ Public Class clsawinSettings
     ' wird für den Import von Excel Projekt-Dateien benötigt 
     Public Property importSettings As String()
 
-    ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
-    ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
-    Public Property ActualdataOrgaUnits As String = ""
+
 
     Public Property visboServer As Boolean
 
@@ -263,7 +263,22 @@ Public Class clsawinSettings
 
     ' tk 24.7.19 Variable steuert, ob beim Filtern in frmPortfolioAdmin die pfv Variante zugrundegelegt werden soll 
     Public Property filterPFV As Boolean
+    ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
+    ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
 
+
+    ' gibt an, für welche Organisations-Einheiten Ist-Daten erfasst werden 
+    ' nur für diese Orga-Units wird alles auf Null gesetzt 
+    Public Property ActualdataOrgaUnits As String = ""
+
+    ' tk 27.7.2020
+    ' wenn es für Externe Ressourcen keine Istdaten gibt, muss planned = Ist; die dürfen nicht ersetzt werden ! 
+    Public Property ExternRessourcesWithActualData As Boolean
+
+    ' tk 27.7.2020
+    ' wenn das true gesetzt ist, dann können Rechnungen eingegeben werden 
+    ' wird im Formular Settings interaktiv gesetzt
+    Public Property enableInvoices As Boolean
 
     ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
@@ -285,6 +300,8 @@ Public Class clsawinSettings
 
         _kurzarbeitActivated = True
         _ActualdataOrgaUnits = ""
+
+        _ExternRessourcesWithActualData = False
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue
@@ -415,6 +432,8 @@ Public Class clsawinSettings
 
         _englishLanguage = False
         _allowSumEditing = True
+
+        _enableInvoices = False
 
         _considerRiskFee = False
 

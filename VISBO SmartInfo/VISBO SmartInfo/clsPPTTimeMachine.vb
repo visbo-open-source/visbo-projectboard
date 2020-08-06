@@ -198,13 +198,18 @@ Public Class clsPPTTimeMachine
     ''' <param name="vpid"></param>
     Public Sub addProject(ByVal pvName As String, Optional ByVal vpid As String = "")
 
-        If vpid = "" Then
+
+        ' tk beide Strukturen - sind eigentlich redundant ...  - müssen aktualisiert werden 
+
+        If pvName <> "" Then
             If Not _projectTimeStamps.ContainsKey(pvName) Then
                 _projectTimeStamps.Add(pvName, Nothing)
             Else
                 ' nichts tun , ist schon drin ... 
             End If
-        Else
+        End If
+
+        If vpid <> "" Then
             Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
             Dim key As String = hkey.vpid & hkey.vname
 
@@ -214,6 +219,25 @@ Public Class clsPPTTimeMachine
                 ' nichts tun , ist schon drin ... 
             End If
         End If
+
+        ' 
+        ' alt ... das hat dann zu Fehler geführt, wenn von vorneherein eine vpid bekannt war .... 
+        'If vpid = "" Then
+        '    If Not _projectTimeStamps.ContainsKey(pvName) Then
+        '        _projectTimeStamps.Add(pvName, Nothing)
+        '    Else
+        '        ' nichts tun , ist schon drin ... 
+        '    End If
+        'Else
+        '    Dim hkey As clsvpidVN = New clsvpidVN(vpid, getVariantnameFromKey(pvName))
+        '    Dim key As String = hkey.vpid & hkey.vname
+
+        '    If Not _projectTSvpid.ContainsKey(key) Then
+        '        _projectTSvpid.Add(key, Nothing)
+        '    Else
+        '        ' nichts tun , ist schon drin ... 
+        '    End If
+        'End If
 
 
     End Sub

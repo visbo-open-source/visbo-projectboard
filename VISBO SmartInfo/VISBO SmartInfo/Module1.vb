@@ -1250,8 +1250,8 @@ Module Module1
                 smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
 
                 If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or
-                    awinSettings.databaseName <> smartSlideLists.slideDBName Or
-                    awinSettings.VCid <> smartSlideLists.slideVCid Then
+                    (awinSettings.databaseName <> smartSlideLists.slideDBName And
+                    awinSettings.VCid <> smartSlideLists.slideVCid) Then
 
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = smartSlideLists.slideDBUrl

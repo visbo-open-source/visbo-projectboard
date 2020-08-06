@@ -8109,10 +8109,11 @@ Public Module agm2
         Dim listOfpNames As New SortedList(Of String, String)
         Dim pName As String = ""
         Dim variantName As String = ""
+        Dim projectNr As String = ""
 
         Dim lastRow As Integer
         Dim lastColumn As Integer
-        'Dim startSpalte As Integer
+
 
         Dim geleseneProjekte As Integer
 
@@ -8146,6 +8147,8 @@ Public Module agm2
                 firstZeile = CType(.Rows(1), Excel.Range)
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
+                Dim portfolioZeile As Integer = 2
+
                 While zeile <= lastRow
 
                     ' Kommentare zurücksetzen ...
@@ -8155,29 +8158,70 @@ Public Module agm2
 
                     End Try
 
-                    ' hier muss jetzt alles zurückgesetzt werden 
-                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
+                    Dim commentMsg As String = ""
+
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    projectNr = CStr(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     If IsNothing(pName) Then
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
-                    ElseIf pName.Trim.Length < 2 Then
-
-                        Try
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
-                        Catch ex As Exception
-
-                        End Try
-
-
+                        pName = ""
                     Else
-                        variantName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If IsNothing(variantName) Then
-                            variantName = ""
+                        pName = pName.Trim
                         End If
 
+                    If IsNothing(variantName) Then
+                        variantName = ""
+                    Else
+                        variantName = variantName.Trim
+                    End If
+
+                    If IsNothing(projectNr) Then
+                        projectNr = ""
+                    Else
+                        projectNr = projectNr.Trim
+                    End If
+
+
+                    Dim notYetDone As Boolean = True
+
+                    ' Prio 1: gibt es das Projekt mit der Nummer ? 
+                    If projectNr <> "" Then
+                        Dim pCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projectNr, err)
+
+                        If pCollection.Count = 1 Then
+
+                            pName = CStr(pCollection.Item(1))
+                            ' das Projekt gibt es , zumindest in der "" Variante
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now, err) Then
+                                ' alles ok 
+
+                                Dim cItem As New clsConstellationItem
+
+                                With cItem
+                                    .projectName = pName
+                                    .variantName = variantName
+                                    .show = True
+                                    .projectTyp = ptPRPFType.project.ToString
+                                    .zeile = portfolioZeile
+                                End With
+
+                                newC.add(cItem)
+                                notYetDone = False
+                                portfolioZeile = portfolioZeile + 1
+
+                            Else
+                                commentMsg = "es gibt kein Projekt mit dieser Projekt-Nummer und Variante "
+                            End If
+
+                        ElseIf pCollection.Count > 1 Then
+                            commentMsg = "Projekt-Nummer nicht eindeutig ... "
+                        End If
+
+                    End If
+
+                    ' Prio 2: gibt es das Projekt mit diesem Namen, Varianten-Namen ? 
+                    If notYetDone And pName <> "" Then
 
                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now, err) Then
                             ' als Constellation Item aufnehmen 
@@ -8188,13 +8232,21 @@ Public Module agm2
                                 .variantName = variantName
                                 .show = True
                                 .projectTyp = ptPRPFType.project.ToString
-                                .zeile = zeile
+                                .zeile = portfolioZeile
                             End With
 
                             newC.add(cItem)
+                            notYetDone = False
+                            portfolioZeile = portfolioZeile + 1
 
+                        Else
+                            commentMsg = "ein Projekt mit diesem Namen, Varianten-Namen existiert nicht ..."
                         End If
+                    End If
 
+
+                    If notYetDone Then
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).AddComment("does not exist ...")
                     End If
 
                     geleseneProjekte = geleseneProjekte + 1
@@ -8804,14 +8856,31 @@ Public Module agm2
                             importedOrga = New clsOrganisation
 
                         Else
-                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ... 
+                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
+                            ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
                             If Not IsNothing(oldOrga) Then
                                 If oldOrga.allRoles.Count > 0 Then
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
                                         Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
+
                                         If Not IsNothing(importedRole) Then
                                             importedRole.kapazitaet = kvp.Value.kapazitaet
                                         End If
+
+                                        ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                        If importedRole.entryDate > StartofCalendar Then
+                                            Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                            For ix As Integer = 1 To tmpix - 1
+                                                importedRole.kapazitaet(ix) = 0
+                                            Next
+                                        End If
+
+                                        Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
+
+                                        For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
+                                            importedRole.kapazitaet(ix) = 0
+                                        Next
+
                                     Next
                                 End If
                             End If
@@ -18765,8 +18834,8 @@ Public Module agm2
                             If spix <= actualdataRelColumn Then
                                 ' tk 19.1.20
                                 ' .Interior.Color = awinSettings.AmpelNichtBewertet
-                                .Interior.Color = XlRgbColor.rgbGray
-                                .Font.Color = XlRgbColor.rgbWhite
+                                .Interior.Color = XlRgbColor.rgbLightGrey
+                                .Font.Color = XlRgbColor.rgbBlack
                             Else
 
                                 If Not isProtectedbyOthers Then
@@ -18840,6 +18909,9 @@ Public Module agm2
 
         ' wieviele Spalten werden hier angezeigt ... 
         Dim anzSpalten As Integer = 12
+        If awinSettings.enableInvoices Then
+            anzSpalten = 16
+        End If
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -18926,6 +18998,14 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Responsible"
                     CType(.Cells(1, 11), Excel.Range).Value = "% Done"
                     CType(.Cells(1, 12), Excel.Range).Value = "folder/document Link"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Invoice Value"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Term of payment"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Penalty Value"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Penalty Date"
+                    End If
+
+
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Nummer"
@@ -18940,6 +19020,12 @@ Public Module agm2
                     CType(.Cells(1, 10), Excel.Range).Value = "Verantwortlich"
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                     CType(.Cells(1, 12), Excel.Range).Value = "Link zum Dokument/Ordner"
+                    If awinSettings.enableInvoices Then
+                        CType(.Cells(1, 13), Excel.Range).Value = "Rechnungs-Betrag"
+                        CType(.Cells(1, 14), Excel.Range).Value = "Zahlungsziel"
+                        CType(.Cells(1, 15), Excel.Range).Value = "Vertrags-Strafe"
+                        CType(.Cells(1, 16), Excel.Range).Value = "Datum Vertrags-Strafe"
+                    End If
                 End If
 
                 ' das Erscheinungsbild der Zeile 1 bestimmen  
@@ -19063,15 +19149,16 @@ Public Module agm2
                             CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                             'CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
 
-                            Dim isPastElement As Boolean = DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0
+                            Dim isPastElement As Boolean = (DateDiff(DateInterval.Day, hproj.actualDataUntil, cMilestone.getDate) <= 0) And (cMilestone.percentDone = 1)
 
                             ' Ende-Datum 
                             CType(currentWS.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
                             If isPastElement Then
                                 ' Sperren ...
-                                CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbBlack
+
                                 CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
                                 'CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGray
                             Else
@@ -19117,7 +19204,6 @@ Public Module agm2
                             End If
 
 
-
                             ' Lieferumfänge
                             CType(currentWS.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables(vbLf)
                             If isProtectedbyOthers Then
@@ -19158,6 +19244,39 @@ Public Module agm2
                                 CType(currentWS.Cells(zeile, 12), Excel.Range).Locked = False
                             End If
 
+                            ' wenn Meilensteine Invoices / Penalties haben können 
+                            If awinSettings.enableInvoices Then
+                                ' der Rechnungsbetrag und Zahlungsziel 
+                                If Not IsNothing(cMilestone.invoice) Then
+                                    If cMilestone.invoice.Key > 0 Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cMilestone.invoice.Key
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cMilestone.invoice.Value
+                                    End If
+                                End If
+
+                                ' die Penalty und das Penalty Date
+                                If Not IsNothing(cMilestone.penalty) Then
+                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
+                                    End If
+                                End If
+
+                                If isProtectedbyOthers Then
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                Else
+                                    CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                    CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                End If
+
+
+                            End If
+
 
 
                         Else
@@ -19188,8 +19307,8 @@ Public Module agm2
                                 CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getStartDate) <= 0 Then
                                     ' Sperren ...
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 5), Excel.Range).Font.Color = XlRgbColor.rgbBlack
                                     CType(currentWS.Cells(zeile, 5), Excel.Range).Locked = True
                                 Else
                                     If isProtectedbyOthers Then
@@ -19206,8 +19325,8 @@ Public Module agm2
                                 If DateDiff(DateInterval.Day, hproj.actualDataUntil, cPhase.getEndDate) <= 0 Then
                                     ' Sperren ...
                                     CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbGray
-                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbWhite
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Interior.Color = XlRgbColor.rgbLightGrey
+                                    CType(currentWS.Cells(zeile, 6), Excel.Range).Font.Color = XlRgbColor.rgbBlack
                                 Else
                                     If isProtectedbyOthers Then
                                         CType(currentWS.Cells(zeile, 6), Excel.Range).Locked = True
@@ -19290,6 +19409,39 @@ Public Module agm2
                                 End If
 
 
+                                ' wenn Phasen Invoices / Penalties haben können 
+                                If awinSettings.enableInvoices Then
+                                    ' der Rechnungsbetrag und Zahlungsziel 
+                                    If Not IsNothing(cPhase.invoice) Then
+                                        If cPhase.invoice.Key > 0 Then
+                                            CType(currentWS.Cells(zeile, 13), Excel.Range).Value = cPhase.invoice.Key
+                                            CType(currentWS.Cells(zeile, 14), Excel.Range).Value = cPhase.invoice.Value
+                                        End If
+                                    End If
+
+                                    ' die Penalty und das Penalty Date
+                                    If Not IsNothing(cPhase.penalty) Then
+                                        If cPhase.penalty.Key > StartofCalendar Then
+                                            CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
+                                            CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key.Date
+                                        End If
+                                    End If
+
+                                    If isProtectedbyOthers Then
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = True
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = True
+                                    Else
+                                        CType(currentWS.Cells(zeile, 13), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 14), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 15), Excel.Range).Locked = False
+                                        CType(currentWS.Cells(zeile, 16), Excel.Range).Locked = False
+                                    End If
+
+
+                                End If
+
                             End With
                         End If
 
@@ -19309,10 +19461,11 @@ Public Module agm2
             Dim infoBlock As Excel.Range
             Dim infoDataBlock As Excel.Range
 
+
             Dim firstHundredColumns As Excel.Range = Nothing
 
             With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(12)), Excel.Range)
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzSpalten)), Excel.Range)
                 infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzSpalten)), Excel.Range)
 
                 firstHundredColumns = CType(.Range(.Columns(1), .Columns(100)), Excel.Range)
@@ -19339,7 +19492,7 @@ Public Module agm2
                 End With
 
                 ' percent Done 
-                With CType(infoBlock.Columns(11), Excel.Range)
+                With CType(infoDataBlock.Columns(11), Excel.Range)
                     .NumberFormat = "0#%"
                 End With
 
@@ -23195,6 +23348,12 @@ Public Module agm2
                     awinSettings.actualDataMonth = CDate(.Range("ActualDataMonth").Value)
                 Catch ex As Exception
                     awinSettings.actualDataMonth = Date.MinValue
+                End Try
+
+                Try
+                    awinSettings.enableInvoices = CBool(.Range("enableInvoices").Value)
+                Catch ex As Exception
+                    awinSettings.enableInvoices = False
                 End Try
 
                 ' tk 23.12.18 deprecated

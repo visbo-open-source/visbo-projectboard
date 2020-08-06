@@ -2311,9 +2311,9 @@ Imports System.Web
             Case "PTXG1B9" ' Cash-Flow zeigen
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Cash-Flow"
+                    tmpLabel = "Veränderung Liquidität"
                 Else
-                    tmpLabel = "Cash-Flow"
+                    tmpLabel = "Change Liquidity"
                 End If
 
             Case "PTOPTB1" ' Optimieren 
@@ -6507,6 +6507,7 @@ Imports System.Web
             weitermachen = True
 
         ElseIf anzFiles > 1 Then
+
             Dim getOrgaFile As New frmSelectImportFiles
             getOrgaFile.menueAswhl = PTImpExp.actualData
             Dim returnValue As DialogResult = getOrgaFile.ShowDialog
@@ -6515,8 +6516,7 @@ Imports System.Web
                 selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
                 weitermachen = True
             End If
-            'Else
-            '    Call MsgBox("keine Istdaten vorhaben ..." & vbLf & "Folder: " & dirname & vbLf & "Datei muss folgender Namensgebung entsprechen:  Istdaten*.xls*")
+
         End If
 
         If weitermachen Then
@@ -6555,7 +6555,9 @@ Imports System.Web
         Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
 
         ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
         Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outPutCollection)
+
         If allesOK Then
 
             Call projektTafelInit()
@@ -6578,73 +6580,116 @@ Imports System.Web
                 Dim cacheProjekte As New clsProjekteAlle
 
 
-                If awinSettings.englishLanguage Then
-                    editActualDataMonth.Label1.Text = "Actual data including last month"
-                Else
-                    editActualDataMonth.Label1.Text = "Istdaten bis vorangegangenem Monat"
-                End If
-                ' Vorbesetzung des Datums für Istdaten ist aktuelles Datum
-                editActualDataMonth.MonatJahr.Value = Date.Now
 
                 If editActualDataMonth.ShowDialog = DialogResult.OK Then
-                    editActualDataMonth.MonatJahr.Value = Date.Now
                     ' Istdaten immer vom Vormonat einlesen
                     IstdatenDate = CDate(editActualDataMonth.MonatJahr.Text).AddMonths(-1)
-                End If
+                    Dim referenzPortfolioName As String = editActualDataMonth.comboBxPortfolio.SelectedItem.ToString
 
+                    Dim curTimeStamp As Date = Date.MinValue
+                    Dim err As New clsErrorCodeMsg
+                    Dim referenzPortfolio As clsConstellation = Nothing
 
-                ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
-                Dim istDatenReferatsliste() As Integer
-                Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
-                ReDim istDatenReferatsliste(anzTopNodes - 1)
-                Dim i As Integer = 0
-                For i = 0 To anzTopNodes - 1
-                    istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
-                Next
+                    If referenzPortfolioName = "" Then
 
-                ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
-                Dim referatsCollection As New Collection
-                For Each itemID As Integer In istDatenReferatsliste
-                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
-                    If Not IsNothing(tmpRole) Then
-                        If Not referatsCollection.Contains(tmpRole.name) Then
-                            referatsCollection.Add(tmpRole.name, tmpRole.name)
+                        Dim txtMsg As String = "kein Portfolio gewählt - Abbruch!"
+                        If awinSettings.englishLanguage Then
+                            txtMsg = "no Portfolio selected - Cancelled ..."
                         End If
+
+                        Call MsgBox(txtMsg)
+                        Call logfileSchliessen()
+
+                        enableOnUpdate = True
+                        appInstance.EnableEvents = True
+                        appInstance.ScreenUpdating = True
+
+                        Exit Sub
+
                     End If
-                Next
 
-                ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
-                Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+                    ' gibt es das Referenz-Portfolio?  
+                    referenzPortfolio = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName, "", curTimeStamp, err, storedAtOrBefore:=Date.Now)
 
+                    If IsNothing(referenzPortfolio) Then
+                        Dim txtMsg As String = referenzPortfolioName & ": Portfolio existiert nicht ... "
+                        If awinSettings.englishLanguage Then
+                            txtMsg = referenzPortfolioName & ": Portfolio does not exist - Cancelled ..."
+                        End If
 
-                ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
-                Dim projectRoleNames(,) As String = Nothing
+                        Call MsgBox(txtMsg)
 
-                ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
-                Dim projectRoleValues(,,) As Double = Nothing
+                        Call logfileSchliessen()
 
-                Dim updatedProjects As Integer = 0
+                        enableOnUpdate = True
+                        appInstance.EnableEvents = True
+                        appInstance.ScreenUpdating = True
 
-                Dim logF_Fehler As Integer = 0
-                ' nimmt die Texte für die LogFile Zeile auf
-                ' Array kann beliebig lang werden 
-                Dim logArray() As String
-                Dim logDblArray() As Double
+                        Exit Sub
+                    End If
 
+                    ' jetzt kann weitergemacht werden ... 
 
+                    ' alle Planungen zu den Rollen, die in dieser Referatsliste aufgeführt sind, werden gelöscht 
+                    Dim istDatenReferatsliste() As Integer
 
-                For Each tmpDatei As String In listOfImportfilesAllg
-                    If awinSettings.englishLanguage Then
-                        outPutline = "Reading actual-data " & tmpDatei
+                    If awinSettings.ActualdataOrgaUnits = "" Then
+                        Dim anzTopNodes As Integer = RoleDefinitions.getTopLevelNodeIDs.Count
+                        ReDim istDatenReferatsliste(anzTopNodes - 1)
+                        Dim i As Integer = 0
+                        For i = 0 To anzTopNodes - 1
+                            istDatenReferatsliste(i) = RoleDefinitions.getTopLevelNodeIDs.Item(i)
+                        Next
                     Else
-                        outPutline = "Einlesen der ActualData " & tmpDatei
+                        istDatenReferatsliste = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
                     End If
 
-                    outPutCollection.Add(outPutline)
 
-                    Call logfileSchreiben(outPutline, "", anzFehler)
 
-                    result = readActualDataWithConfig(actualDataConfig, tmpDatei,
+                    ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+                    Dim referatsCollection As New Collection
+                    For Each itemID As Integer In istDatenReferatsliste
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(itemID)
+                        If Not IsNothing(tmpRole) Then
+                            If Not referatsCollection.Contains(tmpRole.name) Then
+                                referatsCollection.Add(tmpRole.name, tmpRole.name)
+                            End If
+                        End If
+                    Next
+
+                    ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
+                    Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+
+
+                    ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
+                    Dim projectRoleNames(,) As String = Nothing
+
+                    ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
+                    Dim projectRoleValues(,,) As Double = Nothing
+
+                    Dim updatedProjects As Integer = 0
+
+                    Dim logF_Fehler As Integer = 0
+                    ' nimmt die Texte für die LogFile Zeile auf
+                    ' Array kann beliebig lang werden 
+                    Dim logArray() As String
+                    Dim logDblArray() As Double
+
+
+
+                    For Each tmpDatei As String In listOfImportfilesAllg
+                        If awinSettings.englishLanguage Then
+                            outPutline = "Reading actual-data " & tmpDatei
+                        Else
+                            outPutline = "Einlesen der ActualData " & tmpDatei
+                        End If
+
+                        ' tk 2.8.2020 das soll nur noch im Logfile erscheinen , aber nicht mehr im Interaktiven Fenster ...
+                        'outPutCollection.Add(outPutline)
+
+                        Call logfileSchreiben(outPutline, "", anzFehler)
+
+                        result = readActualDataWithConfig(actualDataConfig, tmpDatei,
                                                       IstdatenDate,
                                                       cacheProjekte,
                                                       validProjectNames, projectRoleNames,
@@ -6652,229 +6697,430 @@ Imports System.Web
                                                       updatedProjects,
                                                       outPutCollection)
 
-                    ' hier weitermachen
+                        ' hier weitermachen
 
-                    If result Then
-                        ' hier: merken der erfolgreich importierten ActualData Files
-                        listOfArchivFilesAllg.Add(tmpDatei)
-                        ' Projekt in Importprojekte eintragen
-                    Else
-                        listOfErrorImportFilesAllg.Add(tmpDatei)
-                    End If
-
-                Next
-
-                If listOfImportfilesAllg.Count = listOfArchivFilesAllg.Count Then           ' dann sind alle korrekt durchgelaufen
-
-                    ' jetzt kommt die zweite Bearbeitungs-Welle
-                    ' das Rausschreiben der Test Records 
-
-                    'Protokoll schreiben...
-                    ' tk 8.5.19 nicht mehr machen 
-                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
-
-                        Dim protocolLine As String = ""
-                        For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
-
-                            ' jetzt schreiben 
-                            Dim teamID As Integer = -1
-                            Dim hilfsrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                            Dim curTagessatz As Double = hrole.tagessatzIntern
-
-                            ReDim logArray(3)
-                            logArray(0) = "Importiert wurde: "
-                            logArray(1) = ""
-                            logArray(2) = vPKvP.Key
-                            logArray(3) = rVKvP.Key & ": " & hilfsrole.name
-
-
-                            ReDim logDblArray(rVKvP.Value.Length - 1)
-                            For j As Integer = 0 To rVKvP.Value.Length - 1
-                                ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                                logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
-                            Next
-
-                            Call logfileSchreiben(logArray, logDblArray)
-                        Next
+                        If result Then
+                            ' hier: merken der erfolgreich importierten ActualData Files
+                            listOfArchivFilesAllg.Add(tmpDatei)
+                            ' Projekt in Importprojekte eintragen
+                        Else
+                            listOfErrorImportFilesAllg.Add(tmpDatei)
+                        End If
 
                     Next
-                    ' Protokoll schreiben Ende ... 
 
-                    Dim gesamtIstValue As Double = 0.0
+                    If listOfImportfilesAllg.Count = listOfArchivFilesAllg.Count Then           ' dann sind alle korrekt durchgelaufen
 
-                    For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+                        ' jetzt kommt die zweite Bearbeitungs-Welle
 
-                        Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
-                        Dim oldPlanValue As Double = 0.0
-                        Dim newIstValue As Double = 0.0
 
-                        lastValidMonth = getColumnOfDate(IstdatenDate)
+                        ' jetzt wird hier überprüft 
+                        ' gibt es Projekte im Referenz-Portfolio, die keine Ist-Daten erhalten haben - dann sollte jetzt ggf. hier ein Nuller Eintrag im array für diese Projekte erfolgen 
+                        ' 
+                        ' 
 
-                        If Not IsNothing(hproj) Then
-                            ' es wird pro Projekt eine Variante erzeugt 
+                        ' was hier noch überprüft werden sollte: 
+                        ' welche internen Rollen, die im besagten Zeitraum relevant,  haben keine Ist-Daten ? 
+                        Dim startFiscalYearTelair As Date
+                        Dim endFiscalYearTelair As Date
 
-                            ' wenn es noch nicht beauftragt ist ... dann beauftragen 
-                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                        If IstdatenDate.Month - 10 >= 0 Then
+                            startFiscalYearTelair = DateSerial(IstdatenDate.Year, 10, 1)
+                            endFiscalYearTelair = DateSerial(IstdatenDate.Year + 1, 9, 30)
+                        Else
+                            startFiscalYearTelair = DateSerial(IstdatenDate.Year - 1, 10, 1)
+                            endFiscalYearTelair = DateSerial(IstdatenDate.Year, 9, 30)
+                        End If
+
+                        Dim activeinternRoles() As Integer = RoleDefinitions.getActiveInterns(startFiscalYearTelair, endFiscalYearTelair)
+                        Dim missingTimeSheets As New List(Of String)
+
+
+                        For Each tmpUID As Integer In activeinternRoles
+
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpUID, -1)
+
+                            Dim found As Boolean = False
+                            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmpUID)
+
+                            For Each kvp As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
                                 Try
-                                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                    found = kvp.Value.ContainsKey(roleNameID)
+                                    If found Then
+                                        Exit For
+                                    End If
                                 Catch ex As Exception
 
                                 End Try
+                            Next
 
-                            End If
-                            Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                            If Not found Then
 
-                            ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
-                            ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
-                            ' True: die Werte werden auf Null gesetzt 
-                            Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
-
-                            'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
-                            'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-
-                            newIstValue = calcIstValueOf(vPKvP.Value)
-
-                            gesamtIstValue = gesamtIstValue + newIstValue
-
-                            ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
-                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
-
-
-                            Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
-                            Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
-                            ' Test tk 
-                            'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
-
-                            Dim abweichungGesamt As Double = 0.0
-                            If gesamtNachher <> checkNachher Then
-                                abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
-                            End If
-
-                            Dim abweichungIst As Double = 0.0
-                            If checkIstValue <> newIstValue Then
-                                abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
-                            End If
-
-                            If awinSettings.visboDebug Then
-                                If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
-                                    ReDim logArray(3)
-                                    logArray(0) = "Import Istdaten old/new/diff/check1/check2"
-                                    logArray(1) = ""
-                                    logArray(2) = vPKvP.Key
-                                    logArray(3) = ""
-
-                                    ReDim logDblArray(4)
-                                    logDblArray(0) = oldPlanValue
-                                    logDblArray(1) = newIstValue
-                                    logDblArray(2) = oldPlanValue - newIstValue
-                                    logDblArray(3) = checkIstValue
-                                    logDblArray(4) = gesamtNachher - checkNachher
-
-                                    Call logfileSchreiben(logArray, logDblArray)
-
+                                If tmprole.entryDate < IstdatenDate And tmprole.exitDate > startFiscalYearTelair Then
+                                    missingTimeSheets.Add(tmprole.name)
                                 End If
+
                             End If
 
+                        Next
 
-                            Dim jjjj As Integer = Year(IstdatenDate)
-                            Dim mm As Integer = Month(IstdatenDate)
-                            Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+                        If missingTimeSheets.Count > 0 Then
+                            For Each roleName As String In missingTimeSheets
+                                ReDim logArray(5)
+                                ' ins Protokoll eintragen 
+                                logArray(0) = " Mitarbeiter ohne TimeSheet: "
+                                If awinSettings.englishLanguage Then
+                                    logArray(0) = "Employee wothout TimeSheet: "
+                                End If
+                                logArray(1) = ""
+                                logArray(2) = roleName
+                                logArray(4) = ""
 
-                            With newProj
-                                newProj.actualDataUntil = DateSerial(jjjj, mm, tt)
-                                .variantName = ""   ' eliminieren von VariantenName acd
-                                .variantDescription = ""
-                            End With
+                                Call logfileSchreiben(logArray)
 
-                            ' jetzt in die Import-Projekte eintragen 
-                            updatedProjects = updatedProjects + 1
-                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+                                ' 
+                                ' im Output anzeigen ... 
+                                logmessage = logArray(0) & roleName
+                                outPutCollection.Add(logmessage)
+                            Next
+                        End If
 
-                        Else
+                        ' Ende check : haben alle internen Mitarbeiter ein TimeSheet abgeliefert ... 
+
+                        ' wenn auch externe Rollen Istdaten haben
+                        ' welche externen Rollen haben keine Istdaten .. ? 
+
+
+                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In referenzPortfolio.Liste
+                            Dim tmpPName As String = getPnameFromKey(kvp.Key)
+                            If Not validProjectNames.ContainsKey(tmpPName) Then
+                                ' jetzt muss dieses Projekt Null-Istdaten bekommen - wenn es von früher bereits ActualData hat, dann behält es die
+                                ' es werden nur die Monate actualDatuntil+1 .. IstDateDate genullt 
+                                Dim hproj As clsProjekt = getProjektFromSessionOrDB(tmpPName, "", cacheProjekte, Date.Now)
+                                ReDim logArray(5)
+
+                                If hproj.setNewActualValuesToNull(IstdatenDate, True) Then
+                                    Dim jjjj As Integer = Year(IstdatenDate)
+                                    Dim mm As Integer = Month(IstdatenDate)
+                                    Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+
+                                    hproj.actualDataUntil = DateSerial(jjjj, mm, tt)
+
+                                    ' jetzt in die Import-Projekte eintragen 
+                                    updatedProjects = updatedProjects + 1
+                                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+
+                                    ' ins Protokoll eintragen 
+                                    logArray(0) = " Projekt ohne Zeiterfassung: Ist-Daten auf Null gesetzt ! "
+                                    If awinSettings.englishLanguage Then
+                                        logArray(0) = " Project without time sheet records: actual data set to Zero ! "
+                                    End If
+                                    logArray(1) = ""
+                                    logArray(2) = hproj.name
+                                    logArray(3) = ""
+                                    logArray(4) = ""
+
+                                    Call logfileSchreiben(logArray)
+
+                                Else
+                                    ' Fehler ins Protokoll eintragen 
+                                    logArray(0) = " ohne Zeiterfassung: Plan-Werte konnten nicht auf Null gesetzt werden. "
+                                    If awinSettings.englishLanguage Then
+                                        logArray(0) = " Project without time sheet records: Error : could not set data to Zero ! "
+                                    End If
+                                    logArray(1) = "Error !"
+                                    logArray(2) = hproj.name
+                                    logArray(3) = ""
+                                    logArray(4) = ""
+
+                                    Call logfileSchreiben(logArray)
+                                End If
+
+                                ' im Output anzeigen ... 
+                                logmessage = logArray(0) & hproj.name
+                                outPutCollection.Add(logmessage)
+
+                            End If
+                        Next
+
+                        ' jetzt überprüfen, welche Projekte zwar Istdaten bekommen haben, aber nicht im Referenz-Portfolio aufgeführt sind ... 
+                        For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
                             ReDim logArray(5)
-                            logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
+                            If Not referenzPortfolio.containsProject(vPKvP.Key) Then
+                                ' ins Protokoll eintragen 
+                                logArray(0) = " Projekt hat Ist-Daten, ist aber nicht im Referenz-Portfolio enthalten ... ! "
+                                If awinSettings.englishLanguage Then
+                                    logArray(0) = " Project has time sheet records, but is not referenced in active portfolio ... !"
+                                End If
+                                logArray(1) = ""
+                                logArray(2) = vPKvP.Key
+                                logArray(3) = ""
+                                logArray(4) = ""
+
+                                Call logfileSchreiben(logArray)
+
+                                ' im Output anzeigen ... 
+                                logmessage = logArray(0) & vPKvP.Key
+                                outPutCollection.Add(logmessage)
+
+                            End If
+                        Next
+
+                        ' hier sollte noch ergänzt werdne
+                        ' PRotokollieren welche Orga-Units denn ersetzt werden 
+                        For Each substituteUnit As String In referatsCollection
+                            ReDim logArray(5)
+                            ' ins Protokoll eintragen 
+                            logArray(0) = " Planwerte für Organisations-Unit werden ersetzt durch Istdaten: "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = " Plan values for organizational unit are being replaced by Actual Data: "
+                            End If
                             logArray(1) = ""
-                            logArray(2) = vPKvP.Key
+                            logArray(2) = substituteUnit
                             logArray(3) = ""
                             logArray(4) = ""
 
                             Call logfileSchreiben(logArray)
+
+                            ' im Output anzeigen ... 
+                            logmessage = logArray(0) & substituteUnit
+                            outPutCollection.Add(logmessage)
+
+                        Next
+
+
+                        'Protokoll schreiben...
+                        ' 
+                        For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                            Dim protocolLine As String = ""
+                            For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
+
+                                ' jetzt schreiben 
+                                Dim teamID As Integer = -1
+                                Dim hilfsrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
+                                Dim curTagessatz As Double = hrole.tagessatzIntern
+
+                                ReDim logArray(3)
+                                logArray(0) = "Importiert wurde: "
+                                If awinSettings.englishLanguage Then
+                                    logArray(0) = "Imported: "
+                                End If
+                                logArray(1) = ""
+                                logArray(2) = vPKvP.Key
+                                logArray(3) = rVKvP.Key & ": " & hilfsrole.name
+
+
+                                ReDim logDblArray(rVKvP.Value.Length - 1)
+                                For j As Integer = 0 To rVKvP.Value.Length - 1
+                                    ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                                    logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
+                                Next
+
+                                Call logfileSchreiben(logArray, logDblArray)
+                            Next
+
+                        Next
+                        ' Protokoll schreiben Ende ... 
+
+
+
+                        Dim gesamtIstValue As Double = 0.0
+
+                        For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                            Dim oldPlanValue As Double = 0.0
+                            Dim newIstValue As Double = 0.0
+
+                            lastValidMonth = getColumnOfDate(IstdatenDate)
+
+                            If Not IsNothing(hproj) Then
+                                ' es wird pro Projekt eine Variante erzeugt 
+
+                                ' wenn es noch nicht beauftragt ist ... dann beauftragen 
+                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                    Try
+                                        hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+                                Dim istDatenVName As String = ptVariantFixNames.acd.ToString
+                                Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+
+                                ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                                ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                                ' True: die Werte werden auf Null gesetzt 
+                                Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+
+                                'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                                oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, True)
+                                'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
+                                newIstValue = calcIstValueOf(vPKvP.Value)
+
+                                gesamtIstValue = gesamtIstValue + newIstValue
+
+                                ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                                Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+
+
+                                Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                                Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                                ' Test tk 
+                                'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                                Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth - newProj.Start + 1, False)
+
+                                Dim abweichungGesamt As Double = 0.0
+                                If gesamtNachher <> checkNachher Then
+                                    abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
+                                End If
+
+                                Dim abweichungIst As Double = 0.0
+                                If checkIstValue <> newIstValue Then
+                                    abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
+                                End If
+
+                                ' für Test 
+                                'awinSettings.visboDebug = True
+                                If awinSettings.visboDebug Then
+                                    If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                        ReDim logArray(3)
+                                        logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                        If awinSettings.englishLanguage Then
+                                            logArray(0) = "Import Actual Data old/new/diff/check1/check2"
+                                        End If
+                                        logArray(1) = ""
+                                        logArray(2) = vPKvP.Key
+                                        logArray(3) = ""
+
+                                        ReDim logDblArray(4)
+                                        logDblArray(0) = oldPlanValue
+                                        logDblArray(1) = newIstValue
+                                        logDblArray(2) = oldPlanValue - newIstValue
+                                        logDblArray(3) = checkIstValue
+                                        logDblArray(4) = gesamtNachher - checkNachher
+
+                                        Call logfileSchreiben(logArray, logDblArray)
+
+                                    End If
+                                End If
+
+
+
+                                Dim jjjj As Integer = Year(IstdatenDate)
+                                Dim mm As Integer = Month(IstdatenDate)
+                                Dim tt As Integer = Day(DateSerial(jjjj, mm + 1, 0)) 'tt ist letzte Tag des Monats mm 
+
+                                With newProj
+                                    newProj.actualDataUntil = DateSerial(jjjj, mm, tt)
+                                    .variantName = ""   ' eliminieren von VariantenName acd
+                                    .variantDescription = ""
+                                End With
+
+                                ' jetzt in die Import-Projekte eintragen 
+                                updatedProjects = updatedProjects + 1
+                                ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                            Else
+                                ReDim logArray(5)
+                                logArray(0) = "Projekt existiert nicht !!?? ... darf nicht sein ..."
+                                logArray(1) = ""
+                                logArray(2) = vPKvP.Key
+                                logArray(3) = ""
+                                logArray(4) = ""
+
+                                Call logfileSchreiben(logArray)
+                            End If
+
+                        Next
+
+                        ' tk Test 
+                        If awinSettings.visboDebug Then
+                            ReDim logArray(3)
+                            logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                            If awinSettings.englishLanguage Then
+                                logArray(0) = "Import of total " & updatedProjects & " Projects (Sum in Euro): "
+                            End If
+                            logArray(1) = ""
+                            logArray(2) = ""
+                            logArray(3) = ""
+
+                            ReDim logDblArray(0)
+                            logDblArray(0) = gesamtIstValue
+                            Call logfileSchreiben(logArray, logDblArray)
                         End If
 
-                    Next
 
-                    ' tk Test 
-                    If awinSettings.visboDebug Then
-                        ReDim logArray(3)
-                        logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
-                        logArray(1) = ""
-                        logArray(2) = ""
-                        logArray(3) = ""
-
-                        ReDim logDblArray(0)
-                        logDblArray(0) = gesamtIstValue
-                        Call logfileSchreiben(logArray, logDblArray)
-                    End If
-
-
-                    logmessage = vbLf & "Projekte aktualisiert: " & updatedProjects
-                    outPutCollection.Add(logmessage)
-
-                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
-                    outPutCollection.Add(logmessage)
-
-                    If outPutCollection.Count > 0 Then
+                        logmessage = vbLf & "Projekte aktualisiert: " & updatedProjects
                         If awinSettings.englishLanguage Then
-                            Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
-                        Else
-                            Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                            logmessage = vbLf & "Projects updated: " & updatedProjects
+                        End If
+                        outPutCollection.Add(logmessage)
+
+                        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
+                        If awinSettings.englishLanguage Then
+                            logmessage = vbLf & "Details see LogFile ./logfiles/logfile*.xlsx"
+                        End If
+                        outPutCollection.Add(logmessage)
+
+                        If outPutCollection.Count > 0 Then
+                            If awinSettings.englishLanguage Then
+                                Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
+                            Else
+                                Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                            End If
+
                         End If
 
-                    End If
 
 
+                        '' Cursor auf Default setzen
+                        Cursor.Current = Cursors.Default
 
-                    '' Cursor auf Default setzen
-                    Cursor.Current = Cursors.Default
 
-
-                    ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
-                    Try
-                        Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False,
+                        ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+                        Try
+                            Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False,
                                                      getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
 
 
-                        ' ImportDatei ins archive-Directory schieben
+                            ' ImportDatei ins archive-Directory schieben
 
-                        If listOfArchivFilesAllg.Count > 0 Then
-                            Call moveFilesInArchiv(listOfArchivFilesAllg, importOrdnerNames(PTImpExp.actualData))
+                            If listOfArchivFilesAllg.Count > 0 Then
+                                Call moveFilesInArchiv(listOfArchivFilesAllg, importOrdnerNames(PTImpExp.actualData))
+                            End If
+
+                        Catch ex As Exception
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("Error at Import: " & vbLf & ex.Message)
+                            Else
+                                Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
+                            End If
+
+                        End Try
+
+                    Else
+
+                        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
+                        outPutCollection.Add(logmessage)
+
+                        If outPutCollection.Count > 0 Then
+                            If awinSettings.englishLanguage Then
+                                Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
+                            Else
+                                Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                            End If
+
                         End If
-
-                    Catch ex As Exception
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("Error at Import: " & vbLf & ex.Message)
-                        Else
-                            Call MsgBox("Fehler bei Import: " & vbLf & ex.Message)
-                        End If
-
-                    End Try
+                    End If
 
                 Else
+                    ' nichts weiter tun ... auch kein Logfile schreiben  Logfile schreiben 
 
-                    logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
-                    outPutCollection.Add(logmessage)
-
-                    If outPutCollection.Count > 0 Then
-                        If awinSettings.englishLanguage Then
-                            Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
-                        Else
-                            Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
-                        End If
-
-                    End If
                 End If
 
 

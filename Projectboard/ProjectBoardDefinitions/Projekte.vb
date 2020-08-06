@@ -13395,9 +13395,9 @@ Public Module Projekte
                                   kurzBeschreibung, "", kdNr:=kdNummer)
 
         ' jetzt wird testweise das hproj.setMilestone Invoices gemacht ..
-        If hproj.name.StartsWith("E_Kunde") Then
-            Call hproj.setMilestoneInvoices("Finalization")
-        End If
+        'If hproj.name.StartsWith("E_Kunde") Then
+        '    Call hproj.setMilestoneInvoices("Finalization")
+        'End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating

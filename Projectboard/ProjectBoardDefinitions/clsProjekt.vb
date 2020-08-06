@@ -4135,6 +4135,84 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' wird für alle Projekte aufgerufen, die im aktuellen Portfolio vorkommen, für die es aber keine Ist-Daten gab. 
+    ''' setzt alle Werte zwischen actualDatauntil des Projektes und newActualDataUntil  auf Null
+    ''' aber nur die Rollen, die in awinsettings.ActualdataOrgaUnits aufgeführt sind. 
+    ''' restFromScratch steuert, ob alles von anfang an zurückgesetzt wird oder nur der Anteil, der seit old_actualDatauntil ist 
+    ''' gibt false zurück, wenn nicht erfolgreich
+    ''' </summary>
+    ''' <param name="newActualDataUntil"></param>
+    Public Function setNewActualValuesToNull(ByVal newActualDataUntil As Date, ByVal resetfromScratch As Boolean) As Boolean
+        Dim result As Boolean = True
+
+        Try
+            Dim columnOFActualData As Integer = getColumnOfDate(actualDataUntil)
+            Dim columnOFNewActualData As Integer = getColumnOfDate(newActualDataUntil)
+
+            Dim considerAllRoles As Boolean = (awinSettings.ActualdataOrgaUnits = "")
+            Dim actualDataParentIDs As Integer() = Nothing
+
+            If Not considerAllRoles Then
+                actualDataParentIDs = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+            End If
+
+
+
+            If columnOFNewActualData > columnOFActualData Then
+                ' nur dann muss etwas gemacht werden 
+
+                ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
+                For p As Integer = 1 To CountPhases
+                    Dim curPhase As clsPhase = getPhase(p)
+                    Dim columnOfPhaseStart As Integer = getColumnOfDate(curPhase.getStartDate)
+                    Dim columnOfPhaseEnd As Integer = getColumnOfDate(curPhase.getEndDate)
+
+                    If columnOfPhaseStart <= columnOFNewActualData And columnOfPhaseEnd > columnOFActualData Then
+                        ' dann gibt es was zu tun 
+                        For r = 1 To curPhase.countRoles
+                            Dim curRole As clsRolle = curPhase.getRole(r)
+
+                            ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+                            Dim criteriaFulfilled As Boolean = True
+
+                            If awinSettings.ExternRessourcesWithActualData = True Then
+                                criteriaFulfilled = True
+                            Else
+                                criteriaFulfilled = Not curRole.isExtern
+                            End If
+
+                            If criteriaFulfilled Then
+
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                                    Dim startIndex As Integer = 0
+                                    If Not resetfromScratch Then
+                                        startIndex = System.Math.Max(0, columnOFActualData - columnOfPhaseStart + 1)
+                                    End If
+
+                                    Dim endIndex As Integer = System.Math.Min(columnOFNewActualData - columnOfPhaseStart, curRole.getDimension)
+
+                                    For ix As Integer = startIndex To endIndex
+                                        curRole.Xwerte(ix) = 0
+                                    Next
+                                End If
+
+
+                            End If
+                        Next
+                    End If
+
+                Next
+            End If
+
+        Catch ex As Exception
+            result = False
+        End Try
+
+        setNewActualValuesToNull = result
+
+    End Function
+    ''' <summary>
+    ''' wird in ImportProjekteEintragen aufgerufen: stellt sicher, dass die existierenden Ist-Daten nicht durch einen Import von steckbrief überschrieben werden ... 
     ''' alle Ist-Daten aus oldProj werden dem aktuellen Projekt übertragen
     ''' es bleiben nur die Werte ab Monat ActualDataUntil +1 erhalten, alle anderen werden entweder auf Null gesetzt oder aber aus oldProj übernommen 
     ''' dabei werden nur die Werte  awinsettings.Istdaten berücksichtigt. 
@@ -4272,6 +4350,7 @@ Public Class clsProjekt
     ''' <summary>
     ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
     ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
+    ''' wird in ImportAllianzIstDaten verwendet und in ImportIstdaten
     ''' </summary>
     ''' <param name="phNameID"></param>
     ''' <param name="actualValues"></param>
@@ -4364,11 +4443,24 @@ Public Class clsProjekt
             End If
 
             If isRole Then
+
+                ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+                Dim criteriaFulfilled As Boolean = True
+
+                If awinSettings.ExternRessourcesWithActualData = True Then
+                    criteriaFulfilled = True
+                Else
+                    criteriaFulfilled = Not tmpRole.isExternRole
+                End If
+
                 Dim roleName As String = tmpRole.name
 
-                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCostCollection) Then
-                    tmpResult = True
+                If criteriaFulfilled Then
+                    If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCostCollection) Then
+                        tmpResult = True
+                    End If
                 End If
+
             Else
                 ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
                 tmpResult = roleCostCollection.Contains(roleCostName)
@@ -4521,6 +4613,7 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' wenn für Externe Rollen keine Istdaten eingelesen werden: passiert nur für Rollen, die nicht als Extern gekennzeichnet sind 
     ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
@@ -4533,46 +4626,59 @@ Public Class clsProjekt
         Dim teamID As Integer = -1
         Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
+
         If Not IsNothing(currentRoleDef) Then
-            Dim roleUID As Integer = currentRoleDef.UID
-            Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+            ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+            Dim criteriaFulfilled As Boolean = True
 
-            For Each phNameID As String In listOfPhases
+            If awinSettings.ExternRessourcesWithActualData = True Then
+                criteriaFulfilled = True
+            Else
+                criteriaFulfilled = Not currentRoleDef.isExternRole
+            End If
 
-                Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
-                If Not IsNothing(cPhase) Then
-                    With cPhase
+            If criteriaFulfilled Then
+                Dim roleUID As Integer = currentRoleDef.UID
+                Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-                        If .relStart <= relMonthCol Then
-                            ' jetzt die Werte auslesen und ggf. auf Null setzen 
-                            'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
-                            Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
+                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
 
-                            If Not IsNothing(cRole) Then
-                                Dim oldSum As Double = 0.0
-                                Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
+                For Each phNameID As String In listOfPhases
 
-                                For ix As Integer = 0 To ende - .relStart
-                                    oldSum = oldSum + cRole.Xwerte(ix)
+                    Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+                    If Not IsNothing(cPhase) Then
+                        With cPhase
 
-                                    ' hier werden ggf die Werte zurückgesetzt 
-                                    If resetValuesToNull Then
-                                        cRole.Xwerte(ix) = 0
-                                    End If
+                            If .relStart <= relMonthCol Then
+                                ' jetzt die Werte auslesen und ggf. auf Null setzen 
+                                'Dim cRole As clsRolle = .getRole(currentRoleDef.name)
+                                Dim cRole As clsRolle = .getRoleByRoleNameID(roleNameID)
 
-                                Next
+                                If Not IsNothing(cRole) Then
+                                    Dim oldSum As Double = 0.0
+                                    Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
 
-                                tmpValue = tmpValue + oldSum * tagessatz
+                                    For ix As Integer = 0 To ende - .relStart
+                                        oldSum = oldSum + cRole.Xwerte(ix)
+
+                                        ' hier werden ggf die Werte zurückgesetzt 
+                                        If resetValuesToNull Then
+                                            cRole.Xwerte(ix) = 0
+                                        End If
+
+                                    Next
+
+                                    tmpValue = tmpValue + oldSum * tagessatz
+                                End If
+
                             End If
 
-                        End If
+                        End With
 
-                    End With
-
-                End If
-            Next
+                    End If
+                Next
+            End If
 
         End If
 
@@ -4871,17 +4977,17 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' liefert einen Array zurück, der die prognostizierten Zahlungseingänge für den Cash-Flow enthält; d.h der Array kann länger sein als das Projekt ... 
-    ''' Ergänzung für später: muss die Vertrags-Strafen auch gleich aufnehmen ... 
+    ''' es werden dabei auch die Vertrags-Strafen berücksichtigt  
     ''' </summary>
     ''' <returns></returns>
-    Public ReadOnly Property getInvoices() As Double()
+    Public ReadOnly Property getInvoicesPenalties() As Double()
         Get
             Dim invoiceValues() As Double = Nothing
-            Dim tempArray As Double() = Nothing
+            Dim penaltyValues() As Double = Nothing
 
             ' dieser Array nimmt die Werte auf, der key steht dabei für den relativen Monat des Projektes, key=0 im ersten Monat des Projektes 
-            Dim resultArray As New SortedList(Of Integer, Double)
-
+            Dim invoiceArray As New SortedList(Of Integer, Double)
+            Dim penaltyArray As New SortedList(Of Integer, Double)
 
             ' bestimme die Länge des Invoice-Arrays
 
@@ -4889,53 +4995,115 @@ Public Class clsProjekt
             If _Dauer > 0 Then
 
                 ReDim invoiceValues(_Dauer - 1)
+                ReDim penaltyValues(_Dauer - 1)
                 ' bestimme die Länge des Invoice-Arrays
+
                 Dim projectStartCol As Integer = getColumnOfDate(startDate)
                 Dim invoiceRelCol As Integer = -1
+                Dim penaltyRelCol As Integer = -1
 
                 For p = 1 To CountPhases
                     Dim curPhase As clsPhase = getPhase(p)
+
+                    ' kann Rechnung gesteltl werden ? 
                     If curPhase.invoice.Key > 0 Then
+
                         invoiceRelCol = getColumnOfDate(curPhase.getEndDate.AddDays(curPhase.invoice.Value)) - projectStartCol
-                        If resultArray.ContainsKey(invoiceRelCol) Then
-                            resultArray.Item(invoiceRelCol) = resultArray.Item(invoiceRelCol) + curPhase.invoice.Key
-                        Else
-                            resultArray.Add(invoiceRelCol, curPhase.invoice.Key)
+
+                        If invoiceRelCol > 0 Then
+                            If invoiceArray.ContainsKey(invoiceRelCol) Then
+                                invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curPhase.invoice.Key
+                            Else
+                                invoiceArray.Add(invoiceRelCol, curPhase.invoice.Key)
+                            End If
+                        End If
+
+                    End If
+
+                    ' Penalty relevant ?
+                    If curPhase.penalty.Key > StartofCalendar Then
+                        If curPhase.penalty.Key <= curPhase.getEndDate Then
+                            penaltyRelCol = getColumnOfDate(curPhase.penalty.Key.AddDays(30)) - projectStartCol
+
+                            If penaltyRelCol > 0 Then
+                                If penaltyArray.ContainsKey(penaltyRelCol) Then
+                                    penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curPhase.penalty.Value
+                                Else
+                                    penaltyArray.Add(penaltyRelCol, curPhase.penalty.Value)
+                                End If
+                            End If
+
                         End If
                     End If
+
 
                     For msIx As Integer = 1 To curPhase.countMilestones
 
                         Dim curMilestone As clsMeilenstein = curPhase.getMilestone(msIx)
+
                         If curMilestone.invoice.Key > 0 Then
                             invoiceRelCol = getColumnOfDate(curMilestone.getDate.AddDays(curMilestone.invoice.Value)) - projectStartCol
-                            If resultArray.ContainsKey(invoiceRelCol) Then
-                                resultArray.Item(invoiceRelCol) = resultArray.Item(invoiceRelCol) + curMilestone.invoice.Key
-                            Else
-                                resultArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+
+                            If invoiceRelCol > 0 Then
+                                If invoiceArray.ContainsKey(invoiceRelCol) Then
+                                    invoiceArray.Item(invoiceRelCol) = invoiceArray.Item(invoiceRelCol) + curMilestone.invoice.Key
+                                Else
+                                    invoiceArray.Add(invoiceRelCol, curMilestone.invoice.Key)
+                                End If
+                            End If
+
+                        End If
+
+                        ' Penalty relevant ?
+                        If curMilestone.penalty.Key > StartofCalendar Then
+                            If curMilestone.penalty.Key <= curMilestone.getDate Then
+                                penaltyRelCol = getColumnOfDate(curMilestone.penalty.Key.AddDays(30)) - projectStartCol
+
+                                If penaltyRelCol > 0 Then
+                                    If penaltyArray.ContainsKey(penaltyRelCol) Then
+                                        penaltyArray.Item(penaltyRelCol) = penaltyArray.Item(penaltyRelCol) + curMilestone.penalty.Value
+                                    Else
+                                        penaltyArray.Add(penaltyRelCol, curMilestone.penalty.Value)
+                                    End If
+                                End If
+
                             End If
                         End If
 
-                    Next msIX
+
+                    Next msIx
 
                 Next p
 
-                If resultArray.Count > 0 Then
-                    Dim resultDimension As Integer = System.Math.Max(_Dauer - 1, resultArray.Last.Key)
+                If invoiceArray.Count > 0 Or penaltyArray.Count > 0 Then
+
+                    Dim lenInvoices As Integer = 0
+                    Dim lenPenalties As Integer = 0
+                    If invoiceArray.Count > 0 Then
+                        lenInvoices = invoiceArray.Last.Key
+                    End If
+                    If penaltyArray.Count > 0 Then
+                        lenPenalties = penaltyArray.Last.Key
+                    End If
+                    Dim invPenMax As Integer = System.Math.Max(lenInvoices, lenPenalties)
+                    Dim resultDimension As Integer = System.Math.Max(_Dauer - 1, invPenMax)
                     ReDim invoiceValues(resultDimension)
 
-                    For Each kvp As KeyValuePair(Of Integer, Double) In resultArray
+                    For Each kvp As KeyValuePair(Of Integer, Double) In invoiceArray
                         invoiceValues(kvp.Key) = kvp.Value
+                    Next
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In penaltyArray
+                        invoiceValues(kvp.Key) = invoiceValues(kvp.Key) - kvp.Value
                     Next
 
                 Else
                     invoiceValues = Nothing
                 End If
 
-
             End If
 
-            getInvoices = invoiceValues
+            getInvoicesPenalties = invoiceValues
 
         End Get
     End Property
@@ -4954,7 +5122,7 @@ Public Class clsProjekt
             curPhase.ampelErlaeuterung = ""
             curPhase.percentDone = 0
             curPhase.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
-            curPhase.penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+            curPhase.penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
 
             For mIX As Integer = 1 To curPhase.countMilestones
                 Dim curMS As clsMeilenstein = curPhase.getMilestone(mIX)
@@ -4963,7 +5131,7 @@ Public Class clsProjekt
                 curMS.ampelErlaeuterung = ""
                 curMS.percentDone = 0
                 curMS.invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
-                curMS.penalty = New KeyValuePair(Of Date, Double)(Date.Now.AddYears(100), 0)
+                curMS.penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0)
             Next
 
         Next
@@ -4971,35 +5139,35 @@ Public Class clsProjekt
 
     End Sub
 
-    ''' <summary>
-    ''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
-    ''' </summary>
-    ''' <param name="name"></param>
-    Public Sub setMilestoneInvoices(ByVal name As String)
+    '''' <summary>
+    '''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
+    '''' </summary>
+    '''' <param name="name"></param>
+    'Public Sub setMilestoneInvoices(ByVal name As String)
 
-        Dim msNameIndices() As Integer
-        msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
-        Dim anzMilestones As Integer = msNameIndices.Length
+    '    Dim msNameIndices() As Integer
+    '    msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
+    '    Dim anzMilestones As Integer = msNameIndices.Length
 
-        If anzMilestones = 0 Or msNameIndices(0) = 0 Then
-            Exit Sub
-        End If
-
-
-        Try
-            Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
-            For Each msID As Integer In msNameIndices
-                Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
-                Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
-
-                curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
-            Next
-        Catch ex As Exception
-
-        End Try
+    '    If anzMilestones = 0 Or msNameIndices(0) = 0 Then
+    '        Exit Sub
+    '    End If
 
 
-    End Sub
+    '    Try
+    '        Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
+    '        For Each msID As Integer In msNameIndices
+    '            Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
+    '            Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
+
+    '            curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
+    '        Next
+    '    Catch ex As Exception
+
+    '    End Try
+
+
+    'End Sub
 
     ''' <summary>
     ''' gibt den Bedarf der Rolle in dem Monat X an; X=1 entspricht StartofCalendar usw.
@@ -7602,8 +7770,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
-        'keyMetrics = New clsKeyMetrics
+        keyMetrics = New clsKeyMetrics
 
         _updatedAt = ""
 
@@ -7642,8 +7809,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
-        'keyMetrics = New clsKeyMetrics
+        keyMetrics = New clsKeyMetrics
+
         _updatedAt = ""
 
     End Sub
@@ -7681,8 +7848,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        ' 20.04.30: ur: keyMetrics nicht mehr mit anlegen
-        'keyMetrics = New clsKeyMetrics
+        keyMetrics = New clsKeyMetrics
 
         _updatedAt = ""
 

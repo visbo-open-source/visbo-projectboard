@@ -759,6 +759,45 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' returns a list of intern employyes which are employed during the given timeframe and do have a default capacity of > 0  
+    ''' Returns Nothing, if  es keine aktiven Internen im Zeitraum gibt ..
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getActiveInterns(ByVal vonDate As Date, ByVal bisDate As Date) As Integer()
+        Get
+            Dim tmpResult() As Integer = Nothing
+            Dim tmpList As New SortedList(Of Integer, Boolean)
+
+            For r As Integer = 1 To _allRollen.Count
+                Dim tmpRole As clsRollenDefinition = _allRollen.ElementAt(r - 1).Value
+                If Not tmpRole.isCombinedRole Then
+                    If Not tmpRole.isExternRole Then
+
+                        If tmpRole.isActiveRole And tmpRole.defaultKapa > 0 Then
+
+                            Try
+                                tmpList.Add(tmpRole.UID, True)
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                    End If
+
+                End If
+            Next
+
+            If tmpList.Count > 0 Then
+                tmpResult = tmpList.Keys.ToArray
+            End If
+
+            getActiveInterns = tmpResult
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt eine Collection zurück, die nur die Rollen enthält , die keine Sammelrollen sind
     ''' </summary>
     ''' <value></value>
@@ -793,7 +832,8 @@ Public Class clsRollen
                 ReDim tmpResult(bis - von)
                 ' correction faktor: multiply default value with correctionfaktor to get the cash-flow relevant value per Month
                 ' company have to pay full cost , including illness, holiday, general cost factor,  
-                Dim generalCostFactor As Double = 1.15
+                ' tk 26.6 das muss parametrisiert werden ... 
+                Dim generalCostFactor As Double = 1.22
 
 
                 For Each topLEvelID As Integer In _topLevelNodeIDs
