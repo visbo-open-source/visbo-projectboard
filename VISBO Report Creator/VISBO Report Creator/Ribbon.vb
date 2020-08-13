@@ -134,6 +134,8 @@ Public Class Ribbon
     Private Function successfulLoginAndSetup(ByRef errMsg As String) As Boolean
         Dim wasSuccessful As Boolean = False
         Dim err As New clsErrorCodeMsg
+        Dim VCId As String = ""
+
         awinSettings.databaseURL = My.Settings.dbURL
         awinSettings.databaseName = My.Settings.dbName
         awinSettings.visboServer = True
@@ -156,7 +158,8 @@ Public Class Ribbon
                     If chooseVC.ShowDialog = DialogResult.OK Then
                         ' alles ok 
                         awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, err)
+                        Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                        awinSettings.VCid = VCId
 
                         If Not changeOK Then
                             Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
