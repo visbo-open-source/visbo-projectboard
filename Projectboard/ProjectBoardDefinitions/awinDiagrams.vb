@@ -989,7 +989,7 @@ Public Module awinDiagrams
                         .Chart.Axes(Excel.XlAxisType.xlCategory).HasTitle = False
                         .Chart.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.Constants.xlLow
 
-                        .Chart.Axes(Excel.XlAxisType.xlValue).MajorUnit = 50
+                        .Chart.Axes(Excel.XlAxisType.xlValue).MajorUnit = 250
 
                         .Chart.HasLegend = False
 
@@ -2121,7 +2121,14 @@ Public Module awinDiagrams
             End With
         ElseIf prcTyp = DiagrammTypen(9) Then
             With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
-                .MaximumScaleIsAuto = True
+                Try
+                    .MaximumScaleIsAuto = True
+                    ' soll nach Möglichkeit unten konstant bleiben ...
+                    '.MinimumScaleIsAuto = True
+                Catch ex As Exception
+
+                End Try
+
             End With
         Else
 

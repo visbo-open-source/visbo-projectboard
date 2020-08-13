@@ -4307,9 +4307,12 @@ Public Class clsProjekt
 
                     If IsNothing(curPhase) Then
                         ' es gibt demnach im alten Projekt Ist-Daten zu Phasen, die jetzt gar nicht mehr existieren ... 
-                        ' die müssen jetzt alle der Root-Phase zugeschlagen werden
-                        curPhase = getPhaseByID(rootPhaseName)
-                        deltaIndex = columnOfPhaseStart - getColumnOfDate(curPhase.getStartDate)
+                        ' tk 13.8.2020 das darf nicht sein ! Abbruch !! 
+                        Dim errMsg As String = "Phase des alten PRojektes enthält Ist-Daten und existiert nicht mehr: " & oldPhase.nameID
+                        Throw New ArgumentException(errMsg)
+                        Exit Sub
+                        'curPhase = getPhaseByID(rootPhaseName)
+                        'deltaIndex = columnOfPhaseStart - getColumnOfDate(curPhase.getStartDate)
                     End If
 
                     Dim laenge As Integer = curPhase.relEnde - curPhase.relStart + 1

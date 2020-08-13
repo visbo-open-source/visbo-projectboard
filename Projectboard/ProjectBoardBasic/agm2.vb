@@ -16022,6 +16022,8 @@ Public Module agm2
         For i As Integer = 1 To RoleDefinitions.Count
 
             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(curRole.name)
+
             Dim myCollection As New Collection
             myCollection.Add(curRole.name)
             Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
@@ -16030,9 +16032,11 @@ Public Module agm2
 
             ReDim auslastungsValues(zeitraum)
 
-            For ix As Integer = 0 To zeitraum - 1
+            For ix As Integer = 0 To zeitraum
                 If kapaValues(ix) > 0 Then
                     auslastungsValues(ix) = 1 - bedarfsValues(ix) / kapaValues(ix)
+                Else
+                    auslastungsValues(ix) = 1
                 End If
             Next
 
@@ -16045,6 +16049,8 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
+
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kapa [PT]"
                     editRange.Value = kapaValues
                     zeile = zeile + 1
@@ -16054,6 +16060,7 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Bedarf [PT]"
                     editRange.Value = bedarfsValues
                     zeile = zeile + 1
@@ -16063,6 +16070,7 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kurzarbeit (%)"
                     editRange.Value = auslastungsValues
                     editRange.NumberFormat = "0.0%"

@@ -1384,14 +1384,24 @@ Public Module awinGeneralModules
 
                         ' jetzt sicherstellen, dass das Projekt die Ist-Daten aus dem alten Projekt bekommt.  
                         Try
-                            Call hproj.mergeActualValues(cproj)
+                            Dim oldVname As String = hproj.variantName
+                            Dim wasMarked As Boolean = hproj.marker
+                            Dim tmpProj As clsProjekt = hproj.createVariant("$MergeTemp", hproj.variantDescription)
+                            Call tmpProj.mergeActualValues(cproj)
+                            ' wenn alles gut ging ...
+                            hproj = tmpProj
+                            hproj.variantName = oldVname
+                            hproj.marker = Not hproj.isIdenticalTo(vProj:=cproj)
+
+                            If hproj.marker <> wasMarked Then
+                                Dim txtMsg As String = hproj.name & ": old actual data was restored by former project description ... "
+                                nameChangeCollection.Add(txtMsg)
+                            End If
+
                         Catch ex As Exception
                             ' nichts tun ... 
-                            Dim msgTxt As String = "Warnung 599 - der Merge der Ist-Daten konnte nicht durchgeführt werden ... Projekt wurde ohne Merge importiert."
-                            If awinSettings.englishLanguage Then
-                                msgTxt = "Warning 599 - Merge of Actual Data failed ... project was imported without merging."
-                            End If
-                            Call MsgBox(msgTxt)
+                            Dim txtMsg As String = ex.Message & vbLf & "project " & hproj.name & " was imported without merging actual data"
+                            nameChangeCollection.Add(txtMsg)
                         End Try
 
                     End If
@@ -1503,7 +1513,7 @@ Public Module awinGeneralModules
             End If
 
             If nameChangeCollection.Count > 0 Then
-                Dim headerMsg As String = "project Names were changed to DB-Names"
+                Dim headerMsg As String = "project Names were changed To DB-Names"
                 Call showOutPut(nameChangeCollection, headerMsg, "")
             End If
 

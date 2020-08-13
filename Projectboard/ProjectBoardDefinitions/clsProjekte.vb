@@ -2775,8 +2775,8 @@ Public Class clsProjekte
 
     Public ReadOnly Property getCashFlow() As Double()
         Get
-
-            awinSettings.kurzarbeitActivated = True
+            ' darf nicht mehr automatisch gesetzt werden 
+            'awinSettings.kurzarbeitActivated = True
 
             Dim saveShowrangeLeft As Integer = showRangeLeft
 
