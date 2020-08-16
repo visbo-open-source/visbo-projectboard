@@ -1369,38 +1369,44 @@ Imports System.Web
         ' tk 14.6 als erstes wird jetzt ein einziges Projekt gewählt ... 
         Dim selectProjectAsVorlage As New frmProjPortfolioAdmin
         Try
+            If ShowProjekte.Count > 0 Then
 
-            With selectProjectAsVorlage
+                With selectProjectAsVorlage
 
-                .aKtionskennung = PTTvActions.loadProjectAsTemplate
+                    .aKtionskennung = PTTvActions.loadProjectAsTemplate
 
-            End With
+                End With
 
-            returnValue = selectProjectAsVorlage.ShowDialog
+                returnValue = selectProjectAsVorlage.ShowDialog
 
-            If returnValue = DialogResult.OK Then
+                If returnValue = DialogResult.OK Then
 
-                weiterMachen = True
-                Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    weiterMachen = True
+                    Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
 
-                newProj = hproj.aggregateForPortfolioMgr(idArray)
+                    newProj = hproj.aggregateForPortfolioMgr(idArray)
 
-                ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
-                Call newProj.setBudgetAsNeeded()
+                    ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
+                    Call newProj.setBudgetAsNeeded()
 
-                ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
-                ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
+                    ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
+                    ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
 
-                Call newProj.resetTrafficLightsEtc()
+                    Call newProj.resetTrafficLightsEtc()
 
-                ' actualDatauntil zurücksetzen
-                newProj.actualDataUntil = Date.MinValue
+                    ' actualDatauntil zurücksetzen
+                    newProj.actualDataUntil = Date.MinValue
 
+                Else
+                    weiterMachen = False
+
+                End If
             Else
                 weiterMachen = False
 
             End If
+
 
         Catch ex As Exception
 
@@ -1505,6 +1511,14 @@ Imports System.Web
 
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
+            End If
+        Else
+            If ShowProjekte.Count <= 0 Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Please, load a project")
+                Else
+                    Call MsgBox("Bitte laden Sie ein Projekt")
+                End If
             End If
         End If
 
