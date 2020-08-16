@@ -23706,15 +23706,57 @@ Public Module agm2
             Else
                 ' there is a calendarReference to consider
                 ' the beginning and the end of the calendar in the capafile an the actualData are different
+                If listOfFiles.Count >= 1 Then
 
-                ' look for the first beginning and ending and the take the actualData
-                For Each kvp As KeyValuePair(Of String, clsFirstWDLastWD) In calendarReference.otherCal
-                    Dim beginning As Date = kvp.Value.firstWorkDay
-                    Dim ending As Date = kvp.Value.lastWorkDay
-                    ' search for the relevant inputfiles
+                    Call logfileSchreiben("Einlesen Verfügbarkeiten ", "", anzFehler)
+                    result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, meldungen)
 
+                    If result Then
+                        For Each tmpDatei As String In listOfFiles
 
-                Next
+                            ' hier: merken der erfolgreich importierten KapaFiles
+                            listOfArchivFiles.Add(tmpDatei)
+
+                        Next
+
+                    End If
+                Else
+                    If awinSettings.englishLanguage Then
+                        outputline = "No file for planning the availabilities of employee! " & vbLf _
+                             & "therefore no availabilities in the organisation written"
+                    Else
+                        Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                             & "Es wurde daher jetzt keine berücksichtigt"
+                        outputline = errMsg
+                    End If
+                    ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                    'meldungen.Add(outputline)
+
+                    Call logfileSchreiben(outputline, "", anzFehler)
+                End If
+
+                'Dim relevantCapafiles As New Collection
+                '' look for the first beginning and ending and the take the actualData
+                'For Each kvp As KeyValuePair(Of String, clsFirstWDLastWD) In calendarReference.otherCal
+                '    Dim relevantMonth As Date = CDate(kvp.Key)
+                '    Dim beginning As Date = kvp.Value.firstWorkDay
+                '    Dim ending As Date = kvp.Value.lastWorkDay
+                '    ' search for the relevant inputfiles
+                '    Dim myMonth As Integer = Month(relevantMonth)
+                '    Dim myYear As Integer = Year(relevantMonth)
+                '    Dim filenameKapa = kapaConfig("Kapa-Datei").capacityFile
+                '    Dim hstr() As String = Split(filenameKapa, "*")
+                '    filenameKapa = hstr(hstr.Length - 1)
+
+                '    relevantCapafiles.Add(Year(beginning).ToString & Month(beginning).ToString("D2"),
+                '        Year(beginning).ToString & Month(beginning).ToString("D2") & filenameKapa)
+
+                '    relevantCapafiles.Add(Year(ending).ToString & (Month(beginning) + 1).ToString("D2"),
+                '        Year(ending).ToString & (Month(beginning) + 1).ToString("D2") & filenameKapa)
+                '    Dim needed_1 As String = Year(beginning).ToString & Month(beginning).ToString("D2") & filenameKapa
+                '    Dim needed_2 As String = Year(ending).ToString & (Month(beginning) + 1).ToString & filenameKapa
+
+                'Next
 
             End If
 
