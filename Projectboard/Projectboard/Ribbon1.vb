@@ -7305,8 +7305,7 @@ Imports System.Web
         Dim actualDataFile As String = ""
         Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
         Dim outPutline As String = ""
-        Dim lastrow As Integer
-
+        Dim lastrow As Integer = 0
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -7336,15 +7335,17 @@ Imports System.Web
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
                 Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
 
-                ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
+                '' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
                 Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
                 Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
 
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
-                Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                changedOrga.allRoles = RoleDefinitions
+                    Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+
+                    changedOrga.allRoles = RoleDefinitions
 
                     If outputCollection.Count = 0 Then
                         ' keine Fehler aufgetreten ... 
@@ -7390,9 +7391,19 @@ Imports System.Web
                     End If
                 Else
                     If awinSettings.englishLanguage Then
+                        Call MsgBox("There doesn't exist the Config-File for the import of capacites!")
+                    Else
+                        Call MsgBox("Die Konfigurationsdatei für den Import der Kapazitäten existiert nicht! ")
+
+                    End If
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
                     Call MsgBox("No valid roles! Please import one first!")
                 Else
                     Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
                 End If
             End If
 

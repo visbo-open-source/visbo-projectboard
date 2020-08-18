@@ -2287,7 +2287,7 @@ Public Module agm3
     ''' </summary>
     ''' <remarks></remarks>
     Friend Function readAvailabilityOfRoleWithConfig(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport),
-                                                ByVal kapaFileName As String, ByVal calendarReference As clsOtherCalendar,
+                                                ByVal kapaFileName As String,
                                                 ByRef oPCollection As Collection) As Boolean
 
         Dim err As New clsErrorCodeMsg
