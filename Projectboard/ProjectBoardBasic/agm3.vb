@@ -3055,13 +3055,28 @@ Public Module agm3
                     monthDays.Add(colOfDate, anzDaysCapa)
                 End If
 
-                Dim n As Double = relevantCapafiles.Count
-                ' walking through the relevantCapafiles for capacities of the employee
-                For Each rCf As KeyValuePair(Of String, String) In relevantCapafiles
+                Dim existAllFiles As Boolean = True
+                Dim capaFiles() As String = Nothing
+                ReDim capaFiles(relevantCapafiles.Count - 1)
+                Dim n As Integer = 0
 
-                    Dim capaFile As String = rCf.Value
-                    n = n - 1
-                    If My.Computer.FileSystem.FileExists(capaFile) Then
+                ' checking if all relevantCapafiles exist
+                For Each rCf As KeyValuePair(Of String, String) In relevantCapafiles
+                    If My.Computer.FileSystem.FileExists(rCf.Value) Then
+                        capaFiles(n) = rCf.Value
+                        n = n + 1
+                    Else
+                        existAllFiles = False
+                    End If
+                Next
+
+                ' walking through the relevantCapafiles for capacities of the employee
+                If existAllFiles Then
+
+
+                    For n = 0 To capaFiles.Length - 1
+
+                        Dim capaFile As String = capaFiles(n)
 
                         Try
                             kapaWB = appInstance.Workbooks.Open(capaFile)
@@ -3249,13 +3264,14 @@ Public Module agm3
 
                                                     ' Start und Ende der Spalten-Auslesung bestimmen
                                                     If n = 0 Then
+                                                        iSp = firstUrlspalte + erstertag - 1
+                                                        anzDaysNow = anzMonthDays - erstertag + 1
+                                                    End If
+                                                    If n = 1 Then
                                                         iSp = firstUrlspalte
                                                         anzDaysNow = anzDaysCapa - anzDaysThisMonth + 1
                                                     End If
-                                                    If n = 1 Then
-                                                        iSp = firstUrlspalte + erstertag
-                                                        anzDaysNow = anzMonthDays - erstertag + 1
-                                                    End If
+
 
                                                     For sp = iSp + 0 To iSp + anzDaysNow - 1
 
@@ -3369,7 +3385,7 @@ Public Module agm3
                                                     'Ende tk Check den Wert 
 
                                                     ' erstes relevantCapafile
-                                                    If n = 1 Then
+                                                    If n = 0 Then
                                                         'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                         If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
                                                             hrole.kapazitaet(colOfDate) = anzArbTage
@@ -3379,7 +3395,7 @@ Public Module agm3
                                                     End If
 
                                                     ' zweites relavantCapafile
-                                                    If n = 0 Then
+                                                    If n = 1 Then
                                                         'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
                                                         If colOfDate >= getColumnOfDate(hrole.entryDate) And colOfDate < getColumnOfDate(hrole.exitDate) Then
                                                             hrole.kapazitaet(colOfDate) = hrole.kapazitaet(colOfDate) + anzArbTage
@@ -3403,25 +3419,14 @@ Public Module agm3
                                                     If Not oPCollection.Contains(msgtxt) Then
                                                         oPCollection.Add(msgtxt, msgtxt)
                                                     End If
+                                                    'Call MsgBox(msgtxt)
+                                                    fehler = True
+                                                    Call logfileSchreiben(msgtxt, capaFile, anzFehler)
                                                 End If
-                                                'Call MsgBox(msgtxt)
-                                                fehler = True
-                                                Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+
                                             End If
 
-
-                                            'If awinSettings.englishLanguage Then
-                                            '                msgtxt = "No Name of role given ..."
-                                            '            Else
-                                            '                msgtxt = "kein Rollenname angegeben ..."
-                                            '            End If
-                                            '            If Not oPCollection.Contains(msgtxt) Then
-                                            '                oPCollection.Add(msgtxt, msgtxt)
-                                            '            End If
-                                            '            Call logfileSchreiben(msgtxt, capaFile, anzFehler)
-                                            '        End If
-
-                                        Next iZ
+                                        Next iZ  ' loop Zeilen
 
                                     End If
 
@@ -3444,9 +3449,20 @@ Public Module agm3
 
                         End Try
 
+                    Next    ' Capafiles
+
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "Holidays of " & myYear & "/" & myMonth & " imported"
+                    Else
+                        msgtxt = "Für " & myYear & "/" & myMonth & " wurden Urlaubstage eingelesen"
                     End If
-                Next    ' relevantCapafiles
+
+                    Call logfileSchreiben(msgtxt, dateConsidered, anzFehler)
+
+                End If
+
             End If
+
         Next        ' calenderReference.otherCal
 
         If formerEE Then
