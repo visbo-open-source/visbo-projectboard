@@ -279,8 +279,8 @@ Module oneClickGeneralModules
         Else
             ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
 
-            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+            'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+            'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
         End If
 
         logInToMongoDB = Not noDBAccess

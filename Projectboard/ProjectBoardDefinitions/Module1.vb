@@ -5886,22 +5886,34 @@ Public Module Module1
                     Else
                         cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
                     End If
+
                 Else
-                    cashflow(i) = invoices(i) - (orgaFullCost(i) + checkSonstCost(i) + checkExternCost(ix))
+
+                    totalCost(i) = orgaFullCost(i) + checkSonstCost(i) + checkExternCost(i)
+                    restCost(i) = 0
+
+                    If i = 0 Then
+                        cashflow(i) = invoices(i) - totalCost(i)
+                    Else
+                        cashflow(i) = cashflow(i - 1) + invoices(i) - totalCost(i)
+                    End If
+
                 End If
 
 
             Next
 
 
+            If awinSettings.kurzarbeitActivated And awinSettings.visboDebug Then
+                Dim checkTotalCost(5) As Double
+                For ix = 0 To 5
+                    checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
+                    If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
+                        Call MsgBox("Unterschiede ! Intern und extern")
+                    End If
+                Next
+            End If
 
-            Dim checkTotalCost(5) As Double
-            For ix = 0 To 5
-                checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
-                If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
-                    Call MsgBox("Unterschiede ! Intern und extern")
-                End If
-            Next
 
 
 
@@ -5913,23 +5925,28 @@ Public Module Module1
 
             Dim atLeastOneDifference As Boolean = False
 
-            For ix = 0 To 5
-                If System.Math.Abs(testCashFlow(ix) - cashflow(ix)) > 0.01 Then
-                    atLeastOneDifference = True
-                End If
-            Next
+            'For ix = 0 To 5
+            '    If System.Math.Abs(testCashFlow(ix) - cashflow(ix)) > 0.01 Then
+            '        atLeastOneDifference = True
+            '    End If
+            'Next
 
-            If atLeastOneDifference Then
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Differences in Calculation Liquidity!")
-                Else
-                    Call MsgBox("Unterschiede in Berechnung der Liquidität!")
-                End If
+            'If atLeastOneDifference Then
+            '    If awinSettings.englishLanguage Then
+            '        Call MsgBox("Differences in Calculation Liquidity!")
+            '    Else
+            '        Call MsgBox("Unterschiede in Berechnung der Liquidität!")
+            '    End If
 
-            End If
+            'End If
 
             ' tk Ende 17.6 Checks
 
+            ' jetzt Header schreiben 
+            zeile = 1
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = StartofCalendar.AddMonths(showRangeLeft - 2 + ix).ToString("MMM yy")
+            Next
 
 
             zeile = 2
