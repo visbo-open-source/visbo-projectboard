@@ -7306,6 +7306,8 @@ Imports System.Web
         Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
         Dim outPutline As String = ""
         Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivAllg As New List(Of String)
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -7333,7 +7335,7 @@ Imports System.Web
                 Call readMonthlyExternKapasEV(outputCollection)
 
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
-                Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
+                listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
 
                 '' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
                 Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
@@ -7343,7 +7345,13 @@ Imports System.Web
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                    Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                    listofArchivAllg = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logfileSchreiben(outPutline, "PTImportKapas", anzFehler)
+                End If
+
+                If listofArchivUrlaub.Count > 0 Or listofArchivAllg.Count > 0 Then
 
                     changedOrga.allRoles = RoleDefinitions
 
@@ -7390,12 +7398,20 @@ Imports System.Web
                         Call logfileSchreiben(outputCollection)
                     End If
                 Else
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("There doesn't exist the Config-File for the import of capacites!")
-                    Else
-                        Call MsgBox("Die Konfigurationsdatei für den Import der Kapazitäten existiert nicht! ")
+                    If outputCollection.Count > 0 Then
 
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logfileSchreiben(outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Import of capacites with errors - stopped!")
+                        Else
+                            Call MsgBox("Import der Kapazitäten erfolgte mit Fehler - abgebrochen! ")
+
+                        End If
                     End If
+
                 End If
 
             Else
