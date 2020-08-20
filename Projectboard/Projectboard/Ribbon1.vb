@@ -1369,38 +1369,44 @@ Imports System.Web
         ' tk 14.6 als erstes wird jetzt ein einziges Projekt gewählt ... 
         Dim selectProjectAsVorlage As New frmProjPortfolioAdmin
         Try
+            If ShowProjekte.Count > 0 Then
 
-            With selectProjectAsVorlage
+                With selectProjectAsVorlage
 
-                .aKtionskennung = PTTvActions.loadProjectAsTemplate
+                    .aKtionskennung = PTTvActions.loadProjectAsTemplate
 
-            End With
+                End With
 
-            returnValue = selectProjectAsVorlage.ShowDialog
+                returnValue = selectProjectAsVorlage.ShowDialog
 
-            If returnValue = DialogResult.OK Then
+                If returnValue = DialogResult.OK Then
 
-                weiterMachen = True
-                Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    weiterMachen = True
+                    Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
 
-                newProj = hproj.aggregateForPortfolioMgr(idArray)
+                    newProj = hproj.aggregateForPortfolioMgr(idArray)
 
-                ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
-                Call newProj.setBudgetAsNeeded()
+                    ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
+                    Call newProj.setBudgetAsNeeded()
 
-                ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
-                ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
+                    ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
+                    ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
 
-                Call newProj.resetTrafficLightsEtc()
+                    Call newProj.resetTrafficLightsEtc()
 
-                ' actualDatauntil zurücksetzen
-                newProj.actualDataUntil = Date.MinValue
+                    ' actualDatauntil zurücksetzen
+                    newProj.actualDataUntil = Date.MinValue
 
+                Else
+                    weiterMachen = False
+
+                End If
             Else
                 weiterMachen = False
 
             End If
+
 
         Catch ex As Exception
 
@@ -1505,6 +1511,14 @@ Imports System.Web
 
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
+            End If
+        Else
+            If ShowProjekte.Count <= 0 Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Please, load a project")
+                Else
+                    Call MsgBox("Bitte laden Sie ein Projekt")
+                End If
             End If
         End If
 
@@ -7288,7 +7302,12 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportKapas(control As IRibbonControl)
 
-
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivAllg As New List(Of String)
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -7316,61 +7335,91 @@ Imports System.Web
                 Call readMonthlyExternKapasEV(outputCollection)
 
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
-                Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
+                listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
+
+                '' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
+                Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+                Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
 
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
-                Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                changedOrga.allRoles = RoleDefinitions
+                    listofArchivAllg = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logfileSchreiben(outPutline, "PTImportKapas", anzFehler)
+                End If
 
-                If outputCollection.Count = 0 Then
-                    ' keine Fehler aufgetreten ... 
-                    ' jetzt wird die Orga als Setting weggespeichert ... 
-                    Dim err As New clsErrorCodeMsg
-                    Dim result As Boolean = False
-                    ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString
+                If listofArchivUrlaub.Count > 0 Or listofArchivAllg.Count > 0 Then
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    changedOrga.allRoles = RoleDefinitions
 
-                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim result As Boolean = False
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
                                                                                 CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                 orgaName,
                                                                                 changedOrga.validFrom,
                                                                                 err)
 
-                        If result = True Then
-                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                            If result = True Then
+                                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
+                            Else
+                                Call MsgBox("Error when writing Organisation to Database")
+                                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                            End If
+
+                        Else
+                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
+                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                             Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                             ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
                             Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
-
-                        Else
-                            Call MsgBox("Error when writing Organisation to Database")
-                            Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
                         End If
 
                     Else
-                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
-                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
-                        ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                        ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logfileSchreiben(outputCollection)
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logfileSchreiben(outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Import of capacites with errors - stopped!")
+                        Else
+                            Call MsgBox("Import der Kapazitäten erfolgte mit Fehler - abgebrochen! ")
+
+                        End If
                     End If
 
-                Else
-                    Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                    Call logfileSchreiben(outputCollection)
                 End If
+
             Else
                 If awinSettings.englishLanguage Then
                     Call MsgBox("No valid roles! Please import one first!")
                 Else
                     Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
                 End If
             End If
 

@@ -94,6 +94,7 @@
     <Compile Include="clsOpenXML.vb" />
     <Compile Include="clsOrganisation.vb" />
     <Compile Include="clsOrganisations.vb" />
+    <Compile Include="clsOtherCalendar.vb" />
     <Compile Include="clsPhaseDB.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />

@@ -505,6 +505,7 @@
             <button id="Pt6G6B2" label="Create RepMsg"  onAction="PTCreateReportMessages" />
           </group>
       </tab>-->
+       
       <!--label="zurück zur Multiprojekt-Tafel"-->
       <tab id="PTzurück" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTzurück1" getVisible="chckVisibility" >
