@@ -3596,7 +3596,12 @@ Public Class clsProjekt
 
             For Each curRole As clsRolle In cphase.rollenListe
 
-                Dim roleNameID As String = curRole.getNameID
+                ' tk 20.08.20 copiedRole eingeführt, weil ansonsten curRole verändert wird - und damit das Ausgangs-Projekt
+                ' jetzt muss curRole kopiert werden - andernfalls gibt es Fehler und Seiteneffekte ..
+                Dim copiedRole As New clsRolle
+                Call curRole.CopyTo(copiedRole)
+
+                Dim roleNameID As String = copiedRole.getNameID
 
                 ' tk ist es einer Skill/Team zugeordnet 
                 Dim teamID As Integer = -1
@@ -3628,12 +3633,12 @@ Public Class clsProjekt
 
                 Do While ix <= summaryRoleIDs.Length And Not found
 
-                    If curRole.uid <> summaryRoleIDs(ix - 1) Then
+                    If copiedRole.uid <> summaryRoleIDs(ix - 1) Then
                         ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
                         If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
 
-                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(curRole.uid, summaryRoleIDs(ix - 1)) Then
+                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(copiedRole.uid, summaryRoleIDs(ix - 1)) Then
                             found = True
 
                         Else
@@ -3647,7 +3652,7 @@ Public Class clsProjekt
 
                 If found Then
                     ' in toDoList eintragen 
-                    toDoList.Add(roleNameID, curRole)
+                    toDoList.Add(roleNameID, copiedRole)
                     toDoListSR.Add(roleNameID, summaryRoleIDs(ix - 1))
                 End If
 

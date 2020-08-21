@@ -177,7 +177,7 @@
             <menu id="PT2G1M" getVisible="chckVisibility">
               <!--label="Neu auf Basis Vorlage"-->
               <button id="PT2G1M0B0" getLabel ="bestimmeLabel" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
-              <button id="PT2G1M0B1" getLabel="bestimmeLabel" enabled="false" onAction="PT2ProjektNeuBasisProjekt" />
+              <button id="PT2G1M0B1" getLabel="bestimmeLabel" enabled="true" onAction="PT2ProjektNeuBasisProjekt" />
             </menu>
           </splitButton>
           <!--label="neue Variante anlegen"-->
