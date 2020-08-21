@@ -8759,9 +8759,9 @@ Public Module Module1
     ''' <summary>
     ''' schreibt in die angegebene MassenEdit Excel-Zelle den Rollen-Namen als String und trägt ggf einen Kommentar mit dem Team-NAmen ein.  
     ''' </summary>
-    ''' <param name="currentCell"></param>
+    ''' <param name="currentRange">umfasts jetzt 3 Zellen: rcName, Skill, Level</param>
     ''' <param name="roleNameID"></param>
-    Public Sub writeMECellWithRoleNameID(ByRef currentCell As Excel.Range,
+    Public Sub writeMECellWithRoleNameID(ByRef currentRange As Excel.Range,
                                          ByVal isLocked As Boolean,
                                          ByVal rcName As String,
                                          ByVal roleNameID As String,
@@ -8772,7 +8772,7 @@ Public Module Module1
         Dim teamName As String = ""
 
         ' erst mal alle Kommentare löschen 
-        currentCell.ClearComments()
+        currentRange.ClearComments()
 
         If isRole Then
             If rcName = roleNameID Or roleNameID = "" Then
@@ -8797,15 +8797,10 @@ Public Module Module1
 
         ' Jetzt wird die Zelle geschrieben 
 
-        With currentCell
+        With currentRange.Cells(1, 1)
             .Value = rcName
             .Locked = isLocked
             .IndentLevel = indentlevel
-
-            'If isLocked Then
-            '    ' als gesperrt kennzeichnen 
-            '    .Interior.Color = XlRgbColor.rgbLightGray
-            'End If
 
             Try
                 If Not IsNothing(.Validation) Then
@@ -8815,11 +8810,29 @@ Public Module Module1
 
             End Try
 
-            If teamName.Length > 0 Then
-                Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
-            End If
-
         End With
+
+        If teamName.Length > 0 Then
+            ' Skill Name 
+            currentRange.Cells(1, 2).value = teamName
+            currentRange.Cells(1, 2).locked = isLocked
+            currentRange.Cells(1, 2).indentlevel = 1
+
+            ' Skill - Level 
+            currentRange.Cells(1, 3).value = ""
+            currentRange.Cells(1, 3).locked = isLocked
+            currentRange.Cells(1, 2).indentlevel = 1
+        Else
+            ' Skill Name 
+            currentRange.Cells(1, 2).value = ""
+            currentRange.Cells(1, 2).locked = isLocked
+            currentRange.Cells(1, 2).indentlevel = 1
+
+            ' Skill - Level 
+            currentRange.Cells(1, 3).value = ""
+            currentRange.Cells(1, 3).locked = isLocked
+            currentRange.Cells(1, 2).indentlevel = 1
+        End If
 
     End Sub
 

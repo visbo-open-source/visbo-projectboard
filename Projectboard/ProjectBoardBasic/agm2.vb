@@ -18176,7 +18176,7 @@ Public Module agm2
             Dim spalte As Integer = 1
 
 
-            Dim startSpalteDaten As Integer = 7
+            Dim startSpalteDaten As Integer = 7 + 2
             Dim roleCostInput As Excel.Range = Nothing
 
             tmpName = ""
@@ -18193,8 +18193,11 @@ Public Module agm2
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
-                    maxRCLengthVorkommen = 14
-                    CType(.Cells(1, 6), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Level"
+
+                    maxRCLengthVorkommen = 20
+                    CType(.Cells(1, 8), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
@@ -18202,8 +18205,10 @@ Public Module agm2
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Level"
                     maxRCLengthVorkommen = 20
-                    CType(.Cells(1, 6), Excel.Range).Value = "Summe" & vbLf & "[PT]"
+                    CType(.Cells(1, 8), Excel.Range).Value = "Summe" & vbLf & "[PT]"
 
                 End If
 
@@ -18436,7 +18441,7 @@ Public Module agm2
 
                                 Next r
 
-                                ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
+                                ' tk 25.7.19 jetzt werden alle validRole gemäß ihrer Reihenfolge PosIX dargestellt
 
                                 For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
 
@@ -18473,7 +18478,7 @@ Public Module agm2
                                     If ok Then
 
                                         With currentWS
-                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            CType(.Cells(zeile, 6 + 2), Excel.Range).Value = zeilensumme
                                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                         End With
 
@@ -18530,9 +18535,9 @@ Public Module agm2
                                                                                 ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
                                         If ok Then
-
+                                            ' hier wird der Wert reingeschrieben ... 
                                             With currentWS
-                                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                                CType(.Cells(zeile, 6 + 2), Excel.Range).Value = zeilensumme
                                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                             End With
 
@@ -18775,15 +18780,15 @@ Public Module agm2
 
                 ' Rolle oder Kostenart schreiben 
                 Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
-                Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
+                Call writeMECellWithRoleNameID(CType(.Range(.Cells(zeile, 5), .Cells(zeile, 5 + 2)), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
 
 
                 ' das Format der Zeile mit der Summe
-                CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("##,##0.#")
-                CType(.Cells(zeile, 6), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                CType(.Cells(zeile, 6 + 2), Excel.Range).NumberFormat = Format("##,##0.#")
+                CType(.Cells(zeile, 6 + 2), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
                 If summeEditierenErlaubt Then
-                    With CType(.Cells(zeile, 6), Excel.Range)
+                    With CType(.Cells(zeile, 6 + 2), Excel.Range)
 
                         If Not isProtectedbyOthers Then
                             .Locked = False
