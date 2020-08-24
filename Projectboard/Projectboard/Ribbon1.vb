@@ -6285,7 +6285,7 @@ Imports System.Web
 
                     ' TopNodes und OrgaTeamChilds bauen 
                     Call importedOrga.allRoles.buildTopNodes()
-                    Call importedOrga.allRoles.buildOrgaTeamChilds()
+                    Call importedOrga.allRoles.buildOrgaSkillChilds()
 
                     ' jetzt wird die Orga als Setting weggespeichert ... 
                     Dim err As New clsErrorCodeMsg
@@ -11599,7 +11599,7 @@ Imports System.Web
         End Try
 
         Dim rcName As String = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
-        Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(currentRow, visboZustaende.meColRC), Excel.Range))
+        Dim rcNameID As String = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(currentRow, visboZustaende.meColRC), meWS.Cells(currentRow, visboZustaende.meColRC + 1)), Excel.Range))
 
         Dim rcNameTeamID As Integer = -1
         Dim rcID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, rcNameTeamID)
@@ -11608,16 +11608,6 @@ Imports System.Web
         If IsNothing(rcName) Then
             rcName = ""
         End If
-
-        ' tk 18.1.2020 rausnehmen besser !
-        'Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
-        '    currentRow = currentRow + 1
-        '    rcName = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
-        '    If IsNothing(rcName) Then
-        '        rcName = ""
-        '    End If
-        'Loop
-        ' Ende tk 18.1.2020
 
         ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
         If rcName = "" Then

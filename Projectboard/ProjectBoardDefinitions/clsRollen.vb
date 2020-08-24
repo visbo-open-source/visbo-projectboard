@@ -17,9 +17,9 @@ Public Class clsRollen
 
     ' tk 4.5.19 eingeführt, um Teams den sie umfassenden Organisations-Einheiten zuordnen zu können
     ' im key ist die ID der Organisationseinheit, in der Liste sind die IDs der Teams, die virtuell zu dieser Orga-Einheit gehören 
-    Private _orgaTeamChilds As SortedList(Of Integer, List(Of Integer))
+    Private _orgaSkillChilds As SortedList(Of Integer, List(Of Integer))
 
-    Private _topLevelTeamParents As List(Of Integer)
+    Private _topLevelSkillParents As List(Of Integer)
 
     ' tk 25.7.19 in welcher relativen Position im Baum sind die einzelnen IDs
     ' Key = NameID, value = relative Position
@@ -119,13 +119,13 @@ Public Class clsRollen
     ''' erstellt die virtuellen Zuordnungen von Teams zu ihren Organisations-Einheiten
     ''' die virtuelle Organisations- oder Eltern-Einheit ist die, die alle Team Member als Eltern umfasst
     ''' </summary>
-    Public Sub buildOrgaTeamChilds()
+    Public Sub buildOrgaSkillChilds()
 
         Dim errMsg As String = ""
-        Dim alleTeams As SortedList(Of Integer, Double) = getAllTeamIDs
+        Dim alleTeams As SortedList(Of Integer, Double) = getAllSkillIDs
 
-        _orgaTeamChilds = New SortedList(Of Integer, List(Of Integer))
-        _topLevelTeamParents = New List(Of Integer)
+        _orgaSkillChilds = New SortedList(Of Integer, List(Of Integer))
+        _topLevelSkillParents = New List(Of Integer)
 
         For Each kvp As KeyValuePair(Of Integer, Double) In alleTeams
 
@@ -136,16 +136,16 @@ Public Class clsRollen
                 ' in parentArray(0) steht das Team-Element selber ... deshalb start der Schleife ab i=1
                 For i As Integer = 1 To parentArray.Length - 1
                     Dim parentRole As clsRollenDefinition = getRoleDefByID(parentArray(i))
-                    If Not parentRole.isTeam And Not parentRole.isTeamParent Then
-                        parentRole.isTeamParent = True
+                    If Not parentRole.isSkill And Not parentRole.isSkillParent Then
+                        parentRole.isSkillParent = True
                     End If
                 Next
 
 
                 If Not IsNothing(parentArray) Then
                     If parentArray.Length > 1 Then
-                        If Not _topLevelTeamParents.Contains(parentArray.Last) Then
-                            _topLevelTeamParents.Add(parentArray.Last)
+                        If Not _topLevelSkillParents.Contains(parentArray.Last) Then
+                            _topLevelSkillParents.Add(parentArray.Last)
                         End If
                     End If
                 End If
@@ -155,19 +155,19 @@ Public Class clsRollen
             End Try
 
             Try
-                Dim commonParent As clsRollenDefinition = getContainingRoleOfTeamMembers(kvp.Key)
+                Dim commonParent As clsRollenDefinition = getContainingRoleOfSkillMembers(kvp.Key)
 
                 If Not IsNothing(commonParent) Then
-                    If _orgaTeamChilds.ContainsKey(commonParent.UID) Then
+                    If _orgaSkillChilds.ContainsKey(commonParent.UID) Then
 
-                        If Not _orgaTeamChilds.Item(commonParent.UID).Contains(kvp.Key) Then
-                            _orgaTeamChilds.Item(commonParent.UID).Add(kvp.Key)
+                        If Not _orgaSkillChilds.Item(commonParent.UID).Contains(kvp.Key) Then
+                            _orgaSkillChilds.Item(commonParent.UID).Add(kvp.Key)
                         End If
 
                     Else
                         Dim otc As New List(Of Integer)
                         otc.Add(kvp.Key)
-                        _orgaTeamChilds.Add(commonParent.UID, otc)
+                        _orgaSkillChilds.Add(commonParent.UID, otc)
                     End If
                 End If
             Catch ex As Exception
@@ -184,7 +184,7 @@ Public Class clsRollen
     End Sub
 
     ''' <summary>
-    ''' gibt zu einer Organisations-Einheit die virtuellen Childs zurück, das sind alle Gruppen, deren Team-Mitglieder
+    ''' gibt zu einer Organisations-Einheit die virtuellen Childs zurück, das sind alle Skill-Gruppen, deren Mitglieder
     ''' diese Organisations-Einheit als kleinsten gemeinsamen Parent haben 
     ''' wenn auch angegeben, werden alle virtuellen Kinder / Enkel zurückgebracht 
     ''' gibt nothing zurück, wenn es keine gibt ..
@@ -197,7 +197,7 @@ Public Class clsRollen
             Dim ergebnisListe As New List(Of Integer)
             Try
 
-                If Not _allRollen.Item(roleID).isTeam Then
+                If Not _allRollen.Item(roleID).isSkill Then
                     If _allRollen.Item(roleID).isCombinedRole Then
 
                         If inclSubRoles Then
@@ -206,10 +206,10 @@ Public Class clsRollen
 
                             For Each kvp As KeyValuePair(Of Integer, Double) In subRoleIDs
 
-                                If Not IsNothing(_orgaTeamChilds) Then
-                                    If _orgaTeamChilds.ContainsKey(kvp.Key) Then
+                                If Not IsNothing(_orgaSkillChilds) Then
+                                    If _orgaSkillChilds.ContainsKey(kvp.Key) Then
 
-                                        Dim teilErgebnis As List(Of Integer) = _orgaTeamChilds.Item(kvp.Key)
+                                        Dim teilErgebnis As List(Of Integer) = _orgaSkillChilds.Item(kvp.Key)
                                         For Each srID As Integer In teilErgebnis
                                             If Not ergebnisListe.Contains(srID) Then
                                                 ergebnisListe.Add(srID)
@@ -224,9 +224,9 @@ Public Class clsRollen
 
                         Else
 
-                            If Not IsNothing(_orgaTeamChilds) Then
-                                If _orgaTeamChilds.ContainsKey(roleID) Then
-                                    virtualChilds = _orgaTeamChilds.Item(roleID).ToArray
+                            If Not IsNothing(_orgaSkillChilds) Then
+                                If _orgaSkillChilds.ContainsKey(roleID) Then
+                                    virtualChilds = _orgaSkillChilds.Item(roleID).ToArray
                                 End If
                             End If
 
@@ -241,6 +241,69 @@ Public Class clsRollen
             End Try
 
             getVirtualChildIDs = virtualChilds
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zurück ob die angegebene Rolle die Skill hat; Rolle kann eine OrgaUnit oder Person sein  
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="skillID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property roleHasSkill(ByVal roleID As Integer, ByVal skillID As Integer) As Boolean
+        Get
+            Dim result As Boolean = False
+            Dim curRole As clsRollenDefinition = getRoleDefByID(roleID)
+            Dim curSkill As clsRollenDefinition = getRoleDefByID(skillID)
+
+            If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
+                Try
+                    If Not curRole.isSkill And curSkill.isSkill Then
+                        If curRole.isCombinedRole Then
+                            result = getCommonChildsOfParents(roleID, skillID).Count > 0
+                        Else
+                            result = curRole.getSkillIDs.ContainsKey(skillID)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            roleHasSkill = result
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt zurück, ob die angegebene Rolle die Skill hat; Rolle kann eine OrgaUnit oder Person sein  
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="skillName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property roleHasSkill(ByVal roleName As String, ByVal skillName As String) As Boolean
+        Get
+            Dim result As Boolean = False
+            Dim curRole As clsRollenDefinition = getRoledef(roleName)
+            Dim curSkill As clsRollenDefinition = getRoledef(skillName)
+
+            If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
+                Try
+                    If Not curRole.isSkill And curSkill.isSkill Then
+                        If curRole.isCombinedRole Then
+                            result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                        Else
+                            result = curRole.getSkillIDs.ContainsKey(curSkill.UID)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            roleHasSkill = result
 
         End Get
     End Property
@@ -272,20 +335,20 @@ Public Class clsRollen
     ''' gibt eine Liste aller Team IDs zurück 
     ''' </summary>
     ''' <returns></returns>
-    Public ReadOnly Property getAllTeamIDs() As SortedList(Of Integer, Double)
+    Public ReadOnly Property getAllSkillIDs() As SortedList(Of Integer, Double)
         Get
             Dim tmpValue As Double = 1.0
             Dim tmpResult As New SortedList(Of Integer, Double)
 
             For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
-                If kvp.Value.isTeam Then
+                If kvp.Value.isSkill Then
                     If Not tmpResult.ContainsKey(kvp.Key) Then
                         tmpResult.Add(kvp.Key, tmpValue)
                     End If
                 End If
             Next
 
-            getAllTeamIDs = tmpResult
+            getAllSkillIDs = tmpResult
 
         End Get
     End Property
@@ -294,22 +357,22 @@ Public Class clsRollen
     ''' <summary>
     ''' gibt die Rolle aus der hierarchischen Organisation zurück, die alle Team-Members der teamID  enthält 
     ''' </summary>
-    ''' <param name="teamID"></param>
+    ''' <param name="skillID"></param>
     ''' <returns></returns>
-    Public ReadOnly Property getContainingRoleOfTeamMembers(ByVal teamID As Integer) As clsRollenDefinition
+    Public ReadOnly Property getContainingRoleOfSkillMembers(ByVal skillID As Integer) As clsRollenDefinition
         Get
             Dim tmpContainingRole As clsRollenDefinition = Nothing
 
             Try
                 ' es muss keine ExcludedNAmes angegeben werden, weil sich das nur auf IDs bezieht, die nicht due ursprängliche ID selber sind ..
-                Dim allTeamMembers As SortedList(Of String, Double) = getSubRoleNameIDsOf(CStr(teamID))
+                Dim allTeamMembers As SortedList(Of String, Double) = getSubRoleNameIDsOf(CStr(skillID))
 
                 For Each kvp As KeyValuePair(Of String, Double) In allTeamMembers
                     Dim dummyteamID As Integer = -1
                     Dim roleID As Integer = getRoleDefByIDKennung(kvp.Key, dummyteamID).UID
 
                     ' nur untersuchen, wenn es nicht die Rolle selber ist
-                    If roleID <> teamID Then
+                    If roleID <> skillID Then
                         If IsNothing(tmpContainingRole) Then
                             tmpContainingRole = Me.getParentRoleOf(roleID)
                         Else
@@ -323,7 +386,7 @@ Public Class clsRollen
             End Try
 
 
-            getContainingRoleOfTeamMembers = tmpContainingRole
+            getContainingRoleOfSkillMembers = tmpContainingRole
         End Get
     End Property
 
@@ -523,7 +586,7 @@ Public Class clsRollen
     Public ReadOnly Property getTopLevelTeamIDs() As List(Of Integer)
         Get
 
-            getTopLevelTeamIDs = _topLevelTeamParents.ToList
+            getTopLevelTeamIDs = _topLevelSkillParents.ToList
 
         End Get
     End Property
@@ -562,7 +625,7 @@ Public Class clsRollen
             posIX = posIX + 1
 
             Dim parentrole As clsRollenDefinition = getRoleDefByID(nodeID)
-            If parentrole.isTeam Then
+            If parentrole.isSkill Then
                 teamID = parentrole.UID
             Else
                 teamID = -1
@@ -919,14 +982,14 @@ Public Class clsRollen
     ''' <summary>
     ''' gibt true zurück, wenn es Kinder gibt, die Teams sind
     ''' </summary>
-    ''' <param name="roleName"></param>
+    ''' <param name="skillName"></param>
     ''' <returns></returns>
-    Public ReadOnly Property isParentOfTeams(ByVal roleName As String) As Boolean
+    Public ReadOnly Property isParentOfSkills(ByVal skillName As String) As Boolean
         Get
             Dim teamFound As Boolean = False
             Dim ausschluss As Collection = getTopLevelNodeNames
 
-            Dim childNameIds As SortedList(Of String, Double) = getSubRoleNameIDsOf(roleName)
+            Dim childNameIds As SortedList(Of String, Double) = getSubRoleNameIDsOf(skillName)
 
             Dim ix As Integer = 0
             Do While ix <= childNameIds.Count - 1 And Not teamFound
@@ -934,7 +997,7 @@ Public Class clsRollen
                 ix = ix + 1
             Loop
 
-            isParentOfTeams = teamFound
+            isParentOfSkills = teamFound
         End Get
     End Property
 
@@ -944,9 +1007,9 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="roleUID"></param>
     ''' <returns></returns>
-    Private ReadOnly Property isParentOfAllTeams(ByVal roleUID As Integer) As Boolean
+    Private ReadOnly Property isParentOfAllSkills(ByVal roleUID As Integer) As Boolean
         Get
-            Dim allTeamIDs As SortedList(Of Integer, Double) = getAllTeamIDs
+            Dim allTeamIDs As SortedList(Of Integer, Double) = getAllSkillIDs
             Dim tmpResult As Boolean = False
             Dim firstTime As Boolean = True
 
@@ -964,7 +1027,7 @@ Public Class clsRollen
 
             Next
 
-            isParentOfAllTeams = tmpResult
+            isParentOfAllSkills = tmpResult
         End Get
     End Property
 
@@ -1321,7 +1384,7 @@ Public Class clsRollen
         If isRole Then
 
             ' ist es eine Gruppe ...
-            If tmpRole.isTeam Then
+            If tmpRole.isSkill Then
                 myIDs = Me.getSubRoleIDsOf(roleName)
             Else
                 myIDs = New SortedList(Of Integer, Double)
@@ -1403,24 +1466,34 @@ Public Class clsRollen
     ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
     ''' </summary>
     ''' <param name="roleName"></param>
-    ''' <param name="teamName"></param>
+    ''' <param name="skillName"></param>
     ''' <returns></returns>
-    Public Function bestimmeRoleNameID(ByVal roleName As String, ByVal teamName As String) As String
+    Public Function bestimmeRoleNameID(ByVal roleName As String, ByVal skillName As String) As String
         Dim tmpResult As String = ""
         Dim tmpRole As clsRollenDefinition = Me.getRoledef(roleName)
 
         Try
             If Not IsNothing(tmpRole) Then
 
-                If teamName.Length > 0 Then
-                    Dim tmpRoleTeam As clsRollenDefinition = Me.getRoledef(teamName)
-                    If Not IsNothing(tmpRoleTeam) Then
-                        If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
-                            tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, tmpRoleTeam.UID)
+                If skillName.Length > 0 Then
+                    Dim tmpSkill As clsRollenDefinition = Me.getRoledef(skillName)
+                    If Not IsNothing(tmpSkill) Then
+
+                        If Me.getCommonChildsOfParents(tmpRole.UID, tmpSkill.UID).Count > 0 Then
+                            tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, tmpSkill.UID)
                         Else
                             Dim dummy As Integer = -1
                             tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, dummy)
                         End If
+                        ' tk 23.8.20 alte Variante, hat nur zugelassen, dass Personen Skill-Spezifikation haben können 
+                        'If tmpSkill.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
+                        '    tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, tmpSkill.UID)
+                        'Else
+                        '    Dim dummy As Integer = -1
+                        '    tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, dummy)
+                        'End If
+                    Else
+                        tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, -1)
                     End If
                 Else
                     tmpResult = Me.bestimmeRoleNameID(tmpRole.UID, -1)
@@ -1486,7 +1559,7 @@ Public Class clsRollen
 
                                 Dim curTeamID As Integer = -1
 
-                                If roleDef.isTeam Then
+                                If roleDef.isSkill Then
                                     curTeamID = roleDef.UID
                                 End If
 
@@ -2116,8 +2189,8 @@ Public Class clsRollen
         _positionIndices = New SortedList(Of String, Integer)
 
         ' wird erst in buildOrgaTeamChilds initialisiert und aufgebaut 
-        _orgaTeamChilds = Nothing
-        _topLevelTeamParents = Nothing
+        _orgaSkillChilds = Nothing
+        _topLevelSkillParents = Nothing
 
     End Sub
 

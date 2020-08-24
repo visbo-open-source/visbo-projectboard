@@ -45,7 +45,10 @@ Public Class frmMEhryRoleCost
     Public rcNameID As String
 
     ' der ggf dazugehörende Team-Name 
-    Public teamName As String
+    Public skillName As String
+
+    ' gibt an, was gezeigt werden soll 
+    Public showSkillsOnly As Boolean
 
 
 
@@ -57,6 +60,14 @@ Public Class frmMEhryRoleCost
     Friend normalRoleColor As System.Drawing.Color = System.Drawing.Color.Black
     Friend existingRoleColor As System.Drawing.Color = System.Drawing.Color.DimGray
 
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+
+    End Sub
 
     Private Sub frmMEhryRoleCost_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         If frmCoord(PTfrm.rolecostME, PTpinfo.top) > 0 Then
@@ -82,11 +93,20 @@ Public Class frmMEhryRoleCost
                 tmpPhaseName = "Phase " & phaseName
             End If
 
-            If phaseName.Length > 40 Then
-                Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName.Substring(0, 39)
+            If awinSettings.englishLanguage Then
+                If phaseName.Length > 40 Then
+                    Me.Text = "Select Resources/Skills/Costs for  " & tmpPhaseName.Substring(0, 39)
+                Else
+                    Me.Text = "Select Resources/Skills/Costs for  " & tmpPhaseName
+                End If
             Else
-                Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName
+                If phaseName.Length > 40 Then
+                    Me.Text = "Auswahl Ressourcen/Skills/Kosten für " & tmpPhaseName.Substring(0, 39)
+                Else
+                    Me.Text = "Auswahl Ressourcen/Skills/Kosten für " & tmpPhaseName
+                End If
             End If
+
 
         End If
 
@@ -95,7 +115,7 @@ Public Class frmMEhryRoleCost
         ' der wird bereits beim Right Click ermittelt und steht in rcNameID - siehe oben ...
 
 
-        Call buildMERoleTree()
+        Call buildMERoleTree(showSkillsOnly)
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -206,7 +226,7 @@ Public Class frmMEhryRoleCost
     ''' <summary>
     ''' es sollen jetzt auch die virtuellen Childs angezeigt werden ..
     ''' </summary>
-    Public Sub buildMERoleTree()
+    Public Sub buildMERoleTree(ByVal showSkillsOnly As Boolean)
 
 
         Dim topLevelNode As TreeNode
@@ -254,7 +274,7 @@ Public Class frmMEhryRoleCost
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
 
                     ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
-                    If role.isActiveRole Then
+                    If role.isActiveRole And (role.isSkillParent = showSkillsOnly) Then
                         topLevelNode = .Nodes.Add(role.name)
                         topLevelNode.Text = role.name
 
@@ -273,7 +293,7 @@ Public Class frmMEhryRoleCost
 
                         ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
 
-                        If role.isTeam Then
+                        If role.isSkill Then
                             ' toplevelNode kann nur Team sein, nicht Team-Member
                             nrTag.isTeam = True
                             nrTag.isTeamMember = False
@@ -304,36 +324,39 @@ Public Class frmMEhryRoleCost
                 Next
             End If
 
-            If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
-                If CostDefinitions.Count > 1 Then
+            If Not showSkillsOnly Then
+                If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
+                    If CostDefinitions.Count > 1 Then
 
-                    For i = 1 To CostDefinitions.Count - 1
-                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
+                        For i = 1 To CostDefinitions.Count - 1
+                            Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
 
-                        topLevelNode = .Nodes.Add(cost.name)
-                        topLevelNode.Text = cost.name
-                        topLevelNode.Name = cost.name
-                        '
-                        ' 9.12.18 neuer Stuff 
-                        '
-                        Dim nrTag As New clsNodeRoleTag
-                        With nrTag
-                            .pTag = "X"
-                            .isRole = False
-                        End With
+                            topLevelNode = .Nodes.Add(cost.name)
+                            topLevelNode.Text = cost.name
+                            topLevelNode.Name = cost.name
+                            '
+                            ' 9.12.18 neuer Stuff 
+                            '
+                            Dim nrTag As New clsNodeRoleTag
+                            With nrTag
+                                .pTag = "X"
+                                .isRole = False
+                            End With
 
-                        topLevelNode.Tag = nrTag
-
-
-                        ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
-                        If initialCostsOfPhase.ContainsKey(cost.name) Then
-                            topLevelNode.Checked = True
-                        End If
+                            topLevelNode.Tag = nrTag
 
 
-                    Next
+                            ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
+                            If initialCostsOfPhase.ContainsKey(cost.name) Then
+                                topLevelNode.Checked = True
+                            End If
+
+
+                        Next
+                    End If
                 End If
             End If
+
 
 
 
@@ -365,7 +388,7 @@ Public Class frmMEhryRoleCost
 
 
             Dim nrTag As New clsNodeRoleTag
-            If currentRole.isTeam Then
+            If currentRole.isSkill Then
 
                 nrTag = New clsNodeRoleTag
                 With nrTag
@@ -373,7 +396,7 @@ Public Class frmMEhryRoleCost
                     .isTeamMember = False
                 End With
 
-            ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
+            ElseIf currentRole.getSkillIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
 
                 nrTag = New clsNodeRoleTag
                 Dim teamID As Integer
@@ -479,6 +502,8 @@ Public Class frmMEhryRoleCost
         Dim anzChilds As Integer
         Dim elemID As String
 
+
+
         ' für Prototyp und Diskussion Allianz 
         'Dim showTeamsOnly As Boolean = True
 
@@ -506,7 +531,7 @@ Public Class frmMEhryRoleCost
                     Dim teamID As Integer
                     Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isSkill Then
 
                         Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
                         If Not IsNothing(virtualChilds) Then

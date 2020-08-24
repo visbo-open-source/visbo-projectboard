@@ -2355,7 +2355,7 @@ Public Class clsProjekte
                     Else
                         Dim myvalue As Double = 1.0
                         If teamID > 0 Then
-                            myvalue = curRole.getTeamIDs.Item(teamID)
+                            myvalue = curRole.getSkillIDs.Item(teamID)
                         End If
 
                         If Not realCollection.ContainsKey(curRole.UID) Then

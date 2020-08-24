@@ -1796,7 +1796,7 @@ Public Class frmHierarchySelection
                         Dim teamID As Integer
                         Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isSkill Then
                             Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
                             For Each vcID As Integer In virtualChilds
                                 If Not nodelist.ContainsKey(vcID) Then
@@ -5199,7 +5199,7 @@ Public Class frmHierarchySelection
 
                     ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
 
-                    If role.isTeam Then
+                    If role.isSkill Then
                         ' toplevelNode kann nur Team sein, nicht Team-Member
                         nrTag.isTeam = True
                         nrTag.isTeamMember = False
@@ -5248,7 +5248,7 @@ Public Class frmHierarchySelection
 
 
             Dim nrTag As New clsNodeRoleTag
-            If currentRole.isTeam Then
+            If currentRole.isSkill Then
 
                 nrTag = New clsNodeRoleTag
                 With nrTag
@@ -5256,7 +5256,7 @@ Public Class frmHierarchySelection
                     .isTeamMember = False
                 End With
 
-            ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
+            ElseIf currentRole.getSkillIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
 
                 nrTag = New clsNodeRoleTag
                 Dim teamID As Integer

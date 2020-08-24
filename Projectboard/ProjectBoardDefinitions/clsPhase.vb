@@ -2227,7 +2227,7 @@ Public Class clsPhase
             Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmprole.uid)
             ' nur bei Personen-Rollen oder Team-Roles relevant und zu prüfen  
 
-            If Not currentRole.isCombinedRole Or currentRole.isTeam Then
+            If Not currentRole.isCombinedRole Or currentRole.isSkill Then
 
                 Dim weiterMachen As Boolean = True
 

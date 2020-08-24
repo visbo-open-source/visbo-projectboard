@@ -8161,24 +8161,26 @@ Public Module Module1
     ''' <summary>
     ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
     ''' </summary>
-    ''' <param name="currentCell"></param>
+    ''' <param name="currentRange"></param>
     ''' <returns></returns>
-    Public Function getRCNameIDfromExcelCell(ByVal currentCell As Excel.Range,
+    Public Function getRCNameIDfromExcelRange(ByVal currentRange As Excel.Range,
                                              Optional ByVal returnOnlyValidNameID As Boolean = False) As String
 
         Dim tmpResult As String = ""
         Try
-            If Not IsNothing(currentCell.Value) Then
-                Dim tmpRCname As String = CStr(currentCell.Value).Trim
+            If Not IsNothing(currentRange.Cells(1, 1).Value) Then
+                Dim tmpRCname As String = CStr(currentRange.Cells(1, 1).Value).Trim
 
                 If tmpRCname <> "" Then
                     If RoleDefinitions.containsName(tmpRCname) Then
-                        Dim tmpComment As Excel.Comment = currentCell.Comment
-                        Dim tmpTeamName As String = ""
-                        If Not IsNothing(tmpComment) Then
-                            tmpTeamName = tmpComment.Text
+
+
+                        Dim tmpSkillName As String = ""
+                        If Not IsNothing(currentRange.Cells(1, 2).Value) Then
+                            tmpSkillName = CStr(currentRange.Cells(1, 2).Value).Trim
                         End If
-                        tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRCname, tmpTeamName)
+
+                        tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRCname, tmpSkillName)
                     Else
                         ' im Falle von Kosten soll erst mal die alte Herangehensweise gelten
                         If returnOnlyValidNameID Then
@@ -8198,7 +8200,7 @@ Public Module Module1
             tmpResult = ""
         End Try
 
-        getRCNameIDfromExcelCell = tmpResult
+        getRCNameIDfromExcelRange = tmpResult
 
     End Function
 
@@ -8278,7 +8280,7 @@ Public Module Module1
             If Not isRole Then
                 chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
             Else
-                chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                chckRCNameID = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(curZeile, 5), meWS.Cells(curZeile, 6)), Excel.Range))
             End If
 
 
@@ -8318,7 +8320,7 @@ Public Module Module1
                     If Not isRole Then
                         chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
                     Else
-                        chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                        chckRCNameID = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(curZeile, 5), meWS.Cells(curZeile, 6)), Excel.Range))
                     End If
 
 
@@ -8415,7 +8417,7 @@ Public Module Module1
     ''' <returns></returns>
     Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
 
-        Dim allTeams As SortedList(Of Integer, Double) = roleDefinitionsToCheck.getAllTeamIDs
+        Dim allTeams As SortedList(Of Integer, Double) = roleDefinitionsToCheck.getAllSkillIDs
         Dim atleastOneError As Boolean = False
 
         For Each kvp As KeyValuePair(Of Integer, Double) In allTeams
@@ -8426,7 +8428,7 @@ Public Module Module1
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
-                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
                 If Not ok Then
                     Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
                     outputCollection.Add(outmsg)
@@ -8452,7 +8454,7 @@ Public Module Module1
         For Each kvp As KeyValuePair(Of Integer, Double) In allIDs
 
             Dim tmpRole As clsRollenDefinition = roledefinitionsToCheck.getRoleDefByID(kvp.Key)
-            Dim memberships As SortedList(Of Integer, Double) = tmpRole.getTeamIDs
+            Dim memberships As SortedList(Of Integer, Double) = tmpRole.getSkillIDs
 
             If Not IsNothing(memberships) Then
                 If memberships.Count > 0 Then
@@ -8818,20 +8820,12 @@ Public Module Module1
             currentRange.Cells(1, 2).locked = isLocked
             currentRange.Cells(1, 2).indentlevel = 1
 
-            ' Skill - Level 
-            currentRange.Cells(1, 3).value = ""
-            currentRange.Cells(1, 3).locked = isLocked
-            currentRange.Cells(1, 2).indentlevel = 1
         Else
             ' Skill Name 
             currentRange.Cells(1, 2).value = ""
             currentRange.Cells(1, 2).locked = isLocked
             currentRange.Cells(1, 2).indentlevel = 1
 
-            ' Skill - Level 
-            currentRange.Cells(1, 3).value = ""
-            currentRange.Cells(1, 3).locked = isLocked
-            currentRange.Cells(1, 2).indentlevel = 1
         End If
 
     End Sub

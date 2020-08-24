@@ -6818,7 +6818,7 @@ Public Module awinGeneralModules
         Dim found As Boolean = False
 
         Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-        Dim vglRcNameID As String = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglRcNameID As String = getRCNameIDfromExcelRange(CType(ws.Range(ws.Cells(zeile, colRcName), ws.Cells(zeile, colRcName + 1)), Excel.Range))
         Dim vglPhaseNameID As String = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
 
 
@@ -6838,7 +6838,7 @@ Public Module awinGeneralModules
             If Not found Then
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-                vglRcNameID = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglRcNameID = getRCNameIDfromExcelRange(CType(ws.Range(ws.Cells(zeile, colRcName), ws.Cells(zeile, colRcName + 1)), Excel.Range))
                 vglPhaseNameID = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
             End If
 
