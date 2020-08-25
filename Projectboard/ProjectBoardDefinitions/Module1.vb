@@ -5980,23 +5980,8 @@ Public Module Module1
             Next
 
 
-
-            zeile = 4
-            For ix = 1 To 6
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
-                ' Abfluss: rot
-                If totalCost(ix - 1) > 0 Then
-                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
-                Else
-                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
-                End If
-
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
-            Next
-
-
             ' jetzt KUG Abfluss oder non-utilized capacity 
-            zeile = 5
+            zeile = 4
             For ix = 1 To 6
 
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
@@ -6011,6 +5996,23 @@ Public Module Module1
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
 
             Next
+
+            ' jetzt Abfluss Gesamt-Kosten
+            zeile = 5
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
+                ' Abfluss: rot
+                If totalCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+            Next
+
+
+
 
             zeile = 6
             For ix = 1 To 6
