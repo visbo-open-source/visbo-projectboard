@@ -23618,7 +23618,9 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String, ByRef meldungen As Collection) As List(Of String)
+    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String,
+                                                      ByVal actualDataConfig As SortedList(Of String, clsConfigActualDataImport),
+                                                      ByRef meldungen As Collection) As List(Of String)
 
         Dim kapaConfig As New SortedList(Of String, clsConfigKapaImport)
         Dim kapaFile As String = ""
@@ -23626,6 +23628,7 @@ Public Module agm2
         Dim lastrow As Integer = 0
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim calendarReference As New clsOtherCalendar
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
@@ -23647,6 +23650,7 @@ Public Module agm2
         Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow, meldungen)
 
         If allesOK Then
+
             If Not (IsNothing(kapaFile) Or kapaFile = "") Then
                 kapaFileName = kapaConfig("Kapa-Datei").capacityFile
                 Dim Test As Boolean = (kapaFile = kapaFileName)
@@ -23654,39 +23658,165 @@ Public Module agm2
 
             ' Dateien mit WildCards lesen
             listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
-                         FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+                             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+            If listOfFiles.Count = 0 Then
+                If awinSettings.englishLanguage Then
+                    outputline = "There don't exist any capacity-file: " & kapaFileName
+                Else
+                    outputline = "Es existiert keine solche Kapazitäten-Datei: " & kapaFileName
+                End If
+                meldungen.Add(outputline)
+            Else
+                If kapaConfig.ContainsKey("CalendarReferenceFile") Then
 
-            If listOfFiles.Count >= 1 Then
+                    Dim calendarRefFile As String = kapaConfig("CalendarReferenceFile").Inputfile
+                    If Not IsNothing(calendarRefFile) Then
+                        If My.Computer.FileSystem.FileExists(calendarRefFile) Then
+                            ' read CalendarReferenceFile for correct Calendar for Capacities
+                            result = readCalendarReferenceFile(actualDataConfig, calendarRefFile, calendarReference, meldungen)
 
-                For Each tmpDatei As String In listOfFiles
-                    Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                    result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
 
-                    If result Then
-                        ' hier: merken der erfolgreich importierten KapaFiles
-                        listOfArchivFiles.Add(tmpDatei)
+                            If Not IsNothing(calendarReference) And calendarReference.otherCal.Count > 0 Then
+                                ' Is a calendarReference to consider
+
+                                ' the beginning and the end of the calendar in the capafile an the actualData are different
+                                If listOfFiles.Count >= 1 Then
+
+                                    Call logfileSchreiben("Einlesen Verfügbarkeiten ", "", anzFehler)
+                                    result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, meldungen)
+
+                                    If result Then
+                                        For Each tmpDatei As String In listOfFiles
+
+                                            ' hier: merken der erfolgreich importierten KapaFiles
+                                            listOfArchivFiles.Add(tmpDatei)
+
+                                        Next
+
+                                    End If
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                         & "therefore no availabilities in the organisation written"
+                                    Else
+                                        Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                         & "Es wurde daher jetzt keine berücksichtigt"
+                                        outputline = errMsg
+                                    End If
+                                    ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                                    'meldungen.Add(outputline)
+
+                                    Call logfileSchreiben(outputline, "", anzFehler)
+                                End If
+                            End If
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "The Calendar-Reference-File for the holidays, mentioned in the Configfile, does not exist." & vbLf _
+                                                                   & vbLf & "therefore no availabilities in the organisation written"
+                            Else
+                                outputline = "Die Referenz-Datei für den Urlaubskalender existiert nicht." & vbLf _
+                                                                   & vbLf & "Es wurden daher keine Kapazitäten in die Organisation eingetragen"
+                            End If
+                            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                            meldungen.Add(outputline)
+
+                            Call logfileSchreiben(outputline, "", anzFehler)
+
+                        End If
+
                     Else
+
+                        '' Dateien mit WildCards lesen
+                        'listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                        '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+                        ' there is no calendarReference to consider for importing capacities
+                        If listOfFiles.Count >= 1 Then
+
+                            For Each tmpDatei As String In listOfFiles
+
+                                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                                If result Then
+                                    ' hier: merken der erfolgreich importierten KapaFiles
+                                    listOfArchivFiles.Add(tmpDatei)
+                                Else
+
+                                End If
+                            Next
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                     & "therefore no availabilities in the organisation written"
+                            Else
+                                Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                     & "Es wurde daher jetzt keine berücksichtigt"
+                                outputline = errMsg
+                            End If
+                            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                            meldungen.Add(outputline)
+
+                            Call logfileSchreiben(outputline, "", anzFehler)
+                        End If
 
                     End If
 
-                Next
-
-            Else
-                If awinSettings.englishLanguage Then
-                    outputline = "No file for planning the availabilities of employee! " & vbLf _
-                             & "therefore no availabilities in the organisation written"
                 Else
-                    Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
-                             & "Es wurde daher jetzt keine berücksichtigt"
-                    outputline = errMsg
-                End If
-                ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
-                'meldungen.Add(outputline)
 
-                Call logfileSchreiben(outputline, "", anzFehler)
+                    '' Dateien mit WildCards lesen
+                    'listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                    '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+                    ' there is no calendarReference to consider for importing capacities
+                    If listOfFiles.Count >= 1 Then
+
+                        For Each tmpDatei As String In listOfFiles
+
+                            Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                            result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                            If result Then
+                                ' hier: merken der erfolgreich importierten KapaFiles
+                                listOfArchivFiles.Add(tmpDatei)
+                            Else
+
+                            End If
+                        Next
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                     & "therefore no availabilities in the organisation written"
+                        Else
+                            Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                     & "Es wurde daher jetzt keine berücksichtigt"
+                            outputline = errMsg
+                        End If
+                        ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                        'meldungen.Add(outputline)
+
+                        Call logfileSchreiben(outputline, "", anzFehler)
+                    End If
+
+                End If
             End If
+
+
         Else
             ' irgendetwas mit ConfigFile falsch
+            If awinSettings.englishLanguage Then
+                outputline = "There are some errors, reading the config-file"
+            Else
+
+                outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
+            End If
+            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+            'meldungen.Add(outputline)
+
+            Call logfileSchreiben(outputline, "", anzFehler)
         End If
 
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
