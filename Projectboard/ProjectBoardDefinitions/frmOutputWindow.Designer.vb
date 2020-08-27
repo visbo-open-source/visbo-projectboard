@@ -48,6 +48,7 @@ Partial Class frmOutputWindow
         '
         'LinkLabelKontakt
         '
+        Me.LinkLabelKontakt.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.LinkLabelKontakt.AutoSize = True
         Me.LinkLabelKontakt.LinkBehavior = System.Windows.Forms.LinkBehavior.AlwaysUnderline
         Me.LinkLabelKontakt.Location = New System.Drawing.Point(112, 348)
