@@ -7373,13 +7373,19 @@ Public Module awinDiagrams
                     Next
 
                     ' wenn Kurzarbeit möglich ist 
-                    Dim ShorttermQuota As Double = 0.67
-                    Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+                    If awinSettings.kurzarbeitActivated Then
+                        Dim ShorttermQuota As Double = 0.67
+                        'Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+                        Dim notUtilizedCapacity As Double() = ShowProjekte.getNotUtilizedCapaValuesInMonth()
 
-                    ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
-                    For i As Integer = 0 To tmpResult.Length - 1
-                        tmpTdatenreihe(i) = tmpTdatenreihe(i) - (1 - ShorttermQuota) * notUtilizedCapacity(i)
-                    Next
+                        ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+                        For i As Integer = 0 To tmpResult.Length - 1
+                            ' die nicht ausgelastetete Zeit geht komplett weg, der Mitarbeiter bekommt 1/3 weniger Geld, das Unternehmen finanziert 2/3 vor ...
+                            'tmpTdatenreihe(i) = tmpTdatenreihe(i) - (1 - ShorttermQuota) * notUtilizedCapacity(i)
+                            tmpTdatenreihe(i) = tmpTdatenreihe(i) - notUtilizedCapacity(i)
+                        Next
+                    End If
+
 
                 Catch ex As Exception
 

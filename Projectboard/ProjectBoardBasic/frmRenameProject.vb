@@ -35,7 +35,7 @@ Public Class frmRenameProject
                 End If
                 Call MsgBox(msgtxt)
 
-            ElseIf Not isValidProjectName(newName.Text.Trim) Then
+            ElseIf Not isValidPVName(newName.Text.Trim) Then
                 If awinSettings.englishLanguage Then
                     msgtxt = "Name must not contain any #, (, ) characters ..."
                 Else

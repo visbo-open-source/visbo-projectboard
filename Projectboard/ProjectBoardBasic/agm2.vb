@@ -7312,7 +7312,7 @@ Public Module agm2
 
                         End Try
 
-                    ElseIf Not isValidProjectName(pName) Then
+                    ElseIf Not isValidPVName(pName) Then
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
@@ -8168,7 +8168,7 @@ Public Module agm2
                         pName = ""
                     Else
                         pName = pName.Trim
-                        End If
+                    End If
 
                     If IsNothing(variantName) Then
                         variantName = ""
@@ -9261,7 +9261,7 @@ Public Module agm2
                         Else
                             custFields.Clear()
 
-                            If Not isValidProjectName(pName) Then
+                            If Not isValidPVName(pName) Then
                                 pName = makeValidProjectName(pName)
                             End If
 
@@ -10401,7 +10401,7 @@ Public Module agm2
                         custFields.Clear()
                         description = pName
 
-                        If Not isValidProjectName(pName) Then
+                        If Not isValidPVName(pName) Then
                             pName = makeValidProjectName(pName)
                         End If
 
@@ -12434,7 +12434,7 @@ Public Module agm2
                 End If
 
                 ' jetzt muss der pName normiert werden ..
-                If Not isValidProjectName(currentPName) Then
+                If Not isValidPVName(currentPName) Then
                     currentPName = makeValidProjectName(currentPName)
                 End If
 
@@ -13227,7 +13227,7 @@ Public Module agm2
                                 Dim pNr As String = CStr(CType(.Cells(lupTZeile, 2), Excel.Range).Value).Trim
                                 Dim rupiPName As String = CStr(CType(.Cells(lupTZeile, 3), Excel.Range).Value).Trim
 
-                                If Not isValidProjectName(rupiPName) Then
+                                If Not isValidPVName(rupiPName) Then
                                     rupiPName = makeValidProjectName(rupiPName)
                                 End If
 
@@ -16996,7 +16996,7 @@ Public Module agm2
 
         Dim expFName As String = ""
         If considerAll Then
-            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
+            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & ".xlsx"
         Else
             expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
         End If
@@ -20929,7 +20929,7 @@ Public Module agm2
                         awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
-                    Else
+                        Else
                             Call MsgBox("Es existiert keine Organisation im System!")
                         End If
 
@@ -21885,7 +21885,7 @@ Public Module agm2
 
 
                     nameSopTyp = tmpStr(0).Trim
-                    If Not isValidProjectName(nameSopTyp) Then
+                    If Not isValidPVName(nameSopTyp) Then
                         nameSopTyp = makeValidProjectName(nameSopTyp)
                     End If
                     pName = nameSopTyp

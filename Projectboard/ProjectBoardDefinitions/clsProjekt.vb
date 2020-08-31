@@ -3228,7 +3228,9 @@ Public Class clsProjekt
             Dim fullbreadCrumb As String = Me.getBcElemName(kvp.Key)
 
             If fullbreadCrumb <> "" Then
-                resultList.Add(fullbreadCrumb, kvp.Key)
+                ' fullbreadcrumb ist nicht unbedingt eindeutig, z.B wenn es Meilensteine mit geleichem Namen in der Phase gibt 
+                'resultList.Add(fullbreadCrumb, kvp.Key)
+                resultList.Add(kvp.Key, fullbreadCrumb)
             End If
 
         Next

@@ -5768,7 +5768,14 @@ Public Module Module1
         End If
 
         Try
-            Dim internPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern).Sum
+
+            Dim internPersonellCost As Double
+            If awinSettings.kurzarbeitActivated Then
+                internPersonellCost = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern).Sum
+            Else
+                internPersonellCost = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight).Sum
+            End If
+
             tabelle.Cell(2, 1).Shape.TextFrame2.TextRange.Text = internPersonellCost.ToString(formatierung) & " T€"
 
             Dim externPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.extern).Sum
@@ -5838,17 +5845,37 @@ Public Module Module1
 
             ' tk 17.6.20 Checks ....
             Dim checkExternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.extern)
-            Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
+            'Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
             Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(False)
 
+            ' hier muss geprüft werden, ob die internen Kosten größer als die OrgaFullCost , also die max internen Pers-Kosten sind
+            ' Alles was darüber hinaus geht , muss auf OrgaFullCost beschränkt und auf Externcost verteilt werden 
+            For i As Integer = 0 To showRangeRight - showRangeLeft
+                If internPersonellCost(i) > orgaFullCost(i) Then
+                    Dim diff As Double = internPersonellCost(i) - orgaFullCost(i)
+                    checkExternCost(i) = checkExternCost(i) + diff
+                    internPersonellCost(i) = orgaFullCost(i)
+                End If
+            Next
+
+            Dim rngOffset As Integer = 0
 
             Dim saveShowrangeLeft As Integer = showRangeLeft
-            Dim rngOffset As Integer = 0
+
             If showRangeLeft > 1 Then
                 showRangeLeft = showRangeLeft - 1
                 rngOffset = 1
             End If
-            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+
+            Dim notUtilizedCapacity As Double()
+
+            If awinSettings.kurzarbeitActivated Then
+                'notUtilizedCapacity = ShowProjekte.getCostoValuesInMonth(provideKUGData:=True)
+                notUtilizedCapacity = ShowProjekte.getNotUtilizedCapaValuesInMonth
+            Else
+                ReDim notUtilizedCapacity(showRangeRight - showRangeLeft)
+            End If
+
             showRangeLeft = saveShowrangeLeft
 
 
@@ -5866,6 +5893,8 @@ Public Module Module1
 
 
                 If awinSettings.kurzarbeitActivated Then
+
+
 
                     ' KugCome(i) adressiert den Folge-Monat, von notUtilizedCapacity(i) 
                     kugCome(i) = notUtilizedCapacity(i) * ShorttermQuota
@@ -5904,15 +5933,15 @@ Public Module Module1
             Next
 
 
-            If awinSettings.kurzarbeitActivated And awinSettings.visboDebug Then
-                Dim checkTotalCost(5) As Double
-                For ix = 0 To 5
-                    checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
-                    If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
-                        Call MsgBox("Unterschiede ! Intern und extern")
-                    End If
-                Next
-            End If
+            'If awinSettings.kurzarbeitActivated And awinSettings.visboDebug Then
+            '    Dim checkTotalCost(5) As Double
+            '    For ix = 0 To 5
+            '        checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
+            '        If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
+            '            Call MsgBox("Unterschiede ! Intern und extern")
+            '        End If
+            '    Next
+            'End If
 
 
 
@@ -5925,11 +5954,11 @@ Public Module Module1
 
             Dim atLeastOneDifference As Boolean = False
 
-            'For ix = 0 To 5
-            '    If System.Math.Abs(testCashFlow(ix) - cashflow(ix)) > 0.01 Then
-            '        atLeastOneDifference = True
-            '    End If
-            'Next
+            For ix = 0 To 5
+                If System.Math.Abs(testCashFlow(ix) - cashflow(ix)) > 0.01 Then
+                    atLeastOneDifference = True
+                End If
+            Next
 
             'If atLeastOneDifference Then
             '    If awinSettings.englishLanguage Then

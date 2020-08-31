@@ -3234,9 +3234,9 @@ Imports System.Web
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3281,9 +3281,9 @@ Imports System.Web
 
             Case "PT4G2B3" ' Export Priorisierungsliste
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -6349,7 +6349,7 @@ Imports System.Web
         ' Schließen des LogFiles
         Call logfileSchliessen()
 
-        If listOfArchivFiles.Count > 0 Then
+        If listOfArchivFiles.Count > 0 And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
             Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
         End If
 

@@ -1435,7 +1435,7 @@ Public Module awinGeneralModules
 
             Catch ex As Exception
 
-
+                Call MsgBox("Fehler in Import: Line Number 1438 " & vbLf & ex.Message)
 
             End Try
 
@@ -1579,19 +1579,19 @@ Public Module awinGeneralModules
         End If
 
         For Each tstKvp As KeyValuePair(Of String, String) In baseLineBreadCrumbIDList
-            If elemIDIstMeilenstein(tstKvp.Value) Then
-                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
+            If elemIDIstMeilenstein(tstKvp.Key) Then
+                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Key)
                 If Not IsNothing(tstMS) Then
-                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich:   " & tstMS.nameID & "; " & tstKvp.Key
+                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Value Then
+                        logMessage = "baseline ungleich:   " & tstMS.nameID & "; " & tstKvp.Value
                         result.Add(logMessage)
                     End If
                 End If
             Else
-                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
+                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Key)
                 If Not IsNothing(tstPh) Then
-                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Key
+                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Value Then
+                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Value
                         result.Add(logMessage)
                     End If
                 End If
@@ -1600,19 +1600,19 @@ Public Module awinGeneralModules
         Next
 
         For Each tstKvp As KeyValuePair(Of String, String) In lastProjBreadCrumbIDList
-            If elemIDIstMeilenstein(tstKvp.Value) Then
-                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Value)
+            If elemIDIstMeilenstein(tstKvp.Key) Then
+                Dim tstMS As clsMeilenstein = hproj.getMilestoneByID(tstKvp.Key)
                 If Not IsNothing(tstMS) Then
-                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Key Then
-                        logMessage = "lastproj ungleich " & tstMS.nameID & "; " & tstKvp.Key
+                    If Not hproj.getBcElemName(tstMS.nameID) = tstKvp.Value Then
+                        logMessage = "lastproj ungleich " & tstMS.nameID & "; " & tstKvp.Value
                         result.Add(logMessage)
                     End If
                 End If
             Else
-                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Value)
+                Dim tstPh As clsPhase = hproj.getPhaseByID(tstKvp.Key)
                 If Not IsNothing(tstPh) Then
-                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Key Then
-                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Key
+                    If Not hproj.getBcElemName(tstPh.nameID) = tstKvp.Value Then
+                        logMessage = "baseline ungleich " & tstPh.nameID & "; " & tstKvp.Value
                         result.Add(logMessage)
                     End If
                 End If
@@ -2042,7 +2042,7 @@ Public Module awinGeneralModules
         ElseIf pname.Trim.Length < 2 Then
             fctResult = False
         Else
-            If Not isValidProjectName(pname) Then
+            If Not isValidPVName(pname) Then
                 pname = makeValidProjectName(pname)
             End If
 
@@ -2442,7 +2442,7 @@ Public Module awinGeneralModules
     ''' <param name="pName"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function isValidProjectName(ByVal pName As String) As Boolean
+    Public Function isValidPVName(ByVal pName As String) As Boolean
         Dim ergebnis As Boolean = False
 
         ' wenn beides enthalten ist ...
@@ -2459,7 +2459,7 @@ Public Module awinGeneralModules
             ergebnis = True
         End If
 
-        isValidProjectName = ergebnis
+        isValidPVName = ergebnis
 
     End Function
 

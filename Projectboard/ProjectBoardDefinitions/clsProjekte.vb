@@ -2799,24 +2799,37 @@ Public Class clsProjekte
 
                 ' den Vormonat mit betrachten 
 
-                If showRangeLeft > 1 Then
-                    showRangeLeft = showRangeLeft - 1
-                End If
-
-                Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
-                showRangeLeft = saveShowrangeLeft
 
                 Dim orgaFullCost As Double() = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight)
                 Dim externCost As Double() = getCostGpValuesInMonth(PTrt.extern)
+                Dim internCost As Double() = getCostGpValuesInMonth(PTrt.intern)
                 Dim otherCost As Double() = getTotalCostValuesInMonth(False)
 
-                ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
                 For i As Integer = 0 To zeitraum
-                    kugCome(i) = notUtilizedCapacity(i) * shortTermQuota
-                    kugGo(i) = notUtilizedCapacity(i + 1) * shortTermQuota
+                    If internCost(i) > orgaFullCost(i) Then
+                        ' das kann ja dann gar nicht geleistet werden - 
+                        ' es muss von Externen gemacht werden 
+                        Dim diff As Double = internCost(i) - orgaFullCost(i)
+                        internCost(i) = orgaFullCost(i)
+                        externCost(i) = externCost(i) + diff
+                    End If
                 Next
 
                 If awinSettings.kurzarbeitActivated Then
+
+                    If showRangeLeft > 1 Then
+                        showRangeLeft = showRangeLeft - 1
+                    End If
+                    'Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth(provideKUGData:=True)
+                    Dim notUtilizedCapacity As Double() = ShowProjekte.getNotUtilizedCapaValuesInMonth()
+                    showRangeLeft = saveShowrangeLeft
+
+                    ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+                    For i As Integer = 0 To zeitraum
+                        kugCome(i) = notUtilizedCapacity(i) * shortTermQuota
+                        kugGo(i) = notUtilizedCapacity(i + 1) * shortTermQuota
+                    Next
+
                     For i As Integer = 0 To zeitraum
                         ' notUtilizedCapacity(i+1) adressiert den gleichen Monat wie invoices(i)
                         cashFlowValues(i) = invoices(i) + kugCome(i) - (kugGo(i) + externCost(i) + otherCost(i) + orgaFullCost(i) - notUtilizedCapacity(i + 1))
@@ -4431,12 +4444,46 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
-    ''' gibt die Personalkosten zurück, die durch die internen Rollen entstehen, die in keinen Projekten gebunden sind 
+    ''' returns in T€ rated values of non-utilized capacity in roles given in myCustomerRole.specfics
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getNotUtilizedCapaValuesInMonth() As Double()
+        Get
+            Dim costValues() As Double
+            Dim curCostValues() As Double
+            Dim zeitraum As Integer
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+
+            Dim IDArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+            If IsNothing(IDArray) Then
+                ReDim IDArray(1)
+                IDArray(1) = -1 ' das bedeutet nachher: betrachte einfache alle Rollen in der Organisation als Summe
+            End If
+
+            For Each roleID As Integer In IDArray
+                curCostValues = getCostoValuesInMonth(roleID, provideKUGData:=True)
+                For ix As Integer = 0 To zeitraum
+                    costValues(ix) = costValues(ix) + curCostValues(ix)
+                Next
+            Next
+
+            getNotUtilizedCapaValuesInMonth = costValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' returns costs which occur through underutilization 
+    ''' when KUGData is required there is no summation over the timespan
+    '''  
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1) As Double()
+    ''' <remarks>im Falle Kurzarbeit wird wird das für jeden Monat betrachtet, es gibt keinen ausgleich ! also Mrz ist unterausgelastet, Apr ist überausgelastet</remarks>
+    Public ReadOnly Property getCostoValuesInMonth(Optional ByVal topNodeID As Integer = -1, Optional ByVal provideKUGData As Boolean = False) As Double()
 
         Get
             Dim costValues() As Double
@@ -4507,12 +4554,11 @@ Public Class clsProjekte
                                     costValues(ix) = costValues(ix) - roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
                                 Else
 
-                                    ' interne Ressourcen kosten , können aber nicht verrechnet werden 
-                                    ' wenn rolevalue > kapavalues, dann enstehen negaitiveZahlen - die müssen dann nachher verrechnet werden ...
+                                    ' wenn rolevalue > kapavalues, dann enstehen negativeZahlen - die müssen dann nachher verrechnet werden ...
 
+                                    ' d.h wenn Achim Überstunden macht, dann werden die Überstunden mit der Unterauslastung von Annabell verrechnet - sofern beide topNodeID als Parent haben 
                                     costValues(ix) = costValues(ix) +
                                                  (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
 
 
                                 End If
@@ -4532,26 +4578,38 @@ Public Class clsProjekte
             ' aber so dass die positiven durch die negativen erniedrigt werden ... 
             ' andernfalls werden Unterauslastungen ausgewiesen, wenn ein einiziger Monta eine Unterauslastung hat, alle anderen sind dramatisch überausgelastet ... 
 
-
-            If costValues.Sum <= 0 Then
-                ReDim costValues(zeitraum)
-            Else
-                ' if there are months with over and under-utilization then smoothen it out 
-                Dim hasAnyNegative As Boolean = False
+            If provideKUGData Then
+                ' nur die Elemente, die negativ sind, also Überauslastung haben, auf Null setzen 
                 For ix = 0 To zeitraum
-                    If costValues(ix) < 0 Then
-                        hasAnyNegative = True
-                        Exit For
-                    End If
-                Next
 
-                If hasAnyNegative Then
-                    ' jetzt muss einfach die Gesamt-Summe darauf verteilt werden 
-                    Dim checkSum(0) As Double
-                    checkSum(0) = costValues.Sum
-                    costValues = calcVerteilungAufMonate(StartofCalendar.AddMonths(showRangeLeft), StartofCalendar.AddMonths(showRangeRight), checkSum, 1.0)
+                    If costValues(ix) < 0 Then
+                        costValues(ix) = 0
+                    End If
+
+                Next ix
+            Else
+                If costValues.Sum <= 0 Then
+                    ReDim costValues(zeitraum)
+                Else
+                    ' if there are months with over and under-utilization then smoothen it out 
+                    Dim hasAnyNegative As Boolean = False
+                    For ix = 0 To zeitraum
+                        If costValues(ix) < 0 Then
+                            hasAnyNegative = True
+                            Exit For
+                        End If
+                    Next
+
+                    If hasAnyNegative Then
+                        ' jetzt muss einfach die Gesamt-Summe darauf verteilt werden 
+                        Dim checkSum(0) As Double
+                        checkSum(0) = costValues.Sum
+                        costValues = calcVerteilungAufMonate(StartofCalendar.AddMonths(showRangeLeft), StartofCalendar.AddMonths(showRangeRight), checkSum, 1.0)
+                    End If
                 End If
             End If
+
+
 
 
 
