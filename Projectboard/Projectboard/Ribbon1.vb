@@ -6251,12 +6251,6 @@ Imports System.Web
         ' öffnen des LogFiles
         Call logfileOpen()
 
-        Dim datum As Date = #11/18/2020#
-
-        Dim freeDay As String = Feiertag(datum)
-
-        Call MsgBox(freeDay)
-
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
             weiterMachen = True

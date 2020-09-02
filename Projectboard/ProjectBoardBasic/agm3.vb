@@ -112,6 +112,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -125,6 +127,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -138,6 +142,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -152,6 +158,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -165,6 +173,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -178,6 +188,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -191,6 +203,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -204,6 +218,8 @@ Public Module agm3
                                             configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
                                             configLine.Typ = CStr(.Cells(i, TypCol).value)
                                             configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
                                             configLine.column = CInt(.Cells(i, SNCol).value)
                                             configLine.columnDescript = CStr(.Cells(i, SUCol).value)
                                             configLine.row = CInt(.Cells(i, ZNCol).value)
@@ -2309,14 +2325,14 @@ Public Module agm3
         Dim freeListe As New SortedList(Of Date, String)
         Dim NameFeiertag As String = officialHoliday(DateSerial(AktJahr, AktMonat, 1), freeListe)
         Dim AnzahlTage As Integer = DateTime.DaysInMonth(AktJahr, AktMonat)
-        Dim AnzahlFeiertage As Integer = 0
+        Dim AnzahlfreieTage As Integer = 0
         For i As Integer = 1 To AnzahlTage
-            Dim day As New Date(AktJahr, AktMonat, i)
-            If freeListe.ContainsKey(day) And Not (day.DayOfWeek = DayOfWeek.Sunday Or day.DayOfWeek = DayOfWeek.Saturday) Then
-                AnzahlFeiertage += 1
+            Dim day As Date = DateSerial(AktJahr, AktMonat, i)
+            If freeListe.ContainsKey(day) Or day.DayOfWeek = DayOfWeek.Sunday Or day.DayOfWeek = DayOfWeek.Saturday Then
+                AnzahlfreieTage += 1
             End If
         Next
-        freeDaysInMonth = AnzahlFeiertage
+        freeDaysInMonth = AnzahlfreieTage
     End Function
 
     ''' <summary>
@@ -2356,18 +2372,201 @@ Public Module agm3
             Dim defaultCal As New clsDefaultCalendar
             Dim monthCal As New clsBusinessDays
             Dim relMonth As Integer = getColumnOfDate(StartofCalendar)
-            For y As Integer = Year(StartofCalendar) To Year(StartofCalendar) + 20
+            For y As Integer = Year(StartofCalendar) To Year(StartofCalendar) + 20 - 1
                 For m As Integer = Month(StartofCalendar) To 12
                     monthCal = New clsBusinessDays
                     monthCal.year = y
                     monthCal.month = m
                     monthCal.noOfNonBusinessDays = freeDaysInMonth(y, m)
-                    monthCal.noOfBusinessDays = WorkingDaysInMonth(y, m) - monthCal.noOfNonBusinessDays
+                    monthCal.noOfBusinessDays = DateTime.DaysInMonth(y, m) - monthCal.noOfNonBusinessDays
+                    Dim check As Boolean = (monthCal.noOfBusinessDays = WorkingDaysInMonth(y, m))
                     defaultCal.defCal.Add(relMonth, monthCal)
                     relMonth += 1
 
                 Next        ' for m 
             Next            ' for y
+
+            ' Read capacities and/or holidays for every role 
+            Dim addOnHolidays As New SortedList(Of String, clsDefaultCalendar)
+
+            Dim firstColumn As Integer = 0
+            Dim firstRow As Integer = 0
+            Dim lastRow As Integer = 0
+            Dim lastColumn As Integer = 0
+
+            'Dim noColor As Integer = -4142
+            'Dim whiteColor As Integer = 2
+            Dim currentWS As Excel.Worksheet
+            Dim index As Integer = 1
+            Dim dateConsidered As Date
+
+            'Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
+            Dim monthName As String = ""
+
+            Dim colDate As Integer = 0
+            Dim anzDays As Integer = 0
+
+            'Dim monthDays As New SortedList(Of Integer, Integer)
+
+            Dim hrole As New clsRollenDefinition
+            Dim rolename As String = ""
+            Dim absenceDay As Date
+            Dim absenceType As String = ""
+
+            Dim regexpression As Regex
+
+            Dim outPutCollection As New Collection
+
+            If formerEE Then
+                appInstance.EnableEvents = False
+            End If
+
+            If formerSU Then
+                appInstance.ScreenUpdating = False
+            End If
+
+            enableOnUpdate = False
+
+            Dim roleCol As Integer = kapaConfig("role").column
+            Dim dateCol As Integer = kapaConfig("date").column
+            Dim absenceCol As Integer = kapaConfig("absence type").column
+            Dim roleBusy As New clsBusinessDays
+            Dim roleCapa As New clsDefaultCalendar
+
+            ' öffnen des Files 
+            If My.Computer.FileSystem.FileExists(kapaFileName) Then
+
+                Try
+                    kapaWB = appInstance.Workbooks.Open(kapaFileName)
+
+                    Try
+                        For index = 1 To appInstance.Worksheets.Count
+
+                            Dim tab As String = kapaConfig("valueStart").tabName
+
+                            currentWS = CType(appInstance.Worksheets(index), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                            With currentWS
+
+                                ' Auslesen erste Verfügbarkeitsspalte
+                                firstColumn = kapaConfig("valueStart").column
+                                firstRow = kapaConfig("valueStart").row
+                                Dim lastLineConfig As String = kapaConfig("LastLine").content
+                                If lastLineConfig = "" Then
+                                    lastRow = CType(currentWS.Cells(10000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+                                Else
+                                    ' TODO: muss gemäss RegEx berechnet werden
+                                End If
+
+                                For ix As Integer = firstRow To lastRow
+
+                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String)
+                                    absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
+                                    absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
+                                    If IsNothing(absenceType) Then
+                                        ' TODO Fehlermeldung oder Message
+                                    Else
+                                        If kapaConfig("absence type").regex = "RegEx" Then
+                                            'regexpression = New Regex("[0-9]{4}")
+                                            regexpression = New Regex(kapaConfig("absence type").content)
+                                            Dim match As Match = regexpression.Match(absenceType)
+                                            If match.Success Then
+                                                absenceType = match.Value
+                                            Else
+                                                absenceType = ""
+                                            End If
+                                        End If
+                                    End If
+                                    If absenceType <> "" Then
+                                        Dim columnOfDate As Integer = getColumnOfDate(absenceDay)
+                                        If addOnHolidays.ContainsKey(rolename) Then
+                                            roleCapa = addOnHolidays(rolename)
+                                        Else
+                                            roleCapa = New clsDefaultCalendar
+                                        End If
+
+                                        If roleCapa.defCal.ContainsKey(columnOfDate) Then
+                                            roleBusy = roleCapa.defCal(columnOfDate)
+                                        Else
+                                            roleBusy = New clsBusinessDays
+                                        End If
+
+                                        roleBusy.month = Month(absenceDay)
+                                        roleBusy.year = Year(absenceDay)
+
+                                        Dim NameFeiertag As String = officialHoliday(absenceDay)
+                                        If (NameFeiertag = "") _
+                                                And Not (absenceDay.DayOfWeek = DayOfWeek.Sunday) _
+                                                And Not (absenceDay.DayOfWeek = DayOfWeek.Saturday) Then
+                                            ' absenceDay ist als zusätzlicher Nicht-Arbeitstag zu berücksichtigen
+                                            roleBusy.noOfNonBusinessDays += 1
+                                        Else
+                                            ' Tag schon als nicht Arbeitstag berücksichtigt
+                                        End If
+
+                                        If roleCapa.defCal.ContainsKey(columnOfDate) Then
+                                            roleCapa.defCal.Remove(columnOfDate)
+                                        End If
+                                        roleCapa.defCal.Add(columnOfDate, roleBusy)
+
+                                        If addOnHolidays.ContainsKey(rolename) Then
+                                            addOnHolidays.Remove(rolename)
+                                        End If
+                                        addOnHolidays.Add(rolename, roleCapa)
+                                    End If
+
+                                Next   ' row
+
+                            End With
+                            'End If
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+                Catch ex As Exception
+
+                End Try
+
+                ' Übertragen der Urlaubstage in die Kapazität der Organisations-mitglieder
+
+                For Each kvp As KeyValuePair(Of String, clsDefaultCalendar) In addOnHolidays
+                    rolename = kvp.Key
+                    roleCapa = kvp.Value
+                    ' bereits in orga vorhandene Kapa holen
+                    hrole = RoleDefinitions.getRoledef(rolename)
+                    If Not IsNothing(hrole) Then
+                        For Each kvpCapa As KeyValuePair(Of Integer, clsBusinessDays) In roleCapa.defCal
+                            ' default BusinessDays im Monat kvpCapa.key
+                            Dim colofDate As Integer = kvpCapa.Key
+                            ' Anzahl Arbeitstage, errechnet gemäß DefaultKalender
+                            Dim defaultDays As Integer = defaultCal.defCal(kvpCapa.Key).noOfBusinessDays
+                            ' nur die Tage, die kein Feiertag und kein WE sind
+                            Dim Urlaubsdays As Integer = kvpCapa.Value.noOfNonBusinessDays
+                            Dim anzArbTage As Integer = defaultDays - Urlaubsdays
+                            ' capa = Kapazität, die für Projektarbeit bleibt
+                            Dim capa As Double = anzArbTage * hrole.defaultDayCapa / 8
+                            'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
+                            If colofDate >= getColumnOfDate(hrole.entryDate) And colofDate < getColumnOfDate(hrole.exitDate) Then
+                                hrole.kapazitaet(colofDate) = capa
+                            Else
+                                hrole.kapazitaet(colofDate) = 0
+                            End If
+                        Next
+                    Else
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Error: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
+                        Else
+                            msgtxt = "Fehler: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
+                        End If
+                        'oPCollection.Add(msgtxt)
+                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                    End If
+
+                Next
+
+                Dim halt As Boolean = True
+
+            End If
 
 
         ElseIf ImportTyp = 2 Then
@@ -3561,7 +3760,8 @@ Public Module agm3
     ''' </summary>
     ''' <param name="Datum"></param>
     ''' <returns></returns>
-    Public Function officialHoliday(Datum As Date, ByRef feiertagsliste As SortedList(Of Date, String)) As String
+    Public Function officialHoliday(Datum As Date,
+                                    Optional ByRef feiertagsliste As SortedList(Of Date, String) = Nothing) As String
         Dim J%, D%
         Dim O As Date
         J = Year(Datum)
@@ -3619,26 +3819,28 @@ Public Module agm3
                 officialHoliday = ""
         End Select
 
-        Dim feiertagListe As New SortedList(Of Date, String)
-        feiertagListe.Add(DateSerial(J, 1, 1), "Neujahr")
-        feiertagListe.Add(DateSerial(J, 1, 6), "Dreikönig*")
-        feiertagListe.Add(DateAdd("D", -2, O), "Karfreitag")
-        feiertagListe.Add(O, "Ostersonntag")
-        feiertagListe.Add(DateAdd("D", 1, O), "Ostermontag")
-        feiertagListe.Add(DateSerial(J, 5, 1), "Erster Mai")
-        feiertagListe.Add(DateAdd("D", 39, O), "Christi Himmelfahrt")
-        feiertagListe.Add(DateAdd("D", 49, O), "Pfingstsonntag")
-        feiertagListe.Add(DateAdd("D", 50, O), "Pfingstmontag")
-        feiertagListe.Add(DateAdd("D", 60, O), "Fronleichnam*")
-        feiertagListe.Add(DateSerial(J, 8, 15), "Maria Himmelfahrt*")
-        feiertagListe.Add(DateSerial(J, 10, 3), "Deutsche Einheit")
-        feiertagListe.Add(BussUndBettag(J), "Buß- und Bettag*")
-        feiertagListe.Add(DateSerial(J, 10, 31), "Reformationstag*")
-        feiertagListe.Add(DateSerial(J, 11, 1), "Allerheiligen*")
-        feiertagListe.Add(DateSerial(J, 12, 24), "Heilig Abend*")
-        feiertagListe.Add(DateSerial(J, 12, 25), "EWeihnacht")
-        feiertagListe.Add(DateSerial(J, 12, 26), "ZWeihnacht")
-        feiertagListe.Add(DateSerial(J, 12, 31), "Silvester*")
+        If Not IsNothing(feiertagsliste) Then
+            'Dim feiertagsliste As New SortedList(Of Date, String)
+            feiertagsliste.Add(DateSerial(J, 1, 1), "Neujahr")
+            feiertagsliste.Add(DateSerial(J, 1, 6), "Dreikönig*")
+            feiertagsliste.Add(DateAdd("D", -2, O), "Karfreitag")
+            feiertagsliste.Add(O, "Ostersonntag")
+            feiertagsliste.Add(DateAdd("D", 1, O), "Ostermontag")
+            feiertagsliste.Add(DateSerial(J, 5, 1), "Erster Mai")
+            feiertagsliste.Add(DateAdd("D", 39, O), "Christi Himmelfahrt")
+            feiertagsliste.Add(DateAdd("D", 49, O), "Pfingstsonntag")
+            feiertagsliste.Add(DateAdd("D", 50, O), "Pfingstmontag")
+            feiertagsliste.Add(DateAdd("D", 60, O), "Fronleichnam*")
+            feiertagsliste.Add(DateSerial(J, 8, 15), "Maria Himmelfahrt*")
+            feiertagsliste.Add(DateSerial(J, 10, 3), "Deutsche Einheit")
+            feiertagsliste.Add(BussUndBettag(J), "Buß- und Bettag*")
+            feiertagsliste.Add(DateSerial(J, 10, 31), "Reformationstag*")
+            feiertagsliste.Add(DateSerial(J, 11, 1), "Allerheiligen*")
+            feiertagsliste.Add(DateSerial(J, 12, 24), "Heilig Abend*")
+            feiertagsliste.Add(DateSerial(J, 12, 25), "EWeihnacht")
+            feiertagsliste.Add(DateSerial(J, 12, 26), "ZWeihnacht")
+            feiertagsliste.Add(DateSerial(J, 12, 31), "Silvester*")
+        End If
 
     End Function
 
