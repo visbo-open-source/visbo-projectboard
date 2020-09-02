@@ -23677,13 +23677,15 @@ Public Module agm2
 
 
                             If Not IsNothing(calendarReference) And calendarReference.otherCal.Count > 0 Then
-                                ' Is a calendarReference to consider
-
-                                ' the beginning and the end of the calendar in the capafile an the actualData are different
-                                If listOfFiles.Count >= 1 Then
-
+                                ' There is a calendarReference to consider
+                                Dim referenzListe As New SortedList(Of String, String)
+                                If listOfFiles.Count > 0 Then
+                                    referenzListe = createReferenzListe(kapaConfig, listOfFiles)
+                                End If
+                                If referenzListe.Count > 0 And referenzListe.Count = listOfFiles.Count Then
+                                    ' in referenzListe ist zu jedem Kapa-Monat der Zeuss-Dateiname festgehalten
                                     Call logfileSchreiben("Einlesen Verfügbarkeiten ", "", anzFehler)
-                                    result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, meldungen)
+                                    result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, referenzListe, meldungen)
 
                                     If result Then
                                         For Each tmpDatei As String In listOfFiles
@@ -23695,19 +23697,23 @@ Public Module agm2
 
                                     End If
                                 Else
-                                    If awinSettings.englishLanguage Then
-                                        outputline = "No file for planning the availabilities of employee! " & vbLf _
-                                         & "therefore no availabilities in the organisation written"
-                                    Else
-                                        Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
-                                         & "Es wurde daher jetzt keine berücksichtigt"
-                                        outputline = errMsg
-                                    End If
-                                    ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
-                                    'meldungen.Add(outputline)
-
-                                    Call logfileSchreiben(outputline, "", anzFehler)
+                                    outputline = "Es sind Fehler aufgetreten bei der Zuordnung der Kapa-Dateien zum entsprechenden Monat"
+                                    meldungen.Add(outputline)
                                 End If
+
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                         & "therefore no availabilities in the organisation written"
+                                Else
+                                    Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                         & "Es wurde daher jetzt keine berücksichtigt"
+                                    outputline = errMsg
+                                End If
+                                ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                                'meldungen.Add(outputline)
+
+                                Call logfileSchreiben(outputline, "", anzFehler)
                             End If
 
                         Else
@@ -23790,10 +23796,10 @@ Public Module agm2
                     Else
                         If awinSettings.englishLanguage Then
                             outputline = "No file for planning the availabilities of employee! " & vbLf _
-                                     & "therefore no availabilities in the organisation written"
+                                         & "therefore no availabilities in the organisation written"
                         Else
                             Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
-                                     & "Es wurde daher jetzt keine berücksichtigt"
+                                         & "Es wurde daher jetzt keine berücksichtigt"
                             outputline = errMsg
                         End If
                         ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
@@ -23803,25 +23809,126 @@ Public Module agm2
                     End If
 
                 End If
-            End If
 
+            End If
 
         Else
             ' irgendetwas mit ConfigFile falsch
             If awinSettings.englishLanguage Then
                 outputline = "There are some errors, reading the config-file"
             Else
-
                 outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
             End If
-            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
-            'meldungen.Add(outputline)
-
-            Call logfileSchreiben(outputline, "", anzFehler)
         End If
+
+        ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+        'meldungen.Add(outputline)
+
+        'Call logfileSchreiben(outputline, "", anzFehler)
+
 
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
 
+    End Function
+    Public Function createReferenzListe(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport), ByVal listOfFiles As ObjectModel.ReadOnlyCollection(Of String)) As SortedList(Of String, String)
+        ' the beginning and the end of the calendar in the capafile an the actualData are different
+
+        Dim kfWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim kfWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+
+        Call logfileSchreiben("Nachsehen, welche Monate zu welcher KapaDatei zuzuordnen sind", "", anzFehler)
+        Dim monthFileList As New SortedList(Of String, String)
+        Dim zuordn_ok As Boolean = True
+
+        For Each kf As String In listOfFiles
+            If My.Computer.FileSystem.FileExists(kf) Then
+
+                Try
+                    ' öffnen eines relevanten Zeuss-files und nachsehen welcher Monat hier referenziert ist
+                    kfWB = appInstance.Workbooks.Open(kf)
+                    Dim Index As Integer = 1
+                    Dim regexpression As Regex
+                    kfWS = CType(appInstance.Worksheets(Index), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    With kfWS
+                        Dim zuordn_ok_yyyy As Boolean = True
+                        ' Auslesen der Jahreszahl, falls vorhanden
+                        Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                        Dim jahr As Integer = 0
+                        If Not IsNothing(hjahr) Then
+                            If kapaConfig("year").regex = "RegEx" Then
+                                'regexpression = New Regex("[0-9]{4}")
+                                regexpression = New Regex(kapaConfig("year").content)
+                                Dim match As Match = regexpression.Match(hjahr)
+                                If Not match.Success Then
+                                    zuordn_ok_yyyy = False
+                                Else
+                                    jahr = CInt(match.Value)
+                                End If
+                            End If
+                        Else
+                            zuordn_ok_yyyy = False
+                        End If
+                        If Not zuordn_ok_yyyy Then
+                            Call logfileSchreiben("Fehler in Zeuss-Datei (Jahreszahl): " & kf, "", anzFehler)
+                        End If
+
+                        ' zuordn_ok_mm zurücksetzen
+                        Dim zuordn_ok_mm = True
+
+                        ' Auslesen des relevanten Monats
+                        Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+
+                        If Not IsNothing(hmonth) Then
+                            If kapaConfig("month").regex = "RegEx" Then
+                                regexpression = New Regex(kapaConfig("month").content)
+                                Dim Match As Match = regexpression.Match(hmonth)
+                                If Not Match.Success Then
+                                    zuordn_ok_mm = False
+                                Else
+                                    hmonth = Match.Value
+                                End If
+                            Else
+                                zuordn_ok_mm = False
+                            End If
+                        Else
+                            zuordn_ok_mm = False
+                        End If
+
+                        If Not zuordn_ok_mm Then
+                            Call logfileSchreiben("Fehler in Zeuss-Datei (Monat): " & kf, "", anzFehler)
+                        End If
+
+                        If (zuordn_ok_mm And zuordn_ok_yyyy) Then
+                            ' Zuordnung in die Liste eintragen
+                            Dim dateConsidered As Date
+                            Dim isdate As Boolean = DateTime.TryParse(hmonth & " " & jahr.ToString, dateConsidered)
+
+                            Dim relYearMonth As String = jahr.ToString & Month(dateConsidered).ToString("D2")
+                            If Not monthFileList.ContainsKey(relYearMonth) Then
+                                monthFileList.Add(relYearMonth, kf)
+                            End If
+                        Else
+                            zuordn_ok = zuordn_ok And False
+                        End If
+
+                    End With
+
+                    kfWB.Close()        ' Zeuss-Datei wieder schließen
+
+                Catch ex As Exception
+                    Call logfileSchreiben("Fehler beim Öffnen der Datei " & kf, "", anzFehler)
+                End Try
+            Else
+                Call logfileSchreiben("Datei existiert nicht: " & kf, "", anzFehler)
+            End If
+        Next   ' kf of listOfFiles
+
+        If Not zuordn_ok Then
+            monthFileList = New SortedList(Of String, String)
+            Call logfileSchreiben("Fehler bei der Zuordnung der Kapa-Inputfiles zu Monaten", "", anzFehler)
+        End If
+
+        createReferenzListe = monthFileList
     End Function
 
     ''' <summary>

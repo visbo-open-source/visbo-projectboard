@@ -15,7 +15,7 @@ Public Class frmInfoActualDataMonth
     Private Sub frmInfoActualDataMonth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ' zugelassenen Min und Max-Werte für das Datum setzen 
         MonatJahr.MinDate = StartofCalendar
-        MonatJahr.MaxDate = Date.Now.Date.AddHours(23)
+        MonatJahr.MaxDate = Date.Now.AddDays(-1 * Date.Now.Day + 1).AddMonths(1)
 
         ' Default setzen 
         ' Vorbesetzung des Datums für Istdaten ist aktuelles Datum
