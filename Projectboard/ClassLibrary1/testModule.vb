@@ -17295,6 +17295,9 @@ Public Module testModule
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
+                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                .Line.DashStyle = MsoLineDashStyle.msoLineDash
+                            End If
                         Catch ex As Exception
 
                         End Try

@@ -3248,9 +3248,9 @@ Imports System.Web
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3295,9 +3295,9 @@ Imports System.Web
 
             Case "PT4G2B3" ' Export Priorisierungsliste
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -6363,7 +6363,7 @@ Imports System.Web
         ' Schließen des LogFiles
         Call logfileSchliessen()
 
-        If listOfArchivFiles.Count > 0 Then
+        If listOfArchivFiles.Count > 0 And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
             Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
         End If
 
@@ -7388,14 +7388,16 @@ Imports System.Web
                             Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
                             Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                            Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                            ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                            Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+                            'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                            '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                            'Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
                         End If
 
                     Else
+
                         Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
                         Call logfileSchreiben(outputCollection)
+
                     End If
                 Else
                     If outputCollection.Count > 0 Then

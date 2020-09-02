@@ -17,6 +17,13 @@ Public Class frmEinstellungen
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
         chkbxInvoices.Checked = awinSettings.enableInvoices
 
+        If chkbx_KUG_active.Checked <> awinSettings.kurzarbeitActivated Then
+            dontFire = True
+            chkbx_KUG_active.Checked = awinSettings.kurzarbeitActivated
+            dontFire = False
+        End If
+
+
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             loadPFV.Checked = awinSettings.loadPFV
         Else
@@ -82,6 +89,7 @@ Public Class frmEinstellungen
             chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
             chkboxAmpel.Text = "show traffic lights"
             chkbxInvoices.Text = "Edit Invoices & Penalties"
+            chkbx_KUG_active.Text = "Short-time work possible"
             Label1.Text = "Language for Reports"
         Else
             GroupBox1.Text = "Vergleich mit welcher Version"
@@ -96,6 +104,7 @@ Public Class frmEinstellungen
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"
             chkboxAmpel.Text = "Ampel anzeigen"
             chkbxInvoices.Text = "Rechnungen und Vertrags-Strafen bearbeiten"
+            chkbx_KUG_active.Text = "Kurzarbeit ist möglich"
             Label1.Text = "Sprache für Reports"
         End If
 
@@ -188,6 +197,14 @@ Public Class frmEinstellungen
             awinSettings.enableInvoices = True
         Else
             awinSettings.enableInvoices = False
+        End If
+    End Sub
+
+    Private Sub chkbx_KUG_active_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_KUG_active.CheckedChanged
+        If chkbx_KUG_active.Checked Then
+            awinSettings.kurzarbeitActivated = True
+        Else
+            awinSettings.kurzarbeitActivated = False
         End If
     End Sub
 End Class

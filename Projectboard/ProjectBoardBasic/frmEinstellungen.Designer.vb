@@ -34,6 +34,7 @@ Partial Class frmEinstellungen
         Me.loadPFV = New System.Windows.Forms.CheckBox()
         Me.chkbxPhasesAnteilig = New System.Windows.Forms.CheckBox()
         Me.chkbxInvoices = New System.Windows.Forms.CheckBox()
+        Me.chkbx_KUG_active = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -61,7 +62,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(13, 200)
+        Me.Label1.Location = New System.Drawing.Point(13, 228)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -71,7 +72,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 197)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 225)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -81,7 +82,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(13, 229)
+        Me.statusLabel.Location = New System.Drawing.Point(13, 257)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -152,11 +153,22 @@ Partial Class frmEinstellungen
         Me.chkbxInvoices.Text = "Rechnungen / Penalties bearbeiten"
         Me.chkbxInvoices.UseVisualStyleBackColor = True
         '
+        'chkbx_KUG_active
+        '
+        Me.chkbx_KUG_active.AutoSize = True
+        Me.chkbx_KUG_active.Location = New System.Drawing.Point(16, 182)
+        Me.chkbx_KUG_active.Name = "chkbx_KUG_active"
+        Me.chkbx_KUG_active.Size = New System.Drawing.Size(125, 17)
+        Me.chkbx_KUG_active.TabIndex = 52
+        Me.chkbx_KUG_active.Text = "Kurzarbeit ist möglich"
+        Me.chkbx_KUG_active.UseVisualStyleBackColor = True
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(352, 294)
+        Me.Controls.Add(Me.chkbx_KUG_active)
         Me.Controls.Add(Me.chkbxInvoices)
         Me.Controls.Add(Me.chkbxPhasesAnteilig)
         Me.Controls.Add(Me.loadPFV)
@@ -186,4 +198,5 @@ Partial Class frmEinstellungen
     Friend WithEvents loadPFV As Windows.Forms.CheckBox
     Friend WithEvents chkbxPhasesAnteilig As Windows.Forms.CheckBox
     Friend WithEvents chkbxInvoices As Windows.Forms.CheckBox
+    Friend WithEvents chkbx_KUG_active As Windows.Forms.CheckBox
 End Class

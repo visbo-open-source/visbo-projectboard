@@ -298,7 +298,7 @@ Public Class clsawinSettings
 
         ReDim _importSettings(17)
 
-        _kurzarbeitActivated = True
+        _kurzarbeitActivated = False
         _ActualdataOrgaUnits = ""
 
         _ExternRessourcesWithActualData = False

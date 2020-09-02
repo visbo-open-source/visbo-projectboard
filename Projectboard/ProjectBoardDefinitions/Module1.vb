@@ -5768,7 +5768,14 @@ Public Module Module1
         End If
 
         Try
-            Dim internPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern).Sum
+
+            Dim internPersonellCost As Double
+            If awinSettings.kurzarbeitActivated Then
+                internPersonellCost = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.intern).Sum
+            Else
+                internPersonellCost = RoleDefinitions.getFullCost(showRangeLeft, showRangeRight).Sum
+            End If
+
             tabelle.Cell(2, 1).Shape.TextFrame2.TextRange.Text = internPersonellCost.ToString(formatierung) & " T€"
 
             Dim externPersonellCost As Double = ShowProjekte.getCostGpValuesInMonth(scope:=PTrt.extern).Sum
@@ -5838,17 +5845,37 @@ Public Module Module1
 
             ' tk 17.6.20 Checks ....
             Dim checkExternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.extern)
-            Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
+            'Dim checkInternCost As Double() = ShowProjekte.getCostGpValuesInMonth(PTrt.intern)
             Dim checkSonstCost As Double() = ShowProjekte.getTotalCostValuesInMonth(False)
 
+            ' hier muss geprüft werden, ob die internen Kosten größer als die OrgaFullCost , also die max internen Pers-Kosten sind
+            ' Alles was darüber hinaus geht , muss auf OrgaFullCost beschränkt und auf Externcost verteilt werden 
+            For i As Integer = 0 To showRangeRight - showRangeLeft
+                If internPersonellCost(i) > orgaFullCost(i) Then
+                    Dim diff As Double = internPersonellCost(i) - orgaFullCost(i)
+                    checkExternCost(i) = checkExternCost(i) + diff
+                    internPersonellCost(i) = orgaFullCost(i)
+                End If
+            Next
+
+            Dim rngOffset As Integer = 0
 
             Dim saveShowrangeLeft As Integer = showRangeLeft
-            Dim rngOffset As Integer = 0
+
             If showRangeLeft > 1 Then
                 showRangeLeft = showRangeLeft - 1
                 rngOffset = 1
             End If
-            Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+
+            Dim notUtilizedCapacity As Double()
+
+            If awinSettings.kurzarbeitActivated Then
+                'notUtilizedCapacity = ShowProjekte.getCostoValuesInMonth(provideKUGData:=True)
+                notUtilizedCapacity = ShowProjekte.getNotUtilizedCapaValuesInMonth
+            Else
+                ReDim notUtilizedCapacity(showRangeRight - showRangeLeft)
+            End If
+
             showRangeLeft = saveShowrangeLeft
 
 
@@ -5866,6 +5893,8 @@ Public Module Module1
 
 
                 If awinSettings.kurzarbeitActivated Then
+
+
 
                     ' KugCome(i) adressiert den Folge-Monat, von notUtilizedCapacity(i) 
                     kugCome(i) = notUtilizedCapacity(i) * ShorttermQuota
@@ -5886,22 +5915,34 @@ Public Module Module1
                     Else
                         cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
                     End If
+
                 Else
-                    cashflow(i) = invoices(i) - (orgaFullCost(i) + checkSonstCost(i) + checkExternCost(ix))
+
+                    totalCost(i) = orgaFullCost(i) + checkSonstCost(i) + checkExternCost(i)
+                    restCost(i) = 0
+
+                    If i = 0 Then
+                        cashflow(i) = invoices(i) - totalCost(i)
+                    Else
+                        cashflow(i) = cashflow(i - 1) + invoices(i) - totalCost(i)
+                    End If
+
                 End If
 
 
             Next
 
 
+            'If awinSettings.kurzarbeitActivated And awinSettings.visboDebug Then
+            '    Dim checkTotalCost(5) As Double
+            '    For ix = 0 To 5
+            '        checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
+            '        If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
+            '            Call MsgBox("Unterschiede ! Intern und extern")
+            '        End If
+            '    Next
+            'End If
 
-            Dim checkTotalCost(5) As Double
-            For ix = 0 To 5
-                checkTotalCost(ix) = checkInternCost(ix) + checkExternCost(ix) + checkSonstCost(ix)
-                If System.Math.Abs(checkTotalCost(ix) - totalCost(ix)) > 0.01 Then
-                    Call MsgBox("Unterschiede ! Intern und extern")
-                End If
-            Next
 
 
 
@@ -5919,17 +5960,22 @@ Public Module Module1
                 End If
             Next
 
-            If atLeastOneDifference Then
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Differences in Calculation Liquidity!")
-                Else
-                    Call MsgBox("Unterschiede in Berechnung der Liquidität!")
-                End If
+            'If atLeastOneDifference Then
+            '    If awinSettings.englishLanguage Then
+            '        Call MsgBox("Differences in Calculation Liquidity!")
+            '    Else
+            '        Call MsgBox("Unterschiede in Berechnung der Liquidität!")
+            '    End If
 
-            End If
+            'End If
 
             ' tk Ende 17.6 Checks
 
+            ' jetzt Header schreiben 
+            zeile = 1
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = StartofCalendar.AddMonths(showRangeLeft - 2 + ix).ToString("MMM yy")
+            Next
 
 
             zeile = 2
@@ -5963,23 +6009,8 @@ Public Module Module1
             Next
 
 
-
-            zeile = 4
-            For ix = 1 To 6
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
-                ' Abfluss: rot
-                If totalCost(ix - 1) > 0 Then
-                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
-                Else
-                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
-                End If
-
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
-            Next
-
-
             ' jetzt KUG Abfluss oder non-utilized capacity 
-            zeile = 5
+            zeile = 4
             For ix = 1 To 6
 
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = kugGo(ix - 1).ToString(formatierung)
@@ -5994,6 +6025,23 @@ Public Module Module1
                 tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
 
             Next
+
+            ' jetzt Abfluss Gesamt-Kosten
+            zeile = 5
+            For ix = 1 To 6
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = totalCost(ix - 1).ToString(formatierung)
+                ' Abfluss: rot
+                If totalCost(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                Else
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
+                End If
+
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoFalse
+            Next
+
+
+
 
             zeile = 6
             For ix = 1 To 6

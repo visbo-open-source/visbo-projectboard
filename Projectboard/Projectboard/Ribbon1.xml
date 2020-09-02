@@ -376,8 +376,8 @@
             </menu>-->
             <menuSeparator id="PTXG1s1"/>
             <!--label="Profit/Loss"-->
-            <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
-            <menuSeparator id="PTXG1s3"/>
+            <!--<button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+            <menuSeparator id="PTXG1s3"/>-->
             <!--label="Capazity Utilization"-->
             <button id="PTXG1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
             <!--<menuSeparator id="PTXG1s2"/>-->

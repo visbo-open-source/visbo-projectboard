@@ -3861,7 +3861,7 @@ Public Module agm3
                                             End If
                                             pName = projName
                                             ' ggfs. vorhandene Sonderzeichen wie (,),# [,] ersetzen
-                                            If Not isValidProjectName(pName) Then
+                                            If Not isValidPVName(pName) Then
                                                 pName = makeValidProjectName(pName)
                                             End If
 
