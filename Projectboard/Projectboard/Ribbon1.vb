@@ -7357,9 +7357,10 @@ Imports System.Web
                         Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
                         Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                         ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                        ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+                        ' in diesem Fall soll nicht verschoben werden ... 
+                        'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                        '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                        'Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
                     End If
 
                 Else

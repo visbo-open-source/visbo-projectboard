@@ -8863,8 +8863,74 @@ Public Module agm2
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
                                         Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
+
+                                        ' wenn sich die Default days per Montag geändert hat 
+
                                         If Not IsNothing(importedRole) Then
-                                            importedRole.kapazitaet = kvp.Value.kapazitaet
+
+                                            If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+
+                                                Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
+
+                                                If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+                                                    ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
+                                                    importedRole.kapazitaet = kvp.Value.kapazitaet
+
+                                                ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+                                                    ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
+                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+
+                                                        For ix As Integer = startCol To 240
+                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                            End If
+
+                                                        Next
+
+
+                                                    End If
+
+                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+
+                                                    For ix As Integer = startCol To 240
+                                                        If kvp.Value.kapazitaet(ix) = kvp.Value.defaultKapa Then
+                                                            ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                            importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                        End If
+
+                                                    Next
+
+                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+
+                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+                                                        For ix As Integer = startCol To 240
+                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                            Else
+                                                                ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                                ' hier steht ja schon der richtige Wert 
+                                                                'importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            End If
+
+                                                        Next
+
+
+                                                    End If
+
+                                                End If
+
+                                            End If
+
+
+
                                         End If
 
                                         ' neues Eintrittsdatum , eher unwahrscheinlich 
