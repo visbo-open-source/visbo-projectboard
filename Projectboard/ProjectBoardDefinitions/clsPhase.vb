@@ -80,7 +80,12 @@ Public Class clsPhase
         End Get
         Set(value As KeyValuePair(Of Date, Double))
             If Not IsNothing(value) Then
-                _penalty = value
+                If value.Key = Date.MinValue Then
+                    _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, value.Value)
+                Else
+                    _penalty = value
+                End If
+
             Else
                 _penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0.0)
             End If

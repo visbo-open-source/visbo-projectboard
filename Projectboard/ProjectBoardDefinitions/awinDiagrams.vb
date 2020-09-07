@@ -989,7 +989,7 @@ Public Module awinDiagrams
                         .Chart.Axes(Excel.XlAxisType.xlCategory).HasTitle = False
                         .Chart.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.Constants.xlLow
 
-                        .Chart.Axes(Excel.XlAxisType.xlValue).MajorUnit = 50
+                        .Chart.Axes(Excel.XlAxisType.xlValue).MajorUnit = 250
 
                         .Chart.HasLegend = False
 
@@ -2121,7 +2121,14 @@ Public Module awinDiagrams
             End With
         ElseIf prcTyp = DiagrammTypen(9) Then
             With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
-                .MaximumScaleIsAuto = True
+                Try
+                    .MaximumScaleIsAuto = True
+                    ' soll nach Möglichkeit unten konstant bleiben ...
+                    '.MinimumScaleIsAuto = True
+                Catch ex As Exception
+
+                End Try
+
             End With
         Else
 
@@ -7366,13 +7373,19 @@ Public Module awinDiagrams
                     Next
 
                     ' wenn Kurzarbeit möglich ist 
-                    Dim ShorttermQuota As Double = 0.67
-                    Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+                    If awinSettings.kurzarbeitActivated Then
+                        Dim ShorttermQuota As Double = 0.67
+                        'Dim notUtilizedCapacity As Double() = ShowProjekte.getCostoValuesInMonth()
+                        Dim notUtilizedCapacity As Double() = ShowProjekte.getNotUtilizedCapaValuesInMonth()
 
-                    ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
-                    For i As Integer = 0 To tmpResult.Length - 1
-                        tmpTdatenreihe(i) = tmpTdatenreihe(i) - (1 - ShorttermQuota) * notUtilizedCapacity(i)
-                    Next
+                        ' jetzt muss die nicht ausgelastete Zeit abgezogen werden 
+                        For i As Integer = 0 To tmpResult.Length - 1
+                            ' die nicht ausgelastetete Zeit geht komplett weg, der Mitarbeiter bekommt 1/3 weniger Geld, das Unternehmen finanziert 2/3 vor ...
+                            'tmpTdatenreihe(i) = tmpTdatenreihe(i) - (1 - ShorttermQuota) * notUtilizedCapacity(i)
+                            tmpTdatenreihe(i) = tmpTdatenreihe(i) - notUtilizedCapacity(i)
+                        Next
+                    End If
+
 
                 Catch ex As Exception
 

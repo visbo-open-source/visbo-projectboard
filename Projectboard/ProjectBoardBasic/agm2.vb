@@ -7312,7 +7312,7 @@ Public Module agm2
 
                         End Try
 
-                    ElseIf Not isValidProjectName(pName) Then
+                    ElseIf Not isValidPVName(pName) Then
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
@@ -8168,7 +8168,7 @@ Public Module agm2
                         pName = ""
                     Else
                         pName = pName.Trim
-                        End If
+                    End If
 
                     If IsNothing(variantName) Then
                         variantName = ""
@@ -8863,8 +8863,74 @@ Public Module agm2
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
                                         Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
+
+                                        ' wenn sich die Default days per Montag geändert hat 
+
                                         If Not IsNothing(importedRole) Then
-                                            importedRole.kapazitaet = kvp.Value.kapazitaet
+
+                                            If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+
+                                                Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
+
+                                                If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+                                                    ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
+                                                    importedRole.kapazitaet = kvp.Value.kapazitaet
+
+                                                ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+                                                    ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
+                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+
+                                                        For ix As Integer = startCol To 240
+                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                            End If
+
+                                                        Next
+
+
+                                                    End If
+
+                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+
+                                                    For ix As Integer = startCol To 240
+                                                        If kvp.Value.kapazitaet(ix) = kvp.Value.defaultKapa Then
+                                                            ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                            importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                        End If
+
+                                                    Next
+
+                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+
+                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+                                                        For ix As Integer = startCol To 240
+                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                            Else
+                                                                ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                                ' hier steht ja schon der richtige Wert 
+                                                                'importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            End If
+
+                                                        Next
+
+
+                                                    End If
+
+                                                End If
+
+                                            End If
+
+
+
                                         End If
 
                                         ' neues Eintrittsdatum , eher unwahrscheinlich 
@@ -9261,7 +9327,7 @@ Public Module agm2
                         Else
                             custFields.Clear()
 
-                            If Not isValidProjectName(pName) Then
+                            If Not isValidPVName(pName) Then
                                 pName = makeValidProjectName(pName)
                             End If
 
@@ -10401,7 +10467,7 @@ Public Module agm2
                         custFields.Clear()
                         description = pName
 
-                        If Not isValidProjectName(pName) Then
+                        If Not isValidPVName(pName) Then
                             pName = makeValidProjectName(pName)
                         End If
 
@@ -12434,7 +12500,7 @@ Public Module agm2
                 End If
 
                 ' jetzt muss der pName normiert werden ..
-                If Not isValidProjectName(currentPName) Then
+                If Not isValidPVName(currentPName) Then
                     currentPName = makeValidProjectName(currentPName)
                 End If
 
@@ -13227,7 +13293,7 @@ Public Module agm2
                                 Dim pNr As String = CStr(CType(.Cells(lupTZeile, 2), Excel.Range).Value).Trim
                                 Dim rupiPName As String = CStr(CType(.Cells(lupTZeile, 3), Excel.Range).Value).Trim
 
-                                If Not isValidProjectName(rupiPName) Then
+                                If Not isValidPVName(rupiPName) Then
                                     rupiPName = makeValidProjectName(rupiPName)
                                 End If
 
@@ -16022,6 +16088,8 @@ Public Module agm2
         For i As Integer = 1 To RoleDefinitions.Count
 
             Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+            Dim indentLevel As Integer = RoleDefinitions.getRoleIndent(curRole.name)
+
             Dim myCollection As New Collection
             myCollection.Add(curRole.name)
             Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
@@ -16030,9 +16098,11 @@ Public Module agm2
 
             ReDim auslastungsValues(zeitraum)
 
-            For ix As Integer = 0 To zeitraum - 1
+            For ix As Integer = 0 To zeitraum
                 If kapaValues(ix) > 0 Then
                     auslastungsValues(ix) = 1 - bedarfsValues(ix) / kapaValues(ix)
+                Else
+                    auslastungsValues(ix) = 1
                 End If
             Next
 
@@ -16045,6 +16115,8 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
+
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kapa [PT]"
                     editRange.Value = kapaValues
                     zeile = zeile + 1
@@ -16054,6 +16126,7 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Bedarf [PT]"
                     editRange.Value = bedarfsValues
                     zeile = zeile + 1
@@ -16063,6 +16136,7 @@ Public Module agm2
                     Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
 
                     CType(ws.Cells(zeile, 1), Excel.Range).Value = curRole.name
+                    CType(ws.Cells(zeile, 1), Excel.Range).IndentLevel = indentLevel
                     CType(ws.Cells(zeile, 2), Excel.Range).Value = "Kurzarbeit (%)"
                     editRange.Value = auslastungsValues
                     editRange.NumberFormat = "0.0%"
@@ -16988,7 +17062,7 @@ Public Module agm2
 
         Dim expFName As String = ""
         If considerAll Then
-            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
+            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & ".xlsx"
         Else
             expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
         End If
@@ -20921,7 +20995,7 @@ Public Module agm2
                         awinSettings.readCostRolesFromDB = False
                         If awinSettings.englishLanguage Then
                             Call MsgBox("You don't have any organization in your system!")
-                    Else
+                        Else
                             Call MsgBox("Es existiert keine Organisation im System!")
                         End If
 
@@ -21877,7 +21951,7 @@ Public Module agm2
 
 
                     nameSopTyp = tmpStr(0).Trim
-                    If Not isValidProjectName(nameSopTyp) Then
+                    If Not isValidPVName(nameSopTyp) Then
                         nameSopTyp = makeValidProjectName(nameSopTyp)
                     End If
                     pName = nameSopTyp

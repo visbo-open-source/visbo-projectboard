@@ -268,37 +268,37 @@
         </group>-->
       </tab>
       <!--label="View"-->
-      <tab id="PTview" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PTview" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT3G1" >          
-          <!--label="Projekt-Ampeln"-->
+          --><!--label="Projekt-Ampeln"--><!--
           <button id="PT3G1B1" getLabel ="bestimmeLabel" onAction="Tom2G2M5M1B3ShowStatus" supertip="es werden die Projekt-Ampeln als farbige Symbole angezeigt."/>
-          <!--label="Planelemente visualisieren"-->
+          --><!--label="Planelemente visualisieren"--><!--
           <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Meilensteine und Vorgänge visualisieren"/>
-          <!--<menu id="PT3G1M1" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge visualisieren">
+          --><!--<menu id="PT3G1M1" getLabel ="bestimmeLabel" supertip="Meilensteine und Vorgänge visualisieren">
             --><!--label="Auswahl über Namen"--><!--
             <button id="PTXG1B4" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen."/>
             --><!--label="Auswahl über Hierarchie"--><!--
             <button id="PTXG1B5" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie."/>--><!--
-          </menu>-->
-          <!--label="Beschriftungen-->
+          </menu>--><!--
+          --><!--label="Beschriftungen--><!--
           <button id="PT3G1M2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTBeschriften" supertip ="alle angezeigten Meilensteine und Phasen werden auf der Multiprojekt-Tafel beschriftet."/>
           <separator id="PT2G1s1"/>
-          <!--label="Extended View"-->
+          --><!--label="Extended View"--><!--
           <button id="PT2G1B6" imageMso="OutlineExpand" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
-          <!--label="Rollup View"-->
+          --><!--label="Rollup View"--><!--
           <button id="PT2G1B7" imageMso="OutlineCollapse" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet."/>
           <separator id="PT2G1s3"/>
-          <!--label="Zeichen-Elemente löschen"-->
+          --><!--label="Zeichen-Elemente löschen"--><!--
           <menu id="PT2G3M2" getLabel ="bestimmeLabel" imageMso="Delete" size="large">
-            <!--label="Meilensteine, Phasen, Stati"-->
+            --><!--label="Meilensteine, Phasen, Stati"--><!--
             <button id="PT2G3M4B1" getLabel ="bestimmeLabel"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
-            <!--label="Beschriftungen"-->
+            --><!--label="Beschriftungen"--><!--
             <button id="PT2G3M4B3" getLabel ="bestimmeLabel"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen von Phasen und Meilensteinen werden gelöscht"/>
-            <!--label="Charts"-->
+            --><!--label="Charts"--><!--
             <button id="PT2G3M4B2" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>      
-      </tab>
+      </tab>-->
       <!--label="Filter"-->
       <tab id="PTfilter" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PT0G1" >
@@ -376,8 +376,8 @@
             </menu>-->
             <menuSeparator id="PTXG1s1"/>
             <!--label="Profit/Loss"-->
-            <button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
-            <menuSeparator id="PTXG1s3"/>
+            <!--<button id="PTFKB1" getLabel ="bestimmeLabel" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+            <menuSeparator id="PTXG1s3"/>-->
             <!--label="Capazity Utilization"-->
             <button id="PTXG1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
             <!--<menuSeparator id="PTXG1s2"/>-->
