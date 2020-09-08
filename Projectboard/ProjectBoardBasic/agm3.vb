@@ -2334,6 +2334,31 @@ Public Module agm3
         Next
         freeDaysInMonth = AnzahlfreieTage
     End Function
+    ''' <summary>
+    ''' erstellt einen Kalender, der Ausgangsbasis für Kapazitäten ist
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function createDefaultCalendar() As clsDefaultCalendar
+        Dim defaultCal As New clsDefaultCalendar
+        Dim monthCal As New clsBusinessDays
+        Dim relMonth As Integer = getColumnOfDate(StartofCalendar)
+        For y As Integer = Year(StartofCalendar) To Year(StartofCalendar) + 20 - 1
+            For m As Integer = Month(StartofCalendar) To 12
+                monthCal = New clsBusinessDays
+                monthCal.year = y
+                monthCal.month = m
+                monthCal.noOfNonBusinessDays = freeDaysInMonth(y, m)
+                monthCal.noOfBusinessDays = DateTime.DaysInMonth(y, m) - monthCal.noOfNonBusinessDays
+                Dim check As Boolean = (monthCal.noOfBusinessDays = WorkingDaysInMonth(y, m))
+                defaultCal.defCal.Add(relMonth, monthCal)
+                relMonth += 1
+
+            Next        ' for m 
+        Next            ' for y
+        createDefaultCalendar = defaultCal
+    End Function
+
+
 
     ''' <summary>
     ''' liest das im Diretory ../ressource manager evt. liegende File 'zeuss*.xlsx' (oder wie in kapaConfig benamst) File  aus
@@ -2355,7 +2380,7 @@ Public Module agm3
         Dim anzFehler As Integer = 0
         Dim fehler As Boolean = False
 
-        Dim ImportTyp As Integer = 2
+        Dim ImportTyp As Integer = 2            ' Import like Telair - Zeuss - Dateien
         Try
             ImportTyp = kapaConfig("ImportTyp").content
         Catch ex As Exception
@@ -2367,24 +2392,20 @@ Public Module agm3
             'End If
         End Try
 
-        If ImportTyp = 1 Then
-            ' zunächst den Default-Kalender erstellen unter Berücksichtigung der Feiertage
-            Dim defaultCal As New clsDefaultCalendar
-            Dim monthCal As New clsBusinessDays
-            Dim relMonth As Integer = getColumnOfDate(StartofCalendar)
-            For y As Integer = Year(StartofCalendar) To Year(StartofCalendar) + 20 - 1
-                For m As Integer = Month(StartofCalendar) To 12
-                    monthCal = New clsBusinessDays
-                    monthCal.year = y
-                    monthCal.month = m
-                    monthCal.noOfNonBusinessDays = freeDaysInMonth(y, m)
-                    monthCal.noOfBusinessDays = DateTime.DaysInMonth(y, m) - monthCal.noOfNonBusinessDays
-                    Dim check As Boolean = (monthCal.noOfBusinessDays = WorkingDaysInMonth(y, m))
-                    defaultCal.defCal.Add(relMonth, monthCal)
-                    relMonth += 1
+        Select Case ImportTyp
+            Case 1            ' Import like Instart *Holidays*
 
-                Next        ' for m 
-            Next            ' for y
+            Case 2            ' Import like Telair - Zeuss - Dateien
+
+            Case Else
+
+        End Select
+
+
+        If ImportTyp = 1 Then               ' Import like Instart *Holidays*
+
+            ' zunächst den Default-Kalender ( von StartOfCalendar an 240 Monate) erstellen unter Berücksichtigung der Feiertage
+            Dim defaultCal As clsDefaultCalendar = createDefaultCalendar()
 
             ' Read capacities and/or holidays for every role 
             Dim addOnHolidays As New SortedList(Of String, clsDefaultCalendar)
@@ -2398,7 +2419,6 @@ Public Module agm3
             'Dim whiteColor As Integer = 2
             Dim currentWS As Excel.Worksheet
             Dim index As Integer = 1
-            Dim dateConsidered As Date
 
             'Dim year As Integer = DatePart(DateInterval.Year, Date.Now)
             Dim monthName As String = ""
@@ -2412,7 +2432,7 @@ Public Module agm3
             Dim rolename As String = ""
             Dim absenceDay As Date
             Dim absenceType As String = ""
-
+            Dim input_ok As Boolean = True
             Dim regexpression As Regex
 
             Dim outPutCollection As New Collection
@@ -2458,13 +2478,23 @@ Public Module agm3
                                     ' TODO: muss gemäss RegEx berechnet werden
                                 End If
 
+                                ' loop über die Zeilen
                                 For ix As Integer = firstRow To lastRow
 
+                                    input_ok = True                   ' Initialise
                                     rolename = CType(currentWS.Cells(ix, roleCol).value, String)
+                                    If IsNothing(rolename) Then
+                                        input_ok = False
+                                    End If
+
                                     absenceDay = CDate(currentWS.Cells(ix, dateCol).value)
+                                    If IsNothing(absenceDay) Then
+                                        input_ok = False
+                                    End If
+
                                     absenceType = CStr(currentWS.Cells(ix, absenceCol).value)
                                     If IsNothing(absenceType) Then
-                                        ' TODO Fehlermeldung oder Message
+                                        input_ok = False
                                     Else
                                         If kapaConfig("absence type").regex = "RegEx" Then
                                             'regexpression = New Regex("[0-9]{4}")
@@ -2474,10 +2504,13 @@ Public Module agm3
                                                 absenceType = match.Value
                                             Else
                                                 absenceType = ""
+                                                input_ok = False
                                             End If
                                         End If
                                     End If
-                                    If absenceType <> "" Then
+
+                                    If input_ok Then        ' alle drei Angabe dieser Zeile sind soweit passend
+
                                         Dim columnOfDate As Integer = getColumnOfDate(absenceDay)
                                         If addOnHolidays.ContainsKey(rolename) Then
                                             roleCapa = addOnHolidays(rolename)
@@ -2513,6 +2546,21 @@ Public Module agm3
                                             addOnHolidays.Remove(rolename)
                                         End If
                                         addOnHolidays.Add(rolename, roleCapa)
+
+                                    Else
+                                        If Not IsNothing(absenceType) And Not absenceType = "" Then
+                                            If awinSettings.englishLanguage Then
+                                                msgtxt = "Error in Line: " & ix & " not matching input " & vbLf & kapaFileName
+                                            Else
+                                                msgtxt = "Fehler in Zeile: " & ix & " Input passt nicht zusammen " & vbLf & kapaFileName
+                                            End If
+                                            'oPCollection.Add(msgtxt)
+                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Else
+                                            ' Zeile überlesen ohne Fehlermeldung
+                                            Dim a As Integer = 0
+                                        End If
+
                                     End If
 
                                 Next   ' row
@@ -2523,6 +2571,7 @@ Public Module agm3
                     Catch ex As Exception
 
                     End Try
+
                 Catch ex As Exception
 
                 End Try
@@ -2532,6 +2581,7 @@ Public Module agm3
                 For Each kvp As KeyValuePair(Of String, clsDefaultCalendar) In addOnHolidays
                     rolename = kvp.Key
                     roleCapa = kvp.Value
+
                     ' bereits in orga vorhandene Kapa holen
                     hrole = RoleDefinitions.getRoledef(rolename)
                     If Not IsNothing(hrole) Then
@@ -2546,7 +2596,9 @@ Public Module agm3
                             ' capa = Kapazität, die für Projektarbeit bleibt
                             Dim capa As Double = anzArbTage * hrole.defaultDayCapa / 8
                             'nur wenn die hrole schon eingetreten und nicht ausgetreten ist, wird die Capa eingetragen
-                            If colofDate >= getColumnOfDate(hrole.entryDate) And colofDate < getColumnOfDate(hrole.exitDate) Then
+                            If colofDate >= getColumnOfDate(hrole.entryDate) And
+                                colofDate < getColumnOfDate(hrole.exitDate) Then
+
                                 hrole.kapazitaet(colofDate) = capa
                             Else
                                 hrole.kapazitaet(colofDate) = 0
