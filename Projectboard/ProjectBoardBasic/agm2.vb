@@ -19330,7 +19330,7 @@ Public Module agm2
 
                                 ' die Penalty und das Penalty Date
                                 If Not IsNothing(cMilestone.penalty) Then
-                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                    If cMilestone.penalty.Value > 0 Then
                                         CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
                                     End If
@@ -19495,7 +19495,7 @@ Public Module agm2
 
                                     ' die Penalty und das Penalty Date
                                     If Not IsNothing(cPhase.penalty) Then
-                                        If cPhase.penalty.Key > StartofCalendar Then
+                                        If cPhase.penalty.Value > 0 Then
                                             CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
                                             CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key.Date
                                         End If
