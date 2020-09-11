@@ -2585,6 +2585,8 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
+                    ' timestamp und validFrom auf den ersten des Monats setzen
+                    listofOrgaWeb.validFrom = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
                     Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
                     CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
                     CType(newsetting, clsVCSettingOrganisation).userId = ""
@@ -2595,7 +2597,12 @@ Public Class Request
                     If anzSetting = 1 Then
 
                         ' Update der Organisation - Setting
-                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom = listofOrgaWeb.validFrom Then
+                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Month = listofOrgaWeb.validFrom.Month And
+                            CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Year = listofOrgaWeb.validFrom.Year Then
+                            ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
+                            validFrom = oldsetting.timestamp
+                            CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp
+                            CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
                             newsetting._id = settingID
                             result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                         Else
@@ -3945,7 +3952,7 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVPantwort As clsWebVP = Nothing
+            Dim webVPantwort As New clsWebVP
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
@@ -4202,7 +4209,12 @@ Public Class Request
                                 serverUriString = serverUriString & "&status=" & status
                             End If
                             If variantName <> noVariantName Then
-                                serverUriString = serverUriString & "&variantName=" & variantName
+                                Dim variantID As String = findVariantID(vpid, variantName)
+                                If variantID <> "" Then
+                                    serverUriString = serverUriString & "&variantID=" & variantID
+                                Else
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
                             End If
                         Else
                             If storedAtorBefore > Date.MinValue Then
@@ -4216,7 +4228,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
                             Else
                                 serverUriString = serverUriString & "&refDate=" & refDate
@@ -4228,7 +4245,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
 
                             End If
@@ -4451,7 +4473,12 @@ Public Class Request
                                 serverUriString = serverUriString & "&status=" & status
                             End If
                             If variantName <> noVariantName Then
-                                serverUriString = serverUriString & "&variantName=" & variantName
+                                Dim variantID As String = findVariantID(vpid, variantName)
+                                If variantID <> "" Then
+                                    serverUriString = serverUriString & "&variantID=" & variantID
+                                Else
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
                             End If
                         Else
                             If storedAtorBefore > Date.MinValue Then
@@ -4465,7 +4492,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
                             Else
 
@@ -4477,7 +4509,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
 
                             End If
@@ -6632,6 +6669,33 @@ Public Class Request
 
         DateTimeToISODate = ISODateandTime
 
+    End Function
+
+    ''' <summary>
+    ''' Find the ID to the given VP (vpid) and variantName
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="variantName"></param>
+    ''' <returns>variantID</returns>
+    Private Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
+
+        Dim variantID As String = ""
+        Try ' passende VariantID herausfinden
+            If vpid <> "" Then
+                If VRScache.VPsId.ContainsKey(vpid) Then
+                    Dim actualVP As clsVP = VRScache.VPsId.Item(vpid)
+                    For Each var As clsVPvariant In actualVP.Variant
+                        If var.variantName = variantName Then
+                            variantID = var._id
+                            Exit For
+                        End If
+                    Next
+                End If
+            End If
+        Catch ex As Exception
+            variantID = ""
+        End Try
+        findVariantID = variantID
     End Function
 
     ''' <summary>
