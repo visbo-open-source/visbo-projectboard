@@ -8859,14 +8859,17 @@ Public Module agm2
                             ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
                             ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
                             If Not IsNothing(oldOrga) Then
-                                If oldOrga.allRoles.Count > 0 Then
+
+
+                                If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
                                         Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
 
-                                        ' wenn sich die Default days per Montag geändert hat 
+                                        ' wenn sich die Default days per Monat geändert hat 
 
                                         If Not IsNothing(importedRole) Then
+
 
                                             If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
 
@@ -8875,6 +8878,55 @@ Public Module agm2
                                                 If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
                                                     ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
                                                     importedRole.kapazitaet = kvp.Value.kapazitaet
+
+
+                                                    If importedRole.entryDate = kvp.Value.entryDate And importedRole.exitDate = kvp.Value.exitDate Then
+                                                        ' es muss nichts weiter gemacht werden 
+                                                    Else
+                                                        ' Behandlung EntryDate
+                                                        Dim ix1 As Integer = getColumnOfDate(importedRole.entryDate)
+                                                        If ix1 < 1 Then
+                                                            ix1 = 1
+                                                        End If
+                                                        Dim ix2 As Integer = getColumnOfDate(kvp.Value.entryDate)
+                                                        If ix2 > 240 Then
+                                                            ix2 = 240
+                                                        End If
+
+                                                        If importedRole.entryDate < kvp.Value.entryDate Then
+
+                                                            For ix As Integer = ix1 To ix2
+                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            Next
+
+                                                        ElseIf importedRole.entryDate > kvp.Value.entryDate Then
+                                                            For ix As Integer = ix2 To ix1 - 1
+                                                                importedRole.kapazitaet(ix) = 0
+                                                            Next
+                                                        End If
+
+                                                        ' Behandlung ExitDate 
+                                                        ix1 = getColumnOfDate(importedRole.exitDate)
+                                                        If ix1 > 240 Then
+                                                            ix1 = 240
+                                                        End If
+                                                        ix2 = getColumnOfDate(kvp.Value.exitDate)
+                                                        If ix2 > 240 Then
+                                                            ix2 = 240
+                                                        End If
+
+                                                        If importedRole.exitDate < kvp.Value.exitDate Then
+
+                                                            For ix As Integer = ix1 To ix2
+                                                                importedRole.kapazitaet(ix) = 0
+                                                            Next
+
+                                                        ElseIf importedRole.exitDate > kvp.Value.exitDate Then
+                                                            For ix As Integer = ix2 To ix1 - 1
+                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            Next
+                                                        End If
+                                                    End If
 
                                                 ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
                                                     ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
@@ -19330,7 +19382,7 @@ Public Module agm2
 
                                 ' die Penalty und das Penalty Date
                                 If Not IsNothing(cMilestone.penalty) Then
-                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                    If cMilestone.penalty.Value > 0 Then
                                         CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
                                     End If
@@ -19495,7 +19547,7 @@ Public Module agm2
 
                                     ' die Penalty und das Penalty Date
                                     If Not IsNothing(cPhase.penalty) Then
-                                        If cPhase.penalty.Key > StartofCalendar Then
+                                        If cPhase.penalty.Value > 0 Then
                                             CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
                                             CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key.Date
                                         End If

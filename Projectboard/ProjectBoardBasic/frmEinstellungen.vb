@@ -17,6 +17,12 @@ Public Class frmEinstellungen
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
         chkbxInvoices.Checked = awinSettings.enableInvoices
 
+        If chkbx_TakeCapaFromOldOrga.Checked <> awinSettings.takeCapasFromOldOrga Then
+            dontFire = True
+            chkbx_TakeCapaFromOldOrga.Checked = awinSettings.takeCapasFromOldOrga
+            dontFire = False
+        End If
+
         If chkbx_KUG_active.Checked <> awinSettings.kurzarbeitActivated Then
             dontFire = True
             chkbx_KUG_active.Checked = awinSettings.kurzarbeitActivated
@@ -90,6 +96,7 @@ Public Class frmEinstellungen
             chkboxAmpel.Text = "show traffic lights"
             chkbxInvoices.Text = "Edit Invoices & Penalties"
             chkbx_KUG_active.Text = "Short-time work possible"
+            chkbx_TakeCapaFromOldOrga.Text = "Take capacities from old Organisation"
             Label1.Text = "Language for Reports"
         Else
             GroupBox1.Text = "Vergleich mit welcher Version"
@@ -206,5 +213,17 @@ Public Class frmEinstellungen
         Else
             awinSettings.kurzarbeitActivated = False
         End If
+    End Sub
+
+    Private Sub chkbx_TakeCapaFromOldOrga_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_TakeCapaFromOldOrga.CheckedChanged
+
+        If Not dontFire Then
+            If chkbx_TakeCapaFromOldOrga.Checked Then
+                awinSettings.takeCapasFromOldOrga = True
+            Else
+                awinSettings.takeCapasFromOldOrga = False
+            End If
+        End If
+
     End Sub
 End Class
