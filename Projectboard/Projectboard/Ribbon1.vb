@@ -5339,6 +5339,7 @@ Imports System.Web
         ' Übernahme 
 
         Dim dateiName As String
+        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5407,12 +5408,11 @@ Imports System.Web
 
                         projectConstellations.Add(sessionConstellation)
                         Call loadSessionConstellation(scenarioName, False, True)
+
+                        listOfArchivFiles.Add(dateiName)
                     Else
                         Call MsgBox("keine Projekte importiert ...")
                     End If
-
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
@@ -5422,6 +5422,10 @@ Imports System.Web
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
 
+                ' verschieben der erfolgreich importierten files
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.massenEdit))
+                End If
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5450,6 +5454,8 @@ Imports System.Web
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
+
+        Dim listOfArchivFiles As New List(Of String)
 
         Dim ohneFehler As Boolean = True
 
@@ -5565,6 +5571,9 @@ Imports System.Web
                             Else
                                 Call awinImportProjektInventur()
                             End If
+
+                            listOfArchivFiles.Add(dateiName)
+
                         Catch ex As Exception
 
                             Call MsgBox("Fehler bei Import : " & ex.Message)
@@ -5626,15 +5635,19 @@ Imports System.Web
                             ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
                             ' tk 12.8.19 diese beiden Constellations sollen nicht mehr eingetragen werden , nur noch die Rupi-Liste 
 
+                            If Not IsNothing(sessionConstellationS) Then
+                                projectConstellations.Add(sessionConstellationS)
+                            End If
 
-                            projectConstellations.Add(sessionConstellationP)
-                            projectConstellations.Add(sessionConstellationS)
-                            ' jetzt auf Projekt-Tafel anzeigen 
+                            If Not IsNothing(sessionConstellationP) Then
+                                projectConstellations.Add(sessionConstellationP)
+                                ' jetzt auf Projekt-Tafel anzeigen 
 
-                            currentConstellationName = sessionConstellationP.constellationName
-                            ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
-                            ' die andere kann dann über loadConstelaltion gezeichnet werden 
-                            Call awinZeichnePlanTafel(sessionConstellationP)
+                                currentConstellationName = sessionConstellationP.constellationName
+                                ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
+                                ' die andere kann dann über loadConstelaltion gezeichnet werden 
+                                Call awinZeichnePlanTafel(sessionConstellationP)
+                            End If
 
                             'Call loadSessionConstellation(scenarioNameP, False, True)
 
@@ -5670,6 +5683,10 @@ Imports System.Web
                             '    End If
                             'End If
 
+                            ' ImportDatei ins archive-Directory schieben
+                            If listOfArchivFiles.Count > 0 Then
+                                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.batchlists))
+                            End If
 
 
 
@@ -5722,6 +5739,7 @@ Imports System.Web
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
+        Dim listOfArchivFiles As New List(Of String)
 
         Dim getScenarioImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
@@ -5803,6 +5821,8 @@ Imports System.Web
                         Call MsgBox("keine Projekte für Portfolio erkannt ...")
                     End If
 
+                    ' erfolgreich importierte Files aufsammeln
+                    listOfArchivFiles.Add(dateiName)
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
@@ -5812,6 +5832,10 @@ Imports System.Web
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
 
+                ' verschieben der erfolgreich importierten files
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.scenariodefs))
+                End If
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5835,6 +5859,7 @@ Imports System.Web
     Public Sub Tom2G4B1ModulImport(control As IRibbonControl)
 
         Dim dateiName As String
+        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5865,10 +5890,17 @@ Imports System.Web
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True, False, False)
 
+                listOfArchivFiles.Add(dateiName)
+
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
             End Try
+
+            ' verschieben der erfolgreich importierten files
+            If listOfArchivFiles.Count > 0 Then
+                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.modulScen))
+            End If
         Else
             Call MsgBox(" Import Scenario wurde abgebrochen")
         End If
@@ -5890,6 +5922,7 @@ Imports System.Web
     Public Sub PT4G1B10AddModularImport(control As IRibbonControl)
 
         Dim dateiName As String
+        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5915,6 +5948,8 @@ Imports System.Web
                 ' jetzt werden die Regeln ausgelesen ...
                 Call awinReadAddOnRules(ruleSet)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                listOfArchivFiles.Add(dateiName)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5991,6 +6026,11 @@ Imports System.Web
 
                 End If
 
+                ' verschieben der erfolgreich importierten files
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.addElements))
+                End If
+
             End If
 
         Else
@@ -6020,6 +6060,7 @@ Imports System.Web
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
         Dim listofVorlagen As New Collection
+        Dim listOfArchivFiles As New List(Of String)
         'Dim xlsRplanImport As Excel.Workbook
 
         Call projektTafelInit()
@@ -6057,6 +6098,8 @@ Imports System.Web
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                     ' xlsRplanImport.Close(SaveChanges:=True)
 
+                    ' list of Files, which are imported with success
+                    listOfArchivFiles.Add(dateiName)
 
                     appInstance.ScreenUpdating = True
                     Call importProjekteEintragen(importDate, True, True, True)
@@ -6071,14 +6114,15 @@ Imports System.Web
 
             Next i
 
-            ' ''appInstance.ScreenUpdating = True
-            ' ''Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+            ' verschieben der erfolgreich importierten files
+            If listOfArchivFiles.Count > 0 Then
+                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.rplan))
+            End If
+
         Else
             'Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
             'Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
-
-
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6148,6 +6192,7 @@ Imports System.Web
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
+        Dim listOfArchivFiles As New List(Of String)
         Dim protokoll As New SortedList(Of Integer, clsProtokoll)
 
         ' öffnen des LogFiles
@@ -6179,6 +6224,9 @@ Imports System.Web
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True, True, True)
 
+                ' aufsammeln der zu archivierenden Files
+                listOfArchivFiles.Add(dateiName)
+
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
 
@@ -6195,11 +6243,10 @@ Imports System.Web
                     Call writeProtokoll(protokoll, tabblattname)
                 End If
 
-
-                ' tk Änderung 26.11.15 das muss doch nach dem Import noch nicht gemacht werden
-                ' sondern erst nach Editieren Wörterbuch oder ganz am Schluss beim Beenden 
-                'Call awinWritePhaseDefinitions()
-                'Call awinWritePhaseMilestoneDefinitions()
+                ' verschieben der erfolgreich importierten files
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.rplan))
+                End If
 
             Catch ex As Exception
 
@@ -6237,7 +6284,7 @@ Imports System.Web
 
         Dim dateiname As String = ""
 
-        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
+        ' tk by Ute für das Verschieben der Datei in den Archiv-Ordner wenn erfolgreich 
         Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
@@ -7715,6 +7762,8 @@ Imports System.Web
         Dim listofVorlagen As Collection
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
+        Dim listOfArchivFiles As New List(Of String)
+
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
@@ -7778,11 +7827,15 @@ Imports System.Web
                                 Dim keyStr As String = calcProjektKey(hproj)
                                 ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                                 myCollection.Add(calcProjektKey(hproj))
+                                listOfArchivFiles.Add(dateiName)
+
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                             End Try
 
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            ' liste der Dateien, die nach archive verschoben werden sollen
+
 
                         Catch ex1 As Exception
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -7806,6 +7859,12 @@ Imports System.Web
             Try
                 Call importProjekteEintragen(importDate, True, False, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+                ' ImportDatei ins archive-Directory schieben
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.visbo))
+                End If
+
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
@@ -7855,8 +7914,8 @@ Imports System.Web
 
 
             Dim importDate As Date = Date.Now
-            'Dim importDate As Date = "31.10.2013"
-            ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+            Dim listOfArchivFiles As New List(Of String)
+
             Dim listofVorlagen As Collection
             listofVorlagen = getMSImport.selImportFiles
 
@@ -7920,6 +7979,9 @@ Imports System.Web
                     Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                 End Try
 
+                ' erfolgreich importiertes msproject-File in Liste zum Archivieren speichern
+                listOfArchivFiles.Add(dateiName)
+
             Next i
 
             If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
@@ -7962,11 +8024,15 @@ Imports System.Web
             '' Cursor auf Default setzen
             Cursor.Current = Cursors.Default
 
-
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
-
             Try
                 Call importProjekteEintragen(importDate, True, True, True)
+
+                ' verschieben der erfolgreich importierten files
+                If listOfArchivFiles.Count > 0 Then
+                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.msproject))
+                End If
+
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -7984,9 +8050,6 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
-
-
-
 
     End Sub
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)

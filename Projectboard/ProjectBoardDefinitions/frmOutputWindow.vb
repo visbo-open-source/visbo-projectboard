@@ -10,9 +10,9 @@
             For ii As Integer = 0 To tmpstr.Length - 1
                 Me.ListBoxOutput.Items.Add(tmpstr(ii))
             Next
-            Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
-
         Next
+
+        Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
 
     End Sub
 
