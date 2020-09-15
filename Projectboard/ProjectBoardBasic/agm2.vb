@@ -8787,6 +8787,8 @@ Public Module agm2
     ''' <returns></returns>
     Public Function ImportOrganisation(ByRef outputCollection As Collection) As clsOrganisation
 
+
+
         Dim importedOrga As New clsOrganisation
         Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
 
@@ -8862,142 +8864,163 @@ Public Module agm2
 
 
                                 If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
+
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
-                                        Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
+
+                                        Try
+                                            Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
 
-                                        ' wenn sich die Default days per Monat geändert hat 
+                                            ' wenn sich die Default days per Monat geändert hat 
 
-                                        If Not IsNothing(importedRole) Then
-
-
-                                            If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
-
-                                                Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
-
-                                                If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
-                                                    ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
-                                                    importedRole.kapazitaet = kvp.Value.kapazitaet
+                                            If Not IsNothing(importedRole) Then
 
 
-                                                    If importedRole.entryDate = kvp.Value.entryDate And importedRole.exitDate = kvp.Value.exitDate Then
-                                                        ' es muss nichts weiter gemacht werden 
-                                                    Else
-                                                        ' Behandlung EntryDate
-                                                        Dim ix1 As Integer = getColumnOfDate(importedRole.entryDate)
-                                                        If ix1 < 1 Then
-                                                            ix1 = 1
-                                                        End If
-                                                        Dim ix2 As Integer = getColumnOfDate(kvp.Value.entryDate)
-                                                        If ix2 > 240 Then
-                                                            ix2 = 240
-                                                        End If
+                                                If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
 
-                                                        If importedRole.entryDate < kvp.Value.entryDate Then
+                                                    Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
 
-                                                            For ix As Integer = ix1 To ix2
-                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
-                                                            Next
-
-                                                        ElseIf importedRole.entryDate > kvp.Value.entryDate Then
-                                                            For ix As Integer = ix2 To ix1 - 1
-                                                                importedRole.kapazitaet(ix) = 0
-                                                            Next
-                                                        End If
-
-                                                        ' Behandlung ExitDate 
-                                                        ix1 = getColumnOfDate(importedRole.exitDate)
-                                                        If ix1 > 240 Then
-                                                            ix1 = 240
-                                                        End If
-                                                        ix2 = getColumnOfDate(kvp.Value.exitDate)
-                                                        If ix2 > 240 Then
-                                                            ix2 = 240
-                                                        End If
-
-                                                        If importedRole.exitDate < kvp.Value.exitDate Then
-
-                                                            For ix As Integer = ix1 To ix2
-                                                                importedRole.kapazitaet(ix) = 0
-                                                            Next
-
-                                                        ElseIf importedRole.exitDate > kvp.Value.exitDate Then
-                                                            For ix As Integer = ix2 To ix1 - 1
-                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
-                                                            Next
-                                                        End If
-                                                    End If
-
-                                                ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
-                                                    ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
-                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
-
-                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+                                                    If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+                                                        ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
+                                                        importedRole.kapazitaet = kvp.Value.kapazitaet
 
 
-                                                        For ix As Integer = startCol To 240
-                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
-                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
-                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                        If importedRole.entryDate = kvp.Value.entryDate And importedRole.exitDate = kvp.Value.exitDate Then
+                                                            ' es muss nichts weiter gemacht werden 
+                                                        Else
+                                                            ' Behandlung EntryDate
+                                                            Dim ix1 As Integer = getColumnOfDate(importedRole.entryDate)
+                                                            If ix1 < 1 Then
+                                                                ix1 = 1
+                                                            End If
+                                                            If ix1 > 240 Then
+                                                                ix1 = 240
                                                             End If
 
-                                                        Next
+                                                            Dim ix2 As Integer = getColumnOfDate(kvp.Value.entryDate)
+                                                            If ix2 < 1 Then
+                                                                ix2 = 1
+                                                            End If
+                                                            If ix2 > 240 Then
+                                                                ix2 = 240
+                                                            End If
 
+                                                            If importedRole.entryDate < kvp.Value.entryDate Then
 
-                                                    End If
+                                                                For ix As Integer = ix1 To ix2
+                                                                    importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                Next
 
-                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+                                                            ElseIf importedRole.entryDate > kvp.Value.entryDate Then
+                                                                For ix As Integer = ix2 To ix1 - 1
+                                                                    importedRole.kapazitaet(ix) = 0
+                                                                Next
+                                                            End If
 
-                                                    For ix As Integer = startCol To 240
-                                                        If kvp.Value.kapazitaet(ix) = kvp.Value.defaultKapa Then
-                                                            ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
-                                                            importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            ' Behandlung ExitDate 
+                                                            ix1 = getColumnOfDate(importedRole.exitDate)
+                                                            If ix1 < 1 Then
+                                                                ix1 = 1
+                                                            End If
+                                                            If ix1 > 240 Then
+                                                                ix1 = 240
+                                                            End If
+
+                                                            ix2 = getColumnOfDate(kvp.Value.exitDate)
+                                                            If ix2 < 1 Then
+                                                                ix2 = 1
+                                                            End If
+                                                            If ix2 > 240 Then
+                                                                ix2 = 240
+                                                            End If
+
+                                                            If importedRole.exitDate < kvp.Value.exitDate Then
+
+                                                                For ix As Integer = ix1 To ix2
+                                                                    importedRole.kapazitaet(ix) = 0
+                                                                Next
+
+                                                            ElseIf importedRole.exitDate > kvp.Value.exitDate Then
+                                                                For ix As Integer = ix2 To ix1 - 1
+                                                                    importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                Next
+                                                            End If
                                                         End If
 
-                                                    Next
+                                                    ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+                                                        ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
+                                                        If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
 
-                                                ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+                                                            Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
 
-                                                    If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
 
-                                                        Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+                                                            For ix As Integer = startCol To 240
+                                                                If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                    ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                    importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                                End If
+
+                                                            Next
+
+
+                                                        End If
+
+                                                    ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
 
                                                         For ix As Integer = startCol To 240
-                                                            If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
-                                                                ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
-                                                                importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
-                                                            Else
+                                                            If kvp.Value.kapazitaet(ix) = kvp.Value.defaultKapa Then
                                                                 ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
-                                                                ' hier steht ja schon der richtige Wert 
-                                                                'importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
                                                             End If
 
                                                         Next
 
+                                                    ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+
+                                                        If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                            Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+                                                            For ix As Integer = startCol To 240
+                                                                If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                    ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                    importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                                Else
+                                                                    ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                                    ' hier steht ja schon der richtige Wert 
+                                                                    'importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                End If
+
+                                                            Next
+
+
+                                                        End If
 
                                                     End If
 
                                                 End If
 
+
+
                                             End If
 
+                                            ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                            If importedRole.entryDate > StartofCalendar Then
+                                                Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                For ix As Integer = 1 To tmpix - 1
+                                                    importedRole.kapazitaet(ix) = 0
+                                                Next
+                                            End If
 
+                                            Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
 
-                                        End If
-
-                                        ' neues Eintrittsdatum , eher unwahrscheinlich 
-                                        If importedRole.entryDate > StartofCalendar Then
-                                            Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                            For ix As Integer = 1 To tmpix - 1
+                                            For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
                                                 importedRole.kapazitaet(ix) = 0
                                             Next
-                                        End If
+                                        Catch ex As Exception
+                                            Dim a As Integer = 0
+                                        End Try
 
-                                        Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
-
-                                        For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
-                                            importedRole.kapazitaet(ix) = 0
-                                        Next
 
                                     Next
                                 End If

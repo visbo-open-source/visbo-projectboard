@@ -13120,7 +13120,7 @@ Public Module testModule
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                If currentFilter.doesNotBlock(kvp.Value) Then
+                If currentFilter.doesNotBlock(kvp.Value, passMsPhAnyway:=True) Then
                     If awinSettings.mppSortiertDauer Then
                         ' es wird aufsteigend nach der Dauer sortiert  
                         Dim tmpMinDate As Date
