@@ -65,6 +65,15 @@
     End Sub
 
     ''' <summary>
+    ''' setzt die Liste aller Portfolios der Session zurück 
+    ''' </summary>
+    Public Sub Clear()
+        _listOfLoadedSessionPortfolios.Clear()
+        _allConstellations.Clear()
+        AlleProjektSummaries.Clear(False)
+    End Sub
+
+    ''' <summary>
     ''' gibt das Gesamt Budget des Zeitraums im Gesamt-Portfolio zurück 
     ''' </summary>
     ''' <returns></returns>

@@ -136,6 +136,10 @@ Imports System.Web
 
         ElseIf ControlID = deleteFromSession Then
             removeConstFilterFrm.frmOption = "ProjConstellation"
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                dbPortfolioNames.Add(kvp.Key, kvp.Value.vpID)
+            Next
+            removeConstFilterFrm.dbPortfolioNames = dbPortfolioNames
             removeFromDB = False
 
         ElseIf ControlID = deleteFilter And Not noDB Then
@@ -154,96 +158,97 @@ Imports System.Web
             removeFromDB = False
         End If
 
-        enableOnUpdate = False
+        Dim weiterMitFormular As Boolean = True
 
-        While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
+        If (ControlID = deleteDatenbank Or ControlID = deleteFromSession) And removeConstFilterFrm.dbPortfolioNames.Count <= 0 Then
+            Call MsgBox("es sind keine Portfolios geladen....")
+            weiterMitFormular = False
+        End If
+        If ControlID = deleteFilter And filterDefinitions.filterListe.Count <= 0 Then
+            Call MsgBox("es sind keine Filter geladen....")
+            weiterMitFormular = False
+        End If
 
-            ' Formular mit aufgelisteten Portfolios/Filter anzeigen
-            returnValue = removeConstFilterFrm.ShowDialog
+        If weiterMitFormular Then
 
-        End While
+            enableOnUpdate = False
 
-        Dim outputCollection As New Collection
-        Dim outputLine As String = ""
+            While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
 
-        If returnValue = DialogResult.OK Then
-            If ControlID = deleteDatenbank Or
-                ControlID = deleteFromSession Then
+                ' Formular mit aufgelisteten Portfolios/Filter anzeigen
+                returnValue = removeConstFilterFrm.ShowDialog
 
-                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
+            End While
 
-                For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
-                    constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
-                    Dim constvpid As String = dbPortfolioNames(constFilterName)
-                    Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
+            Dim outputCollection As New Collection
+            Dim outputLine As String = ""
 
-                    If awinSettings.englishLanguage Then
-                        outputLine = constFilterName & " deleted ..."
+            If returnValue = DialogResult.OK Then
+                If ControlID = deleteDatenbank Or
+                    ControlID = deleteFromSession Then
+
+                    appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
+
+                    For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
+                        constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
+                        Dim constvpid As String = dbPortfolioNames(constFilterName)
+                        Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
+                        dbPortfolioNames.Remove(constFilterName)
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = constFilterName & " deleted ..."
+                        Else
+                            outputLine = constFilterName & " wurde gelöscht ..."
+                        End If
+                        outputCollection.Add(outputLine)
+                    Next
+
+                    appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
+                End If
+
+                If ControlID = deleteFilter Then
+
+                    Dim removeOK As Boolean = False
+                    Dim filter As clsFilter = Nothing
+
+                    constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                    filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                        ' Filter muss aus der Datenbank gelöscht werden.
+
+                        removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
+                        If removeOK = False Then
+                            Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                        Else
+                            ' DBFilter ist nun aus der DB gelöscht
+                            ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                            Call filterDefinitions.filterListe.Remove(constFilterName)
+                            Call MsgBox(constFilterName & " wurde gelöscht ...")
+                        End If
                     Else
-                        outputLine = constFilterName & " wurde gelöscht ..."
+                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                        removeOK = False
                     End If
-                    outputCollection.Add(outputLine)
-                Next
 
-                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
-
-
-                ' tk 28.7.19 soll jetzt auch Mehrfach-Löschung von Portfolios zulassen
-                'constFilterName = removeConstFilterFrm.ListBox1.Text
-
-                'Call awinRemoveConstellation(constFilterName, removeFromDB)
-                'Call MsgBox(constFilterName & " wurde gelöscht ...")
-
-                'If constFilterName = currentConstellationName Then
-
-                '    ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                '    'Call storeSessionConstellation("Last")
-                '    'currentConstellationName = "Last"
-                'Else
-                '    ' aktuelle Konstellation bleibt unverändert
-                'End If
-
-
-            End If
-            If ControlID = deleteFilter Then
-
-                Dim removeOK As Boolean = False
-                Dim filter As clsFilter = Nothing
-
-                constFilterName = removeConstFilterFrm.ListBox1.Text
-
-                filter = filterDefinitions.retrieveFilter(constFilterName)
-
-                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                    ' Filter muss aus der Datenbank gelöscht werden.
-
-                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
-                    If removeOK = False Then
-                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
-                    Else
-                        ' DBFilter ist nun aus der DB gelöscht
-                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
-                        Call filterDefinitions.filterListe.Remove(constFilterName)
-                        Call MsgBox(constFilterName & " wurde gelöscht ...")
-                    End If
-                Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
-                    removeOK = False
                 End If
 
             End If
 
-        End If
-        enableOnUpdate = True
-        ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
-        If outputCollection.Count > 0 Then
-            Dim header As String = "Löschen von Portfolios"
-            If awinSettings.englishLanguage Then
-                header = "Delete Portfolios"
+            enableOnUpdate = True
+            ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
+            If outputCollection.Count > 0 Then
+                Dim header As String = "Löschen von Portfolios"
+                If awinSettings.englishLanguage Then
+                    header = "Delete Portfolios"
+                End If
+                Call showOutPut(outputCollection, header:=header, explanation:="")
             End If
-            Call showOutPut(outputCollection, header:=header, explanation:="")
         End If
+
 
     End Sub
 
@@ -426,33 +431,12 @@ Imports System.Web
             Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
 
-            '???appInstance.ScreenUpdating = False
-
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
                 storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
             Else
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
-
-            'If Not loadFromSession Then
-
-            '    dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
-
-            '    'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
-            '    ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
-            '    For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
-
-            '        If projectConstellations.Contains(kvp.Key) Then
-            '            projectConstellations.Remove(kvp.Key)
-            '            projectConstellations.Add(kvp.Value)
-            '        Else
-            '            projectConstellations.Add(kvp.Value)
-            '        End If
-
-            '    Next
-
-            'End If
 
 
             Dim constellationsToDo As New clsConstellations
@@ -480,9 +464,7 @@ Imports System.Web
 
                     ' tmpname ist nicht mehr in der Session geladen
                     If IsNothing(checkconst) And Not loadFromSession Then
-                        '' ''' hole Portfolio (tmpname) aus den dbConstellations-liste
-                        '' ''checkconst = dbConstellations.getConstellation(tmpName)
-                        ''
+
                         ' hole Portfolio (tmpname) aus den db
                         checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
                                                                                                            dbPortfolioNames(tmpName),
@@ -507,9 +489,6 @@ Imports System.Web
                             ' alles in Ordnung 
                             ok = True
                         Else
-                            ' tk 22.7. 19 war vorher:  
-                            'If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
-                            '
                             If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
                                 ok = True
                             End If

@@ -325,7 +325,8 @@ Public Module awinGeneralModules
         ImportProjekte.Clear(False)
 
         ' die ProjectConstellations bleiben erhalten - aber sie sind einfach 
-        projectConstellations.clearLoadedPortfolios()
+        ' projectConstellations.clearLoadedPortfolios()
+        projectConstellations.Clear()
 
 
         ' es gibt ja nix mehr in der Session 
@@ -4330,6 +4331,11 @@ Public Module awinGeneralModules
 
         If returnValue Then
             Try
+                If Not IsNothing(constellationName) Then
+                    projectConstellations.Remove(constellationName)
+                Else
+                    Call MsgBox("Es wurde keine Portfolio ausgewählt")
+                End If
                 If Not IsNothing(activeConstellation) Then
                     ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
                     projectConstellations.Remove(activeConstellation.constellationName)

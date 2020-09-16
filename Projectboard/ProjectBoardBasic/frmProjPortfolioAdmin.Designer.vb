@@ -77,7 +77,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.TreeViewProjekte)
         Me.Panel1.Location = New System.Drawing.Point(-4, 0)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(368, 534)
         Me.Panel1.TabIndex = 0
@@ -263,7 +263,7 @@ Partial Class frmProjPortfolioAdmin
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.TreeViewProjekte.Location = New System.Drawing.Point(26, 33)
-        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
         Me.TreeViewProjekte.Size = New System.Drawing.Size(316, 391)
         Me.TreeViewProjekte.TabIndex = 73

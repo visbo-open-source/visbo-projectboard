@@ -321,7 +321,7 @@ Public Class frmProjPortfolioAdmin
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                    .Text = "Löschen von Projekten, Varianten, Timestamps aus der DB"
                 Else
                     .Text = "Delete projects, variants, timestamps from DB"
                 End If
