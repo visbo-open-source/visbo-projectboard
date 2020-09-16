@@ -4978,7 +4978,6 @@ Public Module agm2
                                                         ' OvertimeRate in Tagessatz umrechnen
                                                         Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
                                                         hoverstr = Split(hoverstr(0), "€", -1)
-                                                        'newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
 
                                                         ' StandardRate in Tagessatz umrechnen
                                                         Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
@@ -22928,8 +22927,6 @@ Public Module agm2
                                         Else
                                             .kapazitaet(cp) = .defaultKapa
                                         End If
-                                        '.kapazitaet(cp) = .defaultKapa
-                                        '.externeKapazitaet(cp) = 0.0
 
                                     Next
                                     .farbe = c.Interior.Color

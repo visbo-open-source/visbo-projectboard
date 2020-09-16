@@ -31,10 +31,6 @@ Public Class clsRollenDefinitionWeb
 
     Public kapazitaet() As Double
 
-    ' tk 23.11. nicht mehr relevant, bleibt drin, um alte Datenmodelle behandeln zu können 
-    Public tagessatzExtern As Double = Nothing
-    Public externeKapazitaet() As Double = Nothing
-
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
     Public startOfCal As Date
@@ -413,10 +409,6 @@ Public Class clsRollenDefinitionWeb
             ' dieser startOfCal gibt jetzt an, wo der Array genau zu beginnen hat ...
             startOfCal = startOfNonStandardValues.ToUniversalTime
 
-
-            ' tk 3.12.18 wird nicht mehr benötigt ...
-            tagessatzExtern = Nothing
-            externeKapazitaet = Nothing
 
         End With
     End Sub
