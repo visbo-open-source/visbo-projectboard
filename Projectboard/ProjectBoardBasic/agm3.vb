@@ -2606,9 +2606,9 @@ Public Module agm3
                         Next
                     Else
                         If awinSettings.englishLanguage Then
-                            msgtxt = "Error: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
+                            msgtxt = "Warning: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
                         Else
-                            msgtxt = "Fehler: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
+                            msgtxt = "Warning: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
                         End If
                         'oPCollection.Add(msgtxt)
                         Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
