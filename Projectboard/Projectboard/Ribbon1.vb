@@ -1417,6 +1417,7 @@ Imports System.Web
             Dim ProjektEingabe As New frmProjektEingabe1
             ProjektEingabe.existingProjAsTemplate = newProj
 
+
             Dim zeile As Integer = 0
 
             Dim pNrDoesNotExistYet As Boolean = True
