@@ -17160,7 +17160,7 @@ Public Module agm2
         Dim spalte As Integer = 1
 
 
-        Dim startOfCustomFields As Integer = 16
+        Dim startOfCustomFields As Integer = 17
         Dim ersteZeile As Excel.Range
 
 
@@ -17191,6 +17191,7 @@ Public Module agm2
                 CType(.Cells(1, 13), Excel.Range).Value = "Strategy"
                 CType(.Cells(1, 14), Excel.Range).Value = "Risk"
                 CType(.Cells(1, 15), Excel.Range).Value = "Description"
+                CType(.Cells(1, 16), Excel.Range).Value = "Row-Nr"
             Else
 
                 CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
@@ -17216,6 +17217,7 @@ Public Module agm2
                 CType(.Cells(1, 13), Excel.Range).Value = "Strategie"
                 CType(.Cells(1, 14), Excel.Range).Value = "Risiko"
                 CType(.Cells(1, 15), Excel.Range).Value = "Beschreibung"
+                CType(.Cells(1, 16), Excel.Range).Value = "Zeilen-Nr"
 
 
             End If
@@ -17331,6 +17333,8 @@ Public Module agm2
                     CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.StrategicFit
                     CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.Risiko
                     CType(.Cells(zeile, 15), Excel.Range).Value = kvp.Value.fullDescription
+
+                    CType(.Cells(zeile, 16), Excel.Range).Value = kvp.Value.tfZeile
 
                     spalte = startOfCustomFields
                     For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
@@ -17454,7 +17458,7 @@ Public Module agm2
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                     Else
-                        ' customFields
+                        ' Zeilen-Nummer und customFields
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                     End If
