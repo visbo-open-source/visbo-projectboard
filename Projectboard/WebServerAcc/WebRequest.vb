@@ -2585,6 +2585,8 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
+                    ' timestamp und validFrom auf den ersten des Monats setzen
+                    listofOrgaWeb.validFrom = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
                     Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
                     CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
                     CType(newsetting, clsVCSettingOrganisation).userId = ""
@@ -2595,7 +2597,12 @@ Public Class Request
                     If anzSetting = 1 Then
 
                         ' Update der Organisation - Setting
-                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom = listofOrgaWeb.validFrom Then
+                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Month = listofOrgaWeb.validFrom.Month And
+                            CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Year = listofOrgaWeb.validFrom.Year Then
+                            ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
+                            validFrom = oldsetting.timestamp
+                            CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp
+                            CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
                             newsetting._id = settingID
                             result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
                         Else

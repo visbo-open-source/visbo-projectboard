@@ -6255,7 +6255,6 @@ Imports System.Web
         ' öffnen des LogFiles
         Call logfileOpen()
 
-
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
             weiterMachen = True
@@ -7341,7 +7340,8 @@ Imports System.Web
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
                 listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
 
-                '' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
+                ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
+                ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
                 Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
                 Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
 

@@ -23799,7 +23799,7 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
+        ' Read & check Config-File - soll in my.settings.xlsConfig festgehalten werden
         Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow, meldungen)
 
         If allesOK Then
@@ -23821,7 +23821,7 @@ Public Module agm2
                 meldungen.Add(outputline)
             Else
                 If kapaConfig.ContainsKey("CalendarReferenceFile") Then
-
+                    ' es gibt ein CalendarReferenceFile, indem enthalten ist, von wann bis wann die Kapas und auch die Istdaten eines Monats gehen
                     Dim calendarRefFile As String = kapaConfig("CalendarReferenceFile").Inputfile
                     If Not IsNothing(calendarRefFile) Then
                         If My.Computer.FileSystem.FileExists(calendarRefFile) Then
@@ -23930,6 +23930,7 @@ Public Module agm2
                     '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
 
                     ' there is no calendarReference to consider for importing capacities
+                    ' therefor it will be done monthly (first of month til lastday of month)
                     If listOfFiles.Count >= 1 Then
 
                         For Each tmpDatei As String In listOfFiles
