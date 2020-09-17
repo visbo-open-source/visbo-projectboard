@@ -8,6 +8,8 @@
     Public Property Inputfile As String
     Public Property Typ As String
     Public Property cellrange As Boolean
+    Public Property tabNr As Integer
+    Public Property tabName As String
     Public Property column As Integer
     Public Property columnDescript As String
     Public Property row As Integer
@@ -21,6 +23,8 @@
         Inputfile = ""
         Typ = "Text"
         cellrange = False
+        tabNr = 1
+        tabName = ""
         column = 0
         columnDescript = "do not exist so far"
         row = 0
