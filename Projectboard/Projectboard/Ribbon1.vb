@@ -1417,6 +1417,7 @@ Imports System.Web
             Dim ProjektEingabe As New frmProjektEingabe1
             ProjektEingabe.existingProjAsTemplate = newProj
 
+
             Dim zeile As Integer = 0
 
             Dim pNrDoesNotExistYet As Boolean = True
@@ -5628,58 +5629,62 @@ Imports System.Web
 
 
                             projectConstellations.Add(sessionConstellationP)
-                            projectConstellations.Add(sessionConstellationS)
+
+                            If Not IsNothing(sessionConstellationS) Then
+                                projectConstellations.Add(sessionConstellationS)
+                            End If
+
                             ' jetzt auf Projekt-Tafel anzeigen 
 
                             currentConstellationName = sessionConstellationP.constellationName
-                            ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
-                            ' die andere kann dann über loadConstelaltion gezeichnet werden 
-                            Call awinZeichnePlanTafel(sessionConstellationP)
+                                ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
+                                ' die andere kann dann über loadConstelaltion gezeichnet werden 
+                                Call awinZeichnePlanTafel(sessionConstellationP)
 
-                            'Call loadSessionConstellation(scenarioNameP, False, True)
+                                'Call loadSessionConstellation(scenarioNameP, False, True)
 
-                            '' tk 8.5.19 auskommentiert 
-                            'If isAllianzImport1 Then
-                            '    If sessionConstellationS.count > 0 Then
+                                '' tk 8.5.19 auskommentiert 
+                                'If isAllianzImport1 Then
+                                '    If sessionConstellationS.count > 0 Then
 
-                            '        If projectConstellations.Contains(scenarioNameS) Then
-                            '            projectConstellations.Remove(scenarioNameS)
-                            '        End If
+                                '        If projectConstellations.Contains(scenarioNameS) Then
+                                '            projectConstellations.Remove(scenarioNameS)
+                                '        End If
 
-                            '        projectConstellations.Add(sessionConstellationS)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
+                                '        projectConstellations.Add(sessionConstellationS)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
 
-                            '        Call loadSessionConstellation(scenarioNameS, False, True)
+                                '        Call loadSessionConstellation(scenarioNameS, False, True)
 
-                            '    Else
-                            '        Call MsgBox("keine Programmlinien importiert ...")
-                            '    End If
-                            'Else
-                            '    If sessionConstellationP.count > 0 Then
+                                '    Else
+                                '        Call MsgBox("keine Programmlinien importiert ...")
+                                '    End If
+                                'Else
+                                '    If sessionConstellationP.count > 0 Then
 
-                            '        If projectConstellations.Contains(scenarioNameP) Then
-                            '            projectConstellations.Remove(scenarioNameP)
-                            '        End If
+                                '        If projectConstellations.Contains(scenarioNameP) Then
+                                '            projectConstellations.Remove(scenarioNameP)
+                                '        End If
 
-                            '        projectConstellations.Add(sessionConstellationP)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
-                            '        Call loadSessionConstellation(scenarioNameP, False, True)
+                                '        projectConstellations.Add(sessionConstellationP)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
+                                '        Call loadSessionConstellation(scenarioNameP, False, True)
 
-                            '    Else
-                            '        Call MsgBox("keine Projekte importiert ...")
-                            '    End If
-                            'End If
-
-
+                                '    Else
+                                '        Call MsgBox("keine Projekte importiert ...")
+                                '    End If
+                                'End If
 
 
-                            If ImportProjekte.Count > 0 Then
-                                ImportProjekte.Clear(False)
+
+
+                                If ImportProjekte.Count > 0 Then
+                                    ImportProjekte.Clear(False)
+                                End If
                             End If
-                        End If
 
 
-                    Else
+                        Else
 
                         Call MsgBox("bitte Datei auswählen ...")
                     End If

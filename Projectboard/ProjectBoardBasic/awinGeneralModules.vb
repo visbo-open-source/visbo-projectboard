@@ -2378,7 +2378,7 @@ Public Module awinGeneralModules
                 Dim i As Integer = 1
                 While i <= completeStr.Length And resultValue = True
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType("", Char)}, 2)
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
 
                     If roleCostStr.Length = 2 Then
 
