@@ -10,15 +10,13 @@
             For ii As Integer = 0 To tmpstr.Length - 1
                 Me.ListBoxOutput.Items.Add(tmpstr(ii))
             Next
-
-            Try
-                Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
-            Catch ex As Exception
-
-            End Try
-
-
         Next
+
+        Try
+            Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 
