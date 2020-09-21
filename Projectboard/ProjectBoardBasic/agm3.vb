@@ -2482,7 +2482,7 @@ Public Module agm3
                                 For ix As Integer = firstRow To lastRow
 
                                     input_ok = True                   ' Initialise
-                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String)
+                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
                                     If IsNothing(rolename) Then
                                         input_ok = False
                                     End If
