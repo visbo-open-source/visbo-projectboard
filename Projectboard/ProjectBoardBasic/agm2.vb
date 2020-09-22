@@ -20628,7 +20628,7 @@ Public Module agm2
                 ' Speziell für Pilot-Kunden
                 ' -----------------------------------------------------
                 ' ab jetzt braucht man keine Lizenzen mehr ... 
-                Dim pilot As Date = "15.11.2118"
+
 
                 If special = "BHTC" Then
 

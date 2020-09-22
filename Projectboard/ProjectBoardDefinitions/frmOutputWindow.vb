@@ -7,9 +7,12 @@
 
             ' hier muss es jetzt zerhackt werden ... 
             Dim tmpstr() As String = CStr(textCollection.Item(i)).Split(New Char() {CChar(vbLf), CChar(vbCr)})
+
             For ii As Integer = 0 To tmpstr.Length - 1
                 Me.ListBoxOutput.Items.Add(tmpstr(ii))
             Next
+
+
         Next
 
         Try
@@ -17,6 +20,8 @@
         Catch ex As Exception
 
         End Try
+
+
 
     End Sub
 
