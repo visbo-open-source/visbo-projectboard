@@ -136,10 +136,6 @@ Imports System.Web
 
         ElseIf ControlID = deleteFromSession Then
             removeConstFilterFrm.frmOption = "ProjConstellation"
-            For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                dbPortfolioNames.Add(kvp.Key, kvp.Value.vpID)
-            Next
-            removeConstFilterFrm.dbPortfolioNames = dbPortfolioNames
             removeFromDB = False
 
         ElseIf ControlID = deleteFilter And Not noDB Then
@@ -158,97 +154,96 @@ Imports System.Web
             removeFromDB = False
         End If
 
-        Dim weiterMitFormular As Boolean = True
+        enableOnUpdate = False
 
-        If (ControlID = deleteDatenbank Or ControlID = deleteFromSession) And removeConstFilterFrm.dbPortfolioNames.Count <= 0 Then
-            Call MsgBox("es sind keine Portfolios geladen....")
-            weiterMitFormular = False
-        End If
-        If ControlID = deleteFilter And filterDefinitions.filterListe.Count <= 0 Then
-            Call MsgBox("es sind keine Filter geladen....")
-            weiterMitFormular = False
-        End If
+        While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
 
-        If weiterMitFormular Then
+            ' Formular mit aufgelisteten Portfolios/Filter anzeigen
+            returnValue = removeConstFilterFrm.ShowDialog
 
-            enableOnUpdate = False
+        End While
 
-            While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
+        Dim outputCollection As New Collection
+        Dim outputLine As String = ""
 
-                ' Formular mit aufgelisteten Portfolios/Filter anzeigen
-                returnValue = removeConstFilterFrm.ShowDialog
+        If returnValue = DialogResult.OK Then
+            If ControlID = deleteDatenbank Or
+                ControlID = deleteFromSession Then
 
-            End While
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
 
-            Dim outputCollection As New Collection
-            Dim outputLine As String = ""
+                For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
+                    constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
+                    Dim constvpid As String = dbPortfolioNames(constFilterName)
+                    Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
 
-            If returnValue = DialogResult.OK Then
-                If ControlID = deleteDatenbank Or
-                    ControlID = deleteFromSession Then
-
-                    appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlWait
-
-                    For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
-                        constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
-                        Dim constvpid As String = dbPortfolioNames(constFilterName)
-                        Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
-                        dbPortfolioNames.Remove(constFilterName)
-
-                        If awinSettings.englishLanguage Then
-                            outputLine = constFilterName & " deleted ..."
-                        Else
-                            outputLine = constFilterName & " wurde gelöscht ..."
-                        End If
-                        outputCollection.Add(outputLine)
-                    Next
-
-                    appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
-
-                End If
-
-                If ControlID = deleteFilter Then
-
-                    Dim removeOK As Boolean = False
-                    Dim filter As clsFilter = Nothing
-
-                    constFilterName = removeConstFilterFrm.ListBox1.Text
-
-                    filter = filterDefinitions.retrieveFilter(constFilterName)
-
-                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                        ' Filter muss aus der Datenbank gelöscht werden.
-
-                        removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
-                        If removeOK = False Then
-                            Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
-                        Else
-                            ' DBFilter ist nun aus der DB gelöscht
-                            ' hier: wird der Filter nun noch aus der Filterliste gelöscht
-                            Call filterDefinitions.filterListe.Remove(constFilterName)
-                            Call MsgBox(constFilterName & " wurde gelöscht ...")
-                        End If
+                    If awinSettings.englishLanguage Then
+                        outputLine = constFilterName & " deleted ..."
                     Else
-                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
-                        removeOK = False
+                        outputLine = constFilterName & " wurde gelöscht ..."
                     End If
+                    outputCollection.Add(outputLine)
+                Next
 
+                appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
+
+
+                ' tk 28.7.19 soll jetzt auch Mehrfach-Löschung von Portfolios zulassen
+                'constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                'Call awinRemoveConstellation(constFilterName, removeFromDB)
+                'Call MsgBox(constFilterName & " wurde gelöscht ...")
+
+                'If constFilterName = currentConstellationName Then
+
+                '    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                '    'Call storeSessionConstellation("Last")
+                '    'currentConstellationName = "Last"
+                'Else
+                '    ' aktuelle Konstellation bleibt unverändert
+                'End If
+
+
+            End If
+            If ControlID = deleteFilter Then
+
+                Dim removeOK As Boolean = False
+                Dim filter As clsFilter = Nothing
+
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                    ' Filter muss aus der Datenbank gelöscht werden.
+
+                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
+                    If removeOK = False Then
+                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                    Else
+                        ' DBFilter ist nun aus der DB gelöscht
+                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                        Call filterDefinitions.filterListe.Remove(constFilterName)
+                        Call MsgBox(constFilterName & " wurde gelöscht ...")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                    removeOK = False
                 End If
 
             End If
 
-            enableOnUpdate = True
-            ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
-            If outputCollection.Count > 0 Then
-                Dim header As String = "Löschen von Portfolios"
-                If awinSettings.englishLanguage Then
-                    header = "Delete Portfolios"
-                End If
-                Call showOutPut(outputCollection, header:=header, explanation:="")
-            End If
         End If
-
+        enableOnUpdate = True
+        ' tk 28.7.19 Beim Löschen von Portfolios ergänzt 
+        If outputCollection.Count > 0 Then
+            Dim header As String = "Löschen von Portfolios"
+            If awinSettings.englishLanguage Then
+                header = "Delete Portfolios"
+            End If
+            Call showOutPut(outputCollection, header:=header, explanation:="")
+        End If
 
     End Sub
 
@@ -431,12 +426,33 @@ Imports System.Web
             Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
 
+            '???appInstance.ScreenUpdating = False
+
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
                 storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
             Else
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
+
+            'If Not loadFromSession Then
+
+            '    dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(storedAtOrBefore, err)
+
+            '    'ur:24.06.2019: hier werden nun die Portfolios, die eben aus der DB gelesen wurden in der 
+            '    ' Liste projectConstellations ersetzt, falls bereits vorhanden oder hinzugefügt, falls noch nicht vorhanden
+            '    For Each kvp As KeyValuePair(Of String, clsConstellation) In dbConstellations.Liste
+
+            '        If projectConstellations.Contains(kvp.Key) Then
+            '            projectConstellations.Remove(kvp.Key)
+            '            projectConstellations.Add(kvp.Value)
+            '        Else
+            '            projectConstellations.Add(kvp.Value)
+            '        End If
+
+            '    Next
+
+            'End If
 
 
             Dim constellationsToDo As New clsConstellations
@@ -464,7 +480,9 @@ Imports System.Web
 
                     ' tmpname ist nicht mehr in der Session geladen
                     If IsNothing(checkconst) And Not loadFromSession Then
-
+                        '' ''' hole Portfolio (tmpname) aus den dbConstellations-liste
+                        '' ''checkconst = dbConstellations.getConstellation(tmpName)
+                        ''
                         ' hole Portfolio (tmpname) aus den db
                         checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
                                                                                                            dbPortfolioNames(tmpName),
@@ -489,6 +507,9 @@ Imports System.Web
                             ' alles in Ordnung 
                             ok = True
                         Else
+                            ' tk 22.7. 19 war vorher:  
+                            'If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            '
                             If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
                                 ok = True
                             End If
@@ -1395,6 +1416,7 @@ Imports System.Web
         If weiterMachen Then
             Dim ProjektEingabe As New frmProjektEingabe1
             ProjektEingabe.existingProjAsTemplate = newProj
+
 
             Dim zeile As Integer = 0
 
@@ -5318,7 +5340,6 @@ Imports System.Web
         ' Übernahme 
 
         Dim dateiName As String
-        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5387,11 +5408,12 @@ Imports System.Web
 
                         projectConstellations.Add(sessionConstellation)
                         Call loadSessionConstellation(scenarioName, False, True)
-
-                        listOfArchivFiles.Add(dateiName)
                     Else
                         Call MsgBox("keine Projekte importiert ...")
                     End If
+
+                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
@@ -5401,10 +5423,6 @@ Imports System.Web
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
 
-                ' verschieben der erfolgreich importierten files
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.massenEdit))
-                End If
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5433,8 +5451,6 @@ Imports System.Web
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-
-        Dim listOfArchivFiles As New List(Of String)
 
         Dim ohneFehler As Boolean = True
 
@@ -5550,9 +5566,6 @@ Imports System.Web
                             Else
                                 Call awinImportProjektInventur()
                             End If
-
-                            listOfArchivFiles.Add(dateiName)
-
                         Catch ex As Exception
 
                             Call MsgBox("Fehler bei Import : " & ex.Message)
@@ -5614,68 +5627,64 @@ Imports System.Web
                             ' tk 22.7.19 es sollen beide Constellations in project-Constellations geschrieben werden ... 
                             ' tk 12.8.19 diese beiden Constellations sollen nicht mehr eingetragen werden , nur noch die Rupi-Liste 
 
+
+                            projectConstellations.Add(sessionConstellationP)
+
                             If Not IsNothing(sessionConstellationS) Then
                                 projectConstellations.Add(sessionConstellationS)
                             End If
 
-                            If Not IsNothing(sessionConstellationP) Then
-                                projectConstellations.Add(sessionConstellationP)
-                                ' jetzt auf Projekt-Tafel anzeigen 
+                            ' jetzt auf Projekt-Tafel anzeigen 
 
-                                currentConstellationName = sessionConstellationP.constellationName
+                            currentConstellationName = sessionConstellationP.constellationName
                                 ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
                                 ' die andere kann dann über loadConstelaltion gezeichnet werden 
                                 Call awinZeichnePlanTafel(sessionConstellationP)
+
+                                'Call loadSessionConstellation(scenarioNameP, False, True)
+
+                                '' tk 8.5.19 auskommentiert 
+                                'If isAllianzImport1 Then
+                                '    If sessionConstellationS.count > 0 Then
+
+                                '        If projectConstellations.Contains(scenarioNameS) Then
+                                '            projectConstellations.Remove(scenarioNameS)
+                                '        End If
+
+                                '        projectConstellations.Add(sessionConstellationS)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
+
+                                '        Call loadSessionConstellation(scenarioNameS, False, True)
+
+                                '    Else
+                                '        Call MsgBox("keine Programmlinien importiert ...")
+                                '    End If
+                                'Else
+                                '    If sessionConstellationP.count > 0 Then
+
+                                '        If projectConstellations.Contains(scenarioNameP) Then
+                                '            projectConstellations.Remove(scenarioNameP)
+                                '        End If
+
+                                '        projectConstellations.Add(sessionConstellationP)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
+                                '        Call loadSessionConstellation(scenarioNameP, False, True)
+
+                                '    Else
+                                '        Call MsgBox("keine Projekte importiert ...")
+                                '    End If
+                                'End If
+
+
+
+
+                                If ImportProjekte.Count > 0 Then
+                                    ImportProjekte.Clear(False)
+                                End If
                             End If
 
-                            'Call loadSessionConstellation(scenarioNameP, False, True)
 
-                            '' tk 8.5.19 auskommentiert 
-                            'If isAllianzImport1 Then
-                            '    If sessionConstellationS.count > 0 Then
-
-                            '        If projectConstellations.Contains(scenarioNameS) Then
-                            '            projectConstellations.Remove(scenarioNameS)
-                            '        End If
-
-                            '        projectConstellations.Add(sessionConstellationS)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
-
-                            '        Call loadSessionConstellation(scenarioNameS, False, True)
-
-                            '    Else
-                            '        Call MsgBox("keine Programmlinien importiert ...")
-                            '    End If
-                            'Else
-                            '    If sessionConstellationP.count > 0 Then
-
-                            '        If projectConstellations.Contains(scenarioNameP) Then
-                            '            projectConstellations.Remove(scenarioNameP)
-                            '        End If
-
-                            '        projectConstellations.Add(sessionConstellationP)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
-                            '        Call loadSessionConstellation(scenarioNameP, False, True)
-
-                            '    Else
-                            '        Call MsgBox("keine Projekte importiert ...")
-                            '    End If
-                            'End If
-
-                            ' ImportDatei ins archive-Directory schieben
-                            If listOfArchivFiles.Count > 0 Then
-                                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.batchlists))
-                            End If
-
-
-
-                            If ImportProjekte.Count > 0 Then
-                                ImportProjekte.Clear(False)
-                            End If
-                        End If
-
-
-                    Else
+                        Else
 
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
@@ -5718,7 +5727,6 @@ Imports System.Web
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim listOfArchivFiles As New List(Of String)
 
         Dim getScenarioImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
@@ -5800,8 +5808,6 @@ Imports System.Web
                         Call MsgBox("keine Projekte für Portfolio erkannt ...")
                     End If
 
-                    ' erfolgreich importierte Files aufsammeln
-                    listOfArchivFiles.Add(dateiName)
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
@@ -5811,10 +5817,6 @@ Imports System.Web
                     Call MsgBox("bitte Datei auswählen ...")
                 End If
 
-                ' verschieben der erfolgreich importierten files
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.scenariodefs))
-                End If
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -5838,7 +5840,6 @@ Imports System.Web
     Public Sub Tom2G4B1ModulImport(control As IRibbonControl)
 
         Dim dateiName As String
-        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5869,17 +5870,10 @@ Imports System.Web
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True, False, False)
 
-                listOfArchivFiles.Add(dateiName)
-
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
             End Try
-
-            ' verschieben der erfolgreich importierten files
-            If listOfArchivFiles.Count > 0 Then
-                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.modulScen))
-            End If
         Else
             Call MsgBox(" Import Scenario wurde abgebrochen")
         End If
@@ -5901,7 +5895,6 @@ Imports System.Web
     Public Sub PT4G1B10AddModularImport(control As IRibbonControl)
 
         Dim dateiName As String
-        Dim listOfArchivFiles As New List(Of String)
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
@@ -5927,8 +5920,6 @@ Imports System.Web
                 ' jetzt werden die Regeln ausgelesen ...
                 Call awinReadAddOnRules(ruleSet)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-
-                listOfArchivFiles.Add(dateiName)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -6005,11 +5996,6 @@ Imports System.Web
 
                 End If
 
-                ' verschieben der erfolgreich importierten files
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.addElements))
-                End If
-
             End If
 
         Else
@@ -6039,7 +6025,6 @@ Imports System.Web
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
         Dim listofVorlagen As New Collection
-        Dim listOfArchivFiles As New List(Of String)
         'Dim xlsRplanImport As Excel.Workbook
 
         Call projektTafelInit()
@@ -6077,8 +6062,6 @@ Imports System.Web
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                     ' xlsRplanImport.Close(SaveChanges:=True)
 
-                    ' list of Files, which are imported with success
-                    listOfArchivFiles.Add(dateiName)
 
                     appInstance.ScreenUpdating = True
                     Call importProjekteEintragen(importDate, True, True, True)
@@ -6093,15 +6076,14 @@ Imports System.Web
 
             Next i
 
-            ' verschieben der erfolgreich importierten files
-            If listOfArchivFiles.Count > 0 Then
-                Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.rplan))
-            End If
-
+            ' ''appInstance.ScreenUpdating = True
+            ' ''Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Else
             'Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
             'Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
+
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6171,7 +6153,6 @@ Imports System.Web
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectImportFiles
-        Dim listOfArchivFiles As New List(Of String)
         Dim protokoll As New SortedList(Of Integer, clsProtokoll)
 
         ' öffnen des LogFiles
@@ -6203,9 +6184,6 @@ Imports System.Web
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                 Call importProjekteEintragen(importDate, True, True, True)
 
-                ' aufsammeln der zu archivierenden Files
-                listOfArchivFiles.Add(dateiName)
-
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
 
@@ -6222,10 +6200,11 @@ Imports System.Web
                     Call writeProtokoll(protokoll, tabblattname)
                 End If
 
-                ' verschieben der erfolgreich importierten files
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.rplan))
-                End If
+
+                ' tk Änderung 26.11.15 das muss doch nach dem Import noch nicht gemacht werden
+                ' sondern erst nach Editieren Wörterbuch oder ganz am Schluss beim Beenden 
+                'Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseMilestoneDefinitions()
 
             Catch ex As Exception
 
@@ -6263,7 +6242,7 @@ Imports System.Web
 
         Dim dateiname As String = ""
 
-        ' tk by Ute für das Verschieben der Datei in den Archiv-Ordner wenn erfolgreich 
+        ' tk by Ute für das Verschieben de rDatei nin den Archiv-Ordner wenn erfolgreich 
         Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
@@ -7741,8 +7720,6 @@ Imports System.Web
         Dim listofVorlagen As Collection
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
-        Dim listOfArchivFiles As New List(Of String)
-
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
@@ -7806,15 +7783,11 @@ Imports System.Web
                                 Dim keyStr As String = calcProjektKey(hproj)
                                 ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                                 myCollection.Add(calcProjektKey(hproj))
-                                listOfArchivFiles.Add(dateiName)
-
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                             End Try
 
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                            ' liste der Dateien, die nach archive verschoben werden sollen
-
 
                         Catch ex1 As Exception
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -7838,12 +7811,6 @@ Imports System.Web
             Try
                 Call importProjekteEintragen(importDate, True, False, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-
-                ' ImportDatei ins archive-Directory schieben
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.visbo))
-                End If
-
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
             End Try
@@ -7893,8 +7860,8 @@ Imports System.Web
 
 
             Dim importDate As Date = Date.Now
-            Dim listOfArchivFiles As New List(Of String)
-
+            'Dim importDate As Date = "31.10.2013"
+            ''Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
             Dim listofVorlagen As Collection
             listofVorlagen = getMSImport.selImportFiles
 
@@ -7958,9 +7925,6 @@ Imports System.Web
                     Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                 End Try
 
-                ' erfolgreich importiertes msproject-File in Liste zum Archivieren speichern
-                listOfArchivFiles.Add(dateiName)
-
             Next i
 
             If missingRoleDefinitions.Count > 0 Or missingCostDefinitions.Count > 0 Then
@@ -8003,15 +7967,11 @@ Imports System.Web
             '' Cursor auf Default setzen
             Cursor.Current = Cursors.Default
 
+
             ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
+
             Try
                 Call importProjekteEintragen(importDate, True, True, True)
-
-                ' verschieben der erfolgreich importierten files
-                If listOfArchivFiles.Count > 0 Then
-                    Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.msproject))
-                End If
-
             Catch ex As Exception
                 If awinSettings.englishLanguage Then
                     Call MsgBox("Error at Import: " & vbLf & ex.Message)
@@ -8029,6 +7989,9 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+
+
 
     End Sub
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)

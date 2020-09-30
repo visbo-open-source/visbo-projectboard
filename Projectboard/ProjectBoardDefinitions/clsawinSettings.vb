@@ -7,6 +7,8 @@ Public Class clsawinSettings
 
     ' tk 17.6.2020 
     ' Kurzarbeit aktiviert oder nicht 
+
+    Public Property takeCapasFromOldOrga As Boolean
     Public Property kurzarbeitActivated As Boolean
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
@@ -298,6 +300,8 @@ Public Class clsawinSettings
 
         ReDim _importSettings(17)
 
+
+        _takeCapasFromOldOrga = True
         _kurzarbeitActivated = False
         _ActualdataOrgaUnits = ""
 

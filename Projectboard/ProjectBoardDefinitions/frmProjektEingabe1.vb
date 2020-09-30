@@ -57,11 +57,10 @@ Public Class frmProjektEingabe1
                 .vorlagenDropbox.Visible = False
                 .vorlagenDropbox.Enabled = False
                 .lbl_selProjName.Visible = True
-                .lbl_selProjName.Enabled = True
+                .lbl_selProjName.Enabled = False
                 .lbl_selProjName.Top = .vorlagenDropbox.Top
-                If awinSettings.englishLanguage Then
-                    .lbl_selProjName.Text = "Click to select Project-Name"
-                End If
+                .lbl_selProjName.Text = existingProjAsTemplate.name
+
             Else
                 .lbl_selProjName.Visible = False
                 .lbl_selProjName.Enabled = False
@@ -163,342 +162,6 @@ Public Class frmProjektEingabe1
     End Sub
 
 
-
-    Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
-
-        Dim msgtxt As String = ""
-
-        With projectName
-
-
-            ' Änderung tk 1.7.14: andernfalls kann ein Blank am Ende angehängt sein - dann kommt es im Nachgang zu einem Fehler 
-            Try
-                .Text = .Text.Trim
-            Catch ex As Exception
-                .Text = ""
-            End Try
-
-
-            If Len(.Text) < 2 Then
-
-                If awinSettings.englishLanguage Then
-                    msgtxt = "Projektname has to be at least 2 characters!"
-                Else
-                    msgtxt = "Projektname muss mindestens zwei Zeichen haben!"
-                End If
-                Call MsgBox(msgtxt)
-                .Text = ""
-                .Undo()
-                DialogResult = System.Windows.Forms.DialogResult.None
-
-            Else
-                If IsNumeric(.Text) Then
-                    If awinSettings.englishLanguage Then
-                        msgtxt = "numbers are not permitted as projectnames"
-                    Else
-                        msgtxt = "Zahlen sind nicht zugelassen"
-                    End If
-                    Call MsgBox(msgtxt)
-
-                    .Text = ""
-                    .Undo()
-                    DialogResult = System.Windows.Forms.DialogResult.None
-
-                ElseIf inProjektliste(.Text) Then
-                    If awinSettings.englishLanguage Then
-                        msgtxt = "projectname does already exist"
-                    Else
-                        msgtxt = "Projekt-Name bereits vorhanden !"
-                    End If
-                    Call MsgBox(msgtxt)
-
-                    .Text = ""
-                    .Undo()
-                    DialogResult = System.Windows.Forms.DialogResult.None
-                ElseIf Not isValidProjectName(.Text) Then
-                    If awinSettings.englishLanguage Then
-                        msgtxt = "projectname must not contain any special characters"
-                    Else
-                        msgtxt = "Der Projekt-Name darf keine Sonderzeichen Zeichen enthalten"
-                    End If
-                    Call MsgBox(msgtxt)
-
-                    .Text = ""
-                    .Undo()
-                    DialogResult = System.Windows.Forms.DialogResult.None
-                Else
-
-
-                    If Not AlleProjekte.containsPNr(txtbx_pNr.Text) Then
-                        DialogResult = System.Windows.Forms.DialogResult.OK
-                        MyBase.Close()
-                    Else
-                        If awinSettings.englishLanguage Then
-                            msgtxt = "Project Nr already exists ... "
-                        Else
-                            msgtxt = "Die Projekt-Nummer existiert bereits ..."
-                        End If
-
-                        Call MsgBox(msgtxt)
-
-                        txtbx_pNr.Text = ""
-                        txtbx_pNr.Undo()
-                        DialogResult = System.Windows.Forms.DialogResult.None
-
-                    End If
-
-
-                End If
-            End If
-        End With
-
-    End Sub
-
-    Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
-
-        'DialogResult = System.Windows.Forms.DialogResult.Cancel
-        MyBase.Close()
-
-    End Sub
-
-    Private Sub Erloes_LostFocus(sender As Object, e As EventArgs) Handles Erloes.LostFocus
-
-        With Me.Erloes
-            If Not IsNumeric(.Text) Then
-                MsgBox("bitte eine Zahl eingeben ")
-                .Text = ""
-                .Focus()
-            ElseIf CType(.Text, Double) < 0 Then
-                Call MsgBox(" der Erlös muss eine positive Dezimal-Zahl sein")
-                .Text = ""
-                .Focus()
-            End If
-        End With
-
-    End Sub
-
-
-    Private Sub vorlagenDropbox_LostFocus(sender As Object, e As EventArgs) Handles vorlagenDropbox.LostFocus
-
-        If Projektvorlagen.Liste.ContainsKey(vorlagenDropbox.Text) Then
-            awinSettings.lastProjektTyp = vorlagenDropbox.Text
-
-            Dim hvalue As Integer
-            Try
-                hvalue = CType(System.Math.Round(Projektvorlagen.getProject(vorlagenDropbox.Text).getGesamtKostenBedarf.Sum / 10,
-                                                     mode:=MidpointRounding.ToEven) * 10, Integer)
-
-            Catch ex As Exception
-
-            End Try
-
-            Me.Erloes.Text = hvalue.ToString("N0")
-        Else
-            Call MsgBox("Vorlage " & vorlagenDropbox.Text & " nicht vorhanden!")
-
-            With vorlagenDropbox
-                .Text = awinSettings.lastProjektTyp
-                .Focus()
-            End With
-
-        End If
-
-    End Sub
-
-
-    Private Sub vorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles vorlagenDropbox.SelectedIndexChanged
-
-
-        Dim oldVorlagenDauer As Integer = dauerVorlage
-        Dim diff As Integer
-
-        Try
-            vproj = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex)
-            dauerVorlage = vproj.dauerInDays
-            diff = dauerVorlage - oldVorlagenDauer
-
-
-        Catch ex As Exception
-            Call MsgBox("Vorlagen Dauer konnte nicht bestimmt werden ...")
-        End Try
-
-        Call setParametersOfVorlage()
-
-
-        If dauerUnverändert.Checked Then
-
-            'StartDatum muss gemäß Vorlagendauer errechnet werden
-
-            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-
-            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-
-        Else
-
-            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-            'calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-            calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-
-        End If
-
-        If awinSettings.englishLanguage Then
-            lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-        Else
-            lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-        End If
-
-        Dim hvalue As Integer = 0
-        Try
-            hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10,
-                                                                 mode:=MidpointRounding.ToEven) * 10, Integer)
-        Catch ex As Exception
-
-        End Try
-
-        Erloes.Text = hvalue.ToString("N0")
-
-    End Sub
-
-
-
-
-    Private Sub DateTimeEnde_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
-
-        If dontFire Then
-            ' nichts tun 
-        Else
-            If dauerUnverändert.Checked Then
-                'StartDatum muss gemäß Vorlagendauer errechnet werden
-                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
-                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                    DateTimeEnde.Value = DateTimeStart.Value.AddDays(dauerVorlage - 1)
-                Else
-                    calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
-                    calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
-
-                    DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
-
-                End If
-            Else
-                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
-
-                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                    DateTimeEnde.Value = DateTimeStart.Value.AddMonths(6)
-
-                Else
-                    calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-                    'calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
-                    calcProjektStart = DateTimeStart.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-
-                End If
-            End If
-
-            If awinSettings.englishLanguage Then
-                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            Else
-                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            End If
-
-        End If
-
-
-    End Sub
-
-    Private Sub DateTimeStart_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
-        If dontFire Then
-            ' nichts tun
-        Else
-            If dauerUnverändert.Checked Then
-                'StartDatum muss gemäß Vorlagendauer errechnet werden
-                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
-                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                    DateTimeStart.Value = Date.Now.AddMonths(1)
-                Else
-                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-                    calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-
-                    DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-
-
-                End If
-            Else
-                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
-                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                    DateTimeStart.Value = Date.Now.AddMonths(1)
-                    'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
-                Else
-                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-                    calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-                End If
-            End If
-
-            If awinSettings.englishLanguage Then
-                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            Else
-                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            End If
-        End If
-
-
-    End Sub
-
-    Private Sub dauerUnverändert_CheckedChanged(sender As Object, e As EventArgs) Handles dauerUnverändert.CheckedChanged
-
-        If dontFire Then
-            ' nichts tun
-        Else
-            If dauerUnverändert.Checked Then
-
-                If awinSettings.englishLanguage Then
-                    lbl_Referenz1.Text = "Reference"
-                Else
-                    lbl_Referenz1.Text = "Referenz"
-                End If
-
-                lbl_Referenz2.Visible = False
-                endMilestoneDropbox.Visible = False
-                DateTimeEnde.Visible = False
-
-                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-
-                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-            Else
-                If awinSettings.englishLanguage Then
-                    lbl_Referenz1.Text = "Reference 1"
-                    lbl_Referenz2.Text = "Reference 2"
-                Else
-                    lbl_Referenz1.Text = "Referenz 1"
-                    lbl_Referenz2.Text = "Referenz 2"
-                End If
-
-                lbl_Referenz2.Visible = True
-                endMilestoneDropbox.Visible = True
-                DateTimeEnde.Visible = True
-
-            End If
-
-            If awinSettings.englishLanguage Then
-                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            Else
-                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-                                        calcProjektEnde.ToShortDateString
-            End If
-
-        End If
-
-
-    End Sub
-
     Public Sub New()
 
         ' This call is required by the designer.
@@ -515,73 +178,7 @@ Public Class frmProjektEingabe1
 
 
 
-    Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
 
-
-        'If dontFire Then
-        '    ' nichts tun
-        'Else
-        '    If startMilestoneDropbox.Text = "Projektstart" Then
-        '        startMsOffset = 0
-        '    Else
-        '        startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
-        '    End If
-
-        '    If dauerUnverändert.Checked Then
-        '        calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
-        '        calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
-        '        DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
-        '    Else
-        '        calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
-        '        calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
-        '        DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
-        '    End If
-
-        '    If awinSettings.englishLanguage Then
-        '        lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-        '                                calcProjektEnde.ToShortDateString
-        '    Else
-        '        lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-        '                                calcProjektEnde.ToShortDateString
-        '    End If
-
-        'End If
-
-    End Sub
-
-    Private Sub endMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles endMilestoneDropbox.SelectedIndexChanged
-
-        'If dontFire Then
-        '    ' nichts tun
-        'Else
-        '    If endMilestoneDropbox.Text = "Projektende" Then
-        '        endMsOffset = dauerVorlage - 1
-        '    Else
-        '        endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
-        '    End If
-
-        '    If dauerUnverändert.Checked Then
-        '        calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
-        '        calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
-
-        '        DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
-        '    Else
-        '        calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
-        '        calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
-
-        '    End If
-
-        '    If awinSettings.englishLanguage Then
-        '        lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
-        '                                calcProjektEnde.ToShortDateString
-        '    Else
-        '        lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
-        '                                calcProjektEnde.ToShortDateString
-        '    End If
-
-        'End If
-
-    End Sub
 
     ''' <summary>
     ''' bestimmt den Abstand in Tagen zwischen Start-Meilenstein und Ende-Meilenstein in der Vorlage
@@ -613,21 +210,7 @@ Public Class frmProjektEingabe1
         End Get
     End Property
 
-    Private Sub businessUnitDropBox_SelectedIndexChanged(sender As Object, e As EventArgs)
 
-    End Sub
-
-    Private Sub Erloes_TextChanged(sender As Object, e As EventArgs) Handles Erloes.TextChanged
-        If IsNumeric(Erloes.Text) Then
-            If CDbl(Erloes.Text) < 0.0 Then
-                Call MsgBox("Budget kann nicht negativ sein")
-                Erloes.Text = "0"
-            End If
-        Else
-            Call MsgBox("Budget muss eine positive Zahl sein ")
-            Erloes.Text = "0"
-        End If
-    End Sub
 
 
 
@@ -732,18 +315,326 @@ Public Class frmProjektEingabe1
 
     End Sub
 
-    Private Sub txtbx_pNr_TextChanged(sender As Object, e As EventArgs) Handles txtbx_pNr.TextChanged
+
+
+
+    Private Sub vorlagenDropbox_SelectedIndexChanged_1(sender As Object, e As EventArgs) Handles vorlagenDropbox.SelectedIndexChanged
+
+        Dim oldVorlagenDauer As Integer = dauerVorlage
+        Dim diff As Integer
+
+        Try
+            vproj = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex)
+            dauerVorlage = vproj.dauerInDays
+            diff = dauerVorlage - oldVorlagenDauer
+
+
+        Catch ex As Exception
+            Call MsgBox("Vorlagen Dauer konnte nicht bestimmt werden ...")
+        End Try
+
+        Call setParametersOfVorlage()
+
+
+        If dauerUnverändert.Checked Then
+
+            'StartDatum muss gemäß Vorlagendauer errechnet werden
+
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+
+        Else
+
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+            'calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+            calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+
+        End If
+
+        If awinSettings.englishLanguage Then
+            lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        Else
+            lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+        End If
+
+        Dim hvalue As Integer = 0
+        Try
+            hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10,
+                                                                 mode:=MidpointRounding.ToEven) * 10, Integer)
+        Catch ex As Exception
+
+        End Try
+
+        Erloes.Text = hvalue.ToString("N0")
+    End Sub
+
+
+    Private Sub dauerUnverändert_CheckedChanged_1(sender As Object, e As EventArgs) Handles dauerUnverändert.CheckedChanged
+        If dontFire Then
+            ' nichts tun
+        Else
+            If dauerUnverändert.Checked Then
+
+                If awinSettings.englishLanguage Then
+                    lbl_Referenz1.Text = "Reference"
+                Else
+                    lbl_Referenz1.Text = "Referenz"
+                End If
+
+                lbl_Referenz2.Visible = False
+                endMilestoneDropbox.Visible = False
+                DateTimeEnde.Visible = False
+
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+            Else
+                If awinSettings.englishLanguage Then
+                    lbl_Referenz1.Text = "Reference 1"
+                    lbl_Referenz2.Text = "Reference 2"
+                Else
+                    lbl_Referenz1.Text = "Referenz 1"
+                    lbl_Referenz2.Text = "Referenz 2"
+                End If
+
+                lbl_Referenz2.Visible = True
+                endMilestoneDropbox.Visible = True
+                DateTimeEnde.Visible = True
+
+            End If
+
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+
+        End If
 
     End Sub
 
-    Private Sub lbl_selProjName_Click(sender As Object, e As EventArgs) Handles lbl_selProjName.Click
-        ' hier muss das Auswahl-Fenster zum Laden eines Projektes aus der Session geöffnet werden  
+    Private Sub DateTimeStart_ValueChanged_1(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
+        If dontFire Then
+            ' nichts tun
+        Else
+            If dauerUnverändert.Checked Then
+                'StartDatum muss gemäß Vorlagendauer errechnet werden
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
+                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                    DateTimeStart.Value = Date.Now.AddMonths(1)
+                Else
+                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                    calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+                    DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
 
 
+                End If
+            Else
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
+                    Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                    DateTimeStart.Value = Date.Now.AddMonths(1)
+                    'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+                Else
+                    calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+                    calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+                End If
+            End If
+
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+        End If
+    End Sub
+
+    Private Sub DateTimeEnde_ValueChanged_1(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
+        If dontFire Then
+            ' nichts tun 
+        Else
+            If dauerUnverändert.Checked Then
+                'StartDatum muss gemäß Vorlagendauer errechnet werden
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
+                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                    DateTimeEnde.Value = DateTimeStart.Value.AddDays(dauerVorlage - 1)
+                Else
+                    calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+                    calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
+
+                    DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
+
+                End If
+            Else
+                If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
+
+                    Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                    DateTimeEnde.Value = DateTimeStart.Value.AddMonths(6)
+
+                Else
+                    calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+                    'calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+                    calcProjektStart = DateTimeStart.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+
+                End If
+            End If
+
+            If awinSettings.englishLanguage Then
+                lbl_Laufzeit.Text = "Duration: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            Else
+                lbl_Laufzeit.Text = "Laufzeit: " & calcProjektStart.ToShortDateString & " - " &
+                                        calcProjektEnde.ToShortDateString
+            End If
+
+        End If
 
     End Sub
 
-    Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
+    Private Sub vorlagenDropbox_LostFocus(sender As Object, e As EventArgs) Handles vorlagenDropbox.LostFocus
 
+        If Projektvorlagen.Liste.ContainsKey(vorlagenDropbox.Text) Then
+            awinSettings.lastProjektTyp = vorlagenDropbox.Text
+
+            Dim hvalue As Integer
+            Try
+                hvalue = CType(System.Math.Round(Projektvorlagen.getProject(vorlagenDropbox.Text).getGesamtKostenBedarf.Sum / 10,
+                                                     mode:=MidpointRounding.ToEven) * 10, Integer)
+
+            Catch ex As Exception
+
+            End Try
+
+            Me.Erloes.Text = hvalue.ToString("N0")
+        Else
+            Call MsgBox("Vorlage " & vorlagenDropbox.Text & " nicht vorhanden!")
+
+            With vorlagenDropbox
+                .Text = awinSettings.lastProjektTyp
+                .Focus()
+            End With
+
+        End If
+    End Sub
+
+
+
+    Private Sub Erloes_LostFocus(sender As Object, e As EventArgs) Handles Erloes.LostFocus
+        With Me.Erloes
+            If Not IsNumeric(.Text) Then
+                MsgBox("bitte eine Zahl eingeben ")
+                .Text = ""
+                .Focus()
+            ElseIf CType(.Text, Double) < 0 Then
+                Call MsgBox(" der Erlös muss eine positive Dezimal-Zahl sein")
+                .Text = ""
+                .Focus()
+            End If
+        End With
+
+    End Sub
+
+    Private Sub OKButton_Click_1(sender As Object, e As EventArgs) Handles OKButton.Click
+
+        Dim msgtxt As String = ""
+
+        With projectName
+
+
+            ' Änderung tk 1.7.14: andernfalls kann ein Blank am Ende angehängt sein - dann kommt es im Nachgang zu einem Fehler 
+            Try
+                .Text = .Text.Trim
+            Catch ex As Exception
+                .Text = ""
+            End Try
+
+
+            If Len(.Text) < 2 Then
+
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Projektname has to be at least 2 characters!"
+                Else
+                    msgtxt = "Projektname muss mindestens zwei Zeichen haben!"
+                End If
+                Call MsgBox(msgtxt)
+                .Text = ""
+                .Undo()
+                DialogResult = System.Windows.Forms.DialogResult.None
+
+            Else
+                If IsNumeric(.Text) Then
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "numbers are not permitted as projectnames"
+                    Else
+                        msgtxt = "Zahlen sind nicht zugelassen"
+                    End If
+                    Call MsgBox(msgtxt)
+
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+
+                ElseIf inProjektliste(.Text) Then
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname does already exist"
+                    Else
+                        msgtxt = "Projekt-Name bereits vorhanden !"
+                    End If
+                    Call MsgBox(msgtxt)
+
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+                ElseIf Not isValidProjectName(.Text) Then
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname must not contain any special characters"
+                    Else
+                        msgtxt = "Der Projekt-Name darf keine Sonderzeichen Zeichen enthalten"
+                    End If
+                    Call MsgBox(msgtxt)
+
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+                Else
+
+
+                    If Not AlleProjekte.containsPNr(txtbx_pNr.Text) Then
+                        DialogResult = System.Windows.Forms.DialogResult.OK
+                        MyBase.Close()
+                    Else
+                        If awinSettings.englishLanguage Then
+                            msgtxt = "Project Nr already exists ... "
+                        Else
+                            msgtxt = "Die Projekt-Nummer existiert bereits ..."
+                        End If
+
+                        Call MsgBox(msgtxt)
+
+                        txtbx_pNr.Text = ""
+                        txtbx_pNr.Undo()
+                        DialogResult = System.Windows.Forms.DialogResult.None
+
+                    End If
+
+
+                End If
+            End If
+        End With
+    End Sub
+
+    Private Sub AbbrButton_Click_1(sender As Object, e As EventArgs) Handles AbbrButton.Click
+        'DialogResult = System.Windows.Forms.DialogResult.Cancel
+        MyBase.Close()
     End Sub
 End Class
