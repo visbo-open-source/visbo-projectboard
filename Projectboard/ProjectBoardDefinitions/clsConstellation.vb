@@ -31,6 +31,8 @@
     ' ur: 21.06.2019 ergänzt
     ' gibt den Zeitpunkt an, zu dem das Portfolio zusammengestellt wurde
     Private _timestamp As Date
+
+
     Public Property timestamp As Date
         Get
             timestamp = _timestamp
@@ -61,6 +63,22 @@
     End Property
 
 
+    'ur:22.09.2020 ergänzt
+    ' gibt den Namen der Variante an. Standard = ""
+    Private _variantName As String
+    Public Property variantName As String
+        Get
+            variantName = _variantName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _variantName = value
+                End If
+            End If
+        End Set
+    End Property
+
 
     Private _constellationName As String = "Last"
 
@@ -73,23 +91,24 @@
         Dim istgleich As Boolean = False
 
         If constellationName = vglC.constellationName Then
-            If sortCriteria = vglC.sortCriteria Then
-                If Not sortedListsAreDifferent(sortListe, vglC.sortListe, 1, ) Then
-                    If count = vglC.count Then
-                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            If variantName = vglC.variantName Then
+                If sortCriteria = vglC.sortCriteria Then
+                    If Not sortedListsAreDifferent(sortListe, vglC.sortListe, 1, ) Then
+                        If count = vglC.count Then
+                            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
-                            Dim vglItem As clsConstellationItem = vglC.getItem(kvp.Key)
-                            If Not IsNothing(vglItem) Then
-                                istgleich = kvp.Value.isIdentical(vglItem)
-                            Else
-                                istgleich = False
-                                Exit For
-                            End If
+                                Dim vglItem As clsConstellationItem = vglC.getItem(kvp.Key)
+                                If Not IsNothing(vglItem) Then
+                                    istgleich = kvp.Value.isIdentical(vglItem)
+                                Else
+                                    istgleich = False
+                                    Exit For
+                                End If
 
-                        Next
+                            Next
+                        End If
                     End If
                 End If
-
             End If
         End If
 
@@ -935,7 +954,7 @@
 
     ''' <summary>
     ''' gibt das clsConstellationItem zurück, das angezeigt wird. 
-    ''' pro Constelaltion können zwar mehrere Varianten vorkommen, aber nur eine kann das Attribut show haben 
+    ''' pro Constellation können zwar mehrere Varianten vorkommen, aber nur eine kann das Attribut show haben 
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <returns></returns>
@@ -1041,6 +1060,7 @@
 
             With copyResult
                 .constellationName = cName
+                .variantName = Me.variantName
                 .vpID = Me.vpID
 
                 .timestamp = Me.timestamp
@@ -1616,6 +1636,7 @@
 
         ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
+        _variantName = ""
 
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
@@ -1643,6 +1664,7 @@
         _vpID = Nothing
 
         Me.constellationName = cName
+        Me.variantName = ""
 
         If IsNothing(projektListe) Then
             ' bereits fertig - es ist eine leere Constellation mit Name cNAme

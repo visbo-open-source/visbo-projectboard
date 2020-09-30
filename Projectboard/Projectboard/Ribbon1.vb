@@ -299,14 +299,14 @@ Imports System.Web
             'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
             dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
 
-            For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
+            'For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
 
-                Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
-                Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
+            '    Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
+            '    Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-                Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
+            '    Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
 
-            Next
+            'Next
 
             If outPutCollection.Count > 0 Then
                 Dim msgH As String, msgE As String
@@ -441,6 +441,9 @@ Imports System.Web
 
             Dim constellationsToDo As New clsConstellations
 
+            ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
+            Dim constellationsChecked As New SortedList(Of String, String)
+
             ' WaitCursor einschalten ...
             Cursor.Current = Cursors.WaitCursor
 
@@ -455,21 +458,52 @@ Imports System.Web
                 projectConstellations.clearLoadedPortfolios()
             End If
 
-            For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
+            ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
+            constellationsChecked = New SortedList(Of String, String)
+
+            For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
+                If tNode.Checked Then
+                    Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
+                    For Each vNode As TreeNode In tNode.Nodes
+                        If vNode.Checked Then
+                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                constellationsChecked.Add(tNode.Text, vNode.Text)
+                            Else
+                                Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                            End If
+                            checkedVariants = checkedVariants + 1
+                        End If
+                    Next
+                    If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
+                        If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                            constellationsChecked.Add(tNode.Text, "")
+                        End If
+                    Else
+                        Call MsgBox("Error in Portfolio-Auswahl")
+                    End If
+                End If
+            Next
+
+            For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
+
+                Dim pName As String = pvName.Key        'portfolio-Name
+                Dim vName As String = pvName.Value      'variantenName
 
                 ' Plausibilitätsprüfung: darf das geladen werden 
                 Try
                     ' Check ...
-                    Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
+                    'Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
+                    Dim checkconst As clsConstellation = Nothing
 
-                    ' tmpname ist nicht mehr in der Session geladen
+                    ' pName ist nicht mehr in der Session geladen
                     If IsNothing(checkconst) And Not loadFromSession Then
 
-                        ' hole Portfolio (tmpname) aus den db
-                        checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
-                                                                                                           dbPortfolioNames(tmpName),
+                        ' hole Portfolio (pName,vName) aus der db
+                        checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
+                                                                                                           dbPortfolioNames(pName),
                                                                                                            cTimestamp, err,
-                                                                                                           storedAtOrBefore)
+                                                                                                           variantName:=vName,
+                                                                                                           storedAtOrBefore:=storedAtOrBefore)
 
                         If Not IsNothing(checkconst) Then
                             ' tmpname in die Session-Liste wieder aufnehmen
@@ -480,23 +514,23 @@ Imports System.Web
 
                     End If
 
-                    If Not IsNothing(projectConstellations.getConstellation(tmpName)) Then
+                    If Not IsNothing(projectConstellations.getConstellation(pName)) Then
 
                         Dim ok As Boolean = False
                         If (Not AlleProjekte.containsAnySummaryProject _
-                            And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                            And Not projectConstellations.getConstellation(pName).containsAnySummaryProject _
                             And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
                             ' alles in Ordnung 
                             ok = True
                         Else
-                            If Not ShowProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            If Not ShowProjekte.hasAnyConflictsWith(pName, True) Then
                                 ok = True
                             End If
                         End If
 
                         If ok Then
                             ' aufnehmen ...
-                            Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+                            Dim constellation As clsConstellation = projectConstellations.getConstellation(pName)
 
                             If Not IsNothing(constellation) Then
                                 If Not constellationsToDo.Contains(constellation.constellationName) Then
@@ -510,11 +544,12 @@ Imports System.Web
                                 End If
 
                             ElseIf Not loadFromSession Then
-                                ' hole Portfolio (tmpname) aus den db
-                                constellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(tmpName,
-                                                                                                           dbPortfolioNames(tmpName),
+                                ' hole Portfolio (pName,vName) aus den db
+                                constellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
+                                                                                                           dbPortfolioNames(pName),
                                                                                                            cTimestamp, err,
-                                                                                                           storedAtOrBefore)
+                                                                                                           variantName:=vName,
+                                                                                                           storedAtOrBefore:=storedAtOrBefore)
                                 If Not IsNothing(constellation) Then
                                     If Not constellationsToDo.Contains(constellation.constellationName) Then
                                         If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
@@ -6648,7 +6683,12 @@ Imports System.Web
                     End If
 
                     ' gibt es das Referenz-Portfolio?  
-                    referenzPortfolio = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName, "", curTimeStamp, err, storedAtOrBefore:=Date.Now)
+                    referenzPortfolio = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName,
+                                                                                                              "",
+                                                                                                              curTimeStamp,
+                                                                                                              err,
+                                                                                                              variantName:=noVariantName,
+                                                                                                              storedAtOrBefore:=Date.Now)
 
                     If IsNothing(referenzPortfolio) Then
                         Dim txtMsg As String = referenzPortfolioName & ": Portfolio existiert nicht ... "

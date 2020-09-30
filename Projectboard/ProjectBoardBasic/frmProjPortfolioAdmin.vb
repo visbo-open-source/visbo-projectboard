@@ -150,6 +150,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
                 .OKButton.Visible = False
 
                 '.lblVersionen1.Visible = False
@@ -185,6 +186,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
                 .OKButton.Visible = True
                 If awinSettings.englishLanguage Then
                     .OKButton.Text = "Select as template"
@@ -238,6 +240,7 @@ Public Class frmProjPortfolioAdmin
 
 
                 .dropboxScenarioNames.Visible = True
+                .txtBoxVariantName.Visible = True
 
                 .OKButton.Visible = True
                 '.OKButton.Text = "Szenario speichern"
@@ -297,6 +300,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     OKButton.Text = "aus Session Löschen"
@@ -340,6 +344,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -382,6 +387,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -434,6 +440,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -471,6 +478,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -509,6 +517,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -547,6 +556,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -584,6 +594,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = False
@@ -3151,9 +3162,16 @@ Public Class frmProjPortfolioAdmin
 
                 currentConstellationName = dropboxScenarioNames.Text
                 'currentBrowserConstellation.constellationName = currentConstellationName
+                Dim currentConstellationVariantName As String = ""
+                If txtBoxVariantName.Text <> "" Then
+                    currentConstellationVariantName = txtBoxVariantName.Text
+                End If
 
+                ' TODO: hier muss VarianteName mit berücksichtigt werden
                 Dim toStoreConstellation As clsConstellation =
                     currentBrowserConstellation.copy(currentConstellationName)
+                ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
+                toStoreConstellation.variantName = currentConstellationVariantName
 
 
                 ' Korrektheitsprüfung
@@ -4435,6 +4453,16 @@ Public Class frmProjPortfolioAdmin
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
 
+    Private Sub txtBoxVariantName_MouseHover(sender As Object, e As EventArgs) Handles txtBoxVariantName.MouseHover
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Namen für die Portfolio-Variante eingeben"
+        Else
+            ttText = "Edit new name for the portfolio-variant"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
+    End Sub
+
     Private Sub onlyActive_MouseHover(sender As Object, e As EventArgs) Handles onlyActive.MouseHover
         Dim ttText As String = ""
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -5327,4 +5355,5 @@ Public Class frmProjPortfolioAdmin
     Private Sub OKButton_DockChanged(sender As Object, e As EventArgs) Handles OKButton.DockChanged
 
     End Sub
+
 End Class

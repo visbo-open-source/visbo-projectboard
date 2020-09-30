@@ -726,6 +726,7 @@ Public Module Module1
         project = 0
         pVariant = 1
         timestamp = 2
+        portfolio = 3
     End Enum
     Public Enum PTlicense
         swimlanes = 0

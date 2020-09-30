@@ -3952,7 +3952,7 @@ Public Module awinGeneralModules
                 Dim budget As Double = -1.0
                 Dim calculateAndStoreSummaryProjekt As Boolean = False
                 Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
-
+                ' TODO: currentConstellation.variantName berücksichtigen
                 Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
 
                 Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
@@ -4199,9 +4199,14 @@ Public Module awinGeneralModules
                         If dbConstellations.ContainsKey(currentConstellation.constellationName) Then
                             Dim dbConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(currentConstellation.constellationName,
                                                                                                            dbConstellations(currentConstellation.constellationName),
-                                                                                                           cTimestamp, err,
-                                                                                                           DBtimeStamp)
-                            storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                                                                                                           ctimestamp, err, variantName:=currentConstellation.variantName,
+                                                                                                           storedAtOrBefore:=DBtimeStamp)
+                            ' dbConstellation ist nothing, wenn z.B. die Variante noch nicht existiert
+                            If Not IsNothing(dbConstellation) Then
+                                storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                            Else
+                                storeRequired = True
+                            End If
                         End If
                     End If
 
@@ -4210,7 +4215,6 @@ Public Module awinGeneralModules
 
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
-
 
                     ' ur: 26.10.2019: nicht mehr Date.now, da sonst das Summary-Projekt einen Timestamp hat, der vor dem Portfolio liegt, was unlogisch ist
 
@@ -4230,10 +4234,12 @@ Public Module awinGeneralModules
                             End If
 
                             If awinSettings.englishLanguage Then
-                                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+                                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbTab &
+                                    "Variante: " & currentConstellation.variantName & vbLf & tsMessage
 
                             Else
-                                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+                                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbTab &
+                                    "Variante: " & currentConstellation.variantName & vbLf & tsMessage
                             End If
 
                             outPutCollection.Add(outputLine)
@@ -5202,6 +5208,27 @@ Public Module awinGeneralModules
 
     End Function
 
+
+
+
+    ''' <summary>
+    ''' 
+    ''' liefert die Liste von Varianten-Namen, die es zu einem vp  mit Name pName oder vpid gibt 
+    ''' 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vpid"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getVariantListeFromPName(ByVal pName As String, Optional ByVal vpid As String = "", Optional ByVal vpType As Integer = ptPRPFType.project) As Collection
+        Dim tmpResult As New Collection
+        Dim err As New clsErrorCodeMsg
+
+        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName, err, vpType)
+
+        getVariantListeFromPName = tmpResult
+
+    End Function
 
 
 

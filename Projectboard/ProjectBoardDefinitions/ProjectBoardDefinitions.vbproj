@@ -281,12 +281,6 @@
     <Compile Include="frmGetProjectbackFromNoshow.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmLoadConstellation.Designer.vb">
-      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmLoadConstellation.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="frmProjektAendern.Designer.vb">
       <DependentUpon>frmProjektAendern.vb</DependentUpon>
     </Compile>
@@ -390,9 +384,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmGetProjectbackFromNoshow.resx">
       <DependentUpon>frmGetProjectbackFromNoshow.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLoadConstellation.resx">
-      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjektAendern.resx">
       <DependentUpon>frmProjektAendern.vb</DependentUpon>

@@ -1095,7 +1095,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg) As Collection
+    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg, Optional ByVal vpType As Integer = ptPRPFType.project) As Collection
 
         Dim ergebnisCollection As New Collection
 
@@ -1103,7 +1103,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' nun ist sicher die VPs aufgebaut
-            Dim vp As clsVP = GETvpid(projectName, err)
+            Dim vp As clsVP = GETvpid(projectName, err, vpType)
 
             If vp._id <> "" Then
                 ' alle Variantenamen in der Collection sammeln
@@ -1772,6 +1772,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal variantName As String = noVariantName,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
@@ -1789,7 +1790,7 @@ Public Class Request
                 vpid = vp._id
             End If
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
 
@@ -1829,6 +1830,7 @@ Public Class Request
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal variantName As String = noVariantName,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation
@@ -1852,11 +1854,11 @@ Public Class Request
             End If
 
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
 
             If listOfPortfolios.Count = 0 Then
 
-                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName, True)
             End If
 
 
@@ -1865,7 +1867,7 @@ Public Class Request
                 For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
                     If pf.Key < storedAtOrBefore Then
-                        If pf.value.variantName = "" Then
+                        If pf.Value.variantName = variantName Then
                             vpf = pf.Value
                         Else
                         End If
@@ -2037,7 +2039,8 @@ Public Class Request
                                            ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
-
+        Dim storedVP As Boolean = False
+        Dim storedVPVariant As Boolean = False
         Try
             Dim vpType As Integer = ptPRPFType.portfolio
             Dim cVPf As New clsVPf
@@ -2045,12 +2048,9 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New List(Of clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            '                       cVP = GETvpid(c.constellationName, vpType:=2)
+
             cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
-
-            'cVPf = clsConst2clsVPf(c)
 
             If cVP._id = "" Then
                 '' ur: war nur zu Testzwecken: 
@@ -2073,34 +2073,57 @@ Public Class Request
                 newVP = POSTOneVP(cVP, err)
                 If newVP.Count > 0 Then
                     cVP._id = newVP.Item(0)._id
+                    storedVP = True
                 Else
                     Throw New ArgumentException("FEHLER beim erstellen des VisboPortfolioProject")
                 End If
+            Else
+                storedVP = True
+            End If
 
+            If storedVP Then
+                Dim vname = c.variantName
+                Dim aktvp As clsVP = cVP
+                ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
+                If vname <> "" And aktvp.Variant.Count > 0 Then
+                    For Each var As clsVPvariant In aktvp.Variant
+                        If var.variantName = vname Then
+                            storedVPVariant = True
+                        End If
+                    Next
+                End If
+
+                ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
+                If Not storedVPVariant Then
+                    If vname <> "" Then
+                        storedVPVariant = POSTVPVariant(cVP._id, vname, err)
+                    Else
+                        ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                        storedVPVariant = True
+                    End If
+                End If
             End If
 
             cVPf = clsConst2clsVPf(c)
 
-            If Not IsNothing(cVPf) Then
-                cVPf.vpid = cVP._id
+            If storedVP And storedVPVariant Then
+                If Not IsNothing(cVPf) Then
+                    cVPf.vpid = cVP._id
 
-                'uir:21.06.2019 ist nun in clsConstellation enthalten
-                '' timestamp setzen
-                'cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+                    If cVP._id <> "" Then
 
+                        newVPf = POSTOneVPf(cVPf, err)
 
-                If cVP._id <> "" Then
+                        If newVPf.Count > 0 Then
+                            result = True
+                        End If
 
-                    newVPf = POSTOneVPf(cVPf, err)
-
-                    If newVPf.Count > 0 Then
-                        result = True
                     End If
+                Else
 
                 End If
-            Else
-
             End If
+
 
         Catch ex As Exception
             'Call MsgBox(ex.Message)
@@ -4592,7 +4615,10 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
     ''' </summary>
-    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
+    Private Function GETallVPf(ByVal vpid As String,
+                               ByVal timestamp As Date,
+                               ByRef err As clsErrorCodeMsg,
+                               Optional ByVal variantName As String = noVariantName,
                                Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
@@ -4613,6 +4639,14 @@ Public Class Request
                 serverUriString = serverUriString
             Else
                 serverUriString = serverUriString & "?refDate=" & refDate
+            End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & "&variantID=" & variantID
+                Else
+                    serverUriString = serverUriString & "&variantName=" & variantName
+                End If
             End If
 
             If refNext Then
@@ -6712,6 +6746,7 @@ Public Class Request
             With result
                 .vpID = vpf.vpid
                 .constellationName = vpf.name
+                .variantName = vpf.variantName
                 .timestamp = vpf.timestamp
 
                 ' Aufbau der Constellation.allitems
@@ -6763,6 +6798,7 @@ Public Class Request
 
             With result
                 .name = c.constellationName
+                .variantName = c.variantName
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 
