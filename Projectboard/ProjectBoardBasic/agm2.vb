@@ -4435,7 +4435,8 @@ Public Module agm2
     End Function
 
     ''' <summary>
-    ''' importiert ein MS Project File 
+    ''' importiert ein MS Project File, und falls eine mappinVorlage definiert ist, 
+    ''' wird das hproj noch gemäß Vorlage gemappt und ergibt das mapProj
     ''' </summary>
     ''' <param name="modus"></param>
     ''' <param name="filename"></param>
@@ -4664,6 +4665,8 @@ Public Module agm2
                     res(i) = resPool.Item(i)
                 Next
 
+                'ur: 2.10.2020: wird benötigt für die Rollen, die noch nicht in der Orga definiert sind
+                Dim firstFreeRoleUID As Integer = RoleDefinitions.getFreeRoleID
 
                 For i = 1 To anzTasks
 
@@ -4986,8 +4989,7 @@ Public Module agm2
 
                                                         If Not missingRoleDefinitions.containsName(newRoleDef.name) Then
                                                             Try
-                                                                'ur: 13.09.2019: nicht von Missing nehmen
-                                                                newRoleDef.UID = RoleDefinitions.getFreeRoleID
+                                                                newRoleDef.UID = firstFreeRoleUID + missingRoleDefinitions.Count - 1
                                                                 missingRoleDefinitions.Add(newRoleDef)
                                                             Catch ex As Exception
                                                                 Dim a As Integer = 1
@@ -5052,6 +5054,7 @@ Public Module agm2
                                 Dim cphaseParent As Object = msTask.Parent
 
                                 Dim hrchynode As New clsHierarchyNode
+
                                 hrchynode.elemName = cphase.name
 
                                 If tasklevel = 0 Then

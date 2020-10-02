@@ -7904,11 +7904,15 @@ Imports System.Web
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
+                        'setzt das Budget auf den Wert der sich durch die Ressourcen ergeben
+                        hproj.setBudgetAsNeeded()
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
+                            'setzt das Budget auf den Wert der sich durch die Ressourcen ergeben
+                            mapProj.setBudgetAsNeeded()
                             ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
                             myCollection.Add(calcProjektKey(mapProj))
 
