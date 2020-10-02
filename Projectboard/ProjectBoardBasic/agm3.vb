@@ -45,211 +45,209 @@ Public Module agm3
         If My.Computer.FileSystem.FileExists(configFile) Then
 
             Try
-                configWB = appInstance.Workbooks.Open(configFile)
+                configWB = CType(appInstance.Workbooks.Open(configFile), Microsoft.Office.Interop.Excel.Workbook)
 
                 Try
 
                     If appInstance.Worksheets.Count > 0 Then
+                        'If configWB.Worksheets.Count > 0 Then
 
-                        'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        'currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
 
 
                         Dim titleCol As Integer,
-                            IdentCol As Integer,
-                            InputFileCol As Integer,
-                            TypCol As Integer,
-                            DatenCol As Integer,
-                            TabUCol As Integer, TabNCol As Integer,
-                            SUCol As Integer, SNCol As Integer,
-                            ZUCol As Integer, ZNCol As Integer,
-                            ObjCol As Integer,
-                            InhaltCol As Integer
+                                IdentCol As Integer,
+                                InputFileCol As Integer,
+                                TypCol As Integer,
+                                DatenCol As Integer,
+                                TabUCol As Integer, TabNCol As Integer,
+                                SUCol As Integer, SNCol As Integer,
+                                ZUCol As Integer, ZNCol As Integer,
+                                ObjCol As Integer,
+                                InhaltCol As Integer
 
-                        ' ImportTyp herausfinden ( momentan fest verdrahtet)
-                        configLine = New clsConfigKapaImport
-                        configLine.Titel = CStr(currentWS.Cells(4, 1).value)
-                        configLine.content = CStr(currentWS.Cells(4, 2).value)
-                        If Not IsNothing(configLine.Titel) Then
+                            ' ImportTyp herausfinden ( momentan fest verdrahtet)
+                            configLine = New clsConfigKapaImport
+                            configLine.Titel = CStr(currentWS.Cells(4, 1).value)
+                            configLine.content = CStr(currentWS.Cells(4, 2).value)
                             kapaConfigs.Add(configLine.Titel, configLine)
-                        End If
+
+                            searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
+
+                            titleCol = searcharea.Find("Titel").Column
+                            IdentCol = searcharea.Find("Identifier").Column
+                            InputFileCol = searcharea.Find("InputFile").Column
+                            TypCol = searcharea.Find("Typ").Column
+                            DatenCol = searcharea.Find("Datenbereich").Column
+                            TabUCol = searcharea.Find("Tabellen-Name").Column
+                            TabNCol = searcharea.Find("Tabellen-Nummer").Column
+                            SUCol = searcharea.Find("Spaltenüberschrift").Column
+                            SNCol = searcharea.Find("Spalten-Nummer").Column
+                            ZUCol = searcharea.Find("Zeilenbeschriftung").Column
+                            ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                            ObjCol = searcharea.Find("Objekt-Typ").Column
+                            InhaltCol = searcharea.Find("Inhalt").Column
+
+                            Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
+
+                            If ok Then
+                                With currentWS
+                                    lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
+
+                                    For i = 6 To lastrow
+
+                                        configLine = New clsConfigKapaImport
+
+                                        Dim Titel As String = CStr(.Cells(i, titleCol).value)
+
+                                        Select Case Titel
+                                            Case "Kapa-Datei"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.capacityFile = CStr(.Cells(i, InputFileCol).value)
+                                                kapaFile = configLine.capacityFile
+
+                                            Case "month"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                            Case "year"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
+
+                                            Case "role"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
 
-                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
+                                            Case "valueStart"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                        titleCol = searcharea.Find("Titel").Column
-                        IdentCol = searcharea.Find("Identifier").Column
-                        InputFileCol = searcharea.Find("InputFile").Column
-                        TypCol = searcharea.Find("Typ").Column
-                        DatenCol = searcharea.Find("Datenbereich").Column
-                        TabUCol = searcharea.Find("Tabellen-Name").Column
-                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
-                        SUCol = searcharea.Find("Spaltenüberschrift").Column
-                        SNCol = searcharea.Find("Spalten-Nummer").Column
-                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
-                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
-                        ObjCol = searcharea.Find("Objekt-Typ").Column
-                        InhaltCol = searcharea.Find("Inhalt").Column
+                                            Case "valueLength"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
+                                            Case "valueSign"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                        If ok Then
-                            With currentWS
-                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
+                                            Case "LastLine"
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                                For i = 6 To lastrow
+                                            Case Else
+                                                configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                                configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                                configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                                configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                                configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                                configLine.tabNr = CInt(.Cells(i, TabNCol).value)
+                                                configLine.tabName = CStr(.Cells(i, TabUCol).value)
+                                                configLine.column = CInt(.Cells(i, SNCol).value)
+                                                configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+                                                configLine.row = CInt(.Cells(i, ZNCol).value)
+                                                configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                                configLine.regex = CStr(.Cells(i, ObjCol).value)
+                                                configLine.content = CStr(.Cells(i, InhaltCol).value)
 
-                                    configLine = New clsConfigKapaImport
+                                        End Select
 
-                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
+                                        If kapaConfigs.ContainsKey(configLine.Titel) Then
+                                            kapaConfigs.Remove(configLine.Titel)
+                                        End If
 
-                                    Select Case Titel
-                                        Case "Kapa-Datei"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.capacityFile = CStr(.Cells(i, InputFileCol).value)
-                                            kapaFile = configLine.capacityFile
+                                        kapaConfigs.Add(configLine.Titel, configLine)
 
-                                        Case "month"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                    Next
 
-                                        Case "year"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "role"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-
-                                        Case "valueStart"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "valueLength"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "valueSign"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case "LastLine"
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                        Case Else
-                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
-                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
-                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
-                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
-                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
-                                            configLine.tabNr = CInt(.Cells(i, TabNCol).value)
-                                            configLine.tabName = CStr(.Cells(i, TabUCol).value)
-                                            configLine.column = CInt(.Cells(i, SNCol).value)
-                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
-                                            configLine.row = CInt(.Cells(i, ZNCol).value)
-                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
-                                            configLine.regex = CStr(.Cells(i, ObjCol).value)
-                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
-
-                                    End Select
-
-                                    If kapaConfigs.ContainsKey(configLine.Titel) Then
-                                        kapaConfigs.Remove(configLine.Titel)
-                                    End If
-
-                                    kapaConfigs.Add(configLine.Titel, configLine)
-
-                                Next
-
-                            End With
-                        Else
-                            outputline = "Die Konfigurationsdatei stimmt nicht mit der erwarteten Struktur überein!"
-                            If awinSettings.englishLanguage Then
-                                outputline = "Configuration file does not have expected structure! please contact your sys-admin or VISBO"
+                                End With
+                            Else
+                                outputline = "Die Konfigurationsdatei stimmt nicht mit der erwarteten Struktur überein!"
+                                If awinSettings.englishLanguage Then
+                                    outputline = "Configuration file does not have expected structure! please contact your sys-admin or VISBO"
+                                End If
+                                oPCollection.Add(outputline)
                             End If
-                            oPCollection.Add(outputline)
-                        End If
 
-                    End If
+                        End If
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
@@ -1559,7 +1557,7 @@ Public Module agm3
                                 Dim jahr As String = currentWS.Cells(ActualDataConfig("years").row.von, ActualDataConfig("years").column.von).value
                                 Dim vglJahr As String = currentWS.Name
                                 Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
-                                Dim xxx As Date = CDate("01." & monat & " " & jahr)
+                                Dim xxx As Date = "01." & monat & " " & jahr
                                 curmonth = getColumnOfDate(xxx)
 
                             Catch ex As Exception
@@ -3206,8 +3204,7 @@ Public Module agm3
                                 jahr = currentWS.Cells(actualDataConfig("years").row.von, actualDataConfig("years").column.von).value
                                 Dim vglJahr As String = currentWS.Name
                                 Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
-
-                                Dim xxx As Date = CDate("01." & monat & " " & jahr)
+                                Dim xxx As Date = "01." & monat & " " & jahr
                                 yyyymm = Format(xxx, "yyyy/MM")
                                 curmonth = getColumnOfDate(xxx)
 
@@ -3226,11 +3223,11 @@ Public Module agm3
                                 searcharea = currentWS.Rows(überschriftenzeile)          ' Zeile über... enthält die verschieden Spaltendescript
                                 stdSpalteTotal = searcharea.Find(hspalte).Column
                                 Dim filaWD As New clsFirstWDLastWD
-                                Dim lastWorkDay As Date = CDate(currentWS.Cells(überschriftenzeile, stdSpalteTotal - 3).value.ToString & "." & monat & " " & jahr)
+                                Dim lastWorkDay As Date = currentWS.Cells(überschriftenzeile, stdSpalteTotal - 3).value.ToString & "." & monat & " " & jahr
                                 Dim hdate As Date = DateAdd(DateInterval.Month, -1, lastWorkDay)
                                 Dim hmonth As String = MonthName(Month(hdate), Abbreviate:=True)
                                 jahr = Year(hdate)
-                                Dim firstWorkDay As Date = CDate(currentWS.Cells(überschriftenzeile, 6).value.ToString & "." & hmonth & " " & jahr)
+                                Dim firstWorkDay As Date = currentWS.Cells(überschriftenzeile, 6).value.ToString & "." & hmonth & " " & jahr
                                 filaWD.lastWorkDay = lastWorkDay
                                 filaWD.firstWorkDay = firstWorkDay
                                 special.otherCal.Add(yyyymm, filaWD)
