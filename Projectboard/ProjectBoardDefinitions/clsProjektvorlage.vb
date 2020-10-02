@@ -360,6 +360,35 @@
     End Sub
 
     ''' <summary>
+    ''' wenn die rclists null sind, weil z.Bsp Projekt aus MS Project aufgebaut wurde 
+    ''' dann werden die hier nachträglich aufgebaut
+    ''' </summary>
+    Public Sub updateRcLists()
+
+        For p = 1 To AllPhases.Count
+            Dim cPhase As clsPhase = getPhase(p)
+
+            For Each role As clsRolle In cPhase.rollenListe
+                Try
+                    rcLists.addRP(role.uid, cPhase.nameID, role.teamID)
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            For Each cost As clsKostenart In cPhase.kostenListe
+                Try
+                    rcLists.addCP(cost.KostenTyp, cPhase.nameID)
+                Catch ex As Exception
+
+                End Try
+            Next
+        Next
+
+
+    End Sub
+
+    ''' <summary>
     ''' gibt den kürzesten eindeutigen Namen für das Element zurück, der sich finden lässt
     ''' optional kann die SwimlaneID mitgegeben werden - dann wird nur nach eindeutigen Namen innerhalb der swimlanes gesucht 
     ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
