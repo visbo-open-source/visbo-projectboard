@@ -365,7 +365,11 @@
     ''' </summary>
     Public Sub updateRcLists()
 
+        ' evt. vorhandene Listen löschen
+        rcLists = New clsListOfCostAndRoles
+
         For p = 1 To AllPhases.Count
+
             Dim cPhase As clsPhase = getPhase(p)
 
             For Each role As clsRolle In cPhase.rollenListe

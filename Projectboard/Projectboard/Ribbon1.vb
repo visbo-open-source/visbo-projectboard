@@ -7904,27 +7904,20 @@ Imports System.Web
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
-                        'setzt das Budget auf den Wert der sich durch die Ressourcen ergeben
-                        hproj.setBudgetAsNeeded()
                         ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
-                            'setzt das Budget auf den Wert der sich durch die Ressourcen ergeben
-                            mapProj.setBudgetAsNeeded()
                             ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
                             myCollection.Add(calcProjektKey(mapProj))
-
                         End If
+
                     Catch ex2 As Exception
                         Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                     End Try
 
-                    ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
                 Catch ex1 As Exception
-                    ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                     Call MsgBox(ex1.Message)
                     Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                 End Try
@@ -7993,9 +7986,6 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
-
-
-
 
     End Sub
     Public Sub PTImportProjectsWithConfig(control As IRibbonControl)
