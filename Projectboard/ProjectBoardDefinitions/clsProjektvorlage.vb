@@ -791,8 +791,8 @@
 
     ''' <summary>
     ''' entfernt die Phase mit der übergebenen nameID 
-    ''' dabei kann angegeben werden, was mit den Kind-Elementen passieren soll: löschen oder umhängen 
-    ''' die rootPhase kann nicht gelöscht werden; in diesem Fall wird eine Exception geworfen  
+    ''' Dabei kann angegeben werden, was mit den Kind-Elementen passieren soll: löschen oder umhängen;
+    ''' Die rootPhase kann nicht gelöscht werden; In diesem Fall wird eine Exception geworfen  
     ''' </summary>
     ''' <param name="nameID">der eindeutige Identifier aus der Hierarchie-Liste</param>
     ''' <param name="deleteAllChilds" >
