@@ -4199,9 +4199,13 @@ Public Module awinGeneralModules
                         If dbConstellations.ContainsKey(currentConstellation.constellationName) Then
                             Dim dbConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(currentConstellation.constellationName,
                                                                                                            dbConstellations(currentConstellation.constellationName),
-                                                                                                           cTimestamp, err,
+                                                                                                           ctimestamp, err,
                                                                                                            DBtimeStamp)
-                            storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                            If IsNothing(dbConstellation) Then
+                                storeRequired = True
+                            Else
+                                storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                            End If
                         End If
                     End If
 
