@@ -273,10 +273,7 @@
     Public Property tagessatzIntern As Double
     Public Property kapazitaet As Double()
 
-    ' tk Allianz 21.11.18 nicht mehr gültig ..
-    'Public Property tagessatzExtern As Double
 
-    'Public Property externeKapazitaet As Double()
 
     ''' <summary>
     ''' bestimmt, ob die aktuelle Instanz irgendein Kind oder Kindeskind hat, das in tmpCollection aufgeführt ist
@@ -547,16 +544,13 @@
                             (Me.entryDate.Date = vglRole.entryDate.Date) And
                             (Me.exitDate.Date = vglRole.exitDate.Date) And
                             (Me.defaultDayCapa = vglRole.defaultDayCapa)
-                'And _
-                '            (Me.tagessatzExtern = vglRole.tagessatzExtern)
 
             End If
 
             ' jetzt die Kapa-Arrays vergleichen 
             If stillok Then
                 stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
-                'And _
-                '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+
             End If
 
             isIdenticalTo = stillok
@@ -576,7 +570,6 @@
         ' tk wird aktuell noch nicht in der DB gespeichert, wird beim buildOrgaTeams gesetzt 
         _isTeamParent = False
 
-        'ReDim _externeKapazitaet(240)
 
         _subRoleIDs = New SortedList(Of Integer, Double)
         _teamIDs = New SortedList(Of Integer, Double)

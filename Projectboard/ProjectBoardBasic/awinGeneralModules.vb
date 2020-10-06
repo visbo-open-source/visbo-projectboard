@@ -2686,7 +2686,7 @@ Public Module awinGeneralModules
                                 End If
 
 
-        Else
+                            Else
                                 ' nicht in der Session, nicht in der Datenbank : es ist bereits in AlleProjekte eingetragen ... 
                                 ' jetzt in AlleProjekte eintragen ... 
                                 AlleProjekte.Add(impProjekt)

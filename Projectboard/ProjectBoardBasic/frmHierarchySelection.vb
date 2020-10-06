@@ -5292,5 +5292,7 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
 
+    End Sub
 End Class

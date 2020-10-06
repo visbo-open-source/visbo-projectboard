@@ -7,12 +7,21 @@
 
             ' hier muss es jetzt zerhackt werden ... 
             Dim tmpstr() As String = CStr(textCollection.Item(i)).Split(New Char() {CChar(vbLf), CChar(vbCr)})
+
             For ii As Integer = 0 To tmpstr.Length - 1
                 Me.ListBoxOutput.Items.Add(tmpstr(ii))
             Next
+
+
         Next
 
-        Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
+        Try
+            Me.LinkLabelKontakt.Links.Add(0, 25, LinkLabelKontakt.Text)
+        Catch ex As Exception
+
+        End Try
+
+
 
     End Sub
 
