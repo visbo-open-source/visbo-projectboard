@@ -14556,7 +14556,7 @@ Public Module agm2
     ''' liest die externen Verträge gemäß Allianz Struktur 
     ''' </summary>
     ''' <param name="meldungen"></param>
-    Public Sub readMonthlyExternKapasEV(ByRef meldungen As Collection)
+    Public Sub readMonthlyExternKapasEV(ByRef meldungen As Collection, ByRef successList As List(Of String))
 
         Dim kapaFolder As String
 
@@ -14609,6 +14609,7 @@ Public Module agm2
                             Try
                                 appInstance.Workbooks.Open(dateiName)
                                 ok = True
+                                Dim noError As Boolean = True
 
                                 Try
 
@@ -14674,9 +14675,11 @@ Public Module agm2
 
                                                 Else
                                                     If subRole.isCombinedRole Then
+                                                        noError = False
                                                         errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
                                                         meldungen.Add(errMsg)
                                                     ElseIf subRole.tagessatzIntern <= 0 Then
+                                                        noError = False
                                                         errMsg = "File " & dateiName & ": " & subRoleName & " no dayrate / tagessatz available "
                                                         meldungen.Add(errMsg)
                                                     End If
@@ -14685,6 +14688,7 @@ Public Module agm2
                                                 End If
                                             Else
                                                 If subRoleName.Length > 0 Then
+                                                    noError = False
                                                     errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
                                                     meldungen.Add(errMsg)
                                                     Call logfileSchreiben(errMsg, "", anzFehler)
@@ -14699,6 +14703,7 @@ Public Module agm2
                                     Loop
 
                                 Catch ex2 As Exception
+                                    noError = False
                                     errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
                                     meldungen.Add(errMsg)
                                     Call logfileSchreiben(errMsg, "", anzFehler)
@@ -14709,6 +14714,11 @@ Public Module agm2
                                     End If
 
                                 End Try
+
+
+                                If noError Then
+                                    successList.Add(dateiName)
+                                End If
 
                                 appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
                             Catch ex As Exception
@@ -14751,7 +14761,7 @@ Public Module agm2
     ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
     ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
     ''' </summary>
-    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection)
+    Public Sub readMonthlyModifierKapas(ByRef meldungen As Collection, ByRef successList As List(Of String))
 
         Dim kapaFolder As String
 
@@ -14767,7 +14777,6 @@ Public Module agm2
         Dim tmpKapa As Double
         Dim lastSpalte As Integer
         Dim errMsg As String = ""
-
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -14792,6 +14801,7 @@ Public Module agm2
 
                 For i = 0 To listOfImportfiles.Count - 1
 
+                    Dim noError As Boolean = True
                     Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
                     Dim colName As Integer = 2
                     endeZeile = 0
@@ -14884,6 +14894,7 @@ Public Module agm2
                                                                     spalte = spalte + 1
                                                                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
                                                                 Catch ex As Exception
+                                                                    noError = False
                                                                     errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
                                                                     meldungen.Add(errMsg)
                                                                 End Try
@@ -14895,11 +14906,13 @@ Public Module agm2
 
                                                         End Try
                                                     Else
+                                                        noError = False
                                                         errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
                                                         meldungen.Add(errMsg)
                                                     End If
                                                 Else
                                                     If subRoleName.Length > 0 Then
+                                                        noError = False
                                                         errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
                                                         meldungen.Add(errMsg)
                                                     End If
@@ -14913,14 +14926,21 @@ Public Module agm2
                                         Loop
 
                                     Else
+                                        noError = False
                                         errMsg = "File " & dateiName & " does not contain data in column A ..."
                                         meldungen.Add(errMsg)
                                     End If
 
                                 Catch ex2 As Exception
+                                    noError = False
                                     errMsg = "File " & dateiName & ": unidentified error ... "
                                     meldungen.Add(errMsg)
                                 End Try
+
+                                ' In diesem Fall wurde erfolgreich eingelesen ...
+                                If noError Then
+                                    successList.Add(dateiName)
+                                End If
 
                                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                             Catch ex As Exception
@@ -14933,6 +14953,7 @@ Public Module agm2
 
 
                 Next i
+
             Else
                 ' nur Info im Logbuch
                 Call logfileSchreiben("Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ", "", -1)

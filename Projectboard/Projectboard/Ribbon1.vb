@@ -7306,7 +7306,7 @@ Imports System.Web
         Dim outPutline As String = ""
         Dim lastrow As Integer = 0
         Dim listofArchivUrlaub As New List(Of String)
-        Dim listofArchivAllg As New List(Of String)
+        Dim listofArchivConfig As New List(Of String)
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -7326,12 +7326,13 @@ Imports System.Web
                 RoleDefinitions = changedOrga.allRoles
                 CostDefinitions = changedOrga.allCosts
 
-
+                ' Liste enthält die Datei-Namen der erfolgreich eingelesenen externen Kapazitäts-Files 
+                Dim listOfArchivExtern As New List(Of String)
                 ' wenn es gibt - lesen der Modifier Kapas, wo interne wie externe angegeben sein können ..
-                Call readMonthlyModifierKapas(outputCollection)
+                Call readMonthlyModifierKapas(outputCollection, listOfArchivExtern)
 
                 ' wenn es gibt - lesen der Externen Verträge 
-                Call readMonthlyExternKapasEV(outputCollection)
+                Call readMonthlyExternKapasEV(outputCollection, listOfArchivExtern)
 
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
                 listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
@@ -7345,13 +7346,13 @@ Imports System.Web
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
                 If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                    listofArchivAllg = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                    listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
                 Else
                     outPutline = "There is no Config-File for the capacities!"
                     Call logfileSchreiben(outPutline, "PTImportKapas", anzFehler)
                 End If
 
-                If listofArchivUrlaub.Count > 0 Or listofArchivAllg.Count > 0 Then
+                If listofArchivUrlaub.Count > 0 Or listofArchivConfig.Count > 0 Or listOfArchivExtern.Count > 0 Then
 
                     changedOrga.allRoles = RoleDefinitions
 
@@ -7374,10 +7375,13 @@ Imports System.Web
                             If result = True Then
                                 Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
                                 Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+
+                                ' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
+                                Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
                                 ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                                 Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                                 ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                                Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+                                Call moveFilesInArchiv(listofArchivConfig, importOrdnerNames(PTImpExp.Kapas))
 
                             Else
                                 Call MsgBox("Error when writing Organisation to Database")
@@ -7407,9 +7411,9 @@ Imports System.Web
                     Else
 
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("Import of capacites with errors - stopped!")
+                            Call MsgBox("no Files to import ...")
                         Else
-                            Call MsgBox("Import der Kapazitäten erfolgte mit Fehler - abgebrochen! ")
+                            Call MsgBox("es gab keine Dateien zum Einlesen ... ")
 
                         End If
                     End If
