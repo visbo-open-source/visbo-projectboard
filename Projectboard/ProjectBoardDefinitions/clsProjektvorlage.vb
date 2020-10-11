@@ -3119,7 +3119,7 @@
         Get
             Dim propResult As New SortedList(Of String, String)
             Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
-            Dim roleID As String = ""
+            Dim roleNameID As String = ""
             Dim isTeamMember As Boolean = False
 
             If Not IsNothing(cPhase) Then
@@ -3127,12 +3127,12 @@
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
 
-                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
+                    roleNameID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '
-                    If Not propResult.ContainsKey(roleID) Then
-                        propResult.Add(roleID, roleID)
+                    If Not propResult.ContainsKey(roleNameID) Then
+                        propResult.Add(roleNameID, roleNameID)
                     End If
 
                 Next r
@@ -3141,6 +3141,8 @@
             getRoleIDs = propResult
         End Get
     End Property
+
+
 
     ''' <summary>
     ''' gibt die vorkommenden Kostenarten-Bezeichner in der Form "Name" zurück; es gibt noch keine Hierarchie bei den Kosten 

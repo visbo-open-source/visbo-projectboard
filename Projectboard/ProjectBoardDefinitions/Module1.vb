@@ -1609,6 +1609,8 @@ Public Module Module1
     ''' </summary>
     ''' <param name="role"></param>
     ''' <returns></returns>
+
+
     Public Function isAggregationRole(ByVal role As clsRollenDefinition) As Boolean
         Dim tmpResult As Boolean = False
 

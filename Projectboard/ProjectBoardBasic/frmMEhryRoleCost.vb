@@ -113,9 +113,13 @@ Public Class frmMEhryRoleCost
 
         ' wie lautet der Identifier der aktuellen Zeile: setzet sich zusammen aus roleuid;teamid
         ' der wird bereits beim Right Click ermittelt und steht in rcNameID - siehe oben ...
+        If showSkillsOnly Then
+            Call buildMESkillTree()
+        Else
+            Call buildMERoleTree()
+        End If
 
 
-        Call buildMERoleTree(showSkillsOnly)
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -221,12 +225,110 @@ Public Class frmMEhryRoleCost
 
     End Sub
 
+    ''' <summary>
+    ''' wird aufgerufen, um den SkillTree aufzubauen 
+    ''' </summary>
+    Public Sub buildMESkillTree()
+        Dim topLevelNode As TreeNode
+        Dim checkProj As Boolean = False
+
+        With hryRoleCost
+
+            .Nodes.Clear()
+            .CheckBoxes = True
+
+            ' alle Skills zeigen 
+
+            If RoleDefinitions.Count > 0 Then
+                Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
+                'Dim orgaUnitID As Integer = -1
+
+                '' steht in RCNames was drin ? 
+                'If rcName <> "" Then
+                '    If RoleDefinitions.containsName(rcName) Then
+                '        orgaUnitID = RoleDefinitions.getRoledef(rcName).UID
+                '    End If
+                'End If
+
+                ' wenn bereits eine Skill-Id steht, dann soll ab hier begonnen werden 
+                If skillName <> "" Then
+                    If RoleDefinitions.containsNameOrID(skillName) Then
+                        topNodes.Clear()
+                        Dim teamID As Integer = -1
+                        Dim restrictedSkillID As Integer = RoleDefinitions.getRoledef(skillName).UID
+                        topNodes.Add(restrictedSkillID)
+                    End If
+
+                End If
+
+                For i = 0 To topNodes.Count - 1
+
+                    Dim skill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
+
+                    ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
+
+                    topLevelNode = .Nodes.Add(skill.name)
+                    topLevelNode.Text = skill.name
+
+
+                    Dim nrTag As New clsNodeRoleTag
+                    With nrTag
+                        If skill.getSubRoleCount > 0 And Not isAggregationRole(skill) Then
+                            .pTag = "P"
+                            topLevelNode.Nodes.Clear()
+                            topLevelNode.Nodes.Add("-")
+                        Else
+                            .pTag = "X"
+                        End If
+                    End With
+
+                    ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
+                    ' toplevelNode kann nur Team sein, nicht Team-Member
+                    nrTag.isTeam = True
+                    nrTag.isRole = False
+                    nrTag.isTeamMember = False
+
+
+                    topLevelNode.Tag = nrTag
+
+                    ' tk 11.10.20
+                    ' hier muss unterschieden werden , ob SkillName = "" ist oder nicht 
+                    'topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(skill.UID, orgaUnitID)
+                    topLevelNode.Name = skill.name
+
+                    ' tk 11.10.20 nicht mehr nötig - jetzt hat jede Spalte ihre Bedeutuing: Orga-Unit oder Skill 
+                    ' erst in der Zusammensetzung gewinnen sie ihre Bedeutung 
+                    ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
+                    'If initialRolesOfPhase.ContainsKey(topLevelNode.Name) Then
+                    '    dontFireInCheck = True
+                    '    topLevelNode.Checked = True
+                    'End If
+
+                    '' hier muss gecheckt werden, ob irgendwelche existierende Kind-Rollen unterhalb der aktuellen topNode sind 
+                    '' Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
+
+                    'If RoleDefinitions.hasAnyChildParentRelationsship(initialRolesOfPhase, skill.UID) Then
+
+                    '    ' entsprechend kennzeichnen 
+                    '    topLevelNode.NodeFont = existingRoleFont
+                    '    topLevelNode.ForeColor = existingRoleColor
+
+                    'End If
+
+
+                Next
+            End If
+
+
+        End With
+    End Sub
 
 
     ''' <summary>
-    ''' es sollen jetzt auch die virtuellen Childs angezeigt werden ..
+    ''' es werden hier nur die Organisations-Einheiten angezeigt ... 
+    ''' die Skills kommen im buidMESkillTree / buildMESubSkillTree
     ''' </summary>
-    Public Sub buildMERoleTree(ByVal showSkillsOnly As Boolean)
+    Public Sub buildMERoleTree()
 
 
         Dim topLevelNode As TreeNode
@@ -243,27 +345,41 @@ Public Class frmMEhryRoleCost
             If RoleDefinitions.Count > 0 Then
                 Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
+
+                ' wenn bereits eine Orga-Id steht, dann soll ab hier begonnen werden 
+                Dim done As Boolean = False
+                If rcNameID <> "" Then
+                    If RoleDefinitions.containsNameOrID(rcNameID, strongTest:=False) Then
+                        topNodes.Clear()
+                        Dim teamID As Integer = -1
+                        Dim restrictedToOrgaID As Integer = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
+                        topNodes.Add(restrictedToOrgaID)
+                    End If
+
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
                     myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Then
+
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics, strongTest:=False) Then
 
                             topNodes.Clear()
                             Dim teamID As Integer = -1
                             Dim restrictedToOrgaID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
                             topNodes.Add(restrictedToOrgaID)
 
+                            ' tk 11.10.20 nein, di emüssen heir überhaupt nicht angeteigt werdne
                             ' hier müssen jetzt auch die Skillgruppen angezeigt werden 
-                            Dim topLevelTeams As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
-                            For Each topTeamID As Integer In topLevelTeams
-                                Dim listOFCommonChildIds As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(topTeamID, restrictedToOrgaID)
-                                If listOFCommonChildIds.Count > 0 Then
-                                    If Not topNodes.Contains(topTeamID) Then
-                                        topNodes.Add(topTeamID)
-                                    End If
-                                End If
+                            'Dim topLevelTeams As List(Of Integer) = RoleDefinitions.getTopLevelTeamIDs
 
-                            Next
+                            'For Each topTeamID As Integer In topLevelTeams
+                            '    Dim listOFCommonChildIds As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(topTeamID, restrictedToOrgaID)
+                            '    If listOFCommonChildIds.Count > 0 Then
+                            '        If Not topNodes.Contains(topTeamID) Then
+                            '            topNodes.Add(topTeamID)
+                            '        End If
+                            '    End If
+
+                            'Next
 
                         End If
                     End If
@@ -274,7 +390,7 @@ Public Class frmMEhryRoleCost
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
 
                     ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
-                    If role.isActiveRole And (role.isSkillParent = showSkillsOnly) Then
+                    If role.isActiveRole And Not role.isSkill And Not role.isSkillParent Then
                         topLevelNode = .Nodes.Add(role.name)
                         topLevelNode.Text = role.name
 
@@ -290,41 +406,44 @@ Public Class frmMEhryRoleCost
                             End If
                         End With
 
-
                         ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
 
-                        If role.isSkill Then
-                            ' toplevelNode kann nur Team sein, nicht Team-Member
-                            nrTag.isTeam = True
-                            nrTag.isTeamMember = False
-                        End If
+                        'If role.isSkill Then
+                        '    ' toplevelNode kann nur Team sein, nicht Team-Member
+                        '    nrTag.isTeam = True
+                        '    nrTag.isTeamMember = False
+                        'End If
 
                         topLevelNode.Tag = nrTag
 
-                        topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
+                        ' tk 11.10.20
+                        ' hier muss unterschieden werden , ob SkillName = "" ist oder nicht 
+                        'topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
+                        topLevelNode.Name = role.name
 
+                        ' tk 11.10.20
                         ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
-                        If initialRolesOfPhase.ContainsKey(topLevelNode.Name) Then
-                            dontFireInCheck = True
-                            topLevelNode.Checked = True
-                        End If
+                        'If initialRolesOfPhase.ContainsKey(topLevelNode.Name) Then
+                        '    dontFireInCheck = True
+                        '    topLevelNode.Checked = True
+                        'End If
 
-                        ' hier muss gecheckt werden, ob irgendwelche existierende Kind-Rollen unterhalb der aktuellen topNode sind 
-                        ' Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
+                        '' hier muss gecheckt werden, ob irgendwelche existierende Kind-Rollen unterhalb der aktuellen topNode sind 
+                        '' Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
 
-                        If RoleDefinitions.hasAnyChildParentRelationsship(initialRolesOfPhase, role.UID) Then
+                        'If RoleDefinitions.hasAnyChildParentRelationsship(initialRolesOfPhase, role.UID) Then
 
-                            ' entsprechend kennzeichnen 
-                            topLevelNode.NodeFont = existingRoleFont
-                            topLevelNode.ForeColor = existingRoleColor
+                        '    ' entsprechend kennzeichnen 
+                        '    topLevelNode.NodeFont = existingRoleFont
+                        '    topLevelNode.ForeColor = existingRoleColor
 
-                        End If
+                        'End If
                     End If
 
                 Next
             End If
 
-            If Not showSkillsOnly Then
+            If rcName = "" And skillName = "" Then
                 If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
                     If CostDefinitions.Count > 1 Then
 
@@ -362,7 +481,62 @@ Public Class frmMEhryRoleCost
 
         End With
     End Sub
+    Public Sub buildMESubSkillTree(ByRef parentNode As TreeNode, ByVal currentSkillID As Integer)
 
+        Dim currentSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(currentSkillID)
+
+        Dim currentRole As clsRollenDefinition = Nothing
+        If rcName <> "" Then
+            currentRole = RoleDefinitions.getRoledef(rcName)
+        End If
+
+        If currentSkill.isActiveRole Then
+            Dim childIds As SortedList(Of Integer, Double) = currentSkill.getSubRoleIDs
+
+            Dim currentNode As TreeNode
+            Dim childNode As TreeNode = Nothing
+
+            Dim weiterMachen As Boolean = False
+
+            If IsNothing(currentRole) Then
+                weiterMachen = True
+            Else
+                weiterMachen = RoleDefinitions.roleHasSkill(currentRole.UID, currentSkill.UID)
+            End If
+
+            If weiterMachen Then
+                currentNode = parentNode.Nodes.Add(currentSkill.name)
+                currentNode.Text = currentSkill.name
+
+
+                Dim nrTag As New clsNodeRoleTag
+
+
+                If childIds.Count > 0 And Not isAggregationRole(currentSkill) Then
+                    ' hier muss - im Falle einer customUserRole = Portfolio Mgr bei der "letzten" Stufe abgebrochen werden
+                    ' die dürfen also nicht die Personen sehen ... aber nur , wenn 
+                    currentNode.Nodes.Clear()
+                    currentNode.Nodes.Add("-")
+                    nrTag.pTag = "P"
+                Else
+                    nrTag.pTag = "X"
+                End If
+
+                currentNode.Tag = nrTag
+
+                'currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+                currentNode.Name = currentSkill.name
+            End If
+
+
+        Else
+            ' nur dazu da, um im Falle einer inaktiven Rolle jetzt im Debug anhalten zu können ... 
+            Dim a As Integer = 2
+        End If
+
+
+
+    End Sub
 
     ''' <summary>
     ''' baut den Rollen-SubtreeView für die Rolle mit der ID roleUID auf. 
@@ -377,69 +551,65 @@ Public Class frmMEhryRoleCost
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(currentRoleUid)
 
+        Dim currentSkill As clsRollenDefinition = Nothing
+        If skillName <> "" Then
+            currentSkill = RoleDefinitions.getRoledef(skillName)
+        End If
+
         If currentRole.isActiveRole Then
             Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
             Dim currentNode As TreeNode
             Dim childNode As TreeNode = Nothing
+            Dim weiterMachen As Boolean = False
 
-            currentNode = parentNode.Nodes.Add(currentRole.name)
-            currentNode.Text = currentRole.name
-
-
-            Dim nrTag As New clsNodeRoleTag
-            If currentRole.isSkill Then
-
-                nrTag = New clsNodeRoleTag
-                With nrTag
-                    .isTeam = True
-                    .isTeamMember = False
-                End With
-
-            ElseIf currentRole.getSkillIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
-
-                nrTag = New clsNodeRoleTag
-                Dim teamID As Integer
-                Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
-                With nrTag
-                    .isTeam = False
-                    .isTeamMember = True
-                    .membershipID = parentID
-                    .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
-                End With
-            End If
-
-
-            If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
-                ' hier muss - im Falle einer customUserRole = Portfolio Mgr bei der "letzten" Stufe abgebrochen werden
-                ' die dürfen also nicht die Personen sehen ... aber nur , wenn 
-                currentNode.Nodes.Clear()
-                currentNode.Nodes.Add("-")
-                nrTag.pTag = "P"
+            If IsNothing(currentSkill) Then
+                weiterMachen = True
             Else
-                nrTag.pTag = "X"
+                weiterMachen = RoleDefinitions.roleHasSkill(currentRoleUid, currentSkill.UID)
+            End If
+            ' wenn eine Skill angegeben ist, dann darf der nur aufgenommen werden, wenn er die Skill hat 
+
+            If weiterMachen Then
+                currentNode = parentNode.Nodes.Add(currentRole.name)
+                currentNode.Text = currentRole.name
+
+                ' tk hier muss unterschieden werden, ob man Skills zeigt oder ob man Hierarchie zeigt ...
+                Dim nrTag As New clsNodeRoleTag
+
+                If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
+                    ' hier muss - im Falle einer customUserRole = Portfolio Mgr bei der "letzten" Stufe abgebrochen werden
+                    ' die dürfen also nicht die Personen sehen ... aber nur , wenn 
+                    currentNode.Nodes.Clear()
+                    currentNode.Nodes.Add("-")
+                    nrTag.pTag = "P"
+                Else
+                    nrTag.pTag = "X"
+                End If
+
+                currentNode.Tag = nrTag
+
+                'currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+                currentNode.Name = currentRole.name
+
+                ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
+                'If initialRolesOfPhase.ContainsKey(currentNode.Name) Then
+                '    dontFireInCheck = True
+                '    currentNode.Checked = True
+                'End If
+
+                '' hier muss gecheckt werden, ob irgendwelche existierende Kind-Rollen unterhalb der aktuellen topNode sind 
+                '' Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
+
+                'If RoleDefinitions.hasAnyChildParentRelationsship(initialRolesOfPhase, currentRoleUid) Then
+
+                '    ' entsprechend kennzeichnen 
+                '    currentNode.NodeFont = existingRoleFont
+                '    currentNode.ForeColor = existingRoleColor
+
+                'End If
             End If
 
-            currentNode.Tag = nrTag
-
-            currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
-
-            ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
-            If initialRolesOfPhase.ContainsKey(currentNode.Name) Then
-                dontFireInCheck = True
-                currentNode.Checked = True
-            End If
-
-            ' hier muss gecheckt werden, ob irgendwelche existierende Kind-Rollen unterhalb der aktuellen topNode sind 
-            ' Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
-
-            If RoleDefinitions.hasAnyChildParentRelationsship(initialRolesOfPhase, currentRoleUid) Then
-
-                ' entsprechend kennzeichnen 
-                currentNode.NodeFont = existingRoleFont
-                currentNode.ForeColor = existingRoleColor
-
-            End If
         Else
             ' nur dazu da, um im Falle einer inaktiven Rolle jetzt im Debug anhalten zu können ... 
             Dim a As Integer = 2
@@ -504,8 +674,6 @@ Public Class frmMEhryRoleCost
 
 
 
-        ' für Prototyp und Diskussion Allianz 
-        'Dim showTeamsOnly As Boolean = True
 
         node = e.Node
         elemID = node.Name
@@ -528,25 +696,28 @@ Public Class frmMEhryRoleCost
                 Dim nodelist As New SortedList(Of Integer, Double)
                 Try
 
-                    Dim teamID As Integer
-                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
+                    'Dim teamID As Integer
+                    'Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
+                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(node.Name)
+                    nodelist = curRole.getSubRoleIDs
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isSkill Then
+                    ' tk 11.10.20 
+                    'If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isSkill Then
 
-                        Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
-                        If Not IsNothing(virtualChilds) Then
-                            For Each vcID As Integer In virtualChilds
-                                If Not nodelist.ContainsKey(vcID) Then
-                                    nodelist.Add(vcID, 1.0)
-                                End If
-                            Next
-                        End If
+                    '    Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
+                    '    If Not IsNothing(virtualChilds) Then
+                    '        For Each vcID As Integer In virtualChilds
+                    '            If Not nodelist.ContainsKey(vcID) Then
+                    '                nodelist.Add(vcID, 1.0)
+                    '            End If
+                    '        Next
+                    '    End If
 
-                    Else
-                        ' wenn es sich um einen Ressourcen Manager handelt, kommen jetzt nur die Kinder zurück, die auch zum Ressort des 
-                        ' Ressource Managers gehören 
-                        nodelist = curRole.getSubRoleIDs
-                    End If
+                    'Else
+                    '    ' wenn es sich um einen Ressourcen Manager handelt, kommen jetzt nur die Kinder zurück, die auch zum Ressort des 
+                    '    ' Ressource Managers gehören 
+                    '    nodelist = curRole.getSubRoleIDs
+                    'End If
 
 
                     anzChilds = nodelist.Count
@@ -561,7 +732,12 @@ Public Class frmMEhryRoleCost
 
                 For i As Integer = 0 To anzChilds - 1
 
-                    Call buildMESubRoleTree(node, nodelist.ElementAt(i).Key)
+                    If showSkillsOnly Then
+                        Call buildMESubSkillTree(node, nodelist.ElementAt(i).Key)
+                    Else
+                        Call buildMESubRoleTree(node, nodelist.ElementAt(i).Key)
+                    End If
+
 
                 Next
 
@@ -702,5 +878,7 @@ Public Class frmMEhryRoleCost
 
     End Sub
 
+    Private Sub hryRoleCost_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryRoleCost.AfterSelect
 
+    End Sub
 End Class

@@ -259,7 +259,7 @@ Public Class clsRollen
 
             If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
                 Try
-                    If Not curRole.isSkill And curSkill.isSkill Then
+                    If Not curRole.isSkill And (curSkill.isSkill Or curSkill.isSkillParent) Then
                         If curRole.isCombinedRole Then
                             result = getCommonChildsOfParents(roleID, skillID).Count > 0
                         Else

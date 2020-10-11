@@ -356,18 +356,44 @@ Public Class Tabelle2
 
 
                     Dim hproj As clsProjekt = Nothing
-                    If Not IsNothing(pName) And pName <> "" Then
-                        hproj = ShowProjekte.getProject(pName)
+                    If Not IsNothing(pName) Then
+                        If pName <> "" Then
+                            hproj = ShowProjekte.getProject(pName)
+                        End If
                     End If
 
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
                     ' Jetzt muss ein Formular mit den Rollen und Kosten im TreeView angezeigt werden
+                    If IsNothing(pName) Then
+                        pName = ""
+                    End If
+                    If IsNothing(vName) Then
+                        vName = ""
+                    End If
+                    If IsNothing(phaseName) Then
+                        phaseName = ""
+                    End If
+                    If IsNothing(rcName) Then
+                        rcName = ""
+                        rcNameID = ""
+                    End If
+                    If IsNothing(phaseNameID) Then
+                        phaseNameID = ""
+                    End If
+
+                    If IsNothing(skillName) Then
+                        skillName = ""
+                    End If
+
+
+
                     frmMERoleCost.pName = pName
                     frmMERoleCost.vName = vName
                     frmMERoleCost.phaseName = phaseName
                     frmMERoleCost.rcName = rcName
                     frmMERoleCost.rcNameID = rcNameID
                     frmMERoleCost.phaseNameID = phaseNameID
+                    frmMERoleCost.skillName = skillName
 
                     If Target.Column = columnRC Then
                         frmMERoleCost.showSkillsOnly = False
@@ -420,7 +446,7 @@ Public Class Tabelle2
 
 
                 Else
-                    Call MsgBox("bitte nur eine Zelle selektieren ...")
+                        Call MsgBox("bitte nur eine Zelle selektieren ...")
                     Target.Cells(1, 1).value = visboZustaende.oldValue
                 End If
 
