@@ -8530,6 +8530,46 @@ Public Module Module1
         Dim teamID As Integer
         Dim roleID As Integer
 
+        Dim existingSkills As New SortedList(Of String, Double)
+
+        For Each key As String In existing
+
+            roleID = RoleDefinitions.parseRoleNameID(key, teamID)
+            If teamID > 0 Then
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+                If Not IsNothing(tmpRole) Then
+
+                    Dim skillNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
+                    If Not existingSkills.ContainsKey(skillNameID) Then
+                        existingSkills.Add(skillNameID, 1.0)
+                    End If
+
+                End If
+            End If
+
+        Next
+
+        ' erste Such-Schleife ..
+
+        If existingSkills.Count < lookingFor.Count Then
+            For Each kvp As KeyValuePair(Of String, Double) In existingSkills
+                If lookingFor.ContainsKey(kvp.Key) Then
+                    If Not ergebnisListe.ContainsKey(kvp.Key) Then
+                        ergebnisListe.Add(kvp.Key, 1.0)
+                    End If
+                End If
+            Next
+
+        Else
+            For Each kvp As KeyValuePair(Of String, Double) In lookingFor
+                If existingSkills.ContainsKey(kvp.Key) Then
+                    If Not ergebnisListe.ContainsKey(kvp.Key) Then
+                        ergebnisListe.Add(kvp.Key, 1.0)
+                    End If
+                End If
+            Next
+        End If
+
 
         Try
             If existing.Count <= lookingFor.Count Then
@@ -8537,7 +8577,9 @@ Public Module Module1
                 For Each key As String In existing
 
                     If lookingFor.ContainsKey(key) Then
-                        ergebnisListe.Add(key, lookingFor.Item(key))
+                        If Not ergebnisListe.ContainsKey(key) Then
+                            ergebnisListe.Add(key, 1.0)
+                        End If
                     End If
 
 
@@ -8548,7 +8590,9 @@ Public Module Module1
                         ' es muss noch die Anfrage nach nur roleID gestellt werden 
                         Dim key2 As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
                         If lookingFor.ContainsKey(key2) Then
-                            ergebnisListe.Add(key, lookingFor.Item(key2))
+                            If Not ergebnisListe.ContainsKey(key2) Then
+                                ergebnisListe.Add(key2, 1.0)
+                            End If
                         End If
                     End If
                 Next
@@ -8621,8 +8665,11 @@ Public Module Module1
                     Else
                         ' es ist ein Team angegeben , also will man das exakte haben 
                         If existingSortList.ContainsKey(kvp.Key) Then
-                            ergebnisListe.Add(kvp.Key, kvp.Value)
+                            If Not ergebnisListe.ContainsKey(kvp.Key) Then
+                                ergebnisListe.Add(kvp.Key, 1.0)
+                            End If
                         End If
+
                     End If
 
                 Next

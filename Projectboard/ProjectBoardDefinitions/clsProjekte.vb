@@ -2079,7 +2079,9 @@ Public Class clsProjekte
 
             If considerAllSubRoles Then
                 'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
-                lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames, includingVirtualChilds:=True)
+                ' tk 12.10. andere Skill Behandlung 
+                'lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames, includingVirtualChilds:=True)
+                lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
 
                 ' tk 4.5. das folgende ist notwendig, um z.Bsp bei der Summe von einer Abteilung auch alle 
                 ' Team Ressourcenbedarfe zu berücksichtigen, deren Mitglieder alle in der Abteilung liegen
@@ -2287,6 +2289,8 @@ Public Class clsProjekte
     Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection,
                                                  Optional ByVal onlyIntern As Boolean = False) As Double()
 
+        ' tk 12.10.20 es werden jetzt bei Skills / teams nicht mehr die anteilige Kapazität berücksichtigt, sondern immer die volle
+        '  
         Get
             Dim kapaValues() As Double
             Dim tmpValues() As Double
@@ -2338,13 +2342,14 @@ Public Class clsProjekte
                             For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleListe
 
                                 If Not realCollection.ContainsKey(srKvP.Key) Then
-                                    realCollection.Add(srKvP.Key, srKvP.Value)
-                                Else
-                                    Dim newValue As Double = realCollection(srKvP.Key) + srKvP.Value
-                                    If newValue > 1.0 Then
-                                        newValue = 1.0
-                                    End If
-                                    realCollection(srKvP.Key) = newValue
+                                    'realCollection.Add(srKvP.Key, srKvP.Value)
+                                    realCollection.Add(srKvP.Key, 1.0)
+                                    'Else
+                                    '    Dim newValue As Double = realCollection(srKvP.Key) + srKvP.Value
+                                    '    If newValue > 1.0 Then
+                                    '        newValue = 1.0
+                                    '    End If
+                                    '    realCollection(srKvP.Key) = newValue
                                 End If
 
                             Next
@@ -2353,21 +2358,22 @@ Public Class clsProjekte
                         End If
 
                     Else
-                        Dim myvalue As Double = 1.0
-                        If teamID > 0 Then
-                            myvalue = curRole.getSkillIDs.Item(teamID)
-                        End If
+                        ' tk 12.10.20 
+                        'Dim myvalue As Double = 1.0
+                        'If teamID > 0 Then
+                        '    myvalue = curRole.getSkillIDs.Item(teamID)
+                        'End If
 
                         If Not realCollection.ContainsKey(curRole.UID) Then
                             ' eine Basis Rolle wird immer zu 100% genommen
-                            realCollection.Add(curRole.UID, myvalue)
-                        Else
-                            ' in diesem Fall wird die volle Kapazität der Basis-Rolle berechnet
-                            Dim newValue As Double = realCollection(curRole.UID) + myvalue
-                            If newValue > 1.0 Then
-                                newValue = 1.0
-                            End If
-                            realCollection(curRole.UID) = newValue
+                            realCollection.Add(curRole.UID, 1.0)
+                            'Else
+                            '    ' in diesem Fall wird die volle Kapazität der Basis-Rolle berechnet
+                            '    Dim newValue As Double = realCollection(curRole.UID) + myvalue
+                            '    If newValue > 1.0 Then
+                            '        newValue = 1.0
+                            '    End If
+                            '    realCollection(curRole.UID) = newValue
                         End If
 
                     End If
@@ -2394,7 +2400,8 @@ Public Class clsProjekte
                         ' in kvp.value steht jetzt der Prozentsatz, mit dem die Kapa der Rolle berücksichtig werden soll 
                         For i = showRangeLeft To showRangeRight
 
-                            tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
+                            'tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
+                            tmpValues(i - showRangeLeft) = curRole.kapazitaet(i)
 
                             If tmpValues(i - showRangeLeft) < 0 Then
                                 tmpValues(i - showRangeLeft) = 0

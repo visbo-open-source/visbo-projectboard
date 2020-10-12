@@ -6463,7 +6463,7 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        Dim columnSummen As Integer = visboZustaende.meColRC + 1
+        Dim columnSummen As Integer = visboZustaende.meColRC + 2
         Dim columnRC As Integer = visboZustaende.meColRC
         Dim tmpSum As Double = 0.0
 
