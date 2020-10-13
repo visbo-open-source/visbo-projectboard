@@ -3162,10 +3162,7 @@ Public Class frmProjPortfolioAdmin
 
                 currentConstellationName = dropboxScenarioNames.Text
                 'currentBrowserConstellation.constellationName = currentConstellationName
-                Dim currentConstellationVariantName As String = ""
-                If txtBoxVariantName.Text <> "" Then
-                    currentConstellationVariantName = txtBoxVariantName.Text
-                End If
+                Dim currentConstellationVariantName As String = txtBoxVariantName.Text
 
                 ' TODO: hier muss VarianteName mit berücksichtigt werden
                 Dim toStoreConstellation As clsConstellation =
@@ -3267,7 +3264,7 @@ Public Class frmProjPortfolioAdmin
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
                 dropboxScenarioNames.Text = ""
-
+                txtBoxVariantName.Text = ""
 
             End If
 

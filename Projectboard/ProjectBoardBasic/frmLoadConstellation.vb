@@ -15,25 +15,30 @@ Public Class frmLoadConstellation
 
 
         Call languageSettings()
+        If constellationsToShow.Count > 0 Then
 
-        For Each kvp As KeyValuePair(Of String, String) In constellationsToShow
-            With TreeViewPortfolios
-                .CheckBoxes = True
-                .Nodes.Add(kvp.Key)
-            End With
+            For Each kvp As KeyValuePair(Of String, String) In constellationsToShow
+                With TreeViewPortfolios
+                    .CheckBoxes = True
+                    .Nodes.Add(kvp.Key)
+                End With
 
-        Next
+            Next
 
-        stopRecursion = False
-        updateTreeview(constellationsToShow, actionID, True)
-        formerselect = ""
-
-        If Not retrieveFromDB Then
-            requiredDate.Visible = False
-            lblStandvom.Visible = False
+            stopRecursion = False
+            If Not retrieveFromDB Then
+                requiredDate.Visible = False
+                lblStandvom.Visible = False
+                updateTreeview(constellationsToShow, actionID, False)
+            Else
+                updateTreeview(constellationsToShow, actionID, True)
+            End If
         Else
-
+            DialogResult = System.Windows.Forms.DialogResult.Cancel
+            MyBase.Close()
         End If
+
+        formerselect = ""
 
     End Sub
 
@@ -75,6 +80,7 @@ Public Class frmLoadConstellation
 
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+
 
         If TreeViewPortfolios.Nodes.Count >= 1 Then
             DialogResult = System.Windows.Forms.DialogResult.OK
@@ -217,15 +223,9 @@ Public Class frmLoadConstellation
                     portfolioliste = New SortedList(Of String, String)
                     For Each kvp As KeyValuePair(Of String, String) In pvNamesList
                         Dim tmpName As String = kvp.Key
-                        If tmpName.Contains("#") Then
-                            Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
-                            If Not portfolioliste.ContainsKey(tmpStr(0)) Then
-                                portfolioliste.Add(tmpStr(0), tmpStr(0))
-                            End If
-                        Else
-                            If Not portfolioliste.ContainsKey(tmpName) Then
-                                portfolioliste.Add(tmpName, tmpName)
-                            End If
+                        Dim tmpVpid As String = kvp.Value
+                        If Not portfolioliste.ContainsKey(tmpName) Then
+                            portfolioliste.Add(tmpName, tmpVpid)
                         End If
                     Next
 
@@ -241,15 +241,20 @@ Public Class frmLoadConstellation
                 For Each kvp As KeyValuePair(Of String, String) In portfolioliste
 
                     showPname = True
-                    pname = kvp.Value ' der key ist das sortier-Kriterium, kann constellationName sein, aber auch was ganz anderes 
+
+                    pname = getPnameFromKey(kvp.Key) ' der key ist das sortier-Kriterium, kann constellationName sein, aber auch was ganz anderes 
+
 
                     Dim hPortfolio As clsConstellation = Nothing
-                    Dim variantNames As Collection
+                    Dim variantNames As New Collection
 
                     If quickList Then
-                        variantNames = getVariantListeFromPName(pname, kvp.Key, ptPRPFType.portfolio)
+                        vpid = kvp.Value
+                        variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio)
+                        variantNames.Add("")    ' Standard-Variante hinzufügen
                     Else
-                        variantNames = getVariantListeFromPName(pname, kvp.Key, ptPRPFType.portfolio)
+                        variantName = getVariantnameFromKey(kvp.Key)
+                        variantNames.Add(variantName)
                     End If
 
 
@@ -270,7 +275,7 @@ Public Class frmLoadConstellation
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
 
-                        If variantNames.Count > 1 Then
+                        If variantNames.Count > 0 Then
 
                             Dim vName As String = variantName
                             portfolioNode.Tag = "X"
@@ -286,7 +291,7 @@ Public Class frmLoadConstellation
                                 ' pfv-Variante wird nicht in den Tree mit aufgenommen
                                 If vName <> ptVariantFixNames.pfv.ToString Then
                                     Dim variantNode As TreeNode = portfolioNode.Nodes.Add(vName)
-                                    'variantNode.Text = vName
+                                    variantNode.Text = "(" & vName & ")"
                                     variantNode.Tag = "X"
                                 End If
 
@@ -317,6 +322,11 @@ Public Class frmLoadConstellation
 
             End With
         Else
+            If awinSettings.englishLanguage Then
+                loadErrorMsg = "No Portfolios loaded!"
+            Else
+                loadErrorMsg = "Es sind keine Portfolios in der Session geladen!"
+            End If
             Call MsgBox(loadErrorMsg)
         End If
 
@@ -365,6 +375,11 @@ Public Class frmLoadConstellation
                         ' Aktion nur durchführen, wenn auf der gleichen Ebene 
                         tmpNode.Checked = checkMode
                         'Call collectAfterCheck(treeLevel, tmpNode)
+                        If Not tmpNode.Checked Then
+                            For Each vNode As TreeNode In tmpNode.Nodes
+                                vNode.Checked = False
+                            Next
+                        End If
                     End If
                 Next
 
@@ -377,12 +392,16 @@ Public Class frmLoadConstellation
                     If (tmpNode.Level = treeLevel) And (tmpNode.Text = node.Text) Then
                         ' Aktion nur durchführen, wenn auf der gleichen Ebene 
                         tmpNode.Checked = checkMode
-                        node.Parent.Checked = checkMode
+                        If tmpNode.Checked Then
+                            node.Parent.Checked = True
+                        End If
                         'Call collectAfterCheck(treeLevel, tmpNode)
                     Else
                         ' uncheck alle anderen Varianten
-                        tmpNode.Checked = Not checkMode
+                        tmpNode.Checked = False
                     End If
+
+
                 Next
 
         End Select

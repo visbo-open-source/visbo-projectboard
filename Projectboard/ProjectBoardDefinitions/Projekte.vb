@@ -25579,6 +25579,59 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' errechnet den für projectConstellations benötigten Schlüssel
+    ''' setzt sich zusammen aus pName und variantName
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPortfolioKey(ByVal pName As String, ByVal variantName As String) As String
+
+        Dim trennzeichen As String = "#"
+
+        ' Konsistenzbedingungen gewährleisten
+        If IsNothing(pName) Then
+            Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+        ElseIf pName.Length < 2 Then
+            Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & pName)
+        ElseIf IsNothing(variantName) Then
+            variantName = ""
+        End If
+
+        calcPortfolioKey = pName & trennzeichen & variantName
+
+    End Function
+
+    ''' <summary>
+    ''' errechnet den für projektConstellations benötigten Schlüssel
+    ''' verwendet dazu die in portfolio vorhandenen Attribute constellationName und variantName
+    ''' </summary>
+    ''' <param name="portfolio"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPortfolioKey(ByVal portfolio As clsConstellation) As String
+
+        Dim trennzeichen As String = "#"
+        With portfolio
+
+            ' Konsistenzbedingungen gewährleisten
+            If IsNothing(.constellationName) Then
+                Throw New ArgumentException("Portfolio-Name kann nicht Nothing sein")
+            ElseIf .constellationName.Length < 2 Then
+                Throw New ArgumentException("Portfolio-Name muss mindestens zwei Zeichen lang sein: " & .constellationName)
+            ElseIf IsNothing(.variantName) Then
+                .variantName = ""
+            End If
+
+            calcPortfolioKey = .constellationName & trennzeichen & .variantName
+
+        End With
+
+
+    End Function
+
+    ''' <summary>
     ''' beschriftet ein Projekt mit seinen Phasen und / oder Meilenstein Namen
     ''' orientiert sich an dem Shape des Projektes , es wird nur beschriftet, was im Shape vorhanden ist
     ''' es kann angegeben werden, ob die Original- oder die Standard-Namen angezeigt werden sollen 

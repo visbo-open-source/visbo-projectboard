@@ -21,7 +21,8 @@
         If frmOption = "ProjConstellation" Then
             Me.Text = "Portfolio löschen"
             For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
-                ListBox1.Items.Add(kvp.Key)
+                Dim cName As String = addBrackets(kvp.Key, "[", "]")
+                ListBox1.Items.Add(cName)
             Next
 
             'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste

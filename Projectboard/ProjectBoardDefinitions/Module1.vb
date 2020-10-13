@@ -1577,27 +1577,31 @@ Public Module Module1
     Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
 
         Dim tmpResult As clsProjekt = hproj
+        Try
 
-        If Not IsNothing(hproj) Then
-            ' wenn customUserRole = Portfolio 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-                If Not IsNothing(idArray) Then
-                    If idArray.Length >= 1 Then
-                        tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+            If Not IsNothing(hproj) Then
+                ' wenn customUserRole = Portfolio 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    If Not IsNothing(idArray) Then
+                        If idArray.Length >= 1 Then
+                            tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+                        End If
                     End If
+
                 End If
 
+                ' tk 12.06.2020 
+
+                ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
+                'If tmpResult.name.StartsWith("E_Kunde") Then
+                '    Call tmpResult.setMilestoneInvoices("Finalization")
+                'End If
+
             End If
-
-            ' tk 12.06.2020 
-
-            ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
-            'If tmpResult.name.StartsWith("E_Kunde") Then
-            '    Call tmpResult.setMilestoneInvoices("Finalization")
-            'End If
-
-        End If
+        Catch ex As Exception
+            Call MsgBox("Fehler in prepProjectForRoles : " & ex.Message)
+        End Try
 
         prepProjectForRoles = tmpResult
 
@@ -8870,6 +8874,58 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
+
+    Public Function deleteBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+
+        If name.Contains(bracket_auf) Then
+            Dim hstr() As String = Split(name, bracket_auf)
+            If hstr.Length > 1 Then
+                name = hstr(1)
+            End If
+        End If
+        If name.Contains(bracket_zu) Then
+            Dim hstr() As String = Split(name, bracket_zu)
+            If hstr.Length > 1 Then
+                name = hstr(0)
+            End If
+        End If
+
+        deleteBrackets = name
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
+
+    Public Function addBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+        Dim trennzeichen As String = "#"
+
+        If name.Contains(trennzeichen) Then
+            Dim hstr() As String = Split(name, trennzeichen)
+            If hstr.Length > 1 Then
+                name = hstr(0) & bracket_auf & hstr(1) & bracket_zu
+            End If
+        End If
+
+        addBrackets = name
+
+    End Function
 
 
 End Module

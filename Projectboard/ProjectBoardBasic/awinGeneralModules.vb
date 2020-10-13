@@ -3515,6 +3515,7 @@ Public Module awinGeneralModules
             hproj = projektliste.getProject(key)
             ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
 
+
             If IsNothing(hproj) Then
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
@@ -3741,81 +3742,89 @@ Public Module awinGeneralModules
                 '' ''Dim projsOfCurConstellation As SortedList(Of String, clsProjekt) =
                 '' ''    CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Key, err, storedAtOrBefore)
 
-                ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
-                Dim curSummaryProjVorgabe As clsProjekt = Nothing
-                Dim curSummaryProjToUse As clsProjekt = Nothing
+                If kvp.Value.variantName = "" Then    ' StandardVariante der Constellation
 
-                Dim vorgabeBudget As Double = -1
-                ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
+                    ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
+                    Dim curSummaryProjVorgabe As clsProjekt = Nothing
+                    Dim curSummaryProjToUse As clsProjekt = Nothing
 
-                Dim variantName As String = ptVariantFixNames.pfv.ToString
-                ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
-                ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
-                ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
-                If onlySessionLoad And Not awinSettings.loadPFV Then
-                    variantName = ""
-                End If
+                    Dim vorgabeBudget As Double = -1
+                    ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
 
-                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
-                If Not IsNothing(curSummaryProjVorgabe) Then
-                    vorgabeBudget = curSummaryProjVorgabe.Erloes
-                End If
-
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                    ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
-
-                    If IsNothing(curSummaryProjVorgabe) Then
-                        ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
-                        curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                    Dim variantName As String = ptVariantFixNames.pfv.ToString
+                    ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
+                    ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
+                    ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
+                    If onlySessionLoad And Not awinSettings.loadPFV Then
+                        variantName = ""
                     End If
-                    curSummaryProjToUse = curSummaryProjVorgabe
-                Else
-                    curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
-                End If
 
+                    curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
+                    If Not IsNothing(curSummaryProjVorgabe) Then
+                        vorgabeBudget = curSummaryProjVorgabe.Erloes
+                    End If
 
-                If Not IsNothing(curSummaryProjToUse) Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                        ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
 
-                    ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
-                    Dim srKey As String = calcProjektKey(curSummaryProjToUse)
-
-                    If showSummaryProject Then
-                        ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
-                        If AlleProjekte.Containskey(srKey) Then
-                            AlleProjekte.Remove(srKey, True)
+                        If IsNothing(curSummaryProjVorgabe) Then
+                            ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
+                            curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
                         End If
-
-                        Try
-                            AlleProjekte.Add(curSummaryProjToUse, updateCurrentConstellation:=True, checkOnConflicts:=True)
-                            Dim cItem As New clsConstellationItem
-                            With cItem
-                                .projectName = kvp.Value.constellationName
-                                .variantName = curSummaryProjToUse.variantName
-                                .projectTyp = CType(curSummaryProjToUse.projectType, ptPRPFType).ToString
-                                .zeile = zaehler
-                                .show = True
-                            End With
-                            zaehler = zaehler + 1
-                            activeSummaryConstellation.add(cItem, sKey:=zaehler)
-                        Catch ex As Exception
-
-                        End Try
+                        curSummaryProjToUse = curSummaryProjVorgabe
                     Else
-                        '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
-                        '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
-                        If AlleProjektSummaries.Containskey(srKey) Then
-                            AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
-                        End If
-
-                        Try
-                            AlleProjektSummaries.Add(curSummaryProjToUse, updateCurrentConstellation:=False, checkOnConflicts:=False)
-                        Catch ex As Exception
-
-                        End Try
+                        curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
                     End If
 
+
+                    If Not IsNothing(curSummaryProjToUse) Then
+
+                        ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
+                        Dim srKey As String = calcProjektKey(curSummaryProjToUse)
+
+                        If showSummaryProject Then
+                            ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
+                            If AlleProjekte.Containskey(srKey) Then
+                                AlleProjekte.Remove(srKey, True)
+                            End If
+
+                            Try
+                                AlleProjekte.Add(curSummaryProjToUse, updateCurrentConstellation:=True, checkOnConflicts:=True)
+                                Dim cItem As New clsConstellationItem
+                                With cItem
+                                    .projectName = kvp.Value.constellationName
+                                    .variantName = curSummaryProjToUse.variantName
+                                    .projectTyp = CType(curSummaryProjToUse.projectType, ptPRPFType).ToString
+                                    .zeile = zaehler
+                                    .show = True
+                                End With
+                                zaehler = zaehler + 1
+                                activeSummaryConstellation.add(cItem, sKey:=zaehler)
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+                            '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                            '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                            If AlleProjektSummaries.Containskey(srKey) Then
+                                AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
+                            End If
+
+                            Try
+                                AlleProjektSummaries.Add(curSummaryProjToUse, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                    End If
+
+                Else
+                    ' Variante der Constellation kann kein Summary-Projekt haben
                 End If
+
             Next
+
 
             If showSummaryProject Then
                 ' damit der Name des einen Portfolios übernommen wird ...
@@ -4346,7 +4355,7 @@ Public Module awinGeneralModules
                     ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
                     projectConstellations.Remove(activeConstellation.constellationName)
                 Else
-                    Call MsgBox("Es wurde keine Portfolio ausgewählt")
+                    Call MsgBox("Es wurde kein Portfolio ausgewählt")
                 End If
 
             Catch ex1 As Exception

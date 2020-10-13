@@ -191,7 +191,15 @@ Imports System.Web
 
                     For ix As Integer = 1 To removeConstFilterFrm.ListBox1.SelectedItems.Count
                         constFilterName = CStr(removeConstFilterFrm.ListBox1.SelectedItems.Item(ix - 1))
+
+                        ' portfolioName und variantName wieder durch # getrennt
+                        Dim hstr() As String = Split(constFilterName, "[")
+                        If hstr.Length > 1 Then
+                            constFilterName = hstr(0) & "#" & deleteBrackets(hstr(1), "[", "]")
+                        End If
+
                         Dim constvpid As String = dbPortfolioNames(constFilterName)
+
                         Call awinRemoveConstellation(constFilterName, constvpid, removeFromDB)
                         dbPortfolioNames.Remove(constFilterName)
 
@@ -278,7 +286,7 @@ Imports System.Web
                 .Text = "Portfolio(s) in Datenbank speichern"
             End If
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                sessionPortfolioNames.Add(kvp.Key, kvp.Value.constellationName)
+                sessionPortfolioNames.Add(kvp.Key, kvp.Value.variantName)
             Next
             .constellationsToShow = sessionPortfolioNames
             .retrieveFromDB = False
@@ -290,23 +298,88 @@ Imports System.Web
         End With
 
         Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog()
-
         If returnValue = DialogResult.OK Then
 
-            Dim errMsg As New clsErrorCodeMsg
+            Dim clearBoard As Boolean = Not storeConstellationFrm.addToSession.Checked
+            Dim showSummaryProjects As Boolean = storeConstellationFrm.loadAsSummary.Checked
 
-            ' ur:13.12.2019
-            'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
-            dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
 
-            'For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
+            'If Not IsNothing(storeConstellationFrm.requiredDate.Value) Then
+            '    storedAtOrBefore = CDate(storeConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
+            'Else
+            '    storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
+            'End If
 
-            '    Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
-            '    Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
 
-            '    Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
+            Dim constellationsToDo As New clsConstellations
 
-            'Next
+            ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
+            Dim constellationsChecked As New SortedList(Of String, String)
+
+            ' WaitCursor einschalten ...
+            Cursor.Current = Cursors.WaitCursor
+
+            If clearBoard Then
+                '' nichts zu speichern
+            End If
+            '' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
+            'If loadFromSession Then
+            '        currentSessionConstellation.Liste.Clear()
+            '    Else
+            '        AlleProjekte.Clear(updateCurrentConstellation:=True)
+            '    End If
+
+            '    projectConstellations.clearLoadedPortfolios()
+            'End If
+
+            ' liste, welche Portfolios und Portfolio-Varianten gespeichert werden soll, wird erstellt
+            constellationsChecked = New SortedList(Of String, String)
+
+            For Each tNode As TreeNode In storeConstellationFrm.TreeViewPortfolios.Nodes
+                If tNode.Checked Then
+                    Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
+                    For Each vNode As TreeNode In tNode.Nodes
+                        If vNode.Checked Then
+                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                constellationsChecked.Add(tNode.Text, vNode.Text)
+                            Else
+                                Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                            End If
+                            checkedVariants = checkedVariants + 1
+                        End If
+                    Next
+                    If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
+                        If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                            constellationsChecked.Add(tNode.Text, "")
+                        End If
+
+                    ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
+                        ' alles schon getan
+                    Else
+                        Call MsgBox("Error in Portfolio-Auswahl")
+                    End If
+                End If
+            Next
+            If constellationsChecked.Count = 1 Then
+                Dim constellationName As String = constellationsChecked.ElementAt(0).Key
+                Dim vname As String = constellationsChecked.ElementAt(0).Value
+                Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName, vname)
+                Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
+            End If
+
+
+            '' ur:13.12.2019
+            ''Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+            'dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
+            ''For i As Integer = 1 To storeConstellationFrm.ListBox1.SelectedItems.Count
+
+            ''    Dim constellationName As String = CStr(storeConstellationFrm.ListBox1.SelectedItems.Item(i - 1))
+            ''    Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName)
+
+            ''    Call storeSingleConstellationToDB(outPutCollection, currentConstellation, dbPortfolioNames)
+
+            ''Next
 
             If outPutCollection.Count > 0 Then
                 Dim msgH As String, msgE As String
@@ -399,7 +472,7 @@ Imports System.Web
         Else
             Dim sessionPortfolioNames As New SortedList(Of String, String)
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-                sessionPortfolioNames.Add(kvp.Key, "")
+                sessionPortfolioNames.Add(kvp.Key, kvp.Value.variantName)
             Next
             With loadConstellationFrm
                 'ur:13.12.2019
@@ -418,6 +491,12 @@ Imports System.Web
             loadConstellationFrm.addToSession.Visible = False
         End If
 
+        If loadFromSession Then
+            loadConstellationFrm.addToSession.Checked = False
+            loadConstellationFrm.addToSession.Visible = False
+            loadConstellationFrm.loadAsSummary.Checked = False
+            loadConstellationFrm.loadAsSummary.Visible = False
+        End If
 
         'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
 
@@ -467,7 +546,8 @@ Imports System.Web
                     For Each vNode As TreeNode In tNode.Nodes
                         If vNode.Checked Then
                             If Not constellationsChecked.ContainsKey(tNode.Text) Then
-                                constellationsChecked.Add(tNode.Text, vNode.Text)
+                                Dim vname As String = deleteBrackets(vNode.Text)
+                                constellationsChecked.Add(tNode.Text, vname)
                             Else
                                 Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
                             End If
@@ -478,6 +558,9 @@ Imports System.Web
                         If Not constellationsChecked.ContainsKey(tNode.Text) Then
                             constellationsChecked.Add(tNode.Text, "")
                         End If
+
+                    ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
+                        ' alles schon getan
                     Else
                         Call MsgBox("Error in Portfolio-Auswahl")
                     End If
@@ -514,11 +597,11 @@ Imports System.Web
 
                     End If
 
-                    If Not IsNothing(projectConstellations.getConstellation(pName)) Then
+                    If Not IsNothing(projectConstellations.getConstellation(pName, vName)) Then
 
                         Dim ok As Boolean = False
                         If (Not AlleProjekte.containsAnySummaryProject _
-                            And Not projectConstellations.getConstellation(pName).containsAnySummaryProject _
+                            And Not projectConstellations.getConstellation(pName, vName).containsAnySummaryProject _
                             And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
                             ' alles in Ordnung 
                             ok = True
@@ -530,7 +613,7 @@ Imports System.Web
 
                         If ok Then
                             ' aufnehmen ...
-                            Dim constellation As clsConstellation = projectConstellations.getConstellation(pName)
+                            Dim constellation As clsConstellation = projectConstellations.getConstellation(pName, vName)
 
                             If Not IsNothing(constellation) Then
                                 If Not constellationsToDo.Contains(constellation.constellationName) Then
@@ -586,7 +669,7 @@ Imports System.Web
 
                             ' war vorher ..
                             If Not IsNothing(constellation) Then
-                                projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                                projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName, constellation.variantName)
                             End If
 
                         Else
