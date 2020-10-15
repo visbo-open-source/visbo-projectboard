@@ -45,6 +45,7 @@ Public Class frmLoadConstellation
     Private Sub languageSettings()
 
         If awinSettings.englishLanguage Then
+
             lblStandvom.Text = "Version"
             addToSession.Text = "add to session"
             OKButton.Text = "OK"

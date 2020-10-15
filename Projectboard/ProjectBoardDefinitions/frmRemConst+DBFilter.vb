@@ -32,6 +32,20 @@
             'Next
             formerselect = ""
         End If
+        If frmOption = "PortfolioAusSessionLaden" Then
+            Me.Text = "Portfolio laden"
+            For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
+                Dim cName As String = addBrackets(kvp.Key, "[", "]")
+                ListBox1.Items.Add(cName)
+            Next
+
+            'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+            '    ListBox1.Items.Add(kvp.Key)
+
+            'Next
+            formerselect = ""
+        End If
 
 
     End Sub

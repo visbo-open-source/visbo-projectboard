@@ -2139,7 +2139,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String,
+                                              ByVal vName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -2150,14 +2151,12 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New SortedList(Of Date, clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            'cVP = GETvpid(c.constellationName, vpType:=2)
             If cVpid = "" Then
                 cVP = GETvpid(cName, err, ptPRPFType.portfolio)
                 cVpid = cVP._id
             End If
 
-            newVPf = GETallVPf(cVpid, Date.Now.ToUniversalTime, err)
+            newVPf = GETallVPf(cVpid, Date.MinValue, err, vName)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
@@ -2185,7 +2184,13 @@ Public Class Request
             End If
 
             If result = True Then
-                result = DELETEOneVP(cVpid, err)
+                If vName <> "" Then
+                    Dim varID As String = findVariantID(cVpid, vName)
+                    result = DELETEVPVariant(cVpid, err, varID)
+                Else
+                    result = DELETEOneVP(cVpid, err)
+                End If
+
             End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -6264,15 +6269,15 @@ Public Class Request
                 If errcode = 200 Then
 
                     Dim anzvar As Integer = webVPVarAntwort.Variant.Count
+                    Dim pname As String = GETpName(vpid)
                     If anzvar = 0 Then
                         VRScache.VPsId(vpid).Variant.Clear()
+                        VRScache.VPsN(pname).Variant.Clear()
                     Else
                         VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                        VRScache.VPsN(pname).Variant = webVPVarAntwort.Variant
                     End If
-
-                    Dim pname As String = GETpName(vpid)
-                    ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
-                    result = VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count
+                    result = True
 
                 Else
                     ' Fehlerbehandlung je nach errcode
@@ -6769,10 +6774,23 @@ Public Class Request
 
 
                 Next
+
                 ' hier wird die Sortliste aufgebaut ... 
                 .sortCriteria = vpf.sortType
                 ' tk die Sort-Liste ist im Befehl vorher bereits aufgebaut 
-                ' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+                '' außer
+                'If AlleProjekte.Count < 1 And vpf.sortType <> ptSortCriteria.alphabet And ptSortCriteria.customTF Then
+                '    Dim newsortlist As New SortedList(Of String, String)
+                '    For i As Integer = 0 To vpf.sortList.Count - 1
+
+                '        Dim pname As String = GETpName(vpf.sortList.Item(i))
+                '        Dim nrPname As String = i.ToString & pname
+                '        newsortlist.Add(nrPname, pname)
+                '    Next
+                '    .sortListe(vpf.sortType) = newsortlist
+                'End If
+                '' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+
             End With
 
         Catch ex As Exception

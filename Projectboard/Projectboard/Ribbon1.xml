@@ -31,10 +31,10 @@
             <!--label="Load from Database"-->
             <splitButton id="PT5G1split" size ="large">
               <!--<button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="DataFromDatabase"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />-->
-              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
+              <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLoadStoreRemoveConstellationFromDB" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
               <menu id ="PT5G1M" >
                 <!--label="Portfolio/s"-->                
-                <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
+                <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLoadStoreRemoveConstellationFromDB" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
                 <!--label="Project/s"-->
                 <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; Achtung: Wenn in der Kalenderleiste ein Zeitraum markiert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
               </menu>
@@ -58,7 +58,7 @@
             <!--<button id="PT5G3" getLabel="bestimmeLabel"  imageMso="Delete" onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle Snapshots und auch alle Varianten des Projektes aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>-->
             <menu id ="PT5G3M"  size ="large" getVisible="chckVisibility" getLabel="bestimmeLabel" imageMso="Delete" >
               <!--label="Portfolio"-->
-              <button id="Pt5G3B1" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Portfolio wird in der Datenbank gelöscht; damit wird lediglich die Definition des Portfolios in der Datenbank gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
+              <button id="Pt5G3B1" getLabel ="bestimmeLabel" onAction="PTLoadStoreRemoveConstellationFromDB" supertip ="das ausgewählte Portfolio wird in der Datenbank gelöscht; damit wird lediglich die Definition des Portfolios in der Datenbank gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
               <!--label="Projekte/Varianten/TimeStamps auswählen"-->
               <button id="Pt5G3B3" getLabel ="bestimmeLabel"  onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle Snapshots und auch alle Varianten des Projektes aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>
               <!--<button id="Pt5G3B2" image ="chart" label="Programm" onAction="PT5DeleteProgramme" enabled="false"/>-->
@@ -191,13 +191,13 @@
             <button id="PT2G3M1B1" getLabel ="bestimmeLabel"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; die Szenarien bleiben erhalten, aber alle dargestellten Projekte, Phasen, Meilensteine und Charts werden gelöscht. Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
             <menuSeparator id="separator0" />
             <!--label="Portfolio"-->
-            <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Portfolio wird in der Session gelöscht; damit wird lediglich die Definition dessen in der Session gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
+            <button id="PT2G3M1B3" getLabel ="bestimmeLabel" onAction="PTLoadRemoveConstellationFromSession" supertip ="das ausgewählte Portfolio wird in der Session gelöscht; damit wird lediglich die Definition dessen in der Session gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
             <!--label="einzelne Projekte und Varianten"-->
             <button id="PT2G3M1B2" getLabel ="bestimmeLabel" onAction="Tom2G1Loeschen" supertip ="Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
           <separator id="PT2G1s2"/>
           <!--label="Portfolio/s aus Session anzeigen und laden"-->
-          <button id="PT2G2B2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
+          <button id="PT2G2B2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTLoadRemoveConstellationFromSession" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt oder es wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: im letzteren Fall gehen in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes verloren"/>
           <!--</splitButton>-->
           <!--<button id="PTExit" size="large" imageMso="PrintPreviewClose" getLabel ="bestimmeLabel" onAction="PTexit" />-->
         </group>

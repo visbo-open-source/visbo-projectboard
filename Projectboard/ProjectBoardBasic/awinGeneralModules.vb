@@ -4325,11 +4325,12 @@ Public Module awinGeneralModules
         If deleteDB Then
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
+                Dim pName As String = getPnameFromKey(constellationName)
+                Dim vName As String = getVariantnameFromKey(constellationName)
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(constellationName, vpid, err)
+                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(pName, vpid, vName, err)
                 If returnValue = False Then
-                    Call MsgBox("Fehler bei Löschen Portfolio : " & constellationName)
+                    Call MsgBox("Fehler bei Löschen Portfolio : " & pName & "[" & vName & "]")
                 Else
                     ' jetzt muss die Planung wie die Beauftragung des Portfolio Projekts gelöscht werden ... 
                     'Dim planungsKey As String = calcProjektKey(activeConstellation.constellationName, "")
@@ -4340,7 +4341,7 @@ Public Module awinGeneralModules
                 End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
-                returnValue = False
+                    returnValue = False
             End If
         End If
 

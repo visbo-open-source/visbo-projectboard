@@ -1639,7 +1639,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByVal vName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1647,7 +1647,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
+                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, vName, err)
 
                     If result = False Then
 
@@ -1659,7 +1659,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, vName, err)
                                 End If
 
                             Case Else ' all others

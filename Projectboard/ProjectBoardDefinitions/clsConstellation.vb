@@ -562,65 +562,65 @@
             Next
 
         Else
-            _sortType = ptSortCriteria.customTF
-            ' neu 
-            Dim newSortList As New SortedList(Of String, String)
-            Dim noShowList As New SortedList(Of String, clsConstellationItem)
+            '_sortType = ptSortCriteria.customTF
+            '' neu 
+            'Dim newSortList As New SortedList(Of String, String)
+            'Dim noShowList As New SortedList(Of String, clsConstellationItem)
 
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
-                If kvp.Value.show = True Then
-                    Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
-                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
-                    While newSortList.ContainsKey(sortkey)
-                        sortkey = calcSortKeyCustomTF1(sortkey)
-                    End While
+            'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            '    ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
+            '    If kvp.Value.show = True Then
+            '        Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
+            '        ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+            '        While newSortList.ContainsKey(sortkey)
+            '            sortkey = calcSortKeyCustomTF1(sortkey)
+            '        End While
 
-                    ' jetzt ist er eindeutig 
-                    newSortList.Add(sortkey, kvp.Value.projectName)
-                Else
-                    ' erstmal in die NoShow Liste packen 
-                    noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
-                End If
+            '        ' jetzt ist er eindeutig 
+            '        newSortList.Add(sortkey, kvp.Value.projectName)
+            '    Else
+            '        ' erstmal in die NoShow Liste packen 
+            '        noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
+            '    End If
 
-            Next
+            'Next
 
-            ' jetzt müssen alle NoShow-Items behandelt werden ..
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
-                If newSortList.ContainsValue(kvp.Value.projectName) Then
-                    ' ist schon enthalten, also cItem.zeile anpassen 
-                    Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
-                        (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
-                Else
-                    ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
-                    ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
-                    Dim noShowZeile As Integer
-                    If kvp.Value.zeile >= 2 Then
-                        noShowZeile = kvp.Value.zeile
-                    Else
-                        If newSortList.Count > 0 Then
-                            noShowZeile = getTFzeilefromSortKeyCustomTF _
-                                                   (newSortList.Last.Key) + 1
-                        Else
-                            noShowZeile = 2
-                        End If
-                    End If
+            '' jetzt müssen alle NoShow-Items behandelt werden ..
+            'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
+            '    If newSortList.ContainsValue(kvp.Value.projectName) Then
+            '        ' ist schon enthalten, also cItem.zeile anpassen 
+            '        Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
+            '            (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
+            '    Else
+            '        ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
+            '        ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
+            '        Dim noShowZeile As Integer
+            '        If kvp.Value.zeile >= 2 Then
+            '            noShowZeile = kvp.Value.zeile
+            '        Else
+            '            If newSortList.Count > 0 Then
+            '                noShowZeile = getTFzeilefromSortKeyCustomTF _
+            '                                       (newSortList.Last.Key) + 1
+            '            Else
+            '                noShowZeile = 2
+            '            End If
+            '        End If
 
-                    Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
-                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
-                    While newSortList.ContainsKey(tmpKey)
-                        tmpKey = calcSortKeyCustomTF1(tmpKey)
-                    End While
+            '        Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
+            '        ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+            '        While newSortList.ContainsKey(tmpKey)
+            '            tmpKey = calcSortKeyCustomTF1(tmpKey)
+            '        End While
 
-                    ' jetzt ist er eindeutig 
-                    newSortList.Add(tmpKey, kvp.Value.projectName)
-                    Me.getItem(kvp.Key).zeile = noShowZeile
+            '        ' jetzt ist er eindeutig 
+            '        newSortList.Add(tmpKey, kvp.Value.projectName)
+            '        Me.getItem(kvp.Key).zeile = noShowZeile
 
-                End If
-            Next
+            '    End If
+            'Next
 
-            ' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
-            Me.sortListe(ptSortCriteria.customTF) = newSortList
+            '' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
+            'Me.sortListe(ptSortCriteria.customTF) = newSortList
 
         End If
 
@@ -657,6 +657,8 @@
                 If _sortType <> value Or istNull Or istLeer Then
                     ' nur wenn es unterschiedlich oder wenn es noch gar nicht gesetzt ist, muss etwas getan werden 
                     Call Me.buildSortlist(value)
+
+
                 End If
 
             End If
