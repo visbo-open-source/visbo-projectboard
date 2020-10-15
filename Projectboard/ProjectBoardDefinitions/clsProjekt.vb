@@ -4547,45 +4547,72 @@ Public Class clsProjekt
             ElseIf pstart <= arrayEnde Then
                 ReDim tmpResult(arrayEnde - pstart)
                 If isRole Then
-                    ' enthält diese Phase überhaupt diese Rolle ?
-                    Dim teamID As Integer = -1
-                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
-                    If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
 
-                        cphase = getPhaseByID(phaseNameID)
-                        Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
-                        If Not IsNothing(tmpRole) Then
-                            tagessatz = tmpRole.tagessatzIntern
-                            xWerte = tmpRole.Xwerte
-                        Else
-                            ReDim tmpResult(0)
-                            tmpResult(0) = 0
-                            notYetDone = False
-                        End If
+                    Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                    If Not IsNothing(tmpRole) Then
+                        tagessatz = tmpRole.tagessatzIntern
+                        xWerte = tmpRole.Xwerte
                     Else
                         ReDim tmpResult(0)
                         tmpResult(0) = 0
                         notYetDone = False
                     End If
+
+                    ' enthält diese Phase überhaupt diese Rolle ?
+                    ' braucht man nicht mehr 
+                    'Dim teamID As Integer = -1
+                    'Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+
+                    'If cphase.containsRoleSkillID(rcNameID) Then
+
+                    'End If
+                    'If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
+
+                    '    cphase = getPhaseByID(phaseNameID)
+                    '    Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                    '    If Not IsNothing(tmpRole) Then
+                    '        tagessatz = tmpRole.tagessatzIntern
+                    '        xWerte = tmpRole.Xwerte
+                    '    Else
+                    '        ReDim tmpResult(0)
+                    '        tmpResult(0) = 0
+                    '        notYetDone = False
+                    '    End If
+                    'Else
+                    '    ReDim tmpResult(0)
+                    '    tmpResult(0) = 0
+                    '    notYetDone = False
+                    'End If
                 ElseIf rcNameID <> "" Then
                     If CostDefinitions.containsName(rcNameID) Then
-                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
-                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
 
-                            cphase = getPhaseByID(phaseNameID)
-                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
-                            If Not IsNothing(tmpCost) Then
-                                xWerte = tmpCost.Xwerte
-                            Else
-                                ReDim tmpResult(0)
-                                tmpResult(0) = 0
-                                notYetDone = False
-                            End If
+                        Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                        If Not IsNothing(tmpCost) Then
+                            xWerte = tmpCost.Xwerte
                         Else
                             ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If
+
+
+                        'Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                        'If rcLists.phaseContainsCost(phaseNameID, costID) Then
+
+                        '    cphase = getPhaseByID(phaseNameID)
+                        '    Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                        '    If Not IsNothing(tmpCost) Then
+                        '        xWerte = tmpCost.Xwerte
+                        '    Else
+                        '        ReDim tmpResult(0)
+                        '        tmpResult(0) = 0
+                        '        notYetDone = False
+                        '    End If
+                        'Else
+                        '    ReDim tmpResult(0)
+                        '    tmpResult(0) = 0
+                        '    notYetDone = False
+                        'End If
 
                     Else
                         notYetDone = False
@@ -4650,7 +4677,10 @@ Public Class clsProjekt
                 Dim roleUID As Integer = currentRoleDef.UID
                 Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+                'Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+                Dim tmpCollection As New Collection
+                tmpCollection.Add(currentRoleDef.name)
+                Dim listOfPhases As Collection = getPhaseIdsWithRoleCost(tmpCollection, True)
 
                 For Each phNameID As String In listOfPhases
 
@@ -7145,43 +7175,7 @@ Public Class clsProjekt
         End Get
     End Property
 
-    Public ReadOnly Property getPhaseIdsWithRoleCost(ByVal namenListe As Collection, ByVal namesAreRoleIDs As Boolean) As Collection
-        Get
-            Dim iDCollection As New Collection
-            Dim teamID As Integer = -1
 
-            For i As Integer = 1 To Me.CountPhases
-
-                Dim cphase As clsPhase = Me.getPhase(i)
-                Dim phaseNameID As String = cphase.nameID
-
-                If namesAreRoleIDs Then
-                    For Each tmpItem As String In namenListe
-                        Dim roleID As Integer = RoleDefinitions.getRoleDefByIDKennung(tmpItem, teamID).UID
-                        If Me.rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
-                            If Not iDCollection.Contains(phaseNameID) Then
-                                iDCollection.Add(phaseNameID, phaseNameID)
-                            End If
-                        End If
-                    Next
-                Else
-                    ' Kosten 
-                    For Each tmpItem As String In namenListe
-                        Dim costID As Integer = CostDefinitions.getCostdef(tmpItem).UID
-                        If Me.rcLists.phaseContainsCost(phaseNameID, costID) Then
-                            If Not iDCollection.Contains(phaseNameID) Then
-                                iDCollection.Add(phaseNameID, phaseNameID)
-                            End If
-                        End If
-                    Next
-                End If
-
-
-            Next
-
-            getPhaseIdsWithRoleCost = iDCollection
-        End Get
-    End Property
 
     ''' <summary>
     ''' gibt zu der angegebenen elemID alle Kind und Kindes-KinderIDs zurück

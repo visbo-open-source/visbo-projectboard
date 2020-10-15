@@ -6444,18 +6444,18 @@ Public Module Module1
 
                             If myCustomUserRole.isAllowedToSee(curRole.name) Then
                                 curValue = trimToShowTimeRange(hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                     outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), hproj.Start).Sum
+                                                                     outPutInEuro:=showEuro), hproj.Start).Sum
 
                                 If considerLapr And Not reducedTable Then
                                     laprValue = trimToShowTimeRange(lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), lproj.Start).Sum
+                                                                              outPutInEuro:=showEuro), lproj.Start).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
                                     faprValue = trimToShowTimeRange(bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
-                                                                              outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs), bproj.Start).Sum
+                                                                              outPutInEuro:=showEuro), bproj.Start).Sum
                                 Else
                                     faprValue = 0.0
                                 End If

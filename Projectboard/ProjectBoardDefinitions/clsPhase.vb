@@ -488,6 +488,141 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' true if phase contains the given role skill combination, incl childs = true 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="inclChilds"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsRoleSkillID(ByVal roleNameID As String, Optional ByVal inclChilds As Boolean = True) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim skillID As Integer = -1
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, skillID)
+
+            If roleID = -1 And skillID > 0 Then
+                tmpResult = containsSkillID(skillID, inclSubSkills:=inclChilds)
+            ElseIf roleID > 0 And skillID = -1 Then
+                tmpResult = containsRoleID(roleID, inclSubRoles:=inclChilds)
+            ElseIf roleID = -1 And skillID = -1 Then
+                ' nichts tun 
+            Else
+                Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+                Dim listOfRoleIDs As New SortedList(Of Integer, Double)
+
+                If curRoledef.isCombinedRole And inclChilds Then
+                    listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                Else
+                    listOfRoleIDs.Add(curRoledef.UID, 1.0)
+                End If
+
+                Dim curSKilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+                Dim listOfSkillIDs As New SortedList(Of Integer, Double)
+
+                If curSKilldef.isCombinedRole And inclChilds Then
+                    listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSKilldef.name)
+                Else
+                    listOfSkillIDs.Add(curSKilldef.UID, 1.0)
+                End If
+
+                ' jetzt kommt das MAtching 
+                For Each curRole As clsRolle In _allRoles
+                    If listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID) Then
+                        tmpResult = True
+                        Exit For
+                    End If
+                Next
+            End If
+
+            containsRoleSkillID = tmpResult
+
+        End Get
+    End Property
+    ''' <summary>
+    ''' true, if one of the roleUids in phase is roleUID
+    ''' </summary>
+    ''' <param name="roleUID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsRoleID(ByVal roleUID As Integer, Optional ByVal inclSubRoles As Boolean = True) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUID)
+            Dim listOfIDs As New SortedList(Of Integer, Double)
+
+            If Not IsNothing(curRoledef) Then
+                If Not curRoledef.isSkill And Not curRoledef.isSkillParent Then
+                    If curRoledef.isCombinedRole And inclSubRoles Then
+                        listOfIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                    Else
+                        listOfIDs.Add(curRoledef.UID, 1.0)
+                    End If
+                End If
+            End If
+
+            For Each curRole As clsRolle In _allRoles
+                If listOfIDs.ContainsKey(curRole.uid) Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsRoleID = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' true, if one of 
+    ''' </summary>
+    ''' <param name="skillID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsSkillID(ByVal skillID As Integer, Optional inclSubSkills As Boolean = True) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim curSKilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+            Dim listOfIDs As New SortedList(Of Integer, Double)
+
+            If Not IsNothing(curSKilldef) Then
+                If curSKilldef.isSkill Or curSKilldef.isSkillParent Then
+                    If curSKilldef.isCombinedRole And inclSubSkills Then
+                        listOfIDs = RoleDefinitions.getSubRoleIDsOf(curSKilldef.name)
+                    Else
+                        listOfIDs.Add(curSKilldef.UID, 1.0)
+                    End If
+                End If
+            End If
+
+            For Each curRole As clsRolle In _allRoles
+                If listOfIDs.ContainsKey(curRole.uid) Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsSkillID = tmpResult
+        End Get
+    End Property
+
+    Public ReadOnly Property containsCostID(ByVal costID As Integer) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim curCostdef As clsKostenartDefinition = CostDefinitions.getCostDefByID(costID)
+            Dim listOfIDs As New SortedList(Of Integer, Double)
+
+            ' Vorbereitung für Hierarchie von Kostenarten ..
+            If Not IsNothing(curCostdef) Then
+                listOfIDs.Add(curCostdef.UID, 1.0)
+            End If
+
+            For Each curCost As clsKostenart In _allCosts
+                If listOfIDs.ContainsKey(curCost.KostenTyp) Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsCostID = tmpResult
+        End Get
+    End Property
+    ''' <summary>
     ''' gibt an , ob das Deliverable existiert ...
     ''' </summary>
     ''' <param name="item"></param>
@@ -2345,11 +2480,11 @@ Public Class clsPhase
 
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Try
-            Me.parentProject.rcLists.addRP(tmpRole.uid, Me.nameID, teamID:=teamID)
-        Catch ex As Exception
+        'Try
+        '    Me.parentProject.rcLists.addRP(tmpRole.uid, Me.nameID, teamID:=teamID)
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
 
     End Sub
@@ -2499,12 +2634,12 @@ Public Class clsPhase
             _allRoles.Add(role)
         End If
 
-        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Try
-            Me.parentProject.rcLists.addRP(role.uid, Me.nameID, teamID)
-        Catch ex As Exception
+        '' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        'Try
+        '    Me.parentProject.rcLists.addRP(role.uid, Me.nameID, teamID)
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
 
         ' '' Code vor dem 8.7.16
@@ -2537,7 +2672,7 @@ Public Class clsPhase
             _allRoles.Remove(tmpRole)
             ' Änderung tk 20.09.16
             ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-            Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, teamID, False)
+            'Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, teamID, False)
         Next
 
 
@@ -2561,7 +2696,7 @@ Public Class clsPhase
 
         For Each tmpRole As clsRolle In toDoList
             _allRoles.Remove(tmpRole)
-            Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, tmpRole.teamID, False)
+            'Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, tmpRole.teamID, False)
         Next
 
     End Sub
@@ -3325,8 +3460,8 @@ Public Class clsPhase
             _allCosts.Add(cost)
         End If
 
-        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Me.parentProject.rcLists.addCP(cost.KostenTyp, Me.nameID)
+        '' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        'Me.parentProject.rcLists.addCP(cost.KostenTyp, Me.nameID)
 
 
         ' vor dem 8.7.16
@@ -3391,11 +3526,11 @@ Public Class clsPhase
 
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Try
-            Me.parentProject.rcLists.addCP(tmpCost.KostenTyp, Me.nameID)
-        Catch ex As Exception
+        'Try
+        '    Me.parentProject.rcLists.addCP(tmpCost.KostenTyp, Me.nameID)
+        'Catch ex As Exception
 
-        End Try
+        'End Try
 
 
     End Sub
@@ -3419,7 +3554,7 @@ Public Class clsPhase
         For Each tmpCost As clsKostenart In toDoList
             _allCosts.Remove(tmpCost)
             ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-            Me.parentProject.rcLists.removeCP(tmpCost.KostenTyp, Me.nameID)
+            ''Me.parentProject.rcLists.removeCP(tmpCost.KostenTyp, Me.nameID)
         Next
 
 

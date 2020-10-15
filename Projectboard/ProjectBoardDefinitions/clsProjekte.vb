@@ -2129,7 +2129,7 @@ Public Class clsProjekte
 
                 If anzLoops > 0 Then
 
-                    Dim existingRoleNameIDs As Collection = hproj.rcLists.getRoleNameIDs
+                    Dim existingRoleNameIDs As Collection = hproj.getRoleNameIDs
                     Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIDs, lookingForRoleNameIDs)
 
 

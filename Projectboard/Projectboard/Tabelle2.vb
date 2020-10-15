@@ -618,9 +618,9 @@ Public Class Tabelle2
                                                     Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, oldSkillID)
                                                     If IsNothing(cRole) Then
                                                     Else
-                                                        hproj.rcLists.removeRP(cRole.uid, cphase.nameID, skillID, False)
+                                                        'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, skillID, False)
                                                         cRole.uid = newRoleID
-                                                        hproj.rcLists.addRP(newRoleID, cphase.nameID, skillID)
+                                                        'hproj.rcLists.addRP(newRoleID, cphase.nameID, skillID)
                                                     End If
 
 
@@ -698,9 +698,9 @@ Public Class Tabelle2
                                                 Dim cCost As clsKostenart = cphase.getCost(visboZustaende.oldValue)
                                                 If IsNothing(cCost) Then
                                                 Else
-                                                    hproj.rcLists.removeCP(cCost.KostenTyp, cphase.nameID)
+                                                    'hproj.rcLists.removeCP(cCost.KostenTyp, cphase.nameID)
                                                     cCost.KostenTyp = newCostID
-                                                    hproj.rcLists.addCP(newCostID, cphase.nameID)
+                                                    'hproj.rcLists.addCP(newCostID, cphase.nameID)
                                                 End If
                                                 kostenChanged = True
                                             Else
@@ -799,9 +799,9 @@ Public Class Tabelle2
                                                 Dim cRole As clsRolle = cphase.getRole(rcName, oldSkillID)
                                                 If IsNothing(cRole) Then
                                                 Else
-                                                    hproj.rcLists.removeRP(cRole.uid, cphase.nameID, oldSkillID, False)
+                                                    'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, oldSkillID, False)
                                                     cRole.teamID = newSkillID
-                                                    hproj.rcLists.addRP(cRole.uid, cphase.nameID, newSkillID)
+                                                    'hproj.rcLists.addRP(cRole.uid, cphase.nameID, newSkillID)
                                                 End If
 
 
