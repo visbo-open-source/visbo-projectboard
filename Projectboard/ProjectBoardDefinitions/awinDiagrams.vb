@@ -457,19 +457,49 @@ Public Module awinDiagrams
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.placeholders,
                                                                                    excludedNames:=myCollection)
+
+                                    Dim tstDatenreihe As Double() = ShowProjekte.getRoleValuesInMonth2(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.placeholders,
+                                                                                   excludedNames:=myCollection)
+
                                     edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.realRoles,
+                                                                                   excludedNames:=myCollection)
+
+                                    Dim tsteDatenreihe As Double() = ShowProjekte.getRoleValuesInMonth2(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.placeholders,
                                                                                    excludedNames:=myCollection)
                                 Else
                                     datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.all,
                                                                                    excludedNames:=myCollection)
+
+                                    Dim tstDatenreihe As Double() = ShowProjekte.getRoleValuesInMonth2(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.all,
+                                                                                   excludedNames:=myCollection)
+
+                                    If arraysAreDifferent(datenreihe, tstDatenreihe) Then
+                                        Call MsgBox("Unterschied !! ")
+                                    End If
+
                                 End If
 
                             Else
                                 datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+
+                                Dim tstDatenreihe As Double() = ShowProjekte.getRoleValuesInMonth2(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.all,
+                                                                                   excludedNames:=myCollection)
+
+                                If arraysAreDifferent(datenreihe, tstDatenreihe) Then
+                                    Call MsgBox("Unterschied !! ")
+                                End If
                             End If
 
 

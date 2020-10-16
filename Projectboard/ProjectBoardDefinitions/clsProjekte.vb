@@ -2028,7 +2028,79 @@ Public Class clsProjekte
     End Property
     '
     '
+    Public ReadOnly Property getRoleValuesInMonth2(ByVal roleIDStr As String,
+                                                  Optional ByVal considerAllSubRoles As Boolean = False,
+                                                  Optional ByVal type As PTcbr = PTcbr.all,
+                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
+        Get
+            Dim roleValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
 
+            Dim tempArray() As Double
+            Dim testArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+            Dim teamID As Integer
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleIDStr, teamID)
+            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+
+            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim roleValues(zeitraum)
+
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                Dauer = hproj.anzahlRasterElemente
+
+                ReDim tempArray(Dauer - 1)
+                ReDim testArray(Dauer - 1)
+
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+                    Try
+                        tempArray = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=considerAllSubRoles)
+
+                        For i = 0 To anzLoops - 1
+                            roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Next kvp
+
+
+            getRoleValuesInMonth2 = roleValues
+
+        End Get
+
+    End Property
 
     ''' <summary>
     ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
