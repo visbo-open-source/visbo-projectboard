@@ -736,9 +736,14 @@ Public Class frmProjPortfolioAdmin
             Next
 
             For Each kvp2 As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                Dim newKey As String = kvp2.Key
                 If kvp2.Key <> "Start" Then
-                    If Not dbPortfolioNames.ContainsKey(kvp2.Key) Then
-                        dropboxScenarioNames.Items.Add(kvp2.Key)
+                    If newKey.Contains("#") Then
+                        Dim hstr() As String = Split(newKey, "#")
+                        newKey = hstr(0)
+                    End If
+                    If Not dbPortfolioNames.ContainsKey(newKey) Then
+                        dropboxScenarioNames.Items.Add(newKey)
                     End If
 
                 End If
@@ -4279,9 +4284,6 @@ Public Class frmProjPortfolioAdmin
     'End Sub
 
 
-    Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
-
-    End Sub
 
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 

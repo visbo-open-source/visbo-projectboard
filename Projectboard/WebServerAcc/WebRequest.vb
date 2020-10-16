@@ -2052,12 +2052,15 @@ Public Class Request
             cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
 
-            If cVP._id = "" Then
+            If cVP._id = "" _
+                Or (cVP._id <> "" And cVP.vpType <> ptPRPFType.portfolio) Then
                 '' ur: war nur zu Testzwecken: 
                 '' Call MsgBox("es ist noch kein VisboPortfolio angelegt")
 
                 ' Portfolio-Name
                 cVP.name = c.constellationName
+                ' _id
+                cVP._id = Nothing
                 ' ur:14.12.2018: liste der User ist nicht mehr in den VPs enthalten
                 '' berechtiger User
                 'Dim user As New clsUser
@@ -2075,7 +2078,7 @@ Public Class Request
                     cVP._id = newVP.Item(0)._id
                     storedVP = True
                 Else
-                    Throw New ArgumentException("FEHLER beim erstellen des VisboPortfolioProject")
+                    Throw New ArgumentException("FEHLER beim Speichern des Portfolios: " & vbLf & err.errorMsg)
                 End If
             Else
                 storedVP = True
@@ -2156,6 +2159,25 @@ Public Class Request
                 cVpid = cVP._id
             End If
 
+            ' Basis Portfolio kann nicht gelöscht werden, solange noch varianten vorhanden sind
+            If vName = "" Then
+                cVP = GETvpid(cName, err, ptPRPFType.portfolio)
+                If Not IsNothing(cVP) Then
+
+                    If cVP.Variant.Count = 1 And
+                        cVP.Variant.Item(0).variantName = ptVariantFixNames.pfv.ToString Then
+                        ' do nothing
+                    ElseIf cVP.Variant.Count = 0 Then
+                        'do nothing
+                    Else
+                        err.errorCode = 0
+                        err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
+                        Return result
+                    End If
+                End If
+            End If
+
+            ' ab hier ist sichergestellt, dass für vname = "" keine Varianten mehr existieren
             newVPf = GETallVPf(cVpid, Date.MinValue, err, vName)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
@@ -2179,8 +2201,10 @@ Public Class Request
                     'Call MsgBox("Es gab mehrer Portfolio-Versionen zu: " & c.constellationName)
                 End If
             Else
-                ' aktuell existiert keine PortfolioVersion zu vpid
-                ' TODO: was ist, wenn nur der Token is dead war?!?!?
+                ' aktuell existiert keine PortfolioVersion zu vpid, aber der request zum Server war erfolgreich
+                If err.errorCode = 200 Then
+                    result = True
+                End If
             End If
 
             If result = True Then
@@ -2188,6 +2212,7 @@ Public Class Request
                     Dim varID As String = findVariantID(cVpid, vName)
                     result = DELETEVPVariant(cVpid, err, varID)
                 Else
+                    ' BasisPortfolio mit pfv als letztes übrig geblieben
                     result = DELETEOneVP(cVpid, err)
                 End If
 
@@ -4630,6 +4655,7 @@ Public Class Request
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
         Dim errmsg As String = ""
         Dim errcode As Integer
+        Dim nextUrlTrennzeichen As String = "?"
 
         Try
             Dim serverUriString As String
@@ -4643,19 +4669,21 @@ Public Class Request
             If timestamp <= Date.MinValue Then
                 serverUriString = serverUriString
             Else
-                serverUriString = serverUriString & "?refDate=" & refDate
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refDate=" & refDate
+                nextUrlTrennzeichen = "&"
             End If
             If variantName <> noVariantName Then
                 Dim variantID As String = findVariantID(vpid, variantName)
                 If variantID <> "" Then
-                    serverUriString = serverUriString & "&variantID=" & variantID
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantID=" & variantID
                 Else
-                    serverUriString = serverUriString & "&variantName=" & variantName
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantName=" & variantName
                 End If
+                nextUrlTrennzeichen = "&"
             End If
 
             If refNext Then
-                serverUriString = serverUriString & "&refNext=1"
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refNext=1"
             End If
 
 
@@ -6257,26 +6285,29 @@ Public Class Request
 
                 ' Request absetzen
                 Dim Antwort As String
-                Dim webVPVarAntwort As clsWebVPVariant = Nothing
+                Dim webVPVarAntwort As clsWebVP = Nothing
 
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                     Antwort = ReadResponseContent(httpresp)
                     errcode = CType(httpresp.StatusCode, Integer)
                     errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
                 End Using
 
                 If errcode = 200 Then
 
-                    Dim anzvar As Integer = webVPVarAntwort.Variant.Count
+                    Dim anzvar As Integer = webVPVarAntwort.vp.Item(0).Variant.Count
                     Dim pname As String = GETpName(vpid)
                     If anzvar = 0 Then
                         VRScache.VPsId(vpid).Variant.Clear()
                         VRScache.VPsN(pname).Variant.Clear()
-                    Else
-                        VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
-                        VRScache.VPsN(pname).Variant = webVPVarAntwort.Variant
+
+                    ElseIf webVPVarAntwort.vp.Count = 1 Then
+                        VRScache.VPsId(vpid) = webVPVarAntwort.vp.Item(0)
+                        VRScache.VPsN(pname) = webVPVarAntwort.vp.Item(0)
                     End If
+
+                    result = (VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count)
                     result = True
 
                 Else

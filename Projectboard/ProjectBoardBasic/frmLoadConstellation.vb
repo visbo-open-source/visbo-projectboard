@@ -252,7 +252,8 @@ Public Class frmLoadConstellation
                     If quickList Then
                         vpid = kvp.Value
                         variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio)
-                        variantNames.Add("")    ' Standard-Variante hinzufügen
+                        variantNames.Add("",, variantNames.Item(1))
+                        'variantNames.Add("")    ' Standard-Variante hinzufügen
                     Else
                         variantName = getVariantnameFromKey(kvp.Key)
                         variantNames.Add(variantName)
@@ -360,6 +361,7 @@ Public Class frmLoadConstellation
         ' mit Click in TreeView wird verändert: Activate Variant, ChgInSession 
 
         Dim checkMode As Boolean = node.Checked
+        Dim oneVarChecked As Boolean = False
 
         stopRecursion = True
 
@@ -380,6 +382,23 @@ Public Class frmLoadConstellation
                             For Each vNode As TreeNode In tmpNode.Nodes
                                 vNode.Checked = False
                             Next
+                        Else
+                            ' basisVariante muss gecheckt werden, wenn sonst keine Variante gecheckt ist
+                            Dim indexBaseVar As Integer = 0
+                            Dim hindex As Integer = 0
+                            For Each vNode As TreeNode In tmpNode.Nodes
+                                If vNode.Checked Then
+                                    oneVarChecked = True
+                                    Exit For
+                                End If
+                                If vNode.Text = "()" Then
+                                    indexBaseVar = hindex
+                                End If
+                                hindex += 1
+                            Next
+                            If Not oneVarChecked Then
+                                tmpNode.Nodes.Item(indexBaseVar).Checked = True
+                            End If
                         End If
                     End If
                 Next
@@ -395,14 +414,14 @@ Public Class frmLoadConstellation
                         tmpNode.Checked = checkMode
                         If tmpNode.Checked Then
                             node.Parent.Checked = True
+                        Else
+                            node.Parent.Checked = False
                         End If
                         'Call collectAfterCheck(treeLevel, tmpNode)
                     Else
                         ' uncheck alle anderen Varianten
                         tmpNode.Checked = False
                     End If
-
-
                 Next
 
         End Select
@@ -430,7 +449,7 @@ Public Class frmLoadConstellation
 
         Select Case TreeLevel
 
-            Case 0 ' Projekt ist selektiert / nicht selektiert 
+            Case 0 ' Portfolio ist selektiert / nicht selektiert 
 
                 Dim checkMode As Boolean = node.Checked
 
@@ -489,7 +508,7 @@ Public Class frmLoadConstellation
         selectedNode = e.Node
         nodeLevel = e.Node.Level
 
-        ' Projekt-Ebene
+        ' Portfolio-Ebene
         If nodeLevel = 0 Then
 
 
