@@ -1432,39 +1432,47 @@ Public Class clsProjekt
 
         Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
 
-        ' hier passiert das jetzt 
-        Dim roleNameIDs As New SortedList(Of String, Double)
+
+
+        Dim childRoleIDs As New SortedList(Of Integer, Double)
+        Dim childSkillIDs As New SortedList(Of Integer, Double)
 
         If Not IsNothing(rolesToBeDeleted) Then
+
             For Each roleName As String In rolesToBeDeleted
 
-                Dim teamID As Integer = -1
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleName, teamID)
-                If Not IsNothing(tmpRole) Then
+                Dim skillID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleName, skillID)
 
-                    Dim curRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, teamID)
+                Dim tmpSkill As clsRollenDefinition = Nothing
 
-                    If includingChilds Then
-                        Dim tmpRoleIDS As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(curRoleNameID, type:=PTcbr.all)
-                        For Each srKvP As KeyValuePair(Of String, Double) In tmpRoleIDS
-                            If roleNameIDs.ContainsKey(srKvP.Key) Then
-                                ' muss nichts getan werden - ist schon in der Liste  
-                            Else
-                                ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
-                                ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
-                                roleNameIDs.Add(srKvP.Key, 1.0)
-                            End If
-                        Next
-                    Else
+                If skillID > 0 Then
+                    tmpSkill = RoleDefinitions.getRoleDefByID(skillID)
+                End If
 
-                        If Not roleNameIDs.ContainsKey(curRoleNameID) Then
-                            roleNameIDs.Add(curRoleNameID, 1.0)
-                        End If
+                If includingChilds Then
 
+                    If Not IsNothing(tmpRole) Then
+                        childRoleIDs = RoleDefinitions.getSubRoleIDsOf(tmpRole.name)
+                    End If
+
+                    If Not IsNothing(tmpSkill) Then
+                        childSkillIDs = RoleDefinitions.getSubRoleIDsOf(tmpSkill.name)
+                    End If
+
+
+                Else
+
+                    If Not IsNothing(tmpRole) Then
+                        childRoleIDs.Add(tmpRole.UID, 1.0)
+                    End If
+
+
+                    If Not IsNothing(tmpSkill) Then
+                        childSkillIDs.Add(tmpSkill.UID, 1.0)
                     End If
 
                 End If
-
 
 
             Next
@@ -1477,20 +1485,34 @@ Public Class clsProjekt
             Dim cPhase As clsPhase = newProj.getPhase(ip)
 
             If Not IsNothing(rolesToBeDeleted) Then
-                If roleNameIDs.Count > 0 Then
+                If childRoleIDs.Count > 0 Or childSkillIDs.Count > 0 Then
                     Dim delCollection As New Collection
+
                     For dx As Integer = 1 To cPhase.countRoles
                         Dim tmpRole As clsRolle = cPhase.getRole(dx)
-                        Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
-                        If roleNameIDs.ContainsKey(tmpKey) Then
-                            ' löschen 
-                            If Not delCollection.Contains(tmpKey) Then
-                                delCollection.Add(tmpKey, tmpKey)
+                        Dim found As Boolean = False
+
+                        If childRoleIDs.Count > 0 And childSkillIDs.Count > 0 Then
+                            found = childRoleIDs.ContainsKey(tmpRole.uid) And childSkillIDs.ContainsKey(tmpRole.teamID)
+
+                        ElseIf childRoleIDs.Count = 0 And childSkillIDs.Count > 0 Then
+                            found = childSkillIDs.ContainsKey(tmpRole.teamID)
+
+                        ElseIf childRoleIDs.Count > 0 And childSkillIDs.Count = 0 Then
+                            found = childRoleIDs.ContainsKey(tmpRole.uid)
+
+                        End If
+
+                        If found Then
+                            Dim foundKey As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+                            If Not delCollection.Contains(foundKey) Then
+                                delCollection.Add(foundKey, foundKey)
                             End If
                         End If
+
                     Next
 
-                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    ' jetzt müssen alle delCollection Einträge in der Phase gelöscht werden 
                     For Each item As String In delCollection
                         If item <> "" Then
                             cPhase.removeRoleByNameID(item)

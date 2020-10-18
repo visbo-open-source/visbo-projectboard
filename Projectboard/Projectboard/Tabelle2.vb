@@ -1997,7 +1997,7 @@ Public Class Tabelle2
                 ' anderfalls muss geprüft werden ob es sich um eine gültige Skill handelt ... 
                 Dim tmpSkill As clsRollenDefinition = RoleDefinitions.getRoledef(skillName)
                 If Not IsNothing(tmpSkill) Then
-                    tmpValue = tmpSkill.isSkill Or tmpSkill.isSkillParent
+                    tmpValue = tmpSkill.isSkill
                 End If
             End If
 

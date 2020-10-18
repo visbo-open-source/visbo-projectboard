@@ -549,7 +549,7 @@ Public Class clsPhase
             Dim listOfIDs As New SortedList(Of Integer, Double)
 
             If Not IsNothing(curRoledef) Then
-                If Not curRoledef.isSkill And Not curRoledef.isSkillParent Then
+                If Not curRoledef.isSkill Then
                     If curRoledef.isCombinedRole And inclSubRoles Then
                         listOfIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
                     Else
@@ -581,7 +581,7 @@ Public Class clsPhase
             Dim listOfIDs As New SortedList(Of Integer, Double)
 
             If Not IsNothing(curSKilldef) Then
-                If curSKilldef.isSkill Or curSKilldef.isSkillParent Then
+                If curSKilldef.isSkill Then
                     If curSKilldef.isCombinedRole And inclSubSkills Then
                         listOfIDs = RoleDefinitions.getSubRoleIDsOf(curSKilldef.name)
                     Else

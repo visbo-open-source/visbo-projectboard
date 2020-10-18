@@ -140,7 +140,7 @@
     Private _isSkill As Boolean
     Public Property isSkill As Boolean
         Get
-            isSkill = _isSkill
+            isSkill = _isSkill Or _isSkillParent
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
@@ -252,16 +252,16 @@
     Private _uuid As Integer
     'Private Kapa() As Double
 
-    Private _isTeamParent As Boolean
+    Private _isSkillParent As Boolean
     Public Property isSkillParent As Boolean
         Get
-            isSkillParent = _isTeamParent
+            isSkillParent = _isSkillParent
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
-                _isTeamParent = value
+                _isSkillParent = value
             Else
-                _isTeamParent = False
+                _isSkillParent = False
             End If
 
         End Set
@@ -329,27 +329,20 @@
         Get
             ' tk 15.1.20 wenn es sich bei der Rolle um ein Team handelt und es sich um einen Ressourcen-Manager handelt , dann werden nur die 
             ' Skillgruppen gezeigt, die mindestens ein Mitglied in dem Team haben 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And (Me.isSkill = True Or Me.isSkillParent) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And Me.isSkill = True Then
+                ' alle Kinder der Skill bringen, aber nur die, die Teil der Organisations-Unit von Ressourcen Manager sind .. 
 
                 Dim restrictedToOrgaID As Integer = CInt(myCustomUserRole.specifics)
                 Dim restrictedSubRoleIDs As New SortedList(Of Integer, Double)
 
                 For Each kvp As KeyValuePair(Of Integer, Double) In _subRoleIDs
+
+                    ' wenn das Kind der Skill mindestens eine gemeinsame Ressourcen hat ... 
+                    If RoleDefinitions.getCommonChildsOfParents(restrictedToOrgaID, kvp.Key).Count > 0 Then
+                        restrictedSubRoleIDs.Add(kvp.Key, 1.0)
+                    End If
+
                     Dim roleName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-
-
-
-                    Dim childIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(roleName)
-                    If childIDs.Count = 0 Then
-                        ' jetzt die Rolle selber aufnehmen 
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                        childIDs.Add(roleNameID, 1.0)
-                    End If
-
-                    Dim childIDArray As String() = childIDs.Keys.ToArray
-                    If RoleDefinitions.hasAnyChildParentRelationsship(childIDArray, restrictedToOrgaID) Then
-                        restrictedSubRoleIDs.Add(kvp.Key, kvp.Value)
-                    End If
 
                 Next
 
@@ -574,7 +567,7 @@
         _isSkill = False
 
         ' tk wird aktuell noch nicht in der DB gespeichert, wird beim buildOrgaTeams gesetzt 
-        _isTeamParent = False
+        _isSkillParent = False
 
         'ReDim _externeKapazitaet(240)
 

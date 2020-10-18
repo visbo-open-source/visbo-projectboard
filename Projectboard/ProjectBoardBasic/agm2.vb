@@ -18757,16 +18757,6 @@ Public Module agm2
 
 
         Try
-            ' jetzt muss behandelt werden, dass im alten Schema eine TeamID noch als Rolle abgespeichert werden kann 
-            If isRole Then
-                Dim skillID As Integer = -1
-                Dim chckRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID)
-                If Not IsNothing(chckRole) Then
-                    If chckRole.isSkillParent Or chckRole.isSkill Then
-
-                    End If
-                End If
-            End If
 
 
             ' Schreiben der Projekt-Informationen 

@@ -152,7 +152,7 @@ Public Class clsCustomUserRole
                     ' Ende Alt vor 18.1.20
 
                     ' Neu seit 18.1.20
-                    If restrictedToRoleDef.isSkill Or restrictedToRoleDef.isSkillParent Then
+                    If restrictedToRoleDef.isSkill Then
                         isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedToRoleID)
                     Else
                         Dim tmpergList As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(roleID, restrictedToRoleID)

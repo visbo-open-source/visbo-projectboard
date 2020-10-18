@@ -136,7 +136,7 @@ Public Class clsRollen
                 ' in parentArray(0) steht das Team-Element selber ... deshalb start der Schleife ab i=1
                 For i As Integer = 1 To parentArray.Length - 1
                     Dim parentRole As clsRollenDefinition = getRoleDefByID(parentArray(i))
-                    If Not parentRole.isSkill And Not parentRole.isSkillParent Then
+                    If Not parentRole.isSkill Then
                         parentRole.isSkillParent = True
                     End If
                 Next
@@ -259,7 +259,7 @@ Public Class clsRollen
 
             If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
                 Try
-                    If Not curRole.isSkill And (curSkill.isSkill Or curSkill.isSkillParent) Then
+                    If Not curRole.isSkill And curSkill.isSkill Then
                         If curRole.isCombinedRole Then
                             result = getCommonChildsOfParents(roleID, skillID).Count > 0
                         Else
@@ -364,23 +364,26 @@ Public Class clsRollen
             Dim tmpContainingRole As clsRollenDefinition = Nothing
 
             Try
-                ' es muss keine ExcludedNAmes angegeben werden, weil sich das nur auf IDs bezieht, die nicht due ursprängliche ID selber sind ..
-                Dim allTeamMembers As SortedList(Of String, Double) = getSubRoleNameIDsOf(CStr(skillID))
+                Dim skillRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+                If Not IsNothing(skillRole) Then
+                    Dim allTeamMembers As SortedList(Of Integer, Double) = getSubRoleIDsOf(skillRole.name)
 
-                For Each kvp As KeyValuePair(Of String, Double) In allTeamMembers
-                    Dim dummyteamID As Integer = -1
-                    Dim roleID As Integer = getRoleDefByIDKennung(kvp.Key, dummyteamID).UID
 
-                    ' nur untersuchen, wenn es nicht die Rolle selber ist
-                    If roleID <> skillID Then
-                        If IsNothing(tmpContainingRole) Then
-                            tmpContainingRole = Me.getParentRoleOf(roleID)
-                        Else
-                            tmpContainingRole = getCommonParent(tmpContainingRole, Me.getParentRoleOf(roleID))
+                    For Each kvp As KeyValuePair(Of Integer, Double) In allTeamMembers
+
+                        ' nur untersuchen, wenn es nicht die Rolle selber ist
+                        If kvp.Key <> skillID Then
+                            If IsNothing(tmpContainingRole) Then
+                                tmpContainingRole = Me.getParentRoleOf(kvp.Key)
+                            Else
+                                tmpContainingRole = getCommonParent(tmpContainingRole, Me.getParentRoleOf(kvp.Key))
+                            End If
                         End If
-                    End If
 
-                Next
+                    Next
+                End If
+
+
             Catch ex As Exception
 
             End Try
@@ -989,13 +992,15 @@ Public Class clsRollen
             Dim teamFound As Boolean = False
             Dim ausschluss As Collection = getTopLevelNodeNames
 
-            Dim childNameIds As SortedList(Of String, Double) = getSubRoleNameIDsOf(skillName)
+            Dim childNameIds As SortedList(Of Integer, Double) = getSubRoleIDsOf(skillName)
 
-            Dim ix As Integer = 0
-            Do While ix <= childNameIds.Count - 1 And Not teamFound
-                teamFound = childNameIds.ElementAt(ix).Key.Contains(";")
-                ix = ix + 1
-            Loop
+
+            For Each kvp As KeyValuePair(Of Integer, Double) In childNameIds
+                teamFound = _allRollen.Item(kvp.Key).isSkill
+                If teamFound Then
+                    Exit For
+                End If
+            Next kvp
 
             isParentOfSkills = teamFound
         End Get
@@ -1260,24 +1265,32 @@ Public Class clsRollen
     Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer,
                                                    Optional includingVirtualChilds As Boolean = False) As Boolean
         Dim tmpResult As Boolean = False
-        Dim teamID As Integer = -1
+        Dim skillID As Integer = -1
 
         If Not IsNothing(roleNameID) And Not IsNothing(summaryRoleID) Then
-            Dim roleID As Integer = Me.parseRoleNameID(roleNameID, teamID)
-            roleNameID = Me.bestimmeRoleNameID(roleID, teamID)
+            If roleNameID <> "" And summaryRoleID > 0 Then
 
-            If roleID = summaryRoleID Then
-                tmpResult = True
+                Dim roleID As Integer = Me.parseRoleNameID(roleNameID, skillID)
+                roleNameID = Me.bestimmeRoleNameID(roleID, skillID)
 
-            Else
-                Dim sRole As clsRollenDefinition = Me.getRoleDefByID(summaryRoleID)
-                If Not IsNothing(sRole) Then
-                    Dim alleChildIDs As SortedList(Of String, Double) = Me.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all, includingVirtualChilds:=includingVirtualChilds)
-                    If alleChildIDs.Count > 0 Then
-                        tmpResult = alleChildIDs.ContainsKey(roleNameID)
-                    End If
+                ' now determine whether summaryRoleID is Skill or Role 
+                Dim summaryRole As clsRollenDefinition = getRoleDefByID(summaryRoleID)
+                Dim curRole As clsRollenDefinition = getRoleDefByID(roleID)
+
+                Dim childIDs As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(summaryRole.name)
+                If summaryRole.isSkill And skillID > 0 Then
+                    ' Summary Role ist Skill 
+                    tmpResult = childIDs.ContainsKey(skillID)
+
+                ElseIf curRole.isCombinedRole Then
+                    ' Summary Role ist Orga-Unit, gesuchte Rolle ist SammelRolle
+                    tmpResult = getCommonChildsOfParents(roleID, summaryRoleID).Count > 0
+                Else
+                    ' Sumary Rolle ist Orga-Unit, gesuchte Rolle ist Person
+                    tmpResult = childIDs.ContainsKey(roleID)
                 End If
             End If
+
         End If
 
 
@@ -1507,182 +1520,6 @@ Public Class clsRollen
         bestimmeRoleNameID = tmpResult
     End Function
 
-    ''' <summary>
-    ''' ähnlich wie getSubroleIDsOf , gibt die NameIDs in der Form roleUid;teamUid zurück  
-    ''' </summary>
-    ''' <param name="roleNameID">wird in der Form uid;teamId übergeben</param>
-    ''' <param name="type"></param>
-    ''' <param name="excludedNames">jeder Eintrag muss in der Form uid;teamID sein</param>
-    ''' <returns></returns>
-    Public ReadOnly Property getSubRoleNameIDsOf(ByVal roleNameID As String,
-                                               Optional ByVal type As PTcbr = PTcbr.all,
-                                               Optional ByVal excludedNames As Collection = Nothing,
-                                               Optional includingVirtualChilds As Boolean = False) As SortedList(Of String, Double)
-        Get
-
-            ' hier muss überprüft werden, ob die myCollection Sammelrollen enthält 
-            ' wenn ja, werden die alle solange um die enthaltenen Sammelrollen ergänzt, bis keine Sammelrolle mehr in der Collection drin ist  
-            ' die Sammelrollen werden am Schluss wieder aufgenommen, weil sie ja als Platzhalter Rollen ihre Bedarfs-Werte auch mit geben müssen 
-
-            Dim sammelRollenCollection As New SortedList(Of String, Double)
-            Dim realCollection As New SortedList(Of String, Double)
-            Dim addToRealCollection As New SortedList(Of String, Double)
-            Dim noUntreatedCombinedRole As Boolean = False
-            Dim teamID As Integer = -1
-            Dim initialRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
-
-
-            ' die roleNameID kann auf vielfältige Art und Weise übergeben , deswegen muss das hier 'normiert' werden 
-            ' die folgende parse-Methode kann ID(string), ID; ID;TeamID und Name behandeln, deswegen diese retwas komisch amutende 'Round-Trip'
-            Dim roleID As Integer = parseRoleNameID(roleNameID, teamID)
-            roleNameID = bestimmeRoleNameID(roleID, teamID)
-
-            If Not IsNothing(initialRole) Then
-
-
-                ' initial besetzen, um es in Gang zu setzen
-                'realCollection.Add(roleName, roleName)
-
-                realCollection.Add(roleNameID, 1.0)
-
-                Do Until noUntreatedCombinedRole
-
-                    noUntreatedCombinedRole = True
-
-                    For Each kvp As KeyValuePair(Of String, Double) In realCollection
-
-                        Dim roleDef As clsRollenDefinition = getRoleDefByIDKennung(kvp.Key, teamID)
-
-                        If Not IsNothing(roleDef) Then
-
-                            If roleDef.isCombinedRole Then
-
-                                Dim curTeamID As Integer = -1
-
-                                If roleDef.isSkill Then
-                                    curTeamID = roleDef.UID
-                                End If
-
-                                If Not sammelRollenCollection.ContainsKey(kvp.Key) Then
-
-                                    noUntreatedCombinedRole = False
-                                    ' dann wurde sie nicht schon mal ersetzt  und die Kinder müssen aufgenommen werden  
-                                    sammelRollenCollection.Add(kvp.Key, kvp.Value)
-
-                                    Dim listofSubRoles As SortedList(Of Integer, Double) = roleDef.getSubRoleIDs
-
-                                    If Not IsNothing(listofSubRoles) Then
-
-                                        For Each srkvp As KeyValuePair(Of Integer, Double) In listofSubRoles
-
-                                            Dim tmpKey As String = bestimmeRoleNameID(srkvp.Key, curTeamID)
-                                            If Not realCollection.ContainsKey(tmpKey) And Not addToRealCollection.ContainsKey(tmpKey) Then
-                                                addToRealCollection.Add(tmpKey, srkvp.Value)
-
-                                            ElseIf addToRealCollection.ContainsKey(tmpKey) Then
-                                                ' addieren, aber Gesamt-Summe darf nie größer 1 sein
-                                                Dim newValue As Double = addToRealCollection(tmpKey) + srkvp.Value
-                                                If newValue > 1.0 Then
-                                                    newValue = 1.0
-                                                End If
-                                                addToRealCollection(tmpKey) = newValue
-                                            End If
-
-
-                                        Next
-
-                                    Else
-                                        ' darf eigentlich nicht sein , aber ist im Fehlerfall notwenig, um Endlos schleife zu verhindern 
-                                        noUntreatedCombinedRole = True
-                                    End If
-
-                                End If
-
-                            End If
-                        End If
-
-
-                    Next
-
-                    ' jetzt müssen die addToRealCollection Items übertragen werden 
-                    For Each kvp As KeyValuePair(Of String, Double) In addToRealCollection
-                        If Not realCollection.ContainsKey(kvp.Key) Then
-                            realCollection.Add(kvp.Key, kvp.Value)
-                        Else
-                            Dim newValue As Double = realCollection(kvp.Key) + kvp.Value
-                            If newValue > 1.0 Then
-                                newValue = 1.0
-                            End If
-                            realCollection(kvp.Key) = newValue
-                        End If
-                    Next
-
-                    addToRealCollection.Clear()
-
-                Loop
-
-                ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
-
-                If type = PTcbr.all Then
-                    ' nichts tun - realCollections enthält schon alles - aber ... 
-                    ' jetzt müssen die virtuellen Kinden noch ergänzt werden 
-                    ' das sind die Teams, deren Team-Mitglieder alle unterhalb der angegebenen Rolle liegen
-
-                    If includingVirtualChilds Then
-                        Dim virtualChildIds() As Integer = getVirtualChildIDs(roleID, inclSubRoles:=True)
-                        If Not IsNothing(virtualChildIds) Then
-                            If virtualChildIds.Count > 0 Then
-                                For kx As Integer = 0 To virtualChildIds.Count - 1
-                                    Dim tmpKey As String = Me.bestimmeRoleNameID(virtualChildIds(kx), -1)
-                                    If Not realCollection.ContainsKey(tmpKey) Then
-                                        realCollection.Add(tmpKey, 1.0)
-                                    End If
-                                Next
-                            End If
-                        End If
-                    End If
-
-                ElseIf type = PTcbr.placeholders Then
-                    realCollection = sammelRollenCollection
-
-                ElseIf type = PTcbr.realRoles Then
-                    For Each cRKvp As KeyValuePair(Of String, Double) In sammelRollenCollection
-                        If realCollection.ContainsKey(cRKvp.Key) Then
-                            realCollection.Remove(cRKvp.Key)
-                        End If
-                    Next
-
-                Else
-                    ' nichts tun - realCollection enthält alles  
-                End If
-
-
-
-                ' jetzt alle wieder rausschmeissen, die in excluded Names drin sind 
-                If Not IsNothing(excludedNames) Then
-                    ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
-                    For Each exclName As String In excludedNames
-
-                        Dim tmpRole As clsRollenDefinition = Me.getRoleDefByIDKennung(exclName, teamID)
-
-                        If Not IsNothing(tmpRole) Then
-                            If realCollection.ContainsKey(exclName) And exclName <> roleNameID Then
-                                realCollection.Remove(exclName)
-                            End If
-                        End If
-
-                    Next
-                End If
-
-
-            End If
-
-
-            getSubRoleNameIDsOf = realCollection
-
-
-        End Get
-    End Property
 
 
     ''' <summary>
@@ -1699,8 +1536,7 @@ Public Class clsRollen
     ''' <remarks></remarks>
     Public ReadOnly Property getSubRoleIDsOf(ByVal roleName As String,
                                                Optional ByVal type As Integer = PTcbr.all,
-                                               Optional ByVal excludedNames As Collection = Nothing,
-                                               Optional includingVirtualChilds As Boolean = False) As SortedList(Of Integer, Double)
+                                               Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of Integer, Double)
 
         Get
 
@@ -1713,6 +1549,8 @@ Public Class clsRollen
             Dim addToRealCollection As New SortedList(Of Integer, Double)
             Dim noUntreatedCombinedRole As Boolean = False
             Dim initialRole As clsRollenDefinition = Me.getRoledef(roleName)
+
+
 
             If Not IsNothing(initialRole) Then
 
@@ -1737,7 +1575,7 @@ Public Class clsRollen
 
                                     noUntreatedCombinedRole = False
                                     ' dann wurde sie nicht schon mal ersetzt  und die Kinder müssen aufgenommen werden  
-                                    sammelRollenCollection.Add(kvp.Key, kvp.Value)
+                                    sammelRollenCollection.Add(kvp.Key, 1.0)
 
                                     Dim listofSubRoles As SortedList(Of Integer, Double) = roleDef.getSubRoleIDs
 
@@ -1745,17 +1583,39 @@ Public Class clsRollen
 
                                         For Each srkvp As KeyValuePair(Of Integer, Double) In listofSubRoles
 
-
+                                            ' 
                                             If Not realCollection.ContainsKey(srkvp.Key) And Not addToRealCollection.ContainsKey(srkvp.Key) Then
-                                                addToRealCollection.Add(srkvp.Key, srkvp.Value)
+                                                addToRealCollection.Add(srkvp.Key, 1.0)
+                                                ' tk 18.10.20
+                                                'If Not initialRoleISSkill Then
+                                                '    ' do it anyway in case initial role was Non-Skill, because then leafs are also non-skills
+                                                '    addToRealCollection.Add(srkvp.Key, srkvp.Value)
+                                                'Else
+                                                '    ' because final leaf of skill is always role: make sure roles are not taken as childs of skills 
+                                                '    ' except when askedd for realRoles
+                                                '    Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srkvp.Key)
+                                                '    If childRole.isSkill Then
+                                                '        addToRealCollection.Add(srkvp.Key, srkvp.Value)
+                                                '    Else
+                                                '        ' initial Role was skill, child-Role is no skill: take it when asked for realRoles
+                                                '        If type = PTcbr.realRoles Then
+                                                '            addToRealCollection.Add(srkvp.Key, srkvp.Value)
+                                                '        Else
+                                                '            ' in this case all other childs will be non-skills
+                                                '            Exit For
+                                                '        End If
 
-                                            ElseIf addToRealCollection.ContainsKey(srkvp.Key) Then
-                                                ' addieren, aber Gesamt-Summe darf nie größer 1 sein
-                                                Dim newValue As Double = addToRealCollection(srkvp.Key) + srkvp.Value
-                                                If newValue > 1.0 Then
-                                                    newValue = 1.0
-                                                End If
-                                                addToRealCollection(srkvp.Key) = newValue
+                                                '    End If
+                                                'End If
+                                                ' this is not any more needed because there is no caoacity percentage given for skills any more
+                                                ' capacity of a skill is always defined by the person having this skill 
+                                                'ElseIf addToRealCollection.ContainsKey(srkvp.Key) Then
+                                                '    ' addieren, aber Gesamt-Summe darf nie größer 1 sein
+                                                '    Dim newValue As Double = addToRealCollection(srkvp.Key) + srkvp.Value
+                                                '    If newValue > 1.0 Then
+                                                '        newValue = 1.0
+                                                '    End If
+                                                '    addToRealCollection(srkvp.Key) = newValue
                                             End If
 
 
@@ -1777,13 +1637,14 @@ Public Class clsRollen
                     ' jetzt müssen die addToRealCollection Items übertragen werden 
                     For Each kvp As KeyValuePair(Of Integer, Double) In addToRealCollection
                         If Not realCollection.ContainsKey(kvp.Key) Then
-                            realCollection.Add(kvp.Key, kvp.Value)
-                        Else
-                            Dim newValue As Double = realCollection(kvp.Key) + kvp.Value
-                            If newValue > 1.0 Then
-                                newValue = 1.0
-                            End If
-                            realCollection(kvp.Key) = newValue
+                            realCollection.Add(kvp.Key, 1.0)
+                            ' tk 18.10 das wird nicht mehr benötigt: keine Angabe der % mehr, wurde bsiher benutzt um Kapa von Skill zu berechnen 
+                            'Else
+                            '    Dim newValue As Double = realCollection(kvp.Key) + kvp.Value
+                            '    If newValue > 1.0 Then
+                            '        newValue = 1.0
+                            '    End If
+                            '    realCollection(kvp.Key) = newValue
                         End If
                     Next
 
@@ -1794,23 +1655,7 @@ Public Class clsRollen
                 ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
 
                 If type = PTcbr.all Then
-                    ' nichts tun - realCollections enthält schon alles - aber ... 
-                    ' jetzt müssen die virtuellen Kinden noch ergänzt werden 
-                    ' das sind die Teams, deren Team-Mitglieder alle unterhalb der angegebenen Rolle liegen
-
-                    If includingVirtualChilds Then
-                        Dim virtualChildIds() As Integer = getVirtualChildIDs(initialRole.UID, inclSubRoles:=True)
-                        If Not IsNothing(virtualChildIds) Then
-                            If virtualChildIds.Count > 0 Then
-                                For kx As Integer = 0 To virtualChildIds.Count - 1
-                                    If Not realCollection.ContainsKey(virtualChildIds(kx)) Then
-                                        realCollection.Add(virtualChildIds(kx), 1.0)
-                                    End If
-                                Next
-                            End If
-                        End If
-                    End If
-
+                    ' nichts tun - realCollections enthält schon alles - auch includingVirtualChilds ist nicht mehr nötig ... 
 
                 ElseIf type = PTcbr.placeholders Then
                     realCollection = sammelRollenCollection

@@ -284,7 +284,7 @@ Public Class frmMEhryRoleCost
 
                     ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
                     ' toplevelNode kann nur Team sein, nicht Team-Member
-                    nrTag.isTeam = True
+                    nrTag.isSkill = True
                     nrTag.isRole = False
                     nrTag.isTeamMember = False
 
@@ -390,7 +390,7 @@ Public Class frmMEhryRoleCost
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
 
                     ' erst prüfen, ob die Rolle überhaupt zu den aktiven Rollen zählt, also im Zeitraum aktiv ist 
-                    If role.isActiveRole And Not role.isSkill And Not role.isSkillParent Then
+                    If role.isActiveRole And Not role.isSkill Then
                         topLevelNode = .Nodes.Add(role.name)
                         topLevelNode.Text = role.name
 

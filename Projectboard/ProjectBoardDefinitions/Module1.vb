@@ -8494,7 +8494,7 @@ Public Module Module1
     ''' <returns></returns>
     Public Function bestimmeRollenDiagrammTitel(ByVal rollenKennung As String) As String
 
-        Dim tmpResult As String = ""
+        Dim tmpResult As String = "?-?"
         Dim teamID As Integer
 
         If rollenKennung.Contains("#") Then
@@ -8505,7 +8505,21 @@ Public Module Module1
             End If
         Else
             Try
-                tmpResult = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID).name
+                ' when skill-ID is given, show always skill-Name
+                ' in case skill ID is given
+                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID)
+                If teamID > 0 Then
+                    Dim curSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+                    Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(teamID).UID
+                    If embracingRoleID = curRole.UID Then
+                        tmpResult = curSkill.name
+                    Else
+                        tmpResult = curSkill.name & " [" & curRole.name & "]"
+                    End If
+                Else
+                    tmpResult = curRole.name
+                End If
+
             Catch ex As Exception
 
             End Try

@@ -2026,9 +2026,16 @@ Public Class clsProjekte
         End Get
 
     End Property
-    '
-    '
-    Public ReadOnly Property getRoleValuesInMonth2(ByVal roleIDStr As String,
+
+
+    ''' <summary>
+    ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
+    ''' </summary>
+    ''' <param name="roleIDStr"></param>
+    ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
+    ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleValuesInMonth(ByVal roleIDStr As String,
                                                   Optional ByVal considerAllSubRoles As Boolean = False,
                                                   Optional ByVal type As PTcbr = PTcbr.all,
                                                   Optional ByVal excludedNames As Collection = Nothing) As Double()
@@ -2096,143 +2103,10 @@ Public Class clsProjekte
             Next kvp
 
 
-            getRoleValuesInMonth2 = roleValues
-
-        End Get
-
-    End Property
-
-    ''' <summary>
-    ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
-    ''' </summary>
-    ''' <param name="roleIDStr"></param>
-    ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
-    ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getRoleValuesInMonth(ByVal roleIDStr As String,
-                                                  Optional ByVal considerAllSubRoles As Boolean = False,
-                                                  Optional ByVal type As PTcbr = PTcbr.all,
-                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
-
-        Get
-            Dim roleValues() As Double
-            Dim Dauer As Integer
-            Dim zeitraum As Integer
-            Dim anzProjekte As Integer
-            Dim i As Integer
-            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-            Dim hproj As clsProjekt
-
-            Dim tempArray() As Double
-            Dim testArray() As Double
-            Dim prAnfang As Integer, prEnde As Integer
-
-            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
-            Dim teamID As Integer
-            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleIDStr, teamID)
-            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
-
-            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
-            'Dim considerTeam As Boolean = currentRole.isTeam
-
-            '' jetzt muss dafür gesorgt werden, dass nach der 
-            'If considerTeam Then
-            '    teamID = currentRole.UID
-            'Else
-            '    teamID = -1
-            'End If
-
-            zeitraum = showRangeRight - showRangeLeft
-            ReDim roleValues(zeitraum)
-
-
-            Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
-            ' wenn considerAllSubroles  = true , dann werden die Kinder und Kindeskinder berücksichtigt ...  
-
-            If considerAllSubRoles Then
-                'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
-                ' tk 12.10. andere Skill Behandlung 
-                'lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames, includingVirtualChilds:=True)
-                lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
-
-                ' tk 4.5. das folgende ist notwendig, um z.Bsp bei der Summe von einer Abteilung auch alle 
-                ' Team Ressourcenbedarfe zu berücksichtigen, deren Mitglieder alle in der Abteilung liegen
-                ' 
-                ' virtuelle Kinder sind Teams, deren Team-Mitglieder alle in der Rolle bzw. in einer der Kind-Rollen enthalten sind 
-                ' das wurde jetzt in getSubroleNameIDsOf integeriert 
-                'Dim virtualChildIds() As Integer = RoleDefinitions.getVirtualChildIDs(roleID, inclSubRoles:=True)
-                'If Not IsNothing(virtualChildIds) Then
-                '    If virtualChildIds.Count > 0 Then
-                '        For kx As Integer = 0 To virtualChildIds.Count - 1
-                '            Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(virtualChildIds(kx), -1)
-                '            If Not lookingForRoleNameIDs.ContainsKey(tmpKey) Then
-                '                lookingForRoleNameIDs.Add(tmpKey, 1.0)
-                '            End If
-                '        Next
-                '    End If
-                'End If
-
-            Else
-                Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, teamID)
-                lookingForRoleNameIDs.Add(tmpNameID, 1.0)
-            End If
-
-
-            anzProjekte = _allProjects.Count
-
-            ' anzPhasen = AllPhases.Count
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-
-                hproj = kvp.Value
-
-                Dauer = hproj.anzahlRasterElemente
-
-                ReDim tempArray(Dauer - 1)
-                ReDim testArray(Dauer - 1)
-
-                With hproj
-                    prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                End With
-
-                anzLoops = 0
-                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
-
-                If anzLoops > 0 Then
-
-                    Dim existingRoleNameIDs As Collection = hproj.getRoleNameIDs
-                    Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIDs, lookingForRoleNameIDs)
-
-
-                    If matchingRoleNameIDs.Count > 0 Then
-                        Try
-
-                            ' hier muss die Schleife für alle Items aus toDoListe 
-                            For Each rKvP As KeyValuePair(Of String, Double) In matchingRoleNameIDs
-
-                                tempArray = hproj.getRessourcenBedarf(rKvP.Key, inclSubRoles:=False)
-
-                                For i = 0 To anzLoops - 1
-                                    roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
-                                Next i
-
-                            Next
-
-                        Catch ex As Exception
-
-                        End Try
-                    End If
-
-                End If
-
-            Next kvp
-
-
-
             getRoleValuesInMonth = roleValues
 
         End Get
+
 
     End Property
 
@@ -2379,7 +2253,6 @@ Public Class clsProjekte
             ' subroles ... 
 
             Dim realCollection As New SortedList(Of Integer, Double)
-            Dim sammelRollenCollection As New Collection
 
             For ix As Integer = 1 To myCollection.Count
 
@@ -2389,63 +2262,57 @@ Public Class clsProjekte
 
                 If Not IsNothing(curRole) Then
 
-                    If curRole.isCombinedRole Then
-                        ' es handelt sich um eine Sammelrolle
-                        ' Kapas sind nur in den realRoles , also den nicht Sammelrollen vorhanden ...
-                        Dim subRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName:=roleName,
+                    If teamID > 0 Then
+                        Dim subRoleList As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(curRole.UID, teamID)
+
+                        For Each tmpID As Integer In subRoleList
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(tmpID)
+                            If Not IsNothing(tmpRole) Then
+                                If Not tmpRole.isCombinedRole Then
+                                    If Not realCollection.ContainsKey(tmpRole.UID) Then                                        '
+                                        realCollection.Add(tmpRole.UID, 1.0)
+                                    End If
+                                End If
+                            End If
+                        Next
+
+                    Else
+                        If curRole.isCombinedRole Then
+                            ' es handelt sich um eine Sammelrolle
+                            ' Kapas sind nur in den realRoles , also den nicht Sammelrollen vorhanden ...
+                            Dim subRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName:=roleName,
                                                                                             type:=PTcbr.realRoles,
                                                                                             excludedNames:=myCollection)
 
-                        If subRoleListe.Count = 0 Then
+                            If subRoleListe.Count = 0 Then
 
-                            If Not realCollection.ContainsKey(curRole.UID) Then
-                                ' es gibt keine Kinder 
-                                realCollection.Add(curRole.UID, 1.0)
+                                If Not realCollection.ContainsKey(curRole.UID) Then
+                                    ' es gibt keine Kinder 
+                                    realCollection.Add(curRole.UID, 1.0)
+                                End If
+
+                            Else
+                                ' jetzt müssen alle Elemente von tmpCollection aufgenommen werden, sofern sie nicht schon eh aufgenommen sind 
+
+                                For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleListe
+
+                                    If Not realCollection.ContainsKey(srKvP.Key) Then
+                                        realCollection.Add(srKvP.Key, 1.0)
+                                    End If
+
+                                Next
+
+
                             End If
 
                         Else
-                            ' jetzt müssen alle Elemente von tmpCollection aufgenommen werden, sofern sie nicht schon eh aufgenommen sind 
-                            ' die Sammelrolle wird nicht betrachtet ... 
 
-                            If Not sammelRollenCollection.Contains(roleName) Then
-                                sammelRollenCollection.Add(roleName, roleName)
+                            If Not realCollection.ContainsKey(curRole.UID) Then
+
+                                realCollection.Add(curRole.UID, 1.0)
+
                             End If
 
-                            For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleListe
-
-                                If Not realCollection.ContainsKey(srKvP.Key) Then
-                                    'realCollection.Add(srKvP.Key, srKvP.Value)
-                                    realCollection.Add(srKvP.Key, 1.0)
-                                    'Else
-                                    '    Dim newValue As Double = realCollection(srKvP.Key) + srKvP.Value
-                                    '    If newValue > 1.0 Then
-                                    '        newValue = 1.0
-                                    '    End If
-                                    '    realCollection(srKvP.Key) = newValue
-                                End If
-
-                            Next
-
-
-                        End If
-
-                    Else
-                        ' tk 12.10.20 
-                        'Dim myvalue As Double = 1.0
-                        'If teamID > 0 Then
-                        '    myvalue = curRole.getSkillIDs.Item(teamID)
-                        'End If
-
-                        If Not realCollection.ContainsKey(curRole.UID) Then
-                            ' eine Basis Rolle wird immer zu 100% genommen
-                            realCollection.Add(curRole.UID, 1.0)
-                            'Else
-                            '    ' in diesem Fall wird die volle Kapazität der Basis-Rolle berechnet
-                            '    Dim newValue As Double = realCollection(curRole.UID) + myvalue
-                            '    If newValue > 1.0 Then
-                            '        newValue = 1.0
-                            '    End If
-                            '    realCollection(curRole.UID) = newValue
                         End If
 
                     End If
@@ -2491,43 +2358,6 @@ Public Class clsProjekte
                 End If
 
             Next
-
-            ' tk 30.11.18 deprecated
-            ' falls es SammelRollen gibt, müssen deren externe Kapas noch berücksichtigt werden ... 
-            ' allerdings werden Sammelrollen nie mit Prz beaufschlagt ... 
-            'If includingExterns And sammelRollenCollection.Count > 0 Then
-
-            '    ReDim tmpValues(zeitraum)
-            '    For r = 1 To sammelRollenCollection.Count
-
-            '        rname = CStr(sammelRollenCollection.Item(r))
-            '        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(rname)
-
-            '        If Not IsNothing(curRole) Then
-
-            '            For i = showRangeLeft To showRangeRight
-
-            '                tmpValues(i - showRangeLeft) = curRole.externeKapazitaet(i)
-            '                If tmpValues(i - showRangeLeft) < 0 Then
-            '                    tmpValues(i - showRangeLeft) = 0
-            '                End If
-
-            '            Next
-
-
-            '            For m = 0 To zeitraum
-            '                ' Änderung 27.7 Holen der Kapa Werte , jetzt aufgeschlüsselt nach 
-            '                'kapaValues(m) = kapaValues(m) + hkapa
-            '                kapaValues(m) = kapaValues(m) + tmpValues(m)
-            '            Next m
-
-            '        End If
-
-
-            '    Next
-
-
-            'End If
 
             getRoleKapasInMonth = kapaValues
         End Get
