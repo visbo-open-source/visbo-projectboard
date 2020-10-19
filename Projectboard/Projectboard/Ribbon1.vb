@@ -11801,7 +11801,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                        If Not IsNothing(potentialParents) Then
+                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
                             Dim tmpParentName As String = ""
 
@@ -11859,7 +11859,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                        If Not IsNothing(potentialParents) Then
+                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
                             Dim tmpParentName As String = ""
 

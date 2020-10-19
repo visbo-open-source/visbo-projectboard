@@ -410,6 +410,16 @@ Public Class Tabelle2
 
                         For Each roleSkillItem As String In frmMERoleCost.rolesToAdd
                             If frmMERoleCost.showSkillsOnly Then
+                                If rcName = "" Then
+
+                                    Try
+                                        Dim tmpID As Integer = -1
+                                        rcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
                                 Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
                             Else
                                 Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)

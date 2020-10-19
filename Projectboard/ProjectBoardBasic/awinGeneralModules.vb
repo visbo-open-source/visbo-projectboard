@@ -7753,12 +7753,15 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
-
                                                     End If
                                                 End If
 
@@ -7846,12 +7849,15 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
-
                                                     End If
                                                 End If
 
@@ -7942,11 +7948,16 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
+
 
                                                     End If
                                                 End If
@@ -8037,11 +8048,17 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
+
+
 
                                                     End If
                                                 End If

@@ -366,7 +366,7 @@ Public Class clsRollen
             Try
                 Dim skillRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
                 If Not IsNothing(skillRole) Then
-                    Dim allTeamMembers As SortedList(Of Integer, Double) = getSubRoleIDsOf(skillRole.name)
+                    Dim allTeamMembers As SortedList(Of Integer, Double) = getSubRoleIDsOf(skillRole.name, type:=PTcbr.realRoles)
 
 
                     For Each kvp As KeyValuePair(Of Integer, Double) In allTeamMembers
