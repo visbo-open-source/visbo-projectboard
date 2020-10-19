@@ -17,11 +17,8 @@ Public Class frmEinstellungen
         chkbxPhasesAnteilig.Checked = awinSettings.phasesProzentual
         chkbxInvoices.Checked = awinSettings.enableInvoices
 
-        If chkbx_TakeCapaFromOldOrga.Checked <> awinSettings.takeCapasFromOldOrga Then
-            dontFire = True
-            chkbx_TakeCapaFromOldOrga.Checked = awinSettings.takeCapasFromOldOrga
-            dontFire = False
-        End If
+        chkbx_TakeCapaFromOldOrga.Checked = awinSettings.takeCapasFromOldOrga
+
 
         If chkbx_KUG_active.Checked <> awinSettings.kurzarbeitActivated Then
             dontFire = True
@@ -217,13 +214,7 @@ Public Class frmEinstellungen
 
     Private Sub chkbx_TakeCapaFromOldOrga_CheckedChanged(sender As Object, e As EventArgs) Handles chkbx_TakeCapaFromOldOrga.CheckedChanged
 
-        If Not dontFire Then
-            If chkbx_TakeCapaFromOldOrga.Checked Then
-                awinSettings.takeCapasFromOldOrga = True
-            Else
-                awinSettings.takeCapasFromOldOrga = False
-            End If
-        End If
+        awinSettings.takeCapasFromOldOrga = chkbx_TakeCapaFromOldOrga.Checked
 
     End Sub
 End Class

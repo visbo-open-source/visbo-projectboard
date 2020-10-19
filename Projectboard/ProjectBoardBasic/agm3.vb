@@ -70,7 +70,7 @@ Public Module agm3
                         configLine = New clsConfigKapaImport
                         configLine.Titel = CStr(currentWS.Cells(4, 1).value)
                         configLine.content = CStr(currentWS.Cells(4, 2).value)
-                        If IsNothing(configLine.Titel) Then
+                        If Not IsNothing(configLine.Titel) Then
                             kapaConfigs.Add(configLine.Titel, configLine)
                         End If
 
@@ -1559,7 +1559,7 @@ Public Module agm3
                                 Dim jahr As String = currentWS.Cells(ActualDataConfig("years").row.von, ActualDataConfig("years").column.von).value
                                 Dim vglJahr As String = currentWS.Name
                                 Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
-                                Dim xxx As Date = "01." & monat & " " & jahr
+                                Dim xxx As Date = CDate("01." & monat & " " & jahr)
                                 curmonth = getColumnOfDate(xxx)
 
                             Catch ex As Exception
@@ -2485,7 +2485,7 @@ Public Module agm3
                                 For ix As Integer = firstRow To lastRow
 
                                     input_ok = True                   ' Initialise
-                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String)
+                                    rolename = CType(currentWS.Cells(ix, roleCol).value, String).Trim
                                     If IsNothing(rolename) Then
                                         input_ok = False
                                     End If
@@ -2609,9 +2609,9 @@ Public Module agm3
                         Next
                     Else
                         If awinSettings.englishLanguage Then
-                            msgtxt = "Error: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
+                            msgtxt = "Warning: the role: " & rolename & " isn't defined in the Organisation " & vbLf & kapaFileName
                         Else
-                            msgtxt = "Fehler: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
+                            msgtxt = "Warning: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
                         End If
                         'oPCollection.Add(msgtxt)
                         Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
@@ -3206,7 +3206,8 @@ Public Module agm3
                                 jahr = currentWS.Cells(actualDataConfig("years").row.von, actualDataConfig("years").column.von).value
                                 Dim vglJahr As String = currentWS.Name
                                 Dim validj As Boolean = (vglJahr.Contains(jahr) Or jahr.Contains(vglJahr))
-                                Dim xxx As Date = "01." & monat & " " & jahr
+
+                                Dim xxx As Date = CDate("01." & monat & " " & jahr)
                                 yyyymm = Format(xxx, "yyyy/MM")
                                 curmonth = getColumnOfDate(xxx)
 
@@ -3225,11 +3226,11 @@ Public Module agm3
                                 searcharea = currentWS.Rows(überschriftenzeile)          ' Zeile über... enthält die verschieden Spaltendescript
                                 stdSpalteTotal = searcharea.Find(hspalte).Column
                                 Dim filaWD As New clsFirstWDLastWD
-                                Dim lastWorkDay As Date = currentWS.Cells(überschriftenzeile, stdSpalteTotal - 3).value.ToString & "." & monat & " " & jahr
+                                Dim lastWorkDay As Date = CDate(currentWS.Cells(überschriftenzeile, stdSpalteTotal - 3).value.ToString & "." & monat & " " & jahr)
                                 Dim hdate As Date = DateAdd(DateInterval.Month, -1, lastWorkDay)
                                 Dim hmonth As String = MonthName(Month(hdate), Abbreviate:=True)
                                 jahr = Year(hdate)
-                                Dim firstWorkDay As Date = currentWS.Cells(überschriftenzeile, 6).value.ToString & "." & hmonth & " " & jahr
+                                Dim firstWorkDay As Date = CDate(currentWS.Cells(überschriftenzeile, 6).value.ToString & "." & hmonth & " " & jahr)
                                 filaWD.lastWorkDay = lastWorkDay
                                 filaWD.firstWorkDay = firstWorkDay
                                 special.otherCal.Add(yyyymm, filaWD)

@@ -167,8 +167,6 @@ Partial Class frmEinstellungen
         'chkbx_TakeCapaFromOldOrga
         '
         Me.chkbx_TakeCapaFromOldOrga.AutoSize = True
-        Me.chkbx_TakeCapaFromOldOrga.Checked = True
-        Me.chkbx_TakeCapaFromOldOrga.CheckState = System.Windows.Forms.CheckState.Checked
         Me.chkbx_TakeCapaFromOldOrga.Location = New System.Drawing.Point(16, 205)
         Me.chkbx_TakeCapaFromOldOrga.Name = "chkbx_TakeCapaFromOldOrga"
         Me.chkbx_TakeCapaFromOldOrga.Size = New System.Drawing.Size(277, 17)
