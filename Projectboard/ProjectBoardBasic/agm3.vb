@@ -66,11 +66,14 @@ Public Module agm3
                             ObjCol As Integer,
                             InhaltCol As Integer
 
-                        ' ImportTyp herausfinden ( momentan fest verdrahtet)
+                        ' ImportTyp herausfinden - we´nn nicht im configfile angegeben, dann übergehen
                         configLine = New clsConfigKapaImport
                         configLine.Titel = CStr(currentWS.Cells(4, 1).value)
                         configLine.content = CStr(currentWS.Cells(4, 2).value)
-                        kapaConfigs.Add(configLine.Titel, configLine)
+                        If IsNothing(configLine.Titel) Then
+                            kapaConfigs.Add(configLine.Titel, configLine)
+                        End If
+
 
                         searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
 
