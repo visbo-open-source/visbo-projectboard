@@ -5070,7 +5070,7 @@ Public Module Module1
             If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
                 ' hier handelt es sich um ein Portfolio
                 pName = hportfolio.constellationName
-                vName = ""
+                vName = hportfolio.variantName
                 vpid = hportfolio.vpID
 
             Else
