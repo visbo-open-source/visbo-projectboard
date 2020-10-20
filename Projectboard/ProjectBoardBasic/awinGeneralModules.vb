@@ -3970,7 +3970,12 @@ Public Module awinGeneralModules
                 ' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
                 ' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
                 'calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-                calculateAndStoreSummaryProjekt = True
+                If currentConstellation.variantName = "" Then
+                    calculateAndStoreSummaryProjekt = True
+                Else
+                    calculateAndStoreSummaryProjekt = False
+                End If
+
                 Dim sproj As clsProjekt = Nothing
 
                 If calculateAndStoreSummaryProjekt Then
