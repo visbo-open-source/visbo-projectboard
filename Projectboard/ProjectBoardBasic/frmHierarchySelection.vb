@@ -5203,6 +5203,21 @@ Public Class frmHierarchySelection
 
                     If role.isSkill Then
                         Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(role.UID).UID
+                        Try
+                            ' suche den Top-Vater Knoten zu der umfassendenOrga-Unit
+                            ' nötig, weil eine Skill auch in Kombination mit einer höheren Orga-Unit angegeben werden kann
+
+                            Dim topParentIDS As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(embracingRoleID))
+                            If Not IsNothing(topParentIDS) Then
+                                Dim ix As Integer = topParentIDS.Length - 1
+                                If ix >= 0 Then
+                                    embracingRoleID = topParentIDS(ix)
+                                End If
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
                         topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(embracingRoleID, role.UID)
                     Else
                         topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
@@ -5282,6 +5297,21 @@ Public Class frmHierarchySelection
 
             If currentRole.isSkill Then
                 Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(currentRole.UID).UID
+                Try
+                    ' suche den Top-Vater Knoten zu der umfassendenOrga-Unit
+                    ' nötig, weil eine Skill auch in Kombination mit einer höheren Orga-Unit angegeben werden kann
+
+                    Dim topParentIDS As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(embracingRoleID))
+                    If Not IsNothing(topParentIDS) Then
+                        Dim ix As Integer = topParentIDS.Length - 1
+                        If ix >= 0 Then
+                            embracingRoleID = topParentIDS(ix)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+
                 currentNode.Name = RoleDefinitions.bestimmeRoleNameID(embracingRoleID, currentRole.UID)
             Else
                 currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, nrTag.membershipID)
