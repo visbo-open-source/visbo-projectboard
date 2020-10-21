@@ -243,83 +243,84 @@ Public Class frmLoadConstellation
 
                     showPname = True
 
-                    pname = getPnameFromKey(kvp.Key) ' der key ist das sortier-Kriterium, kann constellationName sein, aber auch was ganz anderes 
+                    If pname <> getPnameFromKey(kvp.Key) Then
+                        pname = getPnameFromKey(kvp.Key) ' der key ist das sortier-Kriterium, kann constellationName sein, aber auch was ganz anderes 
+                        Dim hPortfolio As clsConstellation = Nothing
+                        Dim variantNames As New Collection
 
-
-                    Dim hPortfolio As clsConstellation = Nothing
-                    Dim variantNames As New Collection
-
-                    If quickList Then
-                        vpid = kvp.Value
-                        variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio)
-                        variantNames.Add("",, variantNames.Item(1))
-                        'variantNames.Add("")    ' Standard-Variante hinzufügen
-                    Else
-                        variantName = getVariantnameFromKey(kvp.Key)
-                        variantNames.Add(variantName)
-                    End If
-
-
-                    If showPname Then
-
-
-                        portfolioNode = .Nodes.Add(pname)
-
-
-                        ' damit kann evtl direkt auf den Node zugegriffen werden ...
-                        portfolioNode.Name = pname
-
-
-
-                        If Not IsNothing(hPortfolio) Then
-                            variantName = hPortfolio.variantName
-                        End If
-
-                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-
-                        If variantNames.Count > 0 Then
-
-                            Dim vName As String = variantName
-                            portfolioNode.Tag = "X"
-                            For iv As Integer = 1 To variantNames.Count
-                                vName = CStr(variantNames.Item(iv))
-                                Dim vNameStripped As String = ""
-                                Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
-                                If tmpStr.Length = 1 Then
-                                    vNameStripped = tmpStr(0)
-                                ElseIf tmpStr.Length >= 3 Then
-                                    vNameStripped = tmpStr(1).Trim
-                                End If
-                                ' pfv-Variante wird nicht in den Tree mit aufgenommen
-                                If vName <> ptVariantFixNames.pfv.ToString Then
-                                    Dim variantNode As TreeNode = portfolioNode.Nodes.Add(vName)
-                                    variantNode.Text = "(" & vName & ")"
-                                    variantNode.Tag = "X"
-                                End If
-
-                                'If aKtionskennung = PTTvActions.delFromDB Then
-                                '    variantNode.Tag = "P"
-                                '    Dim tmpNodeLevel2 As TreeNode = variantNode.Nodes.Add("Platzhalter-Datum")
-                                'Else
-                                '    variantNode.Tag = "X"
-                                'End If
-
-                                'Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant,
-                                '                             pname, vNameStripped)
-                                'Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped)
-
-                            Next
-
+                        If quickList Then
+                            vpid = kvp.Value
+                            variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio)
+                            variantNames.Add("",, variantNames.Item(1))
                         Else
-                            portfolioNode.Tag = "X"
+                            variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio, portfolioliste)
+                            'variantName = getVariantnameFromKey(kvp.Key)
+                            'variantNames.Add(variantName)
                         End If
 
-                        'Call bestimmeNodeCheckStatus(portfolioNode, aKtionskennung, PTTreeNodeTyp.project,
-                        '                              pname, variantName)
-                        'Call bestimmeNodeAppearance(portfolioNode, aKtionskennung, PTTreeNodeTyp.project, pname, variantName)
 
+
+
+                        If showPname Then
+
+
+                            portfolioNode = .Nodes.Add(pname)
+
+
+                            ' damit kann evtl direkt auf den Node zugegriffen werden ...
+                            portfolioNode.Name = pname
+
+
+
+                            If Not IsNothing(hPortfolio) Then
+                                variantName = hPortfolio.variantName
+                            End If
+
+                            ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+
+                            If variantNames.Count > 0 Then
+
+                                Dim vName As String = variantName
+                                portfolioNode.Tag = "X"
+                                For iv As Integer = 1 To variantNames.Count
+                                    vName = CStr(variantNames.Item(iv))
+                                    Dim vNameStripped As String = ""
+                                    Dim tmpStr() As String = vName.Split(New Char() {CChar("("), CChar(")")})
+                                    If tmpStr.Length = 1 Then
+                                        vNameStripped = tmpStr(0)
+                                    ElseIf tmpStr.Length >= 3 Then
+                                        vNameStripped = tmpStr(1).Trim
+                                    End If
+                                    ' pfv-Variante wird nicht in den Tree mit aufgenommen
+                                    If vName <> ptVariantFixNames.pfv.ToString Then
+                                        Dim variantNode As TreeNode = portfolioNode.Nodes.Add(vName)
+                                        variantNode.Text = "(" & vName & ")"
+                                        variantNode.Tag = "X"
+                                    End If
+
+                                    'If aKtionskennung = PTTvActions.delFromDB Then
+                                    '    variantNode.Tag = "P"
+                                    '    Dim tmpNodeLevel2 As TreeNode = variantNode.Nodes.Add("Platzhalter-Datum")
+                                    'Else
+                                    '    variantNode.Tag = "X"
+                                    'End If
+
+                                    'Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant,
+                                    '                             pname, vNameStripped)
+                                    'Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped)
+
+                                Next
+
+                            Else
+                                portfolioNode.Tag = "X"
+                            End If
+
+                            'Call bestimmeNodeCheckStatus(portfolioNode, aKtionskennung, PTTreeNodeTyp.project,
+                            '                              pname, variantName)
+                            'Call bestimmeNodeAppearance(portfolioNode, aKtionskennung, PTTreeNodeTyp.project, pname, variantName)
+
+                        End If
                     End If
-
                 Next
 
             End With
