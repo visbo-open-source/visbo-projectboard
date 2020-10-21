@@ -1369,38 +1369,44 @@ Imports System.Web
         ' tk 14.6 als erstes wird jetzt ein einziges Projekt gewählt ... 
         Dim selectProjectAsVorlage As New frmProjPortfolioAdmin
         Try
+            If ShowProjekte.Count > 0 Then
 
-            With selectProjectAsVorlage
+                With selectProjectAsVorlage
 
-                .aKtionskennung = PTTvActions.loadProjectAsTemplate
+                    .aKtionskennung = PTTvActions.loadProjectAsTemplate
 
-            End With
+                End With
 
-            returnValue = selectProjectAsVorlage.ShowDialog
+                returnValue = selectProjectAsVorlage.ShowDialog
 
-            If returnValue = DialogResult.OK Then
+                If returnValue = DialogResult.OK Then
 
-                weiterMachen = True
-                Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    weiterMachen = True
+                    Dim hproj As clsProjekt = selectProjectAsVorlage.selProjectAsTemplate
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
 
-                newProj = hproj.aggregateForPortfolioMgr(idArray)
+                    newProj = hproj.aggregateForPortfolioMgr(idArray)
 
-                ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
-                Call newProj.setBudgetAsNeeded()
+                    ' jetzt wird das Budget neu gesetzt, und zwar so, das es genau reicht ... 
+                    Call newProj.setBudgetAsNeeded()
 
-                ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
-                ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
+                    ' jetzt müssen Ampeln, -Bewertungen, %Done, Verantwortlichkeiten 
+                    ' wobei - evtl muss das gar nicht gemacht werden, weil das ja im TrageIvProjekte gemacht wird ...  
 
-                Call newProj.resetTrafficLightsEtc()
+                    Call newProj.resetTrafficLightsEtc()
 
-                ' actualDatauntil zurücksetzen
-                newProj.actualDataUntil = Date.MinValue
+                    ' actualDatauntil zurücksetzen
+                    newProj.actualDataUntil = Date.MinValue
 
+                Else
+                    weiterMachen = False
+
+                End If
             Else
                 weiterMachen = False
 
             End If
+
 
         Catch ex As Exception
 
@@ -1410,6 +1416,7 @@ Imports System.Web
         If weiterMachen Then
             Dim ProjektEingabe As New frmProjektEingabe1
             ProjektEingabe.existingProjAsTemplate = newProj
+
 
             Dim zeile As Integer = 0
 
@@ -1505,6 +1512,14 @@ Imports System.Web
 
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
+            End If
+        Else
+            If ShowProjekte.Count <= 0 Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Please, load a project")
+                Else
+                    Call MsgBox("Bitte laden Sie ein Projekt")
+                End If
             End If
         End If
 
@@ -3234,9 +3249,9 @@ Imports System.Web
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B9" 'Import Projekte gemäß Konfiguration
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3281,9 +3296,9 @@ Imports System.Web
 
             Case "PT4G2B3" ' Export Priorisierungsliste
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Prioritäten Liste..."
+                    tmpLabel = "Portfolio Definition"
                 Else
-                    tmpLabel = "Priority List..."
+                    tmpLabel = "Portfolio Definition"
                 End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -5614,58 +5629,62 @@ Imports System.Web
 
 
                             projectConstellations.Add(sessionConstellationP)
-                            projectConstellations.Add(sessionConstellationS)
+
+                            If Not IsNothing(sessionConstellationS) Then
+                                projectConstellations.Add(sessionConstellationS)
+                            End If
+
                             ' jetzt auf Projekt-Tafel anzeigen 
 
                             currentConstellationName = sessionConstellationP.constellationName
-                            ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
-                            ' die andere kann dann über loadConstelaltion gezeichnet werden 
-                            Call awinZeichnePlanTafel(sessionConstellationP)
+                                ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
+                                ' die andere kann dann über loadConstelaltion gezeichnet werden 
+                                Call awinZeichnePlanTafel(sessionConstellationP)
 
-                            'Call loadSessionConstellation(scenarioNameP, False, True)
+                                'Call loadSessionConstellation(scenarioNameP, False, True)
 
-                            '' tk 8.5.19 auskommentiert 
-                            'If isAllianzImport1 Then
-                            '    If sessionConstellationS.count > 0 Then
+                                '' tk 8.5.19 auskommentiert 
+                                'If isAllianzImport1 Then
+                                '    If sessionConstellationS.count > 0 Then
 
-                            '        If projectConstellations.Contains(scenarioNameS) Then
-                            '            projectConstellations.Remove(scenarioNameS)
-                            '        End If
+                                '        If projectConstellations.Contains(scenarioNameS) Then
+                                '            projectConstellations.Remove(scenarioNameS)
+                                '        End If
 
-                            '        projectConstellations.Add(sessionConstellationS)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
+                                '        projectConstellations.Add(sessionConstellationS)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
 
-                            '        Call loadSessionConstellation(scenarioNameS, False, True)
+                                '        Call loadSessionConstellation(scenarioNameS, False, True)
 
-                            '    Else
-                            '        Call MsgBox("keine Programmlinien importiert ...")
-                            '    End If
-                            'Else
-                            '    If sessionConstellationP.count > 0 Then
+                                '    Else
+                                '        Call MsgBox("keine Programmlinien importiert ...")
+                                '    End If
+                                'Else
+                                '    If sessionConstellationP.count > 0 Then
 
-                            '        If projectConstellations.Contains(scenarioNameP) Then
-                            '            projectConstellations.Remove(scenarioNameP)
-                            '        End If
+                                '        If projectConstellations.Contains(scenarioNameP) Then
+                                '            projectConstellations.Remove(scenarioNameP)
+                                '        End If
 
-                            '        projectConstellations.Add(sessionConstellationP)
-                            '        ' jetzt auf Projekt-Tafel anzeigen 
-                            '        Call loadSessionConstellation(scenarioNameP, False, True)
+                                '        projectConstellations.Add(sessionConstellationP)
+                                '        ' jetzt auf Projekt-Tafel anzeigen 
+                                '        Call loadSessionConstellation(scenarioNameP, False, True)
 
-                            '    Else
-                            '        Call MsgBox("keine Projekte importiert ...")
-                            '    End If
-                            'End If
-
-
+                                '    Else
+                                '        Call MsgBox("keine Projekte importiert ...")
+                                '    End If
+                                'End If
 
 
-                            If ImportProjekte.Count > 0 Then
-                                ImportProjekte.Clear(False)
+
+
+                                If ImportProjekte.Count > 0 Then
+                                    ImportProjekte.Clear(False)
+                                End If
                             End If
-                        End If
 
 
-                    Else
+                        Else
 
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
@@ -6237,7 +6256,6 @@ Imports System.Web
         ' öffnen des LogFiles
         Call logfileOpen()
 
-
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
             weiterMachen = True
@@ -6349,7 +6367,7 @@ Imports System.Web
         ' Schließen des LogFiles
         Call logfileSchliessen()
 
-        If listOfArchivFiles.Count > 0 Then
+        If listOfArchivFiles.Count > 0 And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
             Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
         End If
 
@@ -7288,7 +7306,12 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportKapas(control As IRibbonControl)
 
-
+        Dim actualDataFile As String = ""
+        Dim actualDataConfig As New SortedList(Of String, clsConfigActualDataImport)
+        Dim outPutline As String = ""
+        Dim lastrow As Integer = 0
+        Dim listofArchivUrlaub As New List(Of String)
+        Dim listofArchivAllg As New List(Of String)
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -7316,61 +7339,94 @@ Imports System.Web
                 Call readMonthlyExternKapasEV(outputCollection)
 
                 '' wenn es gibt - lesen der Urlaubslisten DateiName "Urlaubsplaner*.xlsx
-                Dim listofArchivUrlaub As List(Of String) = readInterneAnwesenheitslisten(outputCollection)
+                listofArchivUrlaub = readInterneAnwesenheitslisten(outputCollection)
+
+                ''  check Config-File - zum Einlesen der Istdaten gemäß Konfiguration -
+                ''  - hier benötigt um den Kalender von IstDaten und Urlaubsdaten aufeinander abzustimmen
+                Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
+                Dim allesOK As Boolean = checkActualDataImportConfig(configActualDataImport, actualDataFile, actualDataConfig, lastrow, outputCollection)
 
                 ' wenn es gibt - lesen der Zeuss- listen und anderer, die durch configCapaImport beschrieben sind
                 Dim configCapaImport As String = awinPath & configfilesOrdner & "configCapaImport.xlsx"
-                Dim listofArchivAllg As List(Of String) = readInterneAnwesenheitslistenAllg(configCapaImport, outputCollection)
+                If My.Computer.FileSystem.FileExists(configCapaImport) Then
 
-                changedOrga.allRoles = RoleDefinitions
+                    listofArchivAllg = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
+                Else
+                    outPutline = "There is no Config-File for the capacities!"
+                    Call logfileSchreiben(outPutline, "PTImportKapas", anzFehler)
+                End If
 
-                If outputCollection.Count = 0 Then
-                    ' keine Fehler aufgetreten ... 
-                    ' jetzt wird die Orga als Setting weggespeichert ... 
-                    Dim err As New clsErrorCodeMsg
-                    Dim result As Boolean = False
-                    ' ute -> überprüfen bzw. fertigstellen ... 
-                    Dim orgaName As String = ptSettingTypes.organisation.ToString
+                If listofArchivUrlaub.Count > 0 Or listofArchivAllg.Count > 0 Then
 
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    changedOrga.allRoles = RoleDefinitions
 
-                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                    If outputCollection.Count = 0 Then
+                        ' keine Fehler aufgetreten ... 
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Dim err As New clsErrorCodeMsg
+                        Dim result As Boolean = False
+                        ' ute -> überprüfen bzw. fertigstellen ... 
+                        Dim orgaName As String = ptSettingTypes.organisation.ToString
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+
+                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
                                                                                 CStr(settingTypes(ptSettingTypes.organisation)),
                                                                                 orgaName,
                                                                                 changedOrga.validFrom,
                                                                                 err)
 
-                        If result = True Then
-                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
-                            ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                            Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                            ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                            Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+                            If result = True Then
+                                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                                Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                                ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                                Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
+                            Else
+                                Call MsgBox("Error when writing Organisation to Database")
+                                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                            End If
 
                         Else
-                            Call MsgBox("Error when writing Organisation to Database")
-                            Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                            Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
+                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
+                            'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
+                            '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
+                            'Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
                         End If
 
                     Else
-                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
-                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
-                        ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
-                        ' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
-                        Call moveFilesInArchiv(listofArchivAllg, importOrdnerNames(PTImpExp.Kapas))
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logfileSchreiben(outputCollection)
+
+                    End If
+                Else
+                    If outputCollection.Count > 0 Then
+
+                        Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
+                        Call logfileSchreiben(outputCollection)
+                    Else
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Import of capacites with errors - stopped!")
+                        Else
+                            Call MsgBox("Import der Kapazitäten erfolgte mit Fehler - abgebrochen! ")
+
+                        End If
                     End If
 
-                Else
-                    Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                    Call logfileSchreiben(outputCollection)
                 End If
+
             Else
                 If awinSettings.englishLanguage Then
                     Call MsgBox("No valid roles! Please import one first!")
                 Else
                     Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+
                 End If
             End If
 

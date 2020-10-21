@@ -7312,7 +7312,7 @@ Public Module agm2
 
                         End Try
 
-                    ElseIf Not isValidProjectName(pName) Then
+                    ElseIf Not isValidPVName(pName) Then
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
@@ -8168,7 +8168,7 @@ Public Module agm2
                         pName = ""
                     Else
                         pName = pName.Trim
-                        End If
+                    End If
 
                     If IsNothing(variantName) Then
                         variantName = ""
@@ -8787,6 +8787,8 @@ Public Module agm2
     ''' <returns></returns>
     Public Function ImportOrganisation(ByRef outputCollection As Collection) As clsOrganisation
 
+
+
         Dim importedOrga As New clsOrganisation
         Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
 
@@ -8859,27 +8861,166 @@ Public Module agm2
                             ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
                             ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
                             If Not IsNothing(oldOrga) Then
-                                If oldOrga.allRoles.Count > 0 Then
+
+
+                                If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
+
                                     For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
-                                        Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
-                                        If Not IsNothing(importedRole) Then
-                                            importedRole.kapazitaet = kvp.Value.kapazitaet
-                                        End If
+                                        Try
+                                            Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
-                                        ' neues Eintrittsdatum , eher unwahrscheinlich 
-                                        If importedRole.entryDate > StartofCalendar Then
-                                            Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                            For ix As Integer = 1 To tmpix - 1
+
+                                            ' wenn sich die Default days per Monat geändert hat 
+
+                                            If Not IsNothing(importedRole) Then
+
+
+                                                If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+
+                                                    Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
+
+                                                    If importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+                                                        ' in diesem Fall können die Kapa Werte 1:1 übernommen werden 
+                                                        importedRole.kapazitaet = kvp.Value.kapazitaet
+
+
+                                                        If importedRole.entryDate = kvp.Value.entryDate And importedRole.exitDate = kvp.Value.exitDate Then
+                                                            ' es muss nichts weiter gemacht werden 
+                                                        Else
+                                                            ' Behandlung EntryDate
+                                                            Dim ix1 As Integer = getColumnOfDate(importedRole.entryDate)
+                                                            If ix1 < 1 Then
+                                                                ix1 = 1
+                                                            End If
+                                                            If ix1 > 240 Then
+                                                                ix1 = 240
+                                                            End If
+
+                                                            Dim ix2 As Integer = getColumnOfDate(kvp.Value.entryDate)
+                                                            If ix2 < 1 Then
+                                                                ix2 = 1
+                                                            End If
+                                                            If ix2 > 240 Then
+                                                                ix2 = 240
+                                                            End If
+
+                                                            If importedRole.entryDate < kvp.Value.entryDate Then
+
+                                                                For ix As Integer = ix1 To ix2
+                                                                    importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                Next
+
+                                                            ElseIf importedRole.entryDate > kvp.Value.entryDate Then
+                                                                For ix As Integer = ix2 To ix1 - 1
+                                                                    importedRole.kapazitaet(ix) = 0
+                                                                Next
+                                                            End If
+
+                                                            ' Behandlung ExitDate 
+                                                            ix1 = getColumnOfDate(importedRole.exitDate)
+                                                            If ix1 < 1 Then
+                                                                ix1 = 1
+                                                            End If
+                                                            If ix1 > 240 Then
+                                                                ix1 = 240
+                                                            End If
+
+                                                            ix2 = getColumnOfDate(kvp.Value.exitDate)
+                                                            If ix2 < 1 Then
+                                                                ix2 = 1
+                                                            End If
+                                                            If ix2 > 240 Then
+                                                                ix2 = 240
+                                                            End If
+
+                                                            If importedRole.exitDate < kvp.Value.exitDate Then
+
+                                                                For ix As Integer = ix1 To ix2
+                                                                    importedRole.kapazitaet(ix) = 0
+                                                                Next
+
+                                                            ElseIf importedRole.exitDate > kvp.Value.exitDate Then
+                                                                For ix As Integer = ix2 To ix1 - 1
+                                                                    importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                Next
+                                                            End If
+                                                        End If
+
+                                                    ElseIf importedRole.defaultKapa = kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+                                                        ' alle Werte, die durch Urlaubsplaner etc zustandekamen , also wo der werte <> kvp.value.defaultKapa ist mit dem Faktor multiplizieren 
+                                                        If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                            Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+
+                                                            For ix As Integer = startCol To 240
+                                                                If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                    ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                    importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                                End If
+
+                                                            Next
+
+
+                                                        End If
+
+                                                    ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa = kvp.Value.defaultDayCapa Then
+
+                                                        For ix As Integer = startCol To 240
+                                                            If kvp.Value.kapazitaet(ix) = kvp.Value.defaultKapa Then
+                                                                ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                                importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                            End If
+
+                                                        Next
+
+                                                    ElseIf importedRole.defaultKapa <> kvp.Value.defaultKapa And importedRole.defaultDayCapa <> kvp.Value.defaultDayCapa Then
+
+                                                        If importedRole.defaultDayCapa > 0 And kvp.Value.defaultDayCapa > 0 Then
+
+                                                            Dim faktor As Double = importedRole.defaultDayCapa / kvp.Value.defaultDayCapa
+
+                                                            For ix As Integer = startCol To 240
+                                                                If kvp.Value.kapazitaet(ix) <> kvp.Value.defaultKapa Then
+                                                                    ' dann wurde hier ein durch spezielle Urlaubsplanung initiierter Wert eingetragen - der muss jetzt entsprechd korrigiert werden  
+                                                                    importedRole.kapazitaet(ix) = kvp.Value.kapazitaet(ix) * faktor
+                                                                Else
+                                                                    ' dann sollte hier einfach der neue DefaultKapa Wert eingetragen werden 
+                                                                    ' hier steht ja schon der richtige Wert 
+                                                                    'importedRole.kapazitaet(ix) = importedRole.defaultKapa
+                                                                End If
+
+                                                            Next
+
+
+                                                        End If
+
+                                                    End If
+
+                                                End If
+
+
+
+                                            End If
+
+                                            ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                            If importedRole.entryDate > StartofCalendar Then
+                                                Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                For ix As Integer = 1 To tmpix - 1
+                                                    importedRole.kapazitaet(ix) = 0
+                                                Next
+                                            End If
+
+                                            Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
+
+                                            For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
                                                 importedRole.kapazitaet(ix) = 0
                                             Next
-                                        End If
+                                        Catch ex As Exception
+                                            Dim a As Integer = 0
+                                        End Try
 
-                                        Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
-
-                                        For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
-                                            importedRole.kapazitaet(ix) = 0
-                                        Next
 
                                     Next
                                 End If
@@ -9261,7 +9402,7 @@ Public Module agm2
                         Else
                             custFields.Clear()
 
-                            If Not isValidProjectName(pName) Then
+                            If Not isValidPVName(pName) Then
                                 pName = makeValidProjectName(pName)
                             End If
 
@@ -10401,7 +10542,7 @@ Public Module agm2
                         custFields.Clear()
                         description = pName
 
-                        If Not isValidProjectName(pName) Then
+                        If Not isValidPVName(pName) Then
                             pName = makeValidProjectName(pName)
                         End If
 
@@ -12434,7 +12575,7 @@ Public Module agm2
                 End If
 
                 ' jetzt muss der pName normiert werden ..
-                If Not isValidProjectName(currentPName) Then
+                If Not isValidPVName(currentPName) Then
                     currentPName = makeValidProjectName(currentPName)
                 End If
 
@@ -13228,7 +13369,7 @@ Public Module agm2
                                 Dim pNr As String = CStr(CType(.Cells(lupTZeile, 2), Excel.Range).Value).Trim
                                 Dim rupiPName As String = CStr(CType(.Cells(lupTZeile, 3), Excel.Range).Value).Trim
 
-                                If Not isValidProjectName(rupiPName) Then
+                                If Not isValidPVName(rupiPName) Then
                                     rupiPName = makeValidProjectName(rupiPName)
                                 End If
 
@@ -16997,7 +17138,7 @@ Public Module agm2
 
         Dim expFName As String = ""
         If considerAll Then
-            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
+            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & ".xlsx"
         Else
             expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
         End If
@@ -17020,7 +17161,7 @@ Public Module agm2
         Dim spalte As Integer = 1
 
 
-        Dim startOfCustomFields As Integer = 16
+        Dim startOfCustomFields As Integer = 17
         Dim ersteZeile As Excel.Range
 
 
@@ -17051,6 +17192,7 @@ Public Module agm2
                 CType(.Cells(1, 13), Excel.Range).Value = "Strategy"
                 CType(.Cells(1, 14), Excel.Range).Value = "Risk"
                 CType(.Cells(1, 15), Excel.Range).Value = "Description"
+                CType(.Cells(1, 16), Excel.Range).Value = "Row-Nr"
             Else
 
                 CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
@@ -17076,6 +17218,7 @@ Public Module agm2
                 CType(.Cells(1, 13), Excel.Range).Value = "Strategie"
                 CType(.Cells(1, 14), Excel.Range).Value = "Risiko"
                 CType(.Cells(1, 15), Excel.Range).Value = "Beschreibung"
+                CType(.Cells(1, 16), Excel.Range).Value = "Zeilen-Nr"
 
 
             End If
@@ -17191,6 +17334,8 @@ Public Module agm2
                     CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.StrategicFit
                     CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.Risiko
                     CType(.Cells(zeile, 15), Excel.Range).Value = kvp.Value.fullDescription
+
+                    CType(.Cells(zeile, 16), Excel.Range).Value = kvp.Value.tfZeile
 
                     spalte = startOfCustomFields
                     For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
@@ -17314,7 +17459,7 @@ Public Module agm2
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                     Else
-                        ' customFields
+                        ' Zeilen-Nummer und customFields
                         CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                         CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                     End If
@@ -19269,7 +19414,7 @@ Public Module agm2
 
                                 ' die Penalty und das Penalty Date
                                 If Not IsNothing(cMilestone.penalty) Then
-                                    If cMilestone.penalty.Key < Date.MaxValue Then
+                                    If cMilestone.penalty.Value > 0 Then
                                         CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cMilestone.penalty.Value
                                         CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cMilestone.penalty.Key
                                     End If
@@ -19434,7 +19579,7 @@ Public Module agm2
 
                                     ' die Penalty und das Penalty Date
                                     If Not IsNothing(cPhase.penalty) Then
-                                        If cPhase.penalty.Key > StartofCalendar Then
+                                        If cPhase.penalty.Value > 0 Then
                                             CType(currentWS.Cells(zeile, 15), Excel.Range).Value = cPhase.penalty.Value
                                             CType(currentWS.Cells(zeile, 16), Excel.Range).Value = cPhase.penalty.Key.Date
                                         End If
@@ -20488,7 +20633,7 @@ Public Module agm2
                 ' Speziell für Pilot-Kunden
                 ' -----------------------------------------------------
                 ' ab jetzt braucht man keine Lizenzen mehr ... 
-                Dim pilot As Date = "15.11.2118"
+
 
                 If special = "BHTC" Then
 
@@ -21890,7 +22035,7 @@ Public Module agm2
 
 
                     nameSopTyp = tmpStr(0).Trim
-                    If Not isValidProjectName(nameSopTyp) Then
+                    If Not isValidPVName(nameSopTyp) Then
                         nameSopTyp = makeValidProjectName(nameSopTyp)
                     End If
                     pName = nameSopTyp
@@ -23631,7 +23776,9 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String, ByRef meldungen As Collection) As List(Of String)
+    Public Function readInterneAnwesenheitslistenAllg(ByVal configFile As String,
+                                                      ByVal actualDataConfig As SortedList(Of String, clsConfigActualDataImport),
+                                                      ByRef meldungen As Collection) As List(Of String)
 
         Dim kapaConfig As New SortedList(Of String, clsConfigKapaImport)
         Dim kapaFile As String = ""
@@ -23639,6 +23786,7 @@ Public Module agm2
         Dim lastrow As Integer = 0
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim calendarReference As New clsOtherCalendar
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = Nothing
         Dim anzFehler As Integer = 0
         Dim result As Boolean = False
@@ -23656,10 +23804,11 @@ Public Module agm2
 
         enableOnUpdate = False
 
-        ' Read & check Config-File - ist in my.settings.xlsConfig festgehalten
+        ' Read & check Config-File - soll in my.settings.xlsConfig festgehalten werden
         Dim allesOK As Boolean = checkCapaImportConfig(configFile, kapaFile, kapaConfig, lastrow, meldungen)
 
         If allesOK Then
+
             If Not (IsNothing(kapaFile) Or kapaFile = "") Then
                 kapaFileName = kapaConfig("Kapa-Datei").capacityFile
                 Dim Test As Boolean = (kapaFile = kapaFileName)
@@ -23667,43 +23816,277 @@ Public Module agm2
 
             ' Dateien mit WildCards lesen
             listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
-                         FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+                             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+            If listOfFiles.Count = 0 Then
+                If awinSettings.englishLanguage Then
+                    outputline = "There don't exist any capacity-file: " & kapaFileName
+                Else
+                    outputline = "Es existiert keine solche Kapazitäten-Datei: " & kapaFileName
+                End If
+                meldungen.Add(outputline)
+            Else
+                If kapaConfig.ContainsKey("CalendarReferenceFile") Then
+                    ' es gibt ein CalendarReferenceFile, indem enthalten ist, von wann bis wann die Kapas und auch die Istdaten eines Monats gehen
+                    Dim calendarRefFile As String = kapaConfig("CalendarReferenceFile").Inputfile
+                    If Not IsNothing(calendarRefFile) Then
+                        If My.Computer.FileSystem.FileExists(calendarRefFile) Then
+                            ' read CalendarReferenceFile for correct Calendar for Capacities
+                            result = readCalendarReferenceFile(actualDataConfig, calendarRefFile, calendarReference, meldungen)
 
-            If listOfFiles.Count >= 1 Then
 
-                For Each tmpDatei As String In listOfFiles
-                    Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
-                    result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+                            If Not IsNothing(calendarReference) And calendarReference.otherCal.Count > 0 Then
+                                ' There is a calendarReference to consider
+                                Dim referenzListe As New SortedList(Of String, String)
+                                If listOfFiles.Count > 0 Then
+                                    referenzListe = createReferenzListe(kapaConfig, listOfFiles)
+                                End If
+                                If referenzListe.Count > 0 And referenzListe.Count = listOfFiles.Count Then
+                                    ' in referenzListe ist zu jedem Kapa-Monat der Zeuss-Dateiname festgehalten
+                                    Call logfileSchreiben("Einlesen Verfügbarkeiten ", "", anzFehler)
+                                    result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, referenzListe, meldungen)
 
-                    If result Then
-                        ' hier: merken der erfolgreich importierten KapaFiles
-                        listOfArchivFiles.Add(tmpDatei)
+                                    If result Then
+                                        For Each tmpDatei As String In listOfFiles
+
+                                            ' hier: merken der erfolgreich importierten KapaFiles
+                                            listOfArchivFiles.Add(tmpDatei)
+
+                                        Next
+
+                                    End If
+                                Else
+                                    outputline = "Es sind Fehler aufgetreten bei der Zuordnung der Kapa-Dateien zum entsprechenden Monat"
+                                    meldungen.Add(outputline)
+                                End If
+
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                         & "therefore no availabilities in the organisation written"
+                                Else
+                                    Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                         & "Es wurde daher jetzt keine berücksichtigt"
+                                    outputline = errMsg
+                                End If
+                                ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                                'meldungen.Add(outputline)
+
+                                Call logfileSchreiben(outputline, "", anzFehler)
+                            End If
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "The Calendar-Reference-File for the holidays, mentioned in the Configfile, does not exist." & vbLf _
+                                                                   & vbLf & "therefore no availabilities in the organisation written"
+                            Else
+                                outputline = "Die Referenz-Datei für den Urlaubskalender existiert nicht." & vbLf _
+                                                                   & vbLf & "Es wurden daher keine Kapazitäten in die Organisation eingetragen"
+                            End If
+                            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                            meldungen.Add(outputline)
+
+                            Call logfileSchreiben(outputline, "", anzFehler)
+
+                        End If
+
                     Else
+
+                        '' Dateien mit WildCards lesen
+                        'listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                        '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+                        ' there is no calendarReference to consider for importing capacities
+                        If listOfFiles.Count >= 1 Then
+
+                            For Each tmpDatei As String In listOfFiles
+
+                                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                                result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                                If result Then
+                                    ' hier: merken der erfolgreich importierten KapaFiles
+                                    listOfArchivFiles.Add(tmpDatei)
+                                Else
+
+                                End If
+                            Next
+
+                        Else
+                            If awinSettings.englishLanguage Then
+                                outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                     & "therefore no availabilities in the organisation written"
+                            Else
+                                Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                     & "Es wurde daher jetzt keine berücksichtigt"
+                                outputline = errMsg
+                            End If
+                            ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                            meldungen.Add(outputline)
+
+                            Call logfileSchreiben(outputline, "", anzFehler)
+                        End If
 
                     End If
 
-                Next
-
-            Else
-                If awinSettings.englishLanguage Then
-                    outputline = "No file for planning the availabilities of employee! " & vbLf _
-                             & "therefore no availabilities in the organisation written"
                 Else
-                    Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
-                             & "Es wurde daher jetzt keine berücksichtigt"
-                    outputline = errMsg
-                End If
-                ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
-                'meldungen.Add(outputline)
 
-                Call logfileSchreiben(outputline, "", anzFehler)
+                    '' Dateien mit WildCards lesen
+                    'listOfFiles = My.Computer.FileSystem.GetFiles(importOrdnerNames(PTImpExp.Kapas),
+                    '             FileIO.SearchOption.SearchTopLevelOnly, kapaFileName)
+
+                    ' there is no calendarReference to consider for importing capacities
+                    ' therefor it will be done monthly (first of month til lastday of month)
+                    If listOfFiles.Count >= 1 Then
+
+                        For Each tmpDatei As String In listOfFiles
+
+                            Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                            result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
+
+                            If result Then
+                                ' hier: merken der erfolgreich importierten KapaFiles
+                                listOfArchivFiles.Add(tmpDatei)
+                            Else
+
+                            End If
+                        Next
+
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputline = "No file for planning the availabilities of employee! " & vbLf _
+                                         & "therefore no availabilities in the organisation written"
+                        Else
+                            Dim errMsg As String = "Es gibt keine Datei zur Planung der Verfügbarkeiten" & vbLf _
+                                         & "Es wurde daher jetzt keine berücksichtigt"
+                            outputline = errMsg
+                        End If
+                        ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+                        'meldungen.Add(outputline)
+
+                        Call logfileSchreiben(outputline, "", anzFehler)
+                    End If
+
+                End If
+
             End If
+
         Else
             ' irgendetwas mit ConfigFile falsch
+            If awinSettings.englishLanguage Then
+                outputline = "There are some errors, reading the config-file"
+            Else
+                outputline = "Es sind Fehler beim Lesen des Config-File aufgetreten"
+            End If
         End If
+
+        ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
+        'meldungen.Add(outputline)
+
+        'Call logfileSchreiben(outputline, "", anzFehler)
+
 
         readInterneAnwesenheitslistenAllg = listOfArchivFiles
 
+    End Function
+    Public Function createReferenzListe(ByVal kapaConfig As SortedList(Of String, clsConfigKapaImport), ByVal listOfFiles As ObjectModel.ReadOnlyCollection(Of String)) As SortedList(Of String, String)
+        ' the beginning and the end of the calendar in the capafile an the actualData are different
+
+        Dim kfWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim kfWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+
+        Call logfileSchreiben("Nachsehen, welche Monate zu welcher KapaDatei zuzuordnen sind", "", anzFehler)
+        Dim monthFileList As New SortedList(Of String, String)
+        Dim zuordn_ok As Boolean = True
+
+        For Each kf As String In listOfFiles
+            If My.Computer.FileSystem.FileExists(kf) Then
+
+                Try
+                    ' öffnen eines relevanten Zeuss-files und nachsehen welcher Monat hier referenziert ist
+                    kfWB = appInstance.Workbooks.Open(kf)
+                    Dim Index As Integer = 1
+                    Dim regexpression As Regex
+                    kfWS = CType(appInstance.Worksheets(Index), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    With kfWS
+                        Dim zuordn_ok_yyyy As Boolean = True
+                        ' Auslesen der Jahreszahl, falls vorhanden
+                        Dim hjahr As String = CStr(.Cells(kapaConfig("year").row, kapaConfig("year").column).value)
+                        Dim jahr As Integer = 0
+                        If Not IsNothing(hjahr) Then
+                            If kapaConfig("year").regex = "RegEx" Then
+                                'regexpression = New Regex("[0-9]{4}")
+                                regexpression = New Regex(kapaConfig("year").content)
+                                Dim match As Match = regexpression.Match(hjahr)
+                                If Not match.Success Then
+                                    zuordn_ok_yyyy = False
+                                Else
+                                    jahr = CInt(match.Value)
+                                End If
+                            End If
+                        Else
+                            zuordn_ok_yyyy = False
+                        End If
+                        If Not zuordn_ok_yyyy Then
+                            Call logfileSchreiben("Fehler in Zeuss-Datei (Jahreszahl): " & kf, "", anzFehler)
+                        End If
+
+                        ' zuordn_ok_mm zurücksetzen
+                        Dim zuordn_ok_mm = True
+
+                        ' Auslesen des relevanten Monats
+                        Dim hmonth As String = CStr(.Cells(kapaConfig("month").row, kapaConfig("month").column).value)
+
+                        If Not IsNothing(hmonth) Then
+                            If kapaConfig("month").regex = "RegEx" Then
+                                regexpression = New Regex(kapaConfig("month").content)
+                                Dim Match As Match = regexpression.Match(hmonth)
+                                If Not Match.Success Then
+                                    zuordn_ok_mm = False
+                                Else
+                                    hmonth = Match.Value
+                                End If
+                            Else
+                                zuordn_ok_mm = False
+                            End If
+                        Else
+                            zuordn_ok_mm = False
+                        End If
+
+                        If Not zuordn_ok_mm Then
+                            Call logfileSchreiben("Fehler in Zeuss-Datei (Monat): " & kf, "", anzFehler)
+                        End If
+
+                        If (zuordn_ok_mm And zuordn_ok_yyyy) Then
+                            ' Zuordnung in die Liste eintragen
+                            Dim dateConsidered As Date
+                            Dim isdate As Boolean = DateTime.TryParse(hmonth & " " & jahr.ToString, dateConsidered)
+
+                            Dim relYearMonth As String = jahr.ToString & Month(dateConsidered).ToString("D2")
+                            If Not monthFileList.ContainsKey(relYearMonth) Then
+                                monthFileList.Add(relYearMonth, kf)
+                            End If
+                        Else
+                            zuordn_ok = zuordn_ok And False
+                        End If
+
+                    End With
+
+                    kfWB.Close()        ' Zeuss-Datei wieder schließen
+
+                Catch ex As Exception
+                    Call logfileSchreiben("Fehler beim Öffnen der Datei " & kf, "", anzFehler)
+                End Try
+            Else
+                Call logfileSchreiben("Datei existiert nicht: " & kf, "", anzFehler)
+            End If
+        Next   ' kf of listOfFiles
+
+        If Not zuordn_ok Then
+            monthFileList = New SortedList(Of String, String)
+            Call logfileSchreiben("Fehler bei der Zuordnung der Kapa-Inputfiles zu Monaten", "", anzFehler)
+        End If
+
+        createReferenzListe = monthFileList
     End Function
 
     ''' <summary>

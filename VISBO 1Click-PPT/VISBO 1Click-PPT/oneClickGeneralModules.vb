@@ -279,8 +279,14 @@ Module oneClickGeneralModules
         Else
             ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
 
+<<<<<<< HEAD
+            ' ur: 06.08.2020: wird nun in awinsetTypen über lesen der VCsettings,type=organisation besetzt
+            ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+            ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+=======
             'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
             'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+>>>>>>> feature/Instart_Anpassungen
         End If
 
         logInToMongoDB = Not noDBAccess

@@ -9,8 +9,8 @@ Public Class clsRollen
     ' Liste ist nach UID sortiert
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
 
-    ' ist eine sortierte Liste von Namen der Rollen und ihrer zugehörigen ID 
-    ' wird benötigt, um das Ganze zu beschelunigen
+    ' ist eine sortierte Liste von Namen und Aliases der Rollen und ihrer zugehörigen ID 
+    ' wird benötigt, um das Ganze zu beschleunigen
     Private _allNames As SortedList(Of String, Integer)
 
     Private _topLevelNodeIDs As List(Of Integer)

@@ -273,7 +273,7 @@ Public Class clsResultWeb
         docUrlAppID = ""
 
         invoice = New KeyValuePair(Of Double, Integer)(0.0, 0)
-        penalty = New KeyValuePair(Of Date, Double)(Date.MinValue, 0.0)
+        penalty = New KeyValuePair(Of Date, Double)(Date.MaxValue, 0.0)
 
     End Sub
 

@@ -2730,6 +2730,16 @@ Module Module1
                                             Dim q2 As String = pptShape.Tags.Item("Q2")
                                             'Dim nids As String = pptShape.Tags.Item("NIDS")
 
+                                            ' ist showrangeleft und Right zu setzen ? 
+                                            If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                                                If Not IsNothing(pptShape.Tags.Item("SRLD")) And Not IsNothing(pptShape.Tags.Item("SRRD")) Then
+                                                    If pptShape.Tags.Item("SRLD") <> "" And pptShape.Tags.Item("SRRD") <> "" Then
+                                                        showRangeLeft = getColumnOfDate(CDate(pptShape.Tags.Item("SRLD")))
+                                                        showRangeRight = getColumnOfDate(CDate(pptShape.Tags.Item("SRRD")))
+                                                    End If
+                                                End If
+                                            End If
+
                                             'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
                                             '                                 toDoCollection, q1, q2)
                                             Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
@@ -2805,6 +2815,16 @@ Module Module1
                                         Dim q1 As String = pptShape.Tags.Item("Q1")
                                         Dim q2 As String = pptShape.Tags.Item("Q2")
                                         'Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                        ' ist showrangeleft und Right zu setzen ? 
+                                        If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                                            If Not IsNothing(pptShape.Tags.Item("SRLD")) And Not IsNothing(pptShape.Tags.Item("SRRD")) Then
+                                                If pptShape.Tags.Item("SRLD") <> "" And pptShape.Tags.Item("SRRD") <> "" Then
+                                                    showRangeLeft = getColumnOfDate(CDate(pptShape.Tags.Item("SRLD")))
+                                                    showRangeRight = getColumnOfDate(CDate(pptShape.Tags.Item("SRRD")))
+                                                End If
+                                            End If
+                                        End If
 
                                         'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
                                         '                                 toDoCollection, q1, q2)

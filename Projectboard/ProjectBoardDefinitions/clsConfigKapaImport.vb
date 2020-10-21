@@ -2,15 +2,14 @@
     Public Property capacityFile As String
     Public Property hoursPerDay As Integer
     Public Property anzMonths As Integer
-    'Public Property month As Integer
-    'Public Property year As Integer
-    'Public Property role As Integer
 
     Public Property Titel As String
     Public Property Identifier As String
     Public Property Inputfile As String
     Public Property Typ As String
     Public Property cellrange As Boolean
+    Public Property tabNr As Integer
+    Public Property tabName As String
     Public Property column As Integer
     Public Property columnDescript As String
     Public Property row As Integer
@@ -24,6 +23,8 @@
         Inputfile = ""
         Typ = "Text"
         cellrange = False
+        tabNr = 1
+        tabName = ""
         column = 0
         columnDescript = "do not exist so far"
         row = 0

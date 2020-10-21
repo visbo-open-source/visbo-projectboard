@@ -1885,8 +1885,7 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
 
-                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
-                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                 Catch ex As Exception
@@ -2154,8 +2153,7 @@ Public Module testModule
                                         Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                         Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
-                                        ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
-                                        'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
 
                                         appInstance.ScreenUpdating = formerSU
@@ -4397,8 +4395,7 @@ Public Module testModule
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                     Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & currentSessionConstellation.vpID & "?view=KeyMetrics"
 
-                                    ' tk 3.8.20 solange noch Differenzen bestehen, soll kein auto-Link rein ... schafft sonst nur große Unsicherheit
-                                    'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+                                    Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
 
                                 End If
 
@@ -6211,8 +6208,8 @@ Public Module testModule
                                             Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                             Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
 
-                                            ' tk 3.8. rausgenommen, solange es noch Differenzen gibt 
-                                            'Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
+
+                                            Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
                                         End If
 
 
@@ -13123,7 +13120,7 @@ Public Module testModule
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                If currentFilter.doesNotBlock(kvp.Value) Then
+                If currentFilter.doesNotBlock(kvp.Value, passMsPhAnyway:=True) Then
                     If awinSettings.mppSortiertDauer Then
                         ' es wird aufsteigend nach der Dauer sortiert  
                         Dim tmpMinDate As Date
@@ -17298,6 +17295,9 @@ Public Module testModule
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
+                            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+                                .Line.DashStyle = MsoLineDashStyle.msoLineDash
+                            End If
                         Catch ex As Exception
 
                         End Try

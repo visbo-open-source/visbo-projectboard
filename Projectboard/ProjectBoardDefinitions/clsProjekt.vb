@@ -3120,6 +3120,58 @@ Public Class clsProjekt
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' when Me does not contain any invoices / penalties and projWithInvoices does contain
+    ''' then all invoices/penalties are taken from projWithInvoices 
+    ''' </summary>
+    ''' <param name="projWithInvoices"></param>
+    Public Sub updateProjectwithInvoicesFrom(ByVal projWithInvoices As clsProjekt)
+
+        Try
+            If Me.getInvoicesPenalties.Sum > 0 Then
+                ' dann gibt es Werte und es soll nix übernommen werden 
+
+            Else
+                For ip As Integer = 1 To projWithInvoices.CountPhases
+                    Dim cPhase As clsPhase = projWithInvoices.getPhase(ip)
+                    If Not IsNothing(cPhase) Then
+                        If cPhase.invoice.Key > 0 Or cPhase.penalty.Value > 0 Then
+                            Dim myPhase As clsPhase = getPhaseByID(cPhase.nameID)
+                            If Not IsNothing(myPhase) Then
+                                myPhase.invoice = cPhase.invoice
+                                myPhase.penalty = cPhase.penalty
+                            End If
+                        End If
+
+                        For im As Integer = 1 To cPhase.countMilestones
+                            Dim cMilestone As clsMeilenstein = cPhase.getMilestone(im)
+                            If Not IsNothing(cMilestone) Then
+                                If cMilestone.invoice.Key > 0 Or cMilestone.penalty.Value > 0 Then
+                                    Dim myMilestone As clsMeilenstein = getMilestoneByID(cMilestone.nameID)
+                                    If Not IsNothing(myMilestone) Then
+                                        myMilestone.invoice = cMilestone.invoice
+                                        myMilestone.penalty = cMilestone.penalty
+                                    End If
+                                End If
+
+                            End If
+
+                        Next
+
+                    End If
+
+                Next
+
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Error when copying invoice / penalties " & vbLf & "in clsProjekt, updateProjectwithInvoicesFrom")
+        End Try
+
+
+    End Sub
+
     ''' <summary>
     ''' übernimmt für die eigenen Phasen die entsprechenden Ressourcenbedarfe aus dem anderen Projekt 
     ''' berücksichtigt ausschließlich Phasen, die im eigenen Projekt vorkommen .. 
@@ -3250,7 +3302,9 @@ Public Class clsProjekt
             Dim fullbreadCrumb As String = Me.getBcElemName(kvp.Key)
 
             If fullbreadCrumb <> "" Then
-                resultList.Add(fullbreadCrumb, kvp.Key)
+                ' fullbreadcrumb ist nicht unbedingt eindeutig, z.B wenn es Meilensteine mit geleichem Namen in der Phase gibt 
+                'resultList.Add(fullbreadCrumb, kvp.Key)
+                resultList.Add(kvp.Key, fullbreadCrumb)
             End If
 
         Next
@@ -5150,6 +5204,7 @@ Public Class clsProjekt
                     ReDim invoiceValues(resultDimension)
 
                     For Each kvp As KeyValuePair(Of Integer, Double) In invoiceArray
+                        ' auch wenn es mehrere Rechnungen, in einem Monat geben sollte: die sind jetzt schon alle aufsummert
                         invoiceValues(kvp.Key) = kvp.Value
                     Next
 
@@ -5158,7 +5213,8 @@ Public Class clsProjekt
                     Next
 
                 Else
-                    invoiceValues = Nothing
+                    ' nicht auf Nothing setzen ! 
+                    ' einfach auf Null lassen ... 
                 End If
 
             End If
