@@ -282,7 +282,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks>wenn ein Zeitraum markiert ist, wir der auch berücksichtigt ... </remarks>
-    Public ReadOnly Property doesNotBlock(ByVal hproj As clsProjekt) As Boolean
+    Public ReadOnly Property doesNotBlock(ByVal hproj As clsProjekt, Optional ByVal passMsPhAnyway As Boolean = False) As Boolean
         Get
             Dim containsBU As Boolean
             Dim containsTyp As Boolean
@@ -399,8 +399,9 @@
                     ' da bisher nur über die positive Schnittmenge entschieden wird; 
                     ' ggf muss das noch über eine separate Variable entschieden werden ... das könnte eigentlich über die Projektlinie gemacht werden 
 
-                    If hproj.hierarchy.count = 1 And awinSettings.mppProjectsWithNoMPmayPass Then
+                    If (hproj.hierarchy.count = 1 And awinSettings.mppProjectsWithNoMPmayPass) Or passMsPhAnyway Then
                         ' nur dann kann es sich ggf um ein leeres Projekt handeln 
+                        ' oder aber es handelt sich um ein Projekt mit vielen MS , Phasen das aber gezeichnet werden soll 
                         containsMS = True
 
                     ElseIf filterMilestone.Count = 0 Then
@@ -571,7 +572,7 @@
                                                 Dim tmpPhStart As Date = tmpPhase.getStartDate
                                                 Dim tmpPhEnde As Date = tmpPhase.getEndDate
 
-                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or
                                                     DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
 
                                                 Else
@@ -720,7 +721,7 @@
         End Get
     End Property
 
-    
+
 
     Sub New()
         filterBU = New Collection

@@ -26,7 +26,7 @@
     <PublishUrl>c:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.1.1.0</ApplicationVersion>
+    <ApplicationVersion>4.1.1.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -259,7 +259,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Projectboard_1_TemporaryKey.pfx" />
-    <None Include="Projectboard_2_TemporaryKey.pfx" />
     <None Include="Projectboard_TemporaryKey.pfx" />
     <None Include="ThisWorkbook.Designer.xml">
       <DependentUpon>ThisWorkbook.vb</DependentUpon>
@@ -423,10 +422,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Projectboard_2_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>B7FCEFD6591B5C2F4D3E3AC3CE012FEFBBEC9D62</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>BE0C69CECC92B53D65D23735221377CF02372720</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>

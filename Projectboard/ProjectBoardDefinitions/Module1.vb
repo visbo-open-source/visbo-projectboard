@@ -918,8 +918,7 @@ Public Module Module1
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
-    Public StartofCalendar As Date = #1/1/2015#
-
+    Public StartofCalendar As Date = New Date(2015, 1, 1)
     Public weightStrategicFit As Double
 
     '
@@ -5496,6 +5495,22 @@ Public Module Module1
                         .Tags.Add("NIDS", nameIDString)
                     End If
 
+                    ' tk ergänzt am 20.10.20 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft And showRangeRight < 240 Then
+                        If .Tags.Item("SRLD").Length > 0 Then
+                            .Tags.Delete("SRLD")
+                        End If
+
+                        If .Tags.Item("SRRD").Length > 0 Then
+                            .Tags.Delete("SRRD")
+                        End If
+
+                        .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, True)))
+
+                    End If
+
+
                 End With
 
             End If
@@ -5910,22 +5925,32 @@ Public Module Module1
                         restCost(i) = 0
                     End If
 
-                    If i = 0 Then
-                        cashflow(i) = invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
-                    Else
-                        cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
-                    End If
+                    ' tk 14.09 allen Cash-Abfluss zusammenfassen ... 
+                    totalCost(i) = totalCost(i) + restCost(i)
+
+                    ' keine Kumulierung 
+                    cashflow(i) = invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i))
+
+                    ' alt , vor dem 14.09.20
+                    'If i = 0 Then
+                    '    cashflow(i) = invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    'Else
+                    '    cashflow(i) = cashflow(i - 1) + invoices(i) + kugCome(i) - (totalCost(i) + kugGo(i) + restCost(i))
+                    'End If
 
                 Else
 
                     totalCost(i) = orgaFullCost(i) + checkSonstCost(i) + checkExternCost(i)
                     restCost(i) = 0
 
-                    If i = 0 Then
-                        cashflow(i) = invoices(i) - totalCost(i)
-                    Else
-                        cashflow(i) = cashflow(i - 1) + invoices(i) - totalCost(i)
-                    End If
+                    ' keine Kumulierung
+                    cashflow(i) = invoices(i) - totalCost(i)
+
+                    'If i = 0 Then
+                    '    cashflow(i) = invoices(i) - totalCost(i)
+                    'Else
+                    '    cashflow(i) = cashflow(i - 1) + invoices(i) - totalCost(i)
+                    'End If
 
                 End If
 
@@ -6042,15 +6067,18 @@ Public Module Module1
 
 
 
-
+            ' Liquidität , auf Monat bezogen
             zeile = 6
             For ix = 1 To 6
 
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
+                'tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = restCost(ix - 1).ToString(formatierung)
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
 
                 ' Abfluss: rot
-                If restCost(ix - 1) > 0 Then
+                If cashflow(ix - 1) < 0 Then
                     tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
+                ElseIf cashflow(ix - 1) > 0 Then
+                    tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
                 Else
                     tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
                 End If
@@ -6063,14 +6091,16 @@ Public Module Module1
             ' jetzt wird Cash-Flow kumuliert geschrieben 
             zeile = 7
 
+            Dim cumulValue As Double = 0
             For ix = 1 To 6
 
-                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cashflow(ix - 1).ToString(formatierung)
+                cumulValue = cumulValue + cashflow(ix - 1)
+                tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Text = cumulValue.ToString(formatierung)
 
                 ' Ergebnis: je nachdem ...grün oder rot ...
-                If cashflow(ix - 1) < 0 Then
+                If cumulValue < 0 Then
                     tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNegativ)
-                ElseIf cashflow(ix - 1) > 0 Then
+                ElseIf cumulValue > 0 Then
                     tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbePositiv)
                 Else
                     tabelle.Cell(zeile, ix + 1).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(farbeNeutral)
