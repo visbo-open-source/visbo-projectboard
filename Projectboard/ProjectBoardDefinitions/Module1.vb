@@ -5495,6 +5495,22 @@ Public Module Module1
                         .Tags.Add("NIDS", nameIDString)
                     End If
 
+                    ' tk ergänzt am 20.10.20 
+                    If showRangeLeft > 0 And showRangeRight > showRangeLeft And showRangeRight < 240 Then
+                        If .Tags.Item("SRLD").Length > 0 Then
+                            .Tags.Delete("SRLD")
+                        End If
+
+                        If .Tags.Item("SRRD").Length > 0 Then
+                            .Tags.Delete("SRRD")
+                        End If
+
+                        .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, True)))
+
+                    End If
+
+
                 End With
 
             End If
