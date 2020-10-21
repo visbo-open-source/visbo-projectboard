@@ -251,7 +251,13 @@ Public Class frmLoadConstellation
                         If quickList Then
                             vpid = kvp.Value
                             variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio)
-                            variantNames.Add("",, variantNames.Item(1))
+                            ' StandardVariante an erste Stelle einfügen
+                            If variantNames.Count = 0 Then
+                                variantNames.Add("")
+                            Else
+                                variantNames.Add("",, variantNames.Item(1))
+                            End If
+
                         Else
                             variantNames = getVariantListeFromPName(pname, vpid, ptPRPFType.portfolio, portfolioliste)
                             'variantName = getVariantnameFromKey(kvp.Key)
