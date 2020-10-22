@@ -2041,6 +2041,8 @@ Public Class Request
         Dim result As Boolean = False
         Dim storedVP As Boolean = False
         Dim storedVPVariant As Boolean = False
+        Dim standardVariante As String = ""
+
         Try
             Dim vpType As Integer = ptPRPFType.portfolio
             Dim cVPf As New clsVPf
@@ -2118,7 +2120,19 @@ Public Class Request
                         newVPf = POSTOneVPf(cVPf, err)
 
                         If newVPf.Count > 0 Then
-                            result = True
+
+                            ' prüfen ob bereits eine standardvariante dieses Portfolios existiert, wenn nicht, wird sie angelegt
+                            Dim listofPortfolios As SortedList(Of Date, clsVPf) = GETallVPf(cVP._id, Date.MinValue, err, standardVariante)
+                            Dim stdVPfExists As Boolean = False
+                            If Not (listofPortfolios.Count > 0) Then
+                                cVPf.variantName = standardVariante
+                                Dim stdVPf As List(Of clsVPf) = POSTOneVPf(cVPf, err)
+                                stdVPfExists = (stdVPf.Count > 0)
+                            Else
+                                stdVPfExists = True
+                            End If
+
+                            result = stdVPfExists And True
                         End If
 
                     End If

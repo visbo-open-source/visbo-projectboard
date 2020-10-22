@@ -378,6 +378,7 @@ Imports System.Web
 
         Dim storeConstellationFrm As New frmLoadConstellation
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim errmsg As New clsErrorCodeMsg
         Dim DBtimeStamp As Date = Date.Now
         Dim sessionPortfolioNames As New SortedList(Of String, String)
         Dim dbPortfolioNames As New SortedList(Of String, String)
@@ -477,6 +478,8 @@ Imports System.Web
                     End If
                 Next
                 If constellationsChecked.Count = 1 Then
+                    ' Liste der Portfolios in der DB
+                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
                     Dim constellationName As String = constellationsChecked.ElementAt(0).Key
                     Dim vname As String = constellationsChecked.ElementAt(0).Value
                     Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName, vname)

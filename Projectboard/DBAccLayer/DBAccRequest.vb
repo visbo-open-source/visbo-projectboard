@@ -787,7 +787,7 @@ Public Class Request
                 Try
                     resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err, vpType)
 
-                    If resultCollection.Count <= 0 Then
+                    If resultCollection.Count < 0 Then
 
                         Select Case err.errorCode
 

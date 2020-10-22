@@ -4269,18 +4269,18 @@ Public Module awinGeneralModules
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputLine = "Portfolio contains at least one project with more than one variant - please correct: " & currentConstellation.constellationName
+                            outputLine = "Portfolio contains at least one project with more than one variant - please correct: " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         Else
-                            outputLine = "Portfolio darf pro Projekt nicht mehr als 1 Variante enthalten - bitte korrigieren: " & currentConstellation.constellationName
+                            outputLine = "Portfolio darf pro Projekt nicht mehr als 1 Variante enthalten - bitte korrigieren: " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         End If
                         outPutCollection.Add(outputLine)
                     End If
                 Else
                     If awinSettings.englishLanguage Then
-                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName
+                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         outPutCollection.Add(outputLine)
                     Else
-                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName
+                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         outPutCollection.Add(outputLine)
                     End If
 
@@ -5235,11 +5235,22 @@ Public Module awinGeneralModules
     ''' <param name="vpid"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function getVariantListeFromPName(ByVal pName As String, Optional ByVal vpid As String = "", Optional ByVal vpType As Integer = ptPRPFType.project) As Collection
+    Public Function getVariantListeFromPName(ByVal pName As String, Optional ByVal vpid As String = "",
+                                             Optional ByVal vpType As Integer = ptPRPFType.project,
+                                             Optional ByVal portfolioliste As SortedList(Of String, String) = Nothing) As Collection
         Dim tmpResult As New Collection
         Dim err As New clsErrorCodeMsg
 
-        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName, err, vpType)
+        If Not IsNothing(portfolioliste) Then
+            For Each kvp As KeyValuePair(Of String, String) In portfolioliste
+                If kvp.Key.Contains(pName) Then
+                    tmpResult.Add(kvp.Value)
+                End If
+            Next
+        Else
+            tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName, err, vpType)
+        End If
+
 
         getVariantListeFromPName = tmpResult
 
