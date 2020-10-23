@@ -8570,7 +8570,7 @@ Public Module Module1
                 If teamID > 0 Then
                     Dim curSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
                     Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(teamID).UID
-                    If embracingRoleID = curRole.UID Then
+                    If embracingRoleID = curRole.UID Or RoleDefinitions.hasAnyChildParentRelationsship(embracingRoleID, curRole.UID) Then
                         tmpResult = curSkill.name
                     Else
                         tmpResult = curSkill.name & " [" & curRole.name & "]"

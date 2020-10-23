@@ -2779,7 +2779,8 @@
     ''' <returns></returns>
     Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
-                                                    Optional ByVal outPutInEuro As Boolean = False) As Double()
+                                                    Optional ByVal outPutInEuro As Boolean = False,
+                                                    Optional ByVal considerAllNeedsOfRolesHavingTheseSkills As Boolean = False) As Double()
         Get
             Dim roleValues() As Double
 
@@ -2855,6 +2856,37 @@
                         End If
                     End If
                 End If
+
+                ' limit to all roleUIDs having the skill, but calculate alle resource needs for given roleIDs
+                If listOfSkillIDs.Count > 0 And considerAllNeedsOfRolesHavingTheseSkills And inclSubRoles Then
+                    Dim delList As New List(Of Integer)
+                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                        If Not tmpRole.isCombinedRole Then
+                            Dim found As Boolean = False
+                            Dim ix As Integer = listOfSkillIDs.Count
+                            Do While ix <= listOfSkillIDs.Count And Not found
+                                found = tmpRole.getSkillIDs.ContainsKey(listOfSkillIDs.ElementAt(ix - 1).Key)
+                                ix = ix + 1
+                            Loop
+
+                            If Not found Then
+                                delList.Add(kvp.Key)
+                            End If
+
+                        End If
+                    Next
+
+                    ' jetzt die Roles bereinigen, so dass sie nur noch Rollen enthalten, die die angegebene Skill haben ... 
+                    For Each tmpRoleID As Integer In delList
+                        listOfRoleIDs.Remove(tmpRoleID)
+                    Next
+
+                    ' jetzt für die weitere Verarbeitung die Liste von Skills löschen
+                    ' damit werden alle RoleIDs, die eine dieser Skills haben berücksichtigt, aber es werden alle Ressourcenbedarfe gerechnet 
+                    listOfSkillIDs.Clear()
+                End If
+
 
                 ' jetzt wird eine Loop über alle Phasen gemacht 
                 For Each cPhase As clsPhase In AllPhases
