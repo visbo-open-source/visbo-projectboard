@@ -360,35 +360,6 @@
     End Sub
 
     ''' <summary>
-    ''' wenn die rclists null sind, weil z.Bsp Projekt aus MS Project aufgebaut wurde 
-    ''' dann werden die hier nachträglich aufgebaut
-    ''' </summary>
-    Public Sub updateRcLists()
-
-        For p = 1 To AllPhases.Count
-            Dim cPhase As clsPhase = getPhase(p)
-
-            For Each role As clsRolle In cPhase.rollenListe
-                Try
-                    rcLists.addRP(role.uid, cPhase.nameID, role.teamID)
-                Catch ex As Exception
-
-                End Try
-            Next
-
-            For Each cost As clsKostenart In cPhase.kostenListe
-                Try
-                    rcLists.addCP(cost.KostenTyp, cPhase.nameID)
-                Catch ex As Exception
-
-                End Try
-            Next
-        Next
-
-
-    End Sub
-
-    ''' <summary>
     ''' gibt den kürzesten eindeutigen Namen für das Element zurück, der sich finden lässt
     ''' optional kann die SwimlaneID mitgegeben werden - dann wird nur nach eindeutigen Namen innerhalb der swimlanes gesucht 
     ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
@@ -2834,6 +2805,7 @@
 
                 Dim listOfRoleIDs As New SortedList(Of Integer, Double)
                 Dim listOfSkillIDs As New SortedList(Of Integer, Double)
+                Dim doNotConsiderSkillIDs As New SortedList(Of Integer, Double)
 
                 If roleUID > 0 Then
                     Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUID)
@@ -2850,7 +2822,7 @@
                     Dim curSkilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillUID)
                     If Not IsNothing(curSkilldef) Then
                         If curSkilldef.isCombinedRole And inclSubRoles Then
-                            listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSkilldef.name)
+                            listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSkilldef.name, type:=PTcbr.placeholders)
                         Else
                             listOfSkillIDs.Add(curSkilldef.UID, 1.0)
                         End If
@@ -2873,7 +2845,8 @@
                             If Not found Then
                                 delList.Add(kvp.Key)
                             End If
-
+                        Else
+                            delList.Add(kvp.Key)
                         End If
                     Next
 
@@ -2884,11 +2857,14 @@
 
                     ' jetzt für die weitere Verarbeitung die Liste von Skills löschen
                     ' damit werden alle RoleIDs, die eine dieser Skills haben berücksichtigt, aber es werden alle Ressourcenbedarfe gerechnet 
+                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfSkillIDs
+                        doNotConsiderSkillIDs.Add(kvp.Key, kvp.Value)
+                    Next
                     listOfSkillIDs.Clear()
                 End If
 
 
-                ' jetzt wird eine Loop über alle Phasen gemacht 
+                ' jetzt Loop über alle Phasen  
                 For Each cPhase As clsPhase In AllPhases
                     Dim nrRoles As Integer = cPhase.countRoles
 
@@ -2899,7 +2875,12 @@
                         Dim relevant As Boolean = False
 
                         If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
-                            relevant = listOfRoleIDs.ContainsKey(curRole.uid)
+                            If considerAllNeedsOfRolesHavingTheseSkills Then
+                                relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
+                            Else
+                                relevant = listOfRoleIDs.ContainsKey(curRole.uid)
+                            End If
+
 
                         ElseIf listOfRoleIDs.Count = 0 And listOfSkillIDs.Count > 0 Then
                             relevant = listOfSkillIDs.ContainsKey(curRole.teamID)

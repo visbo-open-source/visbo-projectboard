@@ -2038,6 +2038,7 @@ Public Class clsProjekte
     Public ReadOnly Property getRoleValuesInMonth(ByVal roleIDStr As String,
                                                   Optional ByVal considerAllSubRoles As Boolean = False,
                                                   Optional ByVal type As PTcbr = PTcbr.all,
+                                                  Optional ByVal considerAllNeedsOfRolesHavingTheseSkills As Boolean = False,
                                                   Optional ByVal excludedNames As Collection = Nothing) As Double()
         Get
             Dim roleValues() As Double
@@ -2088,7 +2089,9 @@ Public Class clsProjekte
                 If anzLoops > 0 Then
 
                     Try
-                        tempArray = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=considerAllSubRoles)
+                        tempArray = hproj.getRessourcenBedarf(roleNameID,
+                                                              inclSubRoles:=considerAllSubRoles,
+                                                              considerAllNeedsOfRolesHavingTheseSkills:=considerAllNeedsOfRolesHavingTheseSkills)
 
                         For i = 0 To anzLoops - 1
                             roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)

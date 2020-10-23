@@ -5274,8 +5274,10 @@ Public Class frmHierarchySelection
             ElseIf currentRole.getSkillIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isSkill Then
 
                 nrTag = New clsNodeRoleTag
-                Dim teamID As Integer
-                Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
+
+                ' tk 23.10 muss auf parentNode.text gehen 
+                'Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
+                Dim parentID As Integer = RoleDefinitions.getRoledef(parentNode.Text).UID
                 With nrTag
                     .isSkill = False
                     .isTeamMember = True
