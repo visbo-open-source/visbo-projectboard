@@ -2751,7 +2751,7 @@
     Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
                                                     Optional ByVal outPutInEuro As Boolean = False,
-                                                    Optional ByVal considerAllNeedsOfRolesHavingTheseSkills As Boolean = False) As Double()
+                                                    Optional ByVal considerAllOtherNeedsOfRolesHavingTheseSkills As Boolean = False) As Double()
         Get
             Dim roleValues() As Double
 
@@ -2819,6 +2819,23 @@
                 End If
 
                 If skillUID > 0 Then
+
+                    ' now narrow Role-List down to all roles beeing parent to a person with that skill or being such a person
+                    Dim delList As New List(Of Integer)
+                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                        If Not RoleDefinitions.roleHasSkill(kvp.Key, skillUID) Then
+                            Try
+                                delList.Add(kvp.Key)
+                            Catch ex As Exception
+
+                            End Try
+
+                            For Each tmpRoleID As Integer In delList
+                                listOfRoleIDs.Remove(tmpRoleID)
+                            Next
+                        End If
+                    Next
+
                     Dim curSkilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillUID)
                     If Not IsNothing(curSkilldef) Then
                         If curSkilldef.isCombinedRole And inclSubRoles Then
@@ -2830,7 +2847,7 @@
                 End If
 
                 ' limit to all roleUIDs having the skill, but calculate alle resource needs for given roleIDs
-                If listOfSkillIDs.Count > 0 And considerAllNeedsOfRolesHavingTheseSkills And inclSubRoles Then
+                If listOfSkillIDs.Count > 0 And considerAllOtherNeedsOfRolesHavingTheseSkills And inclSubRoles Then
                     Dim delList As New List(Of Integer)
                     For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
                         Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
@@ -2850,7 +2867,7 @@
                         End If
                     Next
 
-                    ' jetzt die Roles bereinigen, so dass sie nur noch Rollen enthalten, die die angegebene Skill haben ... 
+                    ' jetzt die Liste bereinigen, so dass sie nur noch Rollen enthält, die die angegebene Skill haben ... 
                     For Each tmpRoleID As Integer In delList
                         listOfRoleIDs.Remove(tmpRoleID)
                     Next
@@ -2875,7 +2892,7 @@
                         Dim relevant As Boolean = False
 
                         If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
-                            If considerAllNeedsOfRolesHavingTheseSkills Then
+                            If considerAllOtherNeedsOfRolesHavingTheseSkills Then
                                 relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
                             Else
                                 relevant = listOfRoleIDs.ContainsKey(curRole.uid)

@@ -2091,7 +2091,7 @@ Public Class clsProjekte
                     Try
                         tempArray = hproj.getRessourcenBedarf(roleNameID,
                                                               inclSubRoles:=considerAllSubRoles,
-                                                              considerAllNeedsOfRolesHavingTheseSkills:=considerAllNeedsOfRolesHavingTheseSkills)
+                                                              considerAllOtherNeedsOfRolesHavingTheseSkills:=considerAllNeedsOfRolesHavingTheseSkills)
 
                         For i = 0 To anzLoops - 1
                             roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
