@@ -6129,9 +6129,17 @@ Public Class Request
             Else
                 serverUriString = serverUriString & "/" & vpid & "/lock"
             End If
-            'If variantName <> "" Then
-            serverUriString = serverUriString & "?variantName=" & variantName
-            'End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & "&variantID=" & variantID
+                Else
+                    serverUriString = serverUriString & "&variantName=" & variantName
+                End If
+            End If
+            If variantName = "" Then
+                serverUriString = serverUriString & "?variantID="
+            End If
 
 
 

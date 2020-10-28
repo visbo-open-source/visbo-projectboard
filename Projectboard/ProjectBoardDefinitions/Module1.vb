@@ -3360,6 +3360,33 @@ Public Module Module1
 
     End Function
 
+
+    ''' <summary>
+    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="anzLeerzeichen"></param>
+    ''' <returns></returns>
+    Public Function bestimmeIndent(ByVal text As String, Optional ByVal anzLeerzeichen As Integer = 1) As Integer
+        Dim tmpstr As String = ""
+        Dim indentLevel As Integer = 0
+
+        If Not IsNothing(text) Then
+            Dim origTextLge As Integer = text.Length
+            Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
+            If anzLeerzeichen <> 0 Then
+                indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzLeerzeichen)
+            Else
+                indentLevel = -1
+            End If
+        Else
+
+        End If
+
+        bestimmeIndent = indentLevel
+    End Function
+
+
     ''' <summary>
     ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
     ''' </summary>

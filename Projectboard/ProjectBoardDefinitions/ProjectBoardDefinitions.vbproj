@@ -73,6 +73,7 @@
     <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
+    <Compile Include="clsConfigOrgaImport.vb" />
     <Compile Include="clsConfigProjectsImport.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />

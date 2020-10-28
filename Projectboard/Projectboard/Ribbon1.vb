@@ -6554,13 +6554,28 @@ Imports System.Web
         Dim selectedWB As String = ""
         'Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
         Dim dirname As String = importOrdnerNames(PTImpExp.Orga)
+        Dim dateiname As String = ""
+
+
+        Dim outputCollection As New Collection
+
+        ' ===========================================================
+        ' Konfigurationsdatei lesen und Validierung durchführen
+
+        ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
+        Dim configOrgaImport As String = awinPath & configfilesOrdner & "configOrgaImport.xlsx"
+        Dim orgaImportConfig As New SortedList(Of String, clsConfigOrgaImport)
+        Dim lastrow As Integer = 0
+
+        ' check Config-File - zum Einlesen der Istdaten gemäß Konfiguration
+        ' hier werden Werte für actualDataFile, actualDataConfig gesetzt
+        Dim allesOK As Boolean = checkOrgaImportConfig(configOrgaImport, dateiname, orgaImportConfig, lastrow, outputCollection)
+
 
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*rganisation*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
-        Dim dateiname As String = ""
-
-        ' tk by Ute für das Verschieben der Datei in den Archiv-Ordner wenn erfolgreich 
+        ' tk by Ute für das Verschieben der Datei in den Archiv-Ordner, wenn erfolgreich 
         Dim listOfArchivFiles As New List(Of String)
 
         Dim weiterMachen As Boolean = False
@@ -6585,15 +6600,18 @@ Imports System.Web
 
             If returnValue = DialogResult.OK Then
                 selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
+                ' Check if Config or not
                 weiterMachen = True
             End If
         Else
             Call MsgBox("keine Organisations-Dateien gefunden ..." & vbLf & "Folder: " & dirname & vbLf & "Dateien müssen folgender Namensgebung genügen *rganisation*.xls*")
         End If
 
+
         If weiterMachen Then
 
             dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
 
             Try
                 ' hier wird jetzt der Import gemacht 
@@ -6602,8 +6620,8 @@ Imports System.Web
                 ' Öffnen des Organisations-Files
                 appInstance.Workbooks.Open(dateiname)
 
-                Dim outputCollection As New Collection
-                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+                ' Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
+                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection, orgaImportConfig)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
