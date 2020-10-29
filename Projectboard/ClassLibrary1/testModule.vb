@@ -778,29 +778,33 @@ Public Module testModule
             For i = 1 To anzShapes
                 pptShape = pptSlide.Shapes(i)
                 qualifier = ""
-                With pptShape
 
-                    Dim tmpStr(3) As String
-                    Try
 
-                        If .Title <> "" Then
-                            tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                Dim tmpStr(3) As String
+
+                Try
+
+                    If pptShape.Title <> "" Then
+                        tmpStr = pptShape.Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        kennzeichnung = tmpStr(0).Trim
+                    ElseIf pptShape.AlternativeText <> "" Then
+                        tmpStr = pptShape.AlternativeText.Trim.Split(New Char() {CChar("("), CChar(")"), CChar(vbLf)})
+                        kennzeichnung = tmpStr(0).Trim
+                    Else
+                        If pptShape.HasTextFrame Then
+                            Dim dummyStr As String = pptShape.TextFrame2.TextRange.Text
+                            tmpStr = dummyStr.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         Else
-                            If .HasTextFrame Then
-                                Dim dummyStr As String = .TextFrame2.TextRange.Text
-                                tmpStr = dummyStr.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
-                                kennzeichnung = tmpStr(0).Trim
-                            Else
-                                kennzeichnung = "nicht identifizierbar"
-                            End If
+                            kennzeichnung = "nicht identifizierbar"
                         End If
+                    End If
 
-                    Catch ex As Exception
-                        kennzeichnung = "nicht identifizierbar"
-                    End Try
+                Catch ex As Exception
+                    kennzeichnung = "nicht identifizierbar"
+                End Try
 
-                    If kennzeichnung = "Projekt-Name" Or
+                If kennzeichnung = "Projekt-Name" Or
                         kennzeichnung = "Custom-Field" Or
                         kennzeichnung = "selectedItems" Or
                         kennzeichnung = "Soll-Ist & Prognose" Or
@@ -879,27 +883,26 @@ Public Module testModule
                         kennzeichnung = "Laufzeit:" Or
                         kennzeichnung = "Verantwortlich:" Then
 
-                        listofShapes.Add(pptShape)
+                    listofShapes.Add(pptShape)
 
-                    ElseIf kennzeichnung = "gleich" Then
-                        gleichShape = pptShape
+                ElseIf kennzeichnung = "gleich" Then
+                    gleichShape = pptShape
 
-                    ElseIf kennzeichnung = "steigend" Then
-                        steigendShape = pptShape
+                ElseIf kennzeichnung = "steigend" Then
+                    steigendShape = pptShape
 
-                    ElseIf kennzeichnung = "fallend" Then
-                        fallendShape = pptShape
+                ElseIf kennzeichnung = "fallend" Then
+                    fallendShape = pptShape
 
-                    ElseIf kennzeichnung = "ampel" Then
-                        ampelShape = pptShape
+                ElseIf kennzeichnung = "ampel" Then
+                    ampelShape = pptShape
 
-                    ElseIf kennzeichnung = "stern" Then
-                        sternShape = pptShape
+                ElseIf kennzeichnung = "stern" Then
+                    sternShape = pptShape
 
                     End If
 
 
-                End With
             Next
 
 
@@ -922,6 +925,11 @@ Public Module testModule
                             Call title2kennzQualifier(.Title, kennzeichnung, qualifier, qualifier2)
                             boxName = kennzeichnung
 
+                        ElseIf .AlternativeText <> "" Then
+
+                            Call title2kennzQualifier(.AlternativeText, kennzeichnung, qualifier, qualifier2)
+                            boxName = kennzeichnung
+
                         Else
                             ' Start neu
 
@@ -930,10 +938,10 @@ Public Module testModule
 
                         End If
 
-                        ' wenn .AlternativeText was enthält ; das wird z.Bsp in Tabelle PRojektziele benötigt ...
-                        If .AlternativeText <> "" Then
-                            qualifier2 = .AlternativeText
-                        End If
+                        ''wenn.AlternativeText was enthält ; das wird z.Bsp in Tabelle PRojektziele benötigt ...
+                        'If .AlternativeText <> "" Then
+                        '    qualifier2 = .AlternativeText
+                        'End If
 
 
                         top = .Top
@@ -2149,12 +2157,14 @@ Public Module testModule
                                         ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
-                                        '
-                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
+                                        ' sofern der elementType = 7 (rolesAndCost) ist
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        If smartChartInfo.elementTyp = ptElementTypen.rolesAndCost Then
+                                            Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
+                                            Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        End If
 
                                         appInstance.ScreenUpdating = formerSU
 
@@ -4375,7 +4385,7 @@ Public Module testModule
 
                                 Dim minCal As Boolean = False
                                 If pptShape.AlternativeText.Length > 0 Then
-                                    minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                    minCal = pptShape.AlternativeText.Contains("minCal")
                                 End If
 
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
@@ -22733,32 +22743,52 @@ Public Module testModule
     ''' <remarks></remarks>
     Public Sub title2kennzQualifier(ByVal title As String, ByRef kennz As String, ByRef qualifier As String, ByRef quali2 As String)
         ' Start neu
-        Dim tmpStr(10) As String
-        Try
+        Dim tmpStr() As String
 
-            tmpStr = title.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
+        If title.Contains(vbLf) Then
+            tmpStr = title.Trim.Split(New Char() {CChar(vbLf)})
             kennz = tmpStr(0).Trim
 
-        Catch ex As Exception
-            kennz = "nicht identifizierbar"
-            tmpStr(0) = " "
-        End Try
 
-        Try
-            If tmpStr.Length < 2 Then
+            For i As Integer = 1 To tmpStr.Length - 1
+                If tmpStr(i).Length > 0 Then
+                    If quali2.Length = 0 Then
+                        quali2 = tmpStr(i)
+                    Else
+                        quali2 = quali2 & vbLf & tmpStr(i)
+                    End If
+
+                End If
+            Next
+        Else
+            Try
+
+                tmpStr = title.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
+                kennz = tmpStr(0).Trim
+
+            Catch ex As Exception
+                kennz = "nicht identifizierbar"
+                ReDim tmpStr(0)
+                tmpStr(0) = " "
+            End Try
+
+            Try
+                If tmpStr.Length < 2 Then
+                    qualifier = ""
+                    quali2 = ""
+                ElseIf tmpStr.Length = 2 Then
+                    qualifier = tmpStr(1).Trim
+                ElseIf tmpStr.Length >= 3 Then
+                    qualifier = tmpStr(1).Trim
+                    quali2 = tmpStr(2).Trim
+                End If
+
+            Catch ex As Exception
                 qualifier = ""
                 quali2 = ""
-            ElseIf tmpStr.Length = 2 Then
-                qualifier = tmpStr(1).Trim
-            ElseIf tmpStr.Length >= 3 Then
-                qualifier = tmpStr(1).Trim
-                quali2 = tmpStr(2).Trim
-            End If
+            End Try
+        End If
 
-        Catch ex As Exception
-            qualifier = ""
-            quali2 = ""
-        End Try
         ' Ende neu 
 
     End Sub

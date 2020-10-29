@@ -16,7 +16,12 @@
 
         If allowedDateRight > Date.MinValue Then
             enddatePicker.MinDate = allowedDateLeft
-            enddatePicker.MaxDate = allowedDateRight
+            If allowedDateRight > allowedDateLeft Then
+                enddatePicker.MaxDate = allowedDateRight
+            Else
+                enddatePicker.MaxDate = allowedDateLeft
+            End If
+
         End If
 
     End Sub
