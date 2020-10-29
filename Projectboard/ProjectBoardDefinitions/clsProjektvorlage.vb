@@ -2806,36 +2806,87 @@
                 Dim listOfRoleIDs As New SortedList(Of Integer, Double)
                 Dim listOfSkillIDs As New SortedList(Of Integer, Double)
                 Dim doNotConsiderSkillIDs As New SortedList(Of Integer, Double)
+                ' tk wenn berechnet wird, was alle anderen Skills , non-Skill-Bedarfe für die betrachteten Orga-Einheiten, Personen sind 
 
-                If roleUID > 0 Then
-                    Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUID)
-                    If Not IsNothing(curRoledef) Then
-                        If curRoledef.isCombinedRole And inclSubRoles Then
-                            listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
-                        Else
-                            listOfRoleIDs.Add(curRoledef.UID, 1.0)
-                        End If
-                    End If
-                End If
+
+
 
                 If skillUID > 0 Then
 
-                    ' now narrow Role-List down to all roles beeing parent to a person with that skill or being such a person
-                    Dim delList As New List(Of Integer)
-                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
-                        If Not RoleDefinitions.roleHasSkill(kvp.Key, skillUID) Then
+                    If Not considerAllOtherNeedsOfRolesHavingTheseSkills Then
+                        ' jetzt muss die RoleID ggf auf den obersten PArent gesetzt werdne; denn es kann ja auch einen Rollenbedarf Organisation; FrontEndGui geben
+                        Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(skillUID).UID
+                        ' wenn die RoleUID einer der Väter von der embracing RoleID ist 
+                        ' extension necessary dann notwendig, wenn alle Skills gesucht werden müssen , nicht nur die Skillbedarfe, die zu einer bestimmten einschränkenden Orga-Einheit gehören  
+                        Dim extensionNecessary As Boolean = (embracingRoleID = roleUID) Or RoleDefinitions.hasAnyChildParentRelationsship(embracingRoleID, roleUID)
+                        If extensionNecessary Then
                             Try
-                                delList.Add(kvp.Key)
+                                ' suche den Top-Vater Knoten zu der umfassendenOrga-Unit
+                                ' nötig, weil eine Skill auch in Kombination mit einer höheren Orga-Unit angegeben werden kann
+
+                                Dim topParentIDS As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(embracingRoleID))
+                                If Not IsNothing(topParentIDS) Then
+                                    Dim ix As Integer = topParentIDS.Length - 1
+                                    If ix >= 0 Then
+                                        If topParentIDS(ix) > 0 Then
+                                            roleUID = topParentIDS(ix)
+                                        End If
+                                    End If
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    End If
+
+                    If RoleDefinitions.getRoleDefByID(roleUID).isCombinedRole Then
+                        ' muss nur gemacht werden, wenn es sich nicht schon um eine PErson handelt 
+                        Dim commonListOFIDs As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(roleUID, skillUID)
+                        For Each tmpID As Integer In commonListOFIDs
+                            Try
+                                ' liefert alle Parent-Rollen IDs inkl der eigenen Role-ID...
+                                Dim parentArray As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(tmpID))
+                                If Not IsNothing(parentArray) Then
+                                    For ix As Integer = 0 To parentArray.Length - 1
+                                        If parentArray(ix) > 0 Then
+                                            If Not listOfRoleIDs.ContainsKey(parentArray(ix)) Then
+                                                listOfRoleIDs.Add(parentArray(ix), 1)
+                                            End If
+                                        End If
+
+                                    Next
+                                End If
                             Catch ex As Exception
 
                             End Try
 
-                            For Each tmpRoleID As Integer In delList
-                                listOfRoleIDs.Remove(tmpRoleID)
-                            Next
-                        End If
-                    Next
+                        Next
 
+                    Else
+                        ' andernfalls einfach diese PErson aufnehmen 
+                        listOfRoleIDs.Add(roleUID, 1)
+                    End If
+
+                    ' tk 28.10 jetzt nicht mehr notwendig 
+                    ' now narrow Role-List down to all roles beeing parent to a person with that skill or being such a person
+                    'Dim delList As New List(Of Integer)
+                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                    '    If Not RoleDefinitions.roleHasSkill(kvp.Key, skillUID) Then
+                    '        Try
+                    '            delList.Add(kvp.Key)
+                    '        Catch ex As Exception
+
+                    '        End Try
+
+                    '    End If
+                    'Next
+
+                    'For Each tmpRoleID As Integer In delList
+                    '    listOfRoleIDs.Remove(tmpRoleID)
+                    'Next
+
+
+                    ' jetzt bestimme die Liste mit den Skills 
                     Dim curSkilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillUID)
                     If Not IsNothing(curSkilldef) Then
                         If curSkilldef.isCombinedRole And inclSubRoles Then
@@ -2844,33 +2895,46 @@
                             listOfSkillIDs.Add(curSkilldef.UID, 1.0)
                         End If
                     End If
+                Else
+                    If roleUID > 0 Then
+                        Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUID)
+                        If Not IsNothing(curRoledef) Then
+                            If curRoledef.isCombinedRole And inclSubRoles Then
+                                listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                            Else
+                                listOfRoleIDs.Add(curRoledef.UID, 1.0)
+                            End If
+                        End If
+                    End If
                 End If
 
                 ' limit to all roleUIDs having the skill, but calculate alle resource needs for given roleIDs
                 If listOfSkillIDs.Count > 0 And considerAllOtherNeedsOfRolesHavingTheseSkills And inclSubRoles Then
-                    Dim delList As New List(Of Integer)
-                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
-                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
-                        If Not tmpRole.isCombinedRole Then
-                            Dim found As Boolean = False
-                            Dim ix As Integer = listOfSkillIDs.Count
-                            Do While ix <= listOfSkillIDs.Count And Not found
-                                found = tmpRole.getSkillIDs.ContainsKey(listOfSkillIDs.ElementAt(ix - 1).Key)
-                                ix = ix + 1
-                            Loop
 
-                            If Not found Then
-                                delList.Add(kvp.Key)
-                            End If
-                        Else
-                            delList.Add(kvp.Key)
-                        End If
-                    Next
+                    ' tk das hier ist nicht nötig , die Role-List enthält alle relevanten IDs 
+                    'Dim delList As New List(Of Integer)
+                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                    '    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                    '    If Not tmpRole.isCombinedRole Then
+                    '        Dim found As Boolean = False
+                    '        Dim ix As Integer = listOfSkillIDs.Count
+                    '        Do While ix <= listOfSkillIDs.Count And Not found
+                    '            found = tmpRole.getSkillIDs.ContainsKey(listOfSkillIDs.ElementAt(ix - 1).Key)
+                    '            ix = ix + 1
+                    '        Loop
 
-                    ' jetzt die Liste bereinigen, so dass sie nur noch Rollen enthält, die die angegebene Skill haben ... 
-                    For Each tmpRoleID As Integer In delList
-                        listOfRoleIDs.Remove(tmpRoleID)
-                    Next
+                    '        If Not found Then
+                    '            delList.Add(kvp.Key)
+                    '        End If
+                    '    Else
+                    '        delList.Add(kvp.Key)
+                    '    End If
+                    'Next
+
+                    '' jetzt die Liste bereinigen, so dass sie nur noch Rollen enthält, die die angegebene Skill haben ... 
+                    'For Each tmpRoleID As Integer In delList
+                    '    listOfRoleIDs.Remove(tmpRoleID)
+                    'Next
 
                     ' jetzt für die weitere Verarbeitung die Liste von Skills löschen
                     ' damit werden alle RoleIDs, die eine dieser Skills haben berücksichtigt, aber es werden alle Ressourcenbedarfe gerechnet 
@@ -2892,7 +2956,7 @@
                         Dim relevant As Boolean = False
 
                         If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
-                            If considerAllOtherNeedsOfRolesHavingTheseSkills Then
+                            If considerAllOtherNeedsOfRolesHavingTheseSkills And curRole.teamID > 0 Then
                                 relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
                             Else
                                 relevant = listOfRoleIDs.ContainsKey(curRole.uid)

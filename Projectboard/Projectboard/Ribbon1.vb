@@ -11665,6 +11665,10 @@ Imports System.Web
             rcName = ""
         End If
 
+        If IsNothing(rcNameID) Then
+            rcNameID = ""
+        End If
+
         ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
         If rcName = "" Then
             currentRow = 2
@@ -11677,13 +11681,14 @@ Imports System.Web
             End Try
 
         Else
-            If RoleDefinitions.containsName(rcName) Then
+            If RoleDefinitions.containsNameOrID(rcNameID) Then
                 prcTyp = DiagrammTypen(1)
             ElseIf CostDefinitions.containsName(rcName) Then
                 prcTyp = DiagrammTypen(2)
             Else
                 prcTyp = DiagrammTypen(1)
                 rcName = RoleDefinitions.getDefaultTopNodeName
+                rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, "")
             End If
 
         End If
@@ -11793,17 +11798,35 @@ Imports System.Web
                 hproj = ShowProjekte.getProject(pName)
                 Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
                                                                      chTop, chLeft, chWidth, chHeight, False, True)
+
+                selectedProjekte.Clear(False)
+                selectedProjekte.Add(hproj, False)
             End If
 
-            ' dann das PRCCollectionChart ...
+
+
+            ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
-            chWidth = 2 * stdBreite
+            chWidth = stdBreite
+
+
 
             Dim myCollection As New Collection
             myCollection.Add(rcName)
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
                                                                    chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
+
+            ' das Auslastungs-Chart Skill
+            repObj = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = stdBreite
+
+            myCollection.Clear()
+            myCollection.Add(rcNameID)
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                   chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
+                                                                   isMESkillChart:=True)
 
             ' jetzt das Portfolio Chart Budget anzeigen ... 
             Dim obj As Excel.ChartObject = Nothing

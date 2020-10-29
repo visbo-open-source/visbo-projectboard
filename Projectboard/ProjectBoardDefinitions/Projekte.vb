@@ -25230,6 +25230,22 @@ Public Module Projekte
 
                         End If
 
+                    Case PTpfdk.Skill
+
+                        If mycollection.Count = RoleDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
+
+                        Else
+
+                            For i = 1 To mycollection.Count
+                                cName = CStr(mycollection.Item(i))
+                                ' bei den cNames ist es jetzt roleUid;teamUid bzw roleUid; von daher einfach umverändert übernehmen 
+                                'IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
+                                IDkennung = IDkennung & "#" & cName
+                            Next
+
+                        End If
+
                     Case PTpfdk.Kosten
 
                         If mycollection.Count = CostDefinitions.Count Then

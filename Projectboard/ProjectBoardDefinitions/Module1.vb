@@ -564,6 +564,7 @@ Public Module Module1
         PhaseCategories = 21
         MilestoneCategories = 22
         Cashflow = 23
+        Skill = 24
     End Enum
 
     ' Enumeration Projekt Diagramm Kennungen 
@@ -1720,6 +1721,44 @@ Public Module Module1
     ''' <param name="chtobj"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    Function istSkillDiagramm(ByRef chtobj As ChartObject) As Boolean
+
+        Dim found As Boolean
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+
+
+
+
+        found = False
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Skill Then
+
+                    found = True
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+        End Try
+
+
+        istSkillDiagramm = found
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <returns></returns>
     Function istRollenDiagramm(ByRef chtobj As ChartObject) As Boolean
 
         Dim found As Boolean

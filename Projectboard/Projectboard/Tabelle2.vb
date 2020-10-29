@@ -1096,12 +1096,12 @@ Public Class Tabelle2
                             If Not IsNothing(formProjectInfo1) Then
                                 Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                             End If
-                            ' tk 18.1.20
-                            Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcNameID)
-                            'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                        ' tk 18.1.20
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                        'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
-                            Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=rcName)
-                        End If
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                    End If
 
                     Catch ex As Exception
 
@@ -1830,6 +1830,8 @@ Public Class Tabelle2
         Dim rcName As String = ""
         Dim rcNameID As String = ""
         Dim oldRCName As String = ""
+        Dim oldRCNameID As String = ""
+
         Dim changeBecauseRCNameChanged As Boolean = False
         Try
             ' wenn mehr wie eine Zelle selektiert wurde ...
@@ -1843,10 +1845,12 @@ Public Class Tabelle2
 
             If visboZustaende.oldRow > 0 Then
                 oldRCName = CStr(meWS.Cells(visboZustaende.oldRow, columnRC).value)
+                oldRCNameID = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(visboZustaende.oldRow, columnRC), meWS.Cells(visboZustaende.oldRow, columnRC + 1)), Excel.Range))
             End If
 
             ' das wirkt sich auf das aktualisieren der charts aus 
-            changeBecauseRCNameChanged = rcName <> oldRCName
+            'changeBecauseRCNameChanged = rcName <> oldRCName
+            changeBecauseRCNameChanged = rcNameID <> oldRCNameID
 
             ' alte Row merken 
             visboZustaende.oldRow = Target.Row
@@ -1932,43 +1936,43 @@ Public Class Tabelle2
             End If
 
             ' wenn pNameChanged und das Info-Fenster angezeigt wird, dann aktualisieren 
-            Dim alreadyDone As Boolean = False
+
             If pNameChanged Or changeBecauseRCNameChanged Then
 
-                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcNameID)
+                Call aktualisiereCharts(.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
 
                 If pNameChanged Then
                     selectedProjekte.Clear(False)
                     selectedProjekte.Add(.currentProject, False)
+                End If
 
-                    If Not IsNothing(rcName) Then
+                If Not IsNothing(rcNameID) Then
 
-                        If rcName <> "" Then
-                            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-                            alreadyDone = True
-                        End If
-                    End If
-
-
-                    If Not IsNothing(formProjectInfo1) Then
-                        Call updateProjectInfo1(.currentProject, .currentProjectinSession)
-                        ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                    If rcNameID <> "" Then
+                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
                     End If
                 End If
+
+
+                If Not IsNothing(formProjectInfo1) Then
+                    Call updateProjectInfo1(.currentProject, .currentProjectinSession)
+                    ' hier wird dann ggf noch das Projekt-/RCNAme/aktuelle Version vs DB-Version Chart aktualisiert  
+                End If
+
 
             End If
 
 
-            ' hier wird jetzt ggf das Role/Cost Portfolio Chart aktualisiert ..
-            If Not IsNothing(rcName) Then
-                If oldRCName <> rcName Then
-                    If rcName <> "" And Not alreadyDone Then
-                        selectedProjekte.Clear(False)
-                        selectedProjekte.Add(.currentProject, False)
-                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
-                    End If
-                End If
-            End If
+            ' tk 29.10. alt - nur rcname
+            'If Not IsNothing(rcName) Then
+            '    If oldRCName <> rcName Then
+            '        If rcName <> "" And Not alreadyDone Then
+            '            selectedProjekte.Clear(False)
+            '            selectedProjekte.Add(.currentProject, False)
+            '            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcName)
+            '        End If
+            '    End If
+            'End If
 
         End With
 

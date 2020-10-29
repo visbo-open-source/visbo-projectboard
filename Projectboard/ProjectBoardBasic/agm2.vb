@@ -17867,7 +17867,8 @@ Public Module agm2
                         Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                     End If
                     Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=currentRole.name)
-                    Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
+                    'Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
+                    Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
 
                 Catch ex As Exception
 
