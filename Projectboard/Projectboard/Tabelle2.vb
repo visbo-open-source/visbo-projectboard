@@ -769,9 +769,16 @@ Public Class Tabelle2
                                 ' es handelt sich um eine Skill Änderung
 
 
-                                If isValidRCChange(skillName, visboZustaende.oldValue, rcName, True) Then
+                                If isValidRCChange(skillName, visboZustaende.oldValue, rcName, True) Or (skillName = "" And rcName <> "") Then
 
                                     isRole = True
+
+                                    Dim rcIndentLevel As Integer = 1
+                                    If skillName <> "" Then
+                                        rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                                        Target.Cells(1, 1).IndentLevel = rcIndentLevel
+                                    End If
+
 
                                     Dim rcNameGenerated As Boolean = False
                                     If rcName = "" Then
@@ -786,6 +793,9 @@ Public Class Tabelle2
                                             ' der automatisch generierte Name muss jetzt eingetragen werden 
                                             Try
                                                 Target.Cells(1, 1).offset(0, -1).value = rcName
+                                                ' jetzt den richtigen Indent setzen ..
+                                                rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
+                                                Target.Cells(1, 1).offset(0, -1).IndentLevel = rcIndentLevel
                                             Catch ex As Exception
 
                                             End Try

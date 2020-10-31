@@ -17978,46 +17978,7 @@ Public Module agm2
                 Dim islocked As Boolean = False
                 Dim teamID As Integer = -1
 
-                ' tk 23.8.20 alt, wird nicht mehr benötigt
-                'If isRole And rcName <> "" Then
-                '    ' der rcname muss erst noch bestimmt werden 
-                '    'Dim teamID As Integer = -1
-                '    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcName, teamID)
-                '    If roleID > 0 Then
-                '        rcName = RoleDefinitions.getRoleDefByID(roleID).name
-                '    End If
-                'End If
-                '' ---------------------------------------------------------------------
-                ''Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
-                '' --------------------------------------
-                '' Beginn WriteMECellWithRoleNameID
 
-                'Dim teamName As String = ""
-                '' tk 4.3.19 es muss newzeile sein, statt zeile 
-                'Dim currentCell As Excel.Range = CType(.Cells(newZeile, columnRC), Excel.Range)
-                '' erst mal alle Kommentare löschen 
-                'currentCell.ClearComments()
-
-                'If isRole Then
-                '    If rcName = rcName Or rcName = "" Then
-                '        ' nichts weiter tun ... rcName wird als Value geschrieben
-
-                '    ElseIf rcName.Length > 0 Then
-
-                '        If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcName, teamID)) Then
-                '            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
-
-                '            If Not IsNothing(teamRole) Then
-                '                teamName = teamRole.name
-                '            End If
-                '        End If
-
-                '    End If
-
-                'Else
-                '    ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
-
-                'End If
 
                 '' Jetzt wird die Zelle geschrieben 
 
@@ -18034,6 +17995,10 @@ Public Module agm2
                 End With
 
                 With currentCell.Cells(1, 2)
+                    If skillName <> "" Then
+                        rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                        .IndentLevel = rcIndentLevel
+                    End If
                     .Value = skillName
                     .Locked = islocked
                     If .Locked = False Then
@@ -18854,6 +18819,17 @@ Public Module agm2
 
                     infoBlock.Cells(1, 1).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
+                    ' jetzt die Skill Breite festlegen 
+                    infoBlock = CType(.Columns(startSpalteDaten - 2), Excel.Range)
+                    If infoBlock.ColumnWidth < 20 Then
+                        infoBlock.ColumnWidth = 20
+                    End If
+
+                    ' jetzt die Skill Breite festlegen 
+                    infoBlock = CType(.Columns(startSpalteDaten - 3), Excel.Range)
+                    If infoBlock.ColumnWidth < 20 Then
+                        infoBlock.ColumnWidth = 20
+                    End If
 
                 End With
             Catch ex As Exception

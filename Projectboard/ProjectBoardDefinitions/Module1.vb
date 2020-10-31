@@ -8979,9 +8979,13 @@ Public Module Module1
 
         If teamName.Length > 0 Then
             ' Skill Name 
+
+            Dim skillIndentLevel As Integer
+            skillIndentLevel = RoleDefinitions.getRoleIndent(teamName)
+
             currentRange.Cells(1, 2).value = teamName
             currentRange.Cells(1, 2).locked = isLocked
-            currentRange.Cells(1, 2).indentlevel = 1
+            currentRange.Cells(1, 2).indentlevel = skillIndentLevel
 
         Else
             ' Skill Name 

@@ -246,6 +246,29 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' input is a roleID;SkillID String
+    ''' </summary>
+    ''' <param name="rcNameID"></param>
+    ''' <returns>returns true if role has skill</returns>
+    Public ReadOnly Property isValidCombination(ByVal rcNameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim skillID As Integer = -1
+            Try
+                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, skillID)
+
+                If roleID > 0 And skillID > 0 Then
+                    tmpResult = roleHasSkill(roleID, skillID)
+                End If
+
+            Catch ex As Exception
+                tmpResult = False
+            End Try
+            isValidCombination = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt zurück ob die angegebene Rolle die Skill hat; Rolle kann eine OrgaUnit oder Person sein  
     ''' </summary>
     ''' <param name="roleID"></param>
