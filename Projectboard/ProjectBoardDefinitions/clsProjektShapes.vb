@@ -1427,6 +1427,11 @@ Public Class clsProjektShapes
 
         End If
 
+        ' 30.10.2020 tk in diesem Fall soll das Element wieder selektiert werden 
+        enableOnUpdate = False
+        shpElement.Select()
+        enableOnUpdate = True
+
     End Sub
 
     Public Sub New()
