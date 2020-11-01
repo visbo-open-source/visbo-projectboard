@@ -2842,25 +2842,37 @@
                     If RoleDefinitions.getRoleDefByID(roleUID).isCombinedRole Then
                         ' muss nur gemacht werden, wenn es sich nicht schon um eine PErson handelt 
                         Dim commonListOFIDs As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(roleUID, skillUID)
-                        For Each tmpID As Integer In commonListOFIDs
-                            Try
-                                ' liefert alle Parent-Rollen IDs inkl der eigenen Role-ID...
-                                Dim parentArray As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(tmpID))
-                                If Not IsNothing(parentArray) Then
-                                    For ix As Integer = 0 To parentArray.Length - 1
-                                        If parentArray(ix) > 0 Then
-                                            If Not listOfRoleIDs.ContainsKey(parentArray(ix)) Then
-                                                listOfRoleIDs.Add(parentArray(ix), 1)
-                                            End If
-                                        End If
 
-                                    Next
+                        If considerAllOtherNeedsOfRolesHavingTheseSkills Then
+                            ' jetzt nur die CommonList betrachten , denn nur die Bedarfe mit Skills <> SkillName dieser Personen zählen jetzt hier rein
+                            For Each tmpID As Integer In commonListOFIDs
+                                If Not listOfRoleIDs.ContainsKey(tmpID) Then
+                                    listOfRoleIDs.Add(tmpID, 1)
                                 End If
-                            Catch ex As Exception
+                            Next
+                        Else
+                            ' jetzt auch deren Väter betrachten , denn die können ja auch einen definierten Need für die Skill haben 
+                            For Each tmpID As Integer In commonListOFIDs
+                                Try
+                                    ' liefert alle Parent-Rollen IDs inkl der eigenen Role-ID...
+                                    Dim parentArray As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(tmpID))
+                                    If Not IsNothing(parentArray) Then
+                                        For ix As Integer = 0 To parentArray.Length - 1
+                                            If parentArray(ix) > 0 Then
+                                                If Not listOfRoleIDs.ContainsKey(parentArray(ix)) Then
+                                                    listOfRoleIDs.Add(parentArray(ix), 1)
+                                                End If
+                                            End If
 
-                            End Try
+                                        Next
+                                    End If
+                                Catch ex As Exception
 
-                        Next
+                                End Try
+
+                            Next
+                        End If
+
 
                     Else
                         ' andernfalls einfach diese PErson aufnehmen 

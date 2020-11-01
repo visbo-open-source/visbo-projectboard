@@ -259,6 +259,8 @@ Public Class clsRollen
 
                 If roleID > 0 And skillID > 0 Then
                     tmpResult = roleHasSkill(roleID, skillID)
+                ElseIf roleID > 0 And skillID = -1 Then
+                    tmpResult = True
                 End If
 
             Catch ex As Exception
@@ -1913,6 +1915,52 @@ Public Class clsRollen
             getBezeichner = tmpResult
         End Get
     End Property
+
+    ''' <summary>
+    ''' returns a list of Role-Names containing 
+    ''' </summary>
+    ''' <param name="substr"></param>
+    ''' <returns></returns>
+    Public Function getRoleNamesContainingSubStr(ByVal substr As String) As List(Of String)
+        Dim tmpResult As New SortedList(Of String, Boolean)
+
+        If substr.Length > 0 Then
+            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+                If Not (kvp.Value.isSkill Or kvp.Value.isSkillParent) Then
+                    If kvp.Value.name.Contains(substr) Then
+                        If Not tmpResult.ContainsKey(kvp.Value.name) Then
+                            tmpResult.Add(kvp.Value.name, True)
+                        End If
+                    End If
+                End If
+            Next
+        End If
+
+        getRoleNamesContainingSubStr = tmpResult.Keys.ToList
+    End Function
+
+    ''' <summary>
+    ''' returns a list of Role-Names containing 
+    ''' </summary>
+    ''' <param name="substr"></param>
+    ''' <returns></returns>
+    Public Function getSkillNamesContainingSubStr(ByVal substr As String) As List(Of String)
+        Dim tmpResult As New SortedList(Of String, Boolean)
+
+        If substr.Length > 0 Then
+            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+                If kvp.Value.isSkill Or kvp.Value.isSkillParent Then
+                    If kvp.Value.name.Contains(substr) Then
+                        If Not tmpResult.ContainsKey(kvp.Value.name) Then
+                            tmpResult.Add(kvp.Value.name, True)
+                        End If
+                    End If
+                End If
+            Next
+        End If
+
+        getSkillNamesContainingSubStr = tmpResult.Keys.ToList
+    End Function
 
     ''' <summary>
     ''' bestimmt aus dem übergebenen SelectedRolesItem Angaben wie RoleUID, ggf. die zugehörige TeamID

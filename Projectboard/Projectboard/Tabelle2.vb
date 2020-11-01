@@ -531,33 +531,15 @@ Public Class Tabelle2
                 Dim rcName As String = ""
                 Dim rcNameID As String = ""
 
+                Dim skillName As String = ""
+
                 If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
                     rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
                     If rcName <> "" Then
-                        isRole = RoleDefinitions.containsName(rcName)
-                        If Not isRole Then
-                            isCost = CostDefinitions.containsName(rcName)
-                        End If
+                        isCost = CostDefinitions.containsName(rcName)
+                        ' isRole wird erst später bestimmt, bleibt erst mal auf Falsch 
                     End If
                 End If
-
-                Dim skillName As String = ""
-                Dim oldSkillID As Integer = -1
-
-                If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
-                    skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
-                    If skillName.Length > 0 Then
-                        If RoleDefinitions.containsName(skillName) Then
-                            oldSkillID = RoleDefinitions.getRoledef(skillName).UID
-                        End If
-                    End If
-
-                End If
-
-                If isRole Then
-                    rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
-                End If
-
 
                 Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
@@ -577,6 +559,8 @@ Public Class Tabelle2
                                 ' steht jetzt in rcNAme 
                                 'newRCName = CStr(Target.Cells(1, 1).value)
 
+                                Dim skillID As Integer = -1
+                                Dim tryRcName As String = rcName
                                 If IsNothing(rcName) Then
                                     If Not IsNothing(visboZustaende.oldValue) Then
                                         If visboZustaende.oldValue <> "" Then
@@ -601,19 +585,48 @@ Public Class Tabelle2
                                     End If
 
 
-                                ElseIf isValidRCChange(rcName, visboZustaende.oldValue, skillName, False) Then
+                                ElseIf isValidRCChange(tryRcName, visboZustaende.oldValue, skillName, False) Then
                                     ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
                                     ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
 
                                     ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
                                     ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
+
+                                    ' jetzt ist 
+
+                                    If Not isCost Then
+
+                                        If tryRcName <> rcName Then
+                                            ' tryRCName kann in isValidRCChange geändert worden sein 
+                                            rcName = tryRcName
+                                            meWS.Cells(zeile, columnRC).value = rcName
+                                        End If
+
+                                        ' isCOst ist falsch und isValidRCChange ... 
+                                        isRole = True
+
+                                        If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                                            skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                                            If skillName.Length > 0 Then
+                                                If RoleDefinitions.containsName(skillName) Then
+                                                    skillID = RoleDefinitions.getRoledef(skillName).UID
+                                                End If
+                                            End If
+
+                                        End If
+
+                                        rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+
+                                    End If
+
+
                                     If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
 
                                         Dim rcIndentLevel As Integer = 0
                                         If isRole Then
                                             ' es handelt sich um eine Rollen-Änderung
 
-                                            Dim skillID As Integer = -1
+
                                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID)
 
                                             ' jetzt den Indentlevel der Rolle vestimmen bestimmen 
@@ -625,7 +638,7 @@ Public Class Tabelle2
                                                 ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                                 Try
                                                     auslastungChanged = True
-                                                    Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, oldSkillID)
+                                                    Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, skillID)
                                                     If IsNothing(cRole) Then
                                                     Else
                                                         'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, skillID, False)
@@ -648,58 +661,6 @@ Public Class Tabelle2
                                             End If
 
 
-
-                                            ' tk 23.8.2020 das wird doch nicht mehr benötigt ... 
-                                            ' jetzt für die Zelle die Validation neu bestimmen, dazu muss aber der Blattschutz aufgehoben sein ...  
-
-                                            'If Not awinSettings.meEnableSorting Then
-                                            '    ' es muss der Blattschutz aufgehoben werden, nachher wieder mit diesen Einstellungen aktiviert werden ...
-                                            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                                            '        .Unprotect(Password:="x")
-                                            '    End With
-                                            'End If
-
-
-                                            'If Not awinSettings.meEnableSorting Then
-                                            '    ' es muss der Blattschutz aufgehoben werden, nachher wieder mit diesen Einstellungen aktiviert werden ...
-                                            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                                            '        .Protect(Password:="x", UserInterfaceOnly:=True,
-                                            '                 AllowFormattingCells:=True,
-                                            '                 AllowFormattingColumns:=True,
-                                            '                 AllowInsertingColumns:=False,
-                                            '                 AllowInsertingRows:=True,
-                                            '                 AllowDeletingColumns:=False,
-                                            '                 AllowDeletingRows:=True,
-                                            '                 AllowSorting:=True,
-                                            '                 AllowFiltering:=True)
-                                            '        .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-                                            '        .EnableAutoFilter = True
-                                            '    End With
-                                            'End If
-
-                                            'If awinSettings.meAutoReduce Then
-                                            '    ' jetzt die Rollen bestimmen, die neu berechnet werden müssen ... 
-                                            '    roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
-                                            '    If Not roleCostNames.Contains(rcName) Then
-                                            '        roleCostNames.Add(rcName, rcName)
-                                            '    End If
-
-                                            '    If visboZustaende.oldValue.Length > 0 Then
-                                            '        If Not roleCostNames.Contains(visboZustaende.oldValue) Then
-                                            '            roleCostNames.Add(visboZustaende.oldValue, visboZustaende.oldValue)
-                                            '        End If
-
-                                            '        Dim tmpSummaryNames As Collection = RoleDefinitions.getSummaryRoles(visboZustaende.oldValue)
-                                            '        For sr As Integer = 1 To tmpSummaryNames.Count
-                                            '            Dim srName As String = CStr(tmpSummaryNames.Item(sr))
-                                            '            If Not roleCostNames.Contains(srName) Then
-                                            '                roleCostNames.Add(srName, srName)
-                                            '            End If
-                                            '        Next
-                                            '    End If
-                                            'End If
-
-                                            ' Ende Rollen-Behandlung
                                         ElseIf isCost Then
                                             ' es handelt sich um eine Kostenart Änderung 
                                             If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
@@ -768,21 +729,34 @@ Public Class Tabelle2
                             ElseIf Target.Column = columnRC + 1 Then
                                 ' es handelt sich um eine Skill Änderung
 
+                                Dim skillID As Integer = -1
 
-                                If isValidRCChange(skillName, visboZustaende.oldValue, rcName, True) Or (skillName = "" And rcName <> "") Then
+                                ' schon mal vorbelegen 
+                                If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                                    skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                                End If
+
+                                Dim trySkillName As String = skillName
+                                If isValidRCChange(trySkillName, visboZustaende.oldValue, rcName, True) Or (skillName = "" And rcName <> "") Then
+
+                                    If trySkillName <> skillName Then
+                                        skillName = trySkillName
+                                        meWS.Cells(zeile, columnRC + 1).value = skillName
+                                    End If
 
                                     isRole = True
 
                                     Dim rcIndentLevel As Integer = 1
                                     If skillName <> "" Then
                                         rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                                        skillID = RoleDefinitions.getRoledef(skillName).UID
                                         Target.Cells(1, 1).IndentLevel = rcIndentLevel
                                     End If
 
 
                                     Dim rcNameGenerated As Boolean = False
                                     If rcName = "" Then
-                                        rcName = RoleDefinitions.getContainingRoleOfSkillMembers(oldSkillID).name
+                                        rcName = RoleDefinitions.getContainingRoleOfSkillMembers(skillID).name
                                         rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
                                         rcNameGenerated = True
                                     End If
@@ -802,33 +776,29 @@ Public Class Tabelle2
 
                                         End If
 
-                                        oldSkillID = -1
-                                        Dim newSkillID As Integer = -1
+
+                                        Dim oldSkillID As Integer = -1
                                         If visboZustaende.oldValue <> "" Then
                                             If RoleDefinitions.containsName(visboZustaende.oldValue) Then
                                                 oldSkillID = RoleDefinitions.getRoledef(visboZustaende.oldValue).UID
                                             End If
                                         End If
 
-                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, newSkillID)
 
-                                        If newSkillID <> oldSkillID Then
+                                        If oldSkillID <> skillID Then
                                             ' es handelt sich um einen Wechsel 
                                             Try
                                                 auslastungChanged = True
                                                 Dim cRole As clsRolle = cphase.getRole(rcName, oldSkillID)
                                                 If IsNothing(cRole) Then
                                                 Else
-                                                    'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, oldSkillID, False)
-                                                    cRole.teamID = newSkillID
-                                                    'hproj.rcLists.addRP(cRole.uid, cphase.nameID, newSkillID)
+                                                    cRole.teamID = skillID
                                                 End If
 
 
                                             Catch ex As Exception
                                                 visboZustaende.oldValue = ""
-                                                ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
-                                                ' andere nicht belegte gewechselt 
+
                                             End Try
                                         End If
 
@@ -865,6 +835,21 @@ Public Class Tabelle2
 
 
                             ElseIf Target.Column = columnRC + 2 Then
+
+                                If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
+                                    rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
+                                    isRole = RoleDefinitions.containsName(rcName)
+                                End If
+
+                                If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                                    skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                                End If
+
+                                If isRole Then
+                                    rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+                                End If
+
+
                                 ' es handelt sich um eine Summenänderung
                                 Dim newDblValue As Double
                                 Dim difference As Double
@@ -1020,17 +1005,26 @@ Public Class Tabelle2
 
 
                             ElseIf Target.Column > columnRC + 2 Then
+                                ' es handelt sich um eine Datenänderung in den einzelnen Monaten 
+
+                                If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
+                                    rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
+                                    isRole = RoleDefinitions.containsName(rcName)
+                                End If
+
+                                If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                                    skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                                End If
+
+                                If isRole Then
+                                    rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+                                End If
 
 
-
-                                ' es handelt sich um eine Datenänderung
-                                'Dim newDblValue As Double
-                                'Dim difference As Double
 
                                 ' zu welcher / welchen Sammelrollen gehört die ausgewählte Rolle ? 
                                 Dim sammelRollenName As String = ""
                                 Dim zeileSammelRolle As Integer = 0
-
 
                                 If isRole Or isCost Then
                                     ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
@@ -2001,7 +1995,7 @@ Public Class Tabelle2
     ''' <param name="oldValue"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function isValidRCChange(ByVal newValue As String, ByVal oldValue As String, ByVal otherValue As String, ByVal isSkillCheck As Boolean) As Boolean
+    Private Function isValidRCChange(ByRef newValue As String, ByVal oldValue As String, ByVal otherValue As String, ByVal isSkillCheck As Boolean) As Boolean
 
         Dim rcName As String = ""
         Dim skillName As String = ""
@@ -2012,6 +2006,27 @@ Public Class Tabelle2
             rcName = otherValue
             skillName = newValue
 
+            ' hier muss die Prüfung rein , ob es eine bekannte Skill ist ...
+            If Not RoleDefinitions.containsName(skillName) Then
+                Dim skillNamesList As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(skillName)
+                If skillNamesList.Count = 1 Then
+                    skillName = CStr(skillNamesList.Item(0))
+                    newValue = skillName
+                Else
+                    ' Formular mit Liste zeigen 
+                    Dim selectionFrm As New frmSelectOneItem
+                    If awinSettings.englishLanguage Then
+                        selectionFrm.Text = "Select one skill"
+                    Else
+                        selectionFrm.Text = "Wählen Sie eine Skill"
+                    End If
+                    selectionFrm.itemsCollection = skillNamesList
+                    If selectionFrm.ShowDialog = DialogResult.OK Then
+                        skillName = CStr(selectionFrm.itemList.SelectedItem)
+                        newValue = skillName
+                    End If
+                End If
+            End If
 
             If rcName <> "" Then
                 ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
@@ -2029,72 +2044,97 @@ Public Class Tabelle2
             ' es handelt sich um den RCName Check
             rcName = newValue
             skillName = otherValue
-            Dim stillOk As Boolean = True
-
-            If skillName <> "" Then
-                ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
-                ' wenn es sich um eine Kostenart handelt : sillok = false
-                stillOk = RoleDefinitions.roleHasSkill(rcName, skillName)
-            End If
-
-            If stillOk Then
-
-                Dim weiterMachen As Boolean = False
-                Dim skillID As Integer = -1
-
-                ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                    Dim parentCollection As New Collection
-
-                    'parentCollection.Add(myCustomUserRole.specifics)
-                    parentCollection.Add(RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, skillID).name)
-
-                    If RoleDefinitions.hasAnyChildParentRelationsship(newValue, parentCollection) Then
-                        weiterMachen = True
-                    End If
-
-                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    'Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
-                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-
-                    If Not IsNothing(idArray) Then
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
-
-                        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, skillID)
-
-                        If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or idArray.Contains(roleID) Then
-                            weiterMachen = True
-                        End If
+            ' hier muss die Prüfung rein , ob es eine bekannte Kostenart ist ...
+            If CostDefinitions.containsName(rcName) Then
+                tmpValue = True
+            Else
+                ' hier muss die Prüfung rein , ob es eine bekannte Rolle ist ...
+                If Not RoleDefinitions.containsName(rcName) Then
+                    Dim roleNamesList As List(Of String) = RoleDefinitions.getRoleNamesContainingSubStr(rcName)
+                    If roleNamesList.Count = 1 Then
+                        rcName = CStr(roleNamesList.Item(0))
+                        newValue = rcName
                     Else
-                        weiterMachen = True
+                        ' Formular mit Liste zeigen 
+                        Dim selectionFrm As New frmSelectOneItem
+                        If awinSettings.englishLanguage Then
+                            selectionFrm.Text = "Select one Resource"
+                        Else
+                            selectionFrm.Text = "Wählen Sie eine Resource"
+                        End If
+                        selectionFrm.itemsCollection = roleNamesList
+                        If selectionFrm.ShowDialog = DialogResult.OK Then
+                            rcName = CStr(selectionFrm.itemList.SelectedItem)
+                            newValue = rcName
+                        End If
                     End If
-
-                Else
-                    weiterMachen = True
                 End If
 
-                If weiterMachen Then
-                    If oldValue.Trim.Length = 0 Then
-                        ' ist erlaubt, wenn der Wert in einer der Definitions vorkommt 
-                        tmpValue = RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue)
-                    Else
-                        ' es war vorher was drin 
-                        If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
+                Dim stillOk As Boolean = True
 
-                            If RoleDefinitions.containsName(newValue) = RoleDefinitions.containsName(oldValue) Then
-                                ' ist erlaubt 
-                                tmpValue = True
-                            ElseIf CostDefinitions.containsName(newValue) = missingCostDefinitions.containsName(oldValue) Then
-                                ' ist erlaubt
-                                tmpValue = True
-                            Else
-                                ' ist nicht erlaubt
-                                tmpValue = True
+                If skillName <> "" Then
+                    ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
+                    ' wenn es sich um eine Kostenart handelt : sillok = false
+                    stillOk = RoleDefinitions.roleHasSkill(rcName, skillName)
+                End If
+
+                If stillOk Then
+
+                    Dim weiterMachen As Boolean = False
+                    Dim skillID As Integer = -1
+
+                    ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                        Dim parentCollection As New Collection
+
+                        'parentCollection.Add(myCustomUserRole.specifics)
+                        parentCollection.Add(RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, skillID).name)
+
+                        If RoleDefinitions.hasAnyChildParentRelationsship(newValue, parentCollection) Then
+                            weiterMachen = True
+                        End If
+
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        'Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                        Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+
+                        If Not IsNothing(idArray) Then
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
+
+                            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, skillID)
+
+                            If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or idArray.Contains(roleID) Then
+                                weiterMachen = True
+                            End If
+                        Else
+                            weiterMachen = True
+                        End If
+
+                    Else
+                        weiterMachen = True
+                    End If
+
+                    If weiterMachen Then
+                        If oldValue.Trim.Length = 0 Then
+                            ' ist erlaubt, wenn der Wert in einer der Definitions vorkommt 
+                            tmpValue = RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue)
+                        Else
+                            ' es war vorher was drin 
+                            If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
+
+                                If RoleDefinitions.containsName(newValue) = RoleDefinitions.containsName(oldValue) Then
+                                    ' ist erlaubt 
+                                    tmpValue = True
+                                Else
+                                    ' ist nicht erlaubt
+                                    tmpValue = False
+                                End If
+
                             End If
 
                         End If
-
                     End If
+
                 End If
 
             End If

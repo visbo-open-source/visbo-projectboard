@@ -10,7 +10,9 @@
         Next
 
         ' Den ersten eintrag by default selektieren 
-        itemList.SelectedIndex = 0
+        If itemList.Items.Count > 0 Then
+            itemList.SelectedIndex = 0
+        End If
 
     End Sub
 
