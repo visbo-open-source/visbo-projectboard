@@ -3345,7 +3345,7 @@ Public Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function erzeugeIndent(ByVal level As Integer) As String
-        Dim indentDelta As String = "   "
+        Dim indentDelta As String = " "
         Dim tmpStr As String = ""
 
         If level = -1 Then
@@ -3365,25 +3365,46 @@ Public Module Module1
     ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
     ''' </summary>
     ''' <param name="text"></param>
-    ''' <param name="anzLeerzeichen"></param>
+    ''' <param name="fuellz"></param>
+    ''' <param name="anzFuellz"></param>
     ''' <returns></returns>
-    Public Function bestimmeIndent(ByVal text As String, Optional ByVal anzLeerzeichen As Integer = 1) As Integer
+    Public Function bestimmeIndent(ByVal text As String, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
         Dim tmpstr As String = ""
-        Dim indentLevel As Integer = 0
+        Dim indentLevel As Double = 0
 
         If Not IsNothing(text) Then
-            Dim origTextLge As Integer = text.Length
-            Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
-            If anzLeerzeichen <> 0 Then
-                indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzLeerzeichen)
+            If fuellz = " " Then
+                Dim origTextLge As Integer = text.Length
+                Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
+                If anzFuellz <> 0 Then
+                    indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzFuellz)
+                Else
+                    indentLevel = -1
+                End If
             Else
-                indentLevel = -1
+                Dim tmparray() As String = Split(text, fuellz)
+                Dim i As Integer = 0
+
+                While tmparray(i) = ""
+                    i += 1
+                End While
+                If anzFuellz <> 0 Then
+                    indentLevel = i / anzFuellz
+                Else
+                    indentLevel = -1
+                End If
+
             End If
+
         Else
 
         End If
+        If IsNumeric(indentLevel) Then
+            bestimmeIndent = CInt(indentLevel)
+        Else
+            bestimmeIndent = -1
+        End If
 
-        bestimmeIndent = indentLevel
     End Function
 
 

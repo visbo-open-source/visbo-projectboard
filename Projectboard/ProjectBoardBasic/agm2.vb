@@ -8834,24 +8834,28 @@ Public Module agm2
 
 
         If outputCollection.Count = 0 Then
-                ' bisher alles ok
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readRoleDefinitions")
-                End If
+            ' bisher alles ok
+            If awinSettings.visboDebug Then
+                Call MsgBox("readRoleDefinitions")
+            End If
+            '' ----------------------------------------
+            '' alte Vorgehensweise, ohne Configuration
+            '' ----------------------------------------
+            ' Auslesen der Kosten Definitionen 
+            'Dim newCostDefinitions As New clsKostenarten
+            'Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
 
-                ' Auslesen der Kosten Definitionen 
-                Dim newCostDefinitions As New clsKostenarten
-                Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+            'If awinSettings.visboDebug Then
+            '        Call MsgBox("readCostDefinitions")
+            '    End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readCostDefinitions")
-                End If
+            '    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+            '    Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
 
-                ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
-
-
-                If outputCollection.Count = 0 Then
+            '' ----------------------------------------
+            '' alte Vorgehensweise, ohne Configuration
+            '' ----------------------------------------
+            If outputCollection.Count = 0 Then
                     ' weitermachen ... 
                     ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
                     If newRoleDefinitions.Count > 0 Then
@@ -8869,8 +8873,8 @@ Public Module agm2
                             'bis hier ist alles in Ordnung 
                             With importedOrga
                                 .allRoles = newRoleDefinitions
-                                .allCosts = newCostDefinitions
-                                .validFrom = validFrom
+                            ''.allCosts = newCostDefinitions
+                            .validFrom = validFrom
                             End With
 
                             If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
@@ -23264,6 +23268,8 @@ Public Module agm2
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
         Dim trennz As String = ","
+        Dim fuellz As String = " "
+        Dim anzFuellz As Integer = 1
 
         Dim nameCol As Integer
         Dim relIDCol As Integer
@@ -23341,7 +23347,7 @@ Public Module agm2
                 Exit Sub
             Else
                 errMsg = ""
-                Dim anzZeilen As Integer = rolesRange.Rows.Count
+                Dim anzZeilen As Integer = rolesRange.Rows.Count + 1
                 Dim c As Excel.Range
 
                 ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
@@ -23368,11 +23374,11 @@ Public Module agm2
                         ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
                         ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
                         If i = 1 Then
-                            If bestimmeIndent(c.Value) = 0 Then
+                            If bestimmeIndent(c.Value, fuellz, anzFuellz) = 0 Then
                                 hasHierarchy = True
                             End If
                         Else
-                            Dim tmpIndent As Integer = bestimmeIndent(c.Value)
+                            Dim tmpIndent As Integer = bestimmeIndent(c.Value, fuellz, anzFuellz)
                             'Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
                             If tmpIndent > 0 Then
                                 atleastOneWithIndent = True
@@ -23544,6 +23550,14 @@ Public Module agm2
                             End If
 
                             tmpStr = CType(c.Value, String)
+                            Dim level As Integer = bestimmeIndent(tmpStr, fuellz, anzFuellz)
+                            If fuellz <> " " Then
+                                tmpStr = tmpStr.Trim.Remove(0, level)
+                            Else
+                                tmpStr = tmpStr.Trim
+                            End If
+
+
                             If isValidRoleName(tmpStr, errMsg) Then
                                 If readingGroups Then
                                     przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
@@ -23632,6 +23646,8 @@ Public Module agm2
                                                 .entryDate = Date.MinValue
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, relentryDateCol).Value)
+                                                Dim tmp1Value As String = CStr(c.Offset(0, relentryDateCol).Value)
+                                                Dim newDate As Date = ISODateToDateTime(tmp1Value).ToLocalTime
                                                 .entryDate = tmpValue.Date
                                             End If
                                         Else
@@ -23653,6 +23669,8 @@ Public Module agm2
                                                 .exitDate = CDate("31.12.2200").Date
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, relexitDateCol).Value)
+                                                Dim tmp1Value As String = CStr(c.Offset(0, relexitDateCol).Value)
+                                                Dim newDate As Date = ISODateToDateTime(tmp1Value).ToLocalTime
                                                 .exitDate = tmpValue
                                             End If
                                         Else
@@ -23753,8 +23771,8 @@ Public Module agm2
 
                         Dim parents(maxIndent) As String
 
-                        Dim ix As Integer
-                        parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
+                        Dim ix As Integer = 1
+                        parents(0) = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
 
                         Dim lastLevel As Integer = 0
@@ -23762,13 +23780,18 @@ Public Module agm2
 
                         Dim curRoleName As String = ""
 
-                        ix = 3
+                        ix += 1
 
                         Do While ix <= anzZeilen - 1
 
                             Try
-                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
+                                If fuellz <> " " Then
+                                    curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
+                                Else
+                                    curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                End If
 
                                 If readingGroups Then
                                     ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
@@ -23817,8 +23840,14 @@ Public Module agm2
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
                                     If ix <= anzZeilen - 1 Then
-                                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                        curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                        curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
+                                        'curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        If fuellz <> " " Then
+                                            curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim.Remove(0, curLevel * anzFuellz)
+                                        Else
+                                            curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                        End If
                                         If readingGroups Then
                                             przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
@@ -23879,6 +23908,7 @@ Public Module agm2
 
                                 End If
                             Catch ex As Exception
+
                                 If awinSettings.englishLanguage Then
                                     errMsg = "Row: " & ix.ToString & " : " & ex.Message
                                 Else
@@ -25160,4 +25190,23 @@ Public Module agm2
 
         missingMilestoneDefinitions.Clear()
     End Sub
+
+    ''' <summary>
+    ''' Umwandlung eines Datum des Typs ISO-Datums-String in ein Date
+    ''' </summary>
+    ''' <param name="ISODate"></param>
+    ''' <returns></returns>
+    Public Function ISODateToDateTime(ByVal ISODate As String) As DateTime
+
+        Dim newDate As DateTime = Nothing
+        Try
+            newDate = Date.Parse(ISODate, Nothing, DateTimeStyles.RoundtripKind)
+        Catch ex As Exception
+            newDate = Nothing
+            Throw New ArgumentException("´Fehler bei der Datumsumwandlung von ISO-Datum-String in Date:  " & ISODate)
+        End Try
+
+        ISODateToDateTime = newDate
+    End Function
+
 End Module

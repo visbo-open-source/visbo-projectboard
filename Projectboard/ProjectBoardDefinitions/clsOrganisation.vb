@@ -118,9 +118,21 @@
                             End If
                         End If
                     Else
-                        ' nicht ok 
-                        errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
-                        outputCollection.Add(errmsg)
+                        ' nicht ok => oldRoleDefinition wird in neue Liste _allRoles aufgenommen
+                        Try
+                            ' muss noch ausprogrammiert werden - erst mal nur RoundTrip
+
+                            ' aktuell also Fehler melden
+                            errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                            outputCollection.Add(errmsg)
+                        Catch ex As Exception
+                            errmsg = ex.Message
+                            errmsg = errmsg & vbLf & "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                            outputCollection.Add(errmsg)
+
+                        End Try
+
+
                     End If
 
                     ' jetzt werden die Kapas der alten Rollendefinition übernommen ..
@@ -162,11 +174,17 @@
                             End If
                         End If
                     Else
-                        ' nicht ok 
-                        errmsg = "ID: " & oldCostDefinition.UID.ToString & " : " & oldCostDefinition.name & " ist nicht in neuer Kosten Orga-Definition vorhanden ..."
-                        outputCollection.Add(errmsg)
+                        ' nicht ok => oldCostDefinition wird in neue Liste _allCosts aufgenommen
+                        Try
+                            _allCosts.Add(oldCostDefinition)
+                        Catch ex As Exception
+                            errmsg = ex.Message & vbLf & "ID: " & oldCostDefinition.UID.ToString & " : " & oldCostDefinition.name & " ist nicht in neuer Kosten Orga-Definition vorhanden ..."
+                            outputCollection.Add(errmsg)
+                        End Try
+
                     End If
                 Next
+
 
             End If
         End If
@@ -176,6 +194,30 @@
         validityCheckWith = (Listeneintraege = outputCollection.Count)
 
     End Function
+    Public Function keepRoleInNewOrga(ByVal oldRoleDef As clsRollenDefinition, ByVal oldOrga As clsOrganisation) As Boolean
+
+        Dim result As Boolean = False
+        Dim oldRoles As clsRollen = oldOrga.allRoles
+        Dim newparentRole As clsRollenDefinition
+        Dim vonOldOrgaHolen() As Integer
+
+        ' die Parents herausfinden, damit klar ist ob die Rolle eingetragen werden kann
+        Dim missingUID As Integer = oldRoleDef.UID
+        Dim oldparents() As Integer = oldRoles.getParentArray(oldRoleDef, False)
+        ReDim vonOldOrgaHolen(oldparents.Length)
+
+        Dim i As Integer = 0
+        For Each op In oldparents
+            newparentRole = _allRoles.getRoleDefByID(op)
+            If IsNothing(newparentRole) Then
+                vonOldOrgaHolen(i) = op
+            End If
+        Next
+
+        keepRoleInNewOrga = True
+    End Function
+
+
     Public Sub New()
         _allRoles = New clsRollen
         _allCosts = New clsKostenarten
