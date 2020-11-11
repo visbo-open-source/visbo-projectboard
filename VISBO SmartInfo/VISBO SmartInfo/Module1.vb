@@ -41,6 +41,15 @@ Module Module1
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
 
+    '
+    ' wird benötigt für ReportCreation
+    Friend currentPresHasProjectTemplates As Boolean = False
+    Friend currentPresHasPortfolioTemplates As Boolean = False
+
+    Friend appearancesWereRead As Boolean = False
+    ' Ende ReportCreation Spezifika
+    '
+
     ' die VISBO TimeMachine nimmt alle PRojekte und Timestamps auf 
     Friend timeMachine As New clsPPTTimeMachine
 
@@ -54,6 +63,8 @@ Module Module1
     ' was ist der aktuelle Timestamp der Slide 
     Friend currentTimestamp As Date = Date.MinValue
     Friend previousTimeStamp As Date = Date.MinValue
+
+
 
     ' in der Liste werden für jede Präsentation die beiden Varianten-Namen Previous und current gemerkt 
     ' 0 = previous, 1 = current
@@ -1469,6 +1480,12 @@ Module Module1
 
         Dim key As String = Pres.Name
         currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
+
+        ' die müssen zurück gesetzt werden , weil neue PResentation 
+        ' müssen auch erst gesetzt werden, wenn neue Slide
+        currentPresHasProjectTemplates = False
+        currentPresHasPortfolioTemplates = False
+
 
         If currentPresHasVISBOElements Then
 
