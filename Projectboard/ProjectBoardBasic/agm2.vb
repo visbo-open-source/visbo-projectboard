@@ -22884,8 +22884,16 @@ Public Module agm2
                                 Dim cp As Integer
                                 With hrole
                                     .name = tmpStr.Trim
+                                    .defaultKapa = 0.0
 
-                                    .defaultKapa = CDbl(c.Offset(0, 1).Value)
+                                    If Not IsNothing(c.Offset(0, 1).Value) Then
+                                        If IsNumeric(c.Offset(0, 1).Value) Then
+                                            If CDbl(c.Offset(0, 1).Value) > 0 Then
+                                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
+                                            End If
+                                        End If
+                                    End If
+
 
                                     .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
                                     If .tagessatzIntern <= 0 Then
