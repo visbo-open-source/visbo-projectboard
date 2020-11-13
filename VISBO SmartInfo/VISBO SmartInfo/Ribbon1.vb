@@ -767,67 +767,67 @@ Public Class Ribbon1
         End If
     End Sub
 
-    Private Sub Create_Button_Click(sender As Object, e As RibbonControlEventArgs) Handles Create_Button.Click
-        Dim deletedProj As Integer = 0
-        Dim returnValue As Windows.Forms.DialogResult
+    'Private Sub Create_Button_Click(sender As Object, e As RibbonControlEventArgs) Handles Create_Button.Click
+    '    Dim deletedProj As Integer = 0
+    '    Dim returnValue As Windows.Forms.DialogResult
 
-        'Dim deleteProjects As New frmDeleteProjects
-        Dim loadProjectsForm As New frmProjPortfolioAdmin
+    '    'Dim deleteProjects As New frmDeleteProjects
+    '    Dim loadProjectsForm As New frmProjPortfolioAdmin
 
-        Try
+    '    Try
 
-            With loadProjectsForm
+    '        With loadProjectsForm
 
-                .aKtionskennung = PTTvActions.loadPVInPPT
+    '            .aKtionskennung = PTTvActions.loadPVInPPT
 
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
+    '            '' '' ''.portfolioName.Visible = False
+    '            '' '' ''.Label1.Visible = False
+    '        End With
 
-            returnValue = loadProjectsForm.ShowDialog
+    '        returnValue = loadProjectsForm.ShowDialog
 
-            If returnValue = Windows.Forms.DialogResult.OK Then
-                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+    '        If returnValue = Windows.Forms.DialogResult.OK Then
+    '            'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
-                Dim hproj As clsProjekt = Nothing
-                If selectedProjekte.Count = 1 Then
-                    hproj = selectedProjekte.getProject(1)
+    '            ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
+    '            Dim hproj As clsProjekt = Nothing
+    '            If selectedProjekte.Count = 1 Then
+    '                hproj = selectedProjekte.getProject(1)
 
-                    Dim tmpCollection As New Collection
-                    Call createPPTSlidesFromProjectWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
-                    ' tk 7.10 selectedProjekte wieder zurücksetzen ..
-                    selectedProjekte.Clear(False)
-                Else
-                    Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
-                    If awinSettings.englishLanguage Then
-                        msgtxt = "no project selected ... Exit"
-                    End If
-                    Call MsgBox(msgtxt)
-                End If
-
-
-
-            Else
-                ' returnValue = DialogResult.Cancel
-
-            End If
-
-        Catch ex As Exception
-
-            Call MsgBox(ex.Message)
-        End Try
-
-        ' hier wird ja nix geladen, deshalb soll das nicht gemacht werden .. 
-        'If currentConstellationName <> calcLastSessionScenarioName() Then
-        '    currentConstellationName = calcLastSessionScenarioName()
-        'End If
-
-    End Sub
+    '                Dim tmpCollection As New Collection
+    '                Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
+    '                ' tk 7.10 selectedProjekte wieder zurücksetzen ..
+    '                selectedProjekte.Clear(False)
+    '            Else
+    '                Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
+    '                If awinSettings.englishLanguage Then
+    '                    msgtxt = "no project selected ... Exit"
+    '                End If
+    '                Call MsgBox(msgtxt)
+    '            End If
 
 
 
-    Private Function successfulLoginAndSetup(ByRef errMsg As String) As Boolean
+    '        Else
+    '            ' returnValue = DialogResult.Cancel
+
+    '        End If
+
+    '    Catch ex As Exception
+
+    '        Call MsgBox(ex.Message)
+    '    End Try
+
+    '    ' hier wird ja nix geladen, deshalb soll das nicht gemacht werden .. 
+    '    'If currentConstellationName <> calcLastSessionScenarioName() Then
+    '    '    currentConstellationName = calcLastSessionScenarioName()
+    '    'End If
+
+    'End Sub
+
+
+
+    Private Function loginAndReadApearances(ByRef errMsg As String) As Boolean
         Dim wasSuccessful As Boolean = False
         Dim err As New clsErrorCodeMsg
         Dim VCId As String = ""
@@ -1056,7 +1056,7 @@ Public Class Ribbon1
         ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
 
 
-        successfulLoginAndSetup = wasSuccessful
+        loginAndReadApearances = wasSuccessful
     End Function
 
 
@@ -1070,7 +1070,7 @@ Public Class Ribbon1
         Dim weitermachen As Boolean = True
         If Not appearancesWereRead Then
             ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
-            weitermachen = successfulLoginAndSetup(errMsg)
+            weitermachen = loginAndReadApearances(errMsg)
         End If
 
         If weitermachen Then
@@ -1105,7 +1105,7 @@ Public Class Ribbon1
                         Dim tmpCollection As New Collection
 
                         ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
-                        Call createPPTSlidesFromProjectWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
+                        Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
                         ' tk 7.10 selectedProjekte wieder zurücksetzen ..
                         ShowProjekte.Clear(False)
                         selectedProjekte.Clear(False)
@@ -1121,7 +1121,9 @@ Public Class Ribbon1
                             If anzP > 1 Then
                                 fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiprojekt-Report")
                             End If
-                            curPresentation.SaveAs(fullFileName)
+
+                            pptAPP.ActivePresentation.SaveAs(fullFileName)
+
                         Catch ex As Exception
 
                         End Try

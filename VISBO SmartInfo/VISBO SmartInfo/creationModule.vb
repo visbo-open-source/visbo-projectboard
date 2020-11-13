@@ -7,23 +7,13 @@ Imports ProjectBoardBasic
 Module creationModule
 
 
-
-    Friend curSlide As PowerPoint.Slide = Nothing
-
-    Friend curPresentation As PowerPoint.Presentation = Nothing
-
-    ' bestimmt, ob in englisch oder auf deutsch ..
-    Friend useEnglishLanguage As Boolean = True
-
-    Friend noDBLoginPPT As Boolean = True
-
     ''' <summary>
     ''' erzeugt den Bericht auf Grundlage des aktuell geladenen Powerpoints  
     ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie des Projektes steht 
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <remarks></remarks>
-    Public Sub createPPTSlidesFromProjectWithinPPT(ByRef hproj As clsProjekt,
+    Public Sub fillReportingComponentWithinPPT(ByRef hproj As clsProjekt,
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
@@ -38,10 +28,6 @@ Module creationModule
         ' 4.10.19 tk ist die currentSlide
         'Dim pptSlide As PowerPoint.Slide = Nothing
         Dim shapeRange As PowerPoint.ShapeRange = Nothing
-        ' tk 4.10.19 das wird hier nicht mehr gebraucht , es wird ja die aktuelle Presentation als Vorlage benutzt ...
-        'Dim presentationFile As String = awinPath & requirementsOrdner & "projektdossier.pptx"
-        'Dim presentationFileH As String = awinPath & requirementsOrdner & "projektdossier_Hochformat.pptx"
-        'Dim newFileName As String = reportOrdnerName & "Report.pptx"
 
         Dim pptShape As PowerPoint.Shape
         Dim pname As String = hproj.name
@@ -96,7 +82,7 @@ Module creationModule
 
 
 
-            If Not noDBLoginPPT Then
+            If Not noDBAccessInPPT Then
 
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
@@ -168,10 +154,10 @@ Module creationModule
         ' tk 4.10 aktuell macht er das einfach nur für die aktuelle Slide auf der man sitzt 
         While folieIX <= 1
 
-            Call addSmartPPTSlideBaseInfo(curSlide, reportCreationDate, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(currentSlide, reportCreationDate, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
-            anzShapes = curSlide.Shapes.Count
+            anzShapes = currentSlide.Shapes.Count
             Dim newShapeRange As PowerPoint.ShapeRange = Nothing
             Dim newShapeRange2 As PowerPoint.ShapeRange = Nothing
             Dim newShape As PowerPoint.Shape = Nothing
@@ -192,7 +178,7 @@ Module creationModule
 
             ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
             For i = 1 To anzShapes
-                pptShape = curSlide.Shapes(i)
+                pptShape = currentSlide.Shapes(i)
                 qualifier = ""
                 With pptShape
 
@@ -219,67 +205,14 @@ Module creationModule
                     If kennzeichnung = "Projekt-Name" Or
                         kennzeichnung = "Custom-Field" Or
                         kennzeichnung = "selectedItems" Or
-                        kennzeichnung = "Soll-Ist & Prognose" Or
-                        kennzeichnung = "Multivariantensicht" Or
                         kennzeichnung = "Einzelprojektsicht" Or
                         kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "AllePlanElemente" Or
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
-                        kennzeichnung = "MilestoneCategories" Or
-                        kennzeichnung = "Legenden-Tabelle" Or
-                        kennzeichnung = "Meilenstein Trendanalyse" Or
-                        kennzeichnung = "Vergleich mit Beauftragung" Or
-                        kennzeichnung = "Vergleich mit letztem Stand" Or
-                        kennzeichnung = "Vergleich mit Vorlage" Or
                         kennzeichnung = "TableBudgetCostAPVCV" Or
                         kennzeichnung = "TableMilestoneAPVCV" Or
-                        kennzeichnung = "Tabelle Projektziele" Or
-                        kennzeichnung = "Tabelle Projektstatus" Or
-                        kennzeichnung = "Tabelle Veränderungen" Or
-                        kennzeichnung = "Tabelle Vergleich letzter Stand" Or
-                        kennzeichnung = "Tabelle Vergleich Beauftragung" Or
-                        kennzeichnung = "Tabelle OneGlance Beauftragung" Or
-                        kennzeichnung = "Tabelle OneGlance letzter Stand" Or
-                        kennzeichnung = "Ergebnis" Or
-                        kennzeichnung = "Strategie/Risiko" Or
-                        kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or
-                        kennzeichnung = "Projektphasen" Or
                         kennzeichnung = "ProjektBedarfsChart" Or
-                        kennzeichnung = "Personalbedarf" Or
-                        kennzeichnung = "Personalbedarf2" Or
-                        kennzeichnung = "Personalkosten" Or
-                        kennzeichnung = "Personalkosten2" Or
-                        kennzeichnung = "Sonstige Kosten" Or
-                        kennzeichnung = "Sonstige Kosten2" Or
-                        kennzeichnung = "Gesamtkosten" Or
-                        kennzeichnung = "Gesamtkosten2" Or
-                        kennzeichnung = "Trend Strategischer Fit/Risiko" Or
-                        kennzeichnung = "Trend Kennzahlen" Or
-                        kennzeichnung = "Fortschritt Personalkosten" Or
-                        kennzeichnung = "Fortschritt Sonstige Kosten" Or
-                        kennzeichnung = "Fortschritt Rolle" Or
-                        kennzeichnung = "Fortschritt Kostenart" Or
-                        kennzeichnung = "Soll-Ist1 Personalkosten" Or
-                        kennzeichnung = "Soll-Ist2 Personalkosten" Or
-                        kennzeichnung = "Soll-Ist1C Personalkosten" Or
-                        kennzeichnung = "Soll-Ist2C Personalkosten" Or
-                        kennzeichnung = "Soll-Ist1 Sonstige Kosten" Or
-                        kennzeichnung = "Soll-Ist2 Sonstige Kosten" Or
-                        kennzeichnung = "Soll-Ist1C Sonstige Kosten" Or
-                        kennzeichnung = "Soll-Ist2C Sonstige Kosten" Or
-                        kennzeichnung = "Soll-Ist1 Gesamtkosten" Or
-                        kennzeichnung = "Soll-Ist2 Gesamtkosten" Or
-                        kennzeichnung = "Soll-Ist1C Gesamtkosten" Or
-                        kennzeichnung = "Soll-Ist2C Gesamtkosten" Or
-                        kennzeichnung = "Soll-Ist1 Rolle" Or
-                        kennzeichnung = "Soll-Ist2 Rolle" Or
-                        kennzeichnung = "Soll-Ist1C Rolle" Or
-                        kennzeichnung = "Soll-Ist2C Rolle" Or
-                        kennzeichnung = "Soll-Ist1 Kostenart" Or
-                        kennzeichnung = "Soll-Ist2 Kostenart" Or
-                        kennzeichnung = "Soll-Ist1C Kostenart" Or
-                        kennzeichnung = "Soll-Ist2C Kostenart" Or
                         kennzeichnung = "Ampel-Farbe" Or
                         kennzeichnung = "Ampel-Text" Or
                         kennzeichnung = "Beschreibung" Or
@@ -320,8 +253,6 @@ Module creationModule
                 If kennzeichnung = "Einzelprojektsicht" Or
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
-                        kennzeichnung = "MilestoneCategories" Or
-                        kennzeichnung = "Meilenstein Trendanalyse" Or
                         kennzeichnung = "Multiprojektsicht" Or
                         kennzeichnung = "TableMilestoneAPVCV" Then
 
@@ -592,7 +523,7 @@ Module creationModule
 
                                     ' die Slide mit Tag kennzeichnen ... 
                                     Dim pptFirstTime As Boolean = True
-                                    Call zeichneMultiprojektSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                                   tmpphases, tmpMilestones,
                                                                   translateToRoleNames(selectedRoles), selectedCosts,
                                                                   selectedBUs, selectedTyps,
@@ -616,7 +547,7 @@ Module creationModule
                                     End If
 
                                     Dim pptFirstTime As Boolean = True
-                                    Call zeichneMultiprojektSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                               selectedPhases, selectedMilestones,
                                                               translateToRoleNames(selectedRoles), selectedCosts,
                                                               selectedBUs, selectedTyps,
@@ -638,7 +569,7 @@ Module creationModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
                                     Dim pptFirstTime As Boolean = True
-                                    Call zeichneMultiprojektSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
@@ -650,58 +581,6 @@ Module creationModule
                                     objectsDone = objectsToDo
                                 End Try
 
-                            Case "Multivariantensicht"
-
-
-                                Try
-
-                                    Dim minCal As Boolean = False
-                                    If qualifier2.Length > 0 Then
-                                        minCal = (qualifier2.Trim = "minCal")
-                                    End If
-
-                                    Dim pptFirstTime As Boolean = True
-                                    Call zeichneMultiprojektSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
-                                                                      selectedPhases, selectedMilestones,
-                                                                      translateToRoleNames(selectedRoles), selectedCosts,
-                                                                      selectedBUs, selectedTyps,
-                                                                      False, True, hproj, kennzeichnung, minCal)
-                                    .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
-                                Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = ex.Message
-                                    objectsDone = objectsToDo
-                                End Try
-
-
-                            Case "MilestoneCategories"
-
-                                Call MsgBox("not implemented ...")
-
-                                'Try
-
-                                '    Dim minCal As Boolean = False
-                                '    If qualifier2.Length > 0 Then
-                                '        minCal = (qualifier2.Trim = "minCal")
-                                '    End If
-
-                                '    Dim pptFirstTime As Boolean = True
-                                '    Call zeichneCategorySwimlaneSichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
-                                '                                      selectedPhases, selectedMilestones,
-                                '                                      translateToRoleNames(selectedRoles), selectedCosts,
-                                '                                      selectedBUs, selectedTyps,
-                                '                                      False, hproj, kennzeichnung, minCal)
-
-                                '    .TextFrame2.TextRange.Text = ""
-                                '    '.ZOrder(MsoZOrderCmd.msoSendToBack)
-
-                                '    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
-                                '    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
-                                '    'swimlaneMode = True
-                                'Catch ex As Exception
-                                '    .TextFrame2.TextRange.Text = ex.Message
-                                '    objectsDone = objectsToDo
-                                'End Try
 
 
                             Case "Swimlanes"
@@ -764,569 +643,9 @@ Module creationModule
                                 End Try
 
 
-                            Case "Meilenstein Trendanalyse"
 
-                                Call MsgBox("not implemented ...")
 
 
-                                'Dim nameList As New SortedList(Of Date, String)
-                                'Dim listOfItems As New Collection
-
-                                ''boxName = "Meilenstein Trendanalyse"
-                                'boxName = repMessages.getmsg(21)
-
-                                'Try
-                                '    ' Aufruf 
-                                '    If qualifier = "" Then
-                                '        ' alle Meilensteine anzeigen
-                                '        nameList = hproj.getMilestones
-
-                                '        If nameList.Count > 0 Then
-                                '            For Each kvp As KeyValuePair(Of Date, String) In nameList
-                                '                listOfItems.Add(kvp.Value)
-                                '            Next
-                                '        End If
-
-
-                                '    Else
-                                '        ' nur die anzeigen, die im qualifier mit # voneinander getrennt stehen  
-                                '        Dim tmpStr(20) As String
-                                '        Try
-
-                                '            tmpStr = qualifier.Trim.Split(New Char() {CChar("#")}, 20)
-                                '            kennzeichnung = tmpStr(0).Trim
-
-                                '        Catch ex As Exception
-
-                                '        End Try
-
-
-                                '        ' die ListofItems muss die eindeutigen IDs beeinhalten
-                                '        For i = 1 To tmpStr.Length
-
-                                '            Dim fullmsName As String = tmpStr(i - 1).Trim
-                                '            Dim msName As String = ""
-                                '            Dim breadcrumb As String = ""
-                                '            Dim type As Integer = -1
-                                '            Dim pvName As String = ""
-                                '            Call splitHryFullnameTo2(fullmsName, msName, breadcrumb, type, pvName)
-
-
-                                '            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
-                                '            Dim msItem As String
-
-                                '            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
-
-                                '                If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
-
-                                '                    Try
-                                '                        msItem = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
-                                '                        listOfItems.Add(msItem)
-                                '                    Catch ex As Exception
-
-                                '                    End Try
-
-
-                                '                End If
-
-                                '            Next
-
-                                '        Next
-
-                                '    End If
-
-                                '    ' jetzt ist listofItems entsprechend gefüllt 
-                                '    If listOfItems.Count > 0 Then
-                                '        htop = 100
-                                '        hleft = 50
-                                '        hheight = 2 * ((listOfItems.Count - 1) * 20 + 110)
-                                '        hwidth = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
-
-                                '        Try
-                                '            Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
-
-                                '            reportObj = obj
-
-                                '            bigType = ptReportBigTypes.charts
-                                '            compID = PTprdk.MilestoneTrendanalysis
-                                '            Call addSmartPPTCompInfo(newShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                '                                     bigType, compID)
-
-                                '        Catch ex As Exception
-                                '            '.TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
-                                '            '                            "da es noch nicht begonnen hat"
-                                '            .TextFrame2.TextRange.Text = hproj.name & repMessages.getmsg(22)
-                                '        End Try
-
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(23) & vbLf & hproj.name
-                                '    End If
-
-                                'Catch ex As Exception
-                                '    Throw New ArgumentException("Fehler in MeilensteinTrendAnalyse in CreatePPTSlidesFromProject")
-                                'End Try
-
-                            Case "Projektphasen"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(239)
-                                'End If
-
-                                'Dim scale As Integer
-                                'Dim continueWork As Boolean = True
-                                'Dim cproj As clsProjekt = Nothing
-                                'Dim vproj As clsProjektvorlage
-                                'auswahl = 0
-
-                                'scale = hproj.dauerInDays
-
-                                'If qualifier.Length > 0 Then
-                                '    If qualifier = "Vorlage" Then
-                                '        auswahl = 1
-                                '        vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                '        If IsNothing(vproj) Then
-                                '            '.TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
-                                '            .TextFrame2.TextRange.Text = repMessages.getmsg(24) & hproj.VorlagenName
-                                '            continueWork = False
-                                '        Else
-                                '            vproj.copyTo(cproj)
-                                '            cproj.startDate = hproj.startDate
-                                '        End If
-
-                                '    ElseIf qualifier = "Beauftragung" Then
-                                '        cproj = bproj
-                                '        auswahl = 2
-
-                                '    Else
-                                '        cproj = hproj
-                                '        auswahl = 0
-
-                                '    End If
-                                'Else
-                                '    cproj = hproj
-                                '    auswahl = 0
-                                'End If
-
-                                'If continueWork Then
-                                '    htop = 150
-                                '    hleft = 150
-
-
-                                '    hheight = 380
-                                '    hwidth = 900
-                                '    scale = cproj.dauerInDays
-
-                                '    Dim noColorCollection As New Collection
-                                '    reportObj = Nothing
-
-                                '    Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, auswahl)
-
-
-
-                                '    bigType = ptReportBigTypes.charts
-                                '    compID = PTprdk.Phasen
-                                '    Call addSmartPPTCompInfo(newShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                '                                bigType, compID)
-
-                                'End If
-
-
-                            Case "Vergleich mit Vorlage"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(238)
-                                'End If
-
-
-                                'Dim vproj As clsProjektvorlage
-                                'Dim cproj As New clsProjekt
-                                'Dim scale As Double
-                                'Dim noColorCollection As New Collection
-                                'Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
-                                'Dim continueWork As Boolean = True
-
-                                '' jetzt die Aktion durchführen ...
-
-
-                                'Try
-
-                                '    vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                '    If IsNothing(vproj) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(24) & hproj.VorlagenName
-                                '        continueWork = False
-                                '    Else
-                                '        cproj = New clsProjekt
-                                '        vproj.copyTo(cproj)
-                                '        cproj.startDate = hproj.startDate
-                                '    End If
-
-                                'Catch ex As Exception
-                                '    'Throw New Exception("Vorlage konnte nicht bestimmt werden")
-                                '    Throw New Exception(repMessages.getmsg(25))
-                                'End Try
-
-                                'If continueWork Then
-                                '    htop = 150
-                                '    hleft = 150
-
-
-                                '    hheight = 380
-                                '    hwidth = 900
-                                '    scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-
-                                '    appInstance.EnableEvents = False
-
-
-                                '    noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                                '    repObj1 = Nothing
-                                '    Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
-
-                                '    With repObj1
-                                '        htop = .Top + .Height + 3
-                                '    End With
-
-
-                                '    repObj2 = Nothing
-                                '    Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.vorlage)
-
-                                '    ' jetzt wird das Shape in der Powerpoint entsprechend entsprechend aufgebaut 
-                                '    Try
-                                '        pptSize = CInt(.TextFrame2.TextRange.Font.Size)
-                                '        .TextFrame2.TextRange.Text = " "
-                                '    Catch ex As Exception
-                                '        pptSize = 12
-                                '    End Try
-
-
-                                '    Dim widthFaktor As Double = 1.0
-                                '    Dim heightFaktor As Double = 1.0
-                                '    Dim topNext As Double
-
-
-                                '    If Not repObj1 Is Nothing Then
-                                '        Try
-                                '            ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '            ''newShapeRange = pptSlide.Shapes.Paste
-                                '            newShapeRange = pictCopypptPaste(repObj1, pptSlide)
-
-                                '            With newShapeRange(1)
-                                '                .Top = CSng(top + 0.02 * height)
-                                '                .Left = CSng(left + 0.02 * width)
-                                '                .Width = CSng(width * 0.96)
-                                '                topNext = CSng(top + 0.04 * height + .Height)
-                                '                '.Height = height * 0.46
-                                '            End With
-
-                                '            repObj1.Delete()
-
-                                '            If Not repObj2 Is Nothing Then
-                                '                Try
-                                '                    ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '                    ''newShapeRange2 = pptSlide.Shapes.Paste
-                                '                    newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
-
-                                '                    With newShapeRange2(1)
-                                '                        .Top = CSng(topNext)
-                                '                        .Left = CSng(left + 0.02 * width)
-                                '                        .Width = CSng(width * 0.96)
-                                '                        ' Height wird nicht gesetzt - bei Bildern wird das proportional automatisch gesetzt 
-                                '                    End With
-
-                                '                    ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
-                                '                    Try
-                                '                        If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
-                                '                            widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                '                            newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
-                                '                            newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
-                                '                            newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
-                                '                        End If
-                                '                    Catch ex As Exception
-
-                                '                    End Try
-
-
-
-                                '                    repObj2.Delete()
-                                '                Catch ex As Exception
-
-                                '                End Try
-
-                                '            End If
-                                '        Catch ex As Exception
-
-                                '        End Try
-
-                                '    End If
-
-                                'End If
-
-
-                            Case "Vergleich mit Beauftragung"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(237)
-                                'End If
-
-
-                                'Dim cproj As clsProjekt
-                                'Dim scale As Double
-                                'Dim noColorCollection As New Collection
-                                'Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
-
-
-
-                                '' jetzt die Aktion durchführen ...
-
-
-                                'If bproj Is Nothing Then
-                                '    'Throw New Exception("es gibt keine Beauftragung")
-                                '    Throw New Exception(repMessages.getmsg(26))
-                                'End If
-
-                                'cproj = bproj
-
-
-
-                                'htop = 150
-                                'hleft = 150
-
-                                'hheight = 380
-                                'hwidth = 900
-                                'scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-
-                                'noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                                'repObj1 = Nothing
-                                'Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
-
-                                'With repObj1
-                                '    htop = .Top + .Height + 3
-                                'End With
-
-                                'repObj2 = Nothing
-                                'Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.beauftragung)
-
-                                'Try
-                                '    pptSize = CInt(.TextFrame2.TextRange.Font.Size)
-                                '    .TextFrame2.TextRange.Text = " "
-                                'Catch ex As Exception
-                                '    pptSize = 12
-                                'End Try
-
-
-
-                                'Dim widthFaktor As Double = 1.0
-                                'Dim heightFaktor As Double = 1.0
-                                'Dim topNext As Double
-
-                                'If Not repObj1 Is Nothing Then
-                                '    Try
-                                '        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '        ''newShapeRange = pptSlide.Shapes.Paste
-                                '        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
-
-                                '        With newShapeRange(1)
-                                '            .Top = CSng(top + 0.02 * height)
-                                '            .Left = CSng(left + 0.02 * width)
-                                '            .Width = CSng(width * 0.96)
-                                '            topNext = CSng(top + 0.04 * height + .Height)
-                                '            '.Height = height * 0.46
-                                '        End With
-
-                                '        repObj1.Delete()
-
-                                '        If Not repObj2 Is Nothing Then
-                                '            Try
-                                '                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '                ''newShapeRang2 = pptSlide.Shapes.Paste
-                                '                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
-
-                                '                With newShapeRange2(1)
-                                '                    .Top = CSng(topNext)
-                                '                    .Left = CSng(left + 0.02 * width)
-                                '                    .Width = CSng(width * 0.96)
-                                '                    '.Height = height * 0.46
-                                '                End With
-
-                                '                repObj2.Delete()
-
-                                '                ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
-                                '                If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
-                                '                    widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                '                    newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
-                                '                    newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
-                                '                    newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
-                                '                End If
-                                '            Catch ex As Exception
-
-                                '            End Try
-
-                                '        End If
-
-
-                                '    Catch ex As Exception
-
-                                '    End Try
-
-                                'End If
-
-
-                            Case "Vergleich mit letztem Stand"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(236)
-                                'End If
-
-
-                                'Dim cproj As clsProjekt
-                                'Dim scale As Double
-                                'Dim noColorCollection As New Collection
-                                'Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
-
-
-
-                                '' jetzt die Aktion durchführen ...
-
-                                'If lastproj Is Nothing Then
-                                '    Try
-                                '        .TextFrame2.TextRange.Text = "Fehler: ... " & repMessages.getmsg(27)
-                                '    Catch ex As Exception
-                                '        pptSize = 12
-                                '    End Try
-                                '    'Throw New Exception("es gibt keinen letzten Stand")
-                                '    Throw New Exception(repMessages.getmsg(27))
-                                'End If
-
-                                'cproj = lastproj
-
-                                'htop = 150
-                                'hleft = 150
-
-                                'hheight = 380
-                                'hwidth = 900
-                                'scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-
-                                'noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                                'repObj1 = Nothing
-                                'Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
-
-                                'With repObj1
-                                '    htop = .Top + .Height + 3
-                                'End With
-
-                                'repObj2 = Nothing
-                                'Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.letzterStand)
-
-                                'Try
-                                '    pptSize = .TextFrame2.TextRange.Font.Size
-                                '    .TextFrame2.TextRange.Text = " "
-                                'Catch ex As Exception
-                                '    pptSize = 12
-                                'End Try
-
-
-
-                                'Dim widthFaktor As Double = 1.0
-                                'Dim heightFaktor As Double = 1.0
-                                'Dim topNext As Double
-
-                                'If Not repObj1 Is Nothing Then
-                                '    Try
-                                '        ''repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '        ''newShapeRange = pptSlide.Shapes.Paste
-                                '        newShapeRange = pictCopypptPaste(repObj1, pptSlide)
-
-                                '        With newShapeRange(1)
-                                '            .Top = CSng(top + 0.02 * height)
-                                '            .Left = CSng(left + 0.02 * width)
-                                '            .Width = CSng(width * 0.96)
-                                '            topNext = CSng(top + 0.04 * height + .Height)
-                                '            '.Height = height * 0.46
-                                '        End With
-
-                                '        repObj1.Delete()
-
-                                '        If Not repObj2 Is Nothing Then
-                                '            Try
-                                '                ''repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                '                ''newShapeRange2 = pptSlide.Shapes.Paste                                             
-                                '                newShapeRange2 = pictCopypptPaste(repObj2, pptSlide)
-
-                                '                With newShapeRange2(1)
-                                '                    .Top = CSng(topNext)
-                                '                    .Left = CSng(left + 0.02 * width)
-                                '                    .Width = CSng(width * 0.96)
-                                '                    '.Height = height * 0.46
-                                '                End With
-
-                                '                repObj2.Delete()
-
-                                '                ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
-                                '                If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
-                                '                    widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                '                    newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
-                                '                    newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
-                                '                    newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
-                                '                End If
-                                '            Catch ex As Exception
-
-                                '            End Try
-
-                                '        End If
-
-
-                                '    Catch ex As Exception
-
-                                '    End Try
-
-                                'End If
-
-
-                            Case "Tabelle Projektziele"
-
-                                Try
-                                    ' wenn es im Qualifier angegebene Meilensteine gibt, dann haben die Prio vor der interaktiven Auswahl 
-                                    ' 
-                                    Dim sMilestones As Collection = selectedMilestones
-
-                                    If Not IsNothing(qualifier2) Then
-                                        If qualifier2.Length > 0 Then
-                                            sMilestones = New Collection
-                                            Dim tmpStr() As String = qualifier2.Split(New Char() {CChar(vbLf), CChar(vbCr)})
-                                            For Each tmpMsName As String In tmpStr
-                                                If Not sMilestones.Contains(tmpMsName) Then
-                                                    sMilestones.Add(tmpMsName, tmpMsName)
-                                                End If
-
-                                            Next
-                                        End If
-                                    End If
-
-
-                                    ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
-                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
-                                    Call zeichneProjektTabelleZiele(pptShape, hproj, sMilestones, "", "")
-                                    'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
-
-
-                                Catch ex As Exception
-
-                                End Try
 
                             Case "TableMilestoneAPVCV"
 
@@ -1391,165 +710,6 @@ Module creationModule
 
                                 End Try
 
-                            Case "Tabelle Vergleich letzter Stand"
-
-                                Try
-                                    Call zeichneProjektTabelleVergleich(curSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, lastproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Tabelle Vergleich Beauftragung"
-
-                                Try
-                                    Call zeichneProjektTabelleVergleich(curSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Tabelle OneGlance letzter Stand"
-
-                                Try
-                                    Call zeichneProjektTabelleOneGlance(curSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, lastproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Tabelle OneGlance Beauftragung"
-
-
-                                Try
-                                    Call zeichneProjektTabelleOneGlance(curSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Tabelle Veränderungen"
-
-
-                                Try
-
-                                    ' Für englische Version muss Template auf Englisch sein
-                                    Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Tabelle Projektstatus"
-
-
-                                Try
-                                    Call zeichneProjektTabelleStatus(pptShape, hproj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            Case "Soll-Ist & Prognose"
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(235)
-                                'End If
-
-                                'If istWerteexistieren Then
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "Prognose"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(38)
-                                'End If
-
-                            Case "Ergebnis"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(212)
-                                'End If
-
-
-
-                                'Try
-
-                                '    If qualifier = "letzter Stand" Then
-
-                                '        Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand,
-                                '                                                  5, 5, 280, 180, True)
-
-                                '    ElseIf qualifier = "Beauftragung" Then
-                                '        Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung,
-                                '                                                  5, 5, 280, 180, True)
-
-                                '    Else
-                                '        Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current,
-                                '                                                  5, 5, 280, 180, True)
-
-                                '    End If
-
-
-
-                                '    reportObj = obj
-
-                                '    Dim ax As xlNS.Axis = CType(reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory), Excel.Axis)
-                                '    With ax
-                                '        .TickLabels.Font.Size = 12
-                                '    End With
-
-                                '    notYetDone = True
-                                '    bigType = ptReportBigTypes.charts
-                                '    compID = PTprdk.Ergebnis
-
-                                'Catch ex As Exception
-
-                                'End Try
-
-
-
-                            Case "Strategie/Risiko"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(234)
-                                'End If
-
-
-                                'Dim mycollection As New Collection
-
-                                ''deleteStack.Add(.Name, .Name)
-                                'Try
-                                '    mycollection.Add(pname)
-
-                                '    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
-                                '    notYetDone = True
-
-                                '    bigType = ptReportBigTypes.charts
-                                '    compID = PTprdk.StrategieRisiko
-
-                                'Catch ex As Exception
-                                '    Dim a As Integer = -1
-                                'End Try
-
-                            Case "Strategie/Risiko/Ausstrahlung"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(214)
-                                'End If
-
-
-                                'Dim mycollection As New Collection
-
-                                ''deleteStack.Add(.Name, .Name)
-                                'Try
-                                '    mycollection.Add(pname)
-
-                                '    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight, True)
-                                '    notYetDone = True
-                                '    bigType = ptReportBigTypes.charts
-                                '    compID = PTprdk.Dependencies
-                                'Catch ex As Exception
-
-                                'End Try
 
                             Case "ProjektBedarfsChart"
 
@@ -1559,15 +719,6 @@ Module creationModule
                                     ' Text im ShapeContainer / Platzhalter zurücksetzen 
                                     .TextFrame2.TextRange.Text = ""
 
-                                    'If smartChartInfo.chartTyp = PTChartTypen.Pie Then
-                                    '    Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                    '    bigType = ptReportBigTypes.charts
-                                    '    compID = PTprdk.PersonalPie
-                                    '    boxName = obj.Chart.ChartTitle.Text
-                                    '    reportObj = obj
-                                    '    notYetDone = True
-
-                                    'Else
 
                                     With smartChartInfo
                                         .q2 = bestimmeRoleQ2(qualifier2, selectedRoles)
@@ -1595,727 +746,10 @@ Module creationModule
 
 
 
-                            Case "Personalbedarf"
-
-                                Call MsgBox("not implemented ...")
-                                '' old
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(159)
-                                'End If
-
-
-                                'Try
-                                '    auswahl = 1
-
-                                '    If qualifier.Length > 0 Then
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.PersonalPie
-                                '        Else
-
-                                '            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-
-
-
-                                '            'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                '            '                               roleName:=qualifier2,
-                                '            '                               vglTyp:=PTprdk.PersonalBalken)
-                                '            compID = PTprdk.PersonalBalken
-                                '        End If
-                                '    Else
-                                '        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.PersonalPie
-                                '    End If
-
-                                '    boxName = obj.Chart.ChartTitle.Text
-                                '    ' immer den Text nehmen ..
-                                '    ''If obj.Chart.HasTitle Then
-                                '    ''    boxName = obj.Chart.ChartTitle.Text
-                                '    ''Else
-                                '    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
-                                '    ''    boxName = boxName & " (" & gesamtSumme.ToString &
-                                '    ''    " " & awinSettings.kapaEinheit & ")"
-                                '    ''End If
-
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-                                '    bigType = ptReportBigTypes.charts
-
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
-                                'End Try
-
-                            Case "Personalbedarf2"
-
-                                Call MsgBox("not implemented ...")
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(159)
-                                'End If
-
-
-                                'Try
-                                '    auswahl = 1
-
-                                '    If qualifier.Length > 0 Then
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.PersonalPie
-                                '        Else
-
-                                '            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-
-
-                                '            'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                '            '                               roleName:=qualifier2,
-                                '            '                               vglTyp:=PTprdk.PersonalBalken2)
-                                '            compID = PTprdk.PersonalBalken2
-                                '        End If
-                                '    Else
-                                '        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.PersonalPie
-                                '    End If
-
-                                '    boxName = obj.Chart.ChartTitle.Text
-                                '    ' immer den Text nehmen ..
-                                '    ''If obj.Chart.HasTitle Then
-                                '    ''    boxName = obj.Chart.ChartTitle.Text
-                                '    ''Else
-                                '    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
-                                '    ''    boxName = boxName & " (" & gesamtSumme.ToString &
-                                '    ''    " " & awinSettings.kapaEinheit & ")"
-                                '    ''End If
-
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-                                '    bigType = ptReportBigTypes.charts
-
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
-                                'End Try
-
-                            Case "Personalkosten"
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(164)
-                                'End If
-
-
-                                'Try
-                                '    auswahl = 2
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.PersonalPie
-                                '        Else
-
-                                '            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-
-
-                                '            'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                '            '                               roleName:=qualifier2,
-                                '            '                               vglTyp:=PTprdk.PersonalBalken)
-                                '            compID = PTprdk.PersonalBalken
-                                '        End If
-
-                                '    Else
-                                '        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.PersonalPie
-                                '    End If
-
-                                '    boxName = obj.Chart.ChartTitle.Text
-                                '    ' tk 9.8.18
-                                '    'If obj.Chart.HasTitle Then
-                                '    '    boxName = obj.Chart.ChartTitle.Text
-                                '    'Else
-                                '    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
-                                '    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                '    'End If
-
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-                                '    bigType = ptReportBigTypes.charts
-
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(162)
-                                'End Try
-
-                            Case "Personalkosten2"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(164)
-                                'End If
-
-
-                                'Try
-                                '    auswahl = 2
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.PersonalPie
-                                '        Else
-
-                                '            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-
-
-                                '            'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                '            '                               roleName:=qualifier2,
-                                '            '                               vglTyp:=PTprdk.PersonalBalken2)
-                                '            compID = PTprdk.PersonalBalken2
-                                '        End If
-
-                                '    Else
-                                '        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.PersonalPie
-                                '    End If
-
-                                '    boxName = obj.Chart.ChartTitle.Text
-                                '    ' tk 9.8.18
-                                '    'If obj.Chart.HasTitle Then
-                                '    '    boxName = obj.Chart.ChartTitle.Text
-                                '    'Else
-                                '    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
-                                '    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                '    'End If
-
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-                                '    bigType = ptReportBigTypes.charts
-
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(162)
-                                'End Try
-
-                            Case "Sonstige Kosten"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(165)
-                                'End If
-
-                                'Try
-                                '    auswahl = 1
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.KostenPie
-                                '        Else
-                                '            compID = PTprdk.KostenBalken
-
-
-                                '            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
-
-                                '        End If
-
-                                '    Else
-                                '        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.KostenPie
-                                '    End If
-
-                                '    If obj.Chart.HasTitle Then
-                                '        boxName = obj.Chart.ChartTitle.Text
-                                '    Else
-                                '        Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
-                                '        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                '    End If
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-
-                                '    bigType = ptReportBigTypes.charts
-
-                                'Catch ex As Exception
-
-                                '    '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(163)
-
-                                'End Try
-
-                            Case "Sonstige Kosten2"
-
-                                Call MsgBox("not implemented ...")
-
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(165)
-                                'End If
-
-                                'Try
-                                '    auswahl = 1
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.KostenPie
-                                '        Else
-                                '            compID = PTprdk.KostenBalken2
-
-
-                                '            'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
-
-                                '        End If
-
-                                '    Else
-                                '        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.KostenPie
-                                '    End If
-
-                                '    If obj.Chart.HasTitle Then
-                                '        boxName = obj.Chart.ChartTitle.Text
-                                '    Else
-                                '        Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
-                                '        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                '    End If
-
-                                '    reportObj = obj
-                                '    notYetDone = False
-
-                                '    bigType = ptReportBigTypes.charts
-
-                                'Catch ex As Exception
-
-                                '    '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(163)
-
-                                'End Try
-
-                            Case "Gesamtkosten"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(166)
-                                'End If
-
-
-                                ''htop = 100
-                                ''hleft = 100
-                                ''hwidth = boxWidth * 14
-                                ''hheight = boxHeight * 10
-
-                                'Dim formerEE As Boolean = appInstance.ScreenUpdating
-
-                                'Try
-                                '    auswahl = 2
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            compID = PTprdk.KostenPie
-                                '            reportObj = obj
-                                '            notYetDone = True
-                                '            bigType = ptReportBigTypes.charts
-
-                                '        Else
-
-                                '            appInstance.ScreenUpdating = False
-
-                                '            compID = PTprdk.KostenBalken
-
-
-                                '            'Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
-
-                                '            appInstance.ScreenUpdating = formerEE
-                                '            notYetDone = False
-                                '            bigType = ptReportBigTypes.charts
-
-                                '        End If
-
-                                '    Else
-                                '        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        compID = PTprdk.KostenPie
-                                '        reportObj = obj
-                                '        notYetDone = False
-                                '        bigType = ptReportBigTypes.charts
-                                '    End If
-
-                                '    ' das Platzhalter-Objekt : den Text auf leer setzen 
-                                '    Try
-                                '        .TextFrame2.TextRange.Text = ""
-                                '        .AlternativeText = ""
-                                '    Catch ex As Exception
-
-                                '    End Try
-
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(168)
-                                '    If appInstance.ScreenUpdating = False Then
-                                '        appInstance.ScreenUpdating = formerEE
-                                '    End If
-                                'End Try
-
-                            Case "Gesamtkosten2"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(166)
-                                'End If
-
-
-                                ''htop = 100
-                                ''hleft = 100
-                                ''hwidth = boxWidth * 14
-                                ''hheight = boxHeight * 10
-
-                                'Try
-                                '    auswahl = 2
-
-                                '    If qualifier.Length > 0 Then
-
-                                '        If qualifier.Trim <> "Balken" Then
-                                '            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '            bigType = ptReportBigTypes.charts
-                                '            compID = PTprdk.KostenPie
-                                '            notYetDone = True
-                                '        Else
-                                '            bigType = ptReportBigTypes.charts
-                                '            compID = PTprdk.KostenBalken2
-
-
-                                '            notYetDone = False
-                                '            'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
-                                '        End If
-
-                                '    Else
-                                '        bigType = ptReportBigTypes.charts
-                                '        compID = PTprdk.KostenPie
-                                '        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                '        notYetDone = True
-                                '    End If
-
-                                '    If obj.Chart.HasTitle Then
-                                '        boxName = obj.Chart.ChartTitle.Text
-                                '    Else
-                                '        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                '        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                '    End If
-
-                                '    reportObj = obj
-
-                                '    bigType = ptReportBigTypes.charts
-
-                                'Catch ex As Exception
-                                '    '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(168)
-                                'End Try
-
-
-                            Case "Trend Strategischer Fit/Risiko"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(232)
-                                'End If
-
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-
-                                'If nrSnapshots > 0 Then
-
-                                '    Call createTrendSfit(obj, htop, hleft, hheight, hwidth)
-
-                                '    reportObj = obj
-                                '    notYetDone = True
-
-                                '    bigType = -1
-                                '    compID = -1
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-
-
-                            Case "Trend Kennzahlen"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(231)
-                                'End If
-
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-
-                                'If nrSnapshots > 0 Then
-                                '    'htop = 100
-                                '    'hleft = 100
-                                '    'hwidth = 300
-                                '    'hheight = 400
-
-                                '    Call createTrendKPI(obj, htop, hleft, hheight, hwidth)
-
-                                '    reportObj = obj
-                                '    notYetDone = True
-
-                                '    bigType = -1
-                                '    compID = -1
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-                            Case "Fortschritt Personalkosten"
-
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(205)
-                                'End If
-
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-                                'Dim PListe As New Collection
-                                'compareToID = 1
-                                'auswahl = 1
-
-                                'If nrSnapshots > 0 Then
-
-                                '    If istLaufendesProjekt(hproj) Then
-
-                                '        PListe.Add(hproj.name, hproj.name)
-                                '        Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
-
-                                '        If Not obj Is Nothing Then
-                                '            reportObj = obj
-                                '            notYetDone = True
-
-                                '            With reportObj
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlCategory) = False
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
-                                '            End With
-                                '        Else
-                                '            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
-                                '            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
-                                '        End If
-
-
-                                '    ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
-                                '    End If
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-                            Case "Fortschritt Sonstige Kosten"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(206)
-                                'End If
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-                                'Dim PListe As New Collection
-                                'compareToID = 1
-                                'auswahl = 2
-
-                                'If nrSnapshots > 0 Then
-
-                                '    If istLaufendesProjekt(hproj) Then
-
-                                '        PListe.Add(hproj.name, hproj.name)
-                                '        Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
-
-                                '        If Not obj Is Nothing Then
-                                '            reportObj = obj
-                                '            notYetDone = True
-
-                                '            With reportObj
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlCategory) = False
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
-                                '            End With
-                                '        Else
-                                '            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
-                                '            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
-                                '        End If
-
-                                '    ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
-                                '    End If
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-                            Case "Fortschritt Gesamtkosten"
-
-                                Call MsgBox("not implemented ...")
-
-                                'If boxName = kennzeichnung Then
-                                '    boxName = repMessages.getmsg(207)
-                                'End If
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-                                'Dim PListe As New Collection
-                                'compareToID = 1
-                                'auswahl = 3
-
-                                'If nrSnapshots > 0 Then
-
-                                '    If istLaufendesProjekt(hproj) Then
-
-                                '        PListe.Add(hproj.name, hproj.name)
-                                '        Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
-
-                                '        If Not obj Is Nothing Then
-                                '            reportObj = obj
-                                '            notYetDone = True
-
-                                '            With reportObj
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlCategory) = False
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
-                                '            End With
-                                '        Else
-                                '            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
-                                '            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
-                                '        End If
-
-                                '    ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
-                                '    End If
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-                            Case "Fortschritt Rolle"
-
-                                Call MsgBox("not implemented ...")
-
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-                                'Dim PListe As New Collection
-                                'compareToID = 1
-                                'auswahl = 4
-
-                                'If nrSnapshots > 0 Then
-
-                                '    If istLaufendesProjekt(hproj) Then
-
-                                '        PListe.Add(hproj.name, hproj.name)
-                                '        Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
-
-                                '        'boxName = "Fortschritt " & qualifier
-                                '        boxName = repMessages.getmsg(176) & qualifier
-
-                                '        If Not obj Is Nothing Then
-                                '            reportObj = obj
-                                '            notYetDone = True
-
-                                '            With reportObj
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlCategory) = False
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
-                                '            End With
-                                '        Else
-                                '            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
-                                '            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
-                                '        End If
-
-                                '    ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
-                                '    End If
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-                            Case "Fortschritt Kostenart"
-
-                                Call MsgBox("not implemented ...")
-
-                                'Dim nrSnapshots As Integer = projekthistorie.Count
-                                'Dim PListe As New Collection
-                                'compareToID = 1
-                                'auswahl = 5
-
-                                'If nrSnapshots > 0 Then
-
-                                '    If istLaufendesProjekt(hproj) Then
-
-                                '        PListe.Add(hproj.name, hproj.name)
-                                '        Call awinCreateStatusDiagram1(PListe, obj, compareToID, auswahl, qualifier, False, False, htop, hleft, hwidth, hheight)
-
-                                '        'boxName = "Fortschritt " & qualifier
-                                '        boxName = repMessages.getmsg(176) & qualifier
-
-                                '        If Not obj Is Nothing Then
-                                '            reportObj = obj
-                                '            notYetDone = True
-
-                                '            With reportObj
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlCategory) = False
-                                '                .Chart.HasAxis(xlNS.XlAxisType.xlValue) = False
-                                '            End With
-                                '        Else
-                                '            '.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
-                                '            .TextFrame2.TextRange.Text = boxName & repMessages.getmsg(139)
-                                '        End If
-
-                                '    ElseIf hproj.Start > getColumnOfDate(Date.Now) Then
-                                '        '.TextFrame2.TextRange.Text = "Projekt hat noch nicht begonnen ... "
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(179)
-                                '    Else
-                                '        '.TextFrame2.TextRange.Text = "Projekt ist bereits beendet"
-                                '        .TextFrame2.TextRange.Text = repMessages.getmsg(180)
-                                '    End If
-
-                                'Else
-                                '    '.TextFrame2.TextRange.Text = "es existiert noch keine Projekt-Historie"
-                                '    .TextFrame2.TextRange.Text = repMessages.getmsg(171)
-                                'End If
-
-
-
                             Case "Ampel-Farbe"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Ampel-Farbe"
                                     Else
                                         boxName = "Traffic Light"
@@ -2344,7 +778,7 @@ Module creationModule
                             Case "Ampel-Text"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Ampel-Text"
                                     Else
                                         boxName = "Traffic Light Explanation"
@@ -2364,7 +798,7 @@ Module creationModule
                             Case "Business-Unit:"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Business-Unit:"
                                     Else
                                         boxName = "Business-Unit:"
@@ -2382,7 +816,7 @@ Module creationModule
                             Case "Beschreibung"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Beschreibung"
                                     Else
                                         boxName = "Description"
@@ -2477,7 +911,7 @@ Module creationModule
                             Case "Stand:"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Version:"
                                     Else
                                         boxName = "Stand:"
@@ -2495,7 +929,7 @@ Module creationModule
                             Case "Laufzeit:"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Project Time:"
                                     Else
                                         boxName = "Laufzeit:"
@@ -2512,7 +946,7 @@ Module creationModule
                             Case "Verantwortlich:"
 
                                 If boxName = kennzeichnung Then
-                                    If useEnglishLanguage Then
+                                    If englishLanguage Then
                                         boxName = "Verantwortlich:"
                                     Else
                                         boxName = "Responsible:"
@@ -2721,7 +1155,7 @@ Module creationModule
         diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRed, lengthRed)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
-        Dim newPPTChart As PowerPoint.Shape = curSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
+        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
         'Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
         '                                                           Width:=width, Height:=height)
         ' 
@@ -3073,7 +1507,7 @@ Module creationModule
 
         ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt , sofern bereits vorhanden ..
         ' das Ganze funktioniert also noch mit alten Vorlagen wie mit neuen ... 
-        rds.pptSlide = curSlide
+        rds.pptSlide = currentSlide
 
 
         ' jetzt werden die noch fehlenden Shapes erstellt .. 
@@ -3479,7 +1913,7 @@ Module creationModule
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
             ''rds.errorVorlagenShape.Copy()
             ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, currentSlide)
 
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
@@ -3515,7 +1949,7 @@ Module creationModule
     ''' eine Einzelprojeksicht handelt </param>
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
-    Private Sub zeichneMultiprojektSichtinPPT(ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef pptFirstTime As Boolean,
+    Private Sub drawMultiprojectViewinPPT(ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef pptFirstTime As Boolean,
                                              ByRef zeilenhoehe_sav As Double, ByRef legendFontSize As Double,
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
@@ -3543,7 +1977,7 @@ Module creationModule
 
 
         Dim rds As New clsPPTShapes
-        rds.pptSlide = curSlide
+        rds.pptSlide = currentSlide
 
         ' jetzt werden die Hilfs-Shapes erstellt .. 
 
@@ -3785,7 +2219,7 @@ Module creationModule
 
 
 
-                    Call zeichnePPTprojectsInPPT(projCollection, objectsDone,
+                    Call drawProjectsInPPT(projCollection, objectsDone,
                                 rds, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, kennzeichnung)
 
 
@@ -3814,7 +2248,7 @@ Module creationModule
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
             ''rds.errorVorlagenShape.Copy()
             ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, curSlide)
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, currentSlide)
 
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
@@ -3845,7 +2279,7 @@ Module creationModule
     ''' <param name="selectedRoles"></param>
     ''' <param name="selectedCosts"></param>
     ''' <remarks></remarks>
-    Sub zeichnePPTprojectsInPPT(ByRef projectCollection As SortedList(Of Double, String),
+    Sub drawProjectsInPPT(ByRef projectCollection As SortedList(Of Double, String),
                                 ByRef projDone As Integer,
                                 ByVal rds As clsPPTShapes,
                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
@@ -4020,7 +2454,7 @@ Module creationModule
                         ' normal Mode ... nur 1 Projekt pro Zeile 
                     End If
 
-                    copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, curSlide)
+                    copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, currentSlide)
 
                     ' wenn mehrere Projekte nacheinander in einer Zeile stehen 
                     If severalProjectsInOneLine Then
@@ -4129,7 +2563,7 @@ Module creationModule
                             End If
                         End With
 
-                        copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, curSlide)
+                        copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, currentSlide)
 
                         With copiedShape(1)
                             .Top = CSng(ampelGrafikYPos)
@@ -4176,7 +2610,7 @@ Module creationModule
 
                         ''projectVorlagenForm.Copy()
                         ''copiedShape = pptslide.Shapes.Paste()
-                        copiedShape = pptCopypptPaste(rds.projectVorlagenShape, curSlide)
+                        copiedShape = pptCopypptPaste(rds.projectVorlagenShape, currentSlide)
 
                         With copiedShape(1)
                             .Top = CSng(projektGrafikYPos)
@@ -4355,7 +2789,7 @@ Module creationModule
 
                                                     If zeichnenMS Then
 
-                                                        Call zeichneMeilensteininAktZeile(curSlide, msShapeNames, minX1, maxX2,
+                                                        Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                                       milestone, hproj, milestoneGrafikYPos, rds)
 
 
@@ -4428,7 +2862,7 @@ Module creationModule
 
                                     ''PhDescVorlagenShape.Copy()
                                     ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, curSlide)
+                                    copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, currentSlide)
 
                                     With copiedShape(1)
 
@@ -4468,7 +2902,7 @@ Module creationModule
 
                                     ''PhDateVorlagenShape.Copy()
                                     ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, curSlide)
+                                    copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, currentSlide)
 
                                     With copiedShape(1)
 
@@ -4508,7 +2942,7 @@ Module creationModule
                                     ' linker Delimiter 
                                     ''phasedelimiterShape.Copy()
                                     ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, curSlide)
+                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, currentSlide)
 
                                     With copiedShape(1)
 
@@ -4522,7 +2956,7 @@ Module creationModule
                                     ' rechter Delimiter 
                                     ''phasedelimiterShape.Copy()
                                     ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, curSlide)
+                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, currentSlide)
 
                                     With copiedShape(1)
 
@@ -4558,7 +2992,7 @@ Module creationModule
                                 ''    End If
 
                                 ''End With
-                                phaseShape = curSlide.Shapes.AddShape(appear.shpType,
+                                phaseShape = currentSlide.Shapes.AddShape(appear.shpType,
                                                                       CSng(x1),
                                                                       CSng(phasenGrafikYPos),
                                                                       CSng(x2 - x1),
@@ -4690,7 +3124,7 @@ Module creationModule
 
                                                 If zeichnenMS Then
 
-                                                    Call zeichneMeilensteininAktZeile(curSlide, msShapeNames, minX1, maxX2,
+                                                    Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                                       ms, hproj, milestoneGrafikYPos, rds)
 
 
@@ -4787,7 +3221,7 @@ Module creationModule
                                 End If
 
                                 If zeichnenMS Then
-                                    Call zeichneMeilensteininAktZeile(curSlide, msShapeNames, minX1, maxX2,
+                                    Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                       milestone, hproj, milestoneGrafikYPos, rds)
                                 End If
                             Next
@@ -4847,7 +3281,7 @@ Module creationModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(curSlide, msShapeNames, minX1, maxX2,
+                                Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                   milestone, hproj, milestoneGrafikYPos, rds)
                             End If
                         Next
@@ -4896,7 +3330,7 @@ Module creationModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(curSlide, msShapeNames, minX1, maxX2,
+                                Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                   milestone, hproj, milestoneGrafikYPos, rds)
                             End If
                         Next
@@ -4935,7 +3369,7 @@ Module creationModule
 
                     ''buColorShape.Copy()
                     ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.buColorShape, curSlide)
+                    copiedShape = pptCopypptPaste(rds.buColorShape, currentSlide)
 
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
@@ -4956,7 +3390,7 @@ Module creationModule
                     ' zeichnen des RowDifferentiators 
                     ''rowDifferentiatorShape.Copy()
                     ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.rowDifferentiatorShape, curSlide)
+                    copiedShape = pptCopypptPaste(rds.rowDifferentiatorShape, currentSlide)
 
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
@@ -4975,7 +3409,7 @@ Module creationModule
                     ' Pfeil mit Länge der Dauer zeichnen 
                     ''durationArrowShape.Copy()
                     ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.durationArrowShape, curSlide)
+                    copiedShape = pptCopypptPaste(rds.durationArrowShape, currentSlide)
 
                     Dim pfeilbreite As Double = maxX2 - minX1
 
@@ -4996,7 +3430,7 @@ Module creationModule
 
                     ''durationTextShape.Copy()
                     ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.durationTextShape, curSlide)
+                    copiedShape = pptCopypptPaste(rds.durationTextShape, currentSlide)
 
                     With copiedShape(1)
                         .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
@@ -5098,7 +3532,7 @@ Module creationModule
                 Next
 
                 Try
-                    CType(curSlide.Shapes.Range(arrayOfNames), PowerPoint.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                    CType(currentSlide.Shapes.Range(arrayOfNames), PowerPoint.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
                 Catch ex As Exception
 
                 End Try
@@ -5119,7 +3553,7 @@ Module creationModule
             Next
 
             Try
-                CType(curSlide.Shapes.Range(arrayOfNames), PowerPoint.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                CType(currentSlide.Shapes.Range(arrayOfNames), PowerPoint.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
             Catch ex As Exception
 
             End Try
