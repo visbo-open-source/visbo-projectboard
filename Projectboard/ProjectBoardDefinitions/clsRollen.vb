@@ -1921,7 +1921,7 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="substr"></param>
     ''' <returns></returns>
-    Public Function getRoleNamesContainingSubStr(ByVal substr As String) As List(Of String)
+    Public Function getRoleNamesContainingSubStr(ByVal substr As String, ByVal skillName As String) As List(Of String)
         Dim tmpResult As New SortedList(Of String, Boolean)
 
         If substr.Length > 0 Then
@@ -1929,7 +1929,25 @@ Public Class clsRollen
                 If Not (kvp.Value.isSkill Or kvp.Value.isSkillParent) Then
                     If kvp.Value.name.Contains(substr) Then
                         If Not tmpResult.ContainsKey(kvp.Value.name) Then
-                            tmpResult.Add(kvp.Value.name, True)
+                            If skillName = "" Then
+                                tmpResult.Add(kvp.Value.name, True)
+                            Else
+                                Dim tmpSkill As clsRollenDefinition = getRoledef(skillName)
+                                If Not IsNothing(tmpSkill) Then
+                                    If tmpSkill.isSkill Then
+                                        Dim commonList As List(Of Integer) = Me.getCommonChildsOfParents(tmpSkill.UID, kvp.Value.UID)
+                                        If commonList.Count > 0 Then
+                                            tmpResult.Add(kvp.Value.name, True)
+                                        End If
+                                    Else
+                                        tmpResult.Add(kvp.Value.name, True)
+                                    End If
+
+                                Else
+                                    tmpResult.Add(kvp.Value.name, True)
+                                End If
+                            End If
+
                         End If
                     End If
                 End If
@@ -1941,10 +1959,11 @@ Public Class clsRollen
 
     ''' <summary>
     ''' returns a list of Role-Names containing 
+    ''' if roleName is given , only Skills are shown which belong to roleName
     ''' </summary>
     ''' <param name="substr"></param>
     ''' <returns></returns>
-    Public Function getSkillNamesContainingSubStr(ByVal substr As String) As List(Of String)
+    Public Function getSkillNamesContainingSubStr(ByVal substr As String, ByVal roleName As String) As List(Of String)
         Dim tmpResult As New SortedList(Of String, Boolean)
 
         If substr.Length > 0 Then
@@ -1952,7 +1971,23 @@ Public Class clsRollen
                 If kvp.Value.isSkill Or kvp.Value.isSkillParent Then
                     If kvp.Value.name.Contains(substr) Then
                         If Not tmpResult.ContainsKey(kvp.Value.name) Then
-                            tmpResult.Add(kvp.Value.name, True)
+                            If roleName = "" Then
+                                tmpResult.Add(kvp.Value.name, True)
+                            Else
+                                Dim tmpRole As clsRollenDefinition = getRoledef(roleName)
+                                If Not IsNothing(tmpRole) Then
+                                    If Not tmpRole.isSkill Then
+                                        Dim commonList As List(Of Integer) = Me.getCommonChildsOfParents(kvp.Value.UID, tmpRole.UID)
+                                        If commonList.Count > 0 Then
+                                            tmpResult.Add(kvp.Value.name, True)
+                                        End If
+                                    Else
+                                        tmpResult.Add(kvp.Value.name, True)
+                                    End If
+                                Else
+                                    tmpResult.Add(kvp.Value.name, True)
+                                End If
+                            End If
                         End If
                     End If
                 End If

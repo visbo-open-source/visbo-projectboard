@@ -1712,24 +1712,27 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' macht er jetzt immer, wenn das cproj keine Ressourcenbedarfe enthält
+                If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
+                    ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
+                    Try
+                        Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
+                        If Not IsNothing(tmpProj) Then
+                            hproj = tmpProj
+                        End If
+                    Catch ex As Exception
+                        Call MsgBox("resources from former version could Not be copied ... ")
+                    End Try
+
+                End If
+
+
                 If fileFrom3rdParty Then
 
                     .farbe = cproj.farbe
                     .Schrift = cproj.Schrift
                     .Schriftfarbe = cproj.Schriftfarbe
 
-                    If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
-                        ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
-                        Try
-                            Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
-                            If Not IsNothing(tmpProj) Then
-                                hproj = tmpProj
-                            End If
-                        Catch ex As Exception
-                            Call MsgBox("resources from former version could Not be copied ... ")
-                        End Try
-
-                    End If
 
 
                     ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 

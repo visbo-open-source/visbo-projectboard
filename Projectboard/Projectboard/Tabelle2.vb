@@ -759,6 +759,8 @@ Public Class Tabelle2
                                         rcName = RoleDefinitions.getContainingRoleOfSkillMembers(skillID).name
                                         rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
                                         rcNameGenerated = True
+                                    Else
+                                        rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
                                     End If
 
                                     If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
@@ -2008,7 +2010,7 @@ Public Class Tabelle2
 
             ' hier muss die Prüfung rein , ob es eine bekannte Skill ist ...
             If Not RoleDefinitions.containsName(skillName) Then
-                Dim skillNamesList As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(skillName)
+                Dim skillNamesList As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(skillName, otherValue)
                 If skillNamesList.Count = 1 Then
                     skillName = CStr(skillNamesList.Item(0))
                     newValue = skillName
@@ -2050,7 +2052,7 @@ Public Class Tabelle2
             Else
                 ' hier muss die Prüfung rein , ob es eine bekannte Rolle ist ...
                 If Not RoleDefinitions.containsName(rcName) Then
-                    Dim roleNamesList As List(Of String) = RoleDefinitions.getRoleNamesContainingSubStr(rcName)
+                    Dim roleNamesList As List(Of String) = RoleDefinitions.getRoleNamesContainingSubStr(rcName, otherValue)
                     If roleNamesList.Count = 1 Then
                         rcName = CStr(roleNamesList.Item(0))
                         newValue = rcName

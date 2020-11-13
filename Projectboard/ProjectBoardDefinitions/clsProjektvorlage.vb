@@ -2763,7 +2763,7 @@
             Dim tempArray As Double()
 
 
-            Dim roleUID As Integer
+            Dim roleUID As Integer = -1
             Dim skillUID As Integer = -1
             Dim roleName As String = "" ' kann eigentlich raus; ist nur drin, weil dann leichter debuggable ...
             Dim skillName As String = ""
@@ -2785,12 +2785,13 @@
 
                 ReDim roleValues(_Dauer - 1)
 
-                If IsNumeric(roleID) Then
+                If calculateAll Then
+                    ' weitermachen .. 
+                ElseIf IsNumeric(roleID) Then
                     roleUID = CInt(roleID)
                     roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                     roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
                 Else
-
                     roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), skillUID)
                     If roleUID > 0 Then
                         roleName = RoleDefinitions.getRoleDefByID(roleUID).name
@@ -2980,6 +2981,8 @@
 
                         ElseIf listOfRoleIDs.Count > 0 And listOfSkillIDs.Count > 0 Then
                             relevant = listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID)
+                        ElseIf calculateAll Then
+                            relevant = True
                         End If
 
                         If relevant Then
