@@ -67,6 +67,8 @@ Public Class clsSmartSlideListen
         End If
 
     End Sub
+
+
     ''' <summary>
     ''' liest bzw. setzt das Creation Date der Slide 
     ''' </summary>
@@ -1482,6 +1484,7 @@ Public Class clsSmartSlideListen
         _slideDBUrl = ""
         _slideDBName = ""
         _slideVCid = ""
+
     End Sub
 
 End Class

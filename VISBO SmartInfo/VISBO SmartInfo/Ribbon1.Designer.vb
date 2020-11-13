@@ -60,14 +60,14 @@
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.btnFreeze = Me.Factory.CreateRibbonButton
         Me.Group1 = Me.Factory.CreateRibbonGroup
-        Me.SmartInfo = Me.Factory.CreateRibbonGroup
-        Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.varianten_Tab = Me.Factory.CreateRibbonButton
-        Me.Create_Button = Me.Factory.CreateRibbonButton
         Me.Menu1 = Me.Factory.CreateRibbonMenu
         Me.createProjectReport = Me.Factory.CreateRibbonButton
         Me.createMultiprojectReport = Me.Factory.CreateRibbonButton
         Me.addElement = Me.Factory.CreateRibbonButton
+        Me.SmartInfo = Me.Factory.CreateRibbonGroup
+        Me.settingsTab = Me.Factory.CreateRibbonButton
+        Me.varianten_Tab = Me.Factory.CreateRibbonButton
+        Me.Create_Button = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.Group2.SuspendLayout()
@@ -258,6 +258,30 @@
         Me.Group1.Label = "Create / Add "
         Me.Group1.Name = "Group1"
         '
+        'Menu1
+        '
+        Me.Menu1.Items.Add(Me.createProjectReport)
+        Me.Menu1.Items.Add(Me.createMultiprojectReport)
+        Me.Menu1.Label = "Create Report"
+        Me.Menu1.Name = "Menu1"
+        '
+        'createProjectReport
+        '
+        Me.createProjectReport.Label = "Single Project"
+        Me.createProjectReport.Name = "createProjectReport"
+        Me.createProjectReport.ShowImage = True
+        '
+        'createMultiprojectReport
+        '
+        Me.createMultiprojectReport.Label = "Multi Project"
+        Me.createMultiprojectReport.Name = "createMultiprojectReport"
+        Me.createMultiprojectReport.ShowImage = True
+        '
+        'addElement
+        '
+        Me.addElement.Label = "Add Phase / Milestone"
+        Me.addElement.Name = "addElement"
+        '
         'SmartInfo
         '
         Me.SmartInfo.Items.Add(Me.settingsTab)
@@ -282,30 +306,6 @@
         Me.Create_Button.Name = "Create_Button"
         Me.Create_Button.ScreenTip = "creates report from template"
         Me.Create_Button.Visible = False
-        '
-        'Menu1
-        '
-        Me.Menu1.Items.Add(Me.createProjectReport)
-        Me.Menu1.Items.Add(Me.createMultiprojectReport)
-        Me.Menu1.Label = "Create Report"
-        Me.Menu1.Name = "Menu1"
-        '
-        'createProjectReport
-        '
-        Me.createProjectReport.Label = "Single Project"
-        Me.createProjectReport.Name = "createProjectReport"
-        Me.createProjectReport.ShowImage = True
-        '
-        'createMultiprojectReport
-        '
-        Me.createMultiprojectReport.Label = "Multi Project"
-        Me.createMultiprojectReport.Name = "createMultiprojectReport"
-        Me.createMultiprojectReport.ShowImage = True
-        '
-        'addElement
-        '
-        Me.addElement.Label = "Add Phase / Milestone"
-        Me.addElement.Name = "addElement"
         '
         'Ribbon1
         '

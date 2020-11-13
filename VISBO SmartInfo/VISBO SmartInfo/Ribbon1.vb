@@ -832,6 +832,15 @@ Public Class Ribbon1
         Dim err As New clsErrorCodeMsg
         Dim VCId As String = ""
 
+        ' tk wenn die jetzt noch nicht gesetzt sind , dann müssen die jetzt gesetzt werden 
+        If awinSettings.databaseURL = "" Then
+            awinSettings.databaseURL = "https://my.visbo.net/api"
+            awinSettings.visboServer = True
+            awinSettings.proxyURL = ""
+            awinSettings.DBWithSSL = True
+            awinSettings.databaseName = "MS Project"
+        End If
+
         ' tk das muss beim Login gemacht werden 
         'awinSettings.databaseURL = My.Settings.dbURL
         'awinSettings.databaseName = My.Settings.dbName
@@ -1034,6 +1043,8 @@ Public Class Ribbon1
 
 
                 wasSuccessful = True
+                appearancesWereRead = True
+
             Catch ex As Exception
                 wasSuccessful = False
                 errMsg = ex.Message
@@ -1042,6 +1053,8 @@ Public Class Ribbon1
         Else
             wasSuccessful = False
         End If
+        ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
+
 
         successfulLoginAndSetup = wasSuccessful
     End Function
@@ -1051,6 +1064,7 @@ Public Class Ribbon1
 
         Dim returnValue As Windows.Forms.DialogResult
         Dim errMsg As String = ""
+
 
         Dim loadProjectsForm As New frmProjPortfolioAdmin
         Dim weitermachen As Boolean = True
@@ -1063,6 +1077,11 @@ Public Class Ribbon1
             ' jetzt hat ja alles geklappt: login, Settings lesen, ... 
             appearancesWereRead = True
             noDBAccessInPPT = False
+
+            ' tk 13.11 jetzt bestimmen ob die Slide PRoject / Multiproject / Portfolio Reporting Komponenten hat
+            ' Constante in projectboardDefinitions mit den Schlüsselwörtern für Projekte, Multiprojekte, Portfolios ...
+            ' tk noch nicht bestimmt ... 
+
             Try
 
                 With loadProjectsForm
@@ -1084,6 +1103,8 @@ Public Class Ribbon1
                         hproj = selectedProjekte.getProject(1)
 
                         Dim tmpCollection As New Collection
+
+                        ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
                         Call createPPTSlidesFromProjectWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
                         ' tk 7.10 selectedProjekte wieder zurücksetzen ..
                         ShowProjekte.Clear(False)

@@ -24,6 +24,7 @@ Module Module1
     Friend Const protectionValue As String = "VisboValue"
     Friend Const noVariantName As String = "-9999999"
 
+
     Friend myPPTWindow As PowerPoint.DocumentWindow = Nothing
 
     'Friend xlApp As New xlNS.Application
@@ -43,8 +44,8 @@ Module Module1
 
     '
     ' wird benötigt für ReportCreation
-    Friend currentPresHasProjectTemplates As Boolean = False
-    Friend currentPresHasPortfolioTemplates As Boolean = False
+    Friend currentSldHasProjectTemplates As Boolean = False
+    Friend currentSldHasPortfolioTemplates As Boolean = False
 
     Friend appearancesWereRead As Boolean = False
     ' Ende ReportCreation Spezifika
@@ -1483,8 +1484,8 @@ Module Module1
 
         ' die müssen zurück gesetzt werden , weil neue PResentation 
         ' müssen auch erst gesetzt werden, wenn neue Slide
-        currentPresHasProjectTemplates = False
-        currentPresHasPortfolioTemplates = False
+        currentSldHasProjectTemplates = False
+        currentSldHasPortfolioTemplates = False
 
 
         If currentPresHasVISBOElements Then
@@ -8562,6 +8563,38 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' determines whether or not the shape is a reporting component template
+    ''' i.e contains certain keywords in .AlternativeText 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    Public Function isProjectReportingComponent(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim keyWords As String() = {"Swimlanes", "Swimlanes2", "AlleProjektElemente", "Einzelprojektsicht"}
+        Dim searchtext = curShape.AlternativeText
+
+        If IsNothing(searchtext) Then
+            isProjectReportingComponent = False
+        Else
+            isProjectReportingComponent = keyWords.Contains(curShape.AlternativeText)
+        End If
+
+    End Function
+
+    Public Function isMultiProjectReportingComponent(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim keyWords As String() = {"Multiprojektsicht"}
+        Dim searchtext = curShape.AlternativeText
+
+        If IsNothing(searchtext) Then
+            isMultiProjectReportingComponent = False
+        Else
+            isMultiProjectReportingComponent = keyWords.Contains(curShape.AlternativeText)
+        End If
+
+    End Function
+
+    ''' <summary>
     ''' liefert den Enumeration Typ des Comments zurück 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -9174,6 +9207,18 @@ Module Module1
         Next
 
     End Sub
+
+
+    Public Function slideHasProjectReportComponent(ByVal sld As PowerPoint.Slide) As Boolean
+        Dim found As Boolean = False
+
+        For Each pptShape As PowerPoint.Shape In sld.Shapes
+
+        Next
+
+
+        slideHasProjectReportComponent = found
+    End Function
 
     'Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
 
