@@ -866,6 +866,7 @@ Public Module Module1
         setWriteProtection = 10
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
+        loadMultiPVInPPT = 13
     End Enum
 
     ''' <summary>

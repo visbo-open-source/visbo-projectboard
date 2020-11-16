@@ -1105,11 +1105,14 @@ Public Class Ribbon1
             Try
                 If Not currentSldHasPortfolioTemplates Then
 
-
-
                     With loadProjectsForm
-
-                        .aKtionskennung = PTTvActions.loadPVInPPT
+                        ' if it is a project reporting template such as Swimlanes, then only allow selection of one item 
+                        If currentSldHasProjectTemplates Then
+                            .aKtionskennung = PTTvActions.loadPVInPPT
+                        ElseIf currentSldHasMultiProjectTemplates Then
+                            ' if it is a multiproject reporting template such as Multiprojektsicht, then allow multi-selection of several items 
+                            .aKtionskennung = PTTvActions.loadMultiPVInPPT
+                        End If
 
                     End With
 
