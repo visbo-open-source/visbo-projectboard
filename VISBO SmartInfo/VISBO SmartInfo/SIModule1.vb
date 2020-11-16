@@ -6,7 +6,7 @@ Imports PowerPoint = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core.MsoThemeColorIndex
 
-Module Module1
+Module SIModule1
 
     'Friend Const hiddenExcelSheetName As String = "visboupdate"
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -42,14 +42,6 @@ Module Module1
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
 
-    '
-    ' wird benötigt für ReportCreation
-    Friend currentSldHasProjectTemplates As Boolean = False
-    Friend currentSldHasPortfolioTemplates As Boolean = False
-
-    Friend appearancesWereRead As Boolean = False
-    ' Ende ReportCreation Spezifika
-    '
 
     ' die VISBO TimeMachine nimmt alle PRojekte und Timestamps auf 
     Friend timeMachine As New clsPPTTimeMachine
@@ -9209,15 +9201,34 @@ Module Module1
     End Sub
 
 
-    Public Function slideHasProjectReportComponent(ByVal sld As PowerPoint.Slide) As Boolean
+    ''' <summary>
+    ''' sets the global parameters currentSldhasprojecttemplates, 
+    ''' </summary>
+    ''' <param name="sld"></param>
+    ''' <returns></returns>
+    Public Function slideHasReportComponents(ByVal sld As PowerPoint.Slide) As Boolean
+
         Dim found As Boolean = False
+        currentSldHasProjectTemplates = False
+        currentSldHasMultiProjectTemplates = False
+        currentSldHasPortfolioTemplates = False
 
         For Each pptShape As PowerPoint.Shape In sld.Shapes
+            If Not currentSldHasProjectTemplates Then
+                currentSldHasProjectTemplates = projectComponentNames.Contains(pptShape.Title) Or projectComponentNames.Contains(pptShape.AlternativeText)
+            End If
+
+            If Not currentSldHasMultiProjectTemplates Then
+                currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(pptShape.Title) Or multiprojectComponentNames.Contains(pptShape.AlternativeText)
+            End If
+
+            If Not currentSldHasPortfolioTemplates Then
+                currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(pptShape.Title) Or portfolioComponentNames.Contains(pptShape.AlternativeText)
+            End If
 
         Next
 
-
-        slideHasProjectReportComponent = found
+        slideHasReportComponents = currentSldHasProjectTemplates Or currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates
     End Function
 
     'Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
@@ -10603,6 +10614,12 @@ Module Module1
 
         ' die aktuelle Slide setzen 
         If Not IsNothing(Sld) Then
+
+
+            ' re-set parameters necessary for Creating reporting templates
+            currentSldHasProjectTemplates = False
+            currentSldHasMultiProjectTemplates = False
+            currentSldHasPortfolioTemplates = False
 
             If currentPresHasVISBOElements Then
                 ' nur dann muss irgendwas weitergemacht werden ..

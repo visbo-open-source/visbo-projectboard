@@ -6,6 +6,27 @@ Imports System.Collections
 Imports ProjectBoardBasic
 Module creationModule
 
+    ' defines the keyWords fpr Powerpoint Reporting Compoents, so that report component can be generated
+    Friend projectComponentNames As String() = {"Projekt-Name", "Custom-Field", "selectedItems", "Einzelprojektsicht",
+                                                "AllePlanElemente", "Swimlanes", "Swimlanes2", "TableBudgetCostAPVCV",
+                                                "TableMilestoneAPVCV", "ProjektBedarfsChart", "Ampel-Farbe", "Ampel-Text",
+                                                "Beschreibung", "Business-Unit", "SymTrafficLight", "SymRisks", "SymGoals",
+                                                "SymTeam", "SymFinance", "SymSchedules", "SymPrPf", "Stand:", "Laufzeit:", "Verantwortlich:"}
+
+    Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
+
+    Friend portfolioComponentNames As String() = {}
+
+    '
+    ' wird benötigt für ReportCreation
+    Friend currentSldHasProjectTemplates As Boolean = False
+    Friend currentSldHasMultiProjectTemplates As Boolean = False
+    Friend currentSldHasPortfolioTemplates As Boolean = False
+
+    Friend appearancesWereRead As Boolean = False
+    ' Ende ReportCreation Spezifika
+    '
+
 
     ''' <summary>
     ''' erzeugt den Bericht auf Grundlage des aktuell geladenen Powerpoints  
@@ -216,7 +237,7 @@ Module creationModule
                         kennzeichnung = "Ampel-Farbe" Or
                         kennzeichnung = "Ampel-Text" Or
                         kennzeichnung = "Beschreibung" Or
-                        kennzeichnung = "Business-Unit:" Or
+                        kennzeichnung = "Business-Unit" Or
                         kennzeichnung = "SymTrafficLight" Or
                         kennzeichnung = "SymRisks" Or
                         kennzeichnung = "SymGoals" Or
@@ -795,7 +816,7 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                            Case "Business-Unit:"
+                            Case "Business-Unit"
 
                                 If boxName = kennzeichnung Then
                                     If englishLanguage Then

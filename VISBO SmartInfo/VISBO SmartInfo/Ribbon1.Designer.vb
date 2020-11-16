@@ -60,9 +60,7 @@
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.btnFreeze = Me.Factory.CreateRibbonButton
         Me.Group1 = Me.Factory.CreateRibbonGroup
-        Me.Menu1 = Me.Factory.CreateRibbonMenu
-        Me.createProjectReport = Me.Factory.CreateRibbonButton
-        Me.createMultiprojectReport = Me.Factory.CreateRibbonButton
+        Me.btn_CreateReport = Me.Factory.CreateRibbonButton
         Me.addElement = Me.Factory.CreateRibbonButton
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.settingsTab = Me.Factory.CreateRibbonButton
@@ -253,29 +251,18 @@
         '
         'Group1
         '
-        Me.Group1.Items.Add(Me.Menu1)
+        Me.Group1.Items.Add(Me.btn_CreateReport)
         Me.Group1.Items.Add(Me.addElement)
         Me.Group1.Label = "Create / Add "
         Me.Group1.Name = "Group1"
         '
-        'Menu1
+        'btn_CreateReport
         '
-        Me.Menu1.Items.Add(Me.createProjectReport)
-        Me.Menu1.Items.Add(Me.createMultiprojectReport)
-        Me.Menu1.Label = "Create Report"
-        Me.Menu1.Name = "Menu1"
-        '
-        'createProjectReport
-        '
-        Me.createProjectReport.Label = "Single Project"
-        Me.createProjectReport.Name = "createProjectReport"
-        Me.createProjectReport.ShowImage = True
-        '
-        'createMultiprojectReport
-        '
-        Me.createMultiprojectReport.Label = "Multi Project"
-        Me.createMultiprojectReport.Name = "createMultiprojectReport"
-        Me.createMultiprojectReport.ShowImage = True
+        Me.btn_CreateReport.KeyTip = "CR"
+        Me.btn_CreateReport.Label = "Create Report"
+        Me.btn_CreateReport.Name = "btn_CreateReport"
+        Me.btn_CreateReport.ScreenTip = """ScreenTip"""
+        Me.btn_CreateReport.SuperTip = """SuperTip"""
         '
         'addElement
         '
@@ -374,10 +361,8 @@
     Friend WithEvents btnFreeze As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnToggle As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group1 As Microsoft.Office.Tools.Ribbon.RibbonGroup
-    Friend WithEvents Menu1 As Microsoft.Office.Tools.Ribbon.RibbonMenu
-    Friend WithEvents createProjectReport As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents createMultiprojectReport As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents addElement As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btn_CreateReport As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

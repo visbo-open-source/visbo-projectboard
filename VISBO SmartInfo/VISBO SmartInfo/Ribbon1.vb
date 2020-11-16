@@ -1060,11 +1060,31 @@ Public Class Ribbon1
     End Function
 
 
-    Private Sub createProjectReport_Click(sender As Object, e As RibbonControlEventArgs) Handles createProjectReport.Click
+
+    Private Sub btn_CreateReport_Click(sender As Object, e As RibbonControlEventArgs) Handles btn_CreateReport.Click
 
         Dim returnValue As Windows.Forms.DialogResult
         Dim errMsg As String = ""
 
+        Dim singleProjectSelect As Boolean = True
+
+        ' check whether or not there are any reporting Components on current page. 
+        ' IF Not , do nothing 
+
+        If Not slideHasReportComponents(currentSlide) Then
+            Call MsgBox("no reporting components found on current slide! -> Exit")
+            Exit Sub
+        End If
+
+        ' check on valid combinations 
+        If currentSldHasProjectTemplates And Not (currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates) Then
+            singleProjectSelect = True
+        ElseIf Not currentSldHasProjectTemplates And (currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates) Then
+            singleProjectSelect = False
+        Else
+            Call MsgBox("no combination of project and multiproject/Portfolio components allowed! -> Exit")
+            Exit Sub
+        End If
 
         Dim loadProjectsForm As New frmProjPortfolioAdmin
         Dim weitermachen As Boolean = True
@@ -1083,65 +1103,71 @@ Public Class Ribbon1
             ' tk noch nicht bestimmt ... 
 
             Try
-
-                With loadProjectsForm
-
-                    .aKtionskennung = PTTvActions.loadPVInPPT
-
-                    '' '' ''.portfolioName.Visible = False
-                    '' '' ''.Label1.Visible = False
-                End With
-
-                returnValue = loadProjectsForm.ShowDialog
-
-                If returnValue = Windows.Forms.DialogResult.OK Then
-
-                    ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
-                    Dim hproj As clsProjekt = Nothing
-                    Dim anzP As Integer = ShowProjekte.Count
-                    If selectedProjekte.Count = 1 Then
-                        hproj = selectedProjekte.getProject(1)
-
-                        Dim tmpCollection As New Collection
-
-                        ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
-                        Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
-                        ' tk 7.10 selectedProjekte wieder zurücksetzen ..
-                        ShowProjekte.Clear(False)
-                        selectedProjekte.Clear(False)
-                        showRangeLeft = 0
-                        showRangeRight = 0
+                If Not currentSldHasPortfolioTemplates Then
 
 
-                        Try
-                            ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
 
-                            Dim savePath As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                            Dim fullFileName As String = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
-                            If anzP > 1 Then
-                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiprojekt-Report")
+                    With loadProjectsForm
+
+                        .aKtionskennung = PTTvActions.loadPVInPPT
+
+                    End With
+
+                    returnValue = loadProjectsForm.ShowDialog
+
+                    If returnValue = Windows.Forms.DialogResult.OK Then
+
+                        ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
+                        Dim hproj As clsProjekt = Nothing
+                        Dim anzP As Integer = ShowProjekte.Count
+                        If selectedProjekte.Count >= 1 Then
+                            hproj = selectedProjekte.getProject(1)
+
+                            Dim tmpCollection As New Collection
+
+                            ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
+                            Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
+                            ' tk 7.10 selectedProjekte wieder zurücksetzen ..
+                            ShowProjekte.Clear(False)
+                            selectedProjekte.Clear(False)
+                            showRangeLeft = 0
+                            showRangeRight = 0
+
+
+                            Try
+                                ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
+
+                                Dim savePath As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                                Dim fullFileName As String = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
+                                If anzP > 1 Then
+                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiprojekt-Report")
+                                End If
+
+                                pptAPP.ActivePresentation.SaveAs(fullFileName)
+
+                            Catch ex As Exception
+
+                            End Try
+
+
+                        Else
+                            Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "no project selected ... Exit"
                             End If
+                            Call MsgBox(msgtxt)
+                        End If
 
-                            pptAPP.ActivePresentation.SaveAs(fullFileName)
-
-                        Catch ex As Exception
-
-                        End Try
 
 
                     Else
-                        Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
-                        If awinSettings.englishLanguage Then
-                            msgtxt = "no project selected ... Exit"
-                        End If
-                        Call MsgBox(msgtxt)
+                        ' returnValue = DialogResult.Cancel
+
                     End If
 
 
-
                 Else
-                    ' returnValue = DialogResult.Cancel
-
+                    Call MsgBox("not yet implemented ... -> Exit")
                 End If
 
             Catch ex As Exception
@@ -1149,13 +1175,9 @@ Public Class Ribbon1
                 Call MsgBox(ex.Message)
             End Try
         Else
-            Call MsgBox("Cancelled ...")
+            Call MsgBox("Login Cancelled ... - no further action")
         End If
 
-    End Sub
-
-    Private Sub createMultiprojectReport_Click(sender As Object, e As RibbonControlEventArgs) Handles createMultiprojectReport.Click
-        Call MsgBox("Multi Project Report !")
     End Sub
 End Class
 
