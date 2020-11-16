@@ -387,17 +387,21 @@ Public Class clsRollen
     Public ReadOnly Property getContainingRoleOfSkillMembers(ByVal skillID As Integer) As clsRollenDefinition
         Get
             Dim tmpContainingRole As clsRollenDefinition = Nothing
+            Dim listOfTopLevelNodeIds As List(Of Integer) = getTopLevelNodeIDs
 
             Try
-                Dim skillRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+                Dim skillRole As clsRollenDefinition = getRoleDefByID(skillID)
                 If Not IsNothing(skillRole) Then
                     Dim allTeamMembers As SortedList(Of Integer, Double) = getSubRoleIDsOf(skillRole.name, type:=PTcbr.realRoles)
 
 
                     For Each kvp As KeyValuePair(Of Integer, Double) In allTeamMembers
 
-                        ' nur untersuchen, wenn es nicht die Rolle selber ist
-                        If kvp.Key <> skillID Then
+                        ' tk 16.11.20 wenn eine realrole eine Skill ist, heisst das, dass diese Skill keine Team-Members hat ...
+                        Dim checkRole As clsRollenDefinition = getRoleDefByID(kvp.Key)
+
+                        ' nur untersuchen, wenn es nicht die Rolle selber ist und die chckRole keine Skill ohne Team-MEmber
+                        If kvp.Key <> skillID And Not checkRole.isSkill Then
                             If IsNothing(tmpContainingRole) Then
                                 tmpContainingRole = Me.getParentRoleOf(kvp.Key)
                             Else
@@ -406,6 +410,11 @@ Public Class clsRollen
                         End If
 
                     Next
+
+                    ' Fehler abfangen, solange es Teams gibt, die kein isSkill Attribut haben 
+                    If IsNothing(tmpContainingRole) Then
+                        tmpContainingRole = getRoleDefByID(getTopLevelNodeIDs.First)
+                    End If
                 End If
 
 
@@ -413,6 +422,7 @@ Public Class clsRollen
 
             End Try
 
+            ' tk 16.11.20 wenn tmpContainingRole 
 
             getContainingRoleOfSkillMembers = tmpContainingRole
         End Get
@@ -571,8 +581,7 @@ Public Class clsRollen
         End Get
     End Property
     ''' <summary>
-    ''' gibt die Toplevel NodeIds zurück ...
-    ''' für den Portfolio Manager werden alle ausser des Top Levels für Teams zurückgegeben 
+    ''' gibt die Toplevel NodeIds zurück ...    ''' 
     ''' Level 0 ist die erste Ebene, Level 1 die zweite. Weitere werden aktuell nicht unterstützt 
     ''' </summary>
     ''' <value></value>
