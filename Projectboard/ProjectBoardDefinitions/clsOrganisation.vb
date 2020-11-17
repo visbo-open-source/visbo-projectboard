@@ -65,6 +65,46 @@
 
 
     ''' <summary>
+    ''' this function will copy an Organisation with allRoles, allCosts, validFrom
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function copy(ByRef outputCollection As Collection) As clsOrganisation
+
+        Dim result As New clsOrganisation
+        Dim orga_copy As New clsOrganisation
+        Dim roles_copy As New clsRollen
+        Dim cost_copy As New clsKostenarten
+        Try
+            ' validFrom kopieren
+            orga_copy.validFrom = Me.validFrom
+
+            ' orga.allRoles kopieren
+            For Each kvpRole As KeyValuePair(Of Integer, clsRollenDefinition) In Me.allRoles.liste
+                If Not orga_copy.allRoles.containsUid(kvpRole.Key) Then
+                    orga_copy.allRoles.Add(kvpRole.Value)
+                End If
+            Next
+            ' orga.allCosts kopieren
+            For Each kvpCost As KeyValuePair(Of Integer, clsKostenartDefinition) In Me.allCosts.liste
+                If Not orga_copy.allCosts.containsUid(kvpCost.Key) Then
+                    orga_copy.allCosts.Add(kvpCost.Value)
+                End If
+            Next
+
+        Catch ex As Exception
+            Call MsgBox("there was something wrong in organisation.copy")
+        End Try
+
+        ' Kopie zurückgeben
+        copy = orga_copy
+
+
+    End Function
+
+
+
+    ''' <summary>
     ''' prüft, ob die neue Organisation gültig ist; 
     ''' sie ist nur dann gültig, wenn jede Element-ID aus der alten Organisation auch im neuen vorkommt 
     ''' eine neue Element-ID darf keinen Namen haben, der bereits in der alten vorkommt 
@@ -75,6 +115,7 @@
 
         Dim Listeneintraege As Integer = outputCollection.Count
         Dim errmsg As String = ""
+        Dim missingRoles As New SortedList(Of Integer, clsRollenDefinition)
 
         If IsNothing(oldOrga) Then
             ' nichts tun , alles i.O
@@ -93,9 +134,14 @@
                 For ixr As Integer = 1 To anzRoles
                     'moveKapas = False
                     Dim oldRoleDefinition As clsRollenDefinition = oldRoles.getRoledef(ixr)
+
+
                     Dim newRoleDefinition As clsRollenDefinition = _allRoles.getRoleDefByID(oldRoleDefinition.UID)
                     If Not IsNothing(newRoleDefinition) Then
+
                         ' schon mal ok , die beiden haben hier gleiche UID , weil die newRoleDef mit der ID der oldRoleDef geholt wird
+
+
                         If newRoleDefinition.name = oldRoleDefinition.name Then
                             ' ok 
                             'moveKapas = True
@@ -117,20 +163,31 @@
                                 'moveKapas = True
                             End If
                         End If
+
+                        If stillOK Then
+
+                            If Not newRoleDefinition.isIdenticalTo(oldRoleDefinition, False) Then
+                                oldOrga.allRoles.remove(oldRoleDefinition)
+                                'newRoleDefinition = adaptCapa(oldRoleDefinition, newRoleDefinition, outputCollection)
+                                oldOrga.allRoles.Add(newRoleDefinition)
+                            End If
+                        End If
+
                     Else
-                        ' nicht ok => oldRoleDefinition wird in neue Liste _allRoles aufgenommen
-                        Try
-                            ' muss noch ausprogrammiert werden - erst mal nur RoundTrip
+                        ' nicht ok => oldRoleDefinition wird in Liste der fehlenden Rollen (missingRoles) eingetragen
+                        missingRoles.Add(oldRoleDefinition.UID, oldRoleDefinition)
+                        'Try
+                        '    ' muss noch ausprogrammiert werden - erst mal nur RoundTrip
 
-                            ' aktuell also Fehler melden
-                            errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
-                            outputCollection.Add(errmsg)
-                        Catch ex As Exception
-                            errmsg = ex.Message
-                            errmsg = errmsg & vbLf & "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
-                            outputCollection.Add(errmsg)
+                        '    ' aktuell also Fehler melden
+                        '    errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                        '    outputCollection.Add(errmsg)
+                        'Catch ex As Exception
+                        '    errmsg = ex.Message
+                        '    errmsg = errmsg & vbLf & "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
+                        '    outputCollection.Add(errmsg)
 
-                        End Try
+                        'End Try
 
 
                     End If
@@ -141,6 +198,12 @@
                     '    newRoleDefinition.kapazitaet = oldRoleDefinition.kapazitaet
                     'End If
                 Next
+
+                ' missingRoles nachbehandeln - subroleIDs vervollständigen
+                ' 1. alle missing_Roles von oldOrga übernehmen u
+                ' 2. alle missingRole die SubRoleIDs richtig setzen d.h. in oldOrga nachsehen, wer Parent ist und dann dort als kind eintragen
+
+
 
 
                 '' jetzt die Kosten ..

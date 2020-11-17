@@ -8805,8 +8805,15 @@ Public Module agm2
         ' auslesen der Gültigkeit
         Try
             validFrom = CDate(CType(orgaSheet.Cells(1, 2), Excel.Range).Value)
-            withoutConfiguration = True
+            If validFrom <> Date.MinValue Then
+                withoutConfiguration = True
+            Else
+                validFrom = Date.Now
+                withoutConfiguration = False
+            End If
+
         Catch ex As Exception
+            validFrom = Date.Now
             withoutConfiguration = False
         End Try
 
@@ -8842,15 +8849,26 @@ Public Module agm2
             '' alte Vorgehensweise, ohne Configuration
             '' ----------------------------------------
             ' Auslesen der Kosten Definitionen 
-            'Dim newCostDefinitions As New clsKostenarten
-            'Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+            Dim newCostDefinitions As New clsKostenarten
+            If IsNothing(configListe) Or withoutConfiguration Then
+                Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+            Else
+                Call readCostDefinitionsWithConfig(orgaSheet, newCostDefinitions, outputCollection, configListe)
+            End If
+            If awinSettings.visboDebug Then
+                Call MsgBox("readCostDefinitions")
+            End If
 
-            'If awinSettings.visboDebug Then
-            '        Call MsgBox("readCostDefinitions")
-            '    End If
+            ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+            If IsNothing(configListe) Or withoutConfiguration Then
+                ' Import ohne Configuration
+                ' Auslesen der Gruppen Definitionen
+                Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
 
-            '    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-            '    Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
+            Else  ' Import mit Configuration
+                ' Auslesen der Gruppen Definitionen 
+                Call readRoleDefinitionsWithConfig(orgaSheet, newRoleDefinitions, outputCollection, configListe, readingGroups:=True)
+            End If
 
             '' ----------------------------------------
             '' alte Vorgehensweise, ohne Configuration
@@ -8870,21 +8888,29 @@ Public Module agm2
                         ElseIf TeamsAreNotOK Or existingOverloads Then
                             ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
                         Else
-                            'bis hier ist alles in Ordnung 
-                            With importedOrga
-                                .allRoles = newRoleDefinitions
-                            ''.allCosts = newCostDefinitions
+                        'bis hier ist alles in Ordnung 
+                        With importedOrga
+                            .allRoles = newRoleDefinitions
+                            .allCosts = newCostDefinitions
                             .validFrom = validFrom
-                            End With
+                        End With
 
-                            If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
-                                ' wieder zurück setzen ..
-                                importedOrga = New clsOrganisation
+                        ' OldOrga kopieren
+                        Dim orgaCopy As New clsOrganisation
+                        If Not IsNothing(oldOrga) Then
+                            orgaCopy = oldOrga.copy(outputCollection)
+                        Else
+                            orgaCopy = Nothing
+                        End If
 
-                            Else
-                                ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
-                                ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
-                                If Not IsNothing(oldOrga) Then
+                        If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
+                            ' wieder zurück setzen ..
+                            importedOrga = New clsOrganisation
+
+                        Else
+                            ' jetzt sollen die Kapazitäten aus der alten Orga übernommen werden ...
+                            ' dabei muss aber auch berücksichtigt werden, ob sich Eintritts-Datum, Austrittsdatum bzw DefaultKapa verändert haben  
+                            If Not IsNothing(oldOrga) Then
 
 
                                     If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
@@ -22895,8 +22921,6 @@ Public Module agm2
                                     End If
 
                                     ' tk 5.12 Aufnahme extern
-
-
                                     If Not IsNothing(c.Offset(0, 3).Value) Then
                                         Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
                                         tmpValue = tmpValue.Trim
@@ -23115,11 +23139,12 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
+                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
 
                                         If curLevel = maxIndent And readingGroups Then
-                                            If Not parentRole.isTeam Then
-                                                parentRole.isTeam = True
-                                            End If
+                                            'If Not parentRole.isTeam Then
+                                            '    parentRole.isTeam = True
+                                            'End If
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
                                                 If awinSettings.englishLanguage Then
@@ -23176,28 +23201,37 @@ Public Module agm2
                                         ' als Child aufnehmen 
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
+
                                         parentRole.addSubRole(subRole.UID, przSatz)
+                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
 
-                                        ' hier kann er eigentlich nie hinkommen ...
-                                        If curLevel = maxIndent And readingGroups Then
-                                            If Not parentRole.isTeam Then
-                                                parentRole.isTeam = True
-                                            End If
+                                        If readingGroups Then
+                                            ' hier kann er eigentlich nie hinkommen ...
+                                            If curLevel = maxIndent Then
+                                                'If Not parentRole.isTeam Then
+                                                '    parentRole.isTeam = True
+                                                'End If
 
-                                            If subRole.getSubRoleCount > 0 Then
-                                                ' Fehler ! 
-                                                If awinSettings.englishLanguage Then
-                                                    errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                If subRole.getSubRoleCount > 0 Then
+                                                    ' Fehler ! 
+                                                    If awinSettings.englishLanguage Then
+                                                        errMsg = "row: " & ix.ToString & " : " & subRole.name & " is parent-role and can't be Team-Member!"
+                                                    Else
+                                                        errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                    End If
+
+                                                    meldungen.Add(errMsg)
                                                 Else
-                                                    errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
+                                                    subRole.addTeam(parentRole.UID, przSatz)
                                                 End If
 
-                                                meldungen.Add(errMsg)
                                             Else
-                                                subRole.addTeam(parentRole.UID, przSatz)
+                                                If subRole.getSubRoleCount = 0 Then
+                                                    subRole.isTeam = readingGroups
+                                                End If
                                             End If
-
                                         End If
+
 
                                     Else
                                         ' nichts tun 
@@ -23257,7 +23291,7 @@ Public Module agm2
 
 
         '
-        ' Rollen Definitionen auslesen - im Bereich awin_Rollen_Definition
+        ' Rollen Definitionen auslesen - im Bereich <awin_Rollen_Definition> und/oder <awin_Gruppen_Definition> 
         '
         Dim index As Integer = 0
         Dim tmpStr As String
@@ -23265,13 +23299,15 @@ Public Module agm2
         Dim roleUID As Integer = 0
         Dim roleUidsDefined As Boolean = False
         Dim przSatz As Double = 1.0
+        Dim isTeam As Boolean = False
         Dim defaultTagessatz As Double = 800.0
         Dim errMsg As String = ""
-        Dim trennz As String = ","
+        Dim aliasTrennz As String = "#"
         Dim fuellz As String = " "
         Dim anzFuellz As Integer = 1
 
         Dim nameCol As Integer
+        Dim typeCol As Integer
         Dim relIDCol As Integer
         Dim relTagssatzCol As Integer
         Dim reldefaultCapaCol As Integer
@@ -23279,24 +23315,30 @@ Public Module agm2
         Dim relEmployeeNrCol As Integer
         Dim relentryDateCol As Integer
         Dim relexitDateCol As Integer
+        Dim relpercentCol As Integer
         Dim relAliasesCol As Integer
-        Dim relIsExternRole As Integer
+        Dim relIsExternRoleCol As Integer
+        Dim relIsTeamCol As Integer
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
             ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
 
             valuestart = configListe("valueStart").row.von
+            typeCol = configListe("orgaType").column.von
             nameCol = configListe("Name").column.von
             relIDCol = configListe("UID").column.von - nameCol
             relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
+            relIsExternRoleCol = configListe("isExternRole").column.von - nameCol
+            relIsTeamCol = configListe("isTeam").column.von - nameCol
             reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
             reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
             relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
             relexitDateCol = configListe("exitDate").column.von - nameCol
             relentryDateCol = configListe("entryDate").column.von - nameCol
+            relpercentCol = configListe("percent").column.von - nameCol
             relAliasesCol = configListe("aliases").column.von - nameCol
-            relIsExternRole = configListe("isExternRole").column.von - nameCol
+
 
         Catch ex As Exception
 
@@ -23308,6 +23350,40 @@ Public Module agm2
             Dim maxIndent As Integer = 0
             Dim rolesRange As Excel.Range = Nothing
 
+
+            ' find end of roles/groups/costs
+            Dim i As Integer = 0
+            Dim rolesStart As Integer = 0
+            Dim anzRoles As Integer = 0
+            Dim groupsStart As Integer = 0
+            Dim anzGroups As Integer = 0
+            Dim costsStart As Integer = 0
+            Dim anzCosts As Integer = 0
+
+            With wsname
+                valueend = CType(.Cells(2000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                For i = valuestart To valueend
+                    Dim tmpTypeValue As String = CType(.Cells(i, typeCol), Excel.Range).Value
+                    Select Case tmpTypeValue
+                        Case 1
+                            If anzRoles = 0 Then
+                                rolesStart = i
+                            End If
+                            anzRoles += 1
+                        Case 2
+                            If anzGroups = 0 Then
+                                groupsStart = i
+                            End If
+                            anzGroups += 1
+                        Case 3
+                            If anzCosts = 0 Then
+                                costsStart = i
+                            End If
+                            anzCosts += 1
+                    End Select
+                Next
+            End With
+
             If readingGroups Then
                 Try
                     If awinSettings.englishLanguage Then
@@ -23315,8 +23391,13 @@ Public Module agm2
                     Else
                         errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
                     End If
+                    ' rolesRange = awin_Gruppen_Definition
+                    With wsname
+                        valueend = groupsStart + anzGroups - 1
+                        rolesRange = .Range(.Cells(groupsStart, nameCol), .Cells(valueend, nameCol))
+                    End With
 
-                    rolesRange = wsname.Range("awin_Gruppen_Definition")
+                    przSatz = 1.0
                 Catch ex As Exception
                     rolesRange = Nothing
                 End Try
@@ -23329,11 +23410,13 @@ Public Module agm2
                         errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
                     End If
 
+
                     'rolesRange = wsname.Range("awin_Rollen_Definition")
                     With wsname
-                        valueend = CType(.Cells(2000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
-                        rolesRange = .Range(.Cells(valuestart, nameCol), .Cells(valueend, nameCol))
+                        valueend = rolesStart + anzRoles - 1
+                        rolesRange = .Range(.Cells(rolesStart, nameCol), .Cells(valueend, nameCol))
                     End With
+
                     przSatz = 1.0
                 Catch ex As Exception
                     rolesRange = Nothing
@@ -23347,7 +23430,7 @@ Public Module agm2
                 Exit Sub
             Else
                 errMsg = ""
-                Dim anzZeilen As Integer = rolesRange.Rows.Count + 1
+                Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
                 ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
@@ -23361,7 +23444,7 @@ Public Module agm2
                 Dim groupDefinitionIsOk As Boolean = True
                 Dim uniqueNames As New Collection
 
-                For i = 1 To anzZeilen - 1
+                For i = 1 To anzZeilen
 
                     Try
 
@@ -23447,65 +23530,89 @@ Public Module agm2
                             End If
                         Else
                             ' readingGroups
-                            If tmpIDValue <> "" Then
-                                If Not uniqueNames.Contains(tmpOrgaName) Then
-                                    uniqueNames.Add(tmpOrgaName, tmpOrgaName)
-                                    If neueRollendefinitionen.containsName(tmpOrgaName) Then
+                            ' wenn kein przSatz angegeben ist, so ist es eine Gruppe, die nicht den gleichen Namen wie ein Orga-Mitglied haben darf
+                            ' außerdem ist bei einer Gruppe isTeam = 1 
+                            przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, relpercentCol), Excel.Range), 0.0, 0.0, 1.0)
+
+                            ' Wenn bei readRoleDefinitions mit readingGroups = true kein percent angegeben ist, so muss isTeam auf true gesetzt werden
+                            If (przSatz = 0) Then
+                                isTeam = True
+                            End If
+
+                            ' alternativ kann dies auch explizit angegeben sein
+                            If Not IsNothing(c.Offset(0, relIsTeamCol).Value) Then
+                                Dim tmpValue As String = CStr(c.Offset(0, relIsTeamCol).Value)
+                                tmpValue = tmpValue.Trim
+                                Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                If positiveCriterias.Contains(tmpValue) Then
+                                    isTeam = True
+                                End If
+                            End If
+
+                            ' hier wird sichergestellt, dass es ein Team ist
+                            If Not (przSatz > 0.0 And przSatz <= 1.0) And isTeam Then
+                                    'If tmpIDValue <> "" Then
+                                    If Not uniqueNames.Contains(tmpOrgaName) Then
+                                        uniqueNames.Add(tmpOrgaName, tmpOrgaName)
+                                        If neueRollendefinitionen.containsName(tmpOrgaName) Then
+                                            If awinSettings.englishLanguage Then
+                                                errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                            Else
+                                                errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
+                                            End If
+
+                                            meldungen.Add(errMsg)
+                                            CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                        End If
+                                    Else
+
                                         If awinSettings.englishLanguage Then
-                                            errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
+                                            errMsg = "roles with same name are not allowed: " & tmpOrgaName
                                         Else
-                                            errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
+                                            errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
                                         End If
 
                                         meldungen.Add(errMsg)
                                         CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                     End If
                                 Else
+                                    'If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
+                                    '        If awinSettings.englishLanguage Then
+                                    '            errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                    '        Else
+                                    '            errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
+                                    '        End If
+
+                                    '        meldungen.Add(errMsg)
+                                    '        CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    '    End If
+                                    'End If
+                                End If
+                            End If
+
+
+
+                            ' jetzt checken 
+                            If readingGroups And isWithoutID Then
+                                ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
+                                Dim roleName As String = CStr(c.Value.trim)
+
+                                If Not neueRollendefinitionen.containsName(roleName) Then
 
                                     If awinSettings.englishLanguage Then
-                                        errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                        errMsg = "Team-Role " & roleName & " does not exist ..."
                                     Else
-                                        errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
+                                        errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
                                     End If
 
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                End If
-                            Else
-                                If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
-                                    If awinSettings.englishLanguage Then
-                                        errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
-                                    Else
-                                        errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
-                                    End If
 
-                                    meldungen.Add(errMsg)
-                                    CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    groupDefinitionIsOk = False
                                 End If
+
                             End If
-                        End If
-
-
-                        ' jetzt checken 
-                        If readingGroups And isWithoutID Then
-                            ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
-                            Dim roleName As String = CStr(c.Value.trim)
-
-                            If Not neueRollendefinitionen.containsName(roleName) Then
-
-                                If awinSettings.englishLanguage Then
-                                    errMsg = "Team-Role " & roleName & " does not exist ..."
-                                Else
-                                    errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
-                                End If
-
-                                meldungen.Add(errMsg)
-                                CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-
-                                groupDefinitionIsOk = False
-                            End If
-
-                        End If
 
                     Catch ex As Exception
                         anzWithoutID = anzWithoutID + 1
@@ -23536,15 +23643,15 @@ Public Module agm2
                 Else
                     ' jetzt ist sichergestellt, dass alle Rollen eine ID haben oder keine ; dann wird sie generiert .. 
                     ' oder aber man ist im Reading Group Modus, wo ja nur die Gruppen eine ID benötigen
-                    For i = 1 To anzZeilen - 1
+                    For i = 1 To anzZeilen
 
-                        c = CType(rolesRange.Cells(i, 1), Excel.Range)
+                        c = CType(rolesRange.Cells(i, nameCol), Excel.Range)
 
                         If CStr(c.Value).Trim <> "" Then
 
                             index = index + 1
                             If anzWithID > 0 Then
-                                roleUID = CInt(CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, relIDCol).Value)
+                                roleUID = CInt(CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Value)
                             Else
                                 roleUID = index
                             End If
@@ -23559,16 +23666,35 @@ Public Module agm2
 
 
                             If isValidRoleName(tmpStr, errMsg) Then
-                                If readingGroups Then
-                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 1), Excel.Range), 0.0, 0.0, 1.0)
-                                Else
-                                    przSatz = 1.0
-                                End If
 
-                                ' jetzt kommt die Rollen Definition 
                                 hrole = New clsRollenDefinition
                                 Dim cp As Integer
                                 With hrole
+
+                                    If readingGroups Then
+                                        przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, relpercentCol), Excel.Range), 0.0, 0.0, 1.0)
+                                        ' Wenn bei readRoleDefinitions mit readingGroups = true kein percent angegeben ist, so muss isTeam auf true gesetzt werden
+                                        If (przSatz = 0) Then
+                                            .isTeam = True
+                                        End If
+
+                                        ' alternativ kann dies auch explizit angegeben sein
+                                        If Not IsNothing(c.Offset(0, relIsTeamCol).Value) Then
+                                            Dim tmpValue As String = CStr(c.Offset(0, relIsTeamCol).Value)
+                                            tmpValue = tmpValue.Trim
+                                            Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                            If positiveCriterias.Contains(tmpValue) Then
+                                                .isTeam = True
+                                            End If
+                                        End If
+
+                                    Else
+                                        przSatz = 1.0
+                                    End If
+
+                                    ' jetzt kommt die Rollen Definition 
+
                                     .name = tmpStr.Trim
 
                                     .defaultKapa = CDbl(c.Offset(0, reldefaultCapaCol).Value)
@@ -23581,8 +23707,8 @@ Public Module agm2
                                     ' tk 5.12 Aufnahme extern
 
 
-                                    If Not IsNothing(c.Offset(0, relIsExternRole).Value) Then
-                                        Dim tmpValue As String = CStr(c.Offset(0, relIsExternRole).Value)
+                                    If Not IsNothing(c.Offset(0, relIsExternRoleCol).Value) Then
+                                        Dim tmpValue As String = CStr(c.Offset(0, relIsExternRoleCol).Value)
                                         tmpValue = tmpValue.Trim
                                         Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
@@ -23692,7 +23818,7 @@ Public Module agm2
                                             If CStr(c.Offset(0, relAliasesCol).Value).Trim = "" Then
                                                 .aliases = Nothing
                                             Else
-                                                Dim tmpValues() As String = CStr(c.Offset(0, relAliasesCol).Value).Trim.Split(New Char() {CChar(trennz)})
+                                                Dim tmpValues() As String = CStr(c.Offset(0, relAliasesCol).Value).Trim.Split(New Char() {CChar(aliasTrennz)})
                                                 .aliases = tmpValues
                                             End If
                                         Else
@@ -23782,7 +23908,7 @@ Public Module agm2
 
                         ix += 1
 
-                        Do While ix <= anzZeilen - 1
+                        Do While ix <= anzZeilen
 
                             Try
                                 'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
@@ -23795,12 +23921,12 @@ Public Module agm2
 
                                 If readingGroups Then
                                     ' jetzt steht die Team Kapa da, wo auch die Hierarchie-Kapa steht ... 
-                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                    przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, relpercentCol), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                 Else
                                     przSatz = 1.0
                                 End If
 
-                                Do While curLevel = lastLevel And ix <= anzZeilen - 1
+                                Do While curLevel = lastLevel And ix <= anzZeilen
 
                                     If curLevel > 0 Then
                                         ' als Child aufnehmen 
@@ -23808,11 +23934,12 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
+                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
 
                                         If curLevel = maxIndent And readingGroups Then
-                                            If Not parentRole.isTeam Then
-                                                parentRole.isTeam = True
-                                            End If
+                                            'If Not parentRole.isTeam Then
+                                            '    parentRole.isTeam = True
+                                            'End If
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
                                                 If awinSettings.englishLanguage Then
@@ -23830,6 +23957,7 @@ Public Module agm2
 
                                         ' 29.6.18 auch hier den Parent weiterschalten 
                                         parents(curLevel) = curRoleName
+
                                     Else
                                         ' hier den Parent weiterschalten  
                                         parents(curLevel) = curRoleName
@@ -23839,7 +23967,7 @@ Public Module agm2
                                     ix = ix + 1
 
                                     ' hat sich der Indentlevel immer noch nicht geändert ? 
-                                    If ix <= anzZeilen - 1 Then
+                                    If ix <= anzZeilen Then
                                         'curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                         curLevel = bestimmeIndent(CType(rolesRange.Cells(ix, 1), Excel.Range).Value, fuellz, anzFuellz)
                                         'curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
@@ -23849,7 +23977,7 @@ Public Module agm2
                                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                         End If
                                         If readingGroups Then
-                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
+                                            przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, relpercentCol), Excel.Range).Offset(0, 1), 0.0, 0.0, 1.0)
                                         Else
                                             przSatz = 1.0
                                         End If
@@ -23866,8 +23994,8 @@ Public Module agm2
 
                                     If curLevel < lastLevel Then
                                         ' in der Hierarchie zurück 
-                                        For i As Integer = curLevel + 1 To maxIndent
-                                            parents(i) = ""
+                                        For ip As Integer = curLevel + 1 To maxIndent
+                                            parents(ip) = ""
                                         Next
                                     End If
 
@@ -23876,12 +24004,13 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
+                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
 
                                         ' hier kann er eigentlich nie hinkommen ...
                                         If curLevel = maxIndent And readingGroups Then
-                                            If Not parentRole.isTeam Then
-                                                parentRole.isTeam = True
-                                            End If
+                                            'If Not parentRole.isTeam Then
+                                            '    parentRole.isTeam = True
+                                            'End If
 
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
@@ -25036,6 +25165,144 @@ Public Module agm2
                                 End If
                                 .farbe = c.Interior.Color
                                 .UID = index
+                            End With
+
+                            kostendefinitionen.Add(hcost)
+                        End If
+
+                    Next
+                Else
+                    errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
+                    outputCollection.Add(errmsg)
+                    kostendefinitionen = New clsKostenarten
+                End If
+
+
+            End With
+
+
+        Catch ex As Exception
+            errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
+            outputCollection.Add(errmsg)
+            kostendefinitionen = New clsKostenarten
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' liest die Kosten Definitionen ein 
+    ''' wird in der globalen Variablen CostDefinitions abgelegt 
+    ''' </summary>
+    ''' <param name="wsname"></param>
+    ''' <remarks></remarks>
+    Private Sub readCostDefinitionsWithConfig(ByVal wsname As Excel.Worksheet, ByRef kostendefinitionen As clsKostenarten, ByRef outputCollection As Collection,
+                                              Optional ByVal configListe As SortedList(Of String, clsConfigOrgaImport) = Nothing)
+
+        Dim UID As Integer = 0
+        Dim hcost As clsKostenartDefinition
+        Dim tmpStr As String
+        Dim errmsg As String = ""
+
+        ' Konfigurationen auslesen
+        Dim nameCol As Integer
+        Dim typeCol As Integer
+        Dim relIDCol As Integer
+        Dim relTagssatzCol As Integer
+        Dim reldefaultCapaCol As Integer
+        Dim reldefaultDayCapaCol As Integer
+        Dim relEmployeeNrCol As Integer
+        Dim relentryDateCol As Integer
+        Dim relexitDateCol As Integer
+        Dim relAliasesCol As Integer
+        Dim relIsExternRole As Integer
+        Dim valuestart As Integer
+        Dim valueend As Integer
+        Try
+            ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
+
+            valuestart = configListe("valueStart").row.von
+            typeCol = configListe("orgaType").column.von
+            nameCol = configListe("Name").column.von
+            relIDCol = configListe("UID").column.von - nameCol
+            relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
+            reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
+            reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
+            relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
+            relexitDateCol = configListe("exitDate").column.von - nameCol
+            relentryDateCol = configListe("entryDate").column.von - nameCol
+            relAliasesCol = configListe("aliases").column.von - nameCol
+            relIsExternRole = configListe("isExternRole").column.von - nameCol
+
+        Catch ex As Exception
+
+        End Try
+
+
+        Try
+            ' find end of roles/groups/costs
+            Dim iv As Integer = 0
+            Dim rolesStart As Integer = 0
+            Dim anzRoles As Integer = 0
+            Dim groupsStart As Integer = 0
+            Dim anzGroups As Integer = 0
+            Dim costsStart As Integer = 0
+            Dim anzCosts As Integer = 0
+
+            With wsname
+                valueend = CType(.Cells(2000, nameCol), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                For iv = valuestart To valueend
+                    Dim tmpTypeValue As String = CType(.Cells(iv, typeCol), Excel.Range).Value
+                    Select Case tmpTypeValue
+                        Case 1
+                            If anzRoles = 0 Then
+                                rolesStart = iv
+                            End If
+                            anzRoles += 1
+                        Case 2
+                            If anzGroups = 0 Then
+                                groupsStart = iv
+                            End If
+                            anzGroups += 1
+                        Case 3
+                            If anzCosts = 0 Then
+                                costsStart = iv
+                            End If
+                            anzCosts += 1
+                    End Select
+                Next
+            End With
+
+            With wsname
+                ' costRange = awin_Kosten_Definition
+                Dim costRange As Excel.Range
+                With wsname
+                    valueend = costsStart + anzCosts - 1
+                    costRange = .Range(.Cells(costsStart, nameCol), .Cells(valueend, nameCol))
+                End With
+
+
+                If Not IsNothing(costRange) Then
+                    Dim anzZeilen As Integer = costRange.Rows.Count
+                    Dim c As Excel.Range
+
+                    For i As Integer = 1 To anzZeilen
+
+                        c = CType(costRange.Cells(i, nameCol), Excel.Range)
+                        UID = CType(costRange.Cells(i, nameCol).Offset(0, relIDCol), Excel.Range).Value
+                        If CStr(c.Value) <> "" Or UID > 0 Then
+                            'UID = UID + 1
+                            ' jetzt kommt die Kostenarten Definition
+                            hcost = New clsKostenartDefinition
+                            With hcost
+                                If CStr(c.Value) <> "" Then
+                                    tmpStr = CType(c.Value, String)
+                                    .name = tmpStr.Trim
+                                Else
+                                    .name = "Personalkosten"
+                                End If
+                                .farbe = c.Interior.Color
+                                .UID = UID
                             End With
 
                             kostendefinitionen.Add(hcost)

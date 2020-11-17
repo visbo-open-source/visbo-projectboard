@@ -1718,10 +1718,10 @@ Public Module agm3
                     firstUrlzeile = vstart.row.von
 
                     ' Schleife über alle Tabellenblätter eines ausgewählten Excel-Files (hier = einer Rolle)
-                    For t = 0 To vstart.sheet.bis
+                    For t = 0 To vstart.sheet.bis - 1
 
                         If Not IsNothing(vstart.sheet.von + t) Then
-                            currentWS = CType(appInstance.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            currentWS = CType(actDataWB.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
                             If Not IsNothing(vstart.sheetDescript) Then
                                 ok = (vstart.sheetDescript.Contains(currentWS.Name))
                             Else

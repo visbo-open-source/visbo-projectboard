@@ -87,6 +87,63 @@ Public Class clsRollen
 
     End Sub
 
+
+    ''' <summary>
+    ''' löscht die Rollendefinition roledef aus der Liste der Rollen einer Organisation
+    ''' </summary>
+    ''' <param name="roledef"></param>
+    Public Sub remove(roledef As clsRollenDefinition)
+
+        Dim errMsg As String = ""
+        ' Änderung tk: umgestellt auf 
+
+        If _allRollen.ContainsKey(roledef.UID) Then
+            _allRollen.Remove(roledef.UID)
+
+            If _allNames.ContainsKey(roledef.name) Then
+                _allNames.Remove(roledef.name)
+
+                ' jetzt müssen noch die Alias-Namen aufgenommen werden, sofern es welche gibt ... 
+                If Not IsNothing(roledef.aliases) Then
+                    If roledef.aliases(0) <> "" Then
+                        For Each aliasItem As String In roledef.aliases
+                            If _allNames.ContainsKey(aliasItem) Then
+                                _allNames.Remove(aliasItem)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errMsg = aliasItem & " doesn't exists"
+                                Else
+                                    errMsg = aliasItem & " existiert nicht"
+                                End If
+
+                                Throw New ArgumentException(errMsg)
+                            End If
+                        Next
+                    End If
+                End If
+            Else
+
+                If awinSettings.englishLanguage Then
+                    errMsg = roledef.name & " doesn't exists"
+                Else
+                    errMsg = roledef.name & " existiert nicht"
+                End If
+
+                Throw New ArgumentException(errMsg)
+            End If
+
+        Else
+            If awinSettings.englishLanguage Then
+                errMsg = roledef.UID.ToString & " doesn't exists"
+            Else
+                errMsg = roledef.UID.ToString & " existiert nicht"
+            End If
+
+            Throw New ArgumentException(errMsg)
+        End If
+
+    End Sub
+
     ''' <summary>
     ''' erstellt die virtuellen Zuordnungen von Teams zu ihren Organisations-Einheiten
     ''' die virtuelle Organisations- oder Eltern-Einheit ist die, die alle Team Member als Eltern umfasst
@@ -2081,6 +2138,7 @@ Public Class clsRollen
     End Property
 
     Public Sub New()
+
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
         _allNames = New SortedList(Of String, Integer)

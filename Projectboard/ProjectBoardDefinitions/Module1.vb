@@ -8524,7 +8524,8 @@ Public Module Module1
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
-                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                ok = ok And (Not childRole.isTeam And childRole.getTeamIDs.ContainsKey(kvp.Key)) Or (childRole.isTeam)
+
                 If Not ok Then
                     Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
                     outputCollection.Add(outmsg)

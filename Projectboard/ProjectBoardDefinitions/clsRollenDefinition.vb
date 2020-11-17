@@ -140,7 +140,7 @@
     Private _isTeam As Boolean
     Public Property isTeam As Boolean
         Get
-            isTeam = _isTeam
+            isTeam = _isTeam Or _isTeamParent
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
@@ -489,7 +489,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinition) As Boolean
+    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinition, Optional ByVal mitKapa As Boolean = True) As Boolean
         Get
             Dim stillok As Boolean = True
 
@@ -535,7 +535,6 @@
 
                 stillok = (Me.UID = vglRole.UID) And
                             (Me.name = vglRole.name) And
-                            (CLng(Me.farbe) = CLng(vglRole.farbe)) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
@@ -544,14 +543,31 @@
                             (Me.entryDate.Date = vglRole.entryDate.Date) And
                             (Me.exitDate.Date = vglRole.exitDate.Date) And
                             (Me.defaultDayCapa = vglRole.defaultDayCapa)
+                '(CLng(Me.farbe) = CLng(vglRole.farbe)) And
 
             End If
-
-            ' jetzt die Kapa-Arrays vergleichen 
+            ' jetzt die aliases vergleichen
             If stillok Then
-                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
-
+                If Not IsNothing(Me.aliases) Then
+                    For Each aliasName As String In Me.aliases
+                        If Not IsNothing(vglRole.aliases) Then
+                            stillok = stillok And vglRole.aliases.Contains(aliasName)
+                        Else
+                            stillok = False
+                        End If
+                    Next
+                End If
             End If
+
+            ' kapaArray nur vergleichen, wenn mitKapa = true ist
+            If mitKapa Then
+                ' jetzt die Kapa-Arrays vergleichen 
+                If stillok Then
+                    stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
+
+                End If
+            End If
+
 
             isIdenticalTo = stillok
 

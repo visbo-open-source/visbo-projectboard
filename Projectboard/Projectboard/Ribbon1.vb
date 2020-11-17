@@ -6936,9 +6936,14 @@ Imports System.Web
 
 
                 If editActualDataMonth.ShowDialog = DialogResult.OK Then
+
                     ' Istdaten immer vom Vormonat einlesen
                     IstdatenDate = CDate(editActualDataMonth.MonatJahr.Text).AddMonths(-1)
-                    Dim referenzPortfolioName As String = editActualDataMonth.comboBxPortfolio.SelectedItem.ToString
+
+                    Dim referenzPortfolioName As String = ""
+                    If Not IsNothing(editActualDataMonth.comboBxPortfolio.SelectedItem) Then
+                        referenzPortfolioName = editActualDataMonth.comboBxPortfolio.SelectedItem.ToString
+                    End If
 
                     Dim curTimeStamp As Date = Date.MinValue
                     Dim err As New clsErrorCodeMsg
@@ -6964,11 +6969,11 @@ Imports System.Web
 
                     ' gibt es das Referenz-Portfolio?  
                     referenzPortfolio = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(referenzPortfolioName,
-                                                                                                              "",
-                                                                                                              curTimeStamp,
-                                                                                                              err,
-                                                                                                              variantName:=noVariantName,
-                                                                                                              storedAtOrBefore:=Date.Now)
+                                                                                                          "",
+                                                                                                          curTimeStamp,
+                                                                                                          err,
+                                                                                                          variantName:=noVariantName,
+                                                                                                          storedAtOrBefore:=Date.Now)
 
                     If IsNothing(referenzPortfolio) Then
                         Dim txtMsg As String = referenzPortfolioName & ": Portfolio existiert nicht ... "
@@ -7049,12 +7054,12 @@ Imports System.Web
                         Call logfileSchreiben(outPutline, "", anzFehler)
 
                         result = readActualDataWithConfig(actualDataConfig, tmpDatei,
-                                                      IstdatenDate,
-                                                      cacheProjekte,
-                                                      validProjectNames, projectRoleNames,
-                                                      projectRoleValues,
-                                                      updatedProjects,
-                                                      outPutCollection)
+                                                  IstdatenDate,
+                                                  cacheProjekte,
+                                                  validProjectNames, projectRoleNames,
+                                                  projectRoleValues,
+                                                  updatedProjects,
+                                                  outPutCollection)
 
                         ' hier weitermachen
 
@@ -7444,7 +7449,7 @@ Imports System.Web
                         ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
                         Try
                             Call importProjekteEintragen(importDate:=importDate, drawPlanTafel:=True, fileFrom3rdParty:=False,
-                                                     getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
+                                                 getSomeValuesFromOldProj:=False, calledFromActualDataImport:=True)
 
 
                             ' ImportDatei ins archive-Directory schieben

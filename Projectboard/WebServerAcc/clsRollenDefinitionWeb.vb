@@ -13,7 +13,8 @@ Public Class clsRollenDefinitionWeb
     Public isTeam As Boolean
 
     ' 27.04.20 ur wird nun auch in der DB gespeichert
-    Public isTeamParent As Boolean
+    '9.11.20 nicht mehr in DB speichern
+    'Public isTeamParent As Boolean
 
     ' 8.1.2020 dazugekommen
     Public aliases As String()
@@ -28,6 +29,8 @@ Public Class clsRollenDefinitionWeb
     Public farbe As Long
     Public defaultKapa As Double
     Public tagessatzIntern As Double
+    '9.11.20 ur wird nun doppelt geführt und dann später wird tagessatzintern ausgeführt
+    Public tagessatz As Double
 
     Public kapazitaet() As Double
 
@@ -105,8 +108,12 @@ Public Class clsRollenDefinitionWeb
         ' tk 23.11.18 
         roleDef.isExternRole = Me.isExternRole
         roleDef.isTeam = Me.isTeam
-
-        roleDef.tagessatzIntern = Me.tagessatzIntern
+        ' 9.11.20 ur for a smart change to tagessatz
+        If Not IsNothing(Me.tagessatz) Then
+            roleDef.tagessatzIntern = Me.tagessatz
+        Else
+            roleDef.tagessatzIntern = Me.tagessatzIntern
+        End If
 
         ' jetzt die Übernahme der Kapazitäten 
         ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
@@ -306,6 +313,7 @@ Public Class clsRollenDefinitionWeb
     End Sub
 
     Public Sub copyFrom(ByVal roleDef As clsRollenDefinition)
+
         With roleDef
 
             Dim dbKapa() As Double = Nothing
@@ -317,7 +325,8 @@ Public Class clsRollenDefinitionWeb
                 For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
-                    sr.value = kvp.Value.ToString
+                    'sr.value = kvp.Value.ToString
+                    sr.value = kvp.Value
                     Me.subRoleIDs.Add(sr)
                 Next
 
@@ -377,7 +386,8 @@ Public Class clsRollenDefinitionWeb
                 For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
-                    sr.value = kvp.Value.ToString
+                    'sr.value = kvp.Value.ToString
+                    sr.value = kvp.Value
                     Me.teamIDs.Add(sr)
                 Next
             End If
@@ -391,7 +401,8 @@ Public Class clsRollenDefinitionWeb
             isExternRole = .isExternRole
             isTeam = .isTeam
             ' ur 27.04.20 
-            isTeamParent = .isTeamParent
+            ' ur 9.11.20 wird nicht mehr in DB gespeicher
+            'isTeamParent = .isTeamParent
 
             ' tk 8.1.20
             aliases = .aliases
@@ -400,7 +411,9 @@ Public Class clsRollenDefinitionWeb
             entryDate = .entryDate.ToUniversalTime
             exitDate = .exitDate.ToUniversalTime
 
-            tagessatzIntern = .tagessatzIntern
+            tagessatz = .tagessatzIntern
+
+
 
             ' tk 17.5.20 effiziente Organisation
             ' jetzt nur den Array übergeben, der die vom Default abweichenden Werte enthält 
