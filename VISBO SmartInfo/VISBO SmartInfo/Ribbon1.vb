@@ -1123,8 +1123,8 @@ Public Class Ribbon1
                         ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
                         Dim hproj As clsProjekt = Nothing
                         Dim anzP As Integer = ShowProjekte.Count
-                        If selectedProjekte.Count >= 1 Then
-                            hproj = selectedProjekte.getProject(1)
+                        If ShowProjekte.Count >= 1 Then
+                            hproj = ShowProjekte.getProject(1)
 
                             Dim tmpCollection As New Collection
 

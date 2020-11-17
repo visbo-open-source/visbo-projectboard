@@ -2784,7 +2784,7 @@ Public Class frmProjPortfolioAdmin
         Dim outPutHeader As String = ""
         Dim outPutExplanation As String = ""
 
-        Dim calledFromPPT As Boolean = (aKtionskennung = PTTvActions.loadPVInPPT)
+        Dim calledFromPPT As Boolean = (aKtionskennung = PTTvActions.loadPVInPPT) Or (aKtionskennung = PTTvActions.loadMultiPVInPPT)
 
         ' Cursor auf Wait-Cursor setzen ... 
         Me.Cursor = Cursors.WaitCursor
@@ -2850,6 +2850,16 @@ Public Class frmProjPortfolioAdmin
                 outPutExplanation = "Messages"
             End If
 
+        ElseIf aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+
+            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                outPutHeader = "Selektieren ein oder mehrere Projekte oder Projekt-Varianten "
+                outPutExplanation = "Meldungen: "
+            Else
+                outPutHeader = "Select one or several projects or project-variants "
+                outPutExplanation = "Messages"
+            End If
+
         End If
 
 
@@ -2862,7 +2872,8 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delFromSession Or
             aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.loadPV Or
-            aKtionskennung = PTTvActions.loadPVInPPT Then
+            aKtionskennung = PTTvActions.loadPVInPPT Or
+            aKtionskennung = PTTvActions.loadMultiPVInPPT Then
 
             ' alle anderen Aktionen wie Projekte aus Datenbank löschen , aus Session löschen, aus Datenbank laden  ... 
             With TreeViewProjekte
@@ -2931,7 +2942,7 @@ Public Class frmProjPortfolioAdmin
                             'Next
 
 
-                        ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVinPPT Then
+                        ElseIf aKtionskennung = PTTvActions.loadPV Then
 
                             Dim hproj As clsProjekt = Nothing
                             If ShowProjekte.Count > 0 Then
@@ -3007,22 +3018,6 @@ Public Class frmProjPortfolioAdmin
                                 End If
 
 
-                                'Dim weiterMachen As Boolean = True
-
-
-                                ' wenn es sich um einen Portfolio Manager handelt und nur die Vorlagen geholt werden sollen ..
-
-                                'If variantNode.Checked = True Then
-                                '    weiterMachen = True
-                                'Else
-                                '    ' nur weitermachen wenn es sich um die Variante handelt, die geladen werden soll 
-                                '    ' beim Portfolio MGR ggf die pfv-Variante sonst immer die ""-Variante
-                                '    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                                '        weiterMachen = (variantName = ptVariantFixNames.pfv.ToString)
-                                '    Else
-                                '        weiterMachen = (variantName = "")
-                                '    End If
-                                'End If
 
                                 Dim weitermachen As Boolean = False
 
@@ -3086,13 +3081,141 @@ Public Class frmProjPortfolioAdmin
                             Next
 
 
+                        ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
+
+                            Dim hproj As clsProjekt = Nothing
+                            If ShowProjekte.Count > 0 Then
+                                If ShowProjekte.contains(pname) Then
+                                    hproj = ShowProjekte.getProject(pname)
+                                End If
+                            End If
+
+
+                            ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
+                            currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
+
+                            Dim variantNameLookingFor As String = ""
+
+
+                            ' jetzt muss geprüft werden, welcher Name tatsächlich ins Show gesteckt werden soll 
+                            Dim nameOfFirstChecked As String = ""
+                            Dim firstTime As Boolean = True
+                            Dim found As Boolean = False
+
+
+                            For i As Integer = 0 To anzahlVarianten - 1
+
+                                If projektNode.Nodes.Count > 0 Then
+                                    If projektNode.Nodes.Item(i).Checked = True Then
+
+                                        Dim curVariantName As String = getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text)
+
+                                        If firstTime Then
+                                            nameOfFirstChecked = curVariantName
+                                            firstTime = False
+                                        End If
+
+                                        If curVariantName = variantNameLookingFor Then
+                                            found = True
+                                        End If
+
+                                    End If
+                                Else
+                                    Dim curVariantName As String = getVariantNameOfTreeNode(CStr(variantListe.Item(i + 1)))
+
+                                    If firstTime Then
+                                        nameOfFirstChecked = curVariantName
+                                        firstTime = False
+                                    End If
+
+                                    If curVariantName = variantNameLookingFor Then
+                                        found = True
+                                    End If
+                                End If
+
+                            Next
+
+                            Dim showVariantName As String
+                            If found Then
+                                showVariantName = variantNameLookingFor
+                            Else
+                                showVariantName = nameOfFirstChecked
+                            End If
+
+
+                            For v = 1 To anzahlVarianten
+
+                                variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
+
+                                variantNode = Nothing
+                                If projektNode.Nodes.Count > 0 Then
+                                    variantNode = projektNode.Nodes.Item(v - 1)
+                                End If
+
+
+
+                                Dim weitermachen As Boolean = False
+
+                                If Not IsNothing(variantNode) Then
+                                    weitermachen = variantNode.Checked
+                                Else
+                                    weitermachen = True
+                                End If
+
+                                If weitermachen Then
+                                    Dim showAttribute As Boolean
+                                    If IsNothing(hproj) Then
+                                        showAttribute = (variantName = showVariantName)
+                                    Else
+                                        If variantName = hproj.variantName Then
+                                            showAttribute = True
+                                        Else
+                                            showAttribute = False
+                                        End If
+                                    End If
+
+                                    ' laden der Projekt-Variante 
+                                    ' wenn gefiltert wird, dann wird pfv geladen als als Planungs-Version in AllePRojekte gesteckt 
+
+                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore, calledFromPPT)
+
+                                    pptPname = pname
+                                    pptVname = variantName
+
+
+                                    If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
+                                        ' nichts tun , ist schon drin 
+                                        currentBrowserConstellation.getItem(calcProjektKey(pname, variantName)).show = showAttribute
+                                    Else
+                                        Dim cItem As New clsConstellationItem
+                                        ' tk 28.12.18 , um nachher das Attribut setzen zu können
+                                        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(pname, variantName, AlleProjekte, Date.Now)
+
+                                        With cItem
+                                            .projectName = pname
+                                            .variantName = variantName
+                                            .show = showAttribute
+                                            If Not IsNothing(tmpProj) Then
+                                                .projectTyp = CType(tmpProj.projectType, ptPRPFType).ToString
+                                            End If
+                                        End With
+                                        currentBrowserConstellation.add(cItem)
+                                    End If
+                                End If
+
+
+
+                            Next
+
 
                         End If
 
 
 
-
-                    ElseIf projektNode.Tag = "X" Then
+                    ElseIf projektNode.Tag = "X" And aKtionskennung <> PTTvActions.loadPVInPPT And
+                        aKtionskennung <> PTTvActions.loadMultiPVInPPT Then
 
                         anzahlVarianten = projektNode.Nodes.Count
                         Dim first As Boolean = True
@@ -3130,7 +3253,8 @@ Public Class frmProjPortfolioAdmin
                                     currentBrowserConstellation.remove(tmpKey)
 
 
-                                ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = pttvActions.loadPVInPPT Then
+                                ElseIf aKtionskennung = PTTvActions.loadPV Or aKtionskennung = PTTvActions.loadPVInPPT Or
+                                                        aKtionskennung = PTTvActions.loadMultiPVInPPT Then
 
                                     ' da hier manuell Projekte hinzu kommen, muss der Sort-Type auf customTF gesetzt werden 
                                     currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
@@ -3211,6 +3335,7 @@ Public Class frmProjPortfolioAdmin
             If aKtionskennung = PTTvActions.delFromSession Or
                 aKtionskennung = PTTvActions.loadPV Or
                 aKtionskennung = PTTvActions.loadPVInPPT Or
+                aKtionskennung = PTTvActions.loadMultiPVInPPT Or
                 aKtionskennung = PTTvActions.deleteV Then
                 If currentConstellationName <> calcLastSessionScenarioName() Then
                     currentConstellationName = calcLastSessionScenarioName()
@@ -3399,16 +3524,7 @@ Public Class frmProjPortfolioAdmin
 
         ' jetzt muss das für Projectboard bzw. Aufruf von Powerpoint gestezt werden 
 
-        If aKtionskennung = PTTvActions.loadPVInPPT Then
-            ' selectedProjekte setzen, die werden nämlich dann in PPT abgefragt
-            selectedProjekte.Clear(False)
-            Dim hproj As clsProjekt = AlleProjekte.getProject(pptPname, pptVname)
-
-            If Not IsNothing(hproj) Then
-                selectedProjekte.Add(hproj, False)
-            End If
-
-        ElseIf aKtionskennung <> PTTvActions.loadProjectAsTemplate Then
+        If aKtionskennung <> PTTvActions.loadProjectAsTemplate Then
             ' jetzt muss die Caption neu gesetzt werden ...
             If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
                 Try
@@ -3418,6 +3534,27 @@ Public Class frmProjPortfolioAdmin
                 End Try
             End If
         End If
+
+        ' tk 16.11.20 braucht man nicht mehr ..
+        'If aKtionskennung = PTTvActions.loadPVInPPT Then
+        '    ' selectedProjekte setzen, die werden nämlich dann in PPT abgefragt
+        '    selectedProjekte.Clear(False)
+        '    Dim hproj As clsProjekt = AlleProjekte.getProject(pptPname, pptVname)
+
+        '    If Not IsNothing(hproj) Then
+        '        selectedProjekte.Add(hproj, False)
+        '    End If
+
+        'ElseIf aKtionskennung <> PTTvActions.loadProjectAsTemplate Then
+        '    ' jetzt muss die Caption neu gesetzt werden ...
+        '    If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+        '        Try
+        '            projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt)
+        '        Catch ex As Exception
+
+        '        End Try
+        '    End If
+        'End If
 
 
 
