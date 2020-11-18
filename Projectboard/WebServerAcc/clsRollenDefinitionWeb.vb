@@ -412,6 +412,7 @@ Public Class clsRollenDefinitionWeb
             exitDate = .exitDate.ToUniversalTime
 
             tagessatz = .tagessatzIntern
+            tagessatzIntern = tagessatz
 
 
 

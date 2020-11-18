@@ -23448,7 +23448,7 @@ Public Module agm2
 
                     Try
 
-                        Dim tmpIDValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, relIDCol).Value
+                        Dim tmpIDValue As String = CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Value
                         Dim tmpOrgaName As String = getStringFromExcelCell(CType(rolesRange.Cells(i, nameCol), Excel.Range))
                         tmpOrgaName = tmpOrgaName.Trim
 
@@ -23487,7 +23487,7 @@ Public Module agm2
                                                 End If
 
                                                 meldungen.Add(errMsg)
-                                                CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
+                                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
                                         Else
                                             anzWithoutID = anzWithoutID + 1
@@ -23513,7 +23513,7 @@ Public Module agm2
                                 End If
 
                                 meldungen.Add(errMsg)
-                                CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                             Else
                                 If Not uniqueNames.Contains(tmpOrgaName) Then
                                     uniqueNames.Add(tmpOrgaName, tmpOrgaName)
@@ -23525,7 +23525,7 @@ Public Module agm2
                                     End If
 
                                     meldungen.Add(errMsg)
-                                    CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    CType(rolesRange.Cells(i, nameCol), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                 End If
                             End If
                         Else
@@ -23988,7 +23988,7 @@ Public Module agm2
 
                                 Loop
 
-                                If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
+                                If curLevel <> lastLevel And ix <= anzZeilen Then
 
                                     parents(curLevel) = curRoleName
 
