@@ -8826,6 +8826,17 @@ Public Module agm2
             End If
         End If
 
+        '' OldOrga kopieren
+        'Dim orgaCopy As New clsOrganisation
+        'If Not IsNothing(oldOrga) Then
+        '    orgaCopy = oldOrga.copy(outputCollection)
+        'Else
+        '    orgaCopy = Nothing
+        'End If
+
+        'newRoleDefinitions = orgaCopy.allRoles
+
+
 
         ' Import ohne Configuration
         If IsNothing(configListe) Or withoutConfiguration Then
@@ -8850,6 +8861,8 @@ Public Module agm2
             '' ----------------------------------------
             ' Auslesen der Kosten Definitionen 
             Dim newCostDefinitions As New clsKostenarten
+            'newCostDefinitions = orgaCopy.allCosts
+
             If IsNothing(configListe) Or withoutConfiguration Then
                 Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
             Else
@@ -8883,17 +8896,11 @@ Public Module agm2
                         Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
                         Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
-                        If outputCollection.Count > 0 Then
-                            ' wird an der aurufenden Stelle ausgegeben ... 
-                        ElseIf TeamsAreNotOK Or existingOverloads Then
-                            ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
-                        Else
-                        'bis hier ist alles in Ordnung 
-                        With importedOrga
-                            .allRoles = newRoleDefinitions
-                            .allCosts = newCostDefinitions
-                            .validFrom = validFrom
-                        End With
+                    If outputCollection.Count > 0 Then
+                        ' wird an der aurufenden Stelle ausgegeben ... 
+                    ElseIf TeamsAreNotOK Or existingOverloads Then
+                        ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
+                    Else
 
                         ' OldOrga kopieren
                         Dim orgaCopy As New clsOrganisation
@@ -8902,6 +8909,17 @@ Public Module agm2
                         Else
                             orgaCopy = Nothing
                         End If
+
+                        ' merge von imported Roles and existing Roles
+                        Dim mergedRoleDefinitions As clsRollen = mergeOldAndNewRoleDefs(orgaCopy.allRoles, newRoleDefinitions, outputCollection)
+
+                        'bis hier ist alles in Ordnung 
+                        With importedOrga
+                            .allRoles = newRoleDefinitions
+                            .allCosts = newCostDefinitions
+                            .validFrom = validFrom
+                        End With
+
 
                         If Not importedOrga.validityCheckWith(orgaCopy, outputCollection) = True Then
                             ' wieder zurück setzen ..
@@ -23552,67 +23570,67 @@ Public Module agm2
 
                             ' hier wird sichergestellt, dass es ein Team ist
                             If Not (przSatz > 0.0 And przSatz <= 1.0) And isTeam Then
-                                    'If tmpIDValue <> "" Then
-                                    If Not uniqueNames.Contains(tmpOrgaName) Then
-                                        uniqueNames.Add(tmpOrgaName, tmpOrgaName)
-                                        If neueRollendefinitionen.containsName(tmpOrgaName) Then
-                                            If awinSettings.englishLanguage Then
-                                                errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
-                                            Else
-                                                errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
-                                            End If
-
-                                            meldungen.Add(errMsg)
-                                            CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                        End If
-                                    Else
-
+                                'If tmpIDValue <> "" Then
+                                If Not uniqueNames.Contains(tmpOrgaName) Then
+                                    uniqueNames.Add(tmpOrgaName, tmpOrgaName)
+                                    If neueRollendefinitionen.containsName(tmpOrgaName) Then
                                         If awinSettings.englishLanguage Then
-                                            errMsg = "roles with same name are not allowed: " & tmpOrgaName
+                                            errMsg = "groups with same Name as certain orga-element are not allowed: " & tmpOrgaName
                                         Else
-                                            errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
+                                            errMsg = "Gruppen mit identischem Namen wie eine Organisations-Einheit sind nicht gestattet: " & tmpOrgaName
                                         End If
 
                                         meldungen.Add(errMsg)
                                         CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                                     End If
                                 Else
-                                    'If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
-                                    '        If awinSettings.englishLanguage Then
-                                    '            errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
-                                    '        Else
-                                    '            errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
-                                    '        End If
-
-                                    '        meldungen.Add(errMsg)
-                                    '        CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                                    '    End If
-                                    'End If
-                                End If
-                            End If
-
-
-
-                            ' jetzt checken 
-                            If readingGroups And isWithoutID Then
-                                ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
-                                Dim roleName As String = CStr(c.Value.trim)
-
-                                If Not neueRollendefinitionen.containsName(roleName) Then
 
                                     If awinSettings.englishLanguage Then
-                                        errMsg = "Team-Role " & roleName & " does not exist ..."
+                                        errMsg = "roles with same name are not allowed: " & tmpOrgaName
                                     Else
-                                        errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
+                                        errMsg = "Rollen mit gleichem Namen sind nicht gestattet: " & tmpOrgaName
                                     End If
 
                                     meldungen.Add(errMsg)
                                     CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                End If
+                            Else
+                                'If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
+                                '        If awinSettings.englishLanguage Then
+                                '            errMsg = "group must not have same ID than other Orga-Unit: " & tmpOrgaName
+                                '        Else
+                                '            errMsg = "Gruppe darf nicht dieselbe ID haben wie eine andere Organisations-Einheit: " & tmpOrgaName
+                                '        End If
 
-                                    groupDefinitionIsOk = False
+                                '        meldungen.Add(errMsg)
+                                '        CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                '    End If
+                                'End If
+                            End If
+                        End If
+
+
+
+                        ' jetzt checken 
+                        If readingGroups And isWithoutID Then
+                            ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
+                            Dim roleName As String = CStr(c.Value.trim)
+
+                            If Not neueRollendefinitionen.containsName(roleName) Then
+
+                                If awinSettings.englishLanguage Then
+                                    errMsg = "Team-Role " & roleName & " does not exist ..."
+                                Else
+                                    errMsg = "Gruppen-Rolle " & roleName & " existiert nicht ..."
                                 End If
 
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+
+                                groupDefinitionIsOk = False
                             End If
+
+                        End If
 
                     Catch ex As Exception
                         anzWithoutID = anzWithoutID + 1
@@ -24072,6 +24090,12 @@ Public Module agm2
 
 
     End Sub
+
+    Public Function mergeOldAndNewRoleDefs(ByVal oldRoledefs As clsRollen, ByVal newRoledefs As clsRollen, ByRef outputCollection As Collection) As clsRollen
+
+        Dim result As New clsRollen
+        mergeOldAndNewRoleDefs = result
+    End Function
 
 
     ''' <summary>
