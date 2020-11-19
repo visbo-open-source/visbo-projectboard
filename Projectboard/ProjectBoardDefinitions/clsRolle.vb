@@ -228,11 +228,35 @@ Public Class clsRolle
         End Get
     End Property
 
+    ''' <summary>
+    ''' gets day-rate according to skill / role
+    ''' Use skill rate when skill is given and role is combinedRole
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property tagessatzIntern() As Double
 
         Get
+            ' wenn eine Skill angegeben ist bei einer Orga-Unit Sammelrolle: nimm Tagessatz der Skill 
+            ' wenn eine Skill angegeben ist bei einer Person (also ohne Kinder): nimm Tagessatz der Person
+            ' wenn keine Skill angegeben ist: nimm Tagessatz der Orga-Unit / Skill 
 
-            tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
+            Try
+                If _teamID > 0 Then
+                    If RoleDefinitions.getRoleDefByID(_uid).isCombinedRole Then
+                        ' use day-rate of skill
+                        tagessatzIntern = RoleDefinitions.getRoleDefByID(_teamID).tagessatzIntern
+                    Else
+                        ' use day-rate of orga-unit / skill 
+                        tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
+                    End If
+                Else
+                    tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
+                End If
+            Catch ex As Exception
+                tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
+            End Try
+
+
 
         End Get
 
