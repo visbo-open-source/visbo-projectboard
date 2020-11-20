@@ -18606,11 +18606,24 @@ Public Module testModule
         Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames,
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
-        Try
-            phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
-        Catch ex As Exception
 
+        Try
+            If cphase.appearance = "" Then
+                phaseTypApp = appearanceDefinitions.Item(awinSettings.defaultPhaseClass)
+            Else
+                phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
+            End If
+        Catch ex As Exception
+            Dim i As Integer = 0
+            phaseTypApp = appearanceDefinitions.ElementAt(i).Value
+
+            Do While phaseTypApp.isMilestone And i < appearanceDefinitions.Count - 1
+                i = i + 1
+                phaseTypApp = appearanceDefinitions.ElementAt(i).Value
+            Loop
         End Try
+
+
         If IsNothing(phaseTypApp) Then
             Exit Sub
         End If
@@ -18873,8 +18886,19 @@ Public Module testModule
 
         ' eigentlich muss es das sein ..
         Try
-            milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
+            If cMilestone.appearance = "" Then
+                milestoneTypApp = appearanceDefinitions.Item(awinSettings.defaultMilestoneClass)
+            Else
+                milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
+            End If
         Catch ex As Exception
+            Dim i As Integer = 0
+            milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+
+            Do While Not milestoneTypApp.isMilestone And i < appearanceDefinitions.Count - 1
+                i = i + 1
+                milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+            Loop
 
         End Try
 
@@ -18972,52 +18996,6 @@ Public Module testModule
                     End With
 
                 End If
-
-
-                ' Erst jetzt wird der Meilenstein gezeichnet 
-                '' ''milestoneTypShape.Copy()
-                '' ''copiedShape = rds.pptSlide.Shapes.Paste()
-                ''copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
-
-                ''With copiedShape.Item(1)
-                ''    .Height = sizeFaktor * .Height
-                ''    .Width = sizeFaktor * .Width
-                ''    .Top = CSng(yPosition + rds.YMilestone)
-                ''    .Left = CSng(x1) - .Width / 2
-
-                ''    '.Name = .Name & .Id
-                ''    '.Title = milestoneName
-                ''    '.AlternativeText = msDate.ToShortDateString
-                ''    Try
-                ''        .Name = msShapeName
-                ''    Catch ex As Exception
-
-                ''    End Try
-
-                ''    '.Title = milestoneName
-                ''    '.AlternativeText = msDate.ToShortDateString
-
-                ''    If awinSettings.mppShowAmpel Then
-                ''        .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
-                ''        If .Glow.Radius = 0 Then
-                ''            .Glow.Radius = 2
-                ''        End If
-                ''    End If
-
-                ''    Dim msKwText As String = ""
-                ''    If awinSettings.mppKwInMilestone Then
-
-                ''        msKwText = calcKW(msDate).ToString("0#")
-                ''        If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
-                ''            .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
-                ''            .TextFrame2.TextRange.Text = msKwText
-                ''        End If
-
-                ''    End If
-
-                ''    shapeNames.Add(.Name)
-                ''End With
-                'copiedShape = pptCopypptPaste(milestoneTypShape, rds.pptSlide)
 
 
                 Dim height As Single = sizeFaktor * milestoneTypApp.height
