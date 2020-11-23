@@ -399,6 +399,9 @@ Public Class ThisWorkbook
             ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
             'appInstance.EnableEvents = False
 
+            ' ur:2020-11-23: hier sollte Logfile geschlossen werden.
+            ' Call logfileSchliessen()
+
             Dim WB As Workbook
             For Each WB In Application.Workbooks
                 If WB.Name = myProjektTafel Then
@@ -414,12 +417,9 @@ Public Class ThisWorkbook
 
 
             Application.DisplayAlerts = False
-            'Application.Quit()
-
+            ' Application.Quit()
 
         End If
-
-
 
     End Sub
 
@@ -502,8 +502,6 @@ Public Class ThisWorkbook
 
             End If
 
-
-
             appInstance.ScreenUpdating = True
 
             If Application.Workbooks.Count <= 1 Then
@@ -515,8 +513,8 @@ Public Class ThisWorkbook
 
         Catch ex As Exception
 
-
         End Try
+        Application.Quit()
 
     End Sub
 

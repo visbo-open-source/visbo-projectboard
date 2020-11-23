@@ -142,10 +142,17 @@ Public Class clsRollenDefinitionWeb
 
             If Not IsNothing(Me.kapazitaet) Then
                 Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+                If startingIndex > 0 Then
+                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+                    Next
+                Else ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
+                    startingIndex = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar) + 1
+                    For i As Integer = 1 To nrWebCapaValues - startingIndex
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
+                    Next
+                End If
 
-                For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
-                    roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
-                Next
             End If
 
         Else
