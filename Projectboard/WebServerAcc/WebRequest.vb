@@ -2854,14 +2854,15 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
-
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
-
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
 
@@ -2872,7 +2873,7 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
-
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting, "retrieveOrganisationFromDB: ", anzFehler)
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
                             Dim latestOrga As New clsVCSettingOrganisation
@@ -2888,6 +2889,7 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting, "retrieveOrganisationFromDB: ", anzFehler)
                         End If
 
                         webOrganisation.copyTo(result)
@@ -2899,6 +2901,7 @@ Public Class Request
                         result.allRoles.buildOrgaTeamChilds()
 
                     Else
+                        Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                         If err.errorCode = 403 Then
                             Call MsgBox(err.errorMsg)
                         End If
@@ -2906,10 +2909,12 @@ Public Class Request
 
                     End If
                 Else
+                    Call logfileSchreiben(ptErrLevel.logError, err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                     Call MsgBox(err.errorMsg)
 
                 End If
             Else
+                Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                 If err.errorCode = 403 Then
                     Call MsgBox(err.errorMsg)
                 End If
@@ -2919,8 +2924,12 @@ Public Class Request
 
 
         Catch ex As Exception
+
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "retrieveOrganisationFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
+
+        Call logfileSchreiben(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
         retrieveOrganisationFromDB = result
     End Function
 
@@ -3334,7 +3343,7 @@ Public Class Request
                             End If
 
                         End If
-
+                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRrequest now was successful: (anzError=" & anzError.ToString & ")")
 
                         hresp = Nothing
                         toDo = False
@@ -3506,6 +3515,7 @@ Public Class Request
                     While toDo And anzError < 3
                         Try
                             response = request.GetResponse()
+
                             toDo = False
 
                         Catch ex As WebException
@@ -3594,6 +3604,7 @@ Public Class Request
                     End While
 
                 Else
+                    logger(ptErrLevel.logInfo, "GetRestServerResponse", "GetResponse now was successful: (anzError=" & anzError.ToString & ")")
                     response = hresp
                 End If
 
@@ -3624,11 +3635,12 @@ Public Class Request
         Try
 
             If IsNothing(httpresp) Then
+                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing: (" & httpresp.StatusCode & ")")
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
                 cookies = httpresp.Cookies
-
+                logger(ptErrLevel.logInfo, "ReadResponseContent", "HttpWebResponse: Status: (" & httpresp.StatusCode & ")" & "Content: (" & httpresp.ContentLength & ")")
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
 
@@ -3637,7 +3649,7 @@ Public Class Request
                     End Using
 
                 Catch ex As Exception
-
+                    logger(ptErrLevel.logError, "ReadResponseContent", "Error with exception of the StreamReader( httpresp.GetResponseStream )")
                 End Try
 
             End If
@@ -5546,6 +5558,7 @@ Public Class Request
 
             Dim serverUri As New Uri(serverUriString)
 
+            logger(ptErrLevel.logInfo, "GETOneVCsetting", "before reading the vcSetting " & type & " : (" & err.errorCode & ")")
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
