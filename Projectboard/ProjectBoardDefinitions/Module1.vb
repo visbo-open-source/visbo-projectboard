@@ -3,6 +3,7 @@ Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports System.Windows.Forms
+Imports System.IO
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
@@ -72,18 +73,20 @@ Public Module Module1
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
+    Public logDate As Date = Date.Now
 
     ' verschiedene Fehlerstufen
-    Public errorLevel() As String = {"[INFO]", "[WARN]", "[ERROR]", "[SevERROR]"}
+    Public errorLevel() As String = {"[INFO]", "[DEBUG)", "[WARN]", "[ERROR]", "[SevERROR]"}
 
     ''' <summary>
     ''' Werte-Bereich: {0=Info, 1=Warning; 2=Error; 3=severeError}
     ''' </summary>
     Public Enum ptErrLevel
         logInfo = 0
-        logWarning = 1
-        logError = 2
-        logsevereError = 3
+        logDebug = 1
+        logWarning = 2
+        logError = 3
+        logsevereError = 4
     End Enum
 
     Public vergleichsfarbe0 As Object
@@ -7402,26 +7405,60 @@ Public Module Module1
     ''' <param name="anzFehler"></param>
     Public Sub logfileSchreiben(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
 
-        Dim obj As Object
-
         Try
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+            logf.writeline(strMeld)
+            logf.close()
 
-                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-                CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
-                CType(.Cells(1, 3), Excel.Range).Value = addOn
-                CType(.Cells(1, 4), Excel.Range).Value = text
-
-            End With
-            anzFehler = anzFehler + 1
-            xlsLogfile.Save()
 
         Catch ex As Exception
+            If awinSettings.englishLanguage Then
+                Call MsgBox("ERROR while Writing to logfile" & ex.Message)
+            Else
+                Call MsgBox("Fehler beim Schreiben ins logfile" & ex.Message)
+            End If
 
         End Try
+
+
+        'Dim obj As Object
+
+        'Try
+        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+
+        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+        '        CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
+        '        CType(.Cells(1, 3), Excel.Range).Value = addOn
+        '        CType(.Cells(1, 4), Excel.Range).Value = text
+
+        '    End With
+        '    anzFehler = anzFehler + 1
+        '    xlsLogfile.Save()
+
+        'Catch ex As Exception
+
+        'End Try
 
     End Sub
 
@@ -7514,6 +7551,30 @@ Public Module Module1
 
     End Sub
 
+
+    Public Sub logger(ByVal errLevel As Integer, ByVal theme As String, ByVal strLog As String)
+        Dim strMeld As String
+        Const ForReading = 1, ForWriting = 2, ForAppending = 8
+        Const logTrennz As String = " , "
+        ' logfile-stream erzeugen
+        Dim fs = CreateObject("Scripting.FileSystemObject")
+
+        ' FileNamen zusammenbauen
+        Dim logfileOrdner As String = "logfiles"
+        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+        Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+        'Dim logfileName As String = "newlogfile.txt"
+        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logFileName)
+        ' Fragen, ob bereits existiert - eventuell nicht nötig
+        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+            My.Computer.FileSystem.CreateDirectory(logfilePath)
+        End If
+        ' logfile öffnen
+        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & theme & " , " & strLog
+        logf.writeline(strMeld)
+        logf.close()
+    End Sub
     ''' <summary>
     ''' öffnet das LogFile
     ''' </summary>
@@ -9040,5 +9101,46 @@ Public Module Module1
 
     End Function
 
+    Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
+
+    ' Returns an array with the local IP addresses (as strings).
+    ' Author: Christian d'Heureuse, www.source-code.biz
+    Public Function GetIpAddrTable() As String()
+        Dim Buf(0 To 511) As Byte
+        Dim BufSize As Long : BufSize = UBound(Buf) + 1
+        Dim rc As Long
+        rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
+        If rc <> 0 Then
+            Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
+        End If
+        Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
+        Dim IpAddrs() As String
+        ReDim IpAddrs(0 To NrOfEntries - 1)
+        If NrOfEntries = 0 Then
+            GetIpAddrTable = IpAddrs
+            Exit Function
+        End If
+
+        Dim i As Integer
+        For i = 0 To NrOfEntries - 1
+            Dim j As Integer, s As String : s = ""
+            For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
+            IpAddrs(i) = s
+        Next
+        GetIpAddrTable = IpAddrs
+    End Function
+
+
+
+    ' Test program for GetIpAddrTable.
+    Public Sub Test()
+        Dim IpAddrs() As String
+        IpAddrs = GetIpAddrTable()
+        Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
+        Dim i As Integer
+        For i = LBound(IpAddrs) To UBound(IpAddrs)
+            Debug.Print(IpAddrs(i))
+        Next
+    End Sub
 
 End Module
