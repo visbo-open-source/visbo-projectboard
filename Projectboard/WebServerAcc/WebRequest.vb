@@ -2873,7 +2873,7 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
-                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
                             Dim latestOrga As New clsVCSettingOrganisation
@@ -2889,7 +2889,7 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
-                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
                         End If
 
                         webOrganisation.copyTo(result)
@@ -3635,7 +3635,7 @@ Public Class Request
         Try
 
             If IsNothing(httpresp) Then
-                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing: (" & httpresp.StatusCode & ")")
+                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode

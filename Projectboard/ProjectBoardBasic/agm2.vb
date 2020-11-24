@@ -21018,7 +21018,7 @@ Public Module agm2
                     Else
                         noCustomizationFound = True
                     End If
-
+                    Call logger(ptErrLevel.logInfo, "awinsetTypen", "customizations now set")
 
                 End If
 
@@ -21331,7 +21331,7 @@ Public Module agm2
 
                     'ur: 2020-11-20 Versuch alle Logmeldungen in einem Window
                     '' Logfile wird geschlossen
-                    'Call logfileSchliessen()
+                    Call logfileSchliessen()
 
                 End If ' if special ="ProjectBoard"
 
