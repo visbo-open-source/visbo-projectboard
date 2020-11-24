@@ -73,6 +73,19 @@ Public Module Module1
     Public logmessage As String = ""
     Public anzFehler As Long = 0
 
+    ' verschiedene Fehlerstufen
+    Public errorLevel() As String = {"[INFO]", "[WARN]", "[ERROR]", "[SevERROR]"}
+
+    ''' <summary>
+    ''' Werte-Bereich: {0=Info, 1=Warning; 2=Error; 3=severeError}
+    ''' </summary>
+    Public Enum ptErrLevel
+        logInfo = 0
+        logWarning = 1
+        logError = 2
+        logsevereError = 3
+    End Enum
+
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -7285,18 +7298,19 @@ Public Module Module1
             With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
                 .Name = "logBuch"
                 CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
-                CType(.Columns(1), Excel.Range).ColumnWidth = 100
-                CType(.Columns(2), Excel.Range).ColumnWidth = 50
-                CType(.Columns(3), Excel.Range).ColumnWidth = 20
+                CType(.Columns(1), Excel.Range).ColumnWidth = 15
+                CType(.Columns(2), Excel.Range).ColumnWidth = 10
+                CType(.Columns(3), Excel.Range).ColumnWidth = 50
+                CType(.Columns(4), Excel.Range).ColumnWidth = 100
             End With
         Catch ex As Exception
-
+            Call MsgBox("Error bei logfileInit")
         End Try
 
 
     End Sub
     ''' <summary>
-    ''' schreibt in das logfile 
+    ''' schreibt in das logfile
     ''' </summary>
     ''' <param name="text"></param>
     ''' <param name="addOn"></param>
@@ -7309,19 +7323,56 @@ Public Module Module1
             obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
             With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                CType(.Cells(1, 1), Excel.Range).Value = text
-                CType(.Cells(1, 2), Excel.Range).Value = addOn
-                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 3), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+
+                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+                CType(.Cells(1, 3), Excel.Range).Value = addOn
+                CType(.Cells(1, 4), Excel.Range).Value = text
+
             End With
             anzFehler = anzFehler + 1
+            xlsLogfile.Save()
 
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+
+    ''' <summary>
+    '''  schreibt in das logfile mit Errorlevel
+    ''' </summary>
+    ''' <param name="errLevel"></param>
+    ''' <param name="text"></param>
+    ''' <param name="addOn"></param>
+    ''' <param name="anzFehler"></param>
+    Public Sub logfileSchreiben(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+
+        Dim obj As Object
+
+        Try
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+
+                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+                CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
+                CType(.Cells(1, 3), Excel.Range).Value = addOn
+                CType(.Cells(1, 4), Excel.Range).Value = text
+
+            End With
+            anzFehler = anzFehler + 1
+            xlsLogfile.Save()
 
         Catch ex As Exception
 
         End Try
 
     End Sub
+
+
 
     ''' <summary>
     ''' schreibt die Inhalte der Collection als String in das Logfile
@@ -7340,10 +7391,13 @@ Public Module Module1
 
                 Dim text As String = CStr(meldungen.Item(i))
                 With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                    CType(.Cells(1, 1), Excel.Range).Value = text
+                    CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+                    CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+                    CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+                    CType(.Cells(1, 3), Excel.Range).Value = text
                 End With
             Next
-
+            xlsLogfile.Save()
         Catch ex As Exception
 
         End Try
@@ -7361,13 +7415,15 @@ Public Module Module1
             obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
             With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                For ix As Integer = 1 To anzSpalten
+                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+                For ix As Integer = 3 To anzSpalten + 2
                     CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
                     CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
                 Next
-                CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
+            xlsLogfile.Save()
         Catch ex As Exception
 
         End Try
@@ -7383,19 +7439,21 @@ Public Module Module1
             obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
             With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                For ix As Integer = 1 To anzSpaltenText
+                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+
+                For ix As Integer = 3 To anzSpaltenText + 2
                     CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
                 Next
 
-                For ix As Integer = 1 To anzSpaltenValues
-                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
+                For ix As Integer = 3 To anzSpaltenValues + 2
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
                     CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
                 Next
-                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
-
+            xlsLogfile.Save()
 
         Catch ex As Exception
 

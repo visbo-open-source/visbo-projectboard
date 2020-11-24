@@ -20841,9 +20841,11 @@ Public Module agm2
 
                         End If
                     End If
+                Else
+                    Call logfileSchreiben(ptErrLevel.logInfo, " reading appearances successful", "awinsetTypen", anzFehler)
                 End If
             Catch ex As Exception
-
+                Call logfileSchreiben(ptErrLevel.logError, " reading appearances with error", "awinsetTypen", anzFehler)
             End Try
 
 
@@ -20853,6 +20855,7 @@ Public Module agm2
             customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
             If Not IsNothing(customizations) Then
                 StartofCalendar = customizations.kalenderStart
+                Call logfileSchreiben(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToLongDateString, "awinsetTypen", anzFehler)
             End If
 
             Try
@@ -21326,9 +21329,9 @@ Public Module agm2
                     '    Call RoleDefinitions.buildTopNodes()
                     'End If
 
-
-                    ' Logfile wird geschlossen
-                    Call logfileSchliessen()
+                    'ur: 2020-11-20 Versuch alle Logmeldungen in einem Window
+                    '' Logfile wird geschlossen
+                    'Call logfileSchliessen()
 
                 End If ' if special ="ProjectBoard"
 

@@ -419,7 +419,7 @@ Public Class ThisWorkbook
 
         End If
 
-
+        Call logfileSchliessen()
 
     End Sub
 
@@ -502,7 +502,7 @@ Public Class ThisWorkbook
 
             End If
 
-
+            Call logfileSchliessen()
 
             appInstance.ScreenUpdating = True
 
