@@ -412,16 +412,6 @@ Public Class frmSelectPPTTempl
     ''' <remarks></remarks>
     Private Sub einstellungen_Click(sender As Object, e As EventArgs) Handles einstellungen.Click
 
-        Dim mppFrm As New frmMppSettings
-        Dim dialogreturn As DialogResult
-
-        If calledfrom = "MS-Project" Then
-            mppFrm.calledfrom = calledfrom
-        Else
-            mppFrm.calledfrom = "frmSelectPPTTempl"
-        End If
-
-        dialogreturn = mppFrm.ShowDialog
 
 
     End Sub

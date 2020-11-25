@@ -513,6 +513,12 @@ Public Class frmProjPortfolioAdmin
 
                 .OKButton.Visible = True
 
+                If awinSettings.englishLanguage Then
+                    .OKButton.Text = "Auswählen"
+                Else
+                    .OKButton.Text = "Select"
+                End If
+
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
                 backToInit.Visible = False
@@ -544,6 +550,12 @@ Public Class frmProjPortfolioAdmin
 
 
                 .OKButton.Visible = True
+
+                If awinSettings.englishLanguage Then
+                    .OKButton.Text = "Auswählen"
+                Else
+                    .OKButton.Text = "Select"
+                End If
 
                 onlyActive.Visible = False
                 onlyInactive.Visible = False
@@ -647,13 +659,13 @@ Public Class frmProjPortfolioAdmin
         Me.Cursor = Cursors.Default
         lastIndexChecked = -1
 
-        ' den hilfetext setzen ...
-        If awinSettings.englishLanguage Then
-            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf &
-                                                  "das ist die 1.Zeile " & vbLf &
-                                                  "das ist die zweite Zeile")
-            Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
-        End If
+        '' den hilfetext setzen ...
+        'If awinSettings.englishLanguage Then
+        '    Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf &
+        '                                          "das ist die 1.Zeile " & vbLf &
+        '                                          "das ist die zweite Zeile")
+        '    Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
+        'End If
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))

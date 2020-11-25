@@ -316,7 +316,7 @@ Public Module awinGeneralModules
     ''' macht den Teil des ClearSession, der so ggf auch in Powerpoint, Project etc gemacht werden kann, um 
     ''' alle Strukturen zurückzusetzen
     ''' </summary>
-    Public Sub emptyAllVISBOStructures()
+    Public Sub emptyAllVISBOStructures(Optional ByVal calledFromPPT As Boolean = False)
 
         ShowProjekte.Clear()
         AlleProjekte.Clear()
@@ -331,13 +331,19 @@ Public Module awinGeneralModules
         ' es gibt ja nix mehr in der Session 
         currentConstellationName = ""
 
-        ' jetzt den Datenbank Cache Löschen 
-        Dim clearOK As Boolean = False
-        Try
-            clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
-        Catch ex As Exception
-            Call MsgBox("Error when clearing session: " & ex.Message)
-        End Try
+        '
+        ' jetzt den Datenbank Cache Löschen , aber nur wenn es nicht von Powerpoint Add-In aus aufgerufen wird
+        If Not calledFromPPT Then
+            Dim clearOK As Boolean = False
+            Try
+                clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
+            Catch ex As Exception
+                Call MsgBox("Warning: no Cache clearing " & ex.Message)
+            End Try
+        End If
+        '
+        '
+
 
     End Sub
 

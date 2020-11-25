@@ -1068,6 +1068,9 @@ Public Class Ribbon1
 
         Dim singleProjectSelect As Boolean = True
 
+        ' jetzt die ShowProjekte und soweiter löschen 
+        Call emptyAllVISBOStructures(calledFromPPT:=True)
+
         ' check whether or not there are any reporting Components on current page. 
         ' IF Not , do nothing 
 

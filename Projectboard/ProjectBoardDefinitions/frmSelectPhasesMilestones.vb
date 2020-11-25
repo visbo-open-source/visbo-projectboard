@@ -23,6 +23,16 @@ Public Class frmSelectPhasesMilestones
             Me.Left = 100
         End If
 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            vonDate.MinDate = getDateofColumn(showRangeLeft, False).AddMonths(-3)
+            vonDate.MaxDate = getDateofColumn(showRangeRight, True).AddMonths(-1)
+            vonDate.Value = getDateofColumn(showRangeLeft, False)
+
+            bisDate.MinDate = getDateofColumn(showRangeLeft, False).AddMonths(1)
+            bisDate.MaxDate = getDateofColumn(showRangeRight, True).AddMonths(24)
+            bisDate.Value = getDateofColumn(showRangeRight, True)
+        End If
+
 
         ' Button Visibility und Texte definieren 
         Call defineFrmButtonVisibility()
@@ -52,9 +62,13 @@ Public Class frmSelectPhasesMilestones
         End If
 
         If awinSettings.englishLanguage Then
+            zeitLabel.Text = "Timeframe"
+            einstellungen.Text = "Settings"
             Me.Text = "Selection of projects, phases, milestones"
             Me.Ok_Button.Text = "Confirm selection"
         Else
+            zeitLabel.Text = "Zeitraum"
+            einstellungen.Text = "Einstellungen"
             Me.Text = "Auswahl von Projekten, Phasen, Meilensteinen"
             Me.Ok_Button.Text = "Auswahl bestätigen"
         End If
@@ -545,6 +559,10 @@ Public Class frmSelectPhasesMilestones
 
     Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles Ok_Button.Click
 
+        ' showRangeLeft und showrange Right bestimmen
+        showRangeLeft = getColumnOfDate(vonDate.Value)
+        showRangeRight = getColumnOfDate(bisDate.Value)
+
 
         Dim anzahlKnoten As Integer
         Dim selectedNode As TreeNode = Nothing
@@ -977,5 +995,31 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
+    Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
+        If Not dontFire Then
+            dontFire = True
+            vonDate.Value = vonDate.Value.AddDays(-1 * vonDate.Value.Day + 1)
+        Else
+            dontFire = True
+        End If
+    End Sub
 
+    Private Sub bisDate_ValueChanged(sender As Object, e As EventArgs) Handles bisDate.ValueChanged
+        If Not dontFire Then
+            dontFire = True
+            bisDate.Value = bisDate.Value.AddDays(-1 * bisDate.Value.Day + 1).AddMonths(1).AddDays(-1)
+        Else
+            dontFire = False
+        End If
+    End Sub
+
+    Private Sub einstellungen_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles einstellungen.LinkClicked
+        Dim mppFrm As New frmMppSettings
+        Dim dialogreturn As DialogResult
+
+        mppFrm.calledfrom = "frmSelectPPTTempl"
+
+        dialogreturn = mppFrm.ShowDialog
+
+    End Sub
 End Class

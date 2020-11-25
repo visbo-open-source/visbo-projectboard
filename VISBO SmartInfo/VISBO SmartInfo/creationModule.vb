@@ -17,6 +17,9 @@ Module creationModule
 
     Friend portfolioComponentNames As String() = {}
 
+    ' hier ist  projectboardCustomization.xlsx zu finden
+    Friend customizationPath As String = ""
+
     '
     ' wird benötigt für ReportCreation
     Friend currentSldHasProjectTemplates As Boolean = False
@@ -27,6 +30,81 @@ Module creationModule
     ' Ende ReportCreation Spezifika
     '
 
+    Public Sub readSettings()
+        With awinSettings
+            .mppShowProjectLine = My.Settings.showProjectLine
+            .mppShowAllIfOne = My.Settings.showAllIfOne
+            .mppShowAmpel = My.Settings.showAmpel
+            .mppUseOriginalNames = My.Settings.useOriginalNames
+            .mppShowPhName = My.Settings.showPhName
+            .mppShowPhDate = My.Settings.showPhDate
+            .mppUseAbbreviation = My.Settings.useAbbrev
+            .mppShowMsName = My.Settings.showMsName
+            .mppShowMsDate = My.Settings.showMsDate
+            .mppKwInMilestone = My.Settings.kwInMilestone
+            .mppVertikalesRaster = My.Settings.showVerticals
+            .mppShowLegend = My.Settings.showLegend
+            .mppSortiertDauer = My.Settings.sortiertDauer
+            .mppShowHorizontals = My.Settings.showHorizontals
+            .mppOnePage = My.Settings.allOnePage
+            .mppExtendedMode = My.Settings.extendedMode
+            .mppProjectsWithNoMPmayPass = My.Settings.projectswithNoPhMsmayPass
+
+            If .mppSortiertDauer Then
+                .mppShowAllIfOne = True
+            End If
+
+            ' now get path where projectboardCustomization.xlsx is to find 
+            ' 
+            customizationPath = My.Settings.customizationPath
+
+            ' now define showLeftrange
+            If My.Settings.calLeftDate <> Date.MinValue Then
+                showRangeLeft = getColumnOfDate(My.Settings.calLeftDate)
+            End If
+
+            If My.Settings.calRightDate <> Date.MinValue Then
+                showRangeRight = getColumnOfDate(My.Settings.calRightDate)
+            End If
+
+        End With
+
+    End Sub
+
+    Public Sub writeSettings()
+        With awinSettings
+            My.Settings.showProjectLine = .mppShowProjectLine
+            My.Settings.showAllIfOne = .mppShowAllIfOne
+            My.Settings.showAmpel = .mppShowAmpel
+            My.Settings.useOriginalNames = .mppUseOriginalNames
+            My.Settings.showPhName = .mppShowPhName
+            My.Settings.showPhDate = .mppShowPhDate
+            My.Settings.useAbbrev = .mppUseAbbreviation
+            My.Settings.showMsName = .mppShowMsName
+            My.Settings.showMsDate = .mppShowMsDate
+            My.Settings.kwInMilestone = .mppKwInMilestone
+            My.Settings.showVerticals = .mppVertikalesRaster
+            My.Settings.showLegend = .mppShowLegend
+            My.Settings.sortiertDauer = .mppSortiertDauer
+
+            My.Settings.showHorizontals = .mppShowHorizontals
+            My.Settings.allOnePage = .mppOnePage
+            My.Settings.extendedMode = .mppExtendedMode
+            My.Settings.projectswithNoPhMsmayPass = .mppProjectsWithNoMPmayPass
+
+
+            ' now define showLeftrange
+            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                My.Settings.calLeftDate = getDateofColumn(showRangeLeft, False)
+                My.Settings.calRightDate = getDateofColumn(showRangeRight, True)
+            End If
+
+
+
+
+        End With
+
+    End Sub
 
     ''' <summary>
     ''' erzeugt den Bericht auf Grundlage des aktuell geladenen Powerpoints  
@@ -300,15 +378,32 @@ Module creationModule
 
                 End If
 
+
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn + 3
+
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
-                    selectedPhases = frmSelectionPhMs.selectedPhases
-                    selectedMilestones = frmSelectionPhMs.selectedMilestones
+
+                    If Not IsNothing(frmSelectionPhMs.selectedPhases) Then
+                        selectedPhases = frmSelectionPhMs.selectedPhases
+                    Else
+                        selectedPhases = New Collection
+                    End If
+
+                    If Not IsNothing(frmSelectionPhMs.selectedMilestones) Then
+                        selectedMilestones = frmSelectionPhMs.selectedMilestones
+                    Else
+                        selectedMilestones = New Collection
+                    End If
+
 
                 Else
-                    selectedPhases = New Collection
-                    selectedMilestones = New Collection
+                    Exit Sub
                 End If
+
+                showRangeLeft = getColumnOfDate(frmSelectionPhMs.vonDate.Value)
+                showRangeRight = getColumnOfDate(frmSelectionPhMs.bisDate.Value)
 
                 phMSSelNeeded(1) = True
                 If Not IsNothing(listOfFormerSelectedProjects) Then
@@ -321,9 +416,9 @@ Module creationModule
                     Next
                 End If
 
-                ' jetzt muss für den Multiprojekt Report noch showrangeLeft und Right gesetzt werden 
-                showRangeLeft = ShowProjekte.getMinMonthColumn - 1
-                showRangeRight = ShowProjekte.getMaxMonthColumn + 3
+                '' jetzt muss für den Multiprojekt Report noch showrangeLeft und Right gesetzt werden 
+                'showRangeLeft = ShowProjekte.getMinMonthColumn - 1
+                'showRangeRight = ShowProjekte.getMaxMonthColumn + 3
 
             End If
 

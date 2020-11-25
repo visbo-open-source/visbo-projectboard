@@ -32,6 +32,10 @@ Partial Class frmSelectPhasesMilestones
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
         Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
+        Me.bisDate = New System.Windows.Forms.DateTimePicker()
+        Me.vonDate = New System.Windows.Forms.DateTimePicker()
+        Me.zeitLabel = New System.Windows.Forms.Label()
+        Me.einstellungen = New System.Windows.Forms.LinkLabel()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.resetSelections, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseTree, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -47,7 +51,7 @@ Partial Class frmSelectPhasesMilestones
         Me.TreeViewProjects.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.TreeViewProjects.Location = New System.Drawing.Point(9, 35)
         Me.TreeViewProjects.Name = "TreeViewProjects"
-        Me.TreeViewProjects.Size = New System.Drawing.Size(471, 257)
+        Me.TreeViewProjects.Size = New System.Drawing.Size(471, 261)
         Me.TreeViewProjects.TabIndex = 0
         '
         'Ok_Button
@@ -56,7 +60,7 @@ Partial Class frmSelectPhasesMilestones
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Ok_Button.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.Ok_Button.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Ok_Button.Location = New System.Drawing.Point(165, 312)
+        Me.Ok_Button.Location = New System.Drawing.Point(165, 334)
         Me.Ok_Button.Name = "Ok_Button"
         Me.Ok_Button.Size = New System.Drawing.Size(157, 23)
         Me.Ok_Button.TabIndex = 4
@@ -70,7 +74,7 @@ Partial Class frmSelectPhasesMilestones
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(9, 298)
+        Me.SelectionSet.Location = New System.Drawing.Point(9, 303)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
         Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -83,7 +87,7 @@ Partial Class frmSelectPhasesMilestones
         Me.resetSelections.BackColor = System.Drawing.SystemColors.Control
         Me.resetSelections.Image = CType(resources.GetObject("resetSelections.Image"), System.Drawing.Image)
         Me.resetSelections.InitialImage = Nothing
-        Me.resetSelections.Location = New System.Drawing.Point(32, 298)
+        Me.resetSelections.Location = New System.Drawing.Point(32, 303)
         Me.resetSelections.Name = "resetSelections"
         Me.resetSelections.Size = New System.Drawing.Size(16, 16)
         Me.resetSelections.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -95,7 +99,7 @@ Partial Class frmSelectPhasesMilestones
         Me.collapseTree.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.collapseTree.BackColor = System.Drawing.SystemColors.Control
         Me.collapseTree.Image = CType(resources.GetObject("collapseTree.Image"), System.Drawing.Image)
-        Me.collapseTree.Location = New System.Drawing.Point(55, 298)
+        Me.collapseTree.Location = New System.Drawing.Point(55, 303)
         Me.collapseTree.Name = "collapseTree"
         Me.collapseTree.Size = New System.Drawing.Size(16, 16)
         Me.collapseTree.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -107,7 +111,7 @@ Partial Class frmSelectPhasesMilestones
         Me.expandTree.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.expandTree.BackColor = System.Drawing.SystemColors.Control
         Me.expandTree.Image = CType(resources.GetObject("expandTree.Image"), System.Drawing.Image)
-        Me.expandTree.Location = New System.Drawing.Point(78, 298)
+        Me.expandTree.Location = New System.Drawing.Point(78, 303)
         Me.expandTree.Name = "expandTree"
         Me.expandTree.Size = New System.Drawing.Size(16, 16)
         Me.expandTree.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -147,11 +151,55 @@ Partial Class frmSelectPhasesMilestones
         Me.rdbProjStruktProj.Text = "Projekt-Struktur (Projekt)"
         Me.rdbProjStruktProj.UseVisualStyleBackColor = True
         '
+        'bisDate
+        '
+        Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.bisDate.Location = New System.Drawing.Point(331, 301)
+        Me.bisDate.Name = "bisDate"
+        Me.bisDate.Size = New System.Drawing.Size(107, 22)
+        Me.bisDate.TabIndex = 99
+        '
+        'vonDate
+        '
+        Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.vonDate.Location = New System.Drawing.Point(201, 301)
+        Me.vonDate.Name = "vonDate"
+        Me.vonDate.Size = New System.Drawing.Size(108, 22)
+        Me.vonDate.TabIndex = 98
+        '
+        'zeitLabel
+        '
+        Me.zeitLabel.AutoSize = True
+        Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
+        Me.zeitLabel.Location = New System.Drawing.Point(116, 303)
+        Me.zeitLabel.Name = "zeitLabel"
+        Me.zeitLabel.Size = New System.Drawing.Size(63, 16)
+        Me.zeitLabel.TabIndex = 100
+        Me.zeitLabel.Text = "Zeitraum:"
+        Me.zeitLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'einstellungen
+        '
+        Me.einstellungen.AutoSize = True
+        Me.einstellungen.Location = New System.Drawing.Point(348, 339)
+        Me.einstellungen.Name = "einstellungen"
+        Me.einstellungen.Size = New System.Drawing.Size(70, 13)
+        Me.einstellungen.TabIndex = 101
+        Me.einstellungen.TabStop = True
+        Me.einstellungen.Text = "Einstellungen"
+        '
         'frmSelectPhasesMilestones
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(487, 347)
+        Me.ClientSize = New System.Drawing.Size(487, 369)
+        Me.Controls.Add(Me.einstellungen)
+        Me.Controls.Add(Me.zeitLabel)
+        Me.Controls.Add(Me.bisDate)
+        Me.Controls.Add(Me.vonDate)
         Me.Controls.Add(Me.Panel3)
         Me.Controls.Add(Me.collapseTree)
         Me.Controls.Add(Me.expandTree)
@@ -168,6 +216,7 @@ Partial Class frmSelectPhasesMilestones
         Me.Panel3.ResumeLayout(False)
         Me.Panel3.PerformLayout()
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
 
@@ -180,4 +229,8 @@ Partial Class frmSelectPhasesMilestones
     Friend WithEvents Panel3 As Windows.Forms.Panel
     Friend WithEvents rdbProjStruktTyp As Windows.Forms.RadioButton
     Friend WithEvents rdbProjStruktProj As Windows.Forms.RadioButton
+    Friend WithEvents zeitLabel As Windows.Forms.Label
+    Public WithEvents bisDate As Windows.Forms.DateTimePicker
+    Public WithEvents vonDate As Windows.Forms.DateTimePicker
+    Friend WithEvents einstellungen As Windows.Forms.LinkLabel
 End Class

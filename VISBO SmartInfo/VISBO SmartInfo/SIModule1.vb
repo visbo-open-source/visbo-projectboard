@@ -830,6 +830,8 @@ Module SIModule1
 
         End If
 
+        My.Settings.Save()
+
 
     End Sub
 
