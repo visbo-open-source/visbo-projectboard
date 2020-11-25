@@ -18621,17 +18621,6 @@ Public Module testModule
 
         If awinSettings.mppUseInnerText Then
 
-            ' ''phaseTypShape.Copy()
-            ' ''copiedShape = rds.pptSlide.Shapes.Paste()
-            'copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
-
-            'With copiedShape
-            '    If .Height > 0.0 Then
-            '        sizeFaktor = rds.phaseVorlagenShape.Height / .Height
-            '    End If
-            '    .Delete()
-            'End With
-
             sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
 
         End If
