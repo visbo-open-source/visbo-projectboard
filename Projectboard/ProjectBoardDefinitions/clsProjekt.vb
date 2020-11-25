@@ -4217,7 +4217,7 @@ Public Class clsProjekt
 
 
 
-            If columnOFNewActualData > columnOFActualData Then
+            If columnOFNewActualData >= columnOFActualData Then
                 ' nur dann muss etwas gemacht werden 
 
                 ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
@@ -4226,7 +4226,7 @@ Public Class clsProjekt
                     Dim columnOfPhaseStart As Integer = getColumnOfDate(curPhase.getStartDate)
                     Dim columnOfPhaseEnd As Integer = getColumnOfDate(curPhase.getEndDate)
 
-                    If columnOfPhaseStart <= columnOFNewActualData And columnOfPhaseEnd > columnOFActualData Then
+                    If columnOfPhaseStart <= columnOFNewActualData And columnOfPhaseEnd >= columnOFNewActualData Then
                         ' dann gibt es was zu tun 
                         For r = 1 To curPhase.countRoles
                             Dim curRole As clsRolle = curPhase.getRole(r)
