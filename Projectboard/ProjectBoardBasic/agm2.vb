@@ -22960,13 +22960,15 @@ Public Module agm2
                                     Try
                                         If Not IsNothing(c.Offset(0, 7).Value) Then
                                             If CStr(c.Offset(0, 7).Value).Trim = "" Then
-                                                .exitDate = CDate("31.12.2200").Date
+                                                '.exitDate = CDate("31.12.2200")
+                                                .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
                                                 .exitDate = tmpValue
                                             End If
                                         Else
-                                            .exitDate = CDate("31.12.2200")
+                                            '.exitDate = CDate("31.12.2200")
+                                            .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                         End If
                                     Catch ex As Exception
                                         If awinSettings.englishLanguage Then

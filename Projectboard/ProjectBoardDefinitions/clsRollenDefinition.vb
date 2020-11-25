@@ -583,7 +583,8 @@
 
         _employeeNr = ""
         _entryDate = Date.MinValue
-        _exitDate = CDate("31.12.2200")
+        ' _exitDate = CDate("31.12.2200")
+        _exitDate = DateAndTime.DateSerial(2200, 12, 31)
         _defaultDayCapa = -1
         _aliases = Nothing
 

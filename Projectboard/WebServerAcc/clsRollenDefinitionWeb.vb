@@ -506,7 +506,9 @@ Public Class clsRollenDefinitionWeb
         employeeNr = ""
         defaultDayCapa = -1
         entryDate = Date.MinValue.ToUniversalTime
-        exitDate = CDate("31.12.2200").ToUniversalTime
+        'exitDate = CDate("31.12.2200").ToUniversalTime
+        exitDate = DateAndTime.DateSerial(2200, 12, 31)
+        Dim maxDate As Date = Date.MaxValue.ToUniversalTime
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
@@ -523,7 +525,8 @@ Public Class clsRollenDefinitionWeb
         employeeNr = ""
         defaultDayCapa = -1
         entryDate = Date.MinValue.ToUniversalTime
-        exitDate = CDate("31.12.2200").ToUniversalTime
+        'exitDate = CDate("2200.31.12").ToUniversalTime
+        exitDate = DateAndTime.DateSerial(2200, 12, 31)
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub

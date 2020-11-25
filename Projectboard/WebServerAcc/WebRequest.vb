@@ -2854,14 +2854,16 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
-        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
             logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
+
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
+
             logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
