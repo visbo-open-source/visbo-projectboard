@@ -4375,7 +4375,12 @@ Public Module awinGeneralModules
             outputCollection.Add(outputLine)
         Else
             ' ab diesem Wert soll neu gezeichnet werden 
-            Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+            Dim freieZeile As Integer = 2
+
+            If Not calledFromPPT Then
+                freieZeile = projectboardShapes.getMaxZeile
+            End If
+
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 

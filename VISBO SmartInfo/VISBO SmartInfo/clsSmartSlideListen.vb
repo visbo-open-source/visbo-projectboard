@@ -319,6 +319,20 @@ Public Class clsSmartSlideListen
         End Get
     End Property
 
+    Public ReadOnly Property getPVNames() As Collection
+        Get
+            Dim resultCollection As New Collection
+            For Each kvp As KeyValuePair(Of String, String) In _projectList
+                If Not resultCollection.Contains(kvp.Key) Then
+                    resultCollection.Add(kvp.Key, kvp.Key)
+                End If
+            Next
+
+            getPVNames = resultCollection
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt den Namen zurück, der urspünglich der vpid aus dem VIsbo Center zugeordnet war
     ''' </summary>

@@ -1185,5 +1185,81 @@ Public Class Ribbon1
         End If
 
     End Sub
+
+    Private Sub addElement_Click(sender As Object, e As RibbonControlEventArgs) Handles addElement.Click
+
+        If isVisboSlide(currentSlide) Then
+
+            Dim errmsg As String = ""
+
+            If userIsEntitled(errmsg, currentSlide) Then    ' User ist bereits eingeloggt 
+
+                ' jetzt die ShowProjekte und soweiter löschen 
+                Call emptyAllVISBOStructures(calledFromPPT:=True)
+
+                Dim pvNames As Collection = smartSlideLists.getPVNames
+                If pvNames.Count > 0 Then
+                    ' jetzt werden diese Projekte in AlleProjekte geladen ... 
+                    ' einfach deswegen, weill evtl ja mehrere Varianten ein und desselben Projektes darunter sind 
+                    For Each pvName As String In pvNames
+                        Dim pName As String = getPnameFromKey(pvName)
+                        Dim vName As String = getVariantnameFromKey(pvName)
+                        Dim outputCollection As New Collection
+                        Call loadProjectfromDB(outputCollection, pName, vName, False, Date.Now, True)
+
+                    Next
+                End If
+
+                ' jetzt werden die Meilensteine / Phasen ausgewählt 
+
+                Dim selectedPhases As New Collection
+                Dim selectedMilestones As New Collection
+
+                Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+                If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
+
+                    If Not IsNothing(frmSelectionPhMs.selectedPhases) Then
+                        selectedPhases = frmSelectionPhMs.selectedPhases
+                    Else
+                        selectedPhases = New Collection
+                    End If
+
+                    If Not IsNothing(frmSelectionPhMs.selectedMilestones) Then
+                        selectedMilestones = frmSelectionPhMs.selectedMilestones
+                    Else
+                        selectedMilestones = New Collection
+                    End If
+
+
+                Else
+                    Exit Sub
+                End If
+
+                Call MsgBox("Geladen: " & AlleProjekte.Count)
+
+            Else
+                ' hier ggf auf invisible setzen, wenn erforderlich 
+                If englishLanguage Then
+                    Call MsgBox("sorry, you are not entitled ... ")
+                Else
+                    Call MsgBox("Tut uns leid, aber Sie sind nicht berechtigt ... ")
+                End If
+
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
+            End If
+
+
+
+        Else
+            If englishLanguage Then
+                Call MsgBox("no Smart VISBO elements found - so nothing to add ...")
+
+            Else
+                Call MsgBox("keine Smart-Phasen oder Meilensteine gefunden - Abbruch ...")
+            End If
+        End If
+
+
+    End Sub
 End Class
 
