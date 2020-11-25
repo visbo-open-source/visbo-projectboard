@@ -1210,12 +1210,26 @@ Public Class Ribbon1
                     Next
                 End If
 
+                ' jetzt wird showrangeLeft und showrangeRight bestimmt 
+                Try
+                    showRangeLeft = getColumnOfDate(slideCoordInfo.PPTStartOFCalendar)
+                    showRangeRight = getColumnOfDate(slideCoordInfo.PPTEndOFCalendar)
+                Catch ex As Exception
+
+                End Try
+
+
                 ' jetzt werden die Meilensteine / Phasen ausgewählt 
 
                 Dim selectedPhases As New Collection
                 Dim selectedMilestones As New Collection
 
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+
+                ' set the datepicker boxes in the form to invisible
+                ' because timeframe is defined by report which is currently shown
+                frmSelectionPhMs.addElementMode = True
+
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
 
                     If Not IsNothing(frmSelectionPhMs.selectedPhases) Then
@@ -1235,7 +1249,10 @@ Public Class Ribbon1
                     Exit Sub
                 End If
 
-                Call MsgBox("Geladen: " & AlleProjekte.Count)
+
+
+                ' now draw - but only when it is not yet shown 
+                'slideCoordInfo.calculatePPTx1x2()
 
             Else
                 ' hier ggf auf invisible setzen, wenn erforderlich 
