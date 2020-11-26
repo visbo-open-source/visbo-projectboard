@@ -8071,7 +8071,7 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        Call logfileOpen()
+        'Call logfileOpen()
 
         getVisboImport.menueAswhl = PTImpExp.visbo
         returnValue = getVisboImport.ShowDialog
@@ -8114,10 +8114,10 @@ Imports System.Web
 
                     Try
                         appInstance.Workbooks.Open(dateiName)
-                        Call logfileSchreiben("Beginn Import ", dateiName, -1)
+                        Call logfileSchreiben(ptErrLevel.logInfo, "Beginn Import: " & dateiName, "Tom2G4M1Import", -1)
 
                     Catch ex1 As Exception
-                        Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
+                        Call logfileSchreiben(ptErrLevel.logError, "Fehler bei Öffnen der Datei: " & dateiName, "Tom2G4M1Import", -1)
                         skip = True
                     End Try
 
@@ -8143,7 +8143,7 @@ Imports System.Web
 
                         Catch ex1 As Exception
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                            Call logfileSchreiben(ex1.Message, "", anzFehler)
+                            Call logfileSchreiben(ptErrLevel.logError, ex1.Message, "Tom2G4M1Import", anzFehler)
                             Call MsgBox(ex1.Message)
                             'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
                         End Try
@@ -8181,7 +8181,7 @@ Imports System.Web
 
 
 
-        Call logfileSchliessen()
+        'Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True

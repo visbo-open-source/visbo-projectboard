@@ -20922,7 +20922,7 @@ Public Module agm2
             customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
             If Not IsNothing(customizations) Then
                 StartofCalendar = customizations.kalenderStart
-                Call logfileSchreiben(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToLongDateString, "awinsetTypen", anzFehler)
+                Call logfileSchreiben(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToString, "awinsetTypen", anzFehler)
             End If
 
             Try

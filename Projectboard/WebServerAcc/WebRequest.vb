@@ -2921,9 +2921,9 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
-        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
-        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
@@ -2943,7 +2943,7 @@ Public Class Request
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
 
-                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
