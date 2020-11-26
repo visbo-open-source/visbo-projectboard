@@ -742,6 +742,7 @@ Public Module Module1
         project = 0
         pVariant = 1
         timestamp = 2
+        portfolio = 3
     End Enum
     Public Enum PTlicense
         swimlanes = 0
@@ -1592,27 +1593,31 @@ Public Module Module1
     Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
 
         Dim tmpResult As clsProjekt = hproj
+        Try
 
-        If Not IsNothing(hproj) Then
-            ' wenn customUserRole = Portfolio 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-                If Not IsNothing(idArray) Then
-                    If idArray.Length >= 1 Then
-                        tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+            If Not IsNothing(hproj) Then
+                ' wenn customUserRole = Portfolio 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    If Not IsNothing(idArray) Then
+                        If idArray.Length >= 1 Then
+                            tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+                        End If
                     End If
+
                 End If
 
+                ' tk 12.06.2020 
+
+                ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
+                'If tmpResult.name.StartsWith("E_Kunde") Then
+                '    Call tmpResult.setMilestoneInvoices("Finalization")
+                'End If
+
             End If
-
-            ' tk 12.06.2020 
-
-            ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
-            'If tmpResult.name.StartsWith("E_Kunde") Then
-            '    Call tmpResult.setMilestoneInvoices("Finalization")
-            'End If
-
-        End If
+        Catch ex As Exception
+            Call MsgBox("Fehler in prepProjectForRoles : " & ex.Message)
+        End Try
 
         prepProjectForRoles = tmpResult
 
@@ -3356,7 +3361,7 @@ Public Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function erzeugeIndent(ByVal level As Integer) As String
-        Dim indentDelta As String = "   "
+        Dim indentDelta As String = " "
         Dim tmpStr As String = ""
 
         If level = -1 Then
@@ -3370,6 +3375,54 @@ Public Module Module1
         erzeugeIndent = tmpStr
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="fuellz"></param>
+    ''' <param name="anzFuellz"></param>
+    ''' <returns></returns>
+    Public Function bestimmeIndent(ByVal text As String, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
+        Dim tmpstr As String = ""
+        Dim indentLevel As Double = 0
+
+        If Not IsNothing(text) Then
+            If fuellz = " " Then
+                Dim origTextLge As Integer = text.Length
+                Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
+                If anzFuellz <> 0 Then
+                    indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzFuellz)
+                Else
+                    indentLevel = -1
+                End If
+            Else
+                Dim tmparray() As String = Split(text, fuellz)
+                Dim i As Integer = 0
+
+                While tmparray(i) = ""
+                    i += 1
+                End While
+                If anzFuellz <> 0 Then
+                    indentLevel = i / anzFuellz
+                Else
+                    indentLevel = -1
+                End If
+
+            End If
+
+        Else
+
+        End If
+        If IsNumeric(indentLevel) Then
+            bestimmeIndent = CInt(indentLevel)
+        Else
+            bestimmeIndent = -1
+        End If
+
+    End Function
+
 
     ''' <summary>
     ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
@@ -5081,7 +5134,7 @@ Public Module Module1
             If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
                 ' hier handelt es sich um ein Portfolio
                 pName = hportfolio.constellationName
-                vName = ""
+                vName = hportfolio.variantName
                 vpid = hportfolio.vpID
 
             Else
@@ -7591,6 +7644,9 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub logfileSchliessen()
 
+        ' aktives Workbook merken im Variable actualWB
+        Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
         appInstance.EnableEvents = False
 
         Try
@@ -7606,6 +7662,9 @@ Public Module Module1
         End Try
 
         appInstance.EnableEvents = True
+
+        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+        appInstance.Workbooks(actualWB).Activate()
     End Sub
 
     ''' <summary>
@@ -8590,7 +8649,8 @@ Public Module Module1
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
-                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                ok = ok And (Not childRole.isTeam And childRole.getTeamIDs.ContainsKey(kvp.Key)) Or (childRole.isTeam)
+
                 If Not ok Then
                     Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
                     outputCollection.Add(outmsg)
@@ -8988,6 +9048,56 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
+
+    Public Function deleteBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+
+        If name.Contains(bracket_auf) Then
+            Dim hstr() As String = Split(name, bracket_auf)
+            If hstr.Length > 1 Then
+                name = hstr(1)
+            End If
+        End If
+        If name.Contains(bracket_zu) Then
+            Dim hstr() As String = Split(name, bracket_zu)
+            If hstr.Length > 1 Then
+                name = hstr(0)
+            End If
+        End If
+
+        deleteBrackets = name
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
+
+    Public Function addBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+        Dim trennzeichen As String = "#"
+
+        If name.Contains(trennzeichen) Then
+            Dim hstr() As String = Split(name, trennzeichen)
+            If hstr.Length > 1 Then
+                name = hstr(0) & bracket_auf & hstr(1) & bracket_zu
+            End If
+        End If
+
+        addBrackets = name
+
+    End Function
 
     Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
 

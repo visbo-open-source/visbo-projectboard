@@ -1095,7 +1095,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg) As Collection
+    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg, Optional ByVal vpType As Integer = ptPRPFType.project) As Collection
 
         Dim ergebnisCollection As New Collection
 
@@ -1103,7 +1103,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' nun ist sicher die VPs aufgebaut
-            Dim vp As clsVP = GETvpid(projectName, err)
+            Dim vp As clsVP = GETvpid(projectName, err, vpType)
 
             If vp._id <> "" Then
                 ' alle Variantenamen in der Collection sammeln
@@ -1772,6 +1772,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal variantName As String = noVariantName,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
@@ -1789,7 +1790,7 @@ Public Class Request
                 vpid = vp._id
             End If
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
 
@@ -1829,6 +1830,7 @@ Public Class Request
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal variantName As String = noVariantName,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation
@@ -1852,11 +1854,11 @@ Public Class Request
             End If
 
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
 
             If listOfPortfolios.Count = 0 Then
 
-                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName, True)
             End If
 
 
@@ -1865,7 +1867,7 @@ Public Class Request
                 For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
                     If pf.Key < storedAtOrBefore Then
-                        If pf.value.variantName = "" Then
+                        If pf.Value.variantName = variantName Then
                             vpf = pf.Value
                         Else
                         End If
@@ -2037,6 +2039,9 @@ Public Class Request
                                            ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
+        Dim storedVP As Boolean = False
+        Dim storedVPVariant As Boolean = False
+        Dim standardVariante As String = ""
 
         Try
             Dim vpType As Integer = ptPRPFType.portfolio
@@ -2045,19 +2050,19 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New List(Of clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            '                       cVP = GETvpid(c.constellationName, vpType:=2)
+
             cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
 
-            'cVPf = clsConst2clsVPf(c)
-
-            If cVP._id = "" Then
+            If cVP._id = "" _
+                Or (cVP._id <> "" And cVP.vpType <> ptPRPFType.portfolio) Then
                 '' ur: war nur zu Testzwecken: 
                 '' Call MsgBox("es ist noch kein VisboPortfolio angelegt")
 
                 ' Portfolio-Name
                 cVP.name = c.constellationName
+                ' _id
+                cVP._id = Nothing
                 ' ur:14.12.2018: liste der User ist nicht mehr in den VPs enthalten
                 '' berechtiger User
                 'Dim user As New clsUser
@@ -2073,34 +2078,69 @@ Public Class Request
                 newVP = POSTOneVP(cVP, err)
                 If newVP.Count > 0 Then
                     cVP._id = newVP.Item(0)._id
+                    storedVP = True
                 Else
-                    Throw New ArgumentException("FEHLER beim erstellen des VisboPortfolioProject")
+                    Throw New ArgumentException("FEHLER beim Speichern des Portfolios: " & vbLf & err.errorMsg)
+                End If
+            Else
+                storedVP = True
+            End If
+
+            If storedVP Then
+                Dim vname = c.variantName
+                Dim aktvp As clsVP = cVP
+                ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
+                If vname <> "" And aktvp.Variant.Count > 0 Then
+                    For Each var As clsVPvariant In aktvp.Variant
+                        If var.variantName = vname Then
+                            storedVPVariant = True
+                        End If
+                    Next
                 End If
 
+                ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
+                If Not storedVPVariant Then
+                    If vname <> "" Then
+                        storedVPVariant = POSTVPVariant(cVP._id, vname, err)
+                    Else
+                        ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                        storedVPVariant = True
+                    End If
+                End If
             End If
 
             cVPf = clsConst2clsVPf(c)
 
-            If Not IsNothing(cVPf) Then
-                cVPf.vpid = cVP._id
+            If storedVP And storedVPVariant Then
+                If Not IsNothing(cVPf) Then
+                    cVPf.vpid = cVP._id
 
-                'uir:21.06.2019 ist nun in clsConstellation enthalten
-                '' timestamp setzen
-                'cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+                    If cVP._id <> "" Then
 
+                        newVPf = POSTOneVPf(cVPf, err)
 
-                If cVP._id <> "" Then
+                        If newVPf.Count > 0 Then
 
-                    newVPf = POSTOneVPf(cVPf, err)
+                            ' prüfen ob bereits eine standardvariante dieses Portfolios existiert, wenn nicht, wird sie angelegt
+                            Dim listofPortfolios As SortedList(Of Date, clsVPf) = GETallVPf(cVP._id, Date.MinValue, err, standardVariante)
+                            Dim stdVPfExists As Boolean = False
+                            If Not (listofPortfolios.Count > 0) Then
+                                cVPf.variantName = standardVariante
+                                Dim stdVPf As List(Of clsVPf) = POSTOneVPf(cVPf, err)
+                                stdVPfExists = (stdVPf.Count > 0)
+                            Else
+                                stdVPfExists = True
+                            End If
 
-                    If newVPf.Count > 0 Then
-                        result = True
+                            result = stdVPfExists And True
+                        End If
+
                     End If
+                Else
 
                 End If
-            Else
-
             End If
+
 
         Catch ex As Exception
             'Call MsgBox(ex.Message)
@@ -2116,7 +2156,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String,
+                                              ByVal vName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -2127,14 +2168,31 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New SortedList(Of Date, clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            'cVP = GETvpid(c.constellationName, vpType:=2)
             If cVpid = "" Then
                 cVP = GETvpid(cName, err, ptPRPFType.portfolio)
                 cVpid = cVP._id
             End If
 
-            newVPf = GETallVPf(cVpid, Date.Now.ToUniversalTime, err)
+            ' Basis Portfolio kann nicht gelöscht werden, solange noch varianten vorhanden sind
+            If vName = "" Then
+                cVP = GETvpid(cName, err, ptPRPFType.portfolio)
+                If Not IsNothing(cVP) Then
+
+                    If cVP.Variant.Count = 1 And
+                        cVP.Variant.Item(0).variantName = ptVariantFixNames.pfv.ToString Then
+                        ' do nothing
+                    ElseIf cVP.Variant.Count = 0 Then
+                        'do nothing
+                    Else
+                        err.errorCode = 0
+                        err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
+                        Return result
+                    End If
+                End If
+            End If
+
+            ' ab hier ist sichergestellt, dass für vname = "" keine Varianten mehr existieren
+            newVPf = GETallVPf(cVpid, Date.MinValue, err, vName)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
@@ -2157,12 +2215,21 @@ Public Class Request
                     'Call MsgBox("Es gab mehrer Portfolio-Versionen zu: " & c.constellationName)
                 End If
             Else
-                ' aktuell existiert keine PortfolioVersion zu vpid
-                ' TODO: was ist, wenn nur der Token is dead war?!?!?
+                ' aktuell existiert keine PortfolioVersion zu vpid, aber der request zum Server war erfolgreich
+                If err.errorCode = 200 Then
+                    result = True
+                End If
             End If
 
             If result = True Then
-                result = DELETEOneVP(cVpid, err)
+                If vName <> "" Then
+                    Dim varID As String = findVariantID(cVpid, vName)
+                    result = DELETEVPVariant(cVpid, err, varID)
+                Else
+                    ' BasisPortfolio mit pfv als letztes übrig geblieben
+                    result = DELETEOneVP(cVpid, err)
+                End If
+
             End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -2854,6 +2921,7 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
         Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
@@ -2863,7 +2931,6 @@ Public Class Request
 
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
-
             logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
@@ -2875,7 +2942,9 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+
                             Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
                             Dim latestOrga As New clsVCSettingOrganisation
@@ -2892,6 +2961,7 @@ Public Class Request
                             webOrganisation = latestOrga.value
 
                             Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+
                         End If
 
                         webOrganisation.copyTo(result)
@@ -3637,7 +3707,9 @@ Public Class Request
         Try
 
             If IsNothing(httpresp) Then
+
                 logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
+
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
@@ -4002,7 +4074,7 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVPantwort As clsWebVP = Nothing
+            Dim webVPantwort As New clsWebVP
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
@@ -4259,7 +4331,12 @@ Public Class Request
                                 serverUriString = serverUriString & "&status=" & status
                             End If
                             If variantName <> noVariantName Then
-                                serverUriString = serverUriString & "&variantName=" & variantName
+                                Dim variantID As String = findVariantID(vpid, variantName)
+                                If variantID <> "" Then
+                                    serverUriString = serverUriString & "&variantID=" & variantID
+                                Else
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
                             End If
                         Else
                             If storedAtorBefore > Date.MinValue Then
@@ -4273,7 +4350,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
                             Else
                                 serverUriString = serverUriString & "&refDate=" & refDate
@@ -4285,7 +4367,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
 
                             End If
@@ -4508,7 +4595,12 @@ Public Class Request
                                 serverUriString = serverUriString & "&status=" & status
                             End If
                             If variantName <> noVariantName Then
-                                serverUriString = serverUriString & "&variantName=" & variantName
+                                Dim variantID As String = findVariantID(vpid, variantName)
+                                If variantID <> "" Then
+                                    serverUriString = serverUriString & "&variantID=" & variantID
+                                Else
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
                             End If
                         Else
                             If storedAtorBefore > Date.MinValue Then
@@ -4522,7 +4614,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
                             Else
 
@@ -4534,7 +4631,12 @@ Public Class Request
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
                                 If variantName <> noVariantName Then
-                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                    Dim variantID As String = findVariantID(vpid, variantName)
+                                    If variantID <> "" Then
+                                        serverUriString = serverUriString & "&variantID=" & variantID
+                                    Else
+                                        serverUriString = serverUriString & "&variantName=" & variantName
+                                    End If
                                 End If
 
                             End If
@@ -4612,13 +4714,17 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
     ''' </summary>
-    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
+    Private Function GETallVPf(ByVal vpid As String,
+                               ByVal timestamp As Date,
+                               ByRef err As clsErrorCodeMsg,
+                               Optional ByVal variantName As String = noVariantName,
                                Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
         Dim errmsg As String = ""
         Dim errcode As Integer
+        Dim nextUrlTrennzeichen As String = "?"
 
         Try
             Dim serverUriString As String
@@ -4632,11 +4738,21 @@ Public Class Request
             If timestamp <= Date.MinValue Then
                 serverUriString = serverUriString
             Else
-                serverUriString = serverUriString & "?refDate=" & refDate
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refDate=" & refDate
+                nextUrlTrennzeichen = "&"
+            End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantID=" & variantID
+                Else
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantName=" & variantName
+                End If
+                nextUrlTrennzeichen = "&"
             End If
 
             If refNext Then
-                serverUriString = serverUriString & "&refNext=1"
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refNext=1"
             End If
 
 
@@ -6076,9 +6192,17 @@ Public Class Request
             Else
                 serverUriString = serverUriString & "/" & vpid & "/lock"
             End If
-            'If variantName <> "" Then
-            serverUriString = serverUriString & "?variantName=" & variantName
-            'End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & "&variantID=" & variantID
+                Else
+                    serverUriString = serverUriString & "&variantName=" & variantName
+                End If
+            End If
+            If variantName = "" Then
+                serverUriString = serverUriString & "?variantID="
+            End If
 
 
 
@@ -6246,27 +6370,30 @@ Public Class Request
 
                 ' Request absetzen
                 Dim Antwort As String
-                Dim webVPVarAntwort As clsWebVPVariant = Nothing
+                Dim webVPVarAntwort As clsWebVP = Nothing
 
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                     Antwort = ReadResponseContent(httpresp)
                     errcode = CType(httpresp.StatusCode, Integer)
                     errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
                 End Using
 
                 If errcode = 200 Then
 
-                    Dim anzvar As Integer = webVPVarAntwort.Variant.Count
+                    Dim anzvar As Integer = webVPVarAntwort.vp.Item(0).Variant.Count
+                    Dim pname As String = GETpName(vpid)
                     If anzvar = 0 Then
                         VRScache.VPsId(vpid).Variant.Clear()
-                    Else
-                        VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                        VRScache.VPsN(pname).Variant.Clear()
+
+                    ElseIf webVPVarAntwort.vp.Count = 1 Then
+                        VRScache.VPsId(vpid) = webVPVarAntwort.vp.Item(0)
+                        VRScache.VPsN(pname) = webVPVarAntwort.vp.Item(0)
                     End If
 
-                    Dim pname As String = GETpName(vpid)
-                    ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
-                    result = VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count
+                    result = (VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count)
+                    result = True
 
                 Else
                     ' Fehlerbehandlung je nach errcode
@@ -6700,6 +6827,33 @@ Public Class Request
     End Function
 
     ''' <summary>
+    ''' Find the ID to the given VP (vpid) and variantName
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="variantName"></param>
+    ''' <returns>variantID</returns>
+    Private Function findVariantID(ByVal vpid As String, ByVal variantName As String) As String
+
+        Dim variantID As String = ""
+        Try ' passende VariantID herausfinden
+            If vpid <> "" Then
+                If VRScache.VPsId.ContainsKey(vpid) Then
+                    Dim actualVP As clsVP = VRScache.VPsId.Item(vpid)
+                    For Each var As clsVPvariant In actualVP.Variant
+                        If var.variantName = variantName Then
+                            variantID = var._id
+                            Exit For
+                        End If
+                    Next
+                End If
+            End If
+        Catch ex As Exception
+            variantID = ""
+        End Try
+        findVariantID = variantID
+    End Function
+
+    ''' <summary>
     ''' Kopieren des ReST-Server Portfolios vpf in das der DB-Version clsConstellation
     ''' </summary>
     ''' <param name="vpf"></param>
@@ -6713,6 +6867,7 @@ Public Class Request
             With result
                 .vpID = vpf.vpid
                 .constellationName = vpf.name
+                .variantName = vpf.variantName
                 .timestamp = vpf.timestamp
 
                 ' Aufbau der Constellation.allitems
@@ -6735,10 +6890,23 @@ Public Class Request
 
 
                 Next
+
                 ' hier wird die Sortliste aufgebaut ... 
                 .sortCriteria = vpf.sortType
                 ' tk die Sort-Liste ist im Befehl vorher bereits aufgebaut 
-                ' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+                '' außer
+                'If AlleProjekte.Count < 1 And vpf.sortType <> ptSortCriteria.alphabet And ptSortCriteria.customTF Then
+                '    Dim newsortlist As New SortedList(Of String, String)
+                '    For i As Integer = 0 To vpf.sortList.Count - 1
+
+                '        Dim pname As String = GETpName(vpf.sortList.Item(i))
+                '        Dim nrPname As String = i.ToString & pname
+                '        newsortlist.Add(nrPname, pname)
+                '    Next
+                '    .sortListe(vpf.sortType) = newsortlist
+                'End If
+                '' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+
             End With
 
         Catch ex As Exception
@@ -6764,6 +6932,7 @@ Public Class Request
 
             With result
                 .name = c.constellationName
+                .variantName = c.variantName
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 

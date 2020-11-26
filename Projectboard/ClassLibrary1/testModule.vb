@@ -2149,12 +2149,14 @@ Public Module testModule
                                         ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
-                                        '
-                                        Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                        Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
+                                        ' sofern der elementType = 7 (rolesAndCost) ist
 
-                                        Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        If smartChartInfo.elementTyp = ptElementTypen.rolesAndCost Then
+                                            Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
 
+                                            Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
+                                        End If
 
                                         appInstance.ScreenUpdating = formerSU
 

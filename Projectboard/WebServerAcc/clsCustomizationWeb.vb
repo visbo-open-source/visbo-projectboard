@@ -803,7 +803,7 @@ Public Class clsCustomizationWeb
             .ergebnisfarbe1 = Me.ergebnisfarbe1
             .ergebnisfarbe2 = Me.ergebnisfarbe2
             .weightStrategicFit = Me.weightStrategicFit
-            .kalenderStart = Me.kalenderStart
+            .kalenderStart = Me.kalenderStart.ToLocalTime
             .zeitEinheit = Me.zeitEinheit
             .kapaEinheit = Me.kapaEinheit
             .offsetEinheit = Me.offsetEinheit
@@ -891,7 +891,7 @@ Public Class clsCustomizationWeb
             Me.ergebnisfarbe1 = .ergebnisfarbe1
             Me.ergebnisfarbe2 = .ergebnisfarbe2
             Me.weightStrategicFit = .weightStrategicFit
-            Me.kalenderStart = .kalenderStart
+            Me.kalenderStart = .kalenderStart.ToUniversalTime
             Me.zeitEinheit = .zeitEinheit
             Me.kapaEinheit = .kapaEinheit
             Me.offsetEinheit = .offsetEinheit

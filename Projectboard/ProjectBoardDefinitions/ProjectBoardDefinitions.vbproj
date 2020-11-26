@@ -73,6 +73,7 @@
     <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
+    <Compile Include="clsConfigOrgaImport.vb" />
     <Compile Include="clsConfigProjectsImport.vb" />
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
@@ -281,12 +282,6 @@
     <Compile Include="frmGetProjectbackFromNoshow.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmLoadConstellation.Designer.vb">
-      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmLoadConstellation.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="frmProjektAendern.Designer.vb">
       <DependentUpon>frmProjektAendern.vb</DependentUpon>
     </Compile>
@@ -390,9 +385,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmGetProjectbackFromNoshow.resx">
       <DependentUpon>frmGetProjectbackFromNoshow.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLoadConstellation.resx">
-      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjektAendern.resx">
       <DependentUpon>frmProjektAendern.vb</DependentUpon>
