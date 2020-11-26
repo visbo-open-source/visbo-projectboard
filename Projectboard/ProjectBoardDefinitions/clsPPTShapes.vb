@@ -1,4 +1,5 @@
 ﻿Imports pptNS = Microsoft.Office.Interop.PowerPoint
+Imports core = Microsoft.Office.Core
 ''' <summary>
 ''' nimmt die Powerpoint Shapes auf, die notwendig sind, 
 ''' um eine Einzelprojekt- oder Multiprojekt-Sicht zu erzeugen 
@@ -32,11 +33,11 @@ Public Class clsPPTShapes
     Private _legendAreaBottom As Double = 0.0
 
     ' enthalten die relativen Abstände der Text-Shapes zu ihrem Phasen/Meilenstein Element 
-    Private _yOffsetMsToText As Double = 0.0
-    Private _yOffsetMsToDate As Double = 0.0
+    Private _yOffsetMsToText As Double = -2.0
+    Private _yOffsetMsToDate As Double = 2.0
 
-    Private _yOffsetPhToText As Double = 0.0
-    Private _yOffsetPhToDate As Double = 0.0
+    Private _yOffsetPhToText As Double = 2.0
+    Private _yOffsetPhToDate As Double = -2.0
 
     Private _containerShape As pptNS.Shape = Nothing
     Private _calendarLineShape As pptNS.Shape = Nothing
@@ -55,8 +56,8 @@ Public Class clsPPTShapes
 
     ' wo beginnen die Shapes relativ gesehen innerhalb einer Zeile, aufgeführt für Duration, ProjekctLine, Phase, Milestone
 
-    Private _YDurationText As Double = 0.0
-    Private _YDurationArrow As Double = 0.0
+    Private _YDurationText As Double = -5.0
+    Private _YDurationArrow As Double = -4.0
 
     Private _YProjectLine As Double = 0.0
     Private _YprojectName As Double = 0.0
@@ -68,6 +69,31 @@ Public Class clsPPTShapes
     Private _YMilestone As Double = 0.0
     Private _YMilestoneText As Double = 0.0
     Private _YMilestoneDate As Double = 0.0
+
+    Private _avgMsHeight As Double = 5.0
+    Public Property avgMSHeight As Double
+        Get
+            avgMSHeight = _avgMsHeight
+        End Get
+        Set(value As Double)
+            If value > 0 Then
+                _avgMsHeight = value
+            End If
+        End Set
+    End Property
+
+
+    Private _avgPhHeight As Double = 3.0
+    Public Property avgPhHeight As Double
+        Get
+            avgPhHeight = _avgPhHeight
+        End Get
+        Set(value As Double)
+            If value > 0 Then
+                _avgPhHeight = value
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' löscht das Shape inkl Try..catch Behandlung
@@ -258,6 +284,45 @@ Public Class clsPPTShapes
     End Sub
 
     ''' <summary>
+    ''' creates a text annotation with regard to original shape 
+    ''' </summary>
+    ''' <param name="orientation"></param>
+    ''' <param name="shapeName"></param>
+    ''' <param name="annotationType"></param>
+    ''' <param name="text"></param>
+    ''' <param name="alternativeText"></param>
+    ''' <param name="title"></param>
+    ''' <returns></returns>
+    Public Function addAnnotation(ByVal orientation As core.MsoTextOrientation, ByVal shapeName As String, ByVal annotationType As String,
+                               ByVal text As String, ByVal alternativeText As String, ByVal title As String, ByVal fontsize As Double) As pptNS.Shape
+
+
+        Dim newShape As pptNS.Shape = _pptSlide.Shapes.AddTextbox(orientation, 50, 10, 50, 10)
+
+        With newShape
+            .TextFrame2.TextRange.Text = text
+            .TextFrame2.MarginLeft = 0
+            .TextFrame2.MarginRight = 0
+            .TextFrame2.MarginBottom = 0
+            .TextFrame2.MarginTop = 0
+            .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+            .TextFrame2.TextRange.Font.Size = CSng(fontsize)
+
+            Try
+                .Name = shapeName & annotationType
+            Catch ex As Exception
+
+            End Try
+
+            .Title = title
+            .AlternativeText = alternativeText
+        End With
+
+        addAnnotation = newShape
+
+    End Function
+
+    ''' <summary>
     ''' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
     ''' yOffsetMsToText, yOffsetMsToDate
     ''' yOffsetPhToText, yOffsetPhToDate
@@ -302,31 +367,8 @@ Public Class clsPPTShapes
             x2Pos = Me.drawingAreaRight
         Else
             x2Pos = Me.drawingAreaLeft + offset2 * Me.tagesbreite
-            ' Änderung tk 27.10 , eine Phase geht von Anfang des Tages bis Ende des Tages... 
-            'x2Pos = Me.drawingAreaLeft + (offset2 + 0.75) * Me.tagesbreite
         End If
 
-        ' '' Test Funktionen , eingeführt um die Rückwärtsrechnung Koordinaten->Datum zu überprüfen ... 
-        ''Dim tstStart As Date = calcXtoDate(x1Pos)
-        ''If DateDiff(DateInterval.Day, startdate, tstStart) = 0 Then
-        ''    ' alles in Ordnung 
-        ''Else
-        ''    Call MsgBox("Unterschied: " & startdate.ToString & " versus " & tstStart.ToString)
-        ''End If
-
-        ''Dim tstEnde As Date = calcEndDate(x1Pos, x2Pos - x1Pos)
-        ''If DateDiff(DateInterval.Day, enddate, tstEnde) = 0 Then
-        ''    ' alles in Ordnung 
-        ''Else
-        ''    Call MsgBox("Unterschied: " & enddate.ToString & " versus " & tstEnde.ToString)
-        ''End If
-
-        ''tstEnde = calcXtoDate(x2Pos)
-        ''If DateDiff(DateInterval.Day, enddate, tstEnde) = 0 Then
-        ''    ' alles in Ordnung 
-        ''Else
-        ''    Call MsgBox("Unterschied: " & enddate.ToString & " versus " & tstEnde.ToString)
-        ''End If
 
     End Sub
 
@@ -1158,6 +1200,8 @@ Public Class clsPPTShapes
 
 
     End Sub
+
+
 
     ''' <summary>
     ''' gibt eine Liste zurück, die die fehlenden Hilfs-Shape Elemente für Epp bzw Mpp enthält 

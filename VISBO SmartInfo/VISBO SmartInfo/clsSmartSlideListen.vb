@@ -206,6 +206,18 @@ Public Class clsSmartSlideListen
         End Get
     End Property
 
+    Friend ReadOnly Property getUIDsOFBreadCrumb(ByVal fbreadCrumb As String) As SortedList(Of Integer, Boolean)
+        Get
+
+            If _bCList.ContainsKey(fbreadCrumb) Then
+                getUIDsOFBreadCrumb = _bCList.Item(fbreadCrumb)
+            Else
+                getUIDsOFBreadCrumb = New SortedList(Of Integer, Boolean)
+            End If
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' liefert true, wenn das Portfolio mit portfolioName = pName in der Liste der Portfolios enthalten ist 
@@ -459,7 +471,7 @@ Public Class clsSmartSlideListen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private ReadOnly Property getShapeNameOfUid(ByVal uid As Integer) As String
+    Friend ReadOnly Property getShapeNameOfUid(ByVal uid As Integer) As String
         Get
             Dim tmpStr As String = ""
             Dim tmpStrTest As String = ""
@@ -595,9 +607,10 @@ Public Class clsSmartSlideListen
 
         Dim uid As Integer = Me.getUID(shapeName)
 
-        Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" &
-            bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
+        'Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" &
+        '    bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
 
+        Dim fullbCrumb As String = bestimmeFullBreadcrumb(getPVnameFromShpName(shapeName), bCrumb, getElemNameFromShpName(shapeName))
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
@@ -617,6 +630,16 @@ Public Class clsSmartSlideListen
         End If
 
     End Sub
+
+    Public Function bestimmeFullBreadcrumb(ByVal pvname As String, ByVal bcrumb As String, ByVal elemName As String) As String
+        bestimmeFullBreadcrumb = "(" & pvname & ")" & bcrumb.Replace("#", " - ") & " - " & elemName
+    End Function
+
+    Public ReadOnly Property containsFullBreadCrumb(ByVal fullBreadCrumb As String) As Boolean
+        Get
+            containsFullBreadCrumb = _bCList.ContainsKey(fullBreadCrumb)
+        End Get
+    End Property
 
     ''' <summary>
     ''' fügt der Liste an Lieferumfängen weitere hinzu ;

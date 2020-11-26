@@ -3690,5 +3690,437 @@ Module creationModule
     End Sub
 
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="milestoneID"></param>
+    ''' <param name="yPosition"></param>
+    Friend Sub drawMilestoneAtYPos(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt,
+                                    ByVal swimlaneID As String, ByVal milestoneID As String,
+                                    ByVal yPosition As Double)
+
+        Dim milestoneTypShape As PowerPoint.Shape = Nothing
+        Dim milestoneTypApp As New clsAppearance
+        Dim newShape As PowerPoint.Shape
+        Dim milestoneName As String = elemNameOfElemID(milestoneID)
+        Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
+
+
+        If IsNothing(cMilestone) Then
+            Exit Sub ' einfach nichts machen 
+        End If
+
+
+        Dim x1 As Double
+        Dim x2 As Double
+
+        Dim stdTop As Single = 50
+        Dim stdLeft As Single = 100
+        Dim stdHeight As Single = 10
+        Dim stdWidth As Single = 30
+
+        Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
+        ' Es muss abgefragt werden, wie lange der NAme ist, evtl muss eine Fehlermeldung kommen .,.. 
+        Dim nameLength As Integer = msShapeName.Length
+        Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames,
+                                                             awinSettings.mppUseAbbreviation, swimlaneID)
+
+        ' eigentlich muss es das sein ..
+        Try
+            If cMilestone.appearance = "" Then
+                milestoneTypApp = appearanceDefinitions.Item(awinSettings.defaultMilestoneClass)
+            Else
+                milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
+            End If
+        Catch ex As Exception
+            Dim i As Integer = 0
+            milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+
+            Do While Not milestoneTypApp.isMilestone And i < appearanceDefinitions.Count - 1
+                i = i + 1
+                milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+            Loop
+
+        End Try
+
+        ' Exit , wenn nichts gefunden  
+        If IsNothing(milestoneTypApp) Then
+            Exit Sub
+        End If
+
+        Dim sizeFaktor As Double
+
+        ' die rds.milestoneVorlagenShape muss im Vorfeld bestimmt werden 
+        'sizeFaktor = rds.avgMSHeight / milestoneTypApp.height
+
+        sizeFaktor = 1.0
+
+        Dim msDate As Date = cMilestone.getDate
+
+
+        Call rds.calculatePPTx1x2(msDate, msDate, x1, x2)
+
+        If x2 <= rds.drawingAreaLeft Or x1 >= rds.drawingAreaRight Then
+            ' Fertig , es wird nix gezeichnet 
+            Call MsgBox("Milestone outside drawing area ...")
+        Else
+
+
+            Try
+                ' jetzt muss ggf die Beschriftung angebracht werden 
+                ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                ' überdeckt werden soll 
+                If awinSettings.mppShowMsName Then
+
+                    newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(PTpptAnnotationType.text),
+                                                 msBeschriftung, "", "Beschriftung", schriftGroesse)
+
+
+                    With newShape
+
+                        .Top = CSng(yPosition + rds.yOffsetMsToText)
+                        .Left = CSng(x1) - .Width / 2
+
+
+                    End With
+
+
+                End If
+
+                ' jetzt muss ggf das Datum angebracht werden 
+                Dim msDateText As String = ""
+                If awinSettings.mppShowMsDate Then
+
+                    msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                    newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(PTpptAnnotationType.datum),
+                                                 msDateText, "", "Datum", schriftGroesse)
+
+                    With newShape
+
+                        .Top = CSng(yPosition + rds.yOffsetMsToDate)
+                        .Left = CSng(x1) - .Width / 2
+
+                    End With
+
+                End If
+
+
+                Dim height As Single = CSng(sizeFaktor * milestoneTypApp.height)
+                Dim width As Single = CSng(sizeFaktor * milestoneTypApp.width)
+                Dim top As Single = CSng(yPosition + rds.YMilestone)
+                Dim left As Single = CSng(x1) - width / 2
+
+                milestoneTypShape = rds.pptSlide.Shapes.AddShape(milestoneTypApp.shpType, left, top, width, height)
+
+                If awinSettings.mppKwInMilestone Then
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp, 1)
+
+                    Dim msKwText As String = ""
+                    msKwText = calcKW(msDate).ToString("0#")
+                    If CInt(sizeFaktor * milestoneTypShape.TextFrame2.TextRange.Font.Size) >= 3 Then
+                        milestoneTypShape.TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * milestoneTypApp.TextRangeFontSize)
+                        milestoneTypShape.TextFrame2.TextRange.Text = msKwText
+                    End If
+
+                Else
+
+                    Call defineMsPPTAppearance(milestoneTypShape, milestoneTypApp)
+
+                End If
+
+
+                With milestoneTypShape
+
+                    Try
+                        .Name = msShapeName
+                    Catch ex As Exception
+
+                    End Try
+
+                    If awinSettings.mppShowAmpel Then
+                        .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
+                        If .Glow.Radius = 0 Then
+                            .Glow.Radius = 2
+                        End If
+                    End If
+
+                End With
+
+                If awinSettings.mppEnableSmartPPT Then
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    'Dim originalName As String = cMilestone.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
+                    Dim shortText As String = cMilestone.shortName
+                    Dim originalName As String = cMilestone.originalName
+
+                    Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
+                    Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
+
+                    If originalName = cMilestone.name Then
+                        originalName = Nothing
+                    End If
+
+                    Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
+                    Call addSmartPPTMsPhInfo(milestoneTypShape, hproj,
+                                                    fullBreadCrumb, cMilestone.name, shortText, originalName,
+                                                    bestShortName, bestLongName,
+                                                    Nothing, msDate,
+                                                    cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
+                                                    lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
+                End If
+
+
+
+            Catch ex As Exception
+                Call MsgBox("fehler in zeichneMeilenstein;" & vbLf & ex.Message)
+            End Try
+
+
+
+        End If
+
+
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="phaseID"></param>
+    ''' <param name="yPosition"></param>
+    Friend Sub drawPhaseAtYPos(ByRef rds As clsPPTShapes,
+                                           ByVal hproj As clsProjekt,
+                                           ByVal swimlaneID As String,
+                                           ByVal phaseID As String,
+                                           ByVal yPosition As Double)
+
+        Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
+
+        Dim phaseTypShape As PowerPoint.Shape = Nothing
+        Dim phaseTypApp As New clsAppearance
+        Dim copiedShape As PowerPoint.ShapeRange
+        Dim phaseName As String = elemNameOfElemID(phaseID)
+        Dim cphase As clsPhase = hproj.getPhaseByID(phaseID)
+
+        If IsNothing(cphase) Then
+            Exit Sub ' nichts machen 
+        End If
+
+
+
+        Dim x1 As Double
+        Dim x2 As Double
+
+
+        Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames,
+                                                                awinSettings.mppUseAbbreviation, swimlaneID)
+
+
+        Try
+            If cphase.appearance = "" Then
+                phaseTypApp = appearanceDefinitions.Item(awinSettings.defaultPhaseClass)
+            Else
+                phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
+            End If
+        Catch ex As Exception
+            Dim i As Integer = 0
+            phaseTypApp = appearanceDefinitions.ElementAt(i).Value
+
+            Do While phaseTypApp.isMilestone And i < appearanceDefinitions.Count - 1
+                i = i + 1
+                phaseTypApp = appearanceDefinitions.ElementAt(i).Value
+            Loop
+        End Try
+
+
+        If IsNothing(phaseTypApp) Then
+            Exit Sub
+        End If
+
+
+        ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
+        Dim sizeFaktor As Double = 1.0
+
+        If awinSettings.mppUseInnerText Then
+
+            ' ''phaseTypShape.Copy()
+            ' ''copiedShape = rds.pptSlide.Shapes.Paste()
+            'copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
+
+            'With copiedShape
+            '    If .Height > 0.0 Then
+            '        sizeFaktor = rds.phaseVorlagenShape.Height / .Height
+            '    End If
+            '    .Delete()
+            'End With
+
+            sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
+
+        End If
+
+
+
+
+        Dim phStartDate As Date = cphase.getStartDate
+        Dim phEndDate As Date = cphase.getEndDate
+        Dim phDateText As String = phStartDate.Day.ToString & "." & phStartDate.Month.ToString & " - " &
+                                phEndDate.Day.ToString & "." & phEndDate.Month.ToString
+
+
+        Call rds.calculatePPTx1x2(phStartDate, phEndDate, x1, x2)
+
+        If x2 <= rds.drawingAreaLeft Or x1 >= rds.drawingAreaRight Then
+            ' Fertig 
+        Else
+
+            ' jetzt muss ggf die Beschriftung angebracht werden 
+            ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+            ' überdeckt werden soll 
+            If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
+
+                ''rds.PhDescVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, rds.pptSlide)
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phDescription
+                    .Top = CSng(yPosition + rds.YPhasenText)
+                    .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = CSng(rds.drawingAreaRight - .Width + 2)
+                    End If
+
+                    '.Name = .Name & .Id
+                    Try
+                        .Name = phShapeName & PTpptAnnotationType.text
+                    Catch ex As Exception
+
+                    End Try
+
+                    .Title = "Beschriftung"
+                    .AlternativeText = ""
+
+
+
+                End With
+
+
+            End If
+
+            ' jetzt muss ggf das Datum angebracht werden 
+            If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
+
+                ''rds.PhDateVorlagenShape.Copy()
+                ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, rds.pptSlide)
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phDateText
+                    .Top = CSng(yPosition + rds.YPhasenDatum)
+                    .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = CSng(rds.drawingAreaRight - .Width + 2)
+                    End If
+
+                    '.Name = .Name & .Id
+                    Try
+                        .Name = phShapeName & PTpptAnnotationType.datum
+                    Catch ex As Exception
+
+                    End Try
+
+                    .Title = "Datum"
+                    .AlternativeText = ""
+
+
+
+                End With
+
+            End If
+
+
+
+            ''End With
+            Dim top As Single = CSng(yPosition + rds.YPhase)
+            Dim heigth As Single = rds.phaseVorlagenShape.Height
+            Dim width As Single = CSng(x2 - x1)
+            Dim left As Single = CSng(x1)
+
+            phaseTypShape = rds.pptSlide.Shapes.AddShape(phaseTypApp.shpType, left, top, width, heigth)
+
+            Call definePhPPTAppearance(phaseTypShape, phaseTypApp)
+
+            With phaseTypShape
+                Try
+                    .Name = phShapeName
+                Catch ex As Exception
+
+                End Try
+
+
+                ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
+                If awinSettings.mppUseInnerText Then
+
+                    If awinSettings.mppShowPhDate Then
+                        phDescription = phDescription & " " & phDateText
+                    End If
+
+                    If sizeFaktor * .TextFrame2.TextRange.Font.Size * sizeFaktor > 3.0 Then
+                        .TextFrame2.TextRange.Text = phDescription
+                        .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * sizeFaktor)
+                    End If
+                End If
+
+
+
+            End With
+
+            If awinSettings.mppEnableSmartPPT Then
+                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                          True)
+                'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                       False)
+                'Dim originalName As String = cphase.originalName
+
+                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                Dim shortText As String = cphase.shortName
+                Dim originalName As String = cphase.originalName
+
+                Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+                Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
+                If originalName = cphase.name Then
+                    originalName = Nothing
+                End If
+
+                Call addSmartPPTMsPhInfo(phaseTypShape, hproj,
+                                            fullBreadCrumb, cphase.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            phStartDate, phEndDate,
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                            cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
+            End If
+
+        End If
+
+
+
+
+    End Sub
+
+
+
 
 End Module
