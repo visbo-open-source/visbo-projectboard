@@ -7637,15 +7637,11 @@ Public Module Module1
     End Sub
 
 
-
     ''' <summary>
     ''' schliesst  das logfile 
     ''' </summary>  
     ''' <remarks></remarks>
     Public Sub logfileSchliessen()
-
-        ' aktives Workbook merken im Variable actualWB
-        Dim actualWB As String = appInstance.ActiveWorkbook.Name
 
         appInstance.EnableEvents = False
 
@@ -7662,10 +7658,37 @@ Public Module Module1
         End Try
 
         appInstance.EnableEvents = True
-
-        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-        appInstance.Workbooks(actualWB).Activate()
     End Sub
+
+    '''' <summary>
+    '''' schliesst  das logfile 
+    '''' </summary>  
+    '''' <remarks></remarks>
+    'Public Sub logfileSchliessen()
+
+
+    '    ' aktives Workbook merken im Variable actualWB
+    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+    '    appInstance.EnableEvents = False
+
+    '    Try
+
+    '        If myLogfile <> "" Then
+    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+    '            myLogfile = ""
+    '        End If
+
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler beim Schließen des Logfiles")
+    '    End Try
+
+    '    appInstance.EnableEvents = True
+
+    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+    '    appInstance.Workbooks(actualWB).Activate()
+    'End Sub
 
     ''' <summary>
     ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
