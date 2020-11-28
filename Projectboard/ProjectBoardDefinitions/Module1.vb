@@ -8606,16 +8606,18 @@ Public Module Module1
                 ' when skill-ID is given, show always skill-Name
                 ' in case skill ID is given
                 Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID)
-                If teamID > 0 Then
-                    Dim curSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
-                    Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(teamID).UID
-                    If embracingRoleID = curRole.UID Or RoleDefinitions.hasAnyChildParentRelationsship(embracingRoleID, curRole.UID) Then
-                        tmpResult = curSkill.name
+                If Not IsNothing(curRole) Then
+                    If teamID > 0 Then
+                        Dim curSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+                        Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(teamID).UID
+                        If embracingRoleID = curRole.UID Or RoleDefinitions.hasAnyChildParentRelationsship(embracingRoleID, curRole.UID) Then
+                            tmpResult = curSkill.name
+                        Else
+                            tmpResult = curSkill.name & " [" & curRole.name & "]"
+                        End If
                     Else
-                        tmpResult = curSkill.name & " [" & curRole.name & "]"
+                        tmpResult = curRole.name
                     End If
-                Else
-                    tmpResult = curRole.name
                 End If
 
             Catch ex As Exception

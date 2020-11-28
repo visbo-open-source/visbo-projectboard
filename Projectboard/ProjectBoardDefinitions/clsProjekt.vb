@@ -3668,7 +3668,9 @@ Public Class clsProjekt
             Dim cphase As clsPhase = getPhase(i)
             Dim newPhase As clsPhase = newProj.getPhase(i)
             Dim toDoList As New SortedList(Of String, clsRolle)
-            Dim toDoListSR As New SortedList(Of String, Integer)
+            'Dim toDoListSR As New SortedList(Of String, Integer)
+            ' toDoList SR enthält jetzt die Original Detail Rolle als Key und als Value die RoleID;TeamID auf die es gemappt werden soll 
+            Dim toDoListSR As New SortedList(Of String, String)
 
             For Each curRole As clsRolle In cphase.rollenListe
 
@@ -3680,57 +3682,41 @@ Public Class clsProjekt
                 Dim roleNameID As String = copiedRole.getNameID
 
                 ' tk ist es einer Skill/Team zugeordnet 
-                Dim teamID As Integer = -1
-                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+                Dim oldteamID As Integer = curRole.teamID
+                Dim oldroleID As Integer = curRole.uid
+
+                Dim newRoleID As Integer = oldroleID
+                ' for now, Nov 2020: newTeamID = oldTeamID . Once there are more complex hierachies in Skills, decide which should be the new teamID  
+                Dim newTeamID As Integer = oldteamID
 
                 Dim found As Boolean = False
                 Dim ix As Integer = 1
 
-                ' tk 19.1.20 um rollen mit Skills der Skill-Gruppe zuzuordnen ... 
-                ' Anfang ... 
-                If teamID > 0 And RoleDefinitions.containsUid(teamID) Then
-
+                If summaryRoleIDs.Contains(oldroleID) Then
+                    ' fertig , nichts machen 
+                Else
+                    ' bestimme newRoleID
                     Do While ix <= summaryRoleIDs.Length And Not found
-                        If teamID = summaryRoleIDs(ix - 1) Then
+
+                        If RoleDefinitions.hasAnyChildParentRelationsship(oldroleID, summaryRoleIDs(ix - 1)) Then
+                            'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
-                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(teamID, summaryRoleIDs(ix - 1)) Then
-                            found = True
+                            newRoleID = summaryRoleIDs(ix - 1)
                         Else
                             ix = ix + 1
                         End If
+
                     Loop
 
-                End If
-
-                If Not found Then
-                    ix = 1
-                End If
-                ' Ende ...
-
-                Do While ix <= summaryRoleIDs.Length And Not found
-
-                    If copiedRole.uid <> summaryRoleIDs(ix - 1) Then
-                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
-                        If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
-                            found = True
-
-                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(copiedRole.uid, summaryRoleIDs(ix - 1)) Then
-                            found = True
-
-                        Else
-                            ix = ix + 1
-                        End If
-                    Else
-                        ix = ix + 1
+                    If found Then
+                        Dim mapToRoleSkillID As String = RoleDefinitions.bestimmeRoleNameID(newRoleID, newTeamID)
+                        ' in toDoList eintragen 
+                        toDoList.Add(roleNameID, copiedRole)
+                        toDoListSR.Add(roleNameID, mapToRoleSkillID)
                     End If
-
-                Loop
-
-                If found Then
-                    ' in toDoList eintragen 
-                    toDoList.Add(roleNameID, copiedRole)
-                    toDoListSR.Add(roleNameID, summaryRoleIDs(ix - 1))
                 End If
+
+
 
             Next
 
@@ -3741,18 +3727,29 @@ Public Class clsProjekt
                 ' löschen der alten, detaillierten Rollen ..
                 For Each kvp As KeyValuePair(Of String, clsRolle) In toDoList
 
-                    Dim teamID As Integer = -1
-                    Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(toDoListSR.Item(kvp.Key))
+                    ' find out what roleID, what teamID
+
+                    Dim oldTeamID As Integer = -1
+                    Dim oldRoleID As Integer = RoleDefinitions.parseRoleNameID(kvp.Key, oldTeamID)
+                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(kvp.Key, oldTeamID)
+
+                    Dim newTeamID As Integer = -1
+                    Dim newRoleID As Integer = RoleDefinitions.parseRoleNameID(toDoListSR.Item(kvp.Key), newTeamID)
 
                     ' jetzt wird die alte Rolle removed ..
                     newPhase.removeRoleByNameID(kvp.Key)
 
                     ' jetzt wird der Umrechnungsfaktor bestimmt 
-                    Dim curTagessatz As Double = kvp.Value.tagessatzIntern
-                    Dim sRoleTagessatz As Double = sRoleDef.tagessatzIntern
+                    Dim oldTagessatz As Double = kvp.Value.tagessatzIntern
+
+                    Dim newTagessatz As Double = RoleDefinitions.getRoleDefByID(newRoleID).tagessatzIntern
+                    If newTeamID > 0 Then
+                        newTagessatz = RoleDefinitions.getRoleDefByID(newTeamID).tagessatzIntern
+                    End If
+
                     Dim ptFaktor As Double = 1.0
-                    If curTagessatz > 0 And sRoleTagessatz > 0 Then
-                        ptFaktor = curTagessatz / sRoleTagessatz
+                    If oldTagessatz > 0 And newTagessatz > 0 Then
+                        ptFaktor = oldTagessatz / newTagessatz
                     End If
 
                     ' jetzt werden die PT Werte der current Role umgerechnet ... damit die Kosten gleich bleiben: PT * tagessatz
@@ -3761,8 +3758,8 @@ Public Class clsProjekt
                     Next
 
                     ' jetzt wird die curRole "umdefiniert" 
-                    kvp.Value.uid = sRoleDef.UID
-                    kvp.Value.teamID = -1
+                    kvp.Value.uid = newRoleID
+                    kvp.Value.teamID = newTeamID
 
                     ' jetzt wird sie in die Phase aufgenommen ..
                     newPhase.addRole(kvp.Value)

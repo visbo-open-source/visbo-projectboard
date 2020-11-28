@@ -192,6 +192,19 @@ Public Class clsRolle
         End Get
 
     End Property
+
+    Public ReadOnly Property teamName() As String
+        Get
+            Dim tmpResult As String = ""
+            If _teamID > 0 Then
+                If RoleDefinitions.containsUid(_teamID) Then
+                    tmpResult = RoleDefinitions.getRoleDefByID(_teamID).name
+                End If
+            End If
+
+            teamName = tmpResult
+        End Get
+    End Property
     '
     '
     '

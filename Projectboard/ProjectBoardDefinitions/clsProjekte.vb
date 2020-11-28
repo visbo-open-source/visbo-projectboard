@@ -2261,9 +2261,10 @@ Public Class clsProjekte
 
                 Dim teamID As Integer = -1
                 Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(CStr(myCollection.Item(ix)), teamID)
-                Dim roleName As String = curRole.name
 
                 If Not IsNothing(curRole) Then
+
+                    Dim roleName As String = curRole.name
 
                     If teamID > 0 Then
                         Dim subRoleList As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(curRole.UID, teamID)

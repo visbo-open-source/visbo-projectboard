@@ -6504,6 +6504,7 @@ Public Module agm2
                         Dim oldrng = .Range("Phasen_des_Projekts")
                         ' Änderung tk: es muss die Spalte der Rollen betrachtet werden , wenn die Spalte der Phasen betrachtet wird, werden bei der letzten Phase die Rollen nicht mitgenommen 
                         Dim columnOffset As Integer = oldrng.Column
+                        Dim withSkills As Boolean = False
 
                         ' es muss das Maximum aus den beiden Spalten Pahse und Ressourcen gesucht werden
                         Dim lastrow1 As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
@@ -6528,6 +6529,7 @@ Public Module agm2
                             ressSumOffset = -1              ' keine Summe vorhanden
                             Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
                         Else
+                            withSkills = (gefundenRange.Column = 4)
 
                             If Not isNewSteckbriefFormat Then
                                 ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
@@ -6539,6 +6541,7 @@ Public Module agm2
                                     verbRange.Merge()
 
                                 Next
+
 
                                 ressOff = gefundenRange.Column - rng.Column - 1
                                 ressSumOffset = gefundenRange.Column - rng.Column - 2
@@ -6622,6 +6625,20 @@ Public Module agm2
                             Catch ex1 As Exception
                                 hname = ""
                             End Try
+
+                            Dim teamName As String = ""
+                            If withSkills Then
+                                Try
+
+                                    If Not IsNothing(CType(zelle.Offset(0, 2), Excel.Range).Value) Then
+                                        teamName = CType(CType(zelle.Offset(0, 2), Excel.Range).Value, String).Trim
+                                    End If
+
+                                Catch ex1 As Exception
+                                    teamName = ""
+                                End Try
+                            End If
+
 
                             If Len(phaseName) > 0 And Len(hname) <= 0 Then
                                 chkPhase = True
@@ -6826,7 +6843,13 @@ Public Module agm2
                                             If RoleDefinitions.containsName(hname) Then
                                                 Try
                                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
+                                                    Dim teamID As Integer = -1
 
+                                                    If teamName <> "" Then
+                                                        If RoleDefinitions.containsName(teamName) Then
+                                                            teamID = RoleDefinitions.getRoledef(teamName).UID
+                                                        End If
+                                                    End If
 
                                                     ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
                                                     Try
@@ -6895,6 +6918,7 @@ Public Module agm2
                                                     crole = New clsRolle(ende - anfang)
                                                     With crole
                                                         .uid = r
+                                                        .teamID = teamID
                                                         .Xwerte = Xwerte
                                                     End With
 
