@@ -4320,7 +4320,7 @@ Public Class clsProjekt
             Exit Sub
         End If
 
-        ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
+        ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf die bisher gesetzten Werte gesetzt 
         For p As Integer = 1 To CountPhases
             Dim curPhase As clsPhase = getPhase(p)
             Dim oldPhase As clsPhase = oldProj.getPhaseByID(curPhase.nameID)
@@ -4330,9 +4330,16 @@ Public Class clsProjekt
 
                 For r = 1 To curPhase.countRoles
                     Dim curRole As clsRolle = curPhase.getRole(r)
+                    Dim mergeOldValues As Boolean = True
+                    Dim curNameID As String = RoleDefinitions.bestimmeRoleNameID(curRole.uid, curRole.teamID)
 
+                    If considerAllRoles Then
+                        mergeOldValues = True
+                    Else
+                        mergeOldValues = RoleDefinitions.hasAnyChildParentRelationsship(curNameID, actualDataParentIDs)
+                    End If
 
-                    If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                    If mergeOldValues Then
                         Dim endIndex As Integer = System.Math.Min(columnOFActualData - columnOfPhaseStart, curRole.getDimension)
 
                         For ix As Integer = 0 To endIndex
@@ -4354,11 +4361,11 @@ Public Class clsProjekt
                                 If Not doneKeyValues.Contains(keyValue) Then
                                     doneKeyValues.Add(keyValue)
                                 End If
-
+                                '  else braucht man hier nicht, passeiert oben schon 
                             End If
 
                         Else
-                            ' do nothing - curPhase remains as it is ... 
+                            ' do nothing - curPhase remains as it is Werte aus der Vergangenheit sind bereits auf Null gesetzt  
                         End If
 
                     End If

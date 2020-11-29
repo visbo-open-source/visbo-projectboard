@@ -821,11 +821,12 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
-            ' tk 25.11.19 die erste if Abfrage eingeführt ..
+            ' tk/ute 29.11.20 
+            If PhaseDefinitions.Contains(Me.name) Then
+                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            End If
             If _appearance = "" Then
-                If PhaseDefinitions.Contains(Me.name) Then
-                    _appearance = PhaseDefinitions.getAppearance(Me.name)
-                End If
+                _appearance = awinSettings.defaultPhaseClass
             End If
             appearance = _appearance
         End Get
