@@ -4476,6 +4476,17 @@ Imports System.Web
                     Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
                     Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
 
+                    ' wenn PortfolioManager, so muss die PFV Variante Lock aufgehoben werden
+                    Dim vNameToUnProtect As String = hproj.variantName
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                        If hproj.variantName <> "" Then
+                            vNameToUnProtect = hproj.variantName
+                        Else
+                            vNameToUnProtect = ptVariantFixNames.pfv.ToString
+                        End If
+                        pvName = calcProjektKey(hproj.name, vNameToUnProtect)
+                    End If
+
                     If hproj.isIdenticalTo(kvp.Value) Then
                         ' temp Schutz aufheben 
                         If writeProtections.isProtected(pvName, dbUsername) Then
@@ -4488,6 +4499,7 @@ Imports System.Web
                             ' den temporären Schutz von mir zurücknehmen 
                             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
                             'dbUsername, dbPasswort)
+
                             Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
                             If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem, err) Then
@@ -5882,7 +5894,7 @@ Imports System.Web
                                     ReDim logmsg(1)
                                     logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                     logmsg(1) = sessionConstellationP.constellationName
-                                    Call logfileSchreiben(logmsg)
+                                    Call logger(ptErrLevel.logError, "Tom2G4B1InventurImport", logmsg)
                                 End If
                                 ' ende test
 
@@ -5893,7 +5905,7 @@ Imports System.Web
                                     ReDim logmsg(1)
                                     logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                     logmsg(1) = sessionConstellationP.constellationName
-                                    Call logfileSchreiben(logmsg)
+                                    Call logger(ptErrLevel.logError, "Tom2G4B1InventurImport", logmsg)
                                 End If
                                 ' ende test
                             End If
@@ -6633,7 +6645,7 @@ Imports System.Web
                     outputCollection.Add(errmsg)
                     Call showOutPut(outputCollection, "Organisations-Import", "")
 
-                    Call logfileSchreiben(outputCollection)
+                    Call logger(ptErrLevel.logError, "PTImportOrga: ", outputCollection)
 
                 ElseIf importedOrga.count > 0 Then
 
@@ -6672,7 +6684,7 @@ Imports System.Web
                         Else
                             If awinSettings.englishLanguage Then
                                 Call MsgBox("You don't have any valid (time now) Organisation in the system!")
-                            Else
+                Else
                                 Call MsgBox("Es existiert keine heute gültige Organisation im System!")
                             End If
                         End If
@@ -7140,7 +7152,7 @@ Imports System.Web
                                 logArray(2) = roleName
                                 logArray(4) = ""
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray)
 
                                 ' 
                                 ' im Output anzeigen ... 
@@ -7184,7 +7196,7 @@ Imports System.Web
                                     logArray(3) = ""
                                     logArray(4) = ""
 
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray)
 
                                 Else
                                     ' Fehler ins Protokoll eintragen 
@@ -7197,7 +7209,7 @@ Imports System.Web
                                     logArray(3) = ""
                                     logArray(4) = ""
 
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logError, "PTImportIstDaten", logArray)
                                 End If
 
                                 ' im Output anzeigen ... 
@@ -7222,7 +7234,7 @@ Imports System.Web
                                 logArray(3) = ""
                                 logArray(4) = ""
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray)
 
                                 ' im Output anzeigen ... 
                                 logmessage = logArray(0) & vPKvP.Key
@@ -7245,7 +7257,7 @@ Imports System.Web
                             logArray(3) = ""
                             logArray(4) = ""
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logInfo, "PTImportIstDaten", logArray)
 
                             ' im Output anzeigen ... 
                             logmessage = logArray(0) & substituteUnit
@@ -7282,7 +7294,7 @@ Imports System.Web
                                     logDblArray(j) = rVKvP.Value(j) ' * curTagessatz
                                 Next
 
-                                Call logfileSchreiben(logArray, logDblArray)
+                                Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
                             Next
 
                         Next
@@ -7368,7 +7380,7 @@ Imports System.Web
                                         logDblArray(3) = checkIstValue
                                         logDblArray(4) = gesamtNachher - checkNachher
 
-                                        Call logfileSchreiben(logArray, logDblArray)
+                                        Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
 
                                     End If
                                 End If
@@ -7397,7 +7409,7 @@ Imports System.Web
                                 logArray(3) = ""
                                 logArray(4) = ""
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "PTImportIstDaten", logArray)
                             End If
 
                         Next
@@ -7415,7 +7427,7 @@ Imports System.Web
 
                             ReDim logDblArray(0)
                             logDblArray(0) = gesamtIstValue
-                            Call logfileSchreiben(logArray, logDblArray)
+                            Call logger(ptErrLevel.logWarning, "PTImportIstDaten", logArray, logDblArray)
                         End If
 
 
@@ -7599,7 +7611,7 @@ Imports System.Web
                     outputCollection.Add(errmsg)
                     Call showOutPut(outputCollection, "User Role Import", "")
 
-                    Call logfileSchreiben(outputCollection)
+                    Call logger(ptErrLevel.logError, "PTImportCustomUserRoles: ", outputCollection)
 
                 ElseIf importedRoles.count > 0 Then
                     ' jetzt wird die Orga als Setting weggespeichert ... 
@@ -7747,14 +7759,14 @@ Imports System.Web
                     Else
 
                         Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logfileSchreiben(outputCollection)
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
 
                     End If
                 Else
                     If outputCollection.Count > 0 Then
 
                         Call showOutPut(outputCollection, "Importing Capacities", "... mit Fehlern abgebrochen ...")
-                        Call logfileSchreiben(outputCollection)
+                        Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
                     Else
 
                         If awinSettings.englishLanguage Then
@@ -7788,7 +7800,7 @@ Imports System.Web
             Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
             outputCollection.Add(errMsg)
             Call showOutPut(outputCollection, "Importing Capacities", "")
-            Call logfileSchreiben(outputCollection)
+            Call logger(ptErrLevel.logError, "PTImportKapas: ", outputCollection)
 
         End If
 
@@ -7877,7 +7889,7 @@ Imports System.Web
                     outputCollection.Add(errmsg)
                     Call showOutPut(outputCollection, "Einstellungen Import", "")
 
-                    Call logfileSchreiben(outputCollection)
+                    Call logger(ptErrLevel.logError, "PTImportCustomization: ", outputCollection)
 
                 ElseIf Not IsNothing(importedCustomization) Then
                     ' jetzt werden die Einstellungen als Setting weggespeichert ... 
@@ -8009,7 +8021,7 @@ Imports System.Web
                     outputCollection.Add(errmsg)
                     Call showOutPut(outputCollection, "Appearances Import", "")
 
-                    Call logfileSchreiben(outputCollection)
+                    Call logger(ptErrLevel.logError, "PTImportAppearances: ", outputCollection)
 
                 ElseIf Not IsNothing(importedAppearances) And importedAppearances.Count > 0 Then
                     ' jetzt wird die Appearances als Setting weggespeichert ... 
@@ -8311,7 +8323,7 @@ Imports System.Web
                 Next
 
                 Call logfileOpen()
-                Call logfileSchreiben(outPutCollection)
+                Call logger(ptErrLevel.logError, "Tom2G42ImportMSProject: ", outPutCollection)
                 Call logfileSchliessen()
 
                 If awinSettings.englishLanguage Then

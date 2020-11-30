@@ -7468,26 +7468,38 @@ Public Module Module1
     ''' schreibt die Inhalte der Collection als String in das Logfile
     ''' </summary>
     ''' <param name="meldungen"></param>
-    Public Sub logfileSchreiben(ByVal meldungen As Collection)
-        Dim obj As Object
-        Dim anzZeilen As Integer = meldungen.Count
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal meldungen As Collection)
 
         Try
+            Dim anzZeilen As Integer = meldungen.Count
+
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
 
             For i As Integer = 1 To anzZeilen
 
-                ' neue Zeile einfügen 
-                obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
                 Dim text As String = CStr(meldungen.Item(i))
-                With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                    CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-                    CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-                    CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-                    CType(.Cells(1, 3), Excel.Range).Value = text
-                End With
+                strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+                logf.writeline(strMeld)
+
             Next
-            xlsLogfile.Save()
+            logf.close()
         Catch ex As Exception
 
         End Try
@@ -7497,83 +7509,144 @@ Public Module Module1
     ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
     ''' </summary>
     ''' <param name="text"></param>
-    Public Sub logfileSchreiben(ByVal text() As String)
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String)
 
-        Dim obj As Object
         Try
             Dim anzSpalten As Integer = text.Length
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-                For ix As Integer = 3 To anzSpalten + 2
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
-                Next
-            End With
-            xlsLogfile.Save()
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+
+            ' Meldungstext zusammensetzen aus dem text-array
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+            For i As Integer = 1 To anzSpalten
+                strMeld = strMeld & logTrennz & CStr(text(i))
+            Next
+
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            logf.writeline(strMeld)
+            logf.close()
+
         Catch ex As Exception
 
         End Try
 
     End Sub
 
-    Public Sub logfileSchreiben(ByVal text() As String, ByVal values() As Double)
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String, ByVal values() As Double)
 
-        Dim obj As Object
+
         Try
-            Dim anzSpaltenText As Integer = text.Length
+            Dim anzSpalten As Integer = text.Length
             Dim anzSpaltenValues As Integer = values.Length
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
 
-                For ix As Integer = 3 To anzSpaltenText + 2
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
-                Next
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
 
-                For ix As Integer = 3 To anzSpaltenValues + 2
-                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
-                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
-                Next
-            End With
-            xlsLogfile.Save()
+            ' Meldungstext zusammensetzen aus dem text-array
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+            For i As Integer = 1 To anzSpalten
+                strMeld = strMeld & logTrennz & CStr(text(i))
+            Next
+            For k As Integer = 1 To anzSpaltenValues
+                strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
+            Next
+
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            logf.writeline(strMeld)
+            logf.close()
 
         Catch ex As Exception
 
         End Try
+        'Dim obj As Object
+        'Try
+        '    Dim anzSpaltenText As Integer = text.Length
+        '    Dim anzSpaltenValues As Integer = values.Length
+        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+        '        CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+
+        '        For ix As Integer = 3 To anzSpaltenText + 2
+        '            CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+        '            CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
+        '        Next
+
+        '        For ix As Integer = 3 To anzSpaltenValues + 2
+        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
+        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
+        '        Next
+        '    End With
+        '    xlsLogfile.Save()
+
+        'Catch ex As Exception
+
+        'End Try
 
     End Sub
 
 
-    Public Sub logger(ByVal errLevel As Integer, ByVal theme As String, ByVal strLog As String)
-        Dim strMeld As String
-        Const ForReading = 1, ForWriting = 2, ForAppending = 8
-        Const logTrennz As String = " , "
-        ' logfile-stream erzeugen
-        Dim fs = CreateObject("Scripting.FileSystemObject")
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal strLog As String)
+        Try
 
-        ' FileNamen zusammenbauen
-        Dim logfileOrdner As String = "logfiles"
-        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-        Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-        'Dim logfileName As String = "newlogfile.txt"
-        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logFileName)
-        ' Fragen, ob bereits existiert - eventuell nicht nötig
-        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            My.Computer.FileSystem.CreateDirectory(logfilePath)
-        End If
-        ' logfile öffnen
-        Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
-        strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & theme & " , " & strLog
-        logf.writeline(strMeld)
-        logf.close()
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
+            logf.writeline(strMeld)
+            logf.close()
+
+        Catch ex As Exception
+
+        End Try
     End Sub
     ''' <summary>
     ''' öffnet das LogFile

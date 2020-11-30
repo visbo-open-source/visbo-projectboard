@@ -1713,13 +1713,13 @@ Public Class Request
                             End If
 
                         Else
+
                             If aktvp.lock.Count > 0 Then
                                 For Each lock As clsVPLock In aktvp.lock
                                     If lock.expiresAt > Date.UtcNow Then
 
                                         If vname = lock.variantName And
                                             LCase(aktUser.email) = LCase(lock.email) Then
-
                                             deletePossible = True
                                             Exit For
                                         End If
@@ -2285,9 +2285,7 @@ Public Class Request
 
         Try
             ' alle vp des aktuellen Users und aktuellen vc holen
-            If VRScache.VPsN.Count <= 0 Then
-                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
-            End If
+            VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
 
             vplist = VRScache.VPsN
 
@@ -4334,8 +4332,10 @@ Public Class Request
                                 Dim variantID As String = findVariantID(vpid, variantName)
                                 If variantID <> "" Then
                                     serverUriString = serverUriString & "&variantID=" & variantID
-                                Else
+                                ElseIf variantName <> "" Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
+                                Else
+                                    serverUriString = serverUriString & "&variantID=" & variantID
                                 End If
                             End If
                         Else
@@ -4353,8 +4353,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
                             Else
@@ -4370,8 +4372,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
 
@@ -4598,8 +4602,10 @@ Public Class Request
                                 Dim variantID As String = findVariantID(vpid, variantName)
                                 If variantID <> "" Then
                                     serverUriString = serverUriString & "&variantID=" & variantID
-                                Else
+                                ElseIf variantName <> "" Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
+                                Else
+                                    serverUriString = serverUriString & "&variantID=" & variantID
                                 End If
                             End If
                         Else
@@ -4617,8 +4623,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
                             Else
@@ -4634,8 +4642,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
 
@@ -6118,7 +6128,7 @@ Public Class Request
                 Dim newLock As clsVPLock = webVPLockantwort.lock.ElementAt(0)
                 If VRScache.VPsId(vpid).lock.Count = 0 Then
                     VRScache.VPsId(vpid).lock.Add(newLock)
-                    VRScache.VPsN(pname).lock.Add(newLock)
+                    'VRScache.VPsN(pname).lock.Add(newLock)
                 Else
                     Dim variantNotFound As Boolean = True
                     ' suchen, ob bereits ein Lock für diese Variante besteht, der dann erneuert wird.
@@ -6129,16 +6139,16 @@ Public Class Request
                                 VRScache.VPsId(vpid).lock.Remove(lastlock)
                                 VRScache.VPsId(vpid).lock.Add(newLock)
                             End If
-                            If VRScache.VPsN(pname).lock.Contains(lastlock) Then
-                                VRScache.VPsN(pname).lock.Remove(lastlock)
-                                VRScache.VPsN(pname).lock.Add(newLock)
-                            End If
+                            'If VRScache.VPsN(pname).lock.Contains(lastlock) Then
+                            '    VRScache.VPsN(pname).lock.Remove(lastlock)
+                            '    VRScache.VPsN(pname).lock.Add(newLock)
+                            'End If
                             Exit For
                         End If
                     Next
                     If variantNotFound Then
                         VRScache.VPsId(vpid).lock.Add(newLock)
-                        VRScache.VPsN(pname).lock.Add(newLock)
+                        'VRScache.VPsN(pname).lock.Add(newLock)
                     End If
 
                 End If
@@ -6195,14 +6205,17 @@ Public Class Request
             If variantName <> noVariantName Then
                 Dim variantID As String = findVariantID(vpid, variantName)
                 If variantID <> "" Then
-                    serverUriString = serverUriString & "&variantID=" & variantID
+                    serverUriString = serverUriString & "?variantID=" & variantID
                 Else
-                    serverUriString = serverUriString & "&variantName=" & variantName
+                    If variantName = "" Then
+                        serverUriString = serverUriString & "?variantID="
+                    Else
+                        serverUriString = serverUriString & "?variantName=" & variantName
+                    End If
+
                 End If
             End If
-            If variantName = "" Then
-                serverUriString = serverUriString & "?variantID="
-            End If
+
 
 
 

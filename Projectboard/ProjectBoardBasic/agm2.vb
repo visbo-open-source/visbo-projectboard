@@ -9311,7 +9311,7 @@ Public Module agm2
                         For ix As Integer = 1 To realRoleNamesToConsider.Count
                             logmsg(ix) = realRoleNamesToConsider(ix - 1)
                         Next
-                        Call logfileSchreiben(logmsg)
+                        Call logger(ptErrLevel.logDebug, "importAllianzBOBS", logmsg)
                     Catch ex As Exception
 
                     End Try
@@ -9546,7 +9546,7 @@ Public Module agm2
                                                             Else
                                                                 values(2) = 9999999999
                                                             End If
-                                                            Call logfileSchreiben(logtxt, values)
+                                                            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
                                                         End If
 
                                                     End If
@@ -9578,7 +9578,7 @@ Public Module agm2
                                                             logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                                             logmsg(1) = ""
                                                             logmsg(2) = current1program.constellationName
-                                                            Call logfileSchreiben(logmsg)
+                                                            Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
 
                                                             ' wieder zurücksetzen ... 
                                                             ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
@@ -9595,7 +9595,7 @@ Public Module agm2
                                                             logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
                                                             logmsg(1) = ""
                                                             logmsg(2) = bobProj.name
-                                                            Call logfileSchreiben(logmsg)
+                                                            Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
                                                         End If
 
 
@@ -9693,7 +9693,7 @@ Public Module agm2
                                                 logtxt(1) = ""
                                                 logtxt(2) = pName
 
-                                                Call logfileSchreiben(logtxt)
+                                                Call logger(ptErrLevel.logError, "importAllianzBOBS", logtxt)
 
                                                 ReDim relPrz(anzReleases - 1)
                                             End If
@@ -9824,7 +9824,7 @@ Public Module agm2
                                                 outputCollection.Add(outPutLine)
                                                 logtxt(2) = pName
 
-                                                Call logfileSchreiben(logtxt)
+                                                Call logger(ptErrLevel.logError, "importAllianzBOBS", logtxt)
 
                                             End If
                                         End If
@@ -9901,7 +9901,7 @@ Public Module agm2
 
                                                 outputCollection.Add(outPutLine)
 
-                                                Call logfileSchreiben(logtxt)
+                                                Call logger(ptErrLevel.logError, "importAllianzBOBS", logtxt)
 
 
                                             End If
@@ -9986,7 +9986,7 @@ Public Module agm2
                                             Else
                                                 values(2) = 9999999999
                                             End If
-                                            Call logfileSchreiben(logtxt, values)
+                                            Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
                                         End If
 
                                     End If
@@ -10029,7 +10029,7 @@ Public Module agm2
                                     End If
 
                                     If awinSettings.visboDebug Then
-                                        Call logfileSchreiben(logmsg, roleNeeds)
+                                        Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg, roleNeeds)
                                     End If
 
 
@@ -10058,7 +10058,7 @@ Public Module agm2
                                                 logtxt(0) = "Name existiert mehrfach: "
                                                 logtxt(1) = ""
                                                 logtxt(2) = pName
-                                                Call logfileSchreiben(logtxt)
+                                                Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt)
                                             Else
                                                 ImportProjekte.Add(hproj, False)
                                                 If projektvorhaben.Contains(itemType) Then
@@ -10155,7 +10155,7 @@ Public Module agm2
                                     Else
                                         values(2) = 9999999999
                                     End If
-                                    Call logfileSchreiben(logtxt, values)
+                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
                                 End If
 
                             End If
@@ -10187,7 +10187,7 @@ Public Module agm2
                                     logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                     logmsg(1) = ""
                                     logmsg(2) = current1program.constellationName
-                                    Call logfileSchreiben(logmsg)
+                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
 
                                     ' wieder zurücksetzen ... 
                                     ImportProjekte.Remove(bPKey, updateCurrentConstellation:=False)
@@ -10203,7 +10203,7 @@ Public Module agm2
                                     logmsg(0) = "updatedProjekt mit Ressourcen fehlgeschlagen: "
                                     logmsg(1) = ""
                                     logmsg(2) = bobProj.name
-                                    Call logfileSchreiben(logmsg)
+                                    Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logmsg)
                                 End If
 
                             End If
@@ -10507,7 +10507,7 @@ Public Module agm2
                         For ix As Integer = 1 To realRoleNamesToConsider.Count
                             logmsg(ix) = realRoleNamesToConsider(ix - 1)
                         Next
-                        Call logfileSchreiben(logmsg)
+                        Call logger(ptErrLevel.logDebug, "importAllianzType1", logmsg)
                     Catch ex As Exception
 
                     End Try
@@ -10712,7 +10712,7 @@ Public Module agm2
                                                 logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                                 logmsg(1) = ""
                                                 logmsg(2) = current1program.constellationName
-                                                Call logfileSchreiben(logmsg)
+                                                Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
                                             End If
                                             '' ende tk Änderung 21.7.19 
                                         Else
@@ -10810,7 +10810,7 @@ Public Module agm2
                                             logtxt(1) = ""
                                             logtxt(2) = pName
 
-                                            Call logfileSchreiben(logtxt)
+                                            Call logger(ptErrLevel.logInfo, "importAllianzBOBS", logtxt)
 
                                             ReDim relPrz(anzReleases - 1)
                                         End If
@@ -11016,7 +11016,7 @@ Public Module agm2
                                         Else
                                             values(2) = 9999999999
                                         End If
-                                        Call logfileSchreiben(logtxt, values)
+                                        Call logger(ptErrLevel.logWarning, "importAllianzBOBS", logtxt, values)
                                     End If
 
                                 End If
@@ -11059,7 +11059,7 @@ Public Module agm2
                                 End If
 
                                 If awinSettings.visboDebug Then
-                                    Call logfileSchreiben(logmsg, roleNeeds)
+                                    Call logger(ptErrLevel.logDebug, "importAllianzBOBS", logmsg, roleNeeds)
                                 End If
 
 
@@ -11206,7 +11206,7 @@ Public Module agm2
                             logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                             logmsg(1) = ""
                             logmsg(2) = current1program.constellationName
-                            Call logfileSchreiben(logmsg)
+                            Call logger(ptErrLevel.logError, "importAllianzBOBS", logmsg)
 
                         End If
                         ' ende test
@@ -12665,7 +12665,7 @@ Public Module agm2
                     logmessage = logtxt(0) & logtxt(1)
                     outputCollection.Add(logmessage)
 
-                    Call logfileSchreiben(logtxt)
+                    Call logger(ptErrLevel.logError, "ImportOfflineData", logtxt)
 
                     ' jetzt noch im Input File markieren 
                     CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Interior.Color = XlRgbColor.rgbRed
@@ -12689,7 +12689,7 @@ Public Module agm2
                                 logtxt(2) = currentKdNummer
                                 logtxt(3) = "DB: " & hproj.kundenNummer
 
-                                Call logfileSchreiben(logtxt)
+                                Call logger(ptErrLevel.logWarning, "ImportOfflineData", logtxt)
 
 
                             End If
@@ -12704,7 +12704,7 @@ Public Module agm2
                                 logtxt(2) = currentPName
                                 logtxt(3) = "DB: " & hproj.name
 
-                                Call logfileSchreiben(logtxt)
+                                Call logger(ptErrLevel.logWarning, "ImportOfflineData", logtxt)
                             End If
 
                         End If
@@ -12831,7 +12831,7 @@ Public Module agm2
                                     logtxt(1) = hproj.name
                                     logtxt(2) = phaseName
 
-                                    Call logfileSchreiben(logtxt)
+                                    Call logger(ptErrLevel.logError, "ImportOfflineData", logtxt)
 
 
                                     ' jetzt noch im Input File markieren 
@@ -12874,7 +12874,7 @@ Public Module agm2
 
                                 outputCollection.Add(logmessage)
 
-                                Call logfileSchreiben(logtxt)
+                                Call logger(ptErrLevel.logError, "ImportOfflineData", logtxt)
 
                                 ' jetzt noch im Input File markieren 
                                 CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
@@ -13532,7 +13532,7 @@ Public Module agm2
                             logArray(4) = ""
                             logArray(5) = ""
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logWarning, "ImportAllianzIstdaten", logArray)
                         End If
 
                         Dim roleNameID As String = ""
@@ -13577,7 +13577,7 @@ Public Module agm2
                                     logArray(4) = ""
                                     logArray(5) = ""
 
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logWarning, "ImportAllianzIstdaten", logArray)
 
                                 End If
 
@@ -13597,7 +13597,7 @@ Public Module agm2
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                             End If
 
 
@@ -13629,7 +13629,7 @@ Public Module agm2
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
 
                             End If
                         Else
@@ -13676,7 +13676,7 @@ Public Module agm2
                                 logArray(4) = teamName
                                 logArray(5) = parentReferat
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                                 protocolEntryWritten = True
 
                             End If
@@ -13691,7 +13691,7 @@ Public Module agm2
                                 logArray(4) = teamName
                                 logArray(5) = parentReferat
 
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
 
                             End If
 
@@ -13741,7 +13741,7 @@ Public Module agm2
                                     logArray(3) = ""
                                     logArray(4) = ""
                                     logArray(5) = ""
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
 
                                     shallContinue = False
                                     handledNames.Add(tmpPName, "")
@@ -13857,7 +13857,7 @@ Public Module agm2
                                         logArray(1) = ""
                                         logArray(2) = ""
                                         logArray(3) = fullRoleName
-                                        Call logfileSchreiben(logArray)
+                                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                                     End If
 
 
@@ -13874,7 +13874,7 @@ Public Module agm2
                                     logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
                                     logArray(1) = ""
                                     logArray(2) = pvkey
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                                 End If
 
                             End If
@@ -13892,7 +13892,7 @@ Public Module agm2
                         ReDim logArray(1)
                         logArray(0) = "Projekt Fehler 100413 in Zeile: "
                         logArray(1) = zeile.ToString
-                        Call logfileSchreiben(logArray)
+                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                     End Try
 
                     zeile = zeile + 1
@@ -13993,7 +13993,7 @@ Public Module agm2
                                 logDblArray(3) = checkIstValue
                                 logDblArray(4) = gesamtNachher - checkNachher
 
-                                Call logfileSchreiben(logArray, logDblArray)
+                                Call logger(ptErrLevel.logDebug, "importAllianzIstdaten", logArray, logDblArray)
 
                             End If
                         End If
@@ -14027,7 +14027,7 @@ Public Module agm2
                         logArray(3) = ""
                         logArray(4) = ""
 
-                        Call logfileSchreiben(logArray)
+                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
                     End If
 
                 Next
@@ -14042,7 +14042,7 @@ Public Module agm2
 
                     ReDim logDblArray(0)
                     logDblArray(0) = gesamtIstValue
-                    Call logfileSchreiben(logArray, logDblArray)
+                    Call logger(ptErrLevel.logDebug, "importAllianzIstdaten", logArray, logDblArray)
                 End If
 
 
@@ -14054,7 +14054,7 @@ Public Module agm2
             ReDim logArray(1)
             logArray(0) = "Exception aufgetreten 100457: "
             logArray(1) = ex.Message
-            Call logfileSchreiben(logArray)
+            Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
@@ -21171,7 +21171,7 @@ Public Module agm2
                         Catch ex As Exception
                             If meldungen.Count > 0 Then
                                 Call showOutPut(meldungen, "Error: setUserRoles", "")
-                                Call logfileSchreiben(meldungen)
+                                Call logger(ptErrLevel.logError, "awinsetTypen", meldungen)
                             End If
 
                             myCustomUserRole = New clsCustomUserRole

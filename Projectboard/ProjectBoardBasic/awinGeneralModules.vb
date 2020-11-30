@@ -2124,8 +2124,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
                             logArray(3) = visboDBname
 
-
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
                             ' damit an der aufrufenden Stelle der richtige pName steht ...
                             pname = visboDBname
@@ -2148,7 +2147,7 @@ Public Module awinGeneralModules
                             ix = ix + 1
                         Next
 
-                        Call logfileSchreiben(logArray)
+                        Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                         fctResult = False
 
@@ -2173,7 +2172,7 @@ Public Module awinGeneralModules
                                     logArray(3) = visboDBname
 
 
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
                                     ' damit an der aufrufenden Stelle der richtige pName steht ...
                                     pname = visboDBname
@@ -2189,8 +2188,7 @@ Public Module awinGeneralModules
                                 logArray(2) = pname
                                 logArray(3) = visboDBname
 
-
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                                 fctResult = False
                             End If
@@ -2202,7 +2200,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
                             logArray(3) = visboDBname
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                             fctResult = False
                         End If
@@ -2236,7 +2234,7 @@ Public Module awinGeneralModules
                             logArray(4) = pname
 
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
 
                         Else
@@ -2247,7 +2245,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
 
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logError, "isKnownProject", logArray)
                         End If
 
                     Else
@@ -2615,7 +2613,7 @@ Public Module awinGeneralModules
                                             logmsg(1) = impProjekt.name
                                             logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
                                             logmsg(3) = "kein Import ! "
-                                            Call logfileSchreiben(logmsg)
+                                            Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
                                         Else
                                             ' jetzt in AlleProjekte eintragen ... 
                                             AlleProjekte.Add(impProjekt)
@@ -2647,7 +2645,7 @@ Public Module awinGeneralModules
                                                 logmsg(1) = impProjekt.kundenNummer
                                                 logmsg(2) = "VISBO DB - Name " & vglProj.name
                                                 logmsg(3) = "neuer Name " & newName
-                                                Call logfileSchreiben(logmsg)
+                                                Call logger(ptErrLevel.logWarning, "verarbeiteImportProjekte", logmsg)
                                             Else
                                                 ' kann eigentlich nicht sein 
                                                 ReDim logmsg(3)
@@ -2655,8 +2653,7 @@ Public Module awinGeneralModules
                                                 logmsg(1) = nameCollection.Item(1)
                                                 logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
                                                 logmsg(3) = "kein Import ! "
-                                                Call logfileSchreiben(logmsg)
-
+                                                Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
                                             End If
 
                                         ElseIf nameCollection.Count > 1 Then
@@ -2671,7 +2668,7 @@ Public Module awinGeneralModules
                                                 logmsg(ia + 2) = nameCollection.Item(ia)
                                             Next
 
-                                            Call logfileSchreiben(logmsg)
+                                            Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
 
                                         End If
 
