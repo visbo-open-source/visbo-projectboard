@@ -66,7 +66,25 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="customizationPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
+    </Setting>
+    <Setting Name="mongoDBname" Type="System.String" Scope="User">
+      <Value Profile="(Default)">bhtc</Value>
+    </Setting>
+    <Setting Name="mongoDBURL" Type="System.String" Scope="User">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="VISBOServer" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="proxyServerURL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="awinPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
     </Setting>
   </Settings>
 </SettingsFile>

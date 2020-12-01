@@ -7,6 +7,8 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core.MsoThemeColorIndex
 
 Module SIModule1
+    ' benötigt zum Lesen customization
+    Public pseudoappInstance As Microsoft.Office.Interop.Excel.Application = Nothing
 
     'Friend Const hiddenExcelSheetName As String = "visboupdate"
     Friend WithEvents pptAPP As PowerPoint.Application
