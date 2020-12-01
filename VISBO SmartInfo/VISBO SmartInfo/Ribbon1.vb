@@ -862,6 +862,7 @@ Public Class Ribbon1
 
 
 
+
         If awinSettings.visboServer Then
 
             If logInToMongoDB(True) Then
@@ -893,13 +894,16 @@ Public Class Ribbon1
                         Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
                     Else
                         ' hier direkter MongoDB-Zugriff - alles ok
+
                     End If
                     ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
+
 
                     appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
                     If IsNothing(appearanceDefinitions) Then
                         Throw New ArgumentException("Appearance classes do not exist")
                     End If
+
 
                     Dim customizations As clsCustomization = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
                     If IsNothing(customizations) Then
@@ -1233,6 +1237,192 @@ Public Class Ribbon1
     End Sub
 
     Private Sub addElement_Click(sender As Object, e As RibbonControlEventArgs) Handles addElement.Click
+
+        If isVisboSlide(currentSlide) Then
+
+            Dim errmsg As String = ""
+            Dim weiterMachen As Boolean = True
+
+            If Not appearancesWereRead Then
+                ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
+                weiterMachen = loginAndReadApearances(errmsg)
+            End If
+
+
+            If weiterMachen Then    ' User ist bereits eingeloggt 
+
+                ' jetzt die ShowProjekte und soweiter löschen 
+                Call emptyAllVISBOStructures(calledFromPPT:=True)
+
+                Dim pvNames As Collection = smartSlideLists.getPVNames
+                If pvNames.Count > 0 Then
+                    ' jetzt werden diese Projekte in AlleProjekte geladen ... 
+                    ' einfach deswegen, weill evtl ja mehrere Varianten ein und desselben Projektes darunter sind 
+                    For Each pvName As String In pvNames
+                        Dim pName As String = getPnameFromKey(pvName)
+                        Dim vName As String = getVariantnameFromKey(pvName)
+                        Dim outputCollection As New Collection
+
+                        Call loadProjectfromDB(outputCollection, pName, vName, False, Date.Now, True)
+
+                    Next
+                End If
+
+                ' jetzt wird showrangeLeft und showrangeRight bestimmt 
+                Try
+                    showRangeLeft = getColumnOfDate(slideCoordInfo.PPTStartOFCalendar)
+                    showRangeRight = getColumnOfDate(slideCoordInfo.PPTEndOFCalendar)
+                Catch ex As Exception
+
+                End Try
+
+
+                ' jetzt werden die Meilensteine / Phasen ausgewählt 
+
+                Dim selectedPhases As New Collection
+                Dim selectedMilestones As New Collection
+
+                Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+
+                ' set the datepicker boxes in the form to invisible
+                ' because timeframe is defined by report which is currently shown
+                frmSelectionPhMs.addElementMode = True
+
+                If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
+
+                    If Not IsNothing(frmSelectionPhMs.selectedPhases) Then
+                        selectedPhases = frmSelectionPhMs.selectedPhases
+                    Else
+                        selectedPhases = New Collection
+                    End If
+
+                    If Not IsNothing(frmSelectionPhMs.selectedMilestones) Then
+                        selectedMilestones = frmSelectionPhMs.selectedMilestones
+                    Else
+                        selectedMilestones = New Collection
+                    End If
+
+
+                Else
+                    Exit Sub
+                End If
+
+                ' jetzt die Phasen zeichnen
+                For Each tmpPhase As String In selectedPhases
+
+                    Dim alreadyThere As Boolean = False
+                    ' check whether it is not yet shown 
+                    If Not alreadyThere Then
+                        ' define y-coord
+
+                        ' draw the phase 
+                    End If
+
+
+                Next
+
+                Dim hproj As clsProjekt = Nothing
+
+                ' jetzt die Meilensteine zeichnen
+                For Each tmpMilestone As String In selectedMilestones
+
+                    Dim pvName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim type As Integer = -1
+                    Dim elemName As String = ""
+
+                    Call splitHryFullnameTo2(tmpMilestone, elemName, breadcrumb, type, pvName)
+
+                    Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvName, breadcrumb, elemName)
+                    If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
+                        ' nur dann muss irgendwas gemacht werden, egal ob im einzel- oder Multiprojekt-View
+
+                        Dim phaseNameID As String = ""
+
+                        If type = PTItemType.projekt Or type = -1 Then
+
+                            Dim pName As String = getPnameFromKey(pvName)
+                            Dim vNAme As String = getVariantnameFromKey(pvName)
+                            Dim pvNameAlleProjekte As String = calcProjektKey(pName, vNAme)
+
+                            If IsNothing(hproj) Then
+                                hproj = AlleProjekte.getProject(pvNameAlleProjekte)
+                            ElseIf calcProjektKey(hproj) <> pvNameAlleProjekte Then
+                                hproj = AlleProjekte.getProject(pvNameAlleProjekte)
+                            End If
+
+                            ' Gibt es das Element in hproj ? 
+                            Dim currentMilestone As clsMeilenstein = hproj.getMilestone(elemName, breadcrumb:=breadcrumb)
+
+                            If Not IsNothing(currentMilestone) Then
+                                ' jetzt muss die yPos bestimmt werden , das ist die YPos des nächstgelegenen Vaters im BreadCrumb ...
+                                Dim found As Boolean = False
+                                Dim yPos As Double = 30 ' Default Wert
+
+                                phaseNameID = hproj.hierarchy.getParentIDOfID(currentMilestone.nameID)
+                                Do While Not found And phaseNameID <> ""
+                                    Dim lookingForBreadcrumb As String = hproj.hierarchy.getBreadCrumb(phaseNameID)
+                                    searchString = smartSlideLists.bestimmeFullBreadcrumb(pvName, lookingForBreadcrumb, elemNameOfElemID(phaseNameID))
+                                    found = smartSlideLists.containsFullBreadCrumb(searchString)
+                                    If Not found Then
+                                        phaseNameID = hproj.hierarchy.getParentIDOfID(phaseNameID)
+                                    End If
+                                Loop
+
+                                If found Then
+                                    ' bestimme die y-Koordinate
+                                    If smartSlideLists.getUIDsOFBreadCrumb(searchString).Count > 0 Then
+                                        Dim ShapeID As Integer = smartSlideLists.getUIDsOFBreadCrumb(searchString).First.Key
+                                        Dim parentShapeName As String = smartSlideLists.getShapeNameOfUid(ShapeID)
+                                        yPos = currentSlide.Shapes.Item(parentShapeName).Top
+                                    End If
+                                Else
+                                    phaseNameID = rootPhaseName
+                                End If
+
+                                ' draw the Milestone 
+                                Call drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=phaseNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+
+                            End If
+
+                        ElseIf type = PTItemType.vorlage Then
+
+                        End If
+
+
+
+
+
+                    End If
+
+
+
+                Next
+
+                ' now draw - but only when it is not yet shown 
+                'slideCoordInfo.calculatePPTx1x2()
+
+            Else
+                ' hier ggf auf invisible setzen, wenn erforderlich 
+                If englishLanguage Then
+                    Call MsgBox("sorry, you are not entitled ... ")
+                Else
+                    Call MsgBox("Tut uns leid, aber Sie sind nicht berechtigt ... ")
+                End If
+
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
+            End If
+
+
+
+        Else
+            If englishLanguage Then
+                Call MsgBox("no Smart VISBO elements found - so nothing to add ...")
+
+            Else
+                Call MsgBox("keine Smart-Phasen oder Meilensteine gefunden - Abbruch ...")
+            End If
+        End If
 
     End Sub
 End Class

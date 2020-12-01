@@ -18785,7 +18785,7 @@ Public Module testModule
 
             phaseTypShape = rds.pptSlide.Shapes.AddShape(phaseTypApp.shpType, left, top, width, heigth)
 
-            definePhPPTAppearance(phaseTypShape, phaseTypApp)
+            Call definePhPPTAppearance(phaseTypShape, phaseTypApp)
 
             With phaseTypShape
                 Try

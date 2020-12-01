@@ -9,9 +9,23 @@ Public Class frmSelectPhasesMilestones
     Public selectedMilestones As New Collection
     Public selectedPhases As New Collection
 
+    ' steuert ob die showrangeLEft und showrangeRight Daten gezeigt werden 
+    Public Property addElementMode As Boolean
+
 
     Private dontFire As Boolean = False
     Dim hryStufenValue As Integer = 50
+
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        _addElementMode = False
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+
+    End Sub
+
     Private Sub frmSelectPhasesMilestones_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
@@ -41,7 +55,7 @@ Public Class frmSelectPhasesMilestones
         selectedMilestones.Clear()
         selectedPhases.Clear()
 
-        Call buildHryTreeViewinPPT(PTItemType.projekt)
+        Call buildHryTreeViewInPPT(PTItemType.projekt)
 
 
 
@@ -60,6 +74,10 @@ Public Class frmSelectPhasesMilestones
             rdbProjStruktProj.Visible = False
             rdbProjStruktTyp.Visible = False
         End If
+
+        zeitLabel.Visible = Not addElementMode
+        vonDate.Visible = Not addElementMode
+        bisDate.Visible = Not addElementMode
 
         If awinSettings.englishLanguage Then
             zeitLabel.Text = "Timeframe"
