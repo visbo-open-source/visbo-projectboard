@@ -20786,20 +20786,20 @@ Public Module agm2
                         Else
                             Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
-                    Else
-
+                    ElseIf awinSettings.visboServer Then
                         If Not IsNothing(xlsCustomization) Then
                             ' Customization-File wird geschlossen
                             xlsCustomization.Close(SaveChanges:=False)
                         End If
                         Throw New ArgumentException("You don't belong to any VISBO Center so far ... program ends  ..." & vbCrLf & "You want do be invited? - ")  ' & vbCrLf & "Please contact us: https://visbo.de/kontakt/")
+                    Else
+                        ' nothing to do
                     End If
 
                 End If
 
 
                 If Not loginErfolgreich Then
-
 
                     If Not IsNothing(xlsCustomization) Then
                         ' Customization-File wird geschlossen
