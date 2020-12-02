@@ -2187,30 +2187,7 @@ Module creationModule
             Dim gesamtAnzZeilen As Integer = 0
             Dim projekthoehe As Double = zeilenhoehe_sav
 
-            ' tk 14.10 das wird doch immer benötigt ... 
-            'If awinSettings.mppExtendedMode Then
-
-            '    ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
-            '    For Each kvp As KeyValuePair(Of Double, String) In projCollection
-            '        Try
-
-            '            hproj = AlleProjekte.getProject(kvp.Value)
-            '        Catch ex As Exception
-
-            '        End Try
-
-            '        anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
-
-            '        maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
-            '        gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
-
-            '    Next
-
-
-            'Else
-            '    projekthoehe = zeilenhoehe_sav
-            'End If
-
+         
             ' neu 14.10.19 
             ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
             For Each kvp As KeyValuePair(Of Double, String) In projCollection
@@ -3123,8 +3100,6 @@ Module creationModule
 
                                     End Try
 
-                                    '.Title = phaseName
-                                    '.AlternativeText = phDateText
 
                                     If missingPhaseDefinition Then
                                         .Fill.ForeColor.RGB = cphase.farbe
@@ -3952,17 +3927,6 @@ Module creationModule
         Dim sizeFaktor As Double = 1.0
 
         If awinSettings.mppUseInnerText Then
-
-            ' ''phaseTypShape.Copy()
-            ' ''copiedShape = rds.pptSlide.Shapes.Paste()
-            'copiedShape = xlnsCopypptPaste(phaseTypShape, rds.pptSlide)
-
-            'With copiedShape
-            '    If .Height > 0.0 Then
-            '        sizeFaktor = rds.phaseVorlagenShape.Height / .Height
-            '    End If
-            '    .Delete()
-            'End With
 
             sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
 

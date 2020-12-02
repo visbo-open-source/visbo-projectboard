@@ -1192,6 +1192,8 @@ Public Class Ribbon1
                             showRangeLeft = 0
                             showRangeRight = 0
 
+                            ' jetzt die smartSlideLists aufbauen ...
+                            Call buildSmartSlideLists()
 
                             Try
                                 ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
@@ -1254,6 +1256,8 @@ Public Class Ribbon1
 
             If weiterMachen Then    ' User ist bereits eingeloggt 
 
+                Dim outPutCollection As New Collection
+
                 ' jetzt die ShowProjekte und soweiter löschen 
                 Call emptyAllVISBOStructures(calledFromPPT:=True)
 
@@ -1264,7 +1268,6 @@ Public Class Ribbon1
                     For Each pvName As String In pvNames
                         Dim pName As String = getPnameFromKey(pvName)
                         Dim vName As String = getVariantnameFromKey(pvName)
-                        Dim outputCollection As New Collection
 
                         Call loadProjectfromDB(outputCollection, pName, vName, False, Date.Now, True)
 
@@ -1310,100 +1313,151 @@ Public Class Ribbon1
                     Exit Sub
                 End If
 
-                ' jetzt die Phasen zeichnen
-                For Each tmpPhase As String In selectedPhases
+                ' true, if at least one milestone or phase has been added 
+                Dim atleastOneAddedElement As Boolean = False
 
-                    Dim alreadyThere As Boolean = False
-                    ' check whether it is not yet shown 
-                    If Not alreadyThere Then
-                        ' define y-coord
+                For i As Integer = 1 To 2
+                    Dim nameCollection As Collection
 
-                        ' draw the phase 
+                    Dim isMilestones As Boolean = False
+                    If i = 1 Then
+                        nameCollection = selectedPhases
+                    Else
+                        nameCollection = selectedMilestones
+                        isMilestones = True
                     End If
 
+                    Dim hproj As clsProjekt = Nothing
 
-                Next
+                    outPutCollection.Clear()
 
-                Dim hproj As clsProjekt = Nothing
+                    ' jetzt die Phasen bzw Meilensteine zeichnen
+                    ' change 
+                    For Each PhaseMilestoneName As String In nameCollection
 
-                ' jetzt die Meilensteine zeichnen
-                For Each tmpMilestone As String In selectedMilestones
+                        Dim pvName As String = ""
+                        Dim breadcrumb As String = ""
+                        Dim type As Integer = -1
+                        Dim elemName As String = ""
 
-                    Dim pvName As String = ""
-                    Dim breadcrumb As String = ""
-                    Dim type As Integer = -1
-                    Dim elemName As String = ""
+                        Call splitHryFullnameTo2(PhaseMilestoneName, elemName, breadcrumb, type, pvName)
 
-                    Call splitHryFullnameTo2(tmpMilestone, elemName, breadcrumb, type, pvName)
+                        Dim msgText As String = ""
+                        Dim header As String = ""
 
-                    Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvName, breadcrumb, elemName)
-                    If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
-                        ' nur dann muss irgendwas gemacht werden, egal ob im einzel- oder Multiprojekt-View
+                        Dim pName As String = getPnameFromKey(pvName)
+                        Dim vNAme As String = getVariantnameFromKey(pvName)
+                        Dim pvNameAlleProjekte As String = calcProjektKey(pName, vNAme)
+                        Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvNameAlleProjekte, breadcrumb, elemName)
 
-                        Dim phaseNameID As String = ""
+                        If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
+                            ' nur dann muss irgendwas gemacht werden, egal ob im einzel- oder Multiprojekt-View
 
-                        If type = PTItemType.projekt Or type = -1 Then
+                            Dim parentNameID As String = ""
 
-                            Dim pName As String = getPnameFromKey(pvName)
-                            Dim vNAme As String = getVariantnameFromKey(pvName)
-                            Dim pvNameAlleProjekte As String = calcProjektKey(pName, vNAme)
+                            If type = PTItemType.projekt Or type = -1 Then
 
-                            If IsNothing(hproj) Then
-                                hproj = AlleProjekte.getProject(pvNameAlleProjekte)
-                            ElseIf calcProjektKey(hproj) <> pvNameAlleProjekte Then
-                                hproj = AlleProjekte.getProject(pvNameAlleProjekte)
-                            End If
-
-                            ' Gibt es das Element in hproj ? 
-                            Dim currentMilestone As clsMeilenstein = hproj.getMilestone(elemName, breadcrumb:=breadcrumb)
-
-                            If Not IsNothing(currentMilestone) Then
-                                ' jetzt muss die yPos bestimmt werden , das ist die YPos des nächstgelegenen Vaters im BreadCrumb ...
-                                Dim found As Boolean = False
-                                Dim yPos As Double = 30 ' Default Wert
-
-                                phaseNameID = hproj.hierarchy.getParentIDOfID(currentMilestone.nameID)
-                                Do While Not found And phaseNameID <> ""
-                                    Dim lookingForBreadcrumb As String = hproj.hierarchy.getBreadCrumb(phaseNameID)
-                                    searchString = smartSlideLists.bestimmeFullBreadcrumb(pvName, lookingForBreadcrumb, elemNameOfElemID(phaseNameID))
-                                    found = smartSlideLists.containsFullBreadCrumb(searchString)
-                                    If Not found Then
-                                        phaseNameID = hproj.hierarchy.getParentIDOfID(phaseNameID)
-                                    End If
-                                Loop
-
-                                If found Then
-                                    ' bestimme die y-Koordinate
-                                    If smartSlideLists.getUIDsOFBreadCrumb(searchString).Count > 0 Then
-                                        Dim ShapeID As Integer = smartSlideLists.getUIDsOFBreadCrumb(searchString).First.Key
-                                        Dim parentShapeName As String = smartSlideLists.getShapeNameOfUid(ShapeID)
-                                        yPos = currentSlide.Shapes.Item(parentShapeName).Top
-                                    End If
-                                Else
-                                    phaseNameID = rootPhaseName
+                                If IsNothing(hproj) Then
+                                    hproj = AlleProjekte.getProject(pvNameAlleProjekte)
+                                ElseIf calcProjektKey(hproj) <> pvNameAlleProjekte Then
+                                    hproj = AlleProjekte.getProject(pvNameAlleProjekte)
                                 End If
 
-                                ' draw the Milestone 
-                                Call drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=phaseNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+                                ' Gibt es das Element in hproj ? 
+                                Dim currentMilestone As clsMeilenstein = Nothing
+                                Dim currentPhase As clsPhase = Nothing
+                                Dim allOK As Boolean = False
 
+                                If isMilestones Then
+                                    currentMilestone = hproj.getMilestone(elemName, breadcrumb:=breadcrumb)
+                                    allOK = Not IsNothing(currentMilestone)
+                                Else
+                                    currentPhase = hproj.getPhase(elemName, breadcrumb:=breadcrumb)
+                                    allOK = Not IsNothing(currentPhase)
+                                End If
+
+
+                                If allOK Then
+                                    ' jetzt muss die yPos bestimmt werden , das ist die YPos des nächstgelegenen Vaters im BreadCrumb ...
+                                    Dim found As Boolean = False
+                                    Dim yPos As Double = 30 ' Default Wert
+
+                                    If isMilestones Then
+                                        parentNameID = hproj.hierarchy.getParentIDOfID(currentMilestone.nameID)
+                                    Else
+                                        parentNameID = hproj.hierarchy.getParentIDOfID(currentPhase.nameID)
+                                    End If
+
+                                    Do While Not found And parentNameID <> ""
+                                        Dim lookingForBreadcrumb As String = hproj.hierarchy.getBreadCrumb(parentNameID)
+                                        searchString = smartSlideLists.bestimmeFullBreadcrumb(pvNameAlleProjekte, lookingForBreadcrumb, elemNameOfElemID(parentNameID))
+                                        found = smartSlideLists.containsFullBreadCrumb(searchString)
+                                        If Not found Then
+                                            parentNameID = hproj.hierarchy.getParentIDOfID(parentNameID)
+                                        End If
+                                    Loop
+
+                                    If found Then
+                                        ' bestimme die y-Koordinate
+                                        If smartSlideLists.getUIDsOFBreadCrumb(searchString).Count > 0 Then
+                                            Dim ShapeID As Integer = smartSlideLists.getUIDsOFBreadCrumb(searchString).First.Key
+                                            Dim parentShapeName As String = smartSlideLists.getShapeNameOfUid(ShapeID)
+                                            yPos = currentSlide.Shapes.Item(parentShapeName).Top
+                                        End If
+                                    Else
+                                        parentNameID = rootPhaseName
+                                    End If
+
+                                    If isMilestones Then
+                                        ' draw the Milestone 
+                                        Call drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+
+                                    Else
+                                        Call drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
+                                    End If
+
+                                End If
+
+                            ElseIf type = PTItemType.vorlage Then
+                                Dim a As Integer = 0
+                            Else
+                                Dim a As Integer = 0
                             End If
 
-                        ElseIf type = PTItemType.vorlage Then
+
+
+                        Else
+                            ' Element ist schon eingezeichnet ... 
+                            If vNAme = "" Then
+                                msgText = pName & " : " & breadcrumb & "-" & elemName
+                            Else
+                                msgText = pName & " [" & vNAme & "] : " & breadcrumb & "-" & elemName
+                            End If
+
+                            outPutCollection.Add(msgText)
 
                         End If
 
-
-
-
-
-                    End If
-
+                    Next
 
 
                 Next
 
-                ' now draw - but only when it is not yet shown 
-                'slideCoordInfo.calculatePPTx1x2()
+
+                If outPutCollection.Count > 0 Then
+                    Dim header As String = ""
+                    If englishLanguage Then
+                        header = "Element already there - no drawing occurred!"
+                    Else
+                        header = "Element bereits vorhanden - nicht gezeichnet! "
+                    End If
+                    Call showOutPut(outPutCollection, header, "")
+                End If
+
+                If atleastOneAddedElement Then
+                    Call buildSmartSlideLists()
+                End If
+
 
             Else
                 ' hier ggf auf invisible setzen, wenn erforderlich 
@@ -1430,5 +1484,7 @@ Public Class Ribbon1
         Call pptAPP_AufbauSmartSlideLists(currentSlide)
 
     End Sub
+
+
 End Class
 
