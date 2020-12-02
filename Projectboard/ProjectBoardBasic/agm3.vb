@@ -1495,7 +1495,7 @@ Public Module agm3
         Dim personalNumber As String = ""
         Dim curmonth As Integer
         Dim lastValidMonth As Integer = getColumnOfDate(IstDatenDate)
-        Dim stundenTotal As Integer = 0                     ' Stundenangabe in einer Zeile
+        Dim stundenTotal As Double = 0                     ' Stundenangabe in einer Zeile
 
         ' ======================
         ' vorarbeit der Definitionen geleistet
@@ -1671,20 +1671,41 @@ Public Module agm3
                                             Dim projektName As String = ""
                                             projektName = CStr(currentWS.Cells(z, ActualDataConfig("ProjectName").column.von).value)
 
-                                            stundenTotal = CInt(currentWS.Cells(z, stdSpalteTotal).value)
+                                            stundenTotal = CDbl(currentWS.Cells(z, stdSpalteTotal).value)
 
                                             ' Check mit der Summenbildung in der Zeile
-                                            Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 2), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
-                                            Dim stundenSumme As Integer = appInstance.WorksheetFunction.Sum(stdRange)
-                                            If stundenTotal <> stundenSumme Then
+                                            ' die Werte gehen erst in der Spalte 6 los, also column.von + 4
+                                            'Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 2), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
+                                            Dim stdRange As Excel.Range = CType(currentWS.Range(currentWS.Cells(z, vstart.column.von + 4), currentWS.Cells(z, stdSpalteTotal - 2)), Microsoft.Office.Interop.Excel.Range)
+                                            Dim stundenSumme As Double = 0
+                                            Try
+                                                ' tk hat bei Matthias Urch mal Fehler produziert - deswegen Warnung ausgeben , aber weiter machen 
+                                                ' da konnte die Worksheet Funktion .sum nicht ausgeführt werden 
+                                                stundenSumme = appInstance.WorksheetFunction.Sum(stdRange)
+
+                                                If stundenTotal <> stundenSumme Then
+                                                    If awinSettings.englishLanguage Then
+                                                        outputline = "Attention: " & hrole.name & ": in '" & currentWS.Name & "': sum of the single values (" & stundenSumme.ToString & ") isn 't the same as the value in column '" & hspalte & "' (" & stundenTotal.ToString & ")"
+                                                    Else
+                                                        outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
+                                                    End If
+                                                    oPCollection.Add(outputline)
+                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                End If
+
+                                            Catch ex As Exception
+
+                                                stundenSumme = stundenTotal
+
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = "Attention: " & hrole.name & ": in '" & currentWS.Name & "': sum of the single values (" & stundenSumme.ToString & ") isn 't the same as the value in column '" & hspalte & "' (" & stundenTotal.ToString & ")"
+                                                    outputline = "Attention: " & hrole.name & ": " & ex.Message & currentWS.Name
                                                 Else
-                                                    outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
+                                                    outputline = "Achtung: " & hrole.name & ": " & ex.Message & currentWS.Name
                                                 End If
                                                 oPCollection.Add(outputline)
                                                 Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
-                                            End If
+                                            End Try
+
 
                                             Dim pvkey As String
                                             If Not IsNothing(projektName) Then
