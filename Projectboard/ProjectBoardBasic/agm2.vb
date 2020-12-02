@@ -21273,7 +21273,7 @@ Public Module agm2
                     If awinSettings.visboDebug Then
                         Call MsgBox("readVorlagen: BHTC")
                     End If
-                    If visboClient = divClients(client.VisboMSProject) Then
+                    If Not (visboClient = divClients(client.VisboSmartInfo)) Then
                         Call readVorlagen(False)
                     End If
                 End If

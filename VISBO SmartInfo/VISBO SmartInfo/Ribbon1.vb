@@ -1078,32 +1078,31 @@ Public Class Ribbon1
 
         Else ' direkter MongoDB-Zugriff und lesen der appearances und customizationSettings from File
             Try
+                If Not awinsetTypen_Performed Then
+                    pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
 
-                pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+                    dbUsername = ""
+                    dbPasswort = ""
 
-                dbUsername = ""
-                dbPasswort = ""
+                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+                    Call awinsetTypen("BHTC")
 
-                '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-                Call awinsetTypen("BHTC")
+                    StartofCalendar = StartofCalendar
 
-                StartofCalendar = StartofCalendar
+                    ' UserName - Password merken
+                    If awinSettings.rememberUserPwd Then
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                    End If
 
-                ' UserName - Password merken
-                If awinSettings.rememberUserPwd Then
-                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
+                    wasSuccessful = True
+                    awinsetTypen_Performed = True
                 End If
-
-                wasSuccessful = True
 
             Catch ex As Exception
 
             End Try
-
         End If      ' visboServer = true/false
-
-
-        ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
 
 
         loginAndReadApearances = wasSuccessful
@@ -1184,6 +1183,7 @@ Public Class Ribbon1
                             ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
                             Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
 
+                            ' smartSlideLists und slidcoordInfo aufbauen
                             Call pptAPP_AufbauSmartSlideLists(currentSlide)
 
                             ' tk 7.10 selectedProjekte wieder zurücksetzen ..
@@ -1191,9 +1191,6 @@ Public Class Ribbon1
                             selectedProjekte.Clear(False)
                             showRangeLeft = 0
                             showRangeRight = 0
-
-                            ' jetzt die smartSlideLists aufbauen ...
-                            Call buildSmartSlideLists()
 
                             Try
                                 ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
@@ -1218,14 +1215,9 @@ Public Class Ribbon1
                             End If
                             Call MsgBox(msgtxt)
                         End If
-
-
-
                     Else
                         ' returnValue = DialogResult.Cancel
-
                     End If
-
 
                 Else
                     Call MsgBox("not yet implemented ... -> Exit")
@@ -1247,6 +1239,9 @@ Public Class Ribbon1
 
             Dim errmsg As String = ""
             Dim weiterMachen As Boolean = True
+
+            ' true, if at least one milestone or phase has been added 
+            Dim atleastOneAddedElement As Boolean = False
 
             If Not appearancesWereRead Then
                 ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
@@ -1313,8 +1308,6 @@ Public Class Ribbon1
                     Exit Sub
                 End If
 
-                ' true, if at least one milestone or phase has been added 
-                Dim atleastOneAddedElement As Boolean = False
 
                 For i As Integer = 1 To 2
                     Dim nameCollection As Collection
@@ -1335,19 +1328,26 @@ Public Class Ribbon1
                     ' change 
                     For Each PhaseMilestoneName As String In nameCollection
 
-                        Dim pvName As String = ""
+                        Dim pName As String = ""
+                        Dim vName As String = ""
                         Dim breadcrumb As String = ""
                         Dim type As Integer = -1
                         Dim elemName As String = ""
 
-                        Call splitHryFullnameTo2(PhaseMilestoneName, elemName, breadcrumb, type, pvName)
+                        Call splitHryFullnameTo2(PhaseMilestoneName, elemName, breadcrumb, type, pName)
 
                         Dim msgText As String = ""
                         Dim header As String = ""
 
-                        Dim pName As String = getPnameFromKey(pvName)
-                        Dim vNAme As String = getVariantnameFromKey(pvName)
-                        Dim pvNameAlleProjekte As String = calcProjektKey(pName, vNAme)
+                        ' vName bestimmen aus pName und AlleProjekte
+                        If AlleProjekte.Count > 0 Then
+                            Dim tmpList As Collection = AlleProjekte.getVariantNames(pName, False)
+                            If tmpList.Count > 0 Then
+                                vName = CStr(tmpList.Item(1))
+                            End If
+                        End If
+
+                        Dim pvNameAlleProjekte As String = calcProjektKey(pName, vName)
                         Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvNameAlleProjekte, breadcrumb, elemName)
 
                         If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
@@ -1435,14 +1435,9 @@ Public Class Ribbon1
                             End If
 
                             outPutCollection.Add(msgText)
-
                         End If
-
                     Next
-
-
                 Next
-
 
                 If outPutCollection.Count > 0 Then
                     Dim header As String = ""
@@ -1453,11 +1448,6 @@ Public Class Ribbon1
                     End If
                     Call showOutPut(outPutCollection, header, "")
                 End If
-
-                If atleastOneAddedElement Then
-                    Call buildSmartSlideLists()
-                End If
-
 
             Else
                 ' hier ggf auf invisible setzen, wenn erforderlich 
@@ -1470,18 +1460,17 @@ Public Class Ribbon1
                 Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
             End If
 
-
+            If atleastOneAddedElement Then
+                Call pptAPP_AufbauSmartSlideLists(currentSlide)
+            End If
 
         Else
             If englishLanguage Then
                 Call MsgBox("no Smart VISBO elements found - so nothing to add ...")
-
             Else
                 Call MsgBox("keine Smart-Phasen oder Meilensteine gefunden - Abbruch ...")
             End If
         End If
-
-        Call pptAPP_AufbauSmartSlideLists(currentSlide)
 
     End Sub
 

@@ -317,7 +317,7 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
             curHry = selectedProjekte.getProject(1).hierarchy
         Else
-            curHry = ShowProjekte.getProject(PVname).hierarchy
+            curHry = ShowProjekte.getProject(getPnameFromKey(PVname)).hierarchy
         End If
 
 
@@ -764,8 +764,8 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
 
             ' jetzt anders ... 
-            If selectedProjekte.contains(pvName) Then
-                tmpResult = selectedProjekte.getProject(pvName).hierarchy
+            If selectedProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = selectedProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
             'If Projektvorlagen.Contains(pvName) Then
@@ -773,8 +773,8 @@ Public Class frmSelectPhasesMilestones
             'End If
 
         Else
-            If ShowProjekte.contains(pvName) Then
-                tmpResult = ShowProjekte.getProject(pvName).hierarchy
+            If ShowProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = ShowProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
         End If
@@ -803,6 +803,17 @@ Public Class frmSelectPhasesMilestones
             Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")}, 2)
             If tmpStr.Length >= 2 Then
                 tmpResult = tmpStr(1)
+            End If
+
+        End If
+
+        If AlleProjekte.Count > 0 Then
+            Dim tmpList As Collection = AlleProjekte.getVariantNames(tmpResult, False)
+
+            If tmpList.Count > 0 Then
+                Dim variantName As String = CStr(tmpList.Item(1))
+                tmpResult = calcProjektKey(tmpResult, variantName)
+                Dim hproj As clsProjekt = AlleProjekte.getProject(tmpResult, variantName)
             End If
 
         End If
