@@ -207,6 +207,7 @@ Partial Class frmSelectPhasesMilestones
         Me.Controls.Add(Me.SelectionSet)
         Me.Controls.Add(Me.Ok_Button)
         Me.Controls.Add(Me.TreeViewProjects)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectPhasesMilestones"
         Me.Text = "Auswahl von Projekten, Phasen und Meilensteinen"
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()

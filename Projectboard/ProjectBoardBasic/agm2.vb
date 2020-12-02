@@ -21143,7 +21143,11 @@ Public Module agm2
                         myCustomUserRole = New clsCustomUserRole
 
                         With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            If awinSettings.visboServer Then
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            Else
+                                .customUserRole = ptCustomUserRoles.ProjektLeitung
+                            End If
                             .specifics = ""
                             .userName = dbUsername
                         End With
@@ -23630,6 +23634,7 @@ Public Module agm2
 
             StartofCalendar = awinSettings.kalenderStart
             'StartofCalendar = StartofCalendar.ToLocalTime()
+
 
             historicDate = StartofCalendar
 

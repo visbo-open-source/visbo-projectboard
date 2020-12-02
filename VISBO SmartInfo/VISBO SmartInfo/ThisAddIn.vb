@@ -116,11 +116,13 @@ Public Class ThisAddIn
 
     End Sub
 
-    Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation
+    Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation, Application.PresentationSave
 
         ' das muss hier bleiben und kann nicht nach Module1 verlagert werden .. 
 
-        If presentationHasAnySmartSlides(Pres) Then
+        currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
+
+        If currentPresHasVISBOElements Then
 
             Dim hsearchPane As Microsoft.Office.Tools.CustomTaskPane
             Dim hPropPane As Microsoft.Office.Tools.CustomTaskPane
@@ -240,4 +242,5 @@ Public Class ThisAddIn
     Private Sub ThisAddIn_BindingContextChanged(sender As Object, e As EventArgs) Handles Me.BindingContextChanged
 
     End Sub
+
 End Class

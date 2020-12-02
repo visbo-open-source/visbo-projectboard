@@ -1183,6 +1183,9 @@ Public Class Ribbon1
 
                             ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
                             Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0)
+
+                            Call pptAPP_AufbauSmartSlideLists(currentSlide)
+
                             ' tk 7.10 selectedProjekte wieder zurücksetzen ..
                             ShowProjekte.Clear(False)
                             selectedProjekte.Clear(False)
@@ -1423,6 +1426,8 @@ Public Class Ribbon1
                 Call MsgBox("keine Smart-Phasen oder Meilensteine gefunden - Abbruch ...")
             End If
         End If
+
+        Call pptAPP_AufbauSmartSlideLists(currentSlide)
 
     End Sub
 End Class

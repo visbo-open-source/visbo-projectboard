@@ -7126,7 +7126,7 @@ Module SIModule1
     End Function
 
     ''' <summary>
-    ''' prüft, ob irgendeine VISBO Slide entahlten ist; kann auch frozen sein
+    ''' prüft, ob irgendeine VISBO Slide enthalten ist; kann auch frozen sein
     ''' </summary>
     ''' <param name="pres"></param>
     ''' <returns></returns>
@@ -10721,5 +10721,6 @@ Module SIModule1
         End If
 
     End Sub
+
 
 End Module
