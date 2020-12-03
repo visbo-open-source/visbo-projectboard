@@ -22423,6 +22423,8 @@ Public Module testModule
     ''' <param name="pptslide"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    ''' 
+
     Public Function pptCopypptPaste(ByVal srcShape As pptNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
 
         pptCopypptPaste = Nothing
