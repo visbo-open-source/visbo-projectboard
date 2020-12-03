@@ -85,6 +85,14 @@ namespace MongoDbAccess
         /// </summary>
         protected IMongoCollection<clsFilterDB> CollectionFilter;
         /// <summary>
+        /// enthält die Darstellungsklassen
+        /// </summary>
+        protected IMongoCollection<clsAppearanceDB> CollectionAppearances;
+        /// <summary>
+        /// enthält die benutzerspezifischen Einstellungen
+        /// </summary>
+        protected IMongoCollection<clsCustomizationDB> CollectionCustomizations;
+        /// <summary>
         /// wird für das Speichern von Dokumenten benötigt 
         /// </summary>
         protected IGridFSBucket BucketDocuments;
@@ -152,6 +160,8 @@ namespace MongoDbAccess
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
+            CollectionAppearances = Database.GetCollection<clsAppearanceDB>("appearances");
+            CollectionCustomizations = Database.GetCollection<clsCustomizationDB>("customizations");
             BucketDocuments = new GridFSBucket(Database, new GridFSBucketOptions{BucketName = "documents"});
             User = username;
 
@@ -2349,8 +2359,153 @@ namespace MongoDbAccess
             return result;
         }
 
+        /// <summary>
+        /// Speichert die Liste der 
+        /// Darstellungsklassen in der DB
+        /// </summary>
+        /// <param name="appearances"> - Darstellungsklassen</param>
+        /// <returns></returns>
+        public bool storeAppearancesToDB(SortedList<string, clsAppearance> appearances)
+        {
+            try
+            {
+                var appearanceDB = new clsAppearanceDB();
+                appearanceDB.copyFrom(appearances);
+                appearanceDB.id = DateAndTime.Now;
 
- 
+                //bool alreadyExisting = CollectionAppearances.AsQueryable<clsAppearanceDB>()
+                //        .Where(c => c.id <= DateAndTime.Now);
+
+                //if (alreadyExisting)
+                //{
+                //    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", c.constellationName);
+
+                //    var rResult = CollectionConstellations.ReplaceOne(filter, cDB);
+                //    if (rResult.ModifiedCount > 0)
+                //    { return true;
+                //    }
+                //    else
+                //    { return false;
+                //    }
+                //}
+                //else
+                //{
+                CollectionAppearances.InsertOne(appearanceDB);
+                return true;
+                //}
+
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+        /// <summary>
+        /// liest die Darstellungsklassen-Liste aus der Datenbank 
+        /// </summary>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public SortedList<string, clsAppearance> retrieveAppearancesFromDB(DateTime storedAtOrBefore)
+        {
+            var result = new SortedList<string, clsAppearance>();
+            var appDB = new clsAppearanceDB();
+
+            if (storedAtOrBefore == null)
+            {
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var builder = Builders<clsAppearanceDB>.Filter;
+
+            var filter =  builder.Lte("id", storedAtOrBefore);
+            var sort = Builders<clsAppearanceDB>.Sort.Ascending("id");
+
+            appDB = CollectionAppearances.Find(filter).Sort(sort).ToList().Last();            
+
+            appDB.copyto(ref result);            
+
+            return result;
+        }
+
+        /// <summary>
+        /// Speichert die Liste der 
+        /// Darstellungsklassen in der DB
+        /// </summary>
+        /// <param name="custom"> - Darstellungsklassen</param>
+        /// <returns></returns>
+        public bool storeCustomizationToDB( clsCustomization custom)
+        {
+            try
+            {
+                var customDB = new clsCustomizationDB();
+                customDB.copyFrom(custom);
+                customDB.id = DateAndTime.Now;
+
+                //bool alreadyExisting = CollectionAppearances.AsQueryable<clsAppearanceDB>()
+                //        .Where(c => c.id <= DateAndTime.Now);
+
+                //if (alreadyExisting)
+                //{
+                //    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", c.constellationName);
+
+                //    var rResult = CollectionConstellations.ReplaceOne(filter, cDB);
+                //    if (rResult.ModifiedCount > 0)
+                //    { return true;
+                //    }
+                //    else
+                //    { return false;
+                //    }
+                //}
+                //else
+                //{
+                CollectionCustomizations.InsertOne(customDB);
+                return true;
+                //}
+
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+        /// <summary>
+        /// liest die Darstellungsklassen-Liste aus der Datenbank 
+        /// </summary>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsCustomization retrieveCustomizationFromDB(DateTime storedAtOrBefore )
+        {
+            var result = new  clsCustomization();
+            var customDB = new clsCustomizationDB();
+
+            if (storedAtOrBefore == null)
+            {
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var builder = Builders<clsCustomizationDB>.Filter;
+
+            var filter = builder.Lte("id", storedAtOrBefore);
+            var sort = Builders<clsCustomizationDB>.Sort.Ascending("id");
+
+            customDB = CollectionCustomizations.Find(filter).Sort(sort).ToList().Last();
+
+            customDB.copyTo(ref result);
+
+            return result;
+        }
+
+
         // TODO: add user permission logic to queries. Use this.User for the currently logged in username
         // TODO: create and use mapper classes for FileInfo and File.
 

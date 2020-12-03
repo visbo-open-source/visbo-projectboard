@@ -1912,9 +1912,274 @@ Module SIModule1
                         Next
 
                     Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionText
-                        For i = 0 To 1000
-                            i = i + 1
-                        Next
+                        Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
+
+                        If Not IsNothing(shpRange) And slideHasSmartElements Then
+
+                            ' jetzt muss hier die Behandlung für Office 2010 rein 
+                            Dim correctErrorShape1 As PowerPoint.Shape = Nothing
+                            Dim correctErrorShape2 As PowerPoint.Shape = Nothing
+
+                            ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                            ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                            ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                            ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
+                            If pptAPP.Version = "14.0" Then
+                                Try
+                                    correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
+
+                            If ((pptAPP.Version = "14.0") And
+                                (((Not propertiesPane.Visible) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
+                                ' Erzeugen eines Hilfs-Elements
+
+                                ' Ist es 
+                                If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
+                                    ' nichts machen 
+                                Else
+                                    If IsNothing(correctErrorShape1) Then
+                                        ' erzeugen und selektieren der beiden Shapes  
+                                        Dim oldShape As PowerPoint.Shape = shpRange(1)
+
+                                        Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+
+
+
+                                        If Not IsNothing(helpShape1) Then
+                                            helpShape1.Name = "visboCorrectError1"
+                                            helpShape1.Tags.Add("formerSN", oldShape.Name)
+                                            helpShape1.Select()
+                                        End If
+
+
+
+                                    ElseIf IsNothing(correctErrorShape2) Then
+
+                                        ' jetzt die zweite Welle 
+                                        propertiesPane.Visible = True
+
+                                        Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+                                        If Not IsNothing(helpShape2) Then
+                                            helpShape2.Name = "visboCorrectError2"
+                                            helpShape2.Select()
+                                        End If
+                                    Else
+
+
+                                        ' Selektieren des vorher geklickten shapes 
+                                        Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
+                                        Dim formerSelShape As PowerPoint.Shape = Nothing
+
+                                        If formerShapeName.Length > 0 Then
+                                            Try
+
+                                                formerSelShape = currentSlide.Shapes(formerShapeName)
+
+                                                ' Löschen der Hilfs-Shapes 
+                                                correctErrorShape1.Delete()
+                                                correctErrorShape2.Delete()
+
+                                                ' Selektieren des formerShapes
+                                                formerSelShape.Select()
+
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+                                    End If
+                                End If
+
+                            Else
+                                ' es sind ein oder mehrere Shapes selektiert worden 
+                                Dim i As Integer = 0
+                                If shpRange.Count = 1 Then
+
+                                    ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                                    ' Listbox passt 
+
+                                    '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                                    '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                                    ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                                    ' ''    If infoFrm.rdbName.Visible Then
+                                    ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                                    ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                                    ' ''        End If
+                                    ' ''    End If
+                                    ' ''End If
+
+
+                                    ' jetzt ggf die angezeigten Marker löschen 
+                                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                                        Call deleteMarkerShapes()
+                                    ElseIf markerShpNames.Count > 1 Then
+                                        Call deleteMarkerShapes(shpRange(1).Name)
+                                    End If
+
+                                    ' prüfen, ob es ein Kommentar ist 
+                                    Dim tmpShape As PowerPoint.Shape = shpRange(1)
+                                    If isCommentShape(tmpShape) Then
+                                        Call markReferenceShape(tmpShape.Name)
+                                    End If
+                                ElseIf shpRange.Count > 1 Then
+                                    ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                                    For Each tmpShape As PowerPoint.Shape In shpRange
+                                        If isCommentShape(tmpShape) Then
+                                            Call markReferenceShape(tmpShape.Name)
+                                        End If
+                                    Next
+                                ElseIf shpRange.Count = 0 Then
+
+                                    Call deleteMarkerShapes()
+
+                                End If
+
+
+                                For Each tmpShape As PowerPoint.Shape In shpRange
+
+                                    If tmpShape.Tags.Count > 0 Then
+
+                                        'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
+
+                                        If isRelevantShape(tmpShape) Then
+                                            If bekannteIDs.ContainsKey(tmpShape.Id) Or
+                                        tmpShape.Name.EndsWith(shadowName) Then
+
+                                                If Not relevantShapeNames.Contains(tmpShape.Name) Then
+                                                    relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                                End If
+
+                                            Else
+                                                ' die vorhandenen Tags löschen ... und den Namen ändern 
+                                                Call deleteShpTags(tmpShape)
+                                            End If
+
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+                                '' Anfang ... das war vorher innerhalb der next Schleife .. 
+                                ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                                If relevantShapeNames.Count >= 1 Then
+
+                                    ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                                    For ix As Integer = 1 To relevantShapeNames.Count
+                                        arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                                    Next
+
+                                    selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+
+                                ElseIf isSymbolShape(shpRange(1)) Then
+
+                                    selectedPlanShapes = shpRange
+                                    Call aktualisiereInfoPane(shpRange(1))
+
+                                Else
+                                    ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
+                                    Call checkHomeChangeBtnEnablement()
+                                    Try
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    ' ur: wegen Pane
+                                    ' ''If formIsShown Then
+                                    ' ''    Call aktualisiereInfoFrm(Nothing)
+                                    ' ''End If
+                                End If
+                                '' Ende ...
+
+                                If Not isSymbolShape(shpRange(1)) Then
+                                    If Not IsNothing(selectedPlanShapes) Then
+
+                                        Dim tmpShape As PowerPoint.Shape = Nothing
+                                        Dim elemWasMoved As Boolean = False
+
+                                        Dim isPCard As Boolean = isProjectCard(shpRange(1))
+
+                                        If Not isPCard Then
+                                            For Each tmpShape In selectedPlanShapes
+                                                ' hier sind nur noch richtige Shapes  
+
+                                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                                If elemWasMoved Then
+                                                    homeButtonRelevance = True
+                                                Else
+                                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                                        changedButtonRelevance = True
+                                                    End If
+                                                End If
+
+                                            Next
+                                        Else
+                                            tmpShape = selectedPlanShapes(1)
+                                        End If
+
+
+                                        ' hier wird die Information zu dem selektierten Shape angezeigt 
+                                        If Not IsNothing(propertiesPane) Then
+                                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                                        End If
+                                        ' ur: wegen Pane
+                                        If formIsShown Then
+                                            If isPCard Then
+                                                Call aktualisiereInfoFrm(Nothing)
+                                            Else
+                                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                            End If
+
+                                        End If
+
+
+                                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                                        Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                                        ' kann jetzt wieder aktiviert werden ...
+                                        If Not IsNothing(propertiesPane) Then
+                                            propertiesPane.Visible = True
+                                        End If
+                                    Else
+
+                                        Call checkHomeChangeBtnEnablement()
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
+
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
+                        'For i = 0 To 1000
+                        '    i = i + 1
+                        'Next
 
 
                     Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionNone

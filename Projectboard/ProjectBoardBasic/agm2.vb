@@ -464,7 +464,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="ws"></param>
     ''' <remarks></remarks>
-    Friend Sub aufbauenAppearanceDefinitions(ByVal ws As Excel.Worksheet)
+    Public Sub aufbauenAppearanceDefinitions(ByVal ws As Excel.Worksheet)
 
         Dim appDefinition As clsAppearance
         Dim errMsg As String = ""
@@ -22456,7 +22456,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
+    Public Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim i As Integer = 0
         Dim hMilestone As clsMeilensteinDefinition
@@ -23235,7 +23235,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Excel Worksheets, das die Infos im aktuellen Workbook enthält</param>
     ''' <remarks></remarks>
-    Private Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
+    Public Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
@@ -23286,7 +23286,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
+    Public Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""
@@ -23431,7 +23431,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readOtherDefinitions(ByVal wsname As Excel.Worksheet)
+    Public Sub readOtherDefinitions(ByVal wsname As Excel.Worksheet)
 
 
         With wsname

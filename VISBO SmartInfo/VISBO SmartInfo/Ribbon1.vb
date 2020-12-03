@@ -1084,26 +1084,353 @@ Public Class Ribbon1
                     dbUsername = ""
                     dbPasswort = ""
 
-                    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-                    Call awinsetTypen("BHTC")
+                    If logInToMongoDB(True) Then
+                        ' weitermachen ...
 
-                    StartofCalendar = StartofCalendar
+                        ' die dem User zugeodneten Visbo Center lesen ...
+                        ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
+                        Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                    ' UserName - Password merken
-                    If awinSettings.rememberUserPwd Then
-                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                        If listOfVCs.Count > 1 Then
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+                            If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
+                                ' alles ok 
+                                awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                                awinSettings.VCid = VCId
+
+                                If Not changeOK Then
+                                    Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                                End If
+                            Else
+                                Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                            End If
+                        ElseIf listOfVCs.Count = 1 Then
+                            ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
+                        ElseIf awinSettings.visboServer Then
+                            Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
+                        Else
+                            ' hier direkter MongoDB-Zugriff - alles ok
+
+                        End If
+                        ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
+
+
+                        Dim xlsCustomization As Excel.Workbook = Nothing
+
+                        appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                        If IsNothing(appearanceDefinitions) Then
+
+
+                            Dim wsName7810 As Excel.Worksheet = Nothing
+
+                            appearanceDefinitions = New SortedList(Of String, clsAppearance)
+                            ' hier muss jetzt das Customization File aufgemacht werden ...
+                            Try
+                                xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=awinSettings.awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                                myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
+
+                                If Not IsNothing(xlsCustomization) Then
+                                    Try
+                                        wsName7810 = CType(xlsCustomization.Worksheets("Darstellungsklassen"),
+                                                                  Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                        If awinSettings.visboDebug Then
+                                            Call MsgBox("wsName7810 angesprochen")
+                                        End If
+                                    Catch ex As Exception
+                                        wsName7810 = Nothing
+                                    End Try
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+                            If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
+
+                                ' Aufbauen der Darstellungsklassen  aus Customizationfile
+                                Call aufbauenAppearanceDefinitions(wsName7810)
+
+                                If Not IsNothing(appearanceDefinitions) And appearanceDefinitions.Count > 0 Then
+                                    ' jetzt wird die Appearances als Setting weggespeichert ... 
+                                    ' alles ok 
+
+                                    Dim result As Boolean = False
+                                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
+                                                                                                CStr(settingTypes(ptSettingTypes.appearance)),
+                                                                                                CStr(settingTypes(ptSettingTypes.appearance)),
+                                                                                                Nothing,
+                                                                                                err)
+
+                                    If result = True Then
+                                        Call MsgBox("ok, appearances stored ...")
+                                        Call logfileSchreiben("appearances stored ...", "loginAndReadApearances", -1)
+                                    Else
+                                        Call MsgBox("Error when writing appearances")
+                                        Call logfileSchreiben("Error when writing appearances ...", "loginAndReadApearances", -1)
+                                    End If
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox("There are no appearances defined!" & vbCrLf & "Please ask your administrator")
+                                    Else
+                                        Call MsgBox("Es sind keine Darstellungsklassen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                                    End If
+                                End If
+                            End If
+
+
+                        Else
+
+                        End If
+
+                        ' für den Fall, dass aus dem File gelesen werden muss
+                        Dim wsName4 As Excel.Worksheet = Nothing
+
+                        ' tk 14.1.2020
+                        ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
+                        Dim customizations As New clsCustomization
+                        customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
+                        If Not IsNothing(customizations) Then
+                            StartofCalendar = customizations.kalenderStart
+                        Else
+                            ' es müssen die customizations aus dem ProjectBoardCustomization-File gelesen werden.
+                            Try
+                                xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=awinSettings.awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                                myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
+
+                                If Not IsNothing(xlsCustomization) Then
+                                    wsName4 = CType(xlsCustomization.Worksheets("Einstellungen"),
+                                                  Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                End If
+                                If awinSettings.visboDebug Then
+                                    Call MsgBox("wsName4 angesprochen")
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        Try
+                            ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
+                            ' so aus dem Customization-File lesen, wenn auch kein Customization-File vorhanden, dann Abbruch
+
+                            Dim noCustomizationFound As Boolean = False   ' zeigt an, dass keine Einstellungen, entweder in DB oder auf Platte, gefunden wurden
+
+                            If IsNothing(customizations) And Not IsNothing(wsName4) Then
+
+                                ' nur wenn der User Orga-Admin ist, kann das Customization-File gelesen werden
+                                If (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin) Then
+
+                                    ' Auslesen der BusinessUnit Definitionen
+                                    Call readBusinessUnitDefinitions(wsName4)
+
+                                    ' Auslesen der Phasen Definitionen 
+                                    Call readPhaseDefinitions(wsName4)
+
+                                    ' Auslesen der Meilenstein Definitionen 
+                                    Call readMilestoneDefinitions(wsName4)
+
+                                    If awinSettings.visboDebug Then
+                                        Call MsgBox("readMilestoneDefinitions")
+                                    End If
+
+                                    ' auslesen der anderen Informationen 
+                                    Call readOtherDefinitions(wsName4)
+
+                                    customizations = New clsCustomization
+
+                                    ' Einstellungen aus CustomizationFile und awinSettings übernehmen in customizations
+                                    customizations = get_customSettings()
+
+                                    If Not IsNothing(customizations) Then
+                                        ' jetzt werden die benutzerspez. Einstellungen als Setting weggespeichert ... 
+                                        ' alles ok 
+
+                                        Dim result As Boolean = False
+                                        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
+                                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                                    CStr(settingTypes(ptSettingTypes.customization)),
+                                                                                                    Nothing,
+                                                                                                    err)
+
+                                        If result = True Then
+                                            Call MsgBox("ok, customizations stored ...")
+                                            Call logfileSchreiben("customizations stored ...", "loginAndReadApearances", -1)
+                                        Else
+                                            Call MsgBox("Error when writing customizations")
+                                            Call logfileSchreiben("Error when writing customizations ...", "loginAndReadApearances", -1)
+                                        End If
+                                    Else
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox("There are no customizations defined!" & vbCrLf & "Please ask your administrator")
+                                        Else
+                                            Call MsgBox("Es sind keine benutzerspezifischen Einstellungen definiert!" & vbCrLf & "Bitte kontaktieren Sie Ihren Administrator")
+
+                                        End If
+                                    End If
+                                Else
+                                        If awinSettings.englishLanguage Then
+                                        Call MsgBox("You do not have the rights setting up a new Visbo Center")
+                                    Else
+                                        Call MsgBox("Nur der OrgaAdmin kann ein VC initialisieren")
+                                    End If
+                                End If
+
+                            Else
+                                If Not IsNothing(customizations) Then
+                                    ' alle awinSettings... mit den customizations... besetzen
+                                    'For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                                    '    customizations.businessUnitDefinitions.Add(kvp.Key, kvp.Value)
+                                    'Next
+                                    businessUnitDefinitions = customizations.businessUnitDefinitions
+
+                                    'For Each kvp As KeyValuePair(Of String, clsPhasenDefinition) In PhaseDefinitions.liste
+                                    '    customizations.phaseDefinitions.Add(kvp.Value)
+                                    'Next
+                                    PhaseDefinitions = customizations.phaseDefinitions
+
+                                    'For Each kvp As KeyValuePair(Of String, clsMeilensteinDefinition) In MilestoneDefinitions.liste
+                                    '    customizations.milestoneDefinitions.Add(kvp.Value)
+                                    'Next
+                                    MilestoneDefinitions = customizations.milestoneDefinitions
+                                    ' die Struktur clsCustomization besetzen und in die DB dieses VCs eintragen
+
+                                    showtimezone_color = customizations.showtimezone_color
+                                    noshowtimezone_color = customizations.noshowtimezone_color
+                                    calendarFontColor = customizations.calendarFontColor
+                                    nrOfDaysMonth = customizations.nrOfDaysMonth
+                                    farbeInternOP = customizations.farbeInternOP
+                                    farbeExterne = customizations.farbeExterne
+                                    iProjektFarbe = customizations.iProjektFarbe
+                                    iWertFarbe = customizations.iWertFarbe
+                                    vergleichsfarbe0 = customizations.vergleichsfarbe0
+                                    vergleichsfarbe1 = customizations.vergleichsfarbe1
+                                    'customizations.vergleichsfarbe2 = vergleichsfarbe2
+
+                                    awinSettings.SollIstFarbeB = customizations.SollIstFarbeB
+                                    awinSettings.SollIstFarbeL = customizations.SollIstFarbeL
+                                    awinSettings.SollIstFarbeC = customizations.SollIstFarbeC
+                                    awinSettings.AmpelGruen = customizations.AmpelGruen
+                                    'tmpcolor = CType(.Range("AmpelGruen").Interior.Color, Microsoft.Office.Interop.Excel.ColorFormat)
+                                    awinSettings.AmpelGelb = customizations.AmpelGelb
+                                    awinSettings.AmpelRot = customizations.AmpelRot
+                                    awinSettings.AmpelNichtBewertet = customizations.AmpelNichtBewertet
+                                    awinSettings.glowColor = customizations.glowColor
+
+                                    awinSettings.timeSpanColor = customizations.timeSpanColor
+                                    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
+
+                                    awinSettings.gridLineColor = customizations.gridLineColor
+
+                                    awinSettings.missingDefinitionColor = customizations.missingDefinitionColor
+
+                                    awinSettings.ActualdataOrgaUnits = customizations.allianzIstDatenReferate
+
+                                    awinSettings.autoSetActualDataDate = customizations.autoSetActualDataDate
+
+                                    awinSettings.actualDataMonth = customizations.actualDataMonth
+                                    ergebnisfarbe1 = customizations.ergebnisfarbe1
+                                    ergebnisfarbe2 = customizations.ergebnisfarbe2
+                                    weightStrategicFit = customizations.weightStrategicFit
+                                    awinSettings.kalenderStart = customizations.kalenderStart
+                                    awinSettings.zeitEinheit = customizations.zeitEinheit
+                                    awinSettings.kapaEinheit = customizations.kapaEinheit
+                                    awinSettings.offsetEinheit = customizations.offsetEinheit
+                                    awinSettings.EinzelRessExport = customizations.EinzelRessExport
+                                    awinSettings.zeilenhoehe1 = customizations.zeilenhoehe1
+                                    awinSettings.zeilenhoehe2 = customizations.zeilenhoehe2
+                                    awinSettings.spaltenbreite = customizations.spaltenbreite
+                                    awinSettings.autoCorrectBedarfe = customizations.autoCorrectBedarfe
+                                    awinSettings.propAnpassRess = customizations.propAnpassRess
+                                    awinSettings.showValuesOfSelected = customizations.showValuesOfSelected
+
+                                    awinSettings.mppProjectsWithNoMPmayPass = customizations.mppProjectsWithNoMPmayPass
+                                    awinSettings.fullProtocol = customizations.fullProtocol
+                                    awinSettings.addMissingPhaseMilestoneDef = customizations.addMissingPhaseMilestoneDef
+                                    awinSettings.alwaysAcceptTemplateNames = customizations.alwaysAcceptTemplateNames
+                                    awinSettings.eliminateDuplicates = customizations.eliminateDuplicates
+                                    awinSettings.importUnknownNames = customizations.importUnknownNames
+                                    awinSettings.createUniqueSiblingNames = customizations.createUniqueSiblingNames
+
+                                    awinSettings.readWriteMissingDefinitions = customizations.readWriteMissingDefinitions
+                                    awinSettings.meExtendedColumnsView = customizations.meExtendedColumnsView
+                                    awinSettings.meDontAskWhenAutoReduce = customizations.meDontAskWhenAutoReduce
+                                    awinSettings.readCostRolesFromDB = customizations.readCostRolesFromDB
+
+                                    awinSettings.importTyp = customizations.importTyp
+
+                                    awinSettings.meAuslastungIsInclExt = customizations.meAuslastungIsInclExt
+
+                                    awinSettings.englishLanguage = customizations.englishLanguage
+
+                                    awinSettings.showPlaceholderAndAssigned = customizations.showPlaceholderAndAssigned
+                                    awinSettings.considerRiskFee = customizations.considerRiskFee
+
+                                    ' noch zu tun, sonst in readOtherdefinitions
+                                    StartofCalendar = awinSettings.kalenderStart
+                                    'StartofCalendar = StartofCalendar.ToLocalTime()
+
+                                    historicDate = StartofCalendar
+                                    Try
+                                        If awinSettings.englishLanguage Then
+                                            menuCult = ReportLang(PTSprache.englisch)
+                                            repCult = menuCult
+                                            awinSettings.kapaEinheit = "PD"
+                                        Else
+                                            awinSettings.kapaEinheit = "PT"
+                                            menuCult = ReportLang(PTSprache.deutsch)
+                                            repCult = menuCult
+                                        End If
+                                    Catch ex As Exception
+                                        awinSettings.englishLanguage = False
+                                        awinSettings.kapaEinheit = "PT"
+                                        menuCult = ReportLang(PTSprache.deutsch)
+                                        repCult = menuCult
+                                    End Try
+                                Else
+                                    noCustomizationFound = True
+                                End If
+
+
+                            End If
+
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("readOtherDefinitions")
+                            End If
+
+                            If noCustomizationFound Then
+                                Throw New ArgumentException("Aktuell sind keine Einstellungen vorhanden." & vbCrLf &
+                                                                "Bitte kontaktieren Sie ihren Administator!")
+                            End If
+
+                        Catch ex As Exception
+                            Call MsgBox("Fehler beim lesen der Appearances and customizations from MongoDB")
+                        End Try
+
+
+                        ''09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+                        'Call awinsetTypen("BHTC")
+
+                        'StartofCalendar = StartofCalendar
+
+                        ' UserName - Password merken
+                        If awinSettings.rememberUserPwd Then
+                            My.Settings.userNamePWD = awinSettings.userNamePWD
+                        End If
+
+                        If Not IsNothing(appearanceDefinitions) And Not IsNothing(customizations) Then
+                            ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
+                            wasSuccessful = True
+                            awinsetTypen_Performed = True
+                        End If
+
                     End If
-
-                    ' tk 13.11.20 dem Programm klar machen, dass die Appearances gelesen wurden ...
-                    wasSuccessful = True
-                    awinsetTypen_Performed = True
                 End If
-
             Catch ex As Exception
-
+                Call MsgBox("Fehler beim lesen der Appearances and customizations from MongoDB")
             End Try
         End If      ' visboServer = true/false
-
 
         loginAndReadApearances = wasSuccessful
     End Function
@@ -1411,9 +1738,10 @@ Public Class Ribbon1
                                     If isMilestones Then
                                         ' draw the Milestone 
                                         Call drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
-
+                                        atleastOneAddedElement = True
                                     Else
                                         Call drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
+                                        atleastOneAddedElement = True
                                     End If
 
                                 End If
