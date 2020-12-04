@@ -1046,32 +1046,6 @@ Public Class frmSelectPhasesMilestones
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        With awinSettings
-            .mppShowProjectLine = True
-            .mppShowAmpel = False
-            .mppShowAllIfOne = False
-            .mppSortiertDauer = False
-            .mppShowPhName = False
-            .mppShowPhDate = False
-            .mppShowMsName = False
-            .mppShowMsDate = False
-            .mppVertikalesRaster = True
-            .mppShowHorizontals = False
-            .mppShowLegend = False
-            .mppOnePage = True
-
-            .mppKwInMilestone = True
-
-            .mppUseAbbreviation = False
-
-            .mppExtendedMode = True
-            '.eppExtendedMode = True
-        End With
-
-        If awinSettings.mppSortiertDauer Then
-            awinSettings.mppShowAllIfOne = True
-        End If
-
         mppFrm.calledfrom = "frmSelectPPTTempl"
 
         dialogreturn = mppFrm.ShowDialog

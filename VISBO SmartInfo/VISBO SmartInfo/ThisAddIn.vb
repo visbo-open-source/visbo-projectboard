@@ -79,6 +79,9 @@ Public Class ThisAddIn
 
 
         Try
+            ' User spezifische Settings für Report Creation gemerkt in my.settings
+            Call writeSettings()
+
             ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
             My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
             If My.Settings.rememberUserPWD Then

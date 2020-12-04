@@ -429,7 +429,7 @@ Module SIModule1
         Dim meldungen As New Collection
 
         ' sind die Zugangsdaten mit den aktuellen identisch ?
-        ' wenn nein, dann wird noDBaccess auf false gesetzt 
+        ' wenn nein, dann wird noDBAccessInPPT auf false gesetzt 
         Call getDBsettings(sld)
 
         ' hier muss demnächst die Abfrage rein, ob der anwender auch die entsprechende customUserRole hat, um die Slide zu aktualisieren / zu sehen 
