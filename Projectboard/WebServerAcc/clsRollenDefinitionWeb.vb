@@ -85,7 +85,7 @@ Public Class clsRollenDefinitionWeb
                     tmpValue = 1.0
                 End If
                 Try
-                    roleDef.addTeam(CInt(sr.key), tmpValue)
+                    roleDef.addSkill(CInt(sr.key), tmpValue)
                 Catch ex As Exception
                     Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
                 End Try
@@ -108,7 +108,7 @@ Public Class clsRollenDefinitionWeb
 
         ' tk 23.11.18 
         roleDef.isExternRole = Me.isExternRole
-        roleDef.isTeam = Me.isTeam
+        roleDef.isSkill = Me.isTeam
 
         roleDef.tagessatzIntern = Me.tagessatzIntern
 
@@ -377,8 +377,8 @@ Public Class clsRollenDefinitionWeb
 
             End If
 
-            If .getTeamCount >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
+            If .getSkillCount >= 1 Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getSkillIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
                     sr.value = kvp.Value.ToString
@@ -393,9 +393,9 @@ Public Class clsRollenDefinitionWeb
 
             ' tk 23.11.18 
             isExternRole = .isExternRole
-            isTeam = .isTeam
+            isTeam = .isSkill
             ' ur 27.04.20 
-            isTeamParent = .isTeamParent
+            isTeamParent = .isSkillParent
 
             ' tk 8.1.20
             aliases = .aliases

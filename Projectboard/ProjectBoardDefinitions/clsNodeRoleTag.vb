@@ -4,7 +4,7 @@
 Public Class clsNodeRoleTag
     Public Property pTag As Char
     Public Property isRole As Boolean
-    Public Property isTeam As Boolean
+    Public Property isSkill As Boolean
     Public Property isTeamMember As Boolean
     Public Property membershipID As Integer
     Public Property membershipPrz As Double
@@ -12,7 +12,7 @@ Public Class clsNodeRoleTag
     Public Sub New()
         _pTag = CChar("")
         _isRole = True
-        _isTeam = False
+        _isSkill = False
         _isTeamMember = False
         _membershipID = -1
         _membershipPrz = 0.0
