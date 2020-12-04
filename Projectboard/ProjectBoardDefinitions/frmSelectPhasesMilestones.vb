@@ -504,6 +504,7 @@ Public Class frmSelectPhasesMilestones
 
         Dim initialNode As TreeNode = TreeViewProjects.SelectedNode
         Dim checkMode As Boolean
+        Dim hnode As TreeNode
 
         dontFire = True
         Try
@@ -517,7 +518,6 @@ Public Class frmSelectPhasesMilestones
                             .Nodes.Item(i - 1).Checked = checkMode
                         Next
                     End If
-
                 End With
 
             ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
@@ -564,6 +564,25 @@ Public Class frmSelectPhasesMilestones
                     End While
                 End With
             End If
+
+            ' ProjektKnoten selektieren
+            hnode = initialNode
+
+            ' finde den obersten Node
+            While Not IsNothing(hnode.Parent)
+                hnode = hnode.Parent
+            End While
+
+            ' selektieren ihn, wenn checkmode = true
+            If checkMode Then
+                hnode.Checked = checkMode
+            Else
+                ' wenn nun alle knoten deselektiert sind, obersten Knoten auch deselektieren
+                If Not subNodesSelected(hnode) Then
+                    hnode.Checked = False
+                End If
+            End If
+
         Catch ex As Exception
             dontFire = False
         End Try
