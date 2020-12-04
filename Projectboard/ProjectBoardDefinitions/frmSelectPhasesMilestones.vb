@@ -575,7 +575,7 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
-    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles Ok_Button.Click
+    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles OK_Button.Click
 
         ' showRangeLeft und showrange Right bestimmen
         showRangeLeft = getColumnOfDate(vonDate.Value)
@@ -606,7 +606,7 @@ Public Class frmSelectPhasesMilestones
                 ' und daraus die Hierarchie 
                 If tmpNode.Level = 0 Then
                     hry = getHryFromNode(tmpNode)
-                    Type = getTypeFromNode(tmpNode)
+                    type = getTypeFromNode(tmpNode)
                     pvName = getPVnameFromNode(tmpNode)
                     If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
@@ -974,7 +974,7 @@ Public Class frmSelectPhasesMilestones
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     Private Sub expandTree_Click(sender As Object, e As EventArgs) Handles expandTree.Click
-        
+
         With TreeViewProjects
             .ExpandAll()
         End With
@@ -1051,4 +1051,5 @@ Public Class frmSelectPhasesMilestones
         dialogreturn = mppFrm.ShowDialog
 
     End Sub
+
 End Class
