@@ -947,8 +947,6 @@ Public Class Ribbon1
                         awinSettings.glowColor = customizations.glowColor
 
                         awinSettings.timeSpanColor = customizations.timeSpanColor
-                        'awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
-                        awinSettings.showTimeSpanInPT = False
 
                         awinSettings.gridLineColor = customizations.gridLineColor
 
@@ -1317,7 +1315,6 @@ Public Class Ribbon1
                                     awinSettings.glowColor = customizations.glowColor
 
                                     awinSettings.timeSpanColor = customizations.timeSpanColor
-                                    awinSettings.showTimeSpanInPT = customizations.showTimeSpanInPT
 
                                     awinSettings.gridLineColor = customizations.gridLineColor
 
