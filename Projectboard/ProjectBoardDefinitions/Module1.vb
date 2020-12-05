@@ -30,6 +30,7 @@ Public Module Module1
     Public noDB As Boolean = True
 
     'Name des VisboClient
+    'Public visboClient As String = divClients(client.Projectboard)
     Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos
@@ -268,6 +269,13 @@ Public Module Module1
 
 
     Public Const maxProjektdauer As Integer = 60
+
+    Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+    Public Enum client
+        Projectboard = 0
+        VisboSmartInfo = 1
+        VisboMSProject = 2
+    End Enum
 
     Public Enum ptVariantFixNames
         pfv = 0 ' für den Portfolio Manager, für die Vorgaben reserviert
@@ -1138,7 +1146,7 @@ Public Module Module1
     '            'End Try
 
     '        Catch ex As Exception
-    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
+    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul:  awinLoescheProjekt")
     '            Exit Sub
     '        End Try
 

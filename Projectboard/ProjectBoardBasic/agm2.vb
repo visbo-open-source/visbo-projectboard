@@ -464,7 +464,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="ws"></param>
     ''' <remarks></remarks>
-    Friend Sub aufbauenAppearanceDefinitions(ByVal ws As Excel.Worksheet)
+    Public Sub aufbauenAppearanceDefinitions(ByVal ws As Excel.Worksheet)
 
         Dim appDefinition As clsAppearance
         Dim errMsg As String = ""
@@ -20691,26 +20691,27 @@ Public Module agm2
 
                 appInstance = New Excel.Application
 
-                ' ur:12.09.2019 !!! Es soll kein Customization File mehr notwendig sein
+                ' ur:2020.12.01: direkter DB Zugriff - benötigt für create PPT in Powerpoint
+                If Not awinSettings.visboServer Then
 
-                ' hier muss jetzt das Customization File aufgemacht werden ...
+                    ' hier muss jetzt das Customization File aufgemacht werden ...
+                    Try
+                        xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                        myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                ''Try
-                ''    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
-                ''    myCustomizationFile = appInstance.ActiveWorkbook.Name
+                        'Call logfileOpen()
 
-                ''    Call logfileOpen()
+                        'Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
-                ''    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("Windows-User: " & myWindowsName)
+                        End If
 
-                ''    If awinSettings.visboDebug Then
-                ''        Call MsgBox("Windows-User: " & myWindowsName)
-                ''    End If
-
-                ''Catch ex As Exception
-                ''    Call msgbox("Customization File nicht gefunden - Abbruch")
-                ''    'Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-                ''End Try
+                    Catch ex As Exception
+                        Call MsgBox("Customization File nicht gefunden - Abbruch")
+                        'Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+                    End Try
+                End If
 
             ElseIf special = "ProjectBoard" Then
 
@@ -20786,20 +20787,20 @@ Public Module agm2
                         Else
                             Throw New ArgumentException("no Selection of VISBO Center ... program ends  ..." & vbCrLf & err.errorMsg)
                         End If
-                    Else
-
+                    ElseIf awinSettings.visboServer Then
                         If Not IsNothing(xlsCustomization) Then
                             ' Customization-File wird geschlossen
                             xlsCustomization.Close(SaveChanges:=False)
                         End If
                         Throw New ArgumentException("You don't belong to any VISBO Center so far ... program ends  ..." & vbCrLf & "You want do be invited? - ")  ' & vbCrLf & "Please contact us: https://visbo.de/kontakt/")
+                    Else
+                        ' nothing to do
                     End If
 
                 End If
 
 
                 If Not loginErfolgreich Then
-
 
                     If Not IsNothing(xlsCustomization) Then
                         ' Customization-File wird geschlossen
@@ -21142,7 +21143,11 @@ Public Module agm2
                         myCustomUserRole = New clsCustomUserRole
 
                         With myCustomUserRole
-                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            If awinSettings.visboServer Then
+                                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            Else
+                                .customUserRole = ptCustomUserRoles.ProjektLeitung
+                            End If
                             .specifics = ""
                             .userName = dbUsername
                         End With
@@ -21221,45 +21226,46 @@ Public Module agm2
                         End Try
                     End If
 
-                End If ' if special="ProjectBoard"
 
 
 
-                ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                Try
-                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)),
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
-                                                        )
+                    ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                    ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                    ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    Try
+                        wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet
+                                                            )
 
-                    Call readNameMappings(wsName7810, phaseMappings)
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("readNameMappings Phases")
-                    End If
-                Catch ex As Exception
+                        Call readNameMappings(wsName7810, phaseMappings)
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("readNameMappings Phases")
+                        End If
+                    Catch ex As Exception
 
-                End Try
+                    End Try
 
-
-
-
-                ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                Try
-                    wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)),
+                    ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                    'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                    '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    Try
+                        wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)),
                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
                                                        )
 
-                    Call readNameMappings(wsName7810, milestoneMappings)
+                        Call readNameMappings(wsName7810, milestoneMappings)
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("readNameMappings Milestones")
-                    End If
-                Catch ex As Exception
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("readNameMappings Milestones")
+                        End If
+                    Catch ex As Exception
 
-                End Try
+                    End Try
+
+
+                End If ' if special="ProjectBoard"
+
+
 
 
                 ' hier werden nur für VISBO 1-Click PPT die vorlagen gelesen
@@ -21267,35 +21273,12 @@ Public Module agm2
                     If awinSettings.visboDebug Then
                         Call MsgBox("readVorlagen: BHTC")
                     End If
-                    Call readVorlagen(False)
+                    If Not (visboClient = divClients(client.VisboSmartInfo)) Then
+                        Call readVorlagen(False)
+                    End If
                 End If
 
                 If special = "ProjectBoard" Then
-
-                    '    ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-                    '    appInstance.EnableEvents = False
-                    '    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)),
-                    'Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
-
-                    '    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                    '    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
-                    '    appInstance.EnableEvents = True
-
-
-                    '    ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-                    '    appearanceDefinitions.Clear()
-                    '    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)),
-                    '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                    '    Call aufbauenAppearanceDefinitions(wsName7810)
-
-                    '    '
-                    '    ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
-
-                    '    If awinSettings.visboDebug Then
-                    '        Call MsgBox("Anzahl gelesene Rollen Definitionen: " & RoleDefinitions.Count.ToString)
-                    '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                    '    End If
-
 
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
@@ -22473,7 +22456,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
+    Public Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim i As Integer = 0
         Dim hMilestone As clsMeilensteinDefinition
@@ -23252,7 +23235,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Excel Worksheets, das die Infos im aktuellen Workbook enthält</param>
     ''' <remarks></remarks>
-    Private Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
+    Public Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
@@ -23303,7 +23286,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
+    Public Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""
@@ -23448,7 +23431,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readOtherDefinitions(ByVal wsname As Excel.Worksheet)
+    Public Sub readOtherDefinitions(ByVal wsname As Excel.Worksheet)
 
 
         With wsname
@@ -23651,6 +23634,7 @@ Public Module agm2
 
             StartofCalendar = awinSettings.kalenderStart
             'StartofCalendar = StartofCalendar.ToLocalTime()
+
 
             historicDate = StartofCalendar
 

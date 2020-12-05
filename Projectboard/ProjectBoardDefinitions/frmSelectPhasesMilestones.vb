@@ -317,7 +317,7 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
             curHry = selectedProjekte.getProject(1).hierarchy
         Else
-            curHry = ShowProjekte.getProject(PVname).hierarchy
+            curHry = ShowProjekte.getProject(getPnameFromKey(PVname)).hierarchy
         End If
 
 
@@ -504,6 +504,7 @@ Public Class frmSelectPhasesMilestones
 
         Dim initialNode As TreeNode = TreeViewProjects.SelectedNode
         Dim checkMode As Boolean
+        Dim hnode As TreeNode
 
         dontFire = True
         Try
@@ -517,7 +518,6 @@ Public Class frmSelectPhasesMilestones
                             .Nodes.Item(i - 1).Checked = checkMode
                         Next
                     End If
-
                 End With
 
             ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
@@ -564,6 +564,25 @@ Public Class frmSelectPhasesMilestones
                     End While
                 End With
             End If
+
+            ' ProjektKnoten selektieren
+            hnode = initialNode
+
+            ' finde den obersten Node
+            While Not IsNothing(hnode.Parent)
+                hnode = hnode.Parent
+            End While
+
+            ' selektieren ihn, wenn checkmode = true
+            If checkMode Then
+                hnode.Checked = checkMode
+            Else
+                ' wenn nun alle knoten deselektiert sind, obersten Knoten auch deselektieren
+                If Not subNodesSelected(hnode) Then
+                    hnode.Checked = False
+                End If
+            End If
+
         Catch ex As Exception
             dontFire = False
         End Try
@@ -575,7 +594,7 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
-    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles Ok_Button.Click
+    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles OK_Button.Click
 
         ' showRangeLeft und showrange Right bestimmen
         showRangeLeft = getColumnOfDate(vonDate.Value)
@@ -606,7 +625,7 @@ Public Class frmSelectPhasesMilestones
                 ' und daraus die Hierarchie 
                 If tmpNode.Level = 0 Then
                     hry = getHryFromNode(tmpNode)
-                    Type = getTypeFromNode(tmpNode)
+                    type = getTypeFromNode(tmpNode)
                     pvName = getPVnameFromNode(tmpNode)
                     If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
@@ -764,8 +783,8 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
 
             ' jetzt anders ... 
-            If selectedProjekte.contains(pvName) Then
-                tmpResult = selectedProjekte.getProject(pvName).hierarchy
+            If selectedProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = selectedProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
             'If Projektvorlagen.Contains(pvName) Then
@@ -773,8 +792,8 @@ Public Class frmSelectPhasesMilestones
             'End If
 
         Else
-            If ShowProjekte.contains(pvName) Then
-                tmpResult = ShowProjekte.getProject(pvName).hierarchy
+            If ShowProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = ShowProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
         End If
@@ -803,6 +822,17 @@ Public Class frmSelectPhasesMilestones
             Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")}, 2)
             If tmpStr.Length >= 2 Then
                 tmpResult = tmpStr(1)
+            End If
+
+        End If
+
+        If AlleProjekte.Count > 0 Then
+            Dim tmpList As Collection = AlleProjekte.getVariantNames(tmpResult, False)
+
+            If tmpList.Count > 0 Then
+                Dim variantName As String = CStr(tmpList.Item(1))
+                tmpResult = calcProjektKey(tmpResult, variantName)
+                Dim hproj As clsProjekt = AlleProjekte.getProject(tmpResult, variantName)
             End If
 
         End If
@@ -963,7 +993,7 @@ Public Class frmSelectPhasesMilestones
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     Private Sub expandTree_Click(sender As Object, e As EventArgs) Handles expandTree.Click
-        
+
         With TreeViewProjects
             .ExpandAll()
         End With
@@ -1040,4 +1070,5 @@ Public Class frmSelectPhasesMilestones
         dialogreturn = mppFrm.ShowDialog
 
     End Sub
+
 End Class

@@ -32,6 +32,20 @@ Module creationModule
 
     Public Sub readSettings()
         With awinSettings
+
+
+            ' ur:2020.12.1: Einstellungen für direkt MongoDB oder ReST-Server Zugriff
+            .databaseURL = My.Settings.mongoDBURL
+            .visboServer = My.Settings.VISBOServer
+            .proxyURL = My.Settings.proxyServerURL
+            .DBWithSSL = My.Settings.mongoDBWithSSL
+            .databaseName = My.Settings.mongoDBname
+            .awinPath = My.Settings.awinPath
+
+            .rememberUserPwd = My.Settings.rememberUserPWD
+            .userNamePWD = My.Settings.userNamePWD
+
+
             .mppShowProjectLine = My.Settings.showProjectLine
             .mppShowAllIfOne = My.Settings.showAllIfOne
             .mppShowAmpel = My.Settings.showAmpel
@@ -69,10 +83,23 @@ Module creationModule
 
         End With
 
+
+
     End Sub
 
     Public Sub writeSettings()
         With awinSettings
+
+            ' auskommentierte Settings bleiben unverändert während der Ausführung dieses Programms
+            '' ur:2020.12.1: Einstellungen für direkt MongoDB oder ReST-Server Zugriff
+            'My.Settings.mongoDBURL = .databaseURL
+            'My.Settings.VISBOServer = .visboServer
+            'My.Settings.proxyServerURL = .proxyURL
+            'My.Settings.mongoDBWithSSL = .DBWithSSL
+            'My.Settings.mongoDBname = .databaseName
+            'My.Settings.awinPath = .awinPath
+
+            ' folgende Settings werden im Link Settings vor dem Erzeugen einen Reports evt. modifiziert
             My.Settings.showProjectLine = .mppShowProjectLine
             My.Settings.showAllIfOne = .mppShowAllIfOne
             My.Settings.showAmpel = .mppShowAmpel
@@ -98,12 +125,10 @@ Module creationModule
                 My.Settings.calLeftDate = getDateofColumn(showRangeLeft, False)
                 My.Settings.calRightDate = getDateofColumn(showRangeRight, True)
             End If
-
-
-
-
         End With
 
+        ' Settings sichern für den nächsten Programm-Durchlauf
+        My.Settings.Save()
     End Sub
 
     ''' <summary>
@@ -381,6 +406,10 @@ Module creationModule
 
                 showRangeLeft = ShowProjekte.getMinMonthColumn
                 showRangeRight = ShowProjekte.getMaxMonthColumn + 3
+
+                ' ur:2020.12.04: löschen der evt. zuvor ausgewählten Phasen und Meilensteine
+                selectedPhases.Clear()
+                selectedMilestones.Clear()
 
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
