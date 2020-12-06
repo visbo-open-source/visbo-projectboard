@@ -6728,6 +6728,7 @@ Public Module Module1
         Dim tmpResult As String = ""
         Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
 
+        addOn = "(" & addOn & ")"
 
         If tmpStr(0).EndsWith(vbVerticalTab) Then
             tmpResult = tmpStr(0) & addOn
