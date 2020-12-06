@@ -479,6 +479,7 @@ Public Module Module1
         massEditRessCost = 1
         massEditTermine = 2
         massEditAttribute = 3
+        powerpointAddIn = 4
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 

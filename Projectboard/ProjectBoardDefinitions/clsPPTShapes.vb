@@ -693,6 +693,9 @@ Public Class clsPPTShapes
             If IsNothing(_quarterMonthVorlagenShape) Then
                 _quarterMonthVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _quarterMonthVorlagenShape
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
                     .TextFrame2.TextRange.Text = "Mrz"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -707,6 +710,9 @@ Public Class clsPPTShapes
             If IsNothing(_yearVorlagenShape) Then
                 _yearVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
                 With _yearVorlagenShape
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
                     .TextFrame2.TextRange.Text = "2019"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -772,8 +778,10 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 2
                     .TextFrame2.MarginTop = 2
-                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignLeft
-                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = pNameGanttSize
                     .Title = "ProjectName"
@@ -828,8 +836,9 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.MarginTop = 0
 
-                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
-                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
 
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = msPhNameDateSize
@@ -848,8 +857,9 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.MarginTop = 0
 
-                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
-                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
 
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = msPhNameDateSize
@@ -872,8 +882,9 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.MarginTop = 0
 
-                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
-                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
 
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = msPhNameDateSize
@@ -894,8 +905,9 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.MarginTop = 0
 
-                    .TextFrame2.TextRange.ParagraphFormat.Alignment = Microsoft.Office.Core.MsoParagraphAlignment.msoAlignCenter
-                    .TextFrame2.VerticalAnchor = Microsoft.Office.Core.MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
 
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = msPhNameDateSize
@@ -1127,7 +1139,9 @@ Public Class clsPPTShapes
                 With _calendarMarkShape
                     .Title = "CalendarMark"
                     .Fill.Transparency = 0.7
+                    '.Line.ForeColor.RGB = 14136213
                     .Fill.ForeColor.RGB = 14136213
+                    .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                 End With
             End If
 
@@ -1188,6 +1202,11 @@ Public Class clsPPTShapes
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
                     .TextFrame2.MarginBottom = 2
+
+                    .TextFrame2.TextRange.ParagraphFormat.Alignment = core.MsoParagraphAlignment.msoAlignLeft
+                    .TextFrame2.HorizontalAnchor = core.MsoHorizontalAnchor.msoAnchorCenter
+                    .TextFrame2.VerticalAnchor = core.MsoVerticalAnchor.msoAnchorMiddle
+
                     .TextFrame2.MarginTop = 2
                     .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
                     .TextFrame2.TextRange.Font.Size = 14

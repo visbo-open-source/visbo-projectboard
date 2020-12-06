@@ -505,8 +505,8 @@ Public Class frmProjPortfolioAdmin
                 .collapseCompletely.Visible = True
                 .expandCompletely.Visible = True
 
-                .filterIcon.Visible = True
-                .deleteFilterIcon.Visible = True
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -543,8 +543,8 @@ Public Class frmProjPortfolioAdmin
                 .collapseCompletely.Visible = True
                 .expandCompletely.Visible = True
 
-                .filterIcon.Visible = True
-                .deleteFilterIcon.Visible = True
+                .filterIcon.Visible = False
+                .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
 
@@ -658,14 +658,6 @@ Public Class frmProjPortfolioAdmin
         ' erstmal den WaitCursor zeigen ... 
         Me.Cursor = Cursors.Default
         lastIndexChecked = -1
-
-        '' den hilfetext setzen ...
-        'If awinSettings.englishLanguage Then
-        '    Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf &
-        '                                          "das ist die 1.Zeile " & vbLf &
-        '                                          "das ist die zweite Zeile")
-        '    Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
-        'End If
 
         If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))

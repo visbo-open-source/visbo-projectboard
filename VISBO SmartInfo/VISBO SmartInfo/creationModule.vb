@@ -415,6 +415,13 @@ Module creationModule
                 selectedPhases.Clear()
                 selectedMilestones.Clear()
 
+                ' jetzt die selectedProjekte auf ein Projekt setzen, das wird nämlich dann verwendet , um im TreeView bei 
+                ' die Struktur Auswahl zu machen 
+                selectedProjekte.Clear(False)
+                If ShowProjekte.Count > 0 Then
+                    selectedProjekte.Add(ShowProjekte.getProject(1), False)
+                End If
+
                 Dim frmSelectionPhMs As New frmSelectPhasesMilestones
                 If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
 
@@ -434,6 +441,8 @@ Module creationModule
                 Else
                     Exit Sub
                 End If
+
+                selectedProjekte.Clear(False)
 
                 showRangeLeft = getColumnOfDate(frmSelectionPhMs.vonDate.Value)
                 showRangeRight = getColumnOfDate(frmSelectionPhMs.bisDate.Value)
@@ -2479,6 +2488,9 @@ Module creationModule
 
         Dim lastProjectNameShape As PowerPoint.Shape = Nothing
 
+        ' tk 6.12.2020
+        Dim alreadyDrawnMilestones As New List(Of String)
+
 
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
@@ -2531,10 +2543,11 @@ Module creationModule
 
             If AlleProjekte.Containskey(fullName) Then
 
-                Dim msToDraw As New Collection      ' hier sind alle selektierten Meilensteine mit zugehörigen Phasen enthalten
 
                 hproj = AlleProjekte.getProject(fullName)
 
+                ' die müssen jetzt zurückgesetzt werden 
+                alreadyDrawnMilestones.Clear()
 
                 ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
                 If awinSettings.mppExtendedMode Then
@@ -2808,7 +2821,7 @@ Module creationModule
 
                             If type = -1 Or
                                 (type = PTItemType.projekt And pvName = hproj.name) Or
-                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                (type = PTItemType.vorlage) Then
 
                                 If cphase.name = selPhaseName Then
                                     If vglBreadCrumb.EndsWith(breadcrumb) Then
@@ -2920,6 +2933,12 @@ Module creationModule
 
                                                         Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                                       milestone, hproj, milestoneGrafikYPos, rds)
+
+                                                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestone.nameID) & milestone.nameID
+
+                                                        If Not alreadyDrawnMilestones.Contains(fullBreadCrumb) Then
+                                                            alreadyDrawnMilestones.Add(fullBreadCrumb)
+                                                        End If
 
 
                                                     End If
@@ -3166,7 +3185,7 @@ Module creationModule
 
                                 If type = -1 Or
                                     (type = PTItemType.projekt And pvName = hproj.name) Or
-                                    (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                    (type = PTItemType.vorlage) Then
 
                                     ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
                                     Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
@@ -3219,8 +3238,10 @@ Module creationModule
                                                     Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                                       ms, hproj, milestoneGrafikYPos, rds)
 
-
-
+                                                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(ms.nameID) & ms.nameID
+                                                    If Not alreadyDrawnMilestones.Contains(fullBreadCrumb) Then
+                                                        alreadyDrawnMilestones.Add(fullBreadCrumb)
+                                                    End If
 
                                                 End If
 
@@ -3312,9 +3333,18 @@ Module creationModule
                                     End If
                                 End If
 
+
                                 If zeichnenMS Then
-                                    Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
+
+                                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestone.nameID) & milestone.nameID
+                                    If Not alreadyDrawnMilestones.Contains(fullBreadCrumb) Then
+
+                                        Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
                                                                       milestone, hproj, milestoneGrafikYPos, rds)
+
+                                        alreadyDrawnMilestones.Add(fullBreadCrumb)
+                                    End If
+
                                 End If
                             Next
 
@@ -3373,8 +3403,16 @@ Module creationModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
-                                                                  milestone, hproj, milestoneGrafikYPos, rds)
+
+                                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestone.nameID) & milestone.nameID
+                                If Not alreadyDrawnMilestones.Contains(fullBreadCrumb) Then
+
+                                    Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
+                                                                      milestone, hproj, milestoneGrafikYPos, rds)
+
+                                    alreadyDrawnMilestones.Add(fullBreadCrumb)
+                                End If
+
                             End If
                         Next
 
@@ -3422,8 +3460,16 @@ Module creationModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
-                                                                  milestone, hproj, milestoneGrafikYPos, rds)
+
+                                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestone.nameID) & milestone.nameID
+                                If Not alreadyDrawnMilestones.Contains(fullBreadCrumb) Then
+
+                                    Call zeichneMeilensteininAktZeile(currentSlide, msShapeNames, minX1, maxX2,
+                                                                      milestone, hproj, milestoneGrafikYPos, rds)
+
+                                    alreadyDrawnMilestones.Add(fullBreadCrumb)
+                                End If
+
                             End If
                         Next
 

@@ -7503,7 +7503,7 @@ Public Class clsProjekt
 
                 If mstype = -1 Or
                     (mstype = PTItemType.projekt And pvname = Me.name) Or
-                    (mstype = PTItemType.vorlage And pvname = Me.VorlagenName) Then
+                    (mstype = PTItemType.vorlage) Then
 
                     Dim msNameIndices() As Integer
                     msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
