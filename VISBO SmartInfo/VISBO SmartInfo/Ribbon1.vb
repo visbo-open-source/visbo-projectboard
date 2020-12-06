@@ -827,7 +827,7 @@ Public Class Ribbon1
 
 
 
-    Private Function loginAndReadApearances(ByRef errMsg As String) As Boolean
+    Private Function loginAndReadApearances(ByVal dbNameIsKnown As Boolean, ByRef errMsg As String) As Boolean
         Dim wasSuccessful As Boolean = False
         Dim err As New clsErrorCodeMsg
         Dim VCId As String = ""
@@ -852,7 +852,7 @@ Public Class Ribbon1
         'awinSettings.awinPath = My.Settings.awinPath
 
         ' Lesen aller userSettings
-        Call readSettings()
+        Call readSettings(dbNameIsKnown)
 
         ' tk das muss beim Login gemacht werden 
         awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
@@ -867,36 +867,39 @@ Public Class Ribbon1
                 ' weitermachen ...
 
                 Try
+
                     ' die dem User zugeodneten Visbo Center lesen ...
                     ' jetzt muss geprüft werden, ob es mehr als ein zugelassenes VISBO Center gibt , ist dann der Fall wenn es ein # im awinsettings.databaseNAme gibt 
-                    Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                    If listOfVCs.Count > 1 Then
-                        Dim chooseVC As New frmSelectOneItem
-                        chooseVC.itemsCollection = listOfVCs
-                        If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
-                            ' alles ok 
-                            awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
-                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
-                            awinSettings.VCid = VCId
+                    If Not dbNameIsKnown Then
+                        Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
-                            If Not changeOK Then
-                                Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                        If listOfVCs.Count > 1 Then
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+                            If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
+                                ' alles ok 
+                                awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
+                                Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                                awinSettings.VCid = VCId
+
+                                If Not changeOK Then
+                                    Throw New ArgumentException("bad Selection of VISBO project Center ... program ends  ...")
+                                End If
+                            Else
+                                Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
                             End If
+                        ElseIf listOfVCs.Count = 1 Then
+                            ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
+                        ElseIf awinSettings.visboServer Then
+                            Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
                         Else
-                            Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
+                            ' hier direkter MongoDB-Zugriff - alles ok
+
                         End If
-                    ElseIf listOfVCs.Count = 1 Then
-                        ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
-                    ElseIf awinSettings.visboServer Then
-                        Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")
-                    Else
-                        ' hier direkter MongoDB-Zugriff - alles ok
-
                     End If
+
                     ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
-
-
                     appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
                     If IsNothing(appearanceDefinitions) Then
                         Throw New ArgumentException("Appearance classes do not exist")
@@ -1266,7 +1269,7 @@ Public Class Ribbon1
                                         End If
                                     End If
                                 Else
-                                        If awinSettings.englishLanguage Then
+                                    If awinSettings.englishLanguage Then
                                         Call MsgBox("You do not have the rights setting up a new Visbo Center")
                                     Else
                                         Call MsgBox("Nur der OrgaAdmin kann ein VC initialisieren")
@@ -1464,7 +1467,7 @@ Public Class Ribbon1
         Dim weitermachen As Boolean = True
         If Not appearancesWereRead Then
             ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
-            weitermachen = loginAndReadApearances(errMsg)
+            weitermachen = loginAndReadApearances(False, errMsg)
         End If
 
         If weitermachen Then
@@ -1568,7 +1571,8 @@ Public Class Ribbon1
 
             If Not appearancesWereRead Then
                 ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
-                weiterMachen = loginAndReadApearances(errmsg)
+                ' tk 5.12.20 an dieser Stelle sidn die awinsetitngs.dbname bereits gesetzt
+                weiterMachen = loginAndReadApearances(True, errmsg)
             End If
 
 
@@ -1741,10 +1745,10 @@ Public Class Ribbon1
 
                                         If isMilestones Then
                                             ' draw the Milestone 
-                                            Call drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+                                            Dim newMsShape As PowerPoint.Shape = drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
                                             atleastOneAddedElement = True
                                         Else
-                                            Call drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
+                                            Dim newPhaseShape As PowerPoint.Shape = drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
                                             atleastOneAddedElement = True
                                         End If
 

@@ -832,6 +832,9 @@ Module SIModule1
 
         End If
 
+        ' tk 5.12.20 damit beim Schliessen nicht die alten Listen erhalten bleiben 
+        smartSlideLists = New clsSmartSlideListen
+
         My.Settings.Save()
 
 
@@ -9482,20 +9485,29 @@ Module SIModule1
         currentSldHasMultiProjectTemplates = False
         currentSldHasPortfolioTemplates = False
 
-        For Each pptShape As PowerPoint.Shape In sld.Shapes
-            If Not currentSldHasProjectTemplates Then
-                currentSldHasProjectTemplates = projectComponentNames.Contains(pptShape.Title) Or projectComponentNames.Contains(pptShape.AlternativeText)
+        Try
+            If smartSlideLists.getElementNamen.Count > 0 Then
+                ' nix weitermachen, dann sollen keine weiteren hier erstellt werden können 
+            Else
+                For Each pptShape As PowerPoint.Shape In sld.Shapes
+                    If Not currentSldHasProjectTemplates Then
+                        currentSldHasProjectTemplates = projectComponentNames.Contains(pptShape.Title) Or projectComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                    If Not currentSldHasMultiProjectTemplates Then
+                        currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(pptShape.Title) Or multiprojectComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                    If Not currentSldHasPortfolioTemplates Then
+                        currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(pptShape.Title) Or portfolioComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                Next
             End If
 
-            If Not currentSldHasMultiProjectTemplates Then
-                currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(pptShape.Title) Or multiprojectComponentNames.Contains(pptShape.AlternativeText)
-            End If
-
-            If Not currentSldHasPortfolioTemplates Then
-                currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(pptShape.Title) Or portfolioComponentNames.Contains(pptShape.AlternativeText)
-            End If
-
-        Next
+        Catch ex As Exception
+            found = False
+        End Try
 
         slideHasReportComponents = currentSldHasProjectTemplates Or currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates
     End Function

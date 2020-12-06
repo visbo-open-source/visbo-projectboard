@@ -30,7 +30,7 @@ Module creationModule
     ' Ende ReportCreation Spezifika
     '
 
-    Public Sub readSettings()
+    Public Sub readSettings(ByVal dbNameIsKnown As Boolean)
         With awinSettings
 
 
@@ -39,7 +39,11 @@ Module creationModule
             .visboServer = My.Settings.VISBOServer
             .proxyURL = My.Settings.proxyServerURL
             .DBWithSSL = My.Settings.mongoDBWithSSL
-            .databaseName = My.Settings.mongoDBname
+
+            If Not dbNameIsKnown Then
+                .databaseName = My.Settings.mongoDBname
+            End If
+
             .awinPath = My.Settings.awinPath
 
             .rememberUserPwd = My.Settings.rememberUserPWD
@@ -1626,7 +1630,7 @@ Module creationModule
 
         ' Wichtig für Kalendar 
         Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
-        Dim errorShape As PowerPoint.ShapeRange = Nothing
+        Dim errorShape As PowerPoint.Shape = Nothing
 
         Dim curFormatSize(1) As Double
 
@@ -1877,7 +1881,8 @@ Module creationModule
 
                         With rds
 
-                            Call zeichne3RowsCalendar(rds, minCal)
+                            Call draw3RowsCalendar(rds, minCal)
+                            'Call zeichne3RowsCalendar(rds, minCal)
 
                         End With
 
@@ -2058,9 +2063,9 @@ Module creationModule
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
             ''rds.errorVorlagenShape.Copy()
             ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, currentSlide)
 
-            With errorShape.Item(1)
+            errorShape = createPPTShapeFromShape(rds.errorVorlagenShape, currentSlide)
+            With errorShape
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         End If
@@ -2112,7 +2117,7 @@ Module creationModule
 
         ' Wichtig für Kalendar 
         Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
-        Dim errorShape As PowerPoint.ShapeRange = Nothing
+        Dim errorShape As PowerPoint.Shape = Nothing
 
 
 
@@ -2302,8 +2307,7 @@ Module creationModule
 
                     With rds
 
-                        ' das demnächst abändern auf 
-                        Call zeichne3RowsCalendar(rds, minCal)
+                        Call draw3RowsCalendar(rds, minCal)
 
                     End With
 
@@ -2348,11 +2352,9 @@ Module creationModule
                 Catch ex As Exception
 
                     If Not IsNothing(rds.errorVorlagenShape) Then
-                        ''rds.errorVorlagenShape.Copy()
-                        ''errorShape = pptslide.Shapes.Paste
-                        errorShape = pptCopypptPaste(rds.errorVorlagenShape, rds.pptSlide)
 
-                        With errorShape.Item(1)
+                        errorShape = createPPTShapeFromShape(rds.errorVorlagenShape, rds.pptSlide)
+                        With errorShape
                             .TextFrame2.TextRange.Text = ex.Message
                         End With
                     Else
@@ -2368,11 +2370,9 @@ Module creationModule
 
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
-            ''rds.errorVorlagenShape.Copy()
-            ''errorShape = pptslide.Shapes.Paste
-            errorShape = pptCopypptPaste(rds.errorVorlagenShape, currentSlide)
 
-            With errorShape.Item(1)
+            errorShape = createPPTShapeFromShape(rds.errorVorlagenShape, currentSlide)
+            With errorShape
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
@@ -2427,7 +2427,7 @@ Module creationModule
 
         'Dim tagesEinheit As Double
         Dim projectsToDraw As Integer
-        Dim copiedShape As PowerPoint.ShapeRange = Nothing
+        Dim copiedShape As PowerPoint.Shape = Nothing
         Dim fullName As String
         Dim hproj As clsProjekt
 
@@ -2576,7 +2576,8 @@ Module creationModule
                         ' normal Mode ... nur 1 Projekt pro Zeile 
                     End If
 
-                    copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, currentSlide)
+
+                    copiedShape = createPPTShapeFromShape(rds.projectNameVorlagenShape, currentSlide)
 
                     ' wenn mehrere Projekte nacheinander in einer Zeile stehen 
                     If severalProjectsInOneLine Then
@@ -2598,7 +2599,7 @@ Module creationModule
                         End If
 
                         ' jetzt das eigentliche Shape zeichnen 
-                        With copiedShape(1)
+                        With copiedShape
 
                             If currentProjektIndex > 1 And lastProjectName = hproj.name Then
                                 .TextFrame2.TextRange.Text = "+ ... " & hproj.variantName
@@ -2629,7 +2630,7 @@ Module creationModule
 
                             If awinSettings.mppEnableSmartPPT Then
 
-                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                Call addSmartPPTMsPhInfo(copiedShape, hproj,
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -2641,7 +2642,7 @@ Module creationModule
                         End With
                     Else
 
-                        With copiedShape(1)
+                        With copiedShape
                             .Top = CSng(projektNamenYPos)
                             .Left = CSng(projektNamenXPos)
                             If currentProjektIndex > 1 And lastProjectName = hproj.name Then
@@ -2655,7 +2656,7 @@ Module creationModule
 
                             If awinSettings.mppEnableSmartPPT Then
 
-                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
+                                Call addSmartPPTMsPhInfo(copiedShape, hproj,
                                                         Nothing, hproj.getShapeText, Nothing, Nothing,
                                                         Nothing, Nothing,
                                                         hproj.startDate, hproj.endeDate,
@@ -2667,7 +2668,7 @@ Module creationModule
                         End With
                     End If
 
-                    Dim projectNameShape As PowerPoint.Shape = copiedShape(1)
+                    Dim projectNameShape As PowerPoint.Shape = copiedShape
 
 
                     ' zeichne jetzt ggf die Projekt-Ampel 
@@ -2685,9 +2686,9 @@ Module creationModule
                             End If
                         End With
 
-                        copiedShape = pptCopypptPaste(rds.ampelVorlagenShape, currentSlide)
 
-                        With copiedShape(1)
+                        copiedShape = createPPTShapeFromShape(rds.ampelVorlagenShape, currentSlide)
+                        With copiedShape
                             .Top = CSng(ampelGrafikYPos)
                             If severalProjectsInOneLine Then
                                 .Left = CSng(rds.drawingAreaLeft - 3)
@@ -2730,11 +2731,9 @@ Module creationModule
                     ' hier ggf die ProjectLine zeichnen 
                     If awinSettings.mppShowProjectLine Then
 
-                        ''projectVorlagenForm.Copy()
-                        ''copiedShape = pptslide.Shapes.Paste()
-                        copiedShape = pptCopypptPaste(rds.projectVorlagenShape, currentSlide)
 
-                        With copiedShape(1)
+                        copiedShape = createPPTShapeFromShape(rds.projectVorlagenShape, currentSlide)
+                        With copiedShape
                             .Top = CSng(projektGrafikYPos)
                             .Left = CSng(x1)
                             .Width = CSng(x2 - x1)
@@ -2745,11 +2744,19 @@ Module creationModule
 
                             If awinSettings.mppEnableSmartPPT Then
 
-                                Call addSmartPPTMsPhInfo(copiedShape(1), hproj,
-                                                   Nothing, hproj.getShapeText, Nothing, Nothing,
-                                                   Nothing, Nothing,
+                                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+                                Dim shortText As String = hproj.name
+                                Dim originalName As String = hproj.name
+
+                                Dim bestShortName As String = shortText
+                                Dim bestLongName As String = shortText
+
+
+                                Call addSmartPPTMsPhInfo(copiedShape, hproj,
+                                                   fullBreadCrumb, hproj.getShapeText, shortText, shortText,
+                                                   shortText, shortText,
                                                    hproj.startDate, hproj.endeDate,
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.description,
                                                    hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
                             End If
@@ -2982,11 +2989,9 @@ Module creationModule
                                         phShortname = phaseName
                                     End If
 
-                                    ''PhDescVorlagenShape.Copy()
-                                    ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, currentSlide)
 
-                                    With copiedShape(1)
+                                    copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, currentSlide)
+                                    With copiedShape
 
                                         '.Name = .Name & .Id
                                         Try
@@ -3022,11 +3027,8 @@ Module creationModule
                                                                 phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
                                     Dim rightX As Double, addHeight As Double
 
-                                    ''PhDateVorlagenShape.Copy()
-                                    ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, currentSlide)
-
-                                    With copiedShape(1)
+                                    copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, currentSlide)
+                                    With copiedShape
 
                                         '.Name = .Name & .Id
                                         Try
@@ -3062,11 +3064,9 @@ Module creationModule
                                 If Not IsNothing(rds.phaseDelimiterShape) And selectedPhases.Count > 1 Then
 
                                     ' linker Delimiter 
-                                    ''phasedelimiterShape.Copy()
-                                    ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, currentSlide)
 
-                                    With copiedShape(1)
+                                    copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, currentSlide)
+                                    With copiedShape
 
                                         .Height = CSng(1.3 * appear.height)
                                         .Top = CSng(phasenGrafikYPos)
@@ -3076,11 +3076,9 @@ Module creationModule
                                     End With
 
                                     ' rechter Delimiter 
-                                    ''phasedelimiterShape.Copy()
-                                    ''copiedShape = pptslide.Shapes.Paste()
-                                    copiedShape = pptCopypptPaste(rds.phaseDelimiterShape, currentSlide)
 
-                                    With copiedShape(1)
+                                    copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, currentSlide)
+                                    With copiedShape
 
                                         .Height = CSng(1.3 * appear.height)
                                         .Top = CSng(phasenGrafikYPos)
@@ -3092,28 +3090,7 @@ Module creationModule
                                 End If
 
 
-                                ''copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-                                ''With copiedShape(1)
-                                ''    .Top = CSng(phasenGrafikYPos)
-                                ''    .Left = CSng(x1)
-                                ''    .Width = CSng(x2 - x1)
-                                ''    .Height = rds.phaseVorlagenShape.Height
-                                ''    '.Name = .Name & .Id
-                                ''    Try
-                                ''        .Name = phShapeName
-                                ''    Catch ex As Exception
-
-                                ''    End Try
-
-                                ''    '.Title = phaseName
-                                ''    '.AlternativeText = phDateText
-
-                                ''    If missingPhaseDefinition Then
-                                ''        .Fill.ForeColor.RGB = cphase.farbe
-                                ''    End If
-
-                                ''End With
                                 phaseShape = currentSlide.Shapes.AddShape(appear.shpType,
                                                                       CSng(x1),
                                                                       CSng(phasenGrafikYPos),
@@ -3137,11 +3114,6 @@ Module creationModule
                                 End With
 
                                 If awinSettings.mppEnableSmartPPT Then
-                                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                    '                                          True)
-                                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                    '                                       False)
-                                    'Dim originalName As String = cphase.originalName
 
                                     Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
                                     Dim shortText As String = cphase.shortName
@@ -3487,11 +3459,9 @@ Module creationModule
                     End If
 
 
-                    ''buColorShape.Copy()
-                    ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.buColorShape, currentSlide)
 
-                    With copiedShape(1)
+                    copiedShape = createPPTShapeFromShape(rds.buColorShape, currentSlide)
+                    With copiedShape
                         .Top = CSng(rowYPos)
                         .Left = CSng(rds.projectListLeft)
                         '' '' ''Dim neededLines As Double = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
@@ -3508,11 +3478,9 @@ Module creationModule
                 ' optionales zeichnen der Zeilen-Markierung
                 If drawRowDifferentiator And toggleRowDifferentiator Then
                     ' zeichnen des RowDifferentiators 
-                    ''rowDifferentiatorShape.Copy()
-                    ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.rowDifferentiatorShape, currentSlide)
 
-                    With copiedShape(1)
+                    copiedShape = createPPTShapeFromShape(rds.rowDifferentiatorShape, currentSlide)
+                    With copiedShape
                         .Top = CSng(rowYPos)
                         .Left = CSng(rds.projectListLeft)
                         '''''.Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
@@ -3527,13 +3495,10 @@ Module creationModule
                 If Not IsNothing(rds.durationArrowShape) And Not IsNothing(rds.durationTextShape) Then
 
                     ' Pfeil mit Länge der Dauer zeichnen 
-                    ''durationArrowShape.Copy()
-                    ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.durationArrowShape, currentSlide)
-
+                    copiedShape = createPPTShapeFromShape(rds.durationArrowShape, currentSlide)
                     Dim pfeilbreite As Double = maxX2 - minX1
 
-                    With copiedShape(1)
+                    With copiedShape
                         .Top = CSng(rowYPos + 3 + 0.5 * (addOn - .Height))
                         .Left = CSng(minX1)
                         .Width = CSng(pfeilbreite)
@@ -3548,11 +3513,9 @@ Module creationModule
                     Call hproj.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones, tmpDate1, tmpDate2, dauerInTagen)
                     dauerInM = 12 * dauerInTagen / 365
 
-                    ''durationTextShape.Copy()
-                    ''copiedShape = pptslide.Shapes.Paste()
-                    copiedShape = pptCopypptPaste(rds.durationTextShape, currentSlide)
 
-                    With copiedShape(1)
+                    copiedShape = createPPTShapeFromShape(rds.durationTextShape, currentSlide)
+                    With copiedShape
                         .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
                         .Top = CSng(rowYPos + 3 + 0.5 * (addOn - .Height))
                         .Left = CSng(minX1 + (pfeilbreite - .Width) / 2)
@@ -3701,9 +3664,9 @@ Module creationModule
     ''' <param name="hproj"></param>
     ''' <param name="milestoneID"></param>
     ''' <param name="yPosition"></param>
-    Friend Sub drawMilestoneAtYPos(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt,
+    Friend Function drawMilestoneAtYPos(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt,
                                     ByVal swimlaneID As String, ByVal milestoneID As String,
-                                    ByVal yPosition As Double)
+                                    ByVal yPosition As Double) As PowerPoint.Shape
 
         Dim milestoneTypShape As PowerPoint.Shape = Nothing
         Dim milestoneTypApp As New clsAppearance
@@ -3713,7 +3676,8 @@ Module creationModule
 
 
         If IsNothing(cMilestone) Then
-            Exit Sub ' einfach nichts machen 
+            drawMilestoneAtYPos = milestoneTypShape
+            Exit Function ' einfach nichts machen 
         End If
 
 
@@ -3751,7 +3715,8 @@ Module creationModule
 
         ' Exit , wenn nichts gefunden  
         If IsNothing(milestoneTypApp) Then
-            Exit Sub
+            drawMilestoneAtYPos = milestoneTypShape
+            Exit Function ' einfach nichts machen 
         End If
 
         Dim sizeFaktor As Double
@@ -3889,8 +3854,9 @@ Module creationModule
 
         End If
 
+        drawMilestoneAtYPos = milestoneTypShape
 
-    End Sub
+    End Function
 
 
 
@@ -3902,22 +3868,23 @@ Module creationModule
     ''' <param name="hproj"></param>
     ''' <param name="phaseID"></param>
     ''' <param name="yPosition"></param>
-    Friend Sub drawPhaseAtYPos(ByRef rds As clsPPTShapes,
+    Friend Function drawPhaseAtYPos(ByRef rds As clsPPTShapes,
                                            ByVal hproj As clsProjekt,
                                            ByVal swimlaneID As String,
                                            ByVal phaseID As String,
-                                           ByVal yPosition As Double)
+                                           ByVal yPosition As Double) As PowerPoint.Shape
 
         Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
         Dim phaseTypShape As PowerPoint.Shape = Nothing
         Dim phaseTypApp As New clsAppearance
-        Dim copiedShape As PowerPoint.ShapeRange
+        Dim copiedShape As PowerPoint.Shape
         Dim phaseName As String = elemNameOfElemID(phaseID)
         Dim cphase As clsPhase = hproj.getPhaseByID(phaseID)
 
         If IsNothing(cphase) Then
-            Exit Sub ' nichts machen 
+            drawPhaseAtYPos = phaseTypShape
+            Exit Function ' nichts machen 
         End If
 
 
@@ -3948,7 +3915,8 @@ Module creationModule
 
 
         If IsNothing(phaseTypApp) Then
-            Exit Sub
+            drawPhaseAtYPos = phaseTypShape
+            Exit Function ' nichts machen 
         End If
 
 
@@ -3981,11 +3949,8 @@ Module creationModule
             ' überdeckt werden soll 
             If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
 
-                ''rds.PhDescVorlagenShape.Copy()
-                ''copiedShape = rds.pptSlide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(rds.PhDescVorlagenShape, rds.pptSlide)
-
-                With copiedShape(1)
+                copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, rds.pptSlide)
+                With copiedShape
 
                     .TextFrame2.TextRange.Text = phDescription
                     .Top = CSng(yPosition + rds.YPhasenText)
@@ -4014,11 +3979,10 @@ Module creationModule
             ' jetzt muss ggf das Datum angebracht werden 
             If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
 
-                ''rds.PhDateVorlagenShape.Copy()
-                ''copiedShape = rds.pptSlide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(rds.PhDateVorlagenShape, rds.pptSlide)
 
-                With copiedShape(1)
+
+                copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, rds.pptSlide)
+                With copiedShape
 
                     .TextFrame2.TextRange.Text = phDateText
                     .Top = CSng(yPosition + rds.YPhasenDatum)
@@ -4110,8 +4074,9 @@ Module creationModule
 
 
 
+        drawPhaseAtYPos = phaseTypShape
 
-    End Sub
+    End Function
 
 
 
