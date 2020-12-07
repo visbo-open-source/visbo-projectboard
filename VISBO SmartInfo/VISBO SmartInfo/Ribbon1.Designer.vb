@@ -63,9 +63,9 @@
         Me.btn_CreateReport = Me.Factory.CreateRibbonButton
         Me.addElement = Me.Factory.CreateRibbonButton
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
+        Me.Settings = Me.Factory.CreateRibbonMenu
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.varianten_Tab = Me.Factory.CreateRibbonButton
-        Me.Create_Button = Me.Factory.CreateRibbonButton
+        Me.btn_ImportAppCust = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.Group2.SuspendLayout()
@@ -271,28 +271,30 @@
         '
         'SmartInfo
         '
-        Me.SmartInfo.Items.Add(Me.settingsTab)
-        Me.SmartInfo.Items.Add(Me.varianten_Tab)
-        Me.SmartInfo.Items.Add(Me.Create_Button)
+        Me.SmartInfo.Items.Add(Me.Settings)
         Me.SmartInfo.Name = "SmartInfo"
+        '
+        'Settings
+        '
+        Me.Settings.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Settings.Image = Global.VISBO_SmartInfo.My.Resources.Resources.gear
+        Me.Settings.Items.Add(Me.settingsTab)
+        Me.Settings.Items.Add(Me.btn_ImportAppCust)
+        Me.Settings.Label = "Settings"
+        Me.Settings.Name = "Settings"
+        Me.Settings.ShowImage = True
         '
         'settingsTab
         '
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
+        Me.settingsTab.ShowImage = True
         '
-        'varianten_Tab
+        'btn_ImportAppCust
         '
-        Me.varianten_Tab.Label = "Variants"
-        Me.varianten_Tab.Name = "varianten_Tab"
-        Me.varianten_Tab.Visible = False
-        '
-        'Create_Button
-        '
-        Me.Create_Button.Label = "Create from Template"
-        Me.Create_Button.Name = "Create_Button"
-        Me.Create_Button.ScreenTip = "creates report from template"
-        Me.Create_Button.Visible = False
+        Me.btn_ImportAppCust.Label = "Import CustomSettings"
+        Me.btn_ImportAppCust.Name = "btn_ImportAppCust"
+        Me.btn_ImportAppCust.ShowImage = True
         '
         'Ribbon1
         '
@@ -329,7 +331,6 @@
     Friend WithEvents Group4 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents SmartInfo As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents varianten_Tab As Microsoft.Office.Tools.Ribbon.RibbonButton
 
     Protected Overrides Sub Finalize()
         MyBase.Finalize()
@@ -350,8 +351,6 @@
         'End Try
 
     End Sub
-
-    Friend WithEvents Create_Button As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnDate As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton
@@ -363,6 +362,8 @@
     Friend WithEvents Group1 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents addElement As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btn_CreateReport As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Settings As Microsoft.Office.Tools.Ribbon.RibbonMenu
+    Friend WithEvents btn_ImportAppCust As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection
