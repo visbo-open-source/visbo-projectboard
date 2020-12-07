@@ -35,6 +35,7 @@ Public Class Ribbon1
                     .activateTab.Label = "Annotate"
                     .btnFreeze.Label = "Freeze/Defreeze"
                     .settingsTab.Label = "Settings"
+                    .btn_ImportAppCust.Label = "Import customizable settings"
 
                 End With
             Else
@@ -55,6 +56,7 @@ Public Class Ribbon1
                     .activateTab.Label = "Beschriften"
                     .btnFreeze.Label = "Konservieren/Freigeben"
                     .settingsTab.Label = "Einstellungen"
+                    .btn_ImportAppCust.Label = "spezifische Einstellungen importieren"
                 End With
             End If
 
@@ -1669,10 +1671,24 @@ Public Class Ribbon1
                     ' hier direkter MongoDB-Zugriff - alles ok
 
                 End If
+
+
                 ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
 
 
                 Dim xlsCustomization As Excel.Workbook = Nothing
+
+
+                Dim customFile As String = My.Computer.FileSystem.CombinePath(awinSettings.awinPath, customizationFile)
+
+                If Not My.Computer.FileSystem.FileExists(customFile) Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error: Couldn't find this file: '" & customFile & "'")
+                    Else
+                        Call MsgBox("Fehler: Folgende Datei konnte nicht gefunden werden '" & customFile & "'")
+                    End If
+                    Exit Sub
+                End If
 
                 'appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, Err)
                 appearanceDefinitions = Nothing
@@ -1684,7 +1700,9 @@ Public Class Ribbon1
                     appearanceDefinitions = New SortedList(Of String, clsAppearance)
                     ' hier muss jetzt das Customization File aufgemacht werden ...
                     Try
+
                         Dim customFile As String = My.Computer.FileSystem.CombinePath(awinSettings.awinPath, customizationFile)
+
                         xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=customFile, [ReadOnly]:=True, Editable:=False)
                         myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
 
@@ -1700,7 +1718,12 @@ Public Class Ribbon1
                             End Try
                         End If
                     Catch ex As Exception
-
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error: Couldn't find this file: '" & customFile & "'")
+                        Else
+                            Call MsgBox("Fehler: Folgende Datei konnte nicht gefunden werden '" & customFile & "'")
+                        End If
+                        Exit Sub
                     End Try
 
                     If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
@@ -1744,19 +1767,11 @@ Public Class Ribbon1
                 ' für den Fall, dass aus dem File gelesen werden muss
                 Dim wsName4 As Excel.Worksheet = Nothing
 
-                'tk 14.1.2020
-                ' jetzt muss gleich die Customization ausgelesen werden und der StartOfCalendar gesetzt werden 
-                'Dim customizations As New clsCustomization
-                'customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
-                'If Not IsNothing(customizations) Then
-                '    StartofCalendar = customizations.kalenderStart
-                'Else
-
                 Dim customizations As clsCustomization = Nothing
-                ' es müssen die customizations aus dem ProjectBoardCustomization-File gelesen werden.
+
                 Try
-                    xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=awinSettings.awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
-                    myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
+                    'xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=customFile, [ReadOnly]:=True, Editable:=False)
+                    'myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
 
                     If Not IsNothing(xlsCustomization) Then
                         wsName4 = CType(xlsCustomization.Worksheets("Einstellungen"),
@@ -1766,8 +1781,14 @@ Public Class Ribbon1
                         Call MsgBox("wsName4 angesprochen")
                     End If
                 Catch ex As Exception
-
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error: Couldn't find this file: '" & customFile & "'")
+                    Else
+                        Call MsgBox("Fehler: Folgende Datei konnte nicht gefunden werden '" & customFile & "'")
+                    End If
+                    Exit Sub
                 End Try
+
 
                 Try
                     ' ur:2019-07-18: hier werden nun die Customizations-Einstellungen aus der DB gelesen, wenn allerdings nicht vorhanden, 
@@ -1830,6 +1851,7 @@ Public Class Ribbon1
                         Else
                             If awinSettings.englishLanguage Then
                                 Call MsgBox("You do not have the rights setting up a new Visbo Center")
+
                             Else
                                 Call MsgBox("Nur der OrgaAdmin kann ein VC initialisieren")
                             End If
