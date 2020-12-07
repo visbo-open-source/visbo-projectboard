@@ -45,6 +45,12 @@ Public Class clsSmartSlideListen
     ' 11.5.18 tk enthält die Liste aller Elemente, die einen central document Link haben
     Private _lnkList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
+    ' tk nötig, um die Durchschnittshöhe an Milestones und Phasen zu bestimmen 
+    Private _anzMS As Integer = 0
+    Private _anzPH As Integer = 0
+    Private _avgMsHeight As Single = 0.0
+    Private _avgPhHeight As Single = 0.0
+
     Private _creationDate As Date
     Private _prevDate As Date
 
@@ -52,7 +58,17 @@ Public Class clsSmartSlideListen
     Private _slideDBName As String
     Private _slideVCid As String
 
+    Public ReadOnly Property avgMsHeight() As Single
+        Get
+            avgMsHeight = _avgMsHeight
+        End Get
+    End Property
 
+    Public ReadOnly Property avgPhHeight() As Single
+        Get
+            avgPhHeight = _avgPhHeight
+        End Get
+    End Property
 
     ''' <summary>
     ''' entfernt die Moved Information aus 
@@ -529,11 +545,21 @@ Public Class clsSmartSlideListen
     ''' <param name="cName"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addCN(ByVal cName As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
+    Public Sub addCN(ByVal cName As String, ByVal shapeName As String, ByVal isMilestone As Boolean, ByVal shapeHeight As Single)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
+
+        ' das hier wird gemacht um die durchschnittliche Phase und Meilenstein Höhe zu bestimmen ... 
+        If isMilestone And shapeHeight > 0 Then
+            _avgMsHeight = (_anzMS * _avgMsHeight + shapeHeight) / (_anzMS + 1)
+            _anzMS = _anzMS + 1
+        ElseIf shapeHeight > 0 Then
+            _avgPhHeight = (_anzPH * _avgPhHeight + shapeHeight) / (_anzPH + 1)
+            _anzPH = _anzPH + 1
+        End If
+
 
         If _cNList.ContainsKey(cName) Then
             listOfShapeNames = _cNList.Item(cName)
@@ -1529,6 +1555,12 @@ Public Class clsSmartSlideListen
         _mVList = New SortedList(Of Integer, Boolean)
         _vEList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _ovdList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+
+        ' for avg Heights 
+        _anzMS = 0
+        _avgMsHeight = 0.0
+        _anzPH = 0
+        _avgPhHeight = 0.0
 
         _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 

@@ -3768,9 +3768,12 @@ Module creationModule
         Dim sizeFaktor As Double
 
         ' die rds.milestoneVorlagenShape muss im Vorfeld bestimmt werden 
-        'sizeFaktor = rds.avgMSHeight / milestoneTypApp.height
+        If smartSlideLists.avgMsHeight > 0 And milestoneTypApp.height > 0 Then
+            sizeFaktor = smartSlideLists.avgMsHeight / milestoneTypApp.height
+        Else
+            sizeFaktor = 1.0
+        End If
 
-        sizeFaktor = 1.0
 
         Dim msDate As Date = cMilestone.getDate
 
@@ -3965,11 +3968,20 @@ Module creationModule
 
 
         ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
-        Dim sizeFaktor As Double = 1.0
 
+        Dim sizeFaktor As Double
+
+        ' die rds.milestoneVorlagenShape muss im Vorfeld bestimmt werden 
+        If smartSlideLists.avgPhHeight > 0 And phaseTypApp.height > 0 Then
+            sizeFaktor = smartSlideLists.avgPhHeight / phaseTypApp.height
+        Else
+            sizeFaktor = 1.0
+        End If
+
+        Dim innerTextSizefaktor As Double = 1.0
         If awinSettings.mppUseInnerText Then
 
-            sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
+            innerTextSizefaktor = sizeFaktor * rds.phaseVorlagenShape.Height / phaseTypApp.height
 
         End If
 
@@ -4058,7 +4070,7 @@ Module creationModule
 
             ''End With
             Dim top As Single = CSng(yPosition + rds.YPhase)
-            Dim heigth As Single = rds.phaseVorlagenShape.Height
+            Dim heigth As Single = CSng(sizeFaktor * phaseTypApp.height)
             Dim width As Single = CSng(x2 - x1)
             Dim left As Single = CSng(x1)
 
@@ -4081,9 +4093,9 @@ Module creationModule
                         phDescription = phDescription & " " & phDateText
                     End If
 
-                    If sizeFaktor * .TextFrame2.TextRange.Font.Size * sizeFaktor > 3.0 Then
+                    If .TextFrame2.TextRange.Font.Size * innerTextSizefaktor > 3.0 Then
                         .TextFrame2.TextRange.Text = phDescription
-                        .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * sizeFaktor)
+                        .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * innerTextSizefaktor)
                     End If
                 End If
 

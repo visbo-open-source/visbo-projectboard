@@ -2324,6 +2324,8 @@ Module SIModule1
         ' neu ergänzt wegen zu verwendender vpid
         Dim vpid As String = getVPIDFromTags(tmpShape)
 
+        Dim shapeHeight As Single = 0.0
+
         If isProjectCard(tmpShape) Then
             isPCard = True
             pvName = getPVnameFromTags(tmpShape)
@@ -2351,13 +2353,26 @@ Module SIModule1
             If isPCard Then
                 checkIT = True
                 isMilestone = False
+                shapeHeight = 0.0
             ElseIf pptShapeIsMilestone(tmpShape) Then
                 checkIT = True
                 isMilestone = True
+                shapeHeight = tmpShape.Height
                 ' nichts tun 
             ElseIf pptShapeIsPhase(tmpShape) Then
                 checkIT = True
                 isMilestone = False
+                Try
+                    If tmpShape.TextFrame2.TextRange.Text <> "" Then
+                        ' dann handelt es sich nicht um einen echtes Phasen Shape, sondern um die Swimlnae Beschriftung
+                        shapeHeight = 0.0
+                    Else
+                        shapeHeight = tmpShape.Height
+                    End If
+                Catch ex As Exception
+
+                End Try
+
             Else
                 ' nichts tun 
                 checkIT = False
@@ -2374,7 +2389,7 @@ Module SIModule1
                 Exit Sub
             End If
 
-            Call smartSlideLists.addCN(tmpName, shapeName, isMilestone)
+            Call smartSlideLists.addCN(tmpName, shapeName, isMilestone, shapeHeight)
 
 
             If Not isPCard Then
