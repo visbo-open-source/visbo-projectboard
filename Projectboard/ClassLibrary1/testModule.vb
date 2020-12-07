@@ -12780,8 +12780,8 @@ Public Module testModule
                         Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
                             Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
@@ -12891,41 +12891,41 @@ Public Module testModule
                     Dim pvName As String = ""
                     Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
-                    If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                If type = -1 Or
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
-                        Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
-                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
+                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                            If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
+                        If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
 
-                                Try
-                                    tmpDate = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).getDate
+                            Try
+                                tmpDate = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).getDate
 
-                                    If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+                                If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
 
-                                        If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
-                                            tmpMinimum = tmpDate
-                                        End If
-
-                                        If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
-                                            tmpMaximum = tmpDate
-                                        End If
-
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                        tmpMinimum = tmpDate
                                     End If
-                                Catch ex As Exception
 
-                                End Try
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                        tmpMaximum = tmpDate
+                                    End If
 
-                            End If
+                                End If
+                            Catch ex As Exception
 
-                        Next
-                    ElseIf type = PTItemType.categoryList Then
+                            End Try
 
-                        Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
+                        End If
+
+                    Next
+                ElseIf type = PTItemType.categoryList Then
+
+                    Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
 
                         For Each tmpID As String In idCollection
 
@@ -15464,8 +15464,8 @@ Public Module testModule
                             Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
 
                             If type = -1 Or
-                                (type = PTItemType.projekt And pvName = hproj.name) Or
-                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                                (type = PTItemType.vorlage) Then
 
                                 If cphase.name = selPhaseName Then
                                     If vglBreadCrumb.EndsWith(breadcrumb) Then
@@ -15828,8 +15828,8 @@ Public Module testModule
                                 Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS, type, pvName)
 
                                 If type = -1 Or
-                                    (type = PTItemType.projekt And pvName = hproj.name) Or
-                                    (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                        (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                                        (type = PTItemType.vorlage) Then
 
                                     ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
                                     Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)

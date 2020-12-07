@@ -94,7 +94,7 @@ Public Class frmSelectPhasesMilestones
     End Sub
 
     ''' <summary>
-    ''' baut den TreeView aus Projekte, Phasen udn Meilensteinen auf 
+    ''' baut den TreeView aus Projekte, Phasen und Meilensteinen auf 
     ''' </summary>
     ''' <param name="auswahl"></param>
     Private Sub buildHryTreeViewInPPT(ByVal auswahl As PTItemType)
@@ -124,8 +124,10 @@ Public Class frmSelectPhasesMilestones
 
                     If kvp.Value.hierarchy.count > 0 Then
                         topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                        'topLevel.Name = kennung & kvp.Key
+                        topLevel.Name = kennung & calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        'topLevel.Text = kvp.Key
+                        topLevel.Text = kvp.Value.getShapeText
 
                         hry = kvp.Value.hierarchy
 
@@ -159,8 +161,10 @@ Public Class frmSelectPhasesMilestones
 
                     If kvp.Value.hierarchy.count > 0 Then
                         topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                        'topLevel.Name = kennung & kvp.Key
+                        topLevel.Name = kennung & calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        'topLevel.Text = kvp.Key
+                        topLevel.Text = kvp.Value.getShapeText
                         hry = kvp.Value.hierarchy
 
                         If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
@@ -1024,6 +1028,19 @@ Public Class frmSelectPhasesMilestones
     Private Sub rdbProjStruktTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktTyp.CheckedChanged
 
         If rdbProjStruktTyp.Checked Then
+            ' ist ein Item gecheckt - dann setze das auf selectedProjekte ..
+            Dim found As Boolean = False
+            For Each tmpNode As TreeNode In TreeViewProjects.Nodes
+                If tmpNode.Level = 0 And tmpNode.Checked = True Then
+                    Dim pvName As String = tmpNode.Name.Substring(2)
+                    Dim myProject As clsProjekt = AlleProjekte.getProject(pvName)
+                    If Not IsNothing(myProject) Then
+                        selectedProjekte.Clear(False)
+                        selectedProjekte.Add(myProject, False)
+                        Exit For
+                    End If
+                End If
+            Next
             Call buildHryTreeViewInPPT(PTItemType.vorlage)
         Else
             selectedPhases.Clear()

@@ -428,8 +428,8 @@
                             Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
                             If type = -1 Or
-                                (type = PTItemType.projekt And pvName = hproj.name) Or
-                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                                (type = PTItemType.vorlage) Then
 
                                 Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
                                 ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -513,8 +513,8 @@
                                 Call splitHryFullnameTo2(fullName, pName, breadcrumb, type, pvName)
 
                                 If type = -1 Or
-                                (type = PTItemType.projekt And pvName = hproj.name) Or
-                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                                    (type = PTItemType.vorlage) Then
 
                                     Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
 

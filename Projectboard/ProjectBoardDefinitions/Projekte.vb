@@ -17641,15 +17641,13 @@ Public Module Projekte
 
                     If type = PTItemType.projekt Then
 
-                        If pvName <> kvp.Value.name Then
+                        If pvName <> calcProjektKey(kvp.Value) Then
                             weiter = False
                         End If
 
                     ElseIf type = PTItemType.vorlage Then
 
-                        If pvName <> kvp.Value.VorlagenName Then
-                            weiter = False
-                        End If
+                        ' anyway ok
 
                     End If
 
@@ -17709,15 +17707,13 @@ Public Module Projekte
 
                         If type = PTItemType.projekt Then
 
-                            If pvName <> curProj.name Then
+                            If pvName <> calcProjektKey(curProj) Then
                                 weiter = False
                             End If
 
                         ElseIf type = PTItemType.vorlage Then
 
-                            If pvName <> curProj.VorlagenName Then
-                                weiter = False
-                            End If
+                            ' anyway weiter
 
                         End If
 

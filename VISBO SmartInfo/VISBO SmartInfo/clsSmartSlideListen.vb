@@ -464,6 +464,29 @@ Public Class clsSmartSlideListen
         End Get
     End Property
 
+    Friend ReadOnly Property getShapeNameWithBreadCrumb(ByVal searchString As String) As String
+        Get
+            Dim sisterName As String = ""
+            Dim found As Boolean = False
+            Dim anz As Integer = _bCList.Count
+            Dim ix As Integer = 0
+            Do While Not found And ix <= anz - 1
+                If _bCList.ElementAt(ix).Key.StartsWith(searchString) Then
+                    found = True
+                    ' jetzt die ID eines Elements rausholen 
+                    Dim myID As Integer = _bCList.ElementAt(ix).Value.First.Key
+                    If _IDplanShapes.ContainsKey(myID) Then
+                        sisterName = _IDplanShapes.Item(myID)
+                    End If
+                Else
+                    ix = ix + 1
+                End If
+            Loop
+
+            getShapeNameWithBreadCrumb = sisterName
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt den ShapeName zurück, der zur UID gehört; 
     ''' </summary>

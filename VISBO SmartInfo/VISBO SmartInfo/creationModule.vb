@@ -2820,7 +2820,7 @@ Module creationModule
                             Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
 
                             If type = -1 Or
-                                (type = PTItemType.projekt And pvName = hproj.name) Or
+                                (type = PTItemType.projekt And pvName = calcProjektKey(hproj.name, hproj.variantName)) Or
                                 (type = PTItemType.vorlage) Then
 
                                 If cphase.name = selPhaseName Then
@@ -3184,8 +3184,8 @@ Module creationModule
                                 Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS, type, pvName)
 
                                 If type = -1 Or
-                                    (type = PTItemType.projekt And pvName = hproj.name) Or
-                                    (type = PTItemType.vorlage) Then
+                                     (type = PTItemType.projekt And pvName = calcProjektKey(hproj.name, hproj.variantName)) Or
+                                     (type = PTItemType.vorlage) Then
 
                                     ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
                                     Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
@@ -3939,8 +3939,6 @@ Module creationModule
         Dim x2 As Double
 
 
-        Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames,
-                                                                awinSettings.mppUseAbbreviation, swimlaneID)
 
 
         Try
@@ -3982,6 +3980,9 @@ Module creationModule
         Dim phEndDate As Date = cphase.getEndDate
         Dim phDateText As String = phStartDate.Day.ToString & "." & phStartDate.Month.ToString & " - " &
                                 phEndDate.Day.ToString & "." & phEndDate.Month.ToString
+
+        Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames,
+                                                                awinSettings.mppUseAbbreviation, swimlaneID)
 
 
         Call rds.calculatePPTx1x2(phStartDate, phEndDate, x1, x2)
@@ -4124,6 +4125,107 @@ Module creationModule
 
     End Function
 
+
+    ''' <summary>
+    ''' adds / draws  
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="pvName"></param>
+    ''' <param name="breadCrumb"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="isMilestones"></param>
+    ''' <param name="atleastOneAddedElement"></param>
+    Friend Sub drawElemOfProject(ByVal hproj As clsProjekt, ByVal pvName As String, ByVal breadCrumb As String, ByVal elemName As String, ByVal isMilestones As Boolean,
+                                  ByRef atleastOneAddedElement As Boolean)
+
+
+        Dim parentNameID As String = ""
+        Dim parentName As String = ""
+
+        Dim currentMilestone As clsMeilenstein = Nothing
+        Dim currentPhase As clsPhase = Nothing
+        Dim allOK As Boolean = False
+
+        If isMilestones Then
+            currentMilestone = hproj.getMilestone(elemName, breadcrumb:=breadCrumb)
+            allOK = Not IsNothing(currentMilestone)
+        Else
+            currentPhase = hproj.getPhase(elemName, breadcrumb:=breadCrumb)
+            allOK = Not IsNothing(currentPhase)
+        End If
+
+
+        If allOK Then
+            ' jetzt muss die yPos bestimmt werden , das ist die YPos des nächstgelegenen Vaters im BreadCrumb ...
+            Dim found As Boolean = False
+            Dim yPos As Double = 30 ' Default Wert
+            Dim myNameID As String
+            Dim myName As String
+            If isMilestones Then
+                parentNameID = hproj.hierarchy.getParentIDOfID(currentMilestone.nameID)
+                myNameID = currentMilestone.nameID
+                myName = currentMilestone.name
+            Else
+                parentNameID = hproj.hierarchy.getParentIDOfID(currentPhase.nameID)
+                myNameID = currentPhase.nameID
+                myName = currentPhase.name
+            End If
+
+            If parentNameID <> "" Then
+                Dim parentPhase = hproj.getPhaseByID(parentNameID)
+                If Not IsNothing(parentPhase) Then
+                    parentName = parentPhase.name
+                End If
+            End If
+
+            ' erstmal nach Geschwistern suchen ..
+            ' elemName ist leer, weil jedes Geschwister diesen Breadcrumb hat 
+            Dim sisterBreadCrumb As String = smartSlideLists.bestimmeFullBreadcrumb(calcProjektKey(hproj), hproj.hierarchy.getBreadCrumb(myNameID), "")
+
+            Dim sisterOrParentShapeName As String = smartSlideLists.getShapeNameWithBreadCrumb(sisterBreadCrumb)
+            Dim foundShape As PowerPoint.Shape = Nothing
+
+            If sisterOrParentShapeName <> "" Then
+                foundShape = currentSlide.Shapes.Item(sisterOrParentShapeName)
+            End If
+
+            If Not IsNothing(foundShape) Then
+                found = True
+                yPos = foundShape.Top
+            End If
+
+            ' dann nach Eltern suchen ...
+            If Not found Then
+                Dim parentBreadcrumb As String = smartSlideLists.bestimmeFullBreadcrumb(calcProjektKey(hproj), hproj.hierarchy.getBreadCrumb(parentNameID), parentName)
+                If parentBreadcrumb <> "" Then
+                    sisterOrParentShapeName = smartSlideLists.getShapeNameWithBreadCrumb(parentBreadcrumb)
+                    If sisterOrParentShapeName <> "" Then
+                        foundShape = currentSlide.Shapes.Item(sisterOrParentShapeName)
+                        If Not IsNothing(foundShape) Then
+                            found = True
+                            yPos = foundShape.Top
+                        End If
+                    End If
+                End If
+            End If
+
+
+
+            If isMilestones Then
+                ' draw the Milestone 
+                Dim newMsShape As PowerPoint.Shape = drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
+                atleastOneAddedElement = True
+            Else
+                Dim newPhaseShape As PowerPoint.Shape = drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
+                atleastOneAddedElement = True
+            End If
+
+        End If
+
+
+
+
+    End Sub
 
 
 

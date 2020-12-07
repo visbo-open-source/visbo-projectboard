@@ -1621,6 +1621,13 @@ Public Class Ribbon1
                     Dim selectedPhases As New Collection
                     Dim selectedMilestones As New Collection
 
+                    ' jetzt die selectedProjekte auf ein Projekt setzen, das wird nämlich dann verwendet , um im TreeView bei 
+                    ' die Struktur Auswahl zu machen 
+                    selectedProjekte.Clear(False)
+                    If ShowProjekte.Count > 0 Then
+                        selectedProjekte.Add(ShowProjekte.getProject(1), False)
+                    End If
+
                     Dim frmSelectionPhMs As New frmSelectPhasesMilestones
 
                     ' set the datepicker boxes in the form to invisible
@@ -1663,115 +1670,58 @@ Public Class Ribbon1
                         ' change 
                         For Each PhaseMilestoneName As String In nameCollection
 
+                            Dim pvName As String = ""
                             Dim pName As String = ""
                             Dim vName As String = ""
                             Dim breadcrumb As String = ""
                             Dim type As Integer = -1
                             Dim elemName As String = ""
 
-                            Call splitHryFullnameTo2(PhaseMilestoneName, elemName, breadcrumb, type, pName)
+                            Call splitHryFullnameTo2(PhaseMilestoneName, elemName, breadcrumb, type, pvName)
+                            pName = getPnameFromKey(pvName)
+                            vName = getVariantnameFromKey(pvName)
 
                             Dim msgText As String = ""
                             Dim header As String = ""
 
-                            ' vName bestimmen aus pName und AlleProjekte
-                            If AlleProjekte.Count > 0 Then
-                                Dim tmpList As Collection = AlleProjekte.getVariantNames(pName, False)
-                                If tmpList.Count > 0 Then
-                                    vName = CStr(tmpList.Item(1))
-                                End If
-                            End If
+                            If type = PTItemType.projekt Or type = -1 Then
 
-                            Dim pvNameAlleProjekte As String = calcProjektKey(pName, vName)
-                            Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvNameAlleProjekte, breadcrumb, elemName)
+                                hproj = ShowProjekte.getProject(pName)
 
-                            If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
-                                ' nur dann muss irgendwas gemacht werden, egal ob im einzel- oder Multiprojekt-View
+                                If Not IsNothing(hproj) Then
+                                    Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvName, breadcrumb, elemName)
 
-                                Dim parentNameID As String = ""
-
-                                If type = PTItemType.projekt Or type = -1 Then
-
-                                    If IsNothing(hproj) Then
-                                        hproj = AlleProjekte.getProject(pvNameAlleProjekte)
-                                    ElseIf calcProjektKey(hproj) <> pvNameAlleProjekte Then
-                                        hproj = AlleProjekte.getProject(pvNameAlleProjekte)
-                                    End If
-
-                                    ' Gibt es das Element in hproj ? 
-                                    Dim currentMilestone As clsMeilenstein = Nothing
-                                    Dim currentPhase As clsPhase = Nothing
-                                    Dim allOK As Boolean = False
-
-                                    If isMilestones Then
-                                        currentMilestone = hproj.getMilestone(elemName, breadcrumb:=breadcrumb)
-                                        allOK = Not IsNothing(currentMilestone)
+                                    If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
+                                        Call drawElemOfProject(hproj, pvName, breadcrumb, elemName, isMilestones, atleastOneAddedElement)
                                     Else
-                                        currentPhase = hproj.getPhase(elemName, breadcrumb:=breadcrumb)
-                                        allOK = Not IsNothing(currentPhase)
+                                        msgText = pvName & " : " & breadcrumb & "-" & elemName
+                                        outPutCollection.Add(msgText)
                                     End If
 
+                                End If
 
-                                    If allOK Then
-                                        ' jetzt muss die yPos bestimmt werden , das ist die YPos des nächstgelegenen Vaters im BreadCrumb ...
-                                        Dim found As Boolean = False
-                                        Dim yPos As Double = 30 ' Default Wert
+                            ElseIf type = PTItemType.vorlage Then
 
-                                        If isMilestones Then
-                                            parentNameID = hproj.hierarchy.getParentIDOfID(currentMilestone.nameID)
+                                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                                    hproj = kvp.Value
+                                    pvName = calcProjektKey(hproj)
+
+                                    If Not IsNothing(hproj) Then
+                                        Dim searchString As String = smartSlideLists.bestimmeFullBreadcrumb(pvName, breadcrumb, elemName)
+
+                                        If Not smartSlideLists.containsFullBreadCrumb(searchString) Then
+                                            Call drawElemOfProject(hproj, pvName, breadcrumb, elemName, isMilestones, atleastOneAddedElement)
                                         Else
-                                            parentNameID = hproj.hierarchy.getParentIDOfID(currentPhase.nameID)
+                                            msgText = pvName & " : " & breadcrumb & "-" & elemName
+                                            outPutCollection.Add(msgText)
                                         End If
-
-                                        Do While Not found And parentNameID <> ""
-                                            Dim lookingForBreadcrumb As String = hproj.hierarchy.getBreadCrumb(parentNameID)
-                                            searchString = smartSlideLists.bestimmeFullBreadcrumb(pvNameAlleProjekte, lookingForBreadcrumb, elemNameOfElemID(parentNameID))
-                                            found = smartSlideLists.containsFullBreadCrumb(searchString)
-                                            If Not found Then
-                                                parentNameID = hproj.hierarchy.getParentIDOfID(parentNameID)
-                                            End If
-                                        Loop
-
-                                        If found Then
-                                            ' bestimme die y-Koordinate
-                                            If smartSlideLists.getUIDsOFBreadCrumb(searchString).Count > 0 Then
-                                                Dim ShapeID As Integer = smartSlideLists.getUIDsOFBreadCrumb(searchString).First.Key
-                                                Dim parentShapeName As String = smartSlideLists.getShapeNameOfUid(ShapeID)
-                                                yPos = currentSlide.Shapes.Item(parentShapeName).Top
-                                            End If
-                                        Else
-                                            parentNameID = rootPhaseName
-                                        End If
-
-                                        If isMilestones Then
-                                            ' draw the Milestone 
-                                            Dim newMsShape As PowerPoint.Shape = drawMilestoneAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, milestoneID:=currentMilestone.nameID, yPosition:=yPos)
-                                            atleastOneAddedElement = True
-                                        Else
-                                            Dim newPhaseShape As PowerPoint.Shape = drawPhaseAtYPos(slideCoordInfo, hproj:=hproj, swimlaneID:=parentNameID, phaseID:=currentPhase.nameID, yPosition:=yPos)
-                                            atleastOneAddedElement = True
-                                        End If
-
                                     End If
 
-                                ElseIf type = PTItemType.vorlage Then
-                                    Dim a As Integer = 0
-                                Else
-                                    Dim a As Integer = 0
-                                End If
+                                Next
 
 
-
-                            Else
-                                ' Element ist schon eingezeichnet ... 
-                                If vName = "" Then
-                                    msgText = pName & " : " & breadcrumb & "-" & elemName
-                                Else
-                                    msgText = pName & " [" & vName & "] : " & breadcrumb & "-" & elemName
-                                End If
-
-                                outPutCollection.Add(msgText)
                             End If
+
                         Next
                     Next
 
