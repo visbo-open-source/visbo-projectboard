@@ -2,6 +2,7 @@
     Private formerselect As String
     Public frmOption As String
     Public dbPortfolioNames As SortedList(Of String, String)
+
     Private Sub frmRemoveConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ListBox1.Items.Clear()
@@ -18,13 +19,31 @@
         End If
 
         If frmOption = "ProjConstellation" Then
-            Me.Text = "Portfolio löschen"
-
+            Me.Text = "Portfolio aus Session löschen"
             For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
-
-                ListBox1.Items.Add(kvp.Key)
-
+                Dim cName As String = addBrackets(kvp.Key, "[", "]")
+                ListBox1.Items.Add(cName)
             Next
+
+            'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+            '    ListBox1.Items.Add(kvp.Key)
+
+            'Next
+            formerselect = ""
+        End If
+        If frmOption = "PortfolioAusSessionLaden" Then
+            Me.Text = "Portfolio laden"
+            For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
+                Dim cName As String = addBrackets(kvp.Key, "[", "]")
+                ListBox1.Items.Add(cName)
+            Next
+
+            'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+            '    ListBox1.Items.Add(kvp.Key)
+
+            'Next
             formerselect = ""
         End If
 

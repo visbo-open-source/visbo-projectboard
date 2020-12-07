@@ -56,20 +56,23 @@ Public Module agm3
 
 
                         Dim titleCol As Integer,
-                            IdentCol As Integer,
-                            InputFileCol As Integer,
-                            TypCol As Integer,
-                            DatenCol As Integer,
-                            TabUCol As Integer, TabNCol As Integer,
-                            SUCol As Integer, SNCol As Integer,
-                            ZUCol As Integer, ZNCol As Integer,
-                            ObjCol As Integer,
-                            InhaltCol As Integer
 
-                        ' ImportTyp herausfinden - we´nn nicht im configfile angegeben, dann übergehen
+                                IdentCol As Integer,
+                                InputFileCol As Integer,
+                                TypCol As Integer,
+                                DatenCol As Integer,
+                                TabUCol As Integer, TabNCol As Integer,
+                                SUCol As Integer, SNCol As Integer,
+                                ZUCol As Integer, ZNCol As Integer,
+                                ObjCol As Integer,
+                                InhaltCol As Integer
+
+                        ' ImportTyp aus configfile lesen, wenn nicht vorhanden, wird es übergangen
                         configLine = New clsConfigKapaImport
-                        configLine.Titel = CStr(currentWS.Cells(4, 1).value)
-                        configLine.content = CStr(currentWS.Cells(4, 2).value)
+                        Dim titelzeile As Integer = 4  ' ursprüngliche Zeile der Titel war 4 aber nach Import-Änderung für Instart ist in Zeile 4 der Importtyp verankert
+                        configLine.Titel = CStr(currentWS.Cells(titelzeile, 1).value)
+                        configLine.content = CStr(currentWS.Cells(titelzeile, 2).value)
+
                         If Not IsNothing(configLine.Titel) Then
                             kapaConfigs.Add(configLine.Titel, configLine)
                         End If
@@ -93,8 +96,10 @@ Public Module agm3
 
                         Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
 
+
                         If ok Then
                             With currentWS
+
                                 lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
 
                                 For i = 6 To lastrow
@@ -200,6 +205,7 @@ Public Module agm3
                                             configLine.regex = CStr(.Cells(i, ObjCol).value)
                                             configLine.content = CStr(.Cells(i, InhaltCol).value)
 
+
                                         Case "LastLine"
                                             configLine.Titel = CStr(.Cells(i, titleCol).value)
                                             configLine.Identifier = CStr(.Cells(i, IdentCol).value)
@@ -249,8 +255,6 @@ Public Module agm3
                             oPCollection.Add(outputline)
                         End If
 
-                    End If
-
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
                         outputline = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
@@ -299,6 +303,7 @@ Public Module agm3
                                       ByRef ProjectsConfigs As SortedList(Of String, clsConfigProjectsImport),
                                       ByRef lastrow As Integer,
                                       ByRef outputCollection As Collection) As Boolean
+
 
         Dim configLine As New clsConfigProjectsImport
         Dim currentDirectoryName As String = requirementsOrdner
@@ -1457,6 +1462,205 @@ Public Module agm3
     End Function
 
     ''' <summary>
+    ''' überprüft, ob die Voraussetzungen für das Einlesen der Organisation
+    ''' </summary>
+    ''' <param name="configFile"></param>
+    ''' <param name="orgaFile"></param>
+    ''' <param name="orgaImportConfigs"></param>
+    ''' <param name="lastrow"></param>
+    ''' <returns></returns>
+    Public Function checkOrgaImportConfig(ByVal configFile As String,
+                                      ByRef orgaFile As String,
+                                      ByRef orgaImportConfigs As SortedList(Of String, clsConfigOrgaImport),
+                                      ByRef lastrow As Integer,
+                                      ByRef outputCollection As Collection) As Boolean
+
+        Dim configLine As New clsConfigOrgaImport
+        Dim currentDirectoryName As String = requirementsOrdner
+        Dim configWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
+        Dim currentWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
+        Dim searcharea As Microsoft.Office.Interop.Excel.Range = Nothing
+        Dim outputLine As String
+
+        ''
+        '' Config-file wird geöffnet
+        ' Filename ggf. mit Directory erweitern
+        configFile = My.Computer.FileSystem.CombinePath(currentDirectoryName, configFile)
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(configFile) Then
+
+            Try
+
+                configWB = appInstance.Workbooks.Open(configFile)
+
+                Try
+                    If appInstance.Worksheets.Count > 0 Then
+
+                        'currentWS = CType(appInstance.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                        currentWS = CType(configWB.Worksheets("VISBO Config"), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                        Dim titleCol As Integer,
+                            IdentCol As Integer,
+                            InputFileCol As Integer,
+                            TypCol As Integer,
+                            DatenCol As Integer,
+                            TabUCol As Integer, TabNCol As Integer,
+                            SUCol As Integer, SNCol As Integer,
+                            ZUCol As Integer, ZNCol As Integer,
+                            ObjCol As Integer,
+                            InhaltCol As Integer
+
+                        searcharea = currentWS.Rows(5)          ' Zeile 5 enthält die verschieden Configurationselemente
+
+                        titleCol = searcharea.Find("Titel").Column
+                        IdentCol = searcharea.Find("Identifier").Column
+                        InputFileCol = searcharea.Find("InputFile").Column
+                        TypCol = searcharea.Find("Typ").Column
+                        DatenCol = searcharea.Find("Datenbereich").Column
+                        TabUCol = searcharea.Find("Tabellen-Name").Column
+                        TabNCol = searcharea.Find("Tabellen-Nummer").Column
+                        SUCol = searcharea.Find("Spaltenüberschrift").Column
+                        SNCol = searcharea.Find("Spalten-Nummer").Column
+                        ZUCol = searcharea.Find("Zeilenbeschriftung").Column
+                        ZNCol = searcharea.Find("Zeilen-Nummer").Column
+                        ObjCol = searcharea.Find("Objekt-Typ").Column
+                        InhaltCol = searcharea.Find("Inhalt").Column
+
+                        Dim ok As Boolean = (titleCol + IdentCol + TypCol + DatenCol + SUCol + SNCol + ZUCol + ZNCol + ObjCol + InhaltCol > 13)
+
+                        If ok Then
+                            With currentWS
+                                lastrow = .Cells(.Rows.Count, titleCol).end(Microsoft.Office.Interop.Excel.XlDirection.xlUp).row
+
+                                For i = 6 To lastrow
+
+                                    configLine = New clsConfigOrgaImport
+
+                                    Dim Titel As String = CStr(.Cells(i, titleCol).value)
+
+                                    Select Case Titel
+                                        Case "DateiName"
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            orgaFile = configLine.Inputfile
+
+
+
+                                        Case Else
+                                            configLine.Titel = CStr(.Cells(i, titleCol).value)
+                                            configLine.Identifier = CStr(.Cells(i, IdentCol).value)
+                                            configLine.Inputfile = CStr(.Cells(i, InputFileCol).value)
+                                            configLine.Typ = CStr(.Cells(i, TypCol).value)
+                                            configLine.cellrange = (CStr(.Cells(i, DatenCol).value) = "Range")
+                                            'configLine.sheet = CInt(.Cells(i, TabNCol).value)
+                                            Dim tabrange As String = CStr(.Cells(i, TabNCol).value)
+                                            Dim hstr() As String = Split(tabrange, ":")
+                                            If hstr.Length = 2 Then
+                                                configLine.sheet.von = CInt(hstr(0))
+                                                configLine.sheet.bis = CInt(hstr(1))
+                                            ElseIf hstr.Length = 1 Then
+                                                configLine.sheet.von = CInt(.Cells(i, SNCol).value)
+                                                configLine.sheet.bis = CInt(.Cells(i, SNCol).value)
+                                            Else
+                                                outputLine = configLine.Titel & " : Angabe für Sheet ist kein Range"
+                                                If awinSettings.englishLanguage Then
+                                                    outputLine = configLine.Titel & " : this is no range"
+                                                End If
+                                                outputCollection.Add(outputLine)
+                                            End If
+                                            configLine.sheetDescript = CStr(.Cells(i, TabUCol).value)
+
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, SNCol).value)
+                                                Dim hstr1() As String = Split(colrange, ":")
+                                                If hstr1.Length = 2 Then
+                                                    configLine.column.von = CInt(hstr1(0))
+                                                    configLine.column.bis = CInt(hstr1(1))
+                                                ElseIf hstr1.Length = 1 Then
+                                                    configLine.row.von = CInt(.Cells(i, SNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, SNCol).value)
+                                                Else
+                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    If awinSettings.englishLanguage Then
+                                                        outputLine = configLine.Titel & " : this is no range"
+                                                    End If
+                                                    outputCollection.Add(outputLine)
+                                                End If
+                                            Else
+                                                configLine.column.von = CInt(.Cells(i, SNCol).value)
+                                                configLine.column.bis = CInt(.Cells(i, SNCol).value)
+                                            End If
+                                            configLine.columnDescript = CStr(.Cells(i, SUCol).value)
+
+                                            If configLine.cellrange Then
+                                                Dim colrange As String = CStr(.Cells(i, ZNCol).value)
+                                                Dim hstr2() As String = Split(colrange, ":")
+                                                If hstr2.Length = 2 Then
+                                                    configLine.row.von = CInt(hstr2(0))
+                                                    configLine.row.bis = CInt(hstr2(1))
+                                                ElseIf hstr2.Length = 1 Then
+                                                    configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                    configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                                Else
+                                                    outputLine = configLine.Titel & " : Angabe ist kein Range"
+                                                    If awinSettings.englishLanguage Then
+                                                        outputLine = configLine.Titel & " : this is no range"
+                                                    End If
+                                                    outputCollection.Add(outputLine)
+                                                End If
+                                            Else
+                                                configLine.row.von = CInt(.Cells(i, ZNCol).value)
+                                                configLine.row.bis = CInt(.Cells(i, ZNCol).value)
+                                            End If
+                                            configLine.rowDescript = CStr(.Cells(i, ZUCol).value)
+                                            configLine.objType = CStr(.Cells(i, ObjCol).value)
+                                            configLine.content = CStr(.Cells(i, InhaltCol).value)
+                                    End Select
+
+                                    If orgaImportConfigs.ContainsKey(configLine.Titel) Then
+                                        orgaImportConfigs.Remove(configLine.Titel)
+                                    End If
+
+                                    orgaImportConfigs.Add(configLine.Titel, configLine)
+
+                                Next
+
+                            End With
+
+                        End If
+
+                    End If
+
+                Catch ex As Exception
+                    ' tk 5.2 es trat ein Fehler auf ... also Clear, weil das die ok / nicht ok Rückgabe Bedingung ist 
+                    orgaImportConfigs.Clear()
+
+                    If awinSettings.englishLanguage Then
+                        outputLine = "The configurationfile " & configFile & " has no Sheet with name VISBO Config" & vbCrLf & " ... no import!"
+                    Else
+                        outputLine = "Die Konfigurationsdatei " & configFile & " enthält kein Registerblatt VISBO Config" &
+                                    vbCrLf & " es fand kein Import statt "
+                    End If
+                    outputCollection.Add(outputLine)
+                End Try
+
+                ' configActualDataImport - Konfigurationsfile schließen
+                configWB.Close(SaveChanges:=False)
+
+            Catch ex As Exception
+                ' tk 5.2 es trat ein Fehler auf ... also Clear, weil das die ok / nicht ok Rückgabe Bedingung ist 
+                orgaImportConfigs.Clear()
+                Call MsgBox("Das Öffnen der " & configFile & " war nicht erfolgreich")
+            End Try
+
+        End If
+
+        checkOrgaImportConfig = (orgaImportConfigs.Count > 0)
+
+    End Function
+
+    ''' <summary>
     ''' 
     ''' </summary>
     ''' <param name="ActualDataConfig"></param>
@@ -1515,10 +1719,10 @@ Public Module agm3
                     firstUrlzeile = vstart.row.von
 
                     ' Schleife über alle Tabellenblätter eines ausgewählten Excel-Files (hier = einer Rolle)
-                    For t = 0 To vstart.sheet.bis
+                    For t = 0 To vstart.sheet.bis - 1
 
                         If Not IsNothing(vstart.sheet.von + t) Then
-                            currentWS = CType(appInstance.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                            currentWS = CType(actDataWB.Worksheets(vstart.sheet.von + t), Global.Microsoft.Office.Interop.Excel.Worksheet)
                             If Not IsNothing(vstart.sheetDescript) Then
                                 ok = (vstart.sheetDescript.Contains(currentWS.Name))
                             Else

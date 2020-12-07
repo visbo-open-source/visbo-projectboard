@@ -777,7 +777,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg) As Collection
+    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg, Optional vpType As Integer = ptPRPFType.project) As Collection
 
         Dim resultCollection As New Collection
 
@@ -785,9 +785,9 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
+                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err, vpType)
 
-                    If resultCollection.Count <= 0 Then
+                    If resultCollection.Count < 0 Then
 
                         Select Case err.errorCode
 
@@ -797,7 +797,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
+                                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err, vpType)
                                 End If
 
                             Case Else ' all others
@@ -1367,6 +1367,7 @@ Public Class Request
     Public Function retrieveOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal variantName As String = noVariantName,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As clsConstellation = Nothing
@@ -1376,7 +1377,7 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
-                                                                                               err, storedAtOrBefore)
+                                                                                               err, variantName, storedAtOrBefore)
 
                     If Not IsNothing(result) Then
 
@@ -1389,7 +1390,7 @@ Public Class Request
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
                                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneConstellationFromDB(portfolioName, vpid, timestamp,
-                                                                                                             err, storedAtOrBefore)
+                                                                                                             err, variantName, storedAtOrBefore)
                                 End If
 
                             Case Else ' all others
@@ -1572,7 +1573,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrievPortfolioNamesFromDB", ex.Message)
             Throw New ArgumentException("retrievePortfolioNamesFromDB: " & ex.Message)
         End Try
 
@@ -1638,7 +1639,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByVal vName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1646,7 +1647,7 @@ Public Class Request
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
+                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, vName, err)
 
                     If result = False Then
 
@@ -1658,7 +1659,7 @@ Public Class Request
                             Case 401 ' Token is expired
                                 loginErfolgreich = login(dburl, dbname, vcid, uname, pwd, err)
                                 If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, err)
+                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(cName, cVpid, vName, err)
                                 End If
 
                             Case Else ' all others
@@ -2347,7 +2348,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveOrganisationFromDB", "There is something wrong, reading the organisation: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveOrganisationFromDB = result
@@ -2400,7 +2401,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveCustomFieldsFromDB", "There is something wrong, reading the Customfields: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveCustomFieldsFromDB = result
@@ -2461,7 +2462,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logDebug, "retrieveCustomizationFromDB", "There is something wrong, reading the Customizations: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveCustomizationFromDB = result
@@ -2520,7 +2521,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logDebug, "retrieveAppearancesFromDB", "There is something wrong, reading the appearances: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveAppearancesFromDB = result
@@ -2561,8 +2562,9 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveVCsForUser", "error reading the VC for the user: (" & err.errorCode & ") " & err.errorMsg)
         End Try
+
         retrieveVCsForUser = result
     End Function
 

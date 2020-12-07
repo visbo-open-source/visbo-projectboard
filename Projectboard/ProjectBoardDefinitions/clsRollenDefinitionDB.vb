@@ -18,11 +18,6 @@
     Public kapazitaet() As Double
 
 
-    ' tk Allianz 21.11.18 deprecated, wird nur in Direkt DB Modell noch verwendet 
-    Public tagessatzExtern As Double = Nothing
-    ' tk Allianz 21.11.18 deprecated, wird nur in Direkt DB Modell noch verwendet 
-    Public externeKapazitaet() As Double = Nothing
-
     Public timestamp As Date
     ' Id wird von MongoDB automatisch gesetzt 
     Public Id As String
@@ -100,8 +95,6 @@
 
 
             .tagessatzIntern = Me.tagessatzIntern
-            ' tk Allianz 21.11.18, nicht mehr nötig  
-            '.tagessatzExtern = Me.tagessatzExtern
 
             Dim lenDB As Integer = Me.kapazitaet.Length
             Dim lenSession As Integer = .kapazitaet.Length
@@ -266,9 +259,6 @@
             Me.tagessatzIntern = .tagessatzIntern
             Me.kapazitaet = .kapazitaet
 
-            ' tk Allianz 21.11.18 
-            Me.tagessatzExtern = Nothing
-            Me.externeKapazitaet = Nothing
 
             Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
@@ -320,16 +310,14 @@
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern)
-                'And _
-                '            (Me.tagessatzExtern = vglRole.tagessatzExtern)
+
 
             End If
 
             ' jetzt die Kapa-Arrays vergleichen 
             If stillok Then
                 stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
-                'And _
-                '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+
             End If
 
             isIdenticalTo = stillok

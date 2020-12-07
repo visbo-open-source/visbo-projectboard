@@ -150,6 +150,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
                 .OKButton.Visible = False
 
                 '.lblVersionen1.Visible = False
@@ -185,6 +186,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
                 .OKButton.Visible = True
                 If awinSettings.englishLanguage Then
                     .OKButton.Text = "Select as template"
@@ -238,6 +240,7 @@ Public Class frmProjPortfolioAdmin
 
 
                 .dropboxScenarioNames.Visible = True
+                .txtBoxVariantName.Visible = True
 
                 .OKButton.Visible = True
                 '.OKButton.Text = "Szenario speichern"
@@ -297,6 +300,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     OKButton.Text = "aus Session Löschen"
@@ -321,7 +325,7 @@ Public Class frmProjPortfolioAdmin
             ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                    .Text = "Löschen von Projekten, Varianten, Timestamps aus der DB"
                 Else
                     .Text = "Delete projects, variants, timestamps from DB"
                 End If
@@ -340,6 +344,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -382,6 +387,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -434,6 +440,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -471,6 +478,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -509,6 +517,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -547,6 +556,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = True
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = True
@@ -584,6 +594,7 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
+                .txtBoxVariantName.Visible = False
 
 
                 .OKButton.Visible = False
@@ -725,9 +736,14 @@ Public Class frmProjPortfolioAdmin
             Next
 
             For Each kvp2 As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+                Dim newKey As String = kvp2.Key
                 If kvp2.Key <> "Start" Then
-                    If Not dbPortfolioNames.ContainsKey(kvp2.Key) Then
-                        dropboxScenarioNames.Items.Add(kvp2.Key)
+                    If newKey.Contains("#") Then
+                        Dim hstr() As String = Split(newKey, "#")
+                        newKey = hstr(0)
+                    End If
+                    If Not dbPortfolioNames.ContainsKey(newKey) Then
+                        dropboxScenarioNames.Items.Add(newKey)
                     End If
 
                 End If
@@ -3151,9 +3167,13 @@ Public Class frmProjPortfolioAdmin
 
                 currentConstellationName = dropboxScenarioNames.Text
                 'currentBrowserConstellation.constellationName = currentConstellationName
+                Dim currentConstellationVariantName As String = txtBoxVariantName.Text
 
+                ' TODO: hier muss VarianteName mit berücksichtigt werden
                 Dim toStoreConstellation As clsConstellation =
                     currentBrowserConstellation.copy(currentConstellationName)
+                ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
+                toStoreConstellation.variantName = currentConstellationVariantName
 
 
                 ' Korrektheitsprüfung
@@ -3249,7 +3269,7 @@ Public Class frmProjPortfolioAdmin
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
                 dropboxScenarioNames.Text = ""
-
+                txtBoxVariantName.Text = ""
 
             End If
 
@@ -4264,9 +4284,6 @@ Public Class frmProjPortfolioAdmin
     'End Sub
 
 
-    Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
-
-    End Sub
 
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 
@@ -4431,6 +4448,16 @@ Public Class frmProjPortfolioAdmin
             ttText = "Portfolio-Name auswählen oder neuen Namen eingeben"
         Else
             ttText = "Select portfolio name and/or edit new name"
+        End If
+        ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
+    End Sub
+
+    Private Sub txtBoxVariantName_MouseHover(sender As Object, e As EventArgs) Handles txtBoxVariantName.MouseHover
+        Dim ttText As String = ""
+        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+            ttText = "Namen für die Portfolio-Variante eingeben"
+        Else
+            ttText = "Edit new name for the portfolio-variant"
         End If
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
@@ -5327,4 +5354,5 @@ Public Class frmProjPortfolioAdmin
     Private Sub OKButton_DockChanged(sender As Object, e As EventArgs) Handles OKButton.DockChanged
 
     End Sub
+
 End Class

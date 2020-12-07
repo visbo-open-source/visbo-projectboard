@@ -221,6 +221,7 @@ Public Class clsSmartSlideListen
             Else
                 For Each kvp As KeyValuePair(Of String, String) In _portfolioList
                     If kvp.Value = vpid Then
+                        ' TODO für Portfolio mit Varianten ausprogramieren siehe containsProject
                         If pfName = kvp.Key Then
                             result = True
                             Exit For
