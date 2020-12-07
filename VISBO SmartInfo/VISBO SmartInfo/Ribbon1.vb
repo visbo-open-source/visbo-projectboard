@@ -1684,7 +1684,8 @@ Public Class Ribbon1
                     appearanceDefinitions = New SortedList(Of String, clsAppearance)
                     ' hier muss jetzt das Customization File aufgemacht werden ...
                     Try
-                        xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=awinSettings.awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
+                        Dim customFile As String = My.Computer.FileSystem.CombinePath(awinSettings.awinPath, customizationFile)
+                        xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=customFile, [ReadOnly]:=True, Editable:=False)
                         myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
 
                         If Not IsNothing(xlsCustomization) Then
@@ -1715,7 +1716,7 @@ Public Class Ribbon1
                             result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
                                                                                                 CStr(settingTypes(ptSettingTypes.appearance)),
                                                                                                 CStr(settingTypes(ptSettingTypes.appearance)),
-                                                                                                Nothing,
+                                                                                                Date.Now,
                                                                                                 err)
 
                             If result = True Then
@@ -1808,7 +1809,7 @@ Public Class Ribbon1
                                 result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customizations,
                                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
                                                                                                     CStr(settingTypes(ptSettingTypes.customization)),
-                                                                                                    Nothing,
+                                                                                                    Date.Now,
                                                                                                     err)
 
                                 If result = True Then
