@@ -1700,9 +1700,6 @@ Public Class Ribbon1
                     appearanceDefinitions = New SortedList(Of String, clsAppearance)
                     ' hier muss jetzt das Customization File aufgemacht werden ...
                     Try
-
-                        Dim customFile As String = My.Computer.FileSystem.CombinePath(awinSettings.awinPath, customizationFile)
-
                         xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=customFile, [ReadOnly]:=True, Editable:=False)
                         myCustomizationFile = pseudoappInstance.ActiveWorkbook.Name
 
