@@ -76,6 +76,316 @@ Partial Friend NotInheritable Class MySettings
             Me("rememberUserPWD") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property showProjectLine() As Boolean
+        Get
+            Return CType(Me("showProjectLine"),Boolean)
+        End Get
+        Set
+            Me("showProjectLine") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showAllIfOne() As Boolean
+        Get
+            Return CType(Me("showAllIfOne"),Boolean)
+        End Get
+        Set
+            Me("showAllIfOne") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showAmpel() As Boolean
+        Get
+            Return CType(Me("showAmpel"),Boolean)
+        End Get
+        Set
+            Me("showAmpel") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property useOriginalNames() As Boolean
+        Get
+            Return CType(Me("useOriginalNames"),Boolean)
+        End Get
+        Set
+            Me("useOriginalNames") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showPhName() As Boolean
+        Get
+            Return CType(Me("showPhName"),Boolean)
+        End Get
+        Set
+            Me("showPhName") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showMsName() As Boolean
+        Get
+            Return CType(Me("showMsName"),Boolean)
+        End Get
+        Set
+            Me("showMsName") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showPhDate() As Boolean
+        Get
+            Return CType(Me("showPhDate"),Boolean)
+        End Get
+        Set
+            Me("showPhDate") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showMsDate() As Boolean
+        Get
+            Return CType(Me("showMsDate"),Boolean)
+        End Get
+        Set
+            Me("showMsDate") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property useAbbrev() As Boolean
+        Get
+            Return CType(Me("useAbbrev"),Boolean)
+        End Get
+        Set
+            Me("useAbbrev") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property kwInMilestone() As Boolean
+        Get
+            Return CType(Me("kwInMilestone"),Boolean)
+        End Get
+        Set
+            Me("kwInMilestone") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property showVerticals() As Boolean
+        Get
+            Return CType(Me("showVerticals"),Boolean)
+        End Get
+        Set
+            Me("showVerticals") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showLegend() As Boolean
+        Get
+            Return CType(Me("showLegend"),Boolean)
+        End Get
+        Set
+            Me("showLegend") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property sortiertDauer() As Boolean
+        Get
+            Return CType(Me("sortiertDauer"),Boolean)
+        End Get
+        Set
+            Me("sortiertDauer") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property showHorizontals() As Boolean
+        Get
+            Return CType(Me("showHorizontals"),Boolean)
+        End Get
+        Set
+            Me("showHorizontals") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public Property allOnePage() As Boolean
+        Get
+            Return CType(Me("allOnePage"),Boolean)
+        End Get
+        Set
+            Me("allOnePage") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property extendedMode() As Boolean
+        Get
+            Return CType(Me("extendedMode"),Boolean)
+        End Get
+        Set
+            Me("extendedMode") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property projectswithNoPhMsmayPass() As Boolean
+        Get
+            Return CType(Me("projectswithNoPhMsmayPass"),Boolean)
+        End Get
+        Set
+            Me("projectswithNoPhMsmayPass") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute()>  _
+    Public Property calLeftDate() As Date
+        Get
+            Return CType(Me("calLeftDate"),Date)
+        End Get
+        Set
+            Me("calLeftDate") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute()>  _
+    Public Property calRightDate() As Date
+        Get
+            Return CType(Me("calRightDate"),Date)
+        End Get
+        Set
+            Me("calRightDate") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\Demo Visbo Center\")>  _
+    Public Property customizationPath() As String
+        Get
+            Return CType(Me("customizationPath"),String)
+        End Get
+        Set
+            Me("customizationPath") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+    Public Property mongoDBname() As String
+        Get
+            Return CType(Me("mongoDBname"),String)
+        End Get
+        Set
+            Me("mongoDBname") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://staging.visbo.net/api")>  _
+    Public Property mongoDBURL() As String
+        Get
+            Return CType(Me("mongoDBURL"),String)
+        End Get
+        Set
+            Me("mongoDBURL") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property VISBOServer() As Boolean
+        Get
+            Return CType(Me("VISBOServer"),Boolean)
+        End Get
+        Set
+            Me("VISBOServer") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property mongoDBWithSSL() As Boolean
+        Get
+            Return CType(Me("mongoDBWithSSL"),Boolean)
+        End Get
+        Set
+            Me("mongoDBWithSSL") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+    Public Property proxyServerURL() As String
+        Get
+            Return CType(Me("proxyServerURL"),String)
+        End Get
+        Set
+            Me("proxyServerURL") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\Demo Visbo Center")>  _
+    Public Property awinPath() As String
+        Get
+            Return CType(Me("awinPath"),String)
+        End Get
+        Set
+            Me("awinPath") = value
+        End Set
+    End Property
 End Class
 
 Namespace My

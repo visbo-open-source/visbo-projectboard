@@ -2175,15 +2175,23 @@ Public Class Request
                                 Throw New ArgumentException(err.errorMsg)
                         End Select
 
+
                     End If
 
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message)
                 End Try
 
-            Else 'es wird eine MongoDB direkt adressiert; hier gibt es keine Settings
+            Else 'es wird eine MongoDB direkt adressiert; ur:2020.12.3nun sollen auch Appearances in DB gespeichert werden
 
-                result = False
+                If type = settingTypes(ptSettingTypes.appearance) Then
+                    result = CType(DBAcc, MongoDbAccess.Request).storeAppearancesToDB(hlist)
+                End If
+
+                If type = settingTypes(ptSettingTypes.customization) Then
+                    result = CType(DBAcc, MongoDbAccess.Request).storeCustomizationToDB(hlist)
+                End If
+
             End If
 
         Catch ex As Exception
@@ -2454,10 +2462,12 @@ Public Class Request
 
             Else
                 ' to do for direct MongoAccess
-                result = Nothing
-                err.errorCode = 403
-                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
-                                vbLf & "und können daher nicht von der DB gelesen werden"
+                ' to do for direct MongoAccess
+                result = CType(DBAcc, MongoDbAccess.Request).retrieveCustomizationFromDB(timestamp)
+                'result = Nothing
+                'err.errorCode = 403
+                'err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                '                vbLf & "und können daher nicht von der DB gelesen werden"
 
             End If
 
@@ -2513,10 +2523,12 @@ Public Class Request
 
             Else
                 ' to do for direct MongoAccess
-                result = Nothing
-                err.errorCode = 403
-                err.errorMsg = "Fehler: Darstellungsklasse sind im Customization-File gespeichert " &
-                                vbLf & "und können daher nicht von der DB gelesen werden"
+                result = CType(DBAcc, MongoDbAccess.Request).retrieveAppearancesFromDB(timestamp)
+
+                'result = Nothing
+                'err.errorCode = 403
+                'err.errorMsg = "Fehler: Darstellungsklasse sind im Customization-File gespeichert " &
+                '                vbLf & "und können daher nicht von der DB gelesen werden"
 
             End If
 

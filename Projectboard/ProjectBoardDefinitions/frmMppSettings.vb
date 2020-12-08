@@ -57,73 +57,7 @@
                 .mppShowAllIfOne = True
             End If
 
-            '.eppExtendedMode = False
         End With
-
-
-        If calledfrom = "frmShowPlanElements" Then
-
-            ' alle Elemente anzeigen 
-
-        ElseIf calledfrom = "frmSelectPPTTempl" Then
-
-            With awinSettings
-
-
-                ' Änderung tk - es soll alles sichtbar sein 
-                'notStrictly.Visible = False
-                'sortiertNachDauer.Visible = False
-                'allOnOnePage.Visible = False
-                'shwExtendedMode.Visible = False
-                'ur: 21.04.2015: noch zu tun: zuvor alten Wert sichern
-                'shwExtendedMode.Checked = True
-
-                ' den UseOriginal NAmes Button hochschieben 
-                'useOriginalNames.Top = notStrictly.Top
-            End With
-
-        ElseIf calledfrom = "frmBHTC" Then
-
-            With awinSettings
-
-                ' die folgenden werden im MS Project AddIn gar nicht gezeigt 
-                ' sie müssen auch entsprechend auf die für den Project AddIn sinnvllen werte gesetzt werden 
-                '
-                'shwProjectLine.Visible = False
-                'shwAmpeln.Visible = False
-                'notStrictly.Visible = False
-                'useOriginalNames.Visible = False
-                'sortiertNachDauer.Visible = False
-                'shwExtendedMode.Visible = False
-                
-
-                ' jetzt müssen die Checkboxes und der OK-Button noch hochgeschoben werden 
-                ' ausserdem die Höhe des Formulars verändert werden 
-                'Dim offset As Integer = shwPhaseText.Top - shwProjectLine.Top
-                'shwPhaseText.Top = shwPhaseText.Top - offset
-                'shwPhaseDate.Top = shwPhaseDate.Top - offset
-
-                'ShwMilestoneText.Top = ShwMilestoneText.Top - offset
-                'ShwMilestoneDate.Top = ShwMilestoneDate.Top - offset
-                'KwInMilestone.Top = KwInMilestone.Top - offset
-
-                'useAbbrev.Top = useAbbrev.Top - offset
-
-                'shwVerticals.Top = shwVerticals.Top - offset
-                'shwHorizontals.Top = shwHorizontals.Top - offset
-
-                'shwLegend.Top = shwLegend.Top - offset
-                'allOnOnePage.Top = allOnOnePage.Top - offset
-
-                'okButton.Top = okButton.Top - offset
-
-                'Me.Height = Me.Height - offset
-
-
-            End With
-
-
-        End If
 
     End Sub
 

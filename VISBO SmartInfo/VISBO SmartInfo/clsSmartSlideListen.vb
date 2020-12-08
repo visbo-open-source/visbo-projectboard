@@ -45,6 +45,12 @@ Public Class clsSmartSlideListen
     ' 11.5.18 tk enthält die Liste aller Elemente, die einen central document Link haben
     Private _lnkList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
+    ' tk nötig, um die Durchschnittshöhe an Milestones und Phasen zu bestimmen 
+    Private _anzMS As Integer = 0
+    Private _anzPH As Integer = 0
+    Private _avgMsHeight As Single = 0.0
+    Private _avgPhHeight As Single = 0.0
+
     Private _creationDate As Date
     Private _prevDate As Date
 
@@ -52,7 +58,17 @@ Public Class clsSmartSlideListen
     Private _slideDBName As String
     Private _slideVCid As String
 
+    Public ReadOnly Property avgMsHeight() As Single
+        Get
+            avgMsHeight = _avgMsHeight
+        End Get
+    End Property
 
+    Public ReadOnly Property avgPhHeight() As Single
+        Get
+            avgPhHeight = _avgPhHeight
+        End Get
+    End Property
 
     ''' <summary>
     ''' entfernt die Moved Information aus 
@@ -67,6 +83,8 @@ Public Class clsSmartSlideListen
         End If
 
     End Sub
+
+
     ''' <summary>
     ''' liest bzw. setzt das Creation Date der Slide 
     ''' </summary>
@@ -204,6 +222,18 @@ Public Class clsSmartSlideListen
         End Get
     End Property
 
+    Friend ReadOnly Property getUIDsOFBreadCrumb(ByVal fbreadCrumb As String) As SortedList(Of Integer, Boolean)
+        Get
+
+            If _bCList.ContainsKey(fbreadCrumb) Then
+                getUIDsOFBreadCrumb = _bCList.Item(fbreadCrumb)
+            Else
+                getUIDsOFBreadCrumb = New SortedList(Of Integer, Boolean)
+            End If
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' liefert true, wenn das Portfolio mit portfolioName = pName in der Liste der Portfolios enthalten ist 
@@ -317,6 +347,20 @@ Public Class clsSmartSlideListen
 
         End Get
     End Property
+
+    Public ReadOnly Property getPVNames() As Collection
+        Get
+            Dim resultCollection As New Collection
+            For Each kvp As KeyValuePair(Of String, String) In _projectList
+                If Not resultCollection.Contains(kvp.Key) Then
+                    resultCollection.Add(kvp.Key, kvp.Key)
+                End If
+            Next
+
+            getPVNames = resultCollection
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt den Namen zurück, der urspünglich der vpid aus dem VIsbo Center zugeordnet war
@@ -437,6 +481,29 @@ Public Class clsSmartSlideListen
         End Get
     End Property
 
+    Friend ReadOnly Property getShapeNameWithBreadCrumb(ByVal searchString As String) As String
+        Get
+            Dim sisterName As String = ""
+            Dim found As Boolean = False
+            Dim anz As Integer = _bCList.Count
+            Dim ix As Integer = 0
+            Do While Not found And ix <= anz - 1
+                If _bCList.ElementAt(ix).Key.StartsWith(searchString) Then
+                    found = True
+                    ' jetzt die ID eines Elements rausholen 
+                    Dim myID As Integer = _bCList.ElementAt(ix).Value.First.Key
+                    If _IDplanShapes.ContainsKey(myID) Then
+                        sisterName = _IDplanShapes.Item(myID)
+                    End If
+                Else
+                    ix = ix + 1
+                End If
+            Loop
+
+            getShapeNameWithBreadCrumb = sisterName
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt den ShapeName zurück, der zur UID gehört; 
     ''' </summary>
@@ -444,7 +511,7 @@ Public Class clsSmartSlideListen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private ReadOnly Property getShapeNameOfUid(ByVal uid As Integer) As String
+    Friend ReadOnly Property getShapeNameOfUid(ByVal uid As Integer) As String
         Get
             Dim tmpStr As String = ""
             Dim tmpStrTest As String = ""
@@ -479,11 +546,21 @@ Public Class clsSmartSlideListen
     ''' <param name="cName"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addCN(ByVal cName As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
+    Public Sub addCN(ByVal cName As String, ByVal shapeName As String, ByVal isMilestone As Boolean, ByVal shapeHeight As Single)
 
         Dim uid As Integer = Me.getUID(shapeName)
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
+
+        ' das hier wird gemacht um die durchschnittliche Phase und Meilenstein Höhe zu bestimmen ... 
+        If isMilestone And shapeHeight > 0 Then
+            _avgMsHeight = (_anzMS * _avgMsHeight + shapeHeight) / (_anzMS + 1)
+            _anzMS = _anzMS + 1
+        ElseIf shapeHeight > 0 Then
+            _avgPhHeight = (_anzPH * _avgPhHeight + shapeHeight) / (_anzPH + 1)
+            _anzPH = _anzPH + 1
+        End If
+
 
         If _cNList.ContainsKey(cName) Then
             listOfShapeNames = _cNList.Item(cName)
@@ -580,9 +657,10 @@ Public Class clsSmartSlideListen
 
         Dim uid As Integer = Me.getUID(shapeName)
 
-        Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" &
-            bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
+        'Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" &
+        '    bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
 
+        Dim fullbCrumb As String = bestimmeFullBreadcrumb(getPVnameFromShpName(shapeName), bCrumb, getElemNameFromShpName(shapeName))
 
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
@@ -602,6 +680,16 @@ Public Class clsSmartSlideListen
         End If
 
     End Sub
+
+    Public Function bestimmeFullBreadcrumb(ByVal pvname As String, ByVal bcrumb As String, ByVal elemName As String) As String
+        bestimmeFullBreadcrumb = "(" & pvname & ")" & bcrumb.Replace("#", " - ") & " - " & elemName
+    End Function
+
+    Public ReadOnly Property containsFullBreadCrumb(ByVal fullBreadCrumb As String) As Boolean
+        Get
+            containsFullBreadCrumb = _bCList.ContainsKey(fullBreadCrumb)
+        End Get
+    End Property
 
     ''' <summary>
     ''' fügt der Liste an Lieferumfängen weitere hinzu ;
@@ -1469,6 +1557,12 @@ Public Class clsSmartSlideListen
         _vEList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _ovdList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
+        ' for avg Heights 
+        _anzMS = 0
+        _avgMsHeight = 0.0
+        _anzPH = 0
+        _avgPhHeight = 0.0
+
         _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
         '
@@ -1483,6 +1577,7 @@ Public Class clsSmartSlideListen
         _slideDBUrl = ""
         _slideDBName = ""
         _slideVCid = ""
+
     End Sub
 
 End Class

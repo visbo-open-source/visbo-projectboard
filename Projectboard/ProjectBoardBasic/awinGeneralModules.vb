@@ -316,7 +316,7 @@ Public Module awinGeneralModules
     ''' macht den Teil des ClearSession, der so ggf auch in Powerpoint, Project etc gemacht werden kann, um 
     ''' alle Strukturen zurückzusetzen
     ''' </summary>
-    Public Sub emptyAllVISBOStructures()
+    Public Sub emptyAllVISBOStructures(Optional ByVal calledFromPPT As Boolean = False)
 
         ShowProjekte.Clear()
         AlleProjekte.Clear()
@@ -332,13 +332,19 @@ Public Module awinGeneralModules
         ' es gibt ja nix mehr in der Session 
         currentConstellationName = ""
 
-        ' jetzt den Datenbank Cache Löschen 
-        Dim clearOK As Boolean = False
-        Try
-            clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
-        Catch ex As Exception
-            Call MsgBox("Error when clearing session: " & ex.Message)
-        End Try
+        '
+        ' jetzt den Datenbank Cache Löschen , aber nur wenn es nicht von Powerpoint Add-In aus aufgerufen wird
+        If Not calledFromPPT Then
+            Dim clearOK As Boolean = False
+            Try
+                clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
+            Catch ex As Exception
+                Call MsgBox("Warning: no Cache clearing " & ex.Message)
+            End Try
+        End If
+        '
+        '
+
 
     End Sub
 
@@ -2836,8 +2842,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, phaseName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
                             currentPH = hproj.getPhase(name:=phaseName, breadcrumb:=breadCrumb, lfdNr:=1)
 
@@ -2875,8 +2881,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, milestoneName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
                             currentMS = hproj.getMilestone(milestoneName, breadCrumb, 1)
 
@@ -4393,7 +4399,12 @@ Public Module awinGeneralModules
             outputCollection.Add(outputLine)
         Else
             ' ab diesem Wert soll neu gezeichnet werden 
-            Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+            Dim freieZeile As Integer = 2
+
+            If Not calledFromPPT Then
+                freieZeile = projectboardShapes.getMaxZeile
+            End If
+
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 

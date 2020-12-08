@@ -31,6 +31,7 @@ Public Module Module1
     Public noDB As Boolean = True
 
     'Name des VisboClient
+    'Public visboClient As String = divClients(client.Projectboard)
     Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos
@@ -285,6 +286,13 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+    Public Enum client
+        Projectboard = 0
+        VisboSmartInfo = 1
+        VisboMSProject = 2
+    End Enum
+
     Public Enum ptVariantFixNames
         pfv = 0 ' für den Portfolio Manager, für die Vorgaben reserviert
         acd = 1 ' ggf später für ActualData 
@@ -487,6 +495,7 @@ Public Module Module1
         massEditRessCost = 1
         massEditTermine = 2
         massEditAttribute = 3
+        powerpointAddIn = 4
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
@@ -883,6 +892,7 @@ Public Module Module1
         setWriteProtection = 10
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
+        loadMultiPVInPPT = 13
     End Enum
 
     ''' <summary>
@@ -1154,7 +1164,7 @@ Public Module Module1
     '            'End Try
 
     '        Catch ex As Exception
-    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
+    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul:  awinLoescheProjekt")
     '            Exit Sub
     '        End Try
 
@@ -3531,8 +3541,9 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
-    ''' es kann unterschieden werden zwischen [P:Projekt-Name], 
+    ''' returns a real pvname if its [P:] , that is pName#vname or the empty string
+    ''' gibt ausserdem den Elem-Name und Breadcrumb, type 
+    ''' type kann sein: -1, keine Unterscheidung, 0:=[V:Vorlagen-Name] 1:= [P:Projekt-Name], 
     ''' [V:Vorlagen-Name] und [C:Category-Name]
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -3545,6 +3556,7 @@ Public Module Module1
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
+        Dim tmpPvName As String = ""
 
         ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
         If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or
@@ -3559,12 +3571,12 @@ Public Module Module1
 
             Dim startPos As Integer = 3
             Dim endPos As Integer = fullname.IndexOf("]") + 1
-            pvName = fullname.Substring(startPos, endPos - startPos - 1)
+            tmpPvName = fullname.Substring(startPos, endPos - startPos - 1)
 
             fullname = fullname.Substring(endPos)
         Else
             type = -1
-            pvName = ""
+            tmpPvName = ""
         End If
 
         tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
@@ -3584,6 +3596,17 @@ Public Module Module1
             elemName = "?"
         End If
         breadcrumb = tmpBC
+
+        ' tk 7.12.20 jetzt muss der Pv name noch normiert werden auf pname#vname oder "" 
+        If type = PTItemType.projekt Then
+            If tmpPvName = "" Or tmpPvName.Contains("#") Then
+                pvName = tmpPvName
+            Else
+                pvName = calcProjektKey(tmpPvName, "")
+            End If
+        Else
+            pvName = tmpPvName
+        End If
 
     End Sub
 
@@ -6754,6 +6777,7 @@ Public Module Module1
         Dim tmpResult As String = ""
         Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
 
+        addOn = "(" & addOn & ")"
 
         If tmpStr(0).EndsWith(vbVerticalTab) Then
             tmpResult = tmpStr(0) & addOn

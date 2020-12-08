@@ -7317,7 +7317,6 @@ Public Module awinDiagrams
                     If scInfo.q2 <> "" Then
                         Call splitHryFullnameTo2(scInfo.q2, prcName, breadcrumb, type, pvName)
 
-
                         tmpTdatenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
 
                         Dim myCollection As New Collection

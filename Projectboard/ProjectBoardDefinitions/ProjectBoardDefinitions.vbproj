@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsAppearanceDB.vb" />
     <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
@@ -79,6 +80,7 @@
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
     <Compile Include="clsCustomization.vb" />
+    <Compile Include="clsCustomizationDB.vb" />
     <Compile Include="clsCustomUserRole.vb" />
     <Compile Include="clsCustomUserRoles.vb" />
     <Compile Include="clsDefaultCalendar.vb" />
