@@ -7430,9 +7430,12 @@ Public Module Module1
 
             ' FileNamen zusammenbauen
             Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
             Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
             Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
             ' Fragen, ob bereits existiert - eventuell nicht nötig
             If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
@@ -7497,9 +7500,12 @@ Public Module Module1
 
             ' FileNamen zusammenbauen
             Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
             Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
             Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
             ' Fragen, ob bereits existiert - eventuell nicht nötig
             If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
@@ -7538,9 +7544,12 @@ Public Module Module1
 
             ' FileNamen zusammenbauen
             Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
             Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
             Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
             ' Fragen, ob bereits existiert - eventuell nicht nötig
             If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
@@ -7579,9 +7588,12 @@ Public Module Module1
 
             ' FileNamen zusammenbauen
             Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
             Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
             Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
             ' Fragen, ob bereits existiert - eventuell nicht nötig
             If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
@@ -7646,9 +7658,12 @@ Public Module Module1
 
             ' FileNamen zusammenbauen
             Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
             Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-            Dim logfileName As String = "newlogfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
-            'Dim logfileName As String = "newlogfile.txt"
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
             Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
             ' Fragen, ob bereits existiert - eventuell nicht nötig
             If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
