@@ -15174,7 +15174,7 @@ Public Module testModule
                             worker.ReportProgress(0, e)
                         End If
                     Else
-                        Call logfileSchreiben(msgTxt, "zeichnePPTprojects", 0)
+                        Call logger(ptErrLevel.logInfo, msgTxt, "zeichnePPTprojects", 0)
 
                     End If
                 End If

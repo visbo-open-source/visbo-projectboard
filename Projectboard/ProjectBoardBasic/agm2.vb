@@ -20878,7 +20878,7 @@ Public Module agm2
                     End If
 
                     Call logger(ptErrLevel.logInfo, "LOGIN cancelled ...", "", -1)
-                    '''Call logfileSchliessen()
+
                     If awinSettings.englishLanguage Then
                         Throw New ArgumentException("LOGIN cancelled ...")
                     Else
@@ -21404,7 +21404,7 @@ Public Module agm2
                     'End If
 
                     '' Logfile wird geschlossen
-                    '''Call logfileSchliessen()
+                    '' Call logfileSchliessen()
 
                 End If ' if special ="ProjectBoard"
 
@@ -24125,7 +24125,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Excel Worksheets, das die Infos im aktuellen Workbook enthält</param>
     ''' <remarks></remarks>
-    Private Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
+    Public Sub readBusinessUnitDefinitions(ByVal wsname As Excel.Worksheet)
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
@@ -24176,7 +24176,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
+    Public Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""

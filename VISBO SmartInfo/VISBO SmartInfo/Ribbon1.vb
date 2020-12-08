@@ -1741,10 +1741,10 @@ Public Class Ribbon1
 
                             If result = True Then
                                 Call MsgBox("ok, appearances stored ...")
-                                Call logfileSchreiben("appearances stored ...", "loginAndReadApearances", -1)
+                                Call logger(ptErrLevel.logInfo, "appearances stored ...", "loginAndReadApearances", -1)
                             Else
                                 Call MsgBox("Error when writing appearances")
-                                Call logfileSchreiben("Error when writing appearances ...", "loginAndReadApearances", -1)
+                                Call logger(ptErrLevel.logError, "Error when writing appearances ...", "loginAndReadApearances", -1)
                             End If
                         Else
                             If awinSettings.englishLanguage Then
@@ -1832,10 +1832,10 @@ Public Class Ribbon1
 
                                 If result = True Then
                                     Call MsgBox("ok, customizations stored ...")
-                                    Call logfileSchreiben("customizations stored ...", "loginAndReadApearances", -1)
+                                    Call logger(ptErrLevel.logInfo, "customizations stored ...", "loginAndReadApearances", -1)
                                 Else
                                     Call MsgBox("Error when writing customizations")
-                                    Call logfileSchreiben("Error when writing customizations ...", "loginAndReadApearances", -1)
+                                    Call logger(ptErrLevel.logError, "Error when writing customizations ...", "loginAndReadApearances", -1)
                                 End If
                             Else
                                 If awinSettings.englishLanguage Then

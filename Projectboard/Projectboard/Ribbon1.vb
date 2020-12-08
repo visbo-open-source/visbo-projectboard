@@ -6544,10 +6544,6 @@ Imports System.Web
             'Call logfileSchreiben(" RXF-Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
 
-
-        ' Schließen des LogFiles
-        '''Call logfileSchliessen()
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -8195,7 +8191,7 @@ Imports System.Web
 
 
 
-        '''Call logfileSchliessen()
+        '' Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
