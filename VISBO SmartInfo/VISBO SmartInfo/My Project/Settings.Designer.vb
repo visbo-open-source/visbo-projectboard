@@ -302,19 +302,19 @@ Partial Friend NotInheritable Class MySettings
             Me("calRightDate") = value
         End Set
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(),
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
-     Global.System.Configuration.DefaultSettingValueAttribute("")>
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
     Public Property customizationPath() As String
         Get
-            Return CType(Me("customizationPath"), String)
+            Return CType(Me("customizationPath"),String)
         End Get
         Set
-            Me("customizationPath") = Value
+            Me("customizationPath") = value
         End Set
     End Property
-
+    
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("")>  _
@@ -326,19 +326,19 @@ Partial Friend NotInheritable Class MySettings
             Me("mongoDBname") = value
         End Set
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(),
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
-     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://my.visbo.net/api")>  _
     Public Property mongoDBURL() As String
         Get
-            Return CType(Me("mongoDBURL"), String)
+            Return CType(Me("mongoDBURL"),String)
         End Get
         Set
-            Me("mongoDBURL") = Value
+            Me("mongoDBURL") = value
         End Set
     End Property
-
+    
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
@@ -374,16 +374,16 @@ Partial Friend NotInheritable Class MySettings
             Me("proxyServerURL") = value
         End Set
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(),
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Tom\Documents\VISBO Demo Systeme\VISBO Project Add-In")>
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Demo Systeme\VISBO Project Add-In")>  _
     Public Property awinPath() As String
         Get
-            Return CType(Me("awinPath"), String)
+            Return CType(Me("awinPath"),String)
         End Get
         Set
-            Me("awinPath") = Value
+            Me("awinPath") = value
         End Set
     End Property
 End Class

@@ -84,7 +84,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\Tom\Documents\VISBO Demo Systeme\VISBO Project Add-In</Value>
+      <Value Profile="(Default)">VISBO Demo Systeme\VISBO Project Add-In</Value>
     </Setting>
   </Settings>
 </SettingsFile>
