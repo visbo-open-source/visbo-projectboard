@@ -1630,7 +1630,7 @@ Public Class Ribbon1
     Private Sub btn_ImportAppCust_Click(sender As Object, e As RibbonControlEventArgs) Handles btn_ImportAppCust.Click
 
         Dim err As New clsErrorCodeMsg
-        Dim VCId As String
+        Dim VCId As String = ""
         Dim wasSuccessful As Boolean = False
 
         Try
