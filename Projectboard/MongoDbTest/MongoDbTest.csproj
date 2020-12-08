@@ -51,7 +51,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>05EAA44D40FA9CD0512B1A31F664ED44DBAFCCEE</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>B3CD6F8B9570918AB170D31451B35BEA0D7608A1</ManifestCertificateThumbprint>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />

@@ -69,22 +69,22 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">bhtc</Value>
     </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://my.visbo.net/api</Value>
+      <Value Profile="(Default)">10.28.10.38</Value>
     </Setting>
     <Setting Name="VISBOServer" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">VISBO Demo Systeme\VISBO Project Add-In</Value>
+      <Value Profile="(Default)">MS Project VISBO AddIn</Value>
     </Setting>
   </Settings>
 </SettingsFile>
