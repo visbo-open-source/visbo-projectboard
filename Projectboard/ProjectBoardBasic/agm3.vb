@@ -56,16 +56,15 @@ Public Module agm3
 
 
                         Dim titleCol As Integer,
-
-                                IdentCol As Integer,
-                                InputFileCol As Integer,
-                                TypCol As Integer,
-                                DatenCol As Integer,
-                                TabUCol As Integer, TabNCol As Integer,
-                                SUCol As Integer, SNCol As Integer,
-                                ZUCol As Integer, ZNCol As Integer,
-                                ObjCol As Integer,
-                                InhaltCol As Integer
+                            IdentCol As Integer,
+                            InputFileCol As Integer,
+                            TypCol As Integer,
+                            DatenCol As Integer,
+                            TabUCol As Integer, TabNCol As Integer,
+                            SUCol As Integer, SNCol As Integer,
+                            ZUCol As Integer, ZNCol As Integer,
+                            ObjCol As Integer,
+                            InhaltCol As Integer
 
                         ' ImportTyp aus configfile lesen, wenn nicht vorhanden, wird es übergangen
                         configLine = New clsConfigKapaImport
@@ -254,6 +253,7 @@ Public Module agm3
                             End If
                             oPCollection.Add(outputline)
                         End If
+                    End If
 
                 Catch ex As Exception
                     If awinSettings.englishLanguage Then
@@ -282,7 +282,7 @@ Public Module agm3
             If awinSettings.englishLanguage Then
                 outputline = "There is no such config file: " & configFile
             End If
-            Call logfileSchreiben(outputline, "", -1)
+            Call logger(ptErrLevel.logWarning, outputline, "", -1)
         End If
 
         checkCapaImportConfig = (kapaConfigs.Count > 0) And (anzOld_oPCollection - oPCollection.Count = 0)
@@ -1737,7 +1737,7 @@ Public Module agm3
                                 outputline = "das Tabellenblatt " & currentWS.Name & " passt nicht zur Konfiguration"
                             End If
                             oPCollection.Add(outputline)
-                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                             result = False
                             Exit For ' keine weiteren Tabellenblätter mehr lesen - Fehler aufgetreten
                         End If
@@ -1749,7 +1749,7 @@ Public Module agm3
                                 outputline = "das Tabellenblatt " & vstart.sheetDescript & " ist nicht vorhanden"
                             End If
                             oPCollection.Add(outputline)
-                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                             result = False
                         Else
                             ' passendes Worksheet gefunden
@@ -1769,7 +1769,7 @@ Public Module agm3
                             Catch ex As Exception
                                 outputline = "Error looking for month/year"
                                 oPCollection.Add(outputline)
-                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                 result = False
                             End Try
 
@@ -1789,7 +1789,7 @@ Public Module agm3
                                         outputline = "Error: im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
                                     End If
                                     oPCollection.Add(outputline)
-                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                    Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                     result = False
                                 End Try
 
@@ -1810,7 +1810,7 @@ Public Module agm3
                                                 personalNumber & " : " & personalName
                                         End If
                                         oPCollection.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                         result = False
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
                                     End If
@@ -1823,7 +1823,7 @@ Public Module agm3
                                         outputline = "Fehler: im Tabellenblatt " & vstart.sheetDescript & "- es gibt ein Fehler beim lesen der Personalnummer oder des Namens"
                                     End If
                                     oPCollection.Add(outputline)
-                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                    Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                     result = False
                                 End Try
 
@@ -1864,7 +1864,7 @@ Public Module agm3
                                                             outputline = "Achtung: " & hrole.name & " Tabelle: " & currentWS.Name & " Zeile: " & z.ToString & " keine ProjektNr. angegeben!"
                                                         End If
                                                         oPCollection.Add(outputline)
-                                                        Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                        Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                                     End If
                                                 End If
                                             End If
@@ -1894,7 +1894,7 @@ Public Module agm3
                                                         outputline = "Achtung: " & hrole.name & ": in '" & currentWS.Name & "': Die Summe der einzelnen Werte (" & stundenSumme.ToString & ") ist nicht gleich dem Eintrag in Spalte '" & hspalte & "' (" & stundenTotal.ToString & ")"
                                                     End If
                                                     oPCollection.Add(outputline)
-                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                    Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                                 End If
 
                                             Catch ex As Exception
@@ -1907,7 +1907,7 @@ Public Module agm3
                                                     outputline = "Achtung: " & hrole.name & ": " & ex.Message & currentWS.Name
                                                 End If
                                                 oPCollection.Add(outputline)
-                                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                             End Try
 
 
@@ -1936,7 +1936,7 @@ Public Module agm3
                                                         Else
                                                             outputline = "Unterschiedlicher Projektname für Projekt Nr. '" & projektKDNr & "': in der ExcelTabelle heißt es '" & projektName & "' in der DB  '" & pName & "'"
                                                         End If
-                                                        Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                        Call logger(ptErrLevel.logWarning, outputline, "readActualDataWithConfig", anzFehler)
                                                     End If
 
                                                     hproj = New clsProjekt
@@ -1951,7 +1951,7 @@ Public Module agm3
                                                     End If
 
                                                     oPCollection.Add(outputline)
-                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                    Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
 
                                                 Else
                                                     ' Fehlermeldung, falls kein Projekt zu einer ProjektKdNr. existieren
@@ -1961,7 +1961,7 @@ Public Module agm3
                                                         outputline = "Es existiert kein Projekt zu Projekt-Nr. '" & projektKDNr & "' User: '" & hrole.name & "' Monat: '" & currentWS.Name & "'"
                                                     End If
                                                     oPCollection.Add(outputline)
-                                                    Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                    Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
 
                                                 End If
                                             End If
@@ -2046,7 +2046,7 @@ Public Module agm3
                                                     outputline = "Fehler: Istdaten sind zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
                                                 End If
                                                 oPCollection.Add(outputline)
-                                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                                 result = False
                                             End If
                                         End If      ' if ProjektKDNr = ""
@@ -2064,7 +2064,7 @@ Public Module agm3
                                     outputline = "Ende der Istdaten für '" & personalName & "' erreicht"
                                 End If
 
-                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logInfo, outputline, "readActualDataWithConfig", anzFehler)
                                 Exit For
                             End If
 
@@ -2099,7 +2099,7 @@ Public Module agm3
 
         Try
             ' hier wird jetzt der Import gemacht 
-            Call logfileSchreiben("Beginn Import Istdaten", dateiname, -1)
+            Call logger(ptErrLevel.logInfo, "Beginn Import Istdaten", dateiname, -1)
 
             ' Öffnen des Organisations-Files
             appInstance.Workbooks.Open(dateiname)
@@ -2304,7 +2304,7 @@ Public Module agm3
                                 End If
                                 'Call MsgBox(msgtxt)
 
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
 
                                 If formerEE Then
                                     appInstance.EnableEvents = True
@@ -2324,7 +2324,7 @@ Public Module agm3
                                     oPCollection.Add(msgtxt, msgtxt)
                                 End If
 
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                                 'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
                                 ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
                                 'Throw New ArgumentException(msgtxt)
@@ -2375,7 +2375,7 @@ Public Module agm3
                                                                         End If
                                                                         'Call MsgBox(msgtxt)
                                                                         fehler = True
-                                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                                     End If
                                                                 Else
                                                                     ' Feld ist weiss, oder hat keine Farbe, keine Zahl: also ist es Arbeitstag mit Default-Std pro Tag 
@@ -2399,7 +2399,7 @@ Public Module agm3
                                                                 Else
                                                                     ' freier Tag für Teilzeitbeschäftigte
                                                                     msgtxt = "Tag zählt nicht: Zeile " & iZ & ", Spalte " & sp
-                                                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                    Call logger(ptErrLevel.logInfo, msgtxt, kapaFileName, anzFehler)
                                                                 End If
 
                                                             End If
@@ -2414,7 +2414,7 @@ Public Module agm3
                                                         If Not oPCollection.Contains(msgtxt) Then
                                                             oPCollection.Add(msgtxt, msgtxt)
                                                         End If
-                                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                     End If
 
                                                 Next
@@ -2446,7 +2446,7 @@ Public Module agm3
                                             End If
                                             'Call MsgBox(msgtxt)
                                             fehler = True
-                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                            Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                         End If
                                     Else
 
@@ -2458,7 +2458,7 @@ Public Module agm3
                                         If Not oPCollection.Contains(msgtxt) Then
                                             oPCollection.Add(msgtxt, msgtxt)
                                         End If
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                     End If
 
                                 Next iZ
@@ -2475,7 +2475,7 @@ Public Module agm3
                                 If Not oPCollection.Contains(msgtxt) Then
                                     oPCollection.Add(msgtxt, msgtxt)
                                 End If
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                             End If
 
                         End If
@@ -2783,7 +2783,7 @@ Public Module agm3
                                                 msgtxt = "Fehler in Zeile: " & ix & " Input passt nicht zusammen " & vbLf & kapaFileName
                                             End If
                                             'oPCollection.Add(msgtxt)
-                                            Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                            Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                         Else
                                             ' Zeile überlesen ohne Fehlermeldung
                                             Dim a As Integer = 0
@@ -2839,7 +2839,7 @@ Public Module agm3
                             msgtxt = "Warning: die Person: " & rolename & " ist nicht in der Organisation enthalten " & vbLf & kapaFileName
                         End If
                         'oPCollection.Add(msgtxt)
-                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                     End If
 
                 Next
@@ -2967,7 +2967,7 @@ Public Module agm3
 
                                 End If
                                 oPCollection.Add(msgtxt)
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
 
                             ElseIf Not isdate Then
 
@@ -2978,7 +2978,7 @@ Public Module agm3
 
                                 End If
                                 oPCollection.Add(msgtxt)
-                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                             Else
                                 If Jahr <> 0 And monthName <> "" Then
 
@@ -3010,7 +3010,7 @@ Public Module agm3
                                         End If
 
                                         oPCollection.Add(msgtxt)
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
 
                                     Else
                                         ' hier ist sichergestellt, dass die erste Spalte mit 1 beginnt, die letzte Spalte dem Tag entspricht, mit dem der Monat endet
@@ -3075,7 +3075,7 @@ Public Module agm3
                                         End If
                                         'Call MsgBox(msgtxt)
 
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
 
                                         If formerEE Then
                                             appInstance.EnableEvents = True
@@ -3095,7 +3095,7 @@ Public Module agm3
                                             oPCollection.Add(msgtxt, msgtxt)
                                         End If
 
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Call logger(ptErrLevel.logWarning, msgtxt, kapaFileName, anzFehler)
                                         'Call showOutPut(oPCollection, "Lesen Urlaubsplanung wurde mit Fehler abgeschlossen", "Meldungen zu Lesen Urlaubsplanung")
                                         ' tk 12.2.19 ess oll alles gelesen werden - es wird nicht weitergemacht, wenn es Einträge in der outputCollection gibt 
                                         'Throw New ArgumentException(msgtxt)
@@ -3165,7 +3165,7 @@ Public Module agm3
                                                                                 End If
                                                                                 'Call MsgBox(msgtxt)
                                                                                 fehler = True
-                                                                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                                             End If
                                                                         Else
                                                                             Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
@@ -3221,7 +3221,7 @@ Public Module agm3
                                                                 If Not oPCollection.Contains(msgtxt) Then
                                                                     oPCollection.Add(msgtxt, msgtxt)
                                                                 End If
-                                                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                             End If
 
                                                         Next
@@ -3265,7 +3265,7 @@ Public Module agm3
                                                     End If
                                                     'Call MsgBox(msgtxt)
                                                     fehler = True
-                                                    Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                    Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                                 End If
                                             Else
 
@@ -3277,7 +3277,7 @@ Public Module agm3
                                                 If Not oPCollection.Contains(msgtxt) Then
                                                     oPCollection.Add(msgtxt, msgtxt)
                                                 End If
-                                                Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                                Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                             End If
 
                                         Next iZ
@@ -3295,7 +3295,7 @@ Public Module agm3
                                         If Not oPCollection.Contains(msgtxt) Then
                                             oPCollection.Add(msgtxt, msgtxt)
                                         End If
-                                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                                     End If
 
                                 End If
@@ -3314,7 +3314,7 @@ Public Module agm3
                         If Not oPCollection.Contains(msgtxt) Then
                             oPCollection.Add(msgtxt, msgtxt)
                         End If
-                        Call logfileSchreiben(msgtxt, kapaFileName, anzFehler)
+                        Call logger(ptErrLevel.logError, msgtxt, kapaFileName, anzFehler)
                     End Try
 
                     'kapaWB.Close(SaveChanges:=False)
@@ -3406,7 +3406,7 @@ Public Module agm3
                                 outputline = "das Tabellenblatt " & currentWS.Name & " passt nicht zur Konfiguration"
                             End If
                             oPCollection.Add(outputline)
-                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                             result = False
                             Exit For ' keine weiteren Tabellenblätter mehr lesen - Fehler aufgetreten
                         End If
@@ -3418,7 +3418,7 @@ Public Module agm3
                                 outputline = "das Tabellenblatt " & vstart.sheetDescript & " ist nicht vorhanden"
                             End If
                             oPCollection.Add(outputline)
-                            Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                             result = False
                         Else
                             ' passendes Worksheet gefunden
@@ -3439,7 +3439,7 @@ Public Module agm3
                             Catch ex As Exception
                                 outputline = "Error looking for month/year"
                                 oPCollection.Add(outputline)
-                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                 result = False
                             End Try
 
@@ -3466,7 +3466,7 @@ Public Module agm3
                                     outputline = "Error: im Tabellenblatt " & vstart.sheetDescript & " konnte die WerteSpalte " & hspalte & " nicht gefunden werden"
                                 End If
                                 oPCollection.Add(outputline)
-                                Call logfileSchreiben(outputline, "readActualDataWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                 result = False
                             End Try
 
@@ -3718,7 +3718,7 @@ Public Module agm3
                                                 If Not oPCollection.Contains(msgtxt) Then
                                                     oPCollection.Add(msgtxt, msgtxt)
                                                 End If
-                                                Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+                                                Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                             End If
                                         Else
                                             ok = True
@@ -3842,7 +3842,7 @@ Public Module agm3
                                                                                 End If
                                                                                 'Call MsgBox(msgtxt)
                                                                                 fehler = True
-                                                                                Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+                                                                                Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                                                             End If
                                                                         Else
                                                                             Dim workHours As String = CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value
@@ -3898,7 +3898,7 @@ Public Module agm3
                                                                 If Not oPCollection.Contains(msgtxt) Then
                                                                     oPCollection.Add(msgtxt, msgtxt)
                                                                 End If
-                                                                Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+                                                                Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                                             End If
 
                                                         Next sp
@@ -3965,7 +3965,7 @@ Public Module agm3
                                                         End If
                                                         'Call MsgBox(msgtxt)
                                                         fehler = True
-                                                        Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+                                                        Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                                     End If
 
                                                 End If
@@ -3985,7 +3985,7 @@ Public Module agm3
                                     If Not oPCollection.Contains(msgtxt) Then
                                         oPCollection.Add(msgtxt, msgtxt)
                                     End If
-                                    Call logfileSchreiben(msgtxt, capaFile, anzFehler)
+                                    Call logger(ptErrLevel.logError, msgtxt, capaFile, anzFehler)
                                 End Try
 
                                 kapaWB.Close(SaveChanges:=False)
@@ -4001,7 +4001,7 @@ Public Module agm3
                             msgtxt = "Für " & myYear & "/" & myMonth & " wurden Urlaubstage eingelesen"
                         End If
 
-                        Call logfileSchreiben(msgtxt, dateConsidered, anzFehler)
+                        Call logger(ptErrLevel.logInfo, msgtxt, dateConsidered, anzFehler)
                     Else
                         If awinSettings.englishLanguage Then
                             msgtxt = "Holidays of " & myYear & "/" & myMonth & "not imported"
@@ -4009,7 +4009,7 @@ Public Module agm3
                             msgtxt = "Für " & myYear & "/" & myMonth & " wurden keine Urlaubstage eingelesen" &
                                 vbLf & "Datei existiert nicht: " & notExistentCapaFiles(kvp.Key)
                         End If
-                        Call logfileSchreiben(msgtxt, dateConsidered, anzFehler)
+                        Call logger(ptErrLevel.logWarning, msgtxt, dateConsidered, anzFehler)
                     End If
 
                 End If
@@ -4172,7 +4172,7 @@ Public Module agm3
         If listOfProjectFiles.Count > 0 Then
             ' Öffnen des projectFile
             For Each tmpDatei As String In listOfProjectFiles
-                Call logfileSchreiben("Einlesen Projekte " & tmpDatei, "", anzFehler)
+                Call logger(ptErrLevel.logInfo, "Einlesen Projekte " & tmpDatei, "", anzFehler)
                 result = readProjectsWithConfig(projectConfig, tmpDatei, meldungen)
 
                 If result Then
@@ -4190,7 +4190,7 @@ Public Module agm3
             'ur: 08.01.2020: endgültige meldung erst nachdem alle abgearbeitet wurden
             'Call MsgBox(errMsg)
 
-            Call logfileSchreiben(errMsg, "", anzFehler)
+            Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
         End If
 
         If result Then
@@ -4279,7 +4279,7 @@ Public Module agm3
                         If IsNothing(currentWS) Then
                             outputline = "The Worksheet you want to import cannot be matched"
                             meldungen.Add(outputline)
-                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                            Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                         Else
 
                             lastSpalte = CType(currentWS.Cells(firstUrlzeile, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
@@ -4337,7 +4337,7 @@ Public Module agm3
                                                     outputline = "Fehler beim Herausfinden der Projektnummer in Zeile " & i.ToString & " des Inputfiles"
                                                 End If
                                                 'meldungen.Add(outputline)
-                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                                 noGo = noGo + 1
                                                 projNumber_new = projNumber
                                             End If
@@ -4353,7 +4353,7 @@ Public Module agm3
                                                     outputline = "Fehler : Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & "  N I C H T  erzeugt !"
                                                 End If
                                                 meldungen.Add(outputline)
-                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
 
                                                 ' Zählen der aufgrund von fehlerhafter Definition o.ä. nicht erzeugten Projekten
                                                 anz_Proj_notCreated = anz_Proj_notCreated + 1
@@ -4410,7 +4410,7 @@ Public Module agm3
 
                                                 outputline = "Projekt '" & pName & "' mit Start: " & startDate.ToString & " und Ende: " & endDate.ToString & " erzeugt !"
                                                 'meldungen.Add(outputline)
-                                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
 
                                                 ' nach Projekt-Speicherung in ImportProjekte muss Bedarfsliste zurückgesetzt werden
                                                 roleListNameValues = New SortedList(Of String, Double())
@@ -4435,7 +4435,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden der ProjektNummer in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4482,7 +4482,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden der BU in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4536,7 +4536,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden des ProjektNamens in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         'meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4587,7 +4587,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden des Projekt-Template in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4640,7 +4640,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden des Projekt-Starts in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4691,7 +4691,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden des Projekt-Endes in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                         noGo = noGo + 1
                                     End Try
 
@@ -4742,7 +4742,7 @@ Public Module agm3
                                             outputline = "Fehler beim Herausfinden der Projekt-Beschreibung in Zeile " & i.ToString & " des Inputfiles"
                                         End If
                                         meldungen.Add(outputline)
-                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                        Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                     End Try
 
 
@@ -4862,7 +4862,7 @@ Public Module agm3
                                                                 outputline = "Es wurde keine Regular Expression für die Ressource definiert"
                                                             End If
                                                             meldungen.Add(outputline)
-                                                            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                            Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                                             noGo = noGo + 1
                                                         Else
                                                             regexpression = New Regex(roleNameConfig.content)
@@ -4908,7 +4908,7 @@ Public Module agm3
                                                         End If
 
                                                         'meldungen.Add(outputline)
-                                                        Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                                        Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
 
                                                     End If
                                                 End With
@@ -4927,7 +4927,7 @@ Public Module agm3
                                 End If
 
                                 meldungen.Add(outputline)
-                                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                                Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                                 noGo = noGo + 1
                             End Try
 
@@ -4946,7 +4946,7 @@ Public Module agm3
                     End If
 
                     meldungen.Add(outputline)
-                    Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                    Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
                 End Try
             Else
                 If awinSettings.englishLanguage Then
@@ -4954,7 +4954,7 @@ Public Module agm3
                 Else
                     outputline = "Die ausgewählte Datei existiert nicht!"
                 End If
-                Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+                Call logger(ptErrLevel.logError, outputline, "readProjectsWithConfig", anzFehler)
             End If
 
         Catch ex As Exception
@@ -4967,19 +4967,19 @@ Public Module agm3
         If awinSettings.englishLanguage Then
             outputline = vbLf & anz_Proj_created.ToString & " projects created !"
             meldungen.Add(outputline)
-            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
 
             outputline = anz_Proj_notCreated & " projects were N O T  created !"
             meldungen.Add(outputline)
-            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         Else
             outputline = vbLf & anz_Proj_created.ToString & " Projekte wurden erzeugt !"
             meldungen.Add(outputline)
-            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
 
             outputline = anz_Proj_notCreated & " Projekte wurden N I C H T  erzeugt !"
             meldungen.Add(outputline)
-            Call logfileSchreiben(outputline, "readProjectsWithConfig", anzFehler)
+            Call logger(ptErrLevel.logInfo, outputline, "readProjectsWithConfig", anzFehler)
         End If
 
 

@@ -2709,7 +2709,7 @@ Module Module1
                                             Dim err As New clsErrorCodeMsg
                                             Dim realTimestamp As Date
 
-                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, curTimeStamp)
+                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, , curTimeStamp)
 
                                             Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
 
@@ -3347,7 +3347,7 @@ Module Module1
                         Dim realTimestamp As Date
                         Dim hproj As clsProjekt
 
-                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
+                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err,, curTimeStamp)
 
                         If Not IsNothing(aktConst) Then
                             hproj = calcUnionProject(aktConst, False, curTimeStamp)

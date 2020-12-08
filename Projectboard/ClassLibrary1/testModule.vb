@@ -444,7 +444,7 @@ Public Module testModule
                     Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
                 End If
             Else
-                Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
+                Call logger(ptErrLevel.logInfo, "Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
                 projekthistorie.Add(Date.Now, hproj)
             End If
 
@@ -574,7 +574,7 @@ Public Module testModule
                                     worker.ReportProgress(0, e)
                                 End If
                             Else
-                                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
+                                Call logger(ptErrLevel.logError, msgTxt, "createPPTSlidesFromProject", 0)
 
                             End If
 
@@ -601,7 +601,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
+                Call logger(ptErrLevel.logError, msgTxt, "createPPTSlidesFromProject", 0)
 
             End If
             Call MsgBox(msgTxt)
@@ -649,7 +649,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
+                Call logger(ptErrLevel.logError, msgTxt, "createPPTSlidesFromProject", 0)
 
 
             End If
@@ -756,7 +756,7 @@ Public Module testModule
                 End If
 
             Else
-                Call logfileSchreiben("Bericht Seite " & folieIX & " wird aufgebaut ....", "createPPTSlidesFromProject", 0)
+                Call logger(ptErrLevel.logInfo, "Bericht Seite " & folieIX & " wird aufgebaut ....", "createPPTSlidesFromProject", 0)
             End If
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
@@ -3868,7 +3868,7 @@ Public Module testModule
                 worker.ReportProgress(0, e)
             End If
         Else
-            Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+            Call logger(ptErrLevel.logError, msgtxt, "createPPTSlidesFromConstellation", 0)
 
         End If
 
@@ -3923,7 +3923,7 @@ Public Module testModule
                             End If
 
                         Else
-                            Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                            Call logger(ptErrLevel.logError, msgtxt, "createPPTSlidesFromConstellation", 0)
                         End If
 
                         Call MsgBox(msgtxt)
@@ -3949,7 +3949,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                Call logger(ptErrLevel.logError, msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
             Call MsgBox(msgtxt)
             Exit Sub
@@ -4064,7 +4064,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                Call logger(ptErrLevel.logError, msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
 
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
@@ -4269,7 +4269,7 @@ Public Module testModule
                             worker.ReportProgress(0, e)
                         End If
                     Else
-                        Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                        Call logger(ptErrLevel.logError, msgtxt, "createPPTSlidesFromConstellation", 0)
                     End If
 
 
@@ -6644,9 +6644,9 @@ Public Module testModule
         Else
 
             If tatsErstellt = 1 Then
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                Call logger(ptErrLevel.logInfo, msgtxt, "createPPTSlidesFromConstellation", 0)
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromConstellation", 0)
+                Call logger(ptErrLevel.logInfo, msgtxt, "createPPTSlidesFromConstellation", 0)
             End If
 
         End If
@@ -17065,7 +17065,7 @@ Public Module testModule
                             worker.ReportProgress(0, e)
                         End If
                     Else
-                        Call logfileSchreiben(msgTxt, "zeichnePPTprojects", 0)
+                        Call logger(ptErrLevel.logError, msgTxt, "zeichnePPTprojects", 0)
 
                     End If
                 End If
@@ -21448,7 +21448,7 @@ Public Module testModule
                         If worker.WorkerReportsProgress Then
                             worker.ReportProgress(0, e)
                         Else
-                            Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
+                            Call logger(ptErrLevel.logInfo, "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
                         End If
                     End If
 
@@ -22175,7 +22175,7 @@ Public Module testModule
                     If worker.WorkerReportsProgress Then
                         worker.ReportProgress(0, e)
                     Else
-                        Call logfileSchreiben("Swimlane '" & categoryToDraw & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
+                        Call logger(ptErrLevel.logInfo, "Swimlane '" & categoryToDraw & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
                     End If
                 End If
 

@@ -400,7 +400,7 @@ Public Class ThisWorkbook
             'appInstance.EnableEvents = False
 
             ' ur:2020-11-23: hier sollte Logfile geschlossen werden.
-            ' Call logfileSchliessen()
+            ' ''Call logfileSchliessen()
 
             Dim WB As Workbook
             For Each WB In Application.Workbooks

@@ -3770,7 +3770,7 @@ Public Module agm2
             fs.Close()
 
         Catch ex As Exception
-            Call logfileSchreiben(ex.Message & vbLf & "Fehler bei Name " & CStr(aktuellerName), aktuellerName, anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message & vbLf & "Fehler bei Name " & CStr(aktuellerName), aktuellerName, anzFehler)
             Throw New ArgumentException("Fehler bei Name " & CStr(aktuellerName))
 
             ' RXF-Datei (entspricht XML-Datei) Schliessen
@@ -3836,7 +3836,7 @@ Public Module agm2
                         isMilestone = False
 
                         If aktTask_j.taskType.type = "MILESTONE" Then
-                            Call logfileSchreiben("Korrektur, RXFImport: Phasen-Element mit verschiedenen Start- und Ende-Daten war als Meilenstein deklariert:",
+                            Call logger(ptErrLevel.logError, "Korrektur, RXFImport: Phasen-Element mit verschiedenen Start- und Ende-Daten war als Meilenstein deklariert:",
                                                         aktTask_j.name & ": " & aktTask_j.actualDate.start.Value.ToShortDateString & " versus " &
                                                         aktTask_j.actualDate.finish.Value.ToShortDateString & vbLf &
                                                         "Projekt: " & hproj.name,
@@ -3849,7 +3849,7 @@ Public Module agm2
                     ElseIf isKnownMsName And Not isKnownPhName Then
                         isMilestone = True
                         If aktTask_j.taskType.type <> "MILESTONE" Then
-                            Call logfileSchreiben("Korrektur, RXFImport: bekanntes Meilenstein-Element  mit falscher Typ-Zuordnung:",
+                            Call logger(ptErrLevel.logError, "Korrektur, RXFImport: bekanntes Meilenstein-Element  mit falscher Typ-Zuordnung:",
                                                         aktTask_j.name & " mit Typ " & aktTask_j.taskType.type & vbLf &
                                                         "Projekt: " & hproj.name,
                                                         anzFehler)
@@ -4272,7 +4272,7 @@ Public Module agm2
 
                 Catch ex As Exception
 
-                    Call logfileSchreiben(ex.Message, hproj.name, anzFehler)
+                    Call logger(ptErrLevel.logError, ex.Message, hproj.name, anzFehler)
 
 
                 End Try
@@ -5650,7 +5650,7 @@ Public Module agm2
 
                 End With
             Catch ex As Exception
-                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Stammdaten", hproj.name, anzFehler)
+                Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Stammdaten", hproj.name, anzFehler)
                 Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Stammdaten")
             End Try
 
@@ -5758,17 +5758,17 @@ Public Module agm2
                                                         hproj.addSetCustomBField(cfUid, cfvalue)
                                                     Case Else
                                                         ' Custom Field Type nicht bekannt ...
-                                                        Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
+                                                        Call logger(ptErrLevel.logInfo, "unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName & "," & cfType, anzFehler)
                                                 End Select
                                             Else
                                                 ' Custom Field UID nicht existent ...
-                                                Call logfileSchreiben("uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
+                                                Call logger(ptErrLevel.logError, "uid von Custom-Field existiert nicht ...", hproj.name & " " & cfName & "," & cfUid, anzFehler)
                                             End If
                                         Else
                                             ' Custom Field Definition nicht bekannt ...
 
                                             If cfName <> "" Then
-                                                Call logfileSchreiben("unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
+                                                Call logger(ptErrLevel.logInfo, "unbekanntes Custom-Field, wird ignoriert: ", hproj.name & " " & cfName, anzFehler)
                                             End If
 
                                         End If
@@ -5791,7 +5791,7 @@ Public Module agm2
                     End With
                 End If
             Catch ex As Exception
-                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Attribute", hproj.name, anzFehler)
+                Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Attribute", hproj.name, anzFehler)
                 Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Attribute")
             End Try
 
@@ -5911,14 +5911,14 @@ Public Module agm2
 
                                     Dim x As Integer = CInt(CType(.Cells(zeile, columnOffset), Excel.Range).IndentLevel)
                                     If x Mod einrückTiefe <> 0 Then
-                                        Call logfileSchreiben("Fehler, Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
+                                        Call logger(ptErrLevel.logError, "Fehler, Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
                                         Throw New ArgumentException("Fehler, Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
                                     End If
                                     aktLevel = CInt(x / einrückTiefe)
 
                                 Catch ex As Exception
                                     objectName = Nothing
-                                    Call logfileSchreiben("Fehler, Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ", hproj.name, anzFehler)
+                                    Call logger(ptErrLevel.logError, "Fehler, Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ", hproj.name, anzFehler)
                                     Throw New Exception("Fehler, Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
                                     Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                                 End Try
@@ -5927,7 +5927,7 @@ Public Module agm2
                                 If zeile = rowOffset Then
 
                                     If (aktLevel <> 0 And objectName <> elemNameOfElemID(rootPhaseName)) Then
-                                        Call logfileSchreiben("Fehler, Lesen Termine: In Tabelle 'Termine' fehlt die ProjektPhase '.' !", hproj.name, anzFehler)
+                                        Call logger(ptErrLevel.logError, "Fehler, Lesen Termine: In Tabelle 'Termine' fehlt die ProjektPhase '.' !", hproj.name, anzFehler)
                                         Throw New Exception("Fehler, Lesen Termine: In Tabelle 'Termine' fehlt die ProjektPhase '.' !")
                                         Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                                     Else
@@ -5984,14 +5984,14 @@ Public Module agm2
 
                                             If duration < 1 Or offset < 0 Then
                                                 If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                                    Call logfileSchreiben("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
+                                                    Call logger(ptErrLevel.logError, "Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
                                                     Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                                 Else
                                                     Dim exMsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset (>=0) und Dauer (>=1): " &
                                                                         "Offset= " & offset.ToString &
                                                                         ", Duration= " & duration.ToString & " " & objectName & "; "
 
-                                                    Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                    Call logger(ptErrLevel.logError, exMsg, hproj.name, anzFehler)
                                                     Throw New Exception(exMsg)
                                                 End If
                                             End If
@@ -6003,7 +6003,7 @@ Public Module agm2
                                                                         "Offset= " & offset.ToString &
                                                                         ", Duration=" & duration.ToString & " " & objectName & "; " &
                                                                         ", ProjektDauer=" & ProjektdauerIndays.ToString
-                                                Call logfileSchreiben(exMsg, hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, exMsg, hproj.name, anzFehler)
                                                 Throw New Exception(exMsg)
                                             Else
                                                 Dim startOffset As Integer = 0
@@ -6048,13 +6048,13 @@ Public Module agm2
 
                                         If duration < 1 Or offset < 0 Then
                                             If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                                Call logfileSchreiben(("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, "Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                             Else
                                                 Dim exmsg As String = "Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " &
                                                                     offset.ToString & ", " & duration.ToString & ": " & objectName
 
-                                                Call logfileSchreiben(exmsg, hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, exmsg, hproj.name, anzFehler)
                                                 Throw New Exception(exmsg)
                                             End If
                                         End If
@@ -6213,7 +6213,7 @@ Public Module agm2
                                                 Next l
                                                 hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Else
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & cphase.nameID), hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & cphase.nameID), hproj.name, anzFehler)
                                                 Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden" & cphase.nameID)
                                             End If
 
@@ -6229,7 +6229,7 @@ Public Module agm2
                                         Else
                                             ' objectname existiert nicht in den PhaseDefinitions
                                             ' muss in missingPhaseDefinitions noch eingetragen werden
-                                            Call logfileSchreiben(("Fehler, Lesen Termine: Phase '" & objectName & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                                            Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Phase '" & objectName & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler, Lesen Termine:Phase '" & objectName & "' existiert im CustomizationFile nicht!")
                                         End If
 
@@ -6242,7 +6242,7 @@ Public Module agm2
 
                                             If aktLevel = 0 Then
                                                 ' Fehler, denn Meilenstein kann nicht parallel zu Rootphase sein??
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName), hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName), hproj.name, anzFehler)
                                                 Throw New ArgumentException("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName)
 
                                             ElseIf aktLevel = 1 Then
@@ -6261,7 +6261,7 @@ Public Module agm2
                                                 Next l
                                                 phaseNameID = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Else
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName), hproj.name, anzFehler)
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName), hproj.name, anzFehler)
                                                 Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName)
                                             End If
 
@@ -6280,7 +6280,7 @@ Public Module agm2
                                                 (DateDiff(DateInterval.Day, hilfsPhase.getStartDate, milestoneDate) < 0 Or
                                                  DateDiff(DateInterval.Day, hilfsPhase.getEndDate, milestoneDate) > 0) Then
 
-                                                Call logfileSchreiben(("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
+                                                Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
                                                                     milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf &
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf &
@@ -6294,7 +6294,7 @@ Public Module agm2
                                                 milestoneDate = hproj.startDate.AddDays(hilfsPhase.startOffsetinDays + hilfsPhase.dauerInDays)
                                             Else
                                                 If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                                    Call logfileSchreiben(("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                                    Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
                                                                 "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '"), hproj.name & ".xlsx", anzFehler)
                                                 End If
 
@@ -6416,7 +6416,7 @@ Public Module agm2
                                         Else
                                             ' objectname existiert nicht in den PhaseDefinitions
                                             ' muss in missingPhaseDefinitions noch eingetragen werden
-                                            Call logfileSchreiben(("Fehler, Lesen Termine: Meilenstein '" & objectName & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                                            Call logger(ptErrLevel.logError, ("Fehler, Lesen Termine: Meilenstein '" & objectName & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler, Lesen Termine:Meilenstein '" & objectName & "' existiert im CustomizationFile nicht!")
                                         End If
 
@@ -6430,7 +6430,7 @@ Public Module agm2
                         End With
 
                     Catch ex As Exception
-                        Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                        Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
                         'Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
                         Throw New ArgumentException(ex.Message)
 
@@ -6443,7 +6443,7 @@ Public Module agm2
                     Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
                 End If
             Catch ex As Exception
-                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
                 Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
 
             End Try
@@ -6533,7 +6533,7 @@ Public Module agm2
                             ' alte Version des Steckbriefes 
                             ressOff = 1
                             ressSumOffset = -1              ' keine Summe vorhanden
-                            Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
+                            Call logger(ptErrLevel.logInfo, "alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
                         Else
 
                             If Not isNewSteckbriefFormat Then
@@ -6607,7 +6607,7 @@ Public Module agm2
                             hstr = CStr(zelle.Value)
                             Dim x As Integer = CInt(zelle.IndentLevel)
                             If x Mod einrückTiefe <> 0 Then
-                                Call logfileSchreiben("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
+                                Call logger(ptErrLevel.logError, "Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
                                 Throw New ArgumentException("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
                             End If
                             aktLevel = CInt(x / einrückTiefe)
@@ -6719,7 +6719,7 @@ Public Module agm2
 
                                             Dim xxx As Boolean = hproj.hierarchy.containsPhase(phaseName, breadcrumb)
                                             ReDim phaseIndex(0)
-                                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
+                                            Call logger(ptErrLevel.logError, "Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'")
                                         Else
 
@@ -6782,7 +6782,7 @@ Public Module agm2
                                             End If
 
                                         Catch ex As Exception
-                                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                            Call logger(ptErrLevel.logError, "Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
                                                                        "Bitte überprüfen Sie dies.", hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
                                                                        "Bitte überprüfen Sie dies.")
@@ -6875,7 +6875,7 @@ Public Module agm2
 
                                                         Next
                                                         If Not checkok Then
-                                                            Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                            Call logger(ptErrLevel.logError, msgstr, hproj.name, anzFehler)
                                                             'Call MsgBox(msgstr)
                                                             'Throw New ArgumentException(msgstr)
                                                         End If
@@ -6959,7 +6959,7 @@ Public Module agm2
 
                                                         Next
                                                         If Not checkok Then
-                                                            Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                            Call logger(ptErrLevel.logError, msgstr, hproj.name, anzFehler)
                                                             'Call MsgBox(msgstr)
                                                             'Throw New ArgumentException(msgstr)
                                                         End If
@@ -7013,7 +7013,7 @@ Public Module agm2
 
                     End With
                 Catch ex As Exception
-                    Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen: " & ex.Message, hproj.name, anzFehler)
+                    Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy, Lesen Ressourcen: " & ex.Message, hproj.name, anzFehler)
                     Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
                 End Try
             Else
@@ -7041,7 +7041,7 @@ Public Module agm2
             ' -------------------------------------------------------------------
 
         Catch ex As Exception
-            Call logfileSchreiben("Fehler in awinImportProjectmitHrchy " & ex.Message, hproj.name, anzFehler)
+            Call logger(ptErrLevel.logError, "Fehler in awinImportProjectmitHrchy " & ex.Message, hproj.name, anzFehler)
             Throw New ArgumentException("Fehler in awinImportProjectmitHrchy '" & hproj.name & "' " & vbLf & ex.Message)
         End Try
 
@@ -13483,7 +13483,7 @@ Public Module agm2
             End If
 
             ' hier wird das Logfile jetzt geöffnet 
-            Call logfileOpen()
+            ''Call logfileOpen()
 
             With currentWS
 
@@ -14701,7 +14701,7 @@ Public Module agm2
                         If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Extern") And Not dateiName.Contains("Modifier") Then
 
                             errMsg = "Reading external Capacities " & dateiName
-                            Call logfileSchreiben(errMsg, "", anzFehler)
+                            Call logger(ptErrLevel.logInfo, errMsg, "", anzFehler)
 
                             Try
                                 appInstance.Workbooks.Open(dateiName)
@@ -14781,14 +14781,14 @@ Public Module agm2
                                                         meldungen.Add(errMsg)
                                                     End If
 
-                                                    Call logfileSchreiben(errMsg, "", anzFehler)
+                                                    Call logger(ptErrLevel.logInfo, errMsg, "", anzFehler)
                                                 End If
                                             Else
                                                 If subRoleName.Length > 0 Then
                                                     noError = False
                                                     errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
                                                     meldungen.Add(errMsg)
-                                                    Call logfileSchreiben(errMsg, "", anzFehler)
+                                                    Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
                                                 End If
                                             End If
 
@@ -14803,7 +14803,7 @@ Public Module agm2
                                     noError = False
                                     errMsg = "File " & dateiName & "evtl hat die Tabelle nicht den Namen <Werte in Euro>: Fehler / Error  ... " & vbLf & ex2.Message
                                     meldungen.Add(errMsg)
-                                    Call logfileSchreiben(errMsg, "", anzFehler)
+                                    Call logger(ptErrLevel.logError, errMsg, "", anzFehler)
 
                                     If Not IsNothing(currentWS) Then
                                         CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
@@ -14831,7 +14831,7 @@ Public Module agm2
 
             Else
                 ' nur Info im logfile
-                Call logfileSchreiben("Keine Datei mit Kapazitäten der externen Verträge vorhanden ! ", "", -1)
+                Call logger(ptErrLevel.logInfo, "Keine Datei mit Kapazitäten der externen Verträge vorhanden ! ", "", -1)
             End If
 
 
@@ -15053,7 +15053,7 @@ Public Module agm2
 
             Else
                 ' nur Info im Logbuch
-                Call logfileSchreiben("Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ", "", -1)
+                Call logger(ptErrLevel.logInfo, "Keine Datei mit personenbezogenen Kapazitäten vorhanden ! ", "", -1)
             End If
 
 
@@ -20710,9 +20710,9 @@ Public Module agm2
 
                 Call setWindowParameters()
 
-                Call logfileOpen()
+                ''Call logfileOpen()
 
-                Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+                Call logger(ptErrLevel.logInfo, "Windows-User: ", myWindowsName, anzFehler)
 
 
                 '' '--------------------------------------------------------------------------------
@@ -20737,7 +20737,7 @@ Public Module agm2
                     ' Prüfen der Lizenzen
                     If Not lizenzen.validLicence(user, komponente) Then
 
-                        Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+                        Call logger(ptErrLevel.logError, "Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
 
                         ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
                         ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
@@ -20773,7 +20773,7 @@ Public Module agm2
                 ''    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
                 ''    myCustomizationFile = appInstance.ActiveWorkbook.Name
 
-                ''    Call logfileOpen()
+                ''    'Call logfileOpen()
 
                 ''    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
@@ -20880,8 +20880,8 @@ Public Module agm2
                         xlsCustomization.Close(SaveChanges:=False)
                     End If
 
-                    Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                    Call logfileSchliessen()
+                    Call logger(ptErrLevel.logInfo, "LOGIN cancelled ...", "", -1)
+                    '''Call logfileSchliessen()
                     If awinSettings.englishLanguage Then
                         Throw New ArgumentException("LOGIN cancelled ...")
                     Else
@@ -20937,10 +20937,10 @@ Public Module agm2
                         End If
                     End If
                 Else
-                    Call logfileSchreiben(ptErrLevel.logInfo, " reading appearances successful", "awinsetTypen", anzFehler)
+                    Call logger(ptErrLevel.logInfo, " reading appearances successful", "awinsetTypen", anzFehler)
                 End If
             Catch ex As Exception
-                Call logfileSchreiben(ptErrLevel.logError, " reading appearances with error", "awinsetTypen", anzFehler)
+                Call logger(ptErrLevel.logError, " reading appearances with error", "awinsetTypen", anzFehler)
             End Try
 
 
@@ -20950,7 +20950,7 @@ Public Module agm2
             customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
             If Not IsNothing(customizations) Then
                 StartofCalendar = customizations.kalenderStart
-                Call logfileSchreiben(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToString, "awinsetTypen", anzFehler)
+                Call logger(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToString, "awinsetTypen", anzFehler)
             End If
 
             Try
@@ -21425,7 +21425,7 @@ Public Module agm2
                     'End If
 
                     '' Logfile wird geschlossen
-                    Call logfileSchliessen()
+                    '''Call logfileSchliessen()
 
                 End If ' if special ="ProjectBoard"
 
@@ -24648,7 +24648,7 @@ Public Module agm2
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
-                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
                 result = readAvailabilityOfRole(tmpDatei, meldungen)
                 If result Then
                     ' hier: merken der erfolgreich importierten KapaFiles
@@ -24660,7 +24660,7 @@ Public Module agm2
         Else
             Dim infoMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
                          & "Es wurde daher jetzt keine berücksichtigt"
-            Call logfileSchreiben(infoMsg, "", anzFehler)
+            Call logger(ptErrLevel.logInfo, infoMsg, "", anzFehler)
 
         End If
         If result Then
@@ -24751,7 +24751,7 @@ Public Module agm2
                                 End If
                                 If referenzListe.Count > 0 And referenzListe.Count = listOfFiles.Count Then
                                     ' in referenzListe ist zu jedem Kapa-Monat der Zeuss-Dateiname festgehalten
-                                    Call logfileSchreiben("Einlesen Verfügbarkeiten ", "", anzFehler)
+                                    Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten ", "", anzFehler)
                                     result = readAvailabilityOfRoleWithConfigCalendarReferenz(kapaConfig, calendarReference, referenzListe, meldungen)
 
                                     If result Then
@@ -24780,7 +24780,7 @@ Public Module agm2
                                 ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
                                 'meldungen.Add(outputline)
 
-                                Call logfileSchreiben(outputline, "", anzFehler)
+                                Call logger(ptErrLevel.logWarning, outputline, "", anzFehler)
                             End If
 
                         Else
@@ -24794,7 +24794,7 @@ Public Module agm2
                             ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
                             meldungen.Add(outputline)
 
-                            Call logfileSchreiben(outputline, "", anzFehler)
+                            Call logger(ptErrLevel.logWarning, outputline, "", anzFehler)
 
                         End If
 
@@ -24809,7 +24809,7 @@ Public Module agm2
 
                             For Each tmpDatei As String In listOfFiles
 
-                                Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                                Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
                                 result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
 
                                 If result Then
@@ -24832,7 +24832,7 @@ Public Module agm2
                             ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
                             meldungen.Add(outputline)
 
-                            Call logfileSchreiben(outputline, "", anzFehler)
+                            Call logger(ptErrLevel.logWarning, outputline, "", anzFehler)
                         End If
 
                     End If
@@ -24849,7 +24849,7 @@ Public Module agm2
 
                         For Each tmpDatei As String In listOfFiles
 
-                            Call logfileSchreiben("Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
+                            Call logger(ptErrLevel.logInfo, "Einlesen Verfügbarkeiten " & tmpDatei, "", anzFehler)
                             result = readAvailabilityOfRoleWithConfig(kapaConfig, tmpDatei, meldungen)
 
                             If result Then
@@ -24872,7 +24872,7 @@ Public Module agm2
                         ' wenn keine Zeuss* Dateien da sind, dann auch kein Fehler - nur Info
                         'meldungen.Add(outputline)
 
-                        Call logfileSchreiben(outputline, "", anzFehler)
+                        Call logger(ptErrLevel.logWarning, outputline, "", anzFehler)
                     End If
 
                 End If
@@ -24903,7 +24903,7 @@ Public Module agm2
         Dim kfWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim kfWS As Microsoft.Office.Interop.Excel.Worksheet = Nothing
 
-        Call logfileSchreiben("Nachsehen, welche Monate zu welcher KapaDatei zuzuordnen sind", "", anzFehler)
+        Call logger(ptErrLevel.logInfo, "Nachsehen, welche Monate zu welcher KapaDatei zuzuordnen sind", "", anzFehler)
         Dim monthFileList As New SortedList(Of String, String)
         Dim zuordn_ok As Boolean = True
 
@@ -24936,7 +24936,7 @@ Public Module agm2
                             zuordn_ok_yyyy = False
                         End If
                         If Not zuordn_ok_yyyy Then
-                            Call logfileSchreiben("Fehler in Zeuss-Datei (Jahreszahl): " & kf, "", anzFehler)
+                            Call logger(ptErrLevel.logError, "Fehler in Zeuss-Datei (Jahreszahl): " & kf, "", anzFehler)
                         End If
 
                         ' zuordn_ok_mm zurücksetzen
@@ -24962,7 +24962,7 @@ Public Module agm2
                         End If
 
                         If Not zuordn_ok_mm Then
-                            Call logfileSchreiben("Fehler in Zeuss-Datei (Monat): " & kf, "", anzFehler)
+                            Call logger(ptErrLevel.logError, "Fehler in Zeuss-Datei (Monat): " & kf, "", anzFehler)
                         End If
 
                         If (zuordn_ok_mm And zuordn_ok_yyyy) Then
@@ -24983,16 +24983,16 @@ Public Module agm2
                     kfWB.Close()        ' Zeuss-Datei wieder schließen
 
                 Catch ex As Exception
-                    Call logfileSchreiben("Fehler beim Öffnen der Datei " & kf, "", anzFehler)
+                    Call logger(ptErrLevel.logError, "Fehler beim Öffnen der Datei " & kf, "", anzFehler)
                 End Try
             Else
-                Call logfileSchreiben("Datei existiert nicht: " & kf, "", anzFehler)
+                Call logger(ptErrLevel.logError, "Datei existiert nicht: " & kf, "", anzFehler)
             End If
         Next   ' kf of listOfFiles
 
         If Not zuordn_ok Then
             monthFileList = New SortedList(Of String, String)
-            Call logfileSchreiben("Fehler bei der Zuordnung der Kapa-Inputfiles zu Monaten", "", anzFehler)
+            Call logger(ptErrLevel.logError, "Fehler bei der Zuordnung der Kapa-Inputfiles zu Monaten", "", anzFehler)
         End If
 
         createReferenzListe = monthFileList

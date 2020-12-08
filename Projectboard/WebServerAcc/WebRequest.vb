@@ -2919,9 +2919,9 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
-        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
-        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
+        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
@@ -2941,7 +2941,7 @@ Public Class Request
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
 
-                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
@@ -2958,7 +2958,7 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
-                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         End If
 
@@ -2971,7 +2971,7 @@ Public Class Request
                         result.allRoles.buildOrgaTeamChilds()
 
                     Else
-                        Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
+                        Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                         If err.errorCode = 403 Then
                             Call MsgBox(err.errorMsg)
                         End If
@@ -2979,12 +2979,12 @@ Public Class Request
 
                     End If
                 Else
-                    Call logfileSchreiben(ptErrLevel.logError, err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
+                    Call logger(ptErrLevel.logError, err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                     Call MsgBox(err.errorMsg)
 
                 End If
             Else
-                Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
+                Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                 If err.errorCode = 403 Then
                     Call MsgBox(err.errorMsg)
                 End If
@@ -2995,11 +2995,11 @@ Public Class Request
 
         Catch ex As Exception
 
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "retrieveOrganisationFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "retrieveOrganisationFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 
-        Call logfileSchreiben(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
+        Call logger(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
         retrieveOrganisationFromDB = result
     End Function
 
@@ -3427,7 +3427,7 @@ Public Class Request
                             Case WebExceptionStatus.ConnectFailure
 
                                 Dim msgtxt As String = "first try form request.GetRequestStream(): " & ex.Status
-                                Call logfileSchreiben(msgtxt, "(1)GetRestServerResponse", anzFehler)
+                                Call logger(ptErrLevel.logInfo, msgtxt, "(1)GetRestServerResponse", anzFehler)
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                                 request.Method = method
@@ -3532,7 +3532,7 @@ Public Class Request
 
                                 Else
                                     Dim msgtxt As String = "second try form request.GetRequestStream(): " & hresp.StatusCode
-                                    Call logfileSchreiben(msgtxt, "(2)GetRestServerResponse", anzFehler)
+                                    Call logger(ptErrLevel.logInfo, msgtxt, "(2)GetRestServerResponse", anzFehler)
 
                                     Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
                                 End If
@@ -3562,7 +3562,7 @@ Public Class Request
                                 Dim msgtxt As String = "WebExceptionStatus: " & ex.Status
                                 Dim outputCollection As New Collection
                                 outputCollection.Add(msgtxt)
-                                Call logfileSchreiben(msgtxt, "(3)GetRestServerResponse", anzFehler)
+                                Call logger(ptErrLevel.logInfo, msgtxt, "(3)GetRestServerResponse", anzFehler)
                                 response = hresp
                                 Exit While
                         End Select
@@ -3655,14 +3655,14 @@ Public Class Request
 
                                         Case Else
                                             Dim msgtxt As String = "WebExceptionStatus: " & ex.Status & " HttpStatusCode: (" & hresp.StatusCode & ") " & hresp.StatusDescription
-                                            Call logfileSchreiben(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
+                                            Call logger(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
                                             response = hresp
                                             Exit While
                                     End Select
 
                                 Case Else
                                     Dim msgtxt As String = "WebExceptionStatus: (" & ex.Status & ") " & ex.Message
-                                    Call logfileSchreiben(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
+                                    Call logger(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
                                     response = hresp
                                     Exit While
                             End Select
@@ -3727,7 +3727,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "ReadResponseContent", anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "ReadResponseContent", anzFehler)
             Throw New ArgumentException("ReadResponseContent:" & ex.Message)
         End Try
 
@@ -5693,7 +5693,7 @@ Public Class Request
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 If errcode = 200 Then
-                    Call logfileSchreiben(ptErrLevel.logInfo, errmsg, "GETOneVCSetting: " & type, anzFehler)
+                    Call logger(ptErrLevel.logInfo, errmsg, "GETOneVCSetting: " & type, anzFehler)
                     Select Case type
                         Case settingTypes(ptSettingTypes.customroles)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
@@ -5713,7 +5713,7 @@ Public Class Request
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
-                    Call logfileSchreiben(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
+                    Call logger(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
                 Else
                     webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
                 End If
@@ -5732,7 +5732,7 @@ Public Class Request
             err.errorMsg = "GETOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "GETOneVCSetting: " & type, anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "GETOneVCSetting: " & type, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5831,7 +5831,7 @@ Public Class Request
             err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "POSTOneVCsetting: " & type, anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "POSTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5938,7 +5938,7 @@ Public Class Request
             err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "PUTOneVCsetting: " & type, anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "PUTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5994,7 +5994,7 @@ Public Class Request
 
         Catch ex As Exception
 
-            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "PUTOneVP: " & errcode, anzFehler)
+            Call logger(ptErrLevel.logError, ex.Message, "PUTOneVP: " & errcode, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 

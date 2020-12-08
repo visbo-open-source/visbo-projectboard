@@ -7359,57 +7359,57 @@ Public Module Module1
     End Sub
 
 
-    ''' <summary>
-    ''' initialisert das Logfile
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub logfileInit()
+    '''' <summary>
+    '''' initialisert das Logfile
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub logfileInit()
 
-        Try
+    '    Try
 
-            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
-                .Name = "logBuch"
-                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
-                CType(.Columns(1), Excel.Range).ColumnWidth = 15
-                CType(.Columns(2), Excel.Range).ColumnWidth = 10
-                CType(.Columns(3), Excel.Range).ColumnWidth = 50
-                CType(.Columns(4), Excel.Range).ColumnWidth = 100
-            End With
-        Catch ex As Exception
-            Call MsgBox("Error bei logfileInit")
-        End Try
+    '        With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+    '            .Name = "logBuch"
+    '            CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+    '            CType(.Columns(1), Excel.Range).ColumnWidth = 15
+    '            CType(.Columns(2), Excel.Range).ColumnWidth = 10
+    '            CType(.Columns(3), Excel.Range).ColumnWidth = 50
+    '            CType(.Columns(4), Excel.Range).ColumnWidth = 100
+    '        End With
+    '    Catch ex As Exception
+    '        Call MsgBox("Error bei logfileInit")
+    '    End Try
 
 
-    End Sub
-    ''' <summary>
-    ''' schreibt in das logfile
-    ''' </summary>
-    ''' <param name="text"></param>
-    ''' <param name="addOn"></param>
-    ''' <remarks></remarks>
-    Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+    'End Sub
+    ''''' <summary>
+    '''' schreibt in das logfile
+    '''' </summary>
+    '''' <param name="text"></param>
+    '''' <param name="addOn"></param>
+    '''' <remarks></remarks>
+    'Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
 
-        Dim obj As Object
+    '    Dim obj As Object
 
-        Try
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+    '    Try
+    '        obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+    '        With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
 
-                CType(.Cells(1, 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-                CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
-                CType(.Cells(1, 3), Excel.Range).Value = addOn
-                CType(.Cells(1, 4), Excel.Range).Value = text
+    '            CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+    '            CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+    '            CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+    '            CType(.Cells(1, 3), Excel.Range).Value = addOn
+    '            CType(.Cells(1, 4), Excel.Range).Value = text
 
-            End With
-            anzFehler = anzFehler + 1
-            xlsLogfile.Save()
+    '        End With
+    '        anzFehler = anzFehler + 1
+    '        xlsLogfile.Save()
 
-        Catch ex As Exception
+    '    Catch ex As Exception
 
-        End Try
-    End Sub
+    '    End Try
+    'End Sub
 
 
     ''' <summary>
@@ -7419,7 +7419,7 @@ Public Module Module1
     ''' <param name="text"></param>
     ''' <param name="addOn"></param>
     ''' <param name="anzFehler"></param>
-    Public Sub logfileSchreiben(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
 
         Try
             Dim strMeld As String
@@ -7664,90 +7664,90 @@ Public Module Module1
 
         End Try
     End Sub
-    ''' <summary>
-    ''' öffnet das LogFile
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub logfileOpen()
+    '''' <summary>
+    '''' öffnet das LogFile
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub logfileOpen()
 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        If appInstance.ScreenUpdating Then
-            appInstance.ScreenUpdating = False
-        End If
-
-
-        ' aktives Workbook merken im Variable actualWB
-        Dim actualWB As String = appInstance.ActiveWorkbook.Name
-
-        Dim logfileOrdner As String = "logfiles"
-        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-        Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
-        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-
-        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            My.Computer.FileSystem.CreateDirectory(logfilePath)
-        End If
-
-        ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
-        Try
-            If myLogfile <> "" Then
-                Call logfileSchliessen()
-            End If
-        Catch ex As Exception
-
-        End Try
-
-        Try
-            ' Logfile neu anlegen 
-            xlsLogfile = appInstance.Workbooks.Add
-            ' schreibt Sheet Namen in logfile ...  
-            Call logfileInit()
-
-            xlsLogfile.SaveAs(logfileNamePath)
-            myLogfile = xlsLogfile.Name
-
-        Catch ex As Exception
-            logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
-                                            "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
-            appInstance.ScreenUpdating = True
-            Throw New ArgumentException(logmessage)
-        End Try
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
+    '    If appInstance.ScreenUpdating Then
+    '        appInstance.ScreenUpdating = False
+    '    End If
 
 
+    '    ' aktives Workbook merken im Variable actualWB
+    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
 
-        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-        appInstance.Workbooks(actualWB).Activate()
+    '    Dim logfileOrdner As String = "logfiles"
+    '    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    '    Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
+    '    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
 
-        If appInstance.ScreenUpdating <> formerSU Then
-            appInstance.ScreenUpdating = formerSU
-        End If
+    '    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    '        My.Computer.FileSystem.CreateDirectory(logfilePath)
+    '    End If
+
+    '    ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
+    '    Try
+    '        If myLogfile <> "" Then
+    '            ''Call logfileSchliessen()
+    '        End If
+    '    Catch ex As Exception
+
+    '    End Try
+
+    '    Try
+    '        ' Logfile neu anlegen 
+    '        xlsLogfile = appInstance.Workbooks.Add
+    '        ' schreibt Sheet Namen in logfile ...  
+    '        Call logfileInit()
+
+    '        xlsLogfile.SaveAs(logfileNamePath)
+    '        myLogfile = xlsLogfile.Name
+
+    '    Catch ex As Exception
+    '        logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
+    '                                        "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
+    '        appInstance.ScreenUpdating = True
+    '        Throw New ArgumentException(logmessage)
+    '    End Try
 
 
-    End Sub
+
+    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+    '    appInstance.Workbooks(actualWB).Activate()
+
+    '    If appInstance.ScreenUpdating <> formerSU Then
+    '        appInstance.ScreenUpdating = formerSU
+    '    End If
 
 
-    ''' <summary>
-    ''' schliesst  das logfile 
-    ''' </summary>  
-    ''' <remarks></remarks>
-    Public Sub logfileSchliessen()
-
-        appInstance.EnableEvents = False
-
-        Try
-
-            If myLogfile <> "" Then
-                appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
-                myLogfile = ""
-            End If
+    'End Sub
 
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Schließen des Logfiles")
-        End Try
+    '''' <summary>
+    '''' schliesst  das logfile 
+    '''' </summary>  
+    '''' <remarks></remarks>
+    'Public Sub logfileSchliessen()
 
-        appInstance.EnableEvents = True
-    End Sub
+    '    appInstance.EnableEvents = False
+
+    '    Try
+
+    '        If myLogfile <> "" Then
+    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+    '            myLogfile = ""
+    '        End If
+
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler beim Schließen des Logfiles")
+    '    End Try
+
+    '    appInstance.EnableEvents = True
+    'End Sub
 
     '''' <summary>
     '''' schliesst  das logfile 
@@ -9211,46 +9211,46 @@ Public Module Module1
 
     End Function
 
-    Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
+    'Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
 
-    ' Returns an array with the local IP addresses (as strings).
-    ' Author: Christian d'Heureuse, www.source-code.biz
-    Public Function GetIpAddrTable() As String()
-        Dim Buf(0 To 511) As Byte
-        Dim BufSize As Long : BufSize = UBound(Buf) + 1
-        Dim rc As Long
-        rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
-        If rc <> 0 Then
-            Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
-        End If
-        Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
-        Dim IpAddrs() As String
-        ReDim IpAddrs(0 To NrOfEntries - 1)
-        If NrOfEntries = 0 Then
-            GetIpAddrTable = IpAddrs
-            Exit Function
-        End If
+    '' Returns an array with the local IP addresses (as strings).
+    '' Author: Christian d'Heureuse, www.source-code.biz
+    'Public Function GetIpAddrTable() As String()
+    '    Dim Buf(0 To 511) As Byte
+    '    Dim BufSize As Long : BufSize = UBound(Buf) + 1
+    '    Dim rc As Long
+    '    rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
+    '    If rc <> 0 Then
+    '        Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
+    '    End If
+    '    Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
+    '    Dim IpAddrs() As String
+    '    ReDim IpAddrs(0 To NrOfEntries - 1)
+    '    If NrOfEntries = 0 Then
+    '        GetIpAddrTable = IpAddrs
+    '        Exit Function
+    '    End If
 
-        Dim i As Integer
-        For i = 0 To NrOfEntries - 1
-            Dim j As Integer, s As String : s = ""
-            For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
-            IpAddrs(i) = s
-        Next
-        GetIpAddrTable = IpAddrs
-    End Function
+    '    Dim i As Integer
+    '    For i = 0 To NrOfEntries - 1
+    '        Dim j As Integer, s As String : s = ""
+    '        For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
+    '        IpAddrs(i) = s
+    '    Next
+    '    GetIpAddrTable = IpAddrs
+    'End Function
 
 
 
-    ' Test program for GetIpAddrTable.
-    Public Sub Test()
-        Dim IpAddrs() As String
-        IpAddrs = GetIpAddrTable()
-        Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
-        Dim i As Integer
-        For i = LBound(IpAddrs) To UBound(IpAddrs)
-            Debug.Print(IpAddrs(i))
-        Next
-    End Sub
+    '' Test program for GetIpAddrTable.
+    'Public Sub Test()
+    '    Dim IpAddrs() As String
+    '    IpAddrs = GetIpAddrTable()
+    '    Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
+    '    Dim i As Integer
+    '    For i = LBound(IpAddrs) To UBound(IpAddrs)
+    '        Debug.Print(IpAddrs(i))
+    '    Next
+    'End Sub
 
 End Module

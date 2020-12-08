@@ -7204,7 +7204,7 @@ Public Module awinGeneralModules
                             If reportname = "" Then
                                 Dim aktDate As String = Date.Now.ToString
                                 reportname = aktDate & "Report.pptx"
-                                Call logfileSchreiben("EinzelprojektReport mit ' " & projekte & "/" & variante & "/" &
+                                Call logger(ptErrLevel.logInfo, "EinzelprojektReport mit ' " & projekte & "/" & variante & "/" &
                                                       profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
                             Else
                                 reportname = reportname & ".pptx"
@@ -7233,11 +7233,11 @@ Public Module awinGeneralModules
                             reportErstellen = True
                         Else
 
-                            Call logfileSchreiben("reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
+                            Call logger(ptErrLevel.logError, "reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
 
                         End If
                     Else
-                        Call logfileSchreiben("reportErstellen", "Vorlagendatei " & vorlagendateiname & " existiert nicht!", anzFehler)
+                        Call logger(ptErrLevel.logError, "reportErstellen", "Vorlagendatei " & vorlagendateiname & " existiert nicht!", anzFehler)
                     End If
 
                 Catch ex As Exception
@@ -7292,7 +7292,7 @@ Public Module awinGeneralModules
                                     End If
                                 Else
 
-                                    Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & " mit TimeStamp '" & timestamp.ToString & "' existiert nicht in DB!", anzFehler)
+                                    Call logger(ptErrLevel.logError, "reportErstellen", "Projekt '" & kvp.Value.projectName & " mit TimeStamp '" & timestamp.ToString & "' existiert nicht in DB!", anzFehler)
 
                                 End If  ' if hproj existiert
                             Next
@@ -7329,7 +7329,7 @@ Public Module awinGeneralModules
                                 If reportname = "" Then
                                     Dim aktDate As String = Date.Now.ToString
                                     reportname = aktDate & "MP Report.pptx"
-                                    Call logfileSchreiben("MulitprojektReport mit ' " & projekte & "/" &
+                                    Call logger(ptErrLevel.logInfo, "MulitprojektReport mit ' " & projekte & "/" &
                                                           profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
                                 Else
                                     reportname = reportname & ".pptx"
@@ -7359,12 +7359,12 @@ Public Module awinGeneralModules
 
                             End If
                         Else
-                            Call logfileSchreiben("reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
+                            Call logger(ptErrLevel.logError, "reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
 
                         End If
 
                     Else
-                        Call logfileSchreiben("reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
+                        Call logger(ptErrLevel.logError, "reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
                     End If
 
                 Catch ex As Exception

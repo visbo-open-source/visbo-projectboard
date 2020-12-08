@@ -5775,8 +5775,7 @@ Imports System.Web
                 dateiName = CStr(getInventurImport.selImportFiles.Item(1))
 
                 Try
-                    ' jetzt das Logfile öffnen 
-                    Call logfileOpen()
+
                     Dim logmsg() As String
 
                     If My.Computer.FileSystem.FileExists(dateiName) Then
@@ -5989,11 +5988,9 @@ Imports System.Web
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
 
-                    Call logfileSchliessen()
 
 
                 Catch ex As Exception
-                    Call logfileSchliessen()
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                     Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
@@ -6484,7 +6481,7 @@ Imports System.Web
         Dim protokoll As New SortedList(Of Integer, clsProtokoll)
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        ''Call logfileOpen()
 
         Call projektTafelInit()
 
@@ -6505,7 +6502,7 @@ Imports System.Web
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear(False)
 
-                Call logfileSchreiben("Beginn RXFImport ", dateiName, -1)
+                Call logger(ptErrLevel.logInfo, "Beginn RXFImport ", dateiName, -1)
 
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
@@ -6548,7 +6545,7 @@ Imports System.Web
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        '''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6599,7 +6596,7 @@ Imports System.Web
         enableOnUpdate = False
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
@@ -6627,7 +6624,7 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Organisation ", selectedWB, -1)
+                Call logger(ptErrLevel.logInfo, "Beginn Import Organisation ", selectedWB, -1)
 
                 ' Öffnen des Organisations-Files
                 appInstance.Workbooks.Open(dateiname)
@@ -6684,7 +6681,7 @@ Imports System.Web
                         Else
                             If awinSettings.englishLanguage Then
                                 Call MsgBox("You don't have any valid (time now) Organisation in the system!")
-                Else
+                            Else
                                 Call MsgBox("Es existiert keine heute gültige Organisation im System!")
                             End If
                         End If
@@ -6693,15 +6690,15 @@ Imports System.Web
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                             Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " stored ...")
-                            Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
+                            Call logger(ptErrLevel.logInfo, "Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
                         Else
                             Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " temporarily loaded ...")
-                            Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " temporarily loaded ...", selectedWB, -1)
+                            Call logger(ptErrLevel.logInfo, "Organisation, valid from " & importedOrga.validFrom.ToShortDateString & " temporarily loaded ...", selectedWB, -1)
                         End If
 
                     Else
                         Call MsgBox("Error when writing Organisation")
-                        Call logfileSchreiben("Error when writing Organisation ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing Organisation ...", selectedWB, -1)
                     End If
                 End If
             Catch ex As Exception
@@ -6713,7 +6710,7 @@ Imports System.Web
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         If listOfArchivFiles.Count > 0 And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
             Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.Orga))
@@ -6767,7 +6764,7 @@ Imports System.Web
         If weiterMachen Then
 
             ' öffnen des LogFiles
-            Call logfileOpen()
+            'Call logfileOpen()
 
             For Each selectedWB As String In getOrgaFile.selImportFiles
 
@@ -6775,7 +6772,7 @@ Imports System.Web
 
                 Try
                     ' hier wird jetzt der Import gemacht 
-                    Call logfileSchreiben("Beginn Import Offline-Daten", selectedWB, -1)
+                    Call logger(ptErrLevel.logInfo, "Beginn Import Offline-Daten", selectedWB, -1)
 
                     ' Öffnen des Offline Data -Files
                     appInstance.Workbooks.Open(dateiname)
@@ -6831,7 +6828,7 @@ Imports System.Web
 
 
             ' Schließen des LogFiles
-            Call logfileSchliessen()
+            ''Call logfileSchliessen()
 
         End If
 
@@ -6888,7 +6885,7 @@ Imports System.Web
         If weitermachen Then
 
             ' öffnen des LogFiles
-            Call logfileOpen()
+            'Call logfileOpen()
 
             dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
             result = readActualData(dateiname)
@@ -6897,7 +6894,7 @@ Imports System.Web
             End If
 
             ' Schließen des LogFiles
-            Call logfileSchliessen()
+            ''Call logfileSchliessen()
 
             ' ImportDatei ins archive-Directory schieben
 
@@ -6915,7 +6912,7 @@ Imports System.Web
 
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
         ' wenn es gibt - lesen der ControllingSheet und anderer, die durch configActualDataImport beschrieben sind
         Dim configActualDataImport As String = awinPath & configfilesOrdner & "configActualDataImport.xlsx"
@@ -6969,7 +6966,7 @@ Imports System.Web
                         End If
 
                         Call MsgBox(txtMsg)
-                        Call logfileSchliessen()
+                        ''Call logfileSchliessen()
 
                         enableOnUpdate = True
                         appInstance.EnableEvents = True
@@ -6995,7 +6992,7 @@ Imports System.Web
 
                         Call MsgBox(txtMsg)
 
-                        Call logfileSchliessen()
+                        ''Call logfileSchliessen()
 
                         enableOnUpdate = True
                         appInstance.EnableEvents = True
@@ -7063,7 +7060,7 @@ Imports System.Web
                         ' tk 2.8.2020 das soll nur noch im Logfile erscheinen , aber nicht mehr im Interaktiven Fenster ...
                         'outPutCollection.Add(outPutline)
 
-                        Call logfileSchreiben(outPutline, "", anzFehler)
+                        Call logger(ptErrLevel.logInfo, outPutline, "", anzFehler)
 
                         result = readActualDataWithConfig(actualDataConfig, tmpDatei,
                                                   IstdatenDate,
@@ -7510,7 +7507,7 @@ Imports System.Web
 
                 Call MsgBox(outPutline)
 
-                Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
+                Call logger(ptErrLevel.logWarning, outPutline, "PTImportIstdaten", anzFehler)
             End If
 
 
@@ -7522,7 +7519,7 @@ Imports System.Web
             Else
                 outPutline = "Fehler: entweder fehlt die Konfigurations-Datei oder sie enthält fehlerhafte Definitionen!"
             End If
-            Call logfileSchreiben(outPutline, "PTImportIstdaten", anzFehler)
+            Call logger(ptErrLevel.logError, outPutline, "PTImportIstdaten", anzFehler)
 
             Call MsgBox(outPutline)
 
@@ -7531,7 +7528,7 @@ Imports System.Web
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -7567,7 +7564,7 @@ Imports System.Web
         enableOnUpdate = False
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
 
         If anzFiles = 1 Then
@@ -7593,7 +7590,7 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+                Call logger(ptErrLevel.logInfo, "Beginn Import Custom User Roles", selectedWB, -1)
 
                 ' Öffnen des Organisations-Files
                 appInstance.Workbooks.Open(dateiname)
@@ -7626,10 +7623,10 @@ Imports System.Web
 
                     If result = True Then
                         Call MsgBox("ok, Custom User Roles stored ...")
-                        Call logfileSchreiben("Custom User Roles stored ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logInfo, "Custom User Roles stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing Custom User Roles")
-                        Call logfileSchreiben("Error when writing Custom User Roles ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing Custom User Roles ...", selectedWB, -1)
                     End If
 
                     listOfArchivFiles.Add(dateiname)
@@ -7646,7 +7643,7 @@ Imports System.Web
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         If listOfArchivFiles.Count > 0 Then
             Call moveFilesInArchiv(listOfArchivFiles, importOrdnerNames(PTImpExp.customUserRoles))
@@ -7676,7 +7673,7 @@ Imports System.Web
         enableOnUpdate = False
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
         Dim outputCollection As New Collection
 
@@ -7712,7 +7709,7 @@ Imports System.Web
                     listofArchivConfig = readInterneAnwesenheitslistenAllg(configCapaImport, actualDataConfig, outputCollection)
                 Else
                     outPutline = "There is no Config-File for the capacities!"
-                    Call logfileSchreiben(outPutline, "PTImportKapas", anzFehler)
+                    Call logger(ptErrLevel.logWarning, outPutline, "PTImportKapas", anzFehler)
                 End If
 
                 If listofArchivUrlaub.Count > 0 Or listofArchivConfig.Count > 0 Or listOfArchivExtern.Count > 0 Then
@@ -7737,7 +7734,7 @@ Imports System.Web
 
                             If result = True Then
                                 Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                                Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
 
                                 ' verschieben der Kapa-Dateien Kapazität* Modifier  in den ArchivOrdner
                                 Call moveFilesInArchiv(listOfArchivExtern, importOrdnerNames(PTImpExp.Kapas))
@@ -7748,12 +7745,12 @@ Imports System.Web
 
                             Else
                                 Call MsgBox("Error when writing Organisation to Database")
-                                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                                Call logger(ptErrLevel.logError, "Error when writing Organisation to Database...", "", -1)
                             End If
 
                         Else
                             Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...")
-                            Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
+                            Call logger(ptErrLevel.logInfo, "ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " temporarily updated ...", "", -1)
                             ' verschieben der Kapa-Dateien Urlaubsplaner*.xlsx in den ArchivOrdner
                             'Call moveFilesInArchiv(listofArchivUrlaub, importOrdnerNames(PTImpExp.Kapas))
                             '' verschieben der Kapa-Dateien,die durch configCapaImport.xlsx beschrieben sind, in den ArchivOrdner
@@ -7809,7 +7806,7 @@ Imports System.Web
         End If
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -7843,7 +7840,7 @@ Imports System.Web
         enableOnUpdate = False
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
 
         If anzFiles = 1 Then
@@ -7869,7 +7866,7 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import kundenspezifischer Einstellungen", selectedWB, -1)
+                Call logger(ptErrLevel.logInfo, "Beginn Import kundenspezifischer Einstellungen", selectedWB, -1)
 
                 ' Öffnen des Customization-Files
                 appInstance.Workbooks.Open(dateiname)
@@ -7925,10 +7922,10 @@ Imports System.Web
 
                     If result And result1 Then
                         Call MsgBox("ok, Customizations and CustomFieldDefinitions stored ...")
-                        Call logfileSchreiben("Customizations and CustomFieldDefinitions stored ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logInfo, "Customizations and CustomFieldDefinitions stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing Customizations or CustomfieldDefinitions")
-                        Call logfileSchreiben("Error when writing Customizations or Customfielddefinitions ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing Customizations or Customfielddefinitions ...", selectedWB, -1)
                     End If
 
 
@@ -7942,13 +7939,13 @@ Imports System.Web
             Catch ex As Exception
                 Dim resultMessage As String = ex.Message
                 Call MsgBox(resultMessage)
-                Call logfileSchreiben("Error when writing Customizations ...", resultMessage, -1)
+                Call logger(ptErrLevel.logError, "Error when writing Customizations ...", resultMessage, -1)
             End Try
         End If
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -7980,7 +7977,7 @@ Imports System.Web
         enableOnUpdate = False
 
         ' öffnen des LogFiles
-        Call logfileOpen()
+        'Call logfileOpen()
 
 
         If anzFiles = 1 Then
@@ -8006,7 +8003,7 @@ Imports System.Web
 
             Try
                 ' hier wird jetzt der Import gemacht 
-                Call logfileSchreiben("Beginn Import Appearances", selectedWB, -1)
+                Call logger(ptErrLevel.logInfo, "Beginn Import Appearances", selectedWB, -1)
 
                 ' Öffnen des Customization-Files
                 appInstance.Workbooks.Open(dateiname)
@@ -8040,10 +8037,10 @@ Imports System.Web
 
                     If result = True Then
                         Call MsgBox("ok, appearances stored ...")
-                        Call logfileSchreiben("appearances stored ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logInfo, "appearances stored ...", selectedWB, -1)
                     Else
                         Call MsgBox("Error when writing appearances")
-                        Call logfileSchreiben("Error when writing appearances ...", selectedWB, -1)
+                        Call logger(ptErrLevel.logError, "Error when writing appearances ...", selectedWB, -1)
                     End If
                 Else
                     Call MsgBox("no appearances found ...")
@@ -8057,7 +8054,7 @@ Imports System.Web
 
 
         ' Schließen des LogFiles
-        Call logfileSchliessen()
+        ''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -8087,7 +8084,7 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
-        'Call logfileOpen()
+        ''Call logfileOpen()
 
         getVisboImport.menueAswhl = PTImpExp.visbo
         returnValue = getVisboImport.ShowDialog
@@ -8130,10 +8127,10 @@ Imports System.Web
 
                     Try
                         appInstance.Workbooks.Open(dateiName)
-                        Call logfileSchreiben(ptErrLevel.logInfo, "Beginn Import: " & dateiName, "Tom2G4M1Import", -1)
+                        Call logger(ptErrLevel.logInfo, "Beginn Import: " & dateiName, "Tom2G4M1Import", -1)
 
                     Catch ex1 As Exception
-                        Call logfileSchreiben(ptErrLevel.logError, "Fehler bei Öffnen der Datei: " & dateiName, "Tom2G4M1Import", -1)
+                        Call logger(ptErrLevel.logError, "Fehler bei Öffnen der Datei: " & dateiName, "Tom2G4M1Import", -1)
                         skip = True
                     End Try
 
@@ -8159,7 +8156,7 @@ Imports System.Web
 
                         Catch ex1 As Exception
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                            Call logfileSchreiben(ptErrLevel.logError, ex1.Message, "Tom2G4M1Import", anzFehler)
+                            Call logger(ptErrLevel.logError, ex1.Message, "Tom2G4M1Import", anzFehler)
                             Call MsgBox(ex1.Message)
                             'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
                         End Try
@@ -8197,7 +8194,7 @@ Imports System.Web
 
 
 
-        'Call logfileSchliessen()
+        '''Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -8326,9 +8323,9 @@ Imports System.Web
                     outPutCollection.Add(outputLine)
                 Next
 
-                Call logfileOpen()
+                'Call logfileOpen()
                 Call logger(ptErrLevel.logError, "Tom2G42ImportMSProject: ", outPutCollection)
-                Call logfileSchliessen()
+                ''Call logfileSchliessen()
 
                 If awinSettings.englishLanguage Then
                     Call showOutPut(outPutCollection, "unknown Elements:", "please modify organisation-file or input ...")
@@ -8429,7 +8426,7 @@ Imports System.Web
                 '' Cursor auf HourGlass setzen
                 Cursor.Current = Cursors.WaitCursor
 
-                Call logfileOpen()
+                'Call logfileOpen()
 
                 ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
                 Dim i As Integer
@@ -8447,7 +8444,7 @@ Imports System.Web
                 Next
 
                 'Call logfileSchreiben(outPutCollection)
-                Call logfileSchliessen()
+                ''Call logfileSchliessen()
 
 
                 ' Auch wenn unbekannte Rollen und Kosten drin waren - die Projekte enthalten die ja dann nicht und können deshalb aufgenommen werden ..
