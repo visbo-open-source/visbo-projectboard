@@ -27,9 +27,25 @@
 
     End Sub
 
+    Private Sub Visibility()
+
+        shwAmpeln.Visible = False
+        useOriginalNames.Visible = False
+        filterEmptyProjects.Left = useOriginalNames.Left
+
+        shwLegend.Visible = False
+        sortiertNachDauer.Visible = False
+        allOnOnePage.Visible = False
+        shwExtendedMode.Top = allOnOnePage.Top
+
+
+    End Sub
+
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Call languageSettings()
+
+        Call Visibility()
 
         With awinSettings
             shwProjectLine.Checked = .mppShowProjectLine
