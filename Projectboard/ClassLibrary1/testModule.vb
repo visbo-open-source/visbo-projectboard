@@ -14316,14 +14316,7 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
             End If
 
-            '.Name = .Name & .Id
-            Try
-                .Name = swlShapeName & PTpptAnnotationType.text
-            Catch ex As Exception
-                ' wenn der Name zu lang ist wird hiermit der Fehler abgefangen  
-
-            End Try
-
+            .Name = .Name & .Id
 
 
             ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 

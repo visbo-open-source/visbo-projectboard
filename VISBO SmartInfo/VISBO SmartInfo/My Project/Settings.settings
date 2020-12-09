@@ -66,25 +66,25 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="customizationPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\Demo Visbo Center\</Value>
-    </Setting>
-    <Setting Name="mongoDBname" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="mongoDBname" Type="System.String" Scope="User">
+      <Value Profile="(Default)">bhtc</Value>
+    </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://staging.visbo.net/api</Value>
+      <Value Profile="(Default)">10.28.10.38</Value>
     </Setting>
     <Setting Name="VISBOServer" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\Demo Visbo Center</Value>
+      <Value Profile="(Default)">MS Project VISBO AddIn</Value>
     </Setting>
   </Settings>
 </SettingsFile>

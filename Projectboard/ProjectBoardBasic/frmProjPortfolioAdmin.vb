@@ -1755,11 +1755,17 @@ Public Class frmProjPortfolioAdmin
                         ' eine muss gechecked werden
                         Dim variantNameLookingFor As String = ""
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                            variantNameLookingFor = ptVariantFixNames.pfv.ToString
-                        Else
+                        If awinSettings.visboServer = True Then
                             variantNameLookingFor = ""
+
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                                variantNameLookingFor = ptVariantFixNames.pfv.ToString
+                            End If
+                        Else
+                            variantNameLookingFor = "TMS"
                         End If
+
+
 
                         Dim found As Boolean = False
                         For i = 0 To projektNode.Nodes.Count - 1
@@ -1782,22 +1788,6 @@ Public Class frmProjPortfolioAdmin
                         ' jetzt müssen alle anderen PRoject Nodes unchecked werden 
 
                         Call uncheckExcept(node.Name)
-                        'For i = 1 To TreeViewProjekte.Nodes.Count
-                        '    Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(i - 1)
-                        '    If tmpNode.Level = 0 And tmpNode.Name <> node.Name Then
-                        '        If tmpNode.Checked Then
-                        '            tmpNode.Checked = False
-                        '            ' dann auch alle Varianten unchecken ... 
-                        '            Dim anzV As Integer = tmpNode.Nodes.Count
-
-                        '            For vi As Integer = 1 To anzV
-                        '                If tmpNode.Nodes.Item(vi - 1).Checked Then
-                        '                    tmpNode.Nodes.Item(vi - 1).Checked = False
-                        '                End If
-                        '            Next
-                        '        End If
-                        '    End If
-                        'Next
 
 
                     Else
@@ -1858,11 +1848,16 @@ Public Class frmProjPortfolioAdmin
                         ' eine muss gechecked werden
                         Dim variantNameLookingFor As String = ""
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                            variantNameLookingFor = ptVariantFixNames.pfv.ToString
-                        Else
+                        If awinSettings.visboServer = True Then
                             variantNameLookingFor = ""
+
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                                variantNameLookingFor = ptVariantFixNames.pfv.ToString
+                            End If
+                        Else
+                            variantNameLookingFor = "TMS"
                         End If
+
 
                         Dim found As Boolean = False
                         For i = 0 To projektNode.Nodes.Count - 1
@@ -1898,6 +1893,8 @@ Public Class frmProjPortfolioAdmin
                         If projektNode.Checked = False Then
                             projektNode.Checked = True
                         End If
+
+                        Call uncheckVariantExcept(projektNode, variantNode.Name)
                     Else
                         ' wenn es die letzte Variante war, die unchecked wurde 
                         Dim anzVariantsChecked As Integer = 0
@@ -3998,6 +3995,22 @@ Public Class frmProjPortfolioAdmin
                             tmpNode.Nodes.Item(vi - 1).Checked = False
                         End If
                     Next
+                End If
+            End If
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' unchecks all variant-Nodes in projectnode except variantNode with nodeName 
+    ''' </summary>
+    ''' <param name="projectNode"></param>
+    ''' <param name="nodeName"></param>
+    Private Sub uncheckVariantExcept(ByVal projectNode As TreeNode, ByVal nodeName As String)
+        For i As Integer = 1 To projectNode.Nodes.Count
+            Dim tmpNode As TreeNode = projectNode.Nodes.Item(i - 1)
+            If tmpNode.Level = 1 And tmpNode.Name <> nodeName Then
+                If tmpNode.Checked Then
+                    tmpNode.Checked = False
                 End If
             End If
         Next
