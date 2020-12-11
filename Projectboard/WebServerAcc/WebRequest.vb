@@ -2650,23 +2650,23 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
-                    ' timestamp und validFrom auf den ersten des Monats setzen
-                    listofOrgaWeb.validFrom = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
-                    Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
+                    ' validFrom auf den ersten des Monats setzen
+                    Dim newOrgavalidFrom As Date = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = newOrgavalidFrom.ToString("u")
+                    CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
                     CType(newsetting, clsVCSettingOrganisation).userId = ""
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
 
                     If anzSetting = 1 Then
-
+                        Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
                         ' Update der Organisation - Setting
-                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Month = listofOrgaWeb.validFrom.Month And
-                            CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Year = listofOrgaWeb.validFrom.Year Then
+                        If oldvalidFromlocal.Month = listofOrgaWeb.validFrom.Month And
+                            oldvalidFromlocal.Year = listofOrgaWeb.validFrom.Year Then
                             ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
-                            validFrom = oldsetting.timestamp
-                            CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp
+                            ' CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp.ToString("u")
+                            CType(newsetting, clsVCSettingOrganisation).timestamp = DateTimeToISODate(oldsetting.timestamp)
                             CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
                             newsetting._id = settingID
                             result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
