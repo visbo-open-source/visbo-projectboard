@@ -15447,7 +15447,7 @@ Public Module testModule
                         ' gibt den vollen Breadcrumb zurück 
                         Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
                         ' falls in selPhases Categories stehen 
-                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearance, False)
+                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearanceName, False)
                         Dim selPhaseName As String = ""
 
                         While j <= selectedPhases.Count And Not found
@@ -15597,16 +15597,8 @@ Public Module testModule
 
                                 End If
 
+                                appear = appearanceDefinitions.getPhaseAppearance(cphase)
 
-
-                                ' Änderung tk 26.11 
-                                If PhaseDefinitions.Contains(phaseName) Then
-                                    'phaseShape = PhaseDefinitions.getShape(phaseName)
-                                    appear = PhaseDefinitions.getShapeApp(phaseName)
-                                Else
-                                    'phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                                    appear = missingPhaseDefinitions.getShapeApp(phaseName)
-                                End If
 
                                 ' Ergänzung 19.4.16
                                 Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
@@ -16337,15 +16329,8 @@ Public Module testModule
 
 
 
-        ' Änderung tk 26.11.15
-
-        If MilestoneDefinitions.Contains(MS.name) Then
-            ''milestoneTypShape1 = MilestoneDefinitions.getShape(MS.name)
-            msAppear = MilestoneDefinitions.getShapeApp(MS.name)
-        Else
-            ''milestoneTypShape1 = missingMilestoneDefinitions.getShape(MS.name)
-            msAppear = missingMilestoneDefinitions.getShapeApp(MS.name)
-        End If
+        ' Änderung tk 11.12.2020
+        msAppear = appearanceDefinitions.getMileStoneAppearance(MS)
 
 
         Dim msdate As Date = MS.getDate
@@ -16601,21 +16586,7 @@ Public Module testModule
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
 
-        Try
-            If cphase.appearance = "" Then
-                phaseTypApp = appearanceDefinitions.Item(awinSettings.defaultPhaseClass)
-            Else
-                phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
-            End If
-        Catch ex As Exception
-            Dim i As Integer = 0
-            phaseTypApp = appearanceDefinitions.ElementAt(i).Value
-
-            Do While phaseTypApp.isMilestone And i < appearanceDefinitions.Count - 1
-                i = i + 1
-                phaseTypApp = appearanceDefinitions.ElementAt(i).Value
-            Loop
-        End Try
+        phaseTypApp = appearanceDefinitions.getPhaseAppearance(cphase)
 
 
         If IsNothing(phaseTypApp) Then
@@ -16825,23 +16796,9 @@ Public Module testModule
         Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames,
                                                              awinSettings.mppUseAbbreviation, swimlaneID)
 
-        ' eigentlich muss es das sein ..
-        Try
-            If cMilestone.appearance = "" Then
-                milestoneTypApp = appearanceDefinitions.Item(awinSettings.defaultMilestoneClass)
-            Else
-                milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
-            End If
-        Catch ex As Exception
-            Dim i As Integer = 0
-            milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+        ' get appearance Class 
+        milestoneTypApp = appearanceDefinitions.getMileStoneAppearance(cMilestone)
 
-            Do While Not milestoneTypApp.isMilestone And i < appearanceDefinitions.Count - 1
-                i = i + 1
-                milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
-            Loop
-
-        End Try
 
         ' Exit , wenn nichts gefunden  
         If IsNothing(milestoneTypApp) Then
@@ -17444,7 +17401,7 @@ Public Module testModule
                             If typePv = PTItemType.categoryList Then
                                 catName = pvName
                             End If
-                            If appearanceDefinitions.ContainsKey(catName) Then
+                            If appearanceDefinitions.contains(catName) Then
                                 tmpName = calcHryCategoryName(catName, False)
 
                                 If Not tmpCollection.Contains(tmpName) Then
@@ -17465,7 +17422,7 @@ Public Module testModule
                             If typePv = PTItemType.categoryList Then
                                 catName = pvName
                             End If
-                            If appearanceDefinitions.ContainsKey(catName) Then
+                            If appearanceDefinitions.contains(catName) Then
                                 tmpName = calcHryCategoryName(catName, True)
 
                                 If Not tmpCollection.Contains(tmpName) Then
@@ -17688,58 +17645,31 @@ Public Module testModule
 
             Else
                 projekthoehe = zeilenhoehe_sav
-                End If
+            End If
 
-                '
-                ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
-                '
-                Call rds.calcRelDisTxtToElm()
+            '
+            ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+            '
+            Call rds.calcRelDisTxtToElm()
 
 
             '
             ' bestimme das Format  
 
             Dim neededSpace As Double
+            Dim segmentNeededSpace As Double = 0.0 ' wird für Swimlanes2 benötigt 
 
-
-            If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
-                If awinSettings.mppOnePage Then
-                    neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
-                Else
-                    neededSpace = maxZeilen * zeilenhoehe_sav
-                End If
-            Else
-            End If
-
-
+            neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
 
 
             Dim availableSpace As Double
-                availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
-
-            Dim oldHeight As Double
-            Dim oldwidth As Double
-
-            oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
-            oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
-
-
-            Dim curHeight As Double = oldHeight
-            Dim curWidth As Double = oldwidth
-
+            availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
 
 
             If (availableSpace < neededSpace And awinSettings.mppOnePage) Or
               (availableSpace < neededSpace And awinSettings.mppExtendedMode) Then
 
-
-                ' tk 30.5.2020
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("Contenct does not fit to page ... please modify your selections")
-                Else
-                    Call MsgBox("Inhalt kann nicht auf der Seite dargestellt werden ... bitte Auswahl anpassen ...")
-                End If
-                Exit Sub
+                Call rds.setZeilenhoehe(gesamtAnzZeilen, segmentNeededSpace)
 
             End If
 
@@ -17799,16 +17729,10 @@ Public Module testModule
             Try
 
 
-
                 Call zeichnePPTprojects(pptslide, projCollection, objectsDone,
                                 rds,
                                 selectedPhases, selectedMilestones, selectedRoles, selectedCosts,
                                 worker, e)
-
-
-
-
-
 
 
             Catch ex As Exception
@@ -18147,13 +18071,13 @@ Public Module testModule
                 ' bestimme das Format  
 
                 Dim neededSpace As Double
+                Dim segmentNeededSpace As Double = 0.0
 
 
                 If isSwimlanes2 Then
                     ' jetzt müssen noch die Segment Höhen  berechnet werden 
-
-                    neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isSwimlanes2) * rds.segmentHoehe
+                    segmentNeededSpace = hproj.getSegmentsCount() * rds.segmentHoehe
+                    neededSpace = anzZeilen * rds.zeilenHoehe + segmentNeededSpace
                 Else
 
                     neededSpace = anzZeilen * rds.zeilenHoehe
@@ -18178,110 +18102,8 @@ Public Module testModule
 
                 If (rds.availableSpace < neededSpace And awinSettings.mppOnePage) Then
 
-                    ' es muss das Format angepasst werden ... 
-
-                    Dim ix As Integer = format
-                    Dim ok As Boolean = True
-                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
-
-                    Dim sizeMemory() As Single
-                    Dim relativeSizeMemory As New SortedList(Of String, Double())
-
-                    With rds
-                        sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
-                                                     .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                                     .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                                     .phaseVorlagenShape, .milestoneVorlagenShape,
-                                                     .projectVorlagenShape, .ampelVorlagenShape,
-                                                     .segmentVorlagenShape)
-                    End With
-
-
-                    If pptApp.Version = "14.0" Then
-                        ' muss nichts machen
-
-                    Else
-
-                        relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
-
-                    End If
-
-
-                    Do While rds.availableSpace < neededSpace And ix > 0
-
-                        With pptCurrentPresentation
-
-                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-
-                            If querFormat Then
-                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
-                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
-                            Else
-                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
-                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
-                            End If
-
-
-                        End With
-
-                        curHeight = pptCurrentPresentation.PageSetup.SlideHeight
-                        curWidth = pptCurrentPresentation.PageSetup.SlideWidth
-
-                        ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
-                        ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
-
-                        If pptApp.Version = "14.0" Then
-                            ' muss nichts machen
-                        Else
-
-                            Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
-                        End If
-
-                        ' jetzt wieder die Koordinaten neu berechnen 
-                        Call rds.bestimmeZeichenKoordinaten()
-
-
-                        If rds.availableSpace < neededSpace Then
-                            ix = ix - 1
-                        End If
-
-                    Loop
-
-                    ix = ix - 1
-                    If ix < 0 Then
-                        ix = 0
-                    End If
-
-                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                    If pptApp.Version = "14.0" Then
-                        With rds
-                            Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
-                                                .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                                .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                                .phaseVorlagenShape, .milestoneVorlagenShape,
-                                                .projectVorlagenShape, .ampelVorlagenShape,
-                                                .segmentVorlagenShape)
-                        End With
-
-
-                    End If
-
-
-                    ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
-                    ' entsprechend um den errechneten Faktor anpassen
-
-                    Dim enlargeTxtFaktor As Double = curHeight / oldHeight
-                    Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
-
-                    ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
-                    ' tk 2.2 braucht man nicht mehr ...
-                    'With rds
-                    '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
-                    '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
-
-                    '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
-                    '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
-                    'End With
+                    ' hier wird die Zeilenhoehe ggf so gesetzt, dass alles rein geht ... 
+                    Call rds.setZeilenhoehe(anzZeilen, segmentNeededSpace)
 
                 End If
 
@@ -18308,9 +18130,6 @@ Public Module testModule
                 Catch ex As Exception
 
                 End Try
-
-                ' wenn Legende gezeichnet werden soll - die Legende zeichnen 
-
 
                 Dim smartInfoCRD As Date = Date.MinValue
                 ' jetzt wird hier die Date Info eingetragen ... 
@@ -18774,39 +18593,19 @@ Public Module testModule
             ' eigentlich muss er das Ganze nur machen, wenn pptFirsttime 
             If pptFirstTime Then
 
-                'If awinSettings.mppExtendedMode Then
 
-                '    ' jetzt muss die Gesamt-Zahl an Zeilen ermittelt werden , die die einzelnen Swimlanes bentötigen 
-
-                '    For i = 1 To swimLanesToDo
-
-                '        cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isBHTCSchema)
-
-                '        Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
-                '                                                                 awinSettings.mppExtendedMode, _
-                '                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
-                '                                                                 considerAll)
-
-                '        anzZeilen = anzZeilen + swimLaneZeilen
-                '    Next
-
-
-                'Else
-                '    anzZeilen = swimLanesToDo
-                'End If
                 anzZeilen = swimLanesToDo
 
                 '
                 ' bestimme das Format  
 
                 Dim neededSpace As Double
-
+                Dim segmentNeededSpace As Double = 0.0
 
                 If isBHTCSchema Then
                     ' jetzt müssen noch die Segment Höhen  berechnet werden 
-
-                    neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isBHTCSchema) * rds.segmentHoehe
+                    segmentNeededSpace = hproj.getSegmentsCount() * rds.segmentHoehe
+                    neededSpace = anzZeilen * rds.zeilenHoehe + segmentNeededSpace
                 Else
 
                     neededSpace = anzZeilen * rds.zeilenHoehe
@@ -18829,102 +18628,7 @@ Public Module testModule
 
                 If (rds.availableSpace < neededSpace And awinSettings.mppOnePage) Then
 
-                    ' es muss das Format angepasst werden ... 
-
-                    Dim ix As Integer = format
-                    Dim ok As Boolean = True
-                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
-
-                    Dim sizeMemory() As Single
-                    Dim relativeSizeMemory As New SortedList(Of String, Double())
-
-                    With rds
-                        sizeMemory = saveSizesOfElements(.projectNameVorlagenShape,
-                                                     .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                                     .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                                     .phaseVorlagenShape, .milestoneVorlagenShape,
-                                                     .projectVorlagenShape, .ampelVorlagenShape,
-                                                     .segmentVorlagenShape)
-                    End With
-
-
-                    If pptApp.Version = "14.0" Then
-                        ' muss nichts machen
-
-                    Else
-
-                        relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
-
-                    End If
-
-
-                    Do While rds.availableSpace < neededSpace And ix > 0
-
-                        With pptCurrentPresentation
-
-                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-
-                            If querFormat Then
-                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
-                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
-                            Else
-                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
-                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
-                            End If
-
-
-
-                        End With
-
-                        curHeight = pptCurrentPresentation.PageSetup.SlideHeight
-                        curWidth = pptCurrentPresentation.PageSetup.SlideWidth
-
-                        ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
-                        ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
-
-                        If pptApp.Version = "14.0" Then
-                            ' muss nichts machen
-                        Else
-
-                            Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
-                        End If
-
-                        ' jetzt wieder die Koordinaten neu berechnen 
-                        Call rds.bestimmeZeichenKoordinaten()
-
-
-                        If rds.availableSpace < neededSpace Then
-                            ix = ix - 1
-                        End If
-
-                    Loop
-
-                    ix = ix - 1
-                    If ix < 0 Then
-                        ix = 0
-                    End If
-
-                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                    If pptApp.Version = "14.0" Then
-                        With rds
-                            Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape,
-                                                .MsDescVorlagenShape, .MsDateVorlagenShape,
-                                                .PhDescVorlagenShape, .PhDateVorlagenShape,
-                                                .phaseVorlagenShape, .milestoneVorlagenShape,
-                                                .projectVorlagenShape, .ampelVorlagenShape,
-                                                .segmentVorlagenShape)
-                        End With
-
-
-                    End If
-
-
-                    ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
-                    ' entsprechend um den errechneten Faktor anpassen
-
-                    Dim enlargeTxtFaktor As Double = curHeight / oldHeight
-                    Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
-
+                    Call rds.setZeilenhoehe(anzZeilen, segmentNeededSpace)
 
                 End If
 

@@ -609,22 +609,79 @@ Public Class clsPPTShapes
     End Sub
 
     ''' <summary>
-    ''' setzt die Zeilenhöhe auf ein Minimum bzw. auf ein absolutes Minimum. 
-    ''' beim Minimum bleibt Platz für eine Beschreibung, beim absoluten Minimum wird gewährleistet, dass sich Meilenstein bzw. Phasen aus zwei Zeilen noch nicht überlappen.  
+    ''' first try: define default row Height resp. zeilenhohe  
     ''' </summary>
-    Public Sub setZeilenhöhe(ByVal absoluteMinimum As Boolean)
+    Public Sub setZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
+        Dim goodEnough As Boolean = False
+        Dim newZeilenhoehe As Double = _zeilenHoehe
 
-        If absoluteMinimum Then
+        Dim heights(3) As Single
+        heights(0) = MsDescVorlagenShape.Height
+        heights(1) = MsDateVorlagenShape.Height
+        heights(2) = PhDescVorlagenShape.Height
+        heights(3) = PhDateVorlagenShape.Height
 
-            _zeilenHoehe = Me.minZeilenhöhe
+        newZeilenhoehe = Me.minZeilenhöhe + heights.Max
+
+        goodEnough = anzZeilen * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace
+        If Not goodEnough Then
+            Call autoSetZeilenhoehe(anzZeilen, segmentNeededSpace)
         Else
-            Dim heights(3) As Single
-            heights(0) = MsDescVorlagenShape.Height
-            heights(1) = MsDateVorlagenShape.Height
-            heights(2) = PhDescVorlagenShape.Height
-            heights(3) = PhDateVorlagenShape.Height
+            _zeilenHoehe = newZeilenhoehe
+        End If
 
-            _zeilenHoehe = Me.minZeilenhöhe + heights.Max
+    End Sub
+
+    ''' <summary>
+    ''' called if space ist not sufficient , defines a zeilehohe which enables drawing of the whole thing
+    ''' does reduce Ms height and width and phase height to 0.66 of origibal size   
+    ''' </summary>
+    ''' <param name="anzZeilen"></param>
+    Private Sub autoSetZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
+
+        ' now try three different steps 
+        Dim reductionFactor As Single = 0.8
+        Dim goodEnough As Boolean = False
+
+        Dim msHeight As Single = _milestoneVorlagenShape.Height
+        Dim msWidth As Single = _milestoneVorlagenShape.Width
+        Dim phaseHeight As Single = _phaseVorlagenShape.Height
+        Dim newZeilenhoehe As Double = _zeilenHoehe
+
+        If anzZeilen > 0 Then
+            ' first step
+            Try
+                Dim ix As Integer = 1
+                Do While Not goodEnough And ix <= 2
+                    msHeight = _milestoneVorlagenShape.Height * reductionFactor
+                    msWidth = _milestoneVorlagenShape.Width * reductionFactor
+                    phaseHeight = _phaseVorlagenShape.Height * reductionFactor
+
+                    newZeilenhoehe = 1.1 * System.Math.Max(msHeight, phaseHeight)
+                    If anzZeilen * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace Then
+                        goodEnough = True
+                        _zeilenHoehe = newZeilenhoehe
+                    Else
+                        ix = ix + 1
+                    End If
+                Loop
+
+                ' now set new height and widths for phase and milestones
+                reductionFactor = msHeight / _milestoneVorlagenShape.Height
+
+                _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
+                _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
+                _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
+
+                If Not goodEnough Then
+                    ' set zeilenhoehe such that all fits into the drawing area, no matter whether there will be overlaps or not ... 
+                    _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / anzZeilen
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
         End If
 
     End Sub

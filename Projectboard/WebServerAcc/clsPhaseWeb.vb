@@ -68,7 +68,7 @@ Public Class clsPhaseWeb
 
             Me.shortName = .shortName
             Me.originalName = .originalName
-            Me.appearance = .appearance
+            Me.appearance = .appearanceName
 
             ' Dokumenten-Url und Applikation
             Me.docURL = .DocURL
@@ -192,7 +192,7 @@ Public Class clsPhaseWeb
             End If
 
             If Not IsNothing(Me.appearance) Then
-                .appearance = Me.appearance
+                .appearanceName = Me.appearance
             End If
 
             ' jetzt die Deliverables aufnehmen 

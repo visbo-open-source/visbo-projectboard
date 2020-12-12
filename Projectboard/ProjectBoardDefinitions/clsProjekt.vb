@@ -6572,7 +6572,7 @@ Public Class clsProjekt
                                 ElseIf type = PTItemType.categoryList Then
 
                                     Try
-                                        Dim categoryItem As String = calcHryCategoryName(cphase.appearance, False)
+                                        Dim categoryItem As String = calcHryCategoryName(cphase.appearanceName, False)
                                         If selectedPhases.Contains(categoryItem) Then
                                             found = True
                                         End If

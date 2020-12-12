@@ -1818,14 +1818,15 @@ Module creationModule
             End If
 
             Dim neededSpace As Double
+            Dim segmentNeededSpace As Double = 0.0
             Dim anzSegments As Integer = 0
 
 
             If isSwimlanes2 Then
                 ' jetzt müssen noch die Segment Höhen  berechnet werden 
-                anzSegments = hproj.getSegmentsCount(considerAll, breadcrumbArray, isSwimlanes2)
-                neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    anzSegments * rds.segmentHoehe
+                anzSegments = hproj.getSegmentsCount()
+                segmentNeededSpace = anzSegments * rds.segmentHoehe
+                neededSpace = anzZeilen * rds.zeilenHoehe + segmentNeededSpace
             Else
                 neededSpace = anzZeilen * rds.zeilenHoehe
             End If
@@ -1835,47 +1836,13 @@ Module creationModule
 
             ' jetzt muss die Zeilenhöhe solange reduziert werden, bis alles reinpasst oder aber es gar nicht geht ... 
             If neededSpace > rds.availableSpace Then
-                ' reduzieren der Zeilenhöhe 
-                weitermachen = False
 
-                ' zuerst die Beschriftungen raus nehmen 
-                If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
-                    With awinSettings
-                        .mppShowMsDate = False
-                        .mppShowMsName = False
-                        .mppShowPhDate = False
-                        .mppShowPhName = False
-                    End With
-                End If
-
-                ' dann die Zeilenhöhe auf das Minimum 1: Platz für eine Beschriftung, oben oder unten   setzen ...
-
-                Call rds.setZeilenhöhe(absoluteMinimum:=False)
-
-                neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    anzSegments * rds.segmentHoehe
-
-
-                ' immer noch zu viel Platz benötigt ? 
-                If neededSpace > rds.availableSpace Then
-                    ' auf Minimum 2 setzen 
-
-                    Call rds.setZeilenhöhe(absoluteMinimum:=True)
-
-                    neededSpace = anzZeilen * rds.zeilenHoehe +
-                                    anzSegments * rds.segmentHoehe
-
-                    If neededSpace > rds.availableSpace Then
-                        weitermachen = False
-                    Else
-                        ' alles in ORdnung 
-                        weitermachen = True
-                    End If
+                If segmentNeededSpace > rds.availableSpace Then
+                    weitermachen = False
                 Else
-                    ' alles in Ordnung ...
+                    Call rds.setZeilenhoehe(anzZeilen, segmentNeededSpace)
                     weitermachen = True
                 End If
-
 
             End If
 
@@ -1891,7 +1858,6 @@ Module creationModule
                         With rds
 
                             Call draw3RowsCalendar(rds, minCal)
-                            'Call zeichne3RowsCalendar(rds, minCal)
 
                         End With
 
@@ -2260,6 +2226,7 @@ Module creationModule
             ' bestimme das Format  
 
             Dim neededSpace As Double
+            Dim segmentNeededSpace As Double = 0.0
             ' tk 14.10.19 hier soll immer alles auf eine seite gehen .. 
             neededSpace = gesamtAnzZeilen * zeilenhoehe_sav
 
@@ -2269,43 +2236,13 @@ Module creationModule
 
             ' jetzt muss die Zeilenhöhe solange reduziert werden, bis alles reinpasst oder aber es gar nicht geht ... 
             If neededSpace > rds.availableSpace Then
-                ' reduzieren der Zeilenhöhe 
-                weitermachen = False
 
-                ' zuerst die Beschriftungen raus nehmen 
-                If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
-                    With awinSettings
-                        .mppShowMsDate = False
-                        .mppShowMsName = False
-                        .mppShowPhDate = False
-                        .mppShowPhName = False
-                    End With
-                End If
-
-                ' dann die Zeilenhöhe auf das Minimum 1: Platz für eine Beschriftung, oben oder unten   setzen ...
-
-                Call rds.setZeilenhöhe(absoluteMinimum:=False)
-
-                neededSpace = gesamtAnzZeilen * rds.zeilenHoehe
-
-
-                ' immer noch zu viel Platz benötigt ? 
-                If neededSpace > rds.availableSpace Then
-                    ' auf Minimum 2 setzen 
-                    Call rds.setZeilenhöhe(absoluteMinimum:=True)
-                    neededSpace = gesamtAnzZeilen * rds.zeilenHoehe
-
-                    If neededSpace > rds.availableSpace Then
-                        weitermachen = False
-                    Else
-                        ' alles in ORdnung 
-                        weitermachen = True
-                    End If
+                If segmentNeededSpace > rds.availableSpace Then
+                    weitermachen = False
                 Else
-                    ' alles in Ordnung ...
+                    Call rds.setZeilenhoehe(gesamtAnzZeilen, segmentNeededSpace)
                     weitermachen = True
                 End If
-                ' wenn es immer noch nicht reicht, auf Minimum 2, Höhe des Meilensteins *1,1  setzen 
 
             End If
             ' Ende neu 
@@ -2810,7 +2747,7 @@ Module creationModule
                         ' gibt den vollen Breadcrumb zurück 
                         Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
                         ' falls in selPhases Categories stehen 
-                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearance, False)
+                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearanceName, False)
                         Dim selPhaseName As String = ""
 
                         While j <= selectedPhases.Count And Not found
@@ -2967,15 +2904,8 @@ Module creationModule
                                 End If
 
 
+                                appear = appearanceDefinitions.getPhaseAppearance(cphase)
 
-                                ' Änderung tk 26.11 
-                                If PhaseDefinitions.Contains(phaseName) Then
-                                    'phaseShape = PhaseDefinitions.getShape(phaseName)
-                                    appear = PhaseDefinitions.getShapeApp(phaseName)
-                                Else
-                                    'phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                                    appear = missingPhaseDefinitions.getShapeApp(phaseName)
-                                End If
 
                                 ' Ergänzung 19.4.16
                                 Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
@@ -3633,6 +3563,7 @@ Module creationModule
                 'milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
 
                 If projektGrafikYPos > rds.drawingAreaBottom Then
+                    Call MsgBox("not all elements could be drawn ...")
                     Exit For
                 End If
 
@@ -3695,7 +3626,7 @@ Module creationModule
             '                            currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
             '                            " Projekten gezeichnet werden ... " & vbLf & _
             '                            "bitte verwenden Sie ein anderes Vorlagen-Format")
-            Throw New ArgumentException("not all projects could be drawn ... please use other setitngs")
+            Throw New ArgumentException("not all projects could be drawn ... please use other settings")
         End If
 
 
@@ -3742,22 +3673,8 @@ Module creationModule
                                                              awinSettings.mppUseAbbreviation, swimlaneID)
 
         ' eigentlich muss es das sein ..
-        Try
-            If cMilestone.appearance = "" Then
-                milestoneTypApp = appearanceDefinitions.Item(awinSettings.defaultMilestoneClass)
-            Else
-                milestoneTypApp = appearanceDefinitions.Item(cMilestone.appearance)
-            End If
-        Catch ex As Exception
-            Dim i As Integer = 0
-            milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
+        milestoneTypApp = appearanceDefinitions.getMileStoneAppearance(cMilestone)
 
-            Do While Not milestoneTypApp.isMilestone And i < appearanceDefinitions.Count - 1
-                i = i + 1
-                milestoneTypApp = appearanceDefinitions.ElementAt(i).Value
-            Loop
-
-        End Try
 
         ' Exit , wenn nichts gefunden  
         If IsNothing(milestoneTypApp) Then
@@ -3942,23 +3859,7 @@ Module creationModule
         Dim x2 As Double
 
 
-
-
-        Try
-            If cphase.appearance = "" Then
-                phaseTypApp = appearanceDefinitions.Item(awinSettings.defaultPhaseClass)
-            Else
-                phaseTypApp = appearanceDefinitions.Item(cphase.appearance)
-            End If
-        Catch ex As Exception
-            Dim i As Integer = 0
-            phaseTypApp = appearanceDefinitions.ElementAt(i).Value
-
-            Do While phaseTypApp.isMilestone And i < appearanceDefinitions.Count - 1
-                i = i + 1
-                phaseTypApp = appearanceDefinitions.ElementAt(i).Value
-            Loop
-        End Try
+        phaseTypApp = appearanceDefinitions.getPhaseAppearance(cphase)
 
 
         If IsNothing(phaseTypApp) Then

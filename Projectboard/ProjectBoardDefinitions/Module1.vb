@@ -143,7 +143,8 @@ Public Module Module1
     Public PfChartBubbleNames() As String
 
 
-    Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
+    'Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
+    Public appearanceDefinitions As New clsAppearances
     Public RoleDefinitions As New clsRollen
     Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
@@ -4188,15 +4189,15 @@ Public Module Module1
         Dim ergebnis As String = ""
         Dim found As Boolean = False
         Dim index As Integer = 0
-        Dim anzElements As Integer = appearanceDefinitions.Count
+        Dim anzElements As Integer = appearanceDefinitions.liste.Count
 
 
         Do While Not found And index <= anzElements - 1
 
-            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And
-                    isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
+            If completeText.Contains(appearanceDefinitions.liste.ElementAt(index).Key.Trim) And
+                    isMilestone = appearanceDefinitions.liste.ElementAt(index).Value.isMilestone Then
                 found = True
-                ergebnis = appearanceDefinitions.ElementAt(index).Key
+                ergebnis = appearanceDefinitions.liste.ElementAt(index).Key
             Else
                 index = index + 1
             End If

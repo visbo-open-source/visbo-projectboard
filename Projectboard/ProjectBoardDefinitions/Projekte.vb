@@ -2763,8 +2763,9 @@ Public Module Projekte
         Dim tdatenreiheB() As Double
         Dim tdatenreiheL() As Double
         Dim tdatenreiheC() As Double
-        Dim tmpCollection As New Collection
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        Dim tmpCollection As New Collection From {
+            hproj.name & "#" & auswahl.ToString
+        }
         ' Bestimmen der Werte 
 
         Select Case auswahl
@@ -18983,28 +18984,10 @@ Public Module Projekte
 
                         Else
 
-                            'Dim tmpName As String = elemNameOfElemID(phasenNameID)
-                            'If PhaseDefinitions.Contains(tmpName) Then
-                            '    vorlagenShape = PhaseDefinitions.getShape(tmpName)
-                            'Else
-                            '    vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
-                            'End If
-
-
-                            'phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
-                            '    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                            'vorlagenShape.PickUp()
-                            'phaseShape.Apply()
-
                             'ur:190725
-                            Dim appear As New clsAppearance
-                            Dim tmpName As String = elemNameOfElemID(phasenNameID)
-                            If PhaseDefinitions.Contains(tmpName) Then
+                            Dim appear As clsAppearance = appearanceDefinitions.getPhaseAppearance(cphase)
 
-                                appear = appearanceDefinitions(PhaseDefinitions.getAppearance(tmpName))
-                            Else
-                                appear = appearanceDefinitions(missingPhaseDefinitions.getAppearance(tmpName))
-                            End If
+                            Dim tmpName As String = elemNameOfElemID(phasenNameID)
 
                             phaseShape = worksheetShapes.AddShape(Type:=appear.shpType,
                               Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
@@ -19069,12 +19052,9 @@ Public Module Projekte
                             'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                             'ur:190725
-                            Dim appear As New clsAppearance
-                            If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                appear = appearanceDefinitions(cMilestone.appearance)
-                            Else
-                                appear = appearanceDefinitions(cMilestone.appearance)
-                            End If
+
+                            Dim appear As clsAppearance = appearanceDefinitions.getMileStoneAppearance(cMilestone)
+
                             Dim factorB2H As Double = appear.width / appear.height
 
 
@@ -19791,12 +19771,8 @@ Public Module Projekte
 
                                 'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
                                 'ur:190725
-                                Dim appear As New clsAppearance
-                                If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                    appear = appearanceDefinitions(cMilestone.appearance)
-                                Else
-                                    appear = appearanceDefinitions(cMilestone.appearance)
-                                End If
+                                Dim appear As clsAppearance = appearanceDefinitions.getMileStoneAppearance(cMilestone)
+
                                 Dim factorB2H As Double = appear.width / appear.height
 
 
@@ -20710,14 +20686,7 @@ Public Module Projekte
                         cphase = hproj.getPhaseByID(phaseNameID)
                         Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(cphase.name)
 
-                        ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
-                        If PhaseDefinitions.Contains(cphase.name) Then
-                            'vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-                            appear = PhaseDefinitions.getShapeapp(cphase.name)
-                        Else
-                            'vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-                            appear = missingPhaseDefinitions.getShapeApp(cphase.name)
-                        End If
+                        appear = appearanceDefinitions.getPhaseAppearance(cphase)
 
 
                         Try
@@ -20744,12 +20713,7 @@ Public Module Projekte
                             If shpElement Is Nothing Then
 
 
-                                'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
 
-                                'phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
-                                '                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                'vorlagenshape.PickUp()
-                                'phasenShape.Apply()
                                 phasenShape = .Shapes.AddShape(Type:=appear.shpType,
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
                                 With phasenShape
@@ -20909,7 +20873,7 @@ Public Module Projekte
 
                 End If
             Else
-                Dim appear As clsAppearance = appearanceDefinitions(PhaseDefinitions.getAppearance(myphase.name))
+                Dim appear As clsAppearance = appearanceDefinitions.getPhaseAppearance(myphase)
                 myShape.Rotation = appear.Rotation
                 myShape.Fill.BackColor.RGB = appear.BGcolor
                 myShape.Fill.ForeColor.RGB = appear.FGcolor

@@ -387,8 +387,8 @@ Public Class clsawinSettings
         _costToleranzAbs = 2
 
         ' Settings fürp Default Meilenstein bzw. Phasen-Klassen Namen
-        _defaultMilestoneClass = ""
-        _defaultPhaseClass = ""
+        _defaultMilestoneClass = "Meilenstein Default"
+        _defaultPhaseClass = "Phasen Default"
 
         ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False

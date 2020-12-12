@@ -524,11 +524,11 @@ Public Module agm2
 
                             Try
 
-                                If appearanceDefinitions.ContainsKey(.name) Then
-                                    appearanceDefinitions.Remove(.name)
+                                If appearanceDefinitions.liste.ContainsKey(.name) Then
+                                    appearanceDefinitions.liste.Remove(.name)
                                 End If
 
-                                appearanceDefinitions.Add(.name, appDefinition)
+                                appearanceDefinitions.liste.Add(.name, appDefinition)
 
                                 If .isMilestone And firstMilestone Then
                                     awinSettings.defaultMilestoneClass = .name
@@ -2679,7 +2679,7 @@ Public Module agm2
                                         cphase.verantwortlich = verantwortlich
 
                                         ' Vorgangslasse eintragen 
-                                        cphase.appearance = txtVorgangsKlasse
+                                        cphase.appearanceName = txtVorgangsKlasse
 
                                         ' percentDone eintragen 
                                         cphase.percentDone = percentDone
@@ -2867,7 +2867,7 @@ Public Module agm2
                                                 .setDate = itemEndDate
                                                 ' tk 26.11.17 
                                                 .verantwortlich = verantwortlich
-                                                .appearance = txtVorgangsKlasse
+                                                .appearanceName = txtVorgangsKlasse
                                                 .percentDone = percentDone
                                                 .DocURL = docURL
 
@@ -3411,7 +3411,10 @@ Public Module agm2
 
             ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
             Dim tmpAbbrev As String = MilestoneDefinitions.getAbbrev(curName)
-            Dim tmpAppearance As String = MilestoneDefinitions.getAppearance(curName)
+            Dim tmpAppearance As String = ""
+            If Not IsNothing(appearanceDefinitions.getMileStoneAppearance(cmilestone)) Then
+                tmpAppearance = appearanceDefinitions.getMileStoneAppearance(cmilestone).name
+            End If
 
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
@@ -3469,7 +3472,11 @@ Public Module agm2
 
             ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
             Dim tmpAbbrev As String = PhaseDefinitions.getAbbrev(curName)
-            Dim tmpAppearance As String = PhaseDefinitions.getAppearance(curName)
+            Dim tmpAppearance As String = ""
+            If Not IsNothing(appearanceDefinitions.getPhaseAppearance(cphase)) Then
+                tmpAppearance = appearanceDefinitions.getPhaseAppearance(cphase).name
+            End If
+
 
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
@@ -3517,7 +3524,10 @@ Public Module agm2
 
                 ' jetzt Vorgangsklasse und Abbrev schreiben, falls vorhanden 
                 tmpAbbrev = MilestoneDefinitions.getAbbrev(curName)
-                tmpAppearance = MilestoneDefinitions.getAppearance(curName)
+                tmpAppearance = ""
+                If Not IsNothing(appearanceDefinitions.getMileStoneAppearance(cmilestone)) Then
+                    tmpAppearance = appearanceDefinitions.getMileStoneAppearance(cmilestone).name
+                End If
 
                 CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
                 CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
@@ -4709,20 +4719,30 @@ Public Module agm2
                                 Else
                                     newPhaseDef.shortName = msTask.Name
                                 End If
+
                                 ' Task Class, falls Customfield visbo_taskclass definiert ist
                                 If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
                                     newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
                                 Else
                                     newPhaseDef.darstellungsKlasse = ""
                                 End If
-                                cphase.appearance = newPhaseDef.darstellungsKlasse
+                                cphase.appearanceName = newPhaseDef.darstellungsKlasse
 
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 'PhaseDefinitions.Add(newPhaseDef)
                                 missingPhaseDefinitions.Add(newPhaseDef)
                             Else
-                                cphase.appearance = PhaseDefinitions.getAppearance(msTask.Name)
+                                If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    cphase.appearanceName = msTask.GetField(visbo_taskclass)
+                                Else
+                                    cphase.appearanceName = appearanceDefinitions.getPhaseAppearance(msTask.Name, "").name
+                                End If
                             End If
+
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+
+
+
 
                             With cphase
 
@@ -5171,7 +5191,7 @@ Public Module agm2
                                 Else
                                     msDef.darstellungsKlasse = ""
                                 End If
-                                cmilestone.appearance = msDef.darstellungsKlasse
+                                cmilestone.appearanceName = msDef.darstellungsKlasse
 
                                 msDef.schwellWert = 0
                                 msDef.UID = MilestoneDefinitions.Count + 1
@@ -5181,7 +5201,12 @@ Public Module agm2
                                 Catch ex As Exception
                                 End Try
                             Else
-                                cmilestone.appearance = MilestoneDefinitions.getAppearance(msTask.Name)
+                                If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                    cmilestone.appearanceName = msTask.GetField(visbo_taskclass)
+                                Else
+                                    cmilestone.appearanceName = appearanceDefinitions.getMileStoneAppearance(msTask.Name, "").name
+                                End If
+
                             End If
 
                             ' MeilensteinDefinition vorhanden?
@@ -7118,42 +7143,7 @@ Public Module agm2
                             End If
                         Next
                     End If
-                    'ElseIf roleType = ptCustomUserRoles.InternalViewer Then
-                    '    Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
-                    '    ' bestimme 
-                    '    If tmpStr.Length = 0 Then
-                    '        stillOk = False
-                    '    ElseIf tmpStr.Length = 1 And tmpStr(0) = "none" Then
-                    '        ' nichts weiter tun, specificsWithIDs bleibt leer 
-                    '        stillOk = False
-                    '    Else
-                    '        Dim firstTime As Boolean = True
-                    '        Dim parentRoleID As Integer = -1
-                    '        For Each tmpName As String In tmpStr
-
-                    '            stillOk = stillOk And RoleDefinitions.containsNameOrID(tmpName.Trim)
-                    '            ' jetzt wird Plausibilität gecheckt, ob alle angegebenen Rollen den gleichen Vater haben ..
-                    '            If stillOk Then
-                    '                tmpNameUID = CStr(RoleDefinitions.getRoleDefByIDKennung(tmpName.Trim, teamID).UID)
-                    '                If firstTime Then
-                    '                    parentRoleID = RoleDefinitions.getParentRoleOf(tmpNameUID).UID
-                    '                    firstTime = False
-                    '                Else
-                    '                    stillOk = stillOk And (parentRoleID = RoleDefinitions.getParentRoleOf(tmpNameUID).UID)
-                    '                End If
-
-                    '                If specificsWithIDs = "" Then
-                    '                    specificsWithIDs = tmpNameUID
-                    '                Else
-                    '                    specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
-                    '                End If
-
-                    '            Else
-                    '                Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
-                    '            End If
-                    '        Next
-                    '    End If
 
                 End If
             Else
@@ -7223,20 +7213,6 @@ Public Module agm2
         Dim refProj As New clsProjekt
 
         Dim firstZeile As Excel.Range
-        ' Änderung tk 5.6.16 wird jetzt an der Aufruf Schnittstelle gemacht 
-        ''Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-        ''Dim tmpName As String = ""
-
-        ' ''Dim namesForConstellation As New Collection
-        ' '' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
-        ''Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
-        ''tmpName = ""
-        ''For ih As Integer = 0 To positionIX
-        ''    tmpName = tmpName & scenarioName.Chars(ih)
-        ''Next
-        ''scenarioName = tmpName.Trim
-
-        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
         zeile = 2
         spalte = 1
@@ -8513,7 +8489,7 @@ Public Module agm2
             Try
                 ' Auslesen der Darstellungsklassen und Aufbau der Liste 'appearanceDefinitions'
                 Call aufbauenAppearanceDefinitions(appearancesSheet)
-                updatedAppearanceDef = appearanceDefinitions
+                updatedAppearanceDef = appearanceDefinitions.liste
             Catch ex As Exception
                 Dim resultMessage As String = ex.Message
                 outputCollection.Add(resultMessage)
@@ -11945,7 +11921,7 @@ Public Module agm2
                                         cphase.verantwortlich = verantwortlich
 
                                         ' Vorgangslasse eintragen 
-                                        cphase.appearance = txtVorgangsKlasse
+                                        cphase.appearanceName = txtVorgangsKlasse
 
                                         ' percentDone eintragen 
                                         cphase.percentDone = percentDone
@@ -12090,7 +12066,7 @@ Public Module agm2
                                                 .setDate = itemEndDate
                                                 ' tk 26.11.17 
                                                 .verantwortlich = verantwortlich
-                                                .appearance = txtVorgangsKlasse
+                                                .appearanceName = txtVorgangsKlasse
                                                 .percentDone = percentDone
                                                 .DocURL = docURL
 
@@ -20843,11 +20819,11 @@ Public Module agm2
 
             Try
                 ' Lesen appearance Defintions
-                appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
 
-                If IsNothing(appearanceDefinitions) Then
+                If IsNothing(appearanceDefinitions.liste) Then
 
-                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
+                    appearanceDefinitions = New clsAppearances
 
                     If Not IsNothing(wsName7810) Then   ' es existiert das Customization-File auf Platte
 
@@ -22540,7 +22516,7 @@ Public Module agm2
 
                                     If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
                                         darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                        If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                        If appearanceDefinitions.liste.ContainsKey(darstellungsklasse) Then
                                             .darstellungsKlasse = darstellungsklasse
                                         Else
                                             .darstellungsKlasse = ""
@@ -23363,7 +23339,7 @@ Public Module agm2
 
                                         If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
                                             darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                            If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                            If appearanceDefinitions.liste.ContainsKey(darstellungsklasse) Then
                                                 .darstellungsKlasse = darstellungsklasse
                                             Else
                                                 .darstellungsKlasse = ""

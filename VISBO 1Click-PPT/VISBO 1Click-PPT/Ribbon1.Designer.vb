@@ -1,8 +1,8 @@
 ﻿Partial Class Ribbon1
     Inherits Microsoft.Office.Tools.Ribbon.RibbonBase
 
-    <System.Diagnostics.DebuggerNonUserCode()> _
-   Public Sub New(ByVal container As System.ComponentModel.IContainer)
+    <System.Diagnostics.DebuggerNonUserCode()>
+    Public Sub New(ByVal container As System.ComponentModel.IContainer)
         MyClass.New()
 
         'Erforderlich für die Unterstützung des Windows.Forms-Klassenkompositions-Designers
@@ -12,7 +12,7 @@
 
     End Sub
 
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Public Sub New()
         MyBase.New(Globals.Factory.GetRibbonFactory())
 
@@ -22,7 +22,7 @@
     End Sub
 
     'Die Komponente überschreibt den Löschvorgang zum Bereinigen der Komponentenliste.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -39,16 +39,14 @@
     'Hinweis: Die folgende Prozedur ist für den Komponenten-Designer erforderlich.
     'Das Bearbeiten ist mit dem Komponenten-Designer möglich.
     'Nehmen Sie keine Änderungen mit dem Code-Editor vor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Ribbon1))
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.oneClickPPT = Me.Factory.CreateRibbonTab
         Me.VISBO = Me.Factory.CreateRibbonGroup
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
-        Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.DBspeichern = Me.Factory.CreateRibbonButton
-        Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.Einstellung = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
@@ -70,11 +68,8 @@
         'VISBO
         '
         Me.VISBO.Items.Add(Me.EinzelprojektReport)
-        Me.VISBO.Items.Add(Me.Separator1)
         Me.VISBO.Items.Add(Me.DBspeichern)
-        Me.VISBO.Items.Add(Me.Separator2)
         Me.VISBO.Items.Add(Me.Einstellung)
-        Me.VISBO.Label = "VISBO"
         Me.VISBO.Name = "VISBO"
         '
         'EinzelprojektReport
@@ -84,10 +79,7 @@
         Me.EinzelprojektReport.Label = "Einzelprojekt Report"
         Me.EinzelprojektReport.Name = "EinzelprojektReport"
         Me.EinzelprojektReport.ShowImage = True
-        '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
+        Me.EinzelprojektReport.Visible = False
         '
         'DBspeichern
         '
@@ -96,10 +88,6 @@
         Me.DBspeichern.Label = "Publish in VISBO"
         Me.DBspeichern.Name = "DBspeichern"
         Me.DBspeichern.ShowImage = True
-        '
-        'Separator2
-        '
-        Me.Separator2.Name = "Separator2"
         '
         'Einstellung
         '
@@ -133,8 +121,6 @@
     Friend WithEvents EinzelprojektReport As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Einstellung As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents DBspeichern As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Separator1 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
-    Friend WithEvents Separator2 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
 End Class
 
 Partial Class ThisRibbonCollection

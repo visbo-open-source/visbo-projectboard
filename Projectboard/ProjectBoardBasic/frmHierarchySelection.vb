@@ -1564,17 +1564,20 @@ Public Class frmHierarchySelection
 
 
         Dim pvName As String = getPVnameFromNode(node)
+        Dim pName As String = getPnameFromKey(pvName)
+        Dim vName As String = getVariantnameFromKey(pvName)
+
         Dim type As Integer = getTypeFromNode(node)
 
         If type = PTItemType.vorlage Then
 
-            If Projektvorlagen.Contains(pvName) Then
-                tmpResult = Projektvorlagen.getProject(pvName).hierarchy
+            If Projektvorlagen.Contains(pName) Then
+                tmpResult = Projektvorlagen.getProject(pName).hierarchy
             End If
 
         Else
-            If ShowProjekte.contains(pvName) Then
-                tmpResult = ShowProjekte.getProject(pvName).hierarchy
+            If ShowProjekte.contains(pName) Then
+                tmpResult = ShowProjekte.getProject(pName).hierarchy
             End If
 
         End If
@@ -1769,6 +1772,8 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
+        Dim pName As String = getPnameFromKey(PVname)
+        Dim vNAme As String = getVariantnameFromKey(PVname)
 
         'Dim childRole As clsRollenDefinition
 
@@ -1833,9 +1838,9 @@ Public Class frmHierarchySelection
         Else
             ' es kann sich hier um die PRojekt- und die Vorlagen Struktur handeln, diese Struktur soll hier exoandiert werden 
             If type = PTItemType.vorlage Then
-                curHry = Projektvorlagen.getProject(PVname).hierarchy
+                curHry = Projektvorlagen.getProject(pName).hierarchy
             Else
-                curHry = ShowProjekte.getProject(PVname).hierarchy
+                curHry = ShowProjekte.getProject(pName).hierarchy
             End If
 
 
@@ -2117,8 +2122,10 @@ Public Class frmHierarchySelection
 
                     If kvp.Value.hierarchy.count > 0 Then
                         topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                        'topLevel.Name = kennung & kvp.Key
+                        topLevel.Name = kennung & calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        'topLevel.Text = kvp.Key
+                        topLevel.Text = kvp.Value.getShapeText
                         hry = kvp.Value.hierarchy
 
                         If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
@@ -2354,9 +2361,9 @@ Public Class frmHierarchySelection
                             allPhases = selectedProjekte.getPhaseCategoryNames
                         Else
                             ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allPhases.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -2369,9 +2376,9 @@ Public Class frmHierarchySelection
                         ElseIf ShowProjekte.Count > 0 Then
                             allPhases = ShowProjekte.getPhaseCategoryNames
                         Else
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allPhases.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -2414,9 +2421,9 @@ Public Class frmHierarchySelection
                             allMilestones = selectedProjekte.getMilestoneCategoryNames
                         Else
                             ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allMilestones.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -2429,9 +2436,9 @@ Public Class frmHierarchySelection
                         ElseIf ShowProjekte.Count > 0 Then
                             allMilestones = ShowProjekte.getMilestoneCategoryNames
                         Else
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allMilestones.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -2523,11 +2530,11 @@ Public Class frmHierarchySelection
                         If isMilestone Then
                             cMilestone = hproj.getMilestoneByID(childNameID)
                             ' bool'sche Wert gibtz an, ob es sich um einen Meilenstein handelt 
-                            categoryElem = calcHryCategoryName(cMilestone.appearance, True)
+                            categoryElem = calcHryCategoryName(cMilestone.appearanceName, True)
                         Else
                             cPhase = hproj.getPhaseByID(childNameID)
                             ' bool'sche Wert gibt an, ob es sich um einen Meilenstein handelt
-                            categoryElem = calcHryCategoryName(cPhase.appearance, False)
+                            categoryElem = calcHryCategoryName(cPhase.appearanceName, False)
                         End If
                     End If
 
@@ -3401,52 +3408,6 @@ Public Class frmHierarchySelection
             Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
 
-            ' ''statusLabel.Text = ""
-
-
-            ' ''anzahlKnoten = hryTreeView.Nodes.Count
-            ' ''selectedNode = hryTreeView.SelectedNode
-
-            ' ''selectedPhases.Clear()
-            ' ''selectedMilestones.Clear()
-
-            ' ''With hryTreeView
-
-            ' ''    For px As Integer = 1 To anzahlKnoten
-
-            ' ''        tmpNode = .Nodes.Item(px - 1)
-            ' ''        Dim hry As clsHierarchy = getHryFromNode(tmpNode)
-
-            ' ''        If tmpNode.Checked Then
-            ' ''            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
-
-            ' ''            Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufenValue))
-            ' ''            Dim elemName As String = elemNameOfElemID(tmpNode.Name)
-            ' ''            element = calcHryFullname(elemName, tmpBreadcrumb)
-
-            ' ''            If elemIDIstMeilenstein(tmpNode.Name) Then
-            ' ''                If Not selectedMilestones.Contains(element) Then
-            ' ''                    selectedMilestones.Add(element, element)
-            ' ''                End If
-            ' ''            Else
-            ' ''                If Not selectedPhases.Contains(element) Then
-            ' ''                    selectedPhases.Add(element, element)
-            ' ''                End If
-
-            ' ''            End If
-
-            ' ''        End If
-
-
-            ' ''        If tmpNode.Nodes.Count > 0 Then
-            ' ''            Call pickupCheckedItems(tmpNode, hry)
-            ' ''        End If
-
-            ' ''    Next
-
-            ' ''End With
-
-
             Dim vorlagenDateiName As String
             If Not repProfil.isMpp Then
                 vorlagenDateiName = awinPath & RepProjectVorOrdner &
@@ -3779,47 +3740,6 @@ Public Class frmHierarchySelection
             Call MsgBox("Fehler: " & vbLf & ex.Message)
         End Try
 
-        ' '' '' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
-
-        '' ''showRangeLeft = getColumnOfDate(reportProfil.VonDate)
-        '' ''showRangeRight = getColumnOfDate(reportProfil.BisDate)
-
-        '' ''Try
-        '' ''    Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
-
-        '' ''    If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
-
-        '' ''        Dim projname As String = reportProfil.Projects.ElementAt(0).Value
-
-        '' ''        Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
-
-        '' ''        Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
-        '' ''                                        selectedPhases, selectedMilestones, _
-        '' ''                                        selectedRoles, selectedCosts, _
-        '' ''                                        selectedBUs, selectedTyps, True, _
-        '' ''                                        True, zeilenhoehe, _
-        '' ''                                        legendFontSize, _
-        '' ''                                        worker, e)
-
-
-        '' ''        ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
-        '' ''        ' ''                                   selectedPhases, selectedMilestones, _
-        '' ''        ' ''                                   selectedRoles, selectedCosts, _
-        '' ''        ' ''                                   selectedBUs, selectedTyps, _
-        '' ''        ' ''                                   worker, e)
-        '' ''    Else
-
-        '' ''        ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
-        '' ''        ''                                reportProfil.Phases, reportProfil.Milestones, _
-        '' ''        ''                                reportProfil.Roles, reportProfil.Costs, _
-        '' ''        ''                                reportProfil.BUs, reportProfil.Typs, True, _
-        '' ''        ''                                worker, e)
-        '' ''    End If
-
-
-        '' ''Catch ex As Exception
-        '' ''    Call MsgBox("Fehler: " & vbLf & ex.Message)
-        '' ''End Try
 
     End Sub
 
@@ -3967,11 +3887,6 @@ Public Class frmHierarchySelection
                         Call buildHryTreeViewNew(PTItemType.vorlage)
                         Me.rdbProjStruktTyp.Checked = True
 
-                        'If awinSettings.englishLanguage Then
-                        '    statusLabel.Text = "only as Project-Structur possible"
-                        'Else
-                        '    statusLabel.Text = "Elemente können nur in der Projekt-Struktur angezeigt werden"
-                        'End If
                     End If
 
 
@@ -4041,10 +3956,6 @@ Public Class frmHierarchySelection
 
             End Select
 
-            ' ''If lastAuswahl <> auswahl Then
-            ' ''    'Call buildHryTreeViewNew(auswahl)
-            ' ''    Call MsgBox("lastAuswahl=" & lastAuswahl.ToString & vbLf & "auswahl=" & auswahl.ToString)
-            ' ''End If
 
 
         Else
@@ -4509,9 +4420,9 @@ Public Class frmHierarchySelection
                         End If
                     Else
                         If awinSettings.considerCategories Then
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allPhases.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -4544,9 +4455,9 @@ Public Class frmHierarchySelection
                         End If
                     Else
                         If awinSettings.considerCategories Then
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allPhases.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -4642,9 +4553,9 @@ Public Class frmHierarchySelection
                     Else
                         ' eigentlich sollten hier alle Meilensteine bzw. Kategorien der Datenbank stehen ... 
                         If awinSettings.considerCategories Then
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allMilestones.Add(tmpName, tmpName)
                                 End If
                             Next
@@ -4677,9 +4588,9 @@ Public Class frmHierarchySelection
 
                     Else
                         If awinSettings.considerCategories Then
-                            For i As Integer = 1 To appearanceDefinitions.Count
-                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
-                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                            For i As Integer = 1 To appearanceDefinitions.liste.Count
+                                Dim tmpName As String = appearanceDefinitions.liste.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.liste.ElementAt(i - 1).Value.isMilestone Then
                                     allMilestones.Add(tmpName, tmpName)
                                 End If
                             Next

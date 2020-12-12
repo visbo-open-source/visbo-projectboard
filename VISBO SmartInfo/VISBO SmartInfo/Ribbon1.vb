@@ -906,7 +906,7 @@ Public Class Ribbon1
                     End If
 
                     ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
-                    appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                    appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
                     If IsNothing(appearanceDefinitions) Then
                         Throw New ArgumentException("Appearance classes do not exist")
                     End If
@@ -1126,7 +1126,7 @@ Public Class Ribbon1
                         ' lesen der Customization und Appearance Classes; hier wird der SOC , der StartOfCalendar gesetzt ...  
 
 
-                        appearanceDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
+                        appearanceDefinitions.liste = CType(databaseAcc, DBAccLayer.Request).retrieveAppearancesFromDB("", Date.Now, False, err)
                         If IsNothing(appearanceDefinitions) Then
 
                             If awinSettings.englishLanguage Then
@@ -1697,7 +1697,8 @@ Public Class Ribbon1
 
                     Dim wsName7810 As Excel.Worksheet = Nothing
 
-                    appearanceDefinitions = New SortedList(Of String, clsAppearance)
+                    appearanceDefinitions = New clsAppearances
+                    'appearanceDefinitions = New SortedList(Of String, clsAppearance)
                     ' hier muss jetzt das Customization File aufgemacht werden ...
                     Try
                         xlsCustomization = pseudoappInstance.Workbooks.Open(Filename:=customFile, [ReadOnly]:=True, Editable:=False)
@@ -1728,12 +1729,12 @@ Public Class Ribbon1
                         ' Aufbauen der Darstellungsklassen  aus Customizationfile
                         Call aufbauenAppearanceDefinitions(wsName7810)
 
-                        If Not IsNothing(appearanceDefinitions) And appearanceDefinitions.Count > 0 Then
+                        If Not IsNothing(appearanceDefinitions) And appearanceDefinitions.liste.Count > 0 Then
                             ' jetzt wird die Appearances als Setting weggespeichert ... 
                             ' alles ok 
 
                             Dim result As Boolean = False
-                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions,
+                            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(appearanceDefinitions.liste,
                                                                                                 CStr(settingTypes(ptSettingTypes.appearance)),
                                                                                                 CStr(settingTypes(ptSettingTypes.appearance)),
                                                                                                 Date.Now,

@@ -71,6 +71,7 @@
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
     <Compile Include="clsAppearanceDB.vb" />
+    <Compile Include="clsAppearances.vb" />
     <Compile Include="clsBewertungDB.vb" />
     <Compile Include="clsConfigActualDataImport.vb" />
     <Compile Include="clsConfigKapaImport.vb" />
