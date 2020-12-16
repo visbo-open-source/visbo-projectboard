@@ -6960,28 +6960,9 @@ Public Module awinDiagrams
         '' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
         ''
         'Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-        'Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & sCInfo.hproj.vpID & "?vpvid=" & sCInfo.hproj.Id
+        'Dim projectBedarfChartURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewKeyMetrics/" & sCInfo.hproj.vpID & "?vpvid=" & sCInfo.hproj.Id & "&view=Costs"
 
         'Call createHyperlinkInPPT(currentSlide, projectBedarfChartURL, left:=left, top:=top, width:=20, height:=20)
-
-        ''Dim myShapes As PowerPoint.Shapes = currentSlide.Shapes
-        ''Dim visboWebPictureImage As Object = My.Resources.ResourceManager.GetObject("visboWEB")
-
-        ''Dim myHyperlink As PowerPoint.Shape = myShapes.AddShape(Type:=MsoAutoShapeType.msoShapeCloud, Left:=left, Top:=top, Width:=60, Height:=40)
-        ''myHyperlink.Fill.BackColor.RGB = visboFarbeBlau
-        ''myHyperlink.Fill.ForeColor.RGB = visboFarbeBlau
-        ''myHyperlink.TextFrame.TextRange.Font.Size = 9
-        ''myHyperlink.TextFrame.TextRange.Font.Color.RGB = XlRgbColor.rgbWhite
-        ''myHyperlink.TextFrame.TextRange.Text = "VISBO"
-        ''With myHyperlink.TextFrame.TextRange
-        ''    With .ActionSettings(PowerPoint.PpMouseActivation.ppMouseClick)
-        ''        .Action = PowerPoint.PpActionType.ppActionHyperlink
-        ''        .Hyperlink.Address = hyperlinkURL
-        ''    End With
-        ''End With
-        '' ' Link-Shape nach vorne holen 
-        ''myHyperlink.ZOrder(MsoZOrderCmd.msoBringToFront)
-
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
 

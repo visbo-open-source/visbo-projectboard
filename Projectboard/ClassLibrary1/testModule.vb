@@ -1834,7 +1834,7 @@ Public Module testModule
                                     ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                     '
                                     Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                    Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewDelivery/" & hproj.vpID
+                                    Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Delivery"
 
                                     Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
 
@@ -2104,7 +2104,7 @@ Public Module testModule
 
                                         If smartChartInfo.elementTyp = ptElementTypen.rolesAndCost Then
                                             Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpViewCost/" & hproj.vpID
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpKeyMetrics/" & hproj.vpID & "?view=Cost"
 
                                             Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=left, top:=top, width:=20, height:=20)
                                         End If
@@ -6138,10 +6138,18 @@ Public Module testModule
                                         '
                                         ' jetzt wird der Hyperlink für VISBO-WebUI-Darstellung gesetzt ...
                                         '
-
+                                        Dim beginningDate As String = ""
+                                        Dim endingDate As String = ""
                                         If Not IsNothing(smartChartInfo.vpid) Then
                                             Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
-                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & paramRoleIDToAppend
+                                            If smartChartInfo.zeitRaumLeft > Date.MinValue Then
+                                                beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("u")
+                                            End If
+                                            If smartChartInfo.zeitRaumRight > Date.MinValue Then
+                                                endingDate = "&to=" & smartChartInfo.zeitRaumRight.ToString("u")
+                                            End If
+
+                                            Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
 
 
                                             Call createHyperlinkInPPT(pptSlide, visboHyperLinkURL, left:=pptShape.Left, top:=pptShape.Top, width:=20, height:=20)
