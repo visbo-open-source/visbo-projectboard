@@ -2231,6 +2231,31 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' return whether or not project is having only phases in Level 1 with child Phases
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property isSuitedForSwimlane2() As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+            Dim anzLevel1PhasesWithoutChilds As Integer = 0
+
+            Dim childIDs As Collection = hierarchy.getChildIDsOf(rootPhaseName, False)
+
+            For Each childID As String In childIDs
+                Dim anzChilds As Integer = hierarchy.getChildIDsOf(childID, False).Count
+                If anzChilds = 0 Then
+                    tmpResult = False
+                    Exit For
+                End If
+            Next
+
+
+            isSuitedForSwimlane2 = tmpResult
+        End Get
+    End Property
+
+
 
     ''' <summary>
     ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 

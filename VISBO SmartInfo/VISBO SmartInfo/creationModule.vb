@@ -146,7 +146,8 @@ Module creationModule
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
                                           ByRef zeilenhoehe_sav As Double,
-                                          ByRef legendFontSize As Single)
+                                          ByRef legendFontSize As Single,
+                                          ByRef msgCollection As Collection)
 
         Dim err As New clsErrorCodeMsg
 
@@ -237,15 +238,19 @@ Module creationModule
                         projekthistorie.clear()
                     End Try
                 Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    msgTxt = "no database connection ... network problem !? -> Exit"
+                    msgCollection.Add(msgTxt)
+                    Exit Sub
                 End If
             Else
-                Call MsgBox("Datenbank-Anbindung ist nicht aktiviert. Historie enthält nur das aktuelle Projekt " & hproj.name)
+                msgTxt = "no database connection ... network problem !? -> Exit"
+                msgCollection.Add(msgTxt)
                 Exit Sub
             End If
 
         Catch ex As Exception
-            Call MsgBox("Fehler in Create: " & ex.Message)
+            msgTxt = "no database connection ... network problem !? -> Exit"
+            msgCollection.Add(msgTxt)
             Exit Sub
         End Try
 
@@ -464,7 +469,7 @@ Module creationModule
 
             End If
 
-
+            Dim alreadyOneGantt As Boolean = False
 
             For Each tmpShape As PowerPoint.Shape In listofShapes
 
@@ -537,6 +542,9 @@ Module creationModule
                                     .TextFrame2.TextRange.Text = fullName
                                 End If
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                            ptReportBigTypes.components, ptReportComponents.prName)
 
@@ -574,6 +582,8 @@ Module creationModule
 
                                 ' wenn nichts in selTxtx drin steht , ist es auch gut. Dann "verschwindet" dieses Feld ...
                                 .TextFrame2.TextRange.Text = selTxt
+                                .AlternativeText = ""
+                                .Title = ""
 
 
 
@@ -620,74 +630,87 @@ Module creationModule
 
                                         End Select
 
+
                                         Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                            ptReportBigTypes.components, ptReportComponents.prCustomField)
                                     Else
                                         .TextFrame2.TextRange.Text = "Custom-Field " & qualifier &
-                                            " existiert nicht !"
+                                            " does not exist ... !"
                                     End If
 
                                 Else
                                     ' n.a"
-                                    .TextFrame2.TextRange.Text = "Custom-Field ohne Namen.."
+                                    .TextFrame2.TextRange.Text = "Custom-Field without Name ..."
                                 End If
 
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "AllePlanElemente"
 
                                 Try
 
-                                    Dim i As Integer = 0
-                                    Dim tmpphases As New Collection
-                                    Dim tmpMilestones As New Collection
-                                    Dim minCal As Boolean = False
-                                    If qualifier2.Length > 0 Then
-                                        minCal = (qualifier2.Trim = "minCal")
-                                    End If
 
-                                    ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
-                                    For Each cphase In hproj.AllPhases
+                                    If alreadyOneGantt Then
+                                        msgTxt = "not possible to use more than one schedules plan on aone page ...  " & vbLf & "not drawn: " & kennzeichnung
+                                        msgCollection.Add(msgTxt)
+                                    Else
+                                        alreadyOneGantt = True
 
-                                        Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                        If tmpstr <> "" Then
-                                            tmpstr = tmpstr & "#" & cphase.name
-                                            If Not tmpphases.Contains(tmpstr) Then
-                                                tmpphases.Add(tmpstr, tmpstr)
+                                        Dim i As Integer = 0
+                                        Dim tmpphases As New Collection
+                                        Dim tmpMilestones As New Collection
+                                        Dim minCal As Boolean = False
+                                        If qualifier2.Length > 0 Then
+                                            minCal = (qualifier2.Trim = "minCal")
+                                        End If
+
+                                        ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                                        For Each cphase In hproj.AllPhases
+
+                                            Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                            If tmpstr <> "" Then
+                                                tmpstr = tmpstr & "#" & cphase.name
+                                                If Not tmpphases.Contains(tmpstr) Then
+                                                    tmpphases.Add(tmpstr, tmpstr)
+                                                End If
+
                                             End If
 
+
+                                        Next
+
+
+                                        ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                        Dim mSList As SortedList(Of Date, String)
+
+                                        mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                                        If mSList.Count > 0 Then
+                                            For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                                                Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                                If Not tmpMilestones.Contains(tmpstr) Then
+                                                    tmpMilestones.Add(tmpstr, tmpstr)
+                                                End If
+
+                                            Next
                                         End If
 
 
-                                    Next
-
-
-
-                                    ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
-                                    Dim mSList As SortedList(Of Date, String)
-
-                                    mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
-
-                                    If mSList.Count > 0 Then
-                                        For Each kvp As KeyValuePair(Of Date, String) In mSList
-
-                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
-                                            If Not tmpMilestones.Contains(tmpstr) Then
-                                                tmpMilestones.Add(tmpstr, tmpstr)
-                                            End If
-
-                                        Next
-                                    End If
-
-
-                                    ' die Slide mit Tag kennzeichnen ... 
-                                    Dim pptFirstTime As Boolean = True
-                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                        ' die Slide mit Tag kennzeichnen ... 
+                                        Dim pptFirstTime As Boolean = True
+                                        Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                                   tmpphases, tmpMilestones,
                                                                   translateToRoleNames(selectedRoles), selectedCosts,
                                                                   selectedBUs, selectedTyps,
-                                                                  False, False, hproj, kennzeichnung, minCal)
-                                    .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                                                  False, False, hproj, kennzeichnung, minCal, msgCollection)
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                        .Title = ""
+                                    End If
+
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -697,21 +720,32 @@ Module creationModule
                             Case "Multiprojektsicht"
 
                                 Try
-                                    Dim tmpProjekt As New clsProjekt
 
-                                    Dim minCal As Boolean = False
-                                    If pptShape.AlternativeText.Length > 0 Then
-                                        minCal = (pptShape.AlternativeText.Trim = "minCal")
-                                    End If
+                                    If alreadyOneGantt Then
+                                        msgTxt = "not possible to use more than one schedules plan on aone page ...  " & vbLf & "not drawn: " & kennzeichnung
+                                        msgCollection.Add(msgTxt)
+                                    Else
+                                        alreadyOneGantt = True
+                                        Dim tmpProjekt As New clsProjekt
 
-                                    Dim pptFirstTime As Boolean = True
-                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                        Dim minCal As Boolean = False
+                                        If pptShape.AlternativeText.Length > 0 Then
+                                            minCal = (pptShape.AlternativeText.Trim = "minCal")
+                                        End If
+
+                                        Dim pptFirstTime As Boolean = True
+                                        Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                               selectedPhases, selectedMilestones,
                                                               translateToRoleNames(selectedRoles), selectedCosts,
                                                               selectedBUs, selectedTyps,
-                                                              True, False, tmpProjekt, kennzeichnung, minCal)
-                                    .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                                              True, False, tmpProjekt, kennzeichnung, minCal, msgCollection)
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                        .Title = ""
+                                    End If
+
+
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -720,20 +754,27 @@ Module creationModule
 
                             Case "Einzelprojektsicht"
 
-
                                 Try
-                                    Dim minCal As Boolean = False
-                                    If qualifier2.Length > 0 Then
-                                        minCal = (qualifier2.Trim = "minCal")
-                                    End If
-                                    Dim pptFirstTime As Boolean = True
-                                    Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
+                                    If alreadyOneGantt Then
+                                        msgTxt = "not possible to use more than one schedules plan on aone page ...  " & vbLf & "not drawn: " & kennzeichnung
+                                        msgCollection.Add(msgTxt)
+                                    Else
+                                        Dim minCal As Boolean = False
+                                        If qualifier2.Length > 0 Then
+                                            minCal = (qualifier2.Trim = "minCal")
+                                        End If
+                                        Dim pptFirstTime As Boolean = True
+                                        Call drawMultiprojectViewinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
-                                                                      True, False, hproj, kennzeichnung, minCal)
-                                    .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                                                      True, False, hproj, kennzeichnung, minCal, msgCollection)
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                        .Title = ""
+                                    End If
+
+
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -755,14 +796,12 @@ Module creationModule
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
-                                                                      False, hproj, kennzeichnung, minCal)
+                                                                      False, hproj, kennzeichnung, minCal, msgCollection)
 
                                     .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    .AlternativeText = ""
+                                    .Title = ""
 
-                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
-                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
-                                    'swimlaneMode = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
@@ -781,28 +820,28 @@ Module creationModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
+                                    If Not hproj.isSuitedForSwimlane2 Then
+                                        msgTxt = "Project is not appropriate for type 'Swimlanes2'." & vbLf & "Report Type changed to 'Swimlanes'. "
+                                        Call MsgBox(msgTxt)
+                                        kennzeichnung = "Swimlanes"
+                                    End If
+
                                     Dim pptFirstTime As Boolean = True
                                     Call zeichneSwimlane2SichtinPPT(objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, CDbl(legendFontSize),
                                                                       selectedPhases, selectedMilestones,
                                                                       translateToRoleNames(selectedRoles), selectedCosts,
                                                                       selectedBUs, selectedTyps,
-                                                                      False, hproj, kennzeichnung, minCal)
+                                                                      False, hproj, kennzeichnung, minCal, msgCollection)
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ""
-                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    .AlternativeText = ""
+                                    .Title = ""
 
-                                    ' sonst wird pptLasttime benötigt, um bei mehreren Projekten 
-                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
-                                    'swimlaneMode = True
                                 Catch ex As Exception
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
-
-
-
-
 
 
                             Case "TableMilestoneAPVCV"
@@ -840,6 +879,8 @@ Module creationModule
                                     Call zeichneTableMilestoneAPVCV(pptShape, hproj, bproj, lproj, sMilestones, q1, q2)
                                     'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
+                                    .AlternativeText = ""
+                                    .Title = ""
 
                                 Catch ex As Exception
 
@@ -863,6 +904,8 @@ Module creationModule
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Werte / Identifier angeben kann 
                                     Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, q1, q2)
 
+                                    .AlternativeText = ""
+                                    .Title = ""
 
                                 Catch ex As Exception
 
@@ -896,8 +939,9 @@ Module creationModule
                                     Call createProjektChartInPPTNew(smartChartInfo, pptShape)
 
                                     boxName = ""
-                                    'notYetDone = False
-                                    'End If
+
+                                    .AlternativeText = ""
+                                    .Title = ""
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                 End Try
@@ -932,6 +976,8 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "Ampel-Text"
 
@@ -953,6 +999,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "Business-Unit"
 
                                 If boxName = kennzeichnung Then
@@ -970,6 +1019,9 @@ Module creationModule
                                 qualifier2 = boxName
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "Beschreibung"
 
@@ -1005,6 +1057,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "SymTrafficLight"
 
                                 ' hier wird das entsprechende Licht gesetzt ...
@@ -1016,6 +1071,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "SymRisks"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
@@ -1025,6 +1083,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "SymGoals"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
                                 bigType = ptReportBigTypes.components
@@ -1032,6 +1093,8 @@ Module creationModule
                                 qualifier2 = ""
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+                                .AlternativeText = ""
+                                .Title = ""
 
 
                             Case "SymFinance"
@@ -1041,6 +1104,8 @@ Module creationModule
                                 qualifier2 = ""
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "SymSchedules"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
@@ -1049,6 +1114,8 @@ Module creationModule
                                 qualifier2 = ""
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "SymTeam"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
@@ -1058,6 +1125,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "SymProject"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
                                 bigType = ptReportBigTypes.components
@@ -1065,6 +1135,8 @@ Module creationModule
                                 qualifier2 = ""
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "Stand:"
 
@@ -1084,6 +1156,9 @@ Module creationModule
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
+                                .AlternativeText = ""
+                                .Title = ""
+
                             Case "Laufzeit:"
 
                                 If boxName = kennzeichnung Then
@@ -1100,6 +1175,9 @@ Module creationModule
                                 compID = ptReportComponents.prLaufzeit
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+
+                                .AlternativeText = ""
+                                .Title = ""
 
                             Case "Verantwortlich:"
 
@@ -1118,6 +1196,9 @@ Module creationModule
                                 qualifier2 = boxName
                                 Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
+
+                                .AlternativeText = ""
+                                .Title = ""
                             Case Else
                         End Select
 
@@ -1127,9 +1208,13 @@ Module creationModule
 
                 Catch ex As Exception
 
-                    tmpShape.TextFrame2.TextRange.Text = ex.Message & vbLf & tmpShape.Title & ": Fehler ..."
+                    msgTxt = ex.Message & vbLf & tmpShape.Title & ": Error  ..."
+                    msgCollection.Add(msgTxt)
+                    tmpShape.TextFrame2.TextRange.Text = ex.Message & vbLf & tmpShape.Title & ": Error  ..."
 
                 End Try
+
+                folieIX = folieIX + 1
 
             Next
 
@@ -1164,16 +1249,9 @@ Module creationModule
 
             'Next
 
-            If objectsDone >= objectsToDo Or awinSettings.mppOnePage Then
-                folieIX = folieIX + 1
-                'pptFirstTime = True  ' damit die Folie für die Legende geholt wird
-                'Try
-                '    If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
-                '        pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
-                '    End If
-                'Catch ex As Exception
-
-                'End Try
+            If objectsDone < objectsToDo Then
+                msgTxt = "not all elements could be drawn on page ... only " & objectsDone & " out of " & objectsToDo
+                msgCollection.Add(msgTxt)
                 objectsToDo = 0
                 objectsDone = 0
             End If
@@ -1634,7 +1712,8 @@ Module creationModule
                                                  ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
                                                  ByVal isMultiprojektSicht As Boolean, ByVal hproj As clsProjekt,
                                                  ByVal kennzeichnung As String,
-                                                 ByVal minCal As Boolean)
+                                                 ByVal minCal As Boolean,
+                                                 ByRef msgCollection As Collection)
 
 
         ' Wichtig für Kalendar 
@@ -1805,7 +1884,7 @@ Module creationModule
                             segmentID = cphase.nameID
                         End If
                     End If
-                    Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                    Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwlNew(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, segmentID)
@@ -1838,6 +1917,8 @@ Module creationModule
             If neededSpace > rds.availableSpace Then
 
                 If segmentNeededSpace > rds.availableSpace Then
+                    msgTxt = "Segment descriptions alone need more drawing space than is available"
+                    msgCollection.Add(msgTxt)
                     weitermachen = False
                 Else
                     Call rds.setZeilenhoehe(anzZeilen, segmentNeededSpace)
@@ -1939,7 +2020,7 @@ Module creationModule
 
 
                     ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
-                    Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                    Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwlNew(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, curSegmentID)
@@ -1950,13 +2031,19 @@ Module creationModule
 
                         ' jetzt die Swimlane zeichnen
                         ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
-                        Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
-                                                  hproj, curSwl.nameID, considerAll,
-                                                  breadcrumbArray,
-                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                  selectedPhaseIDs, selectedMilestoneIDs,
-                                                  selectedRoles, selectedCosts,
-                                                  swimLaneZeilen, curSegmentID)
+                        Try
+                            Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
+                                                 hproj, curSwl.nameID, considerAll,
+                                                 breadcrumbArray,
+                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
+                                                 selectedPhaseIDs, selectedMilestoneIDs,
+                                                 selectedRoles, selectedCosts,
+                                                 swimLaneZeilen, curSegmentID)
+                        Catch ex As Exception
+                            msgTxt = "Error 2041 in zeichneSwimlaneOfProject" & curSwl.nameID & vbLf & ex.Message
+                            msgCollection.Add(msgTxt)
+                        End Try
+
 
                         ' merken, ob die letzte gezeichnete Swimlane eigentlich die Meilensteine des Segments waren ...
                         Dim lastSwimlaneWasSegment As Boolean = isSwimlanes2 And (curSwl.nameID = curSegmentID)
@@ -1981,7 +2068,7 @@ Module creationModule
                             End If
 
 
-                            swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
+                            swimLaneZeilen = hproj.calcNeededLinesSwlNew(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
                                                                                  awinSettings.mppExtendedMode,
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, segmentID)
@@ -2012,14 +2099,9 @@ Module creationModule
                         ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
                         ' Abbruch provoziere
                         ' Zwischenbericht abgeben ...
-                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' kann nicht gezeichnet werden; kein Platz  ...."
-                        If awinSettings.englishLanguage Then
-                            msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' could not be drawn: not enough space ...."
-                        End If
 
-                        Throw New ArgumentException(msgTxt)
-                        swimLanesDone = 0
-                        swimLanesToDo = 0
+                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' and later could not be drawn: not enough space ...."
+                        msgCollection.Add(msgTxt)
 
                     Else
 
@@ -2031,7 +2113,7 @@ Module creationModule
                 End If
 
             Else
-                Call MsgBox("not enough space to draw elements  ... ")
+                ' nichs weiter tun
             End If
 
 
@@ -2082,9 +2164,10 @@ Module creationModule
                                              ByVal isMultiprojektSicht As Boolean,
                                              ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt,
                                              ByVal kennzeichnung As String,
-                                             ByVal minCal As Boolean)
+                                             ByVal minCal As Boolean,
+                                             ByRef msgCollection As Collection)
 
-
+        Dim msgTxt As String = ""
 
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
         awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
@@ -2093,7 +2176,6 @@ Module creationModule
         ' Wichtig für Kalendar 
         Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
         Dim errorShape As PowerPoint.Shape = Nothing
-
 
 
         Dim format As Integer = 4
@@ -2184,7 +2266,7 @@ Module creationModule
                 Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
                 zeilenhoehe_sav = rds.zeilenHoehe
             Else
-                Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
+                'Call MsgBox("pptfirstime = " & pptFirstTime.ToString & "; zeilenhoehe_sav = " & zeilenhoehe_sav.ToString)
 
             End If
 
@@ -2196,7 +2278,7 @@ Module creationModule
             Dim gesamtAnzZeilen As Integer = 0
             Dim projekthoehe As Double = zeilenhoehe_sav
 
-         
+
             ' neu 14.10.19 
             ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
             For Each kvp As KeyValuePair(Of Double, String) In projCollection
@@ -2311,7 +2393,8 @@ Module creationModule
                 End Try
 
             Else
-                Call MsgBox("not enough space to draw elements  ... ")
+                msgTxt = "not enough space to draw elements  ... "
+                msgCollection.Add(msgTxt)
             End If
 
 
@@ -2322,8 +2405,8 @@ Module creationModule
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
-            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
-            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
+            msgTxt = repMessages.getmsg(19) & vbLf & missingShapes
+            msgCollection.Add(msgTxt)
         End If
 
 

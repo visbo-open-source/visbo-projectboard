@@ -105,7 +105,6 @@ Public Class clsPPTShapes
         If Not IsNothing(shape) Then
 
             Try
-                'shape.Delete()
                 shape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
             Catch ex As Exception
 
@@ -614,6 +613,7 @@ Public Class clsPPTShapes
     Public Sub setZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
         Dim goodEnough As Boolean = False
         Dim newZeilenhoehe As Double = _zeilenHoehe
+        Dim playItSafeFactor As Double = 0.9
 
         Dim heights(3) As Single
         heights(0) = MsDescVorlagenShape.Height
@@ -623,9 +623,9 @@ Public Class clsPPTShapes
 
         newZeilenhoehe = Me.minZeilenhöhe + heights.Max
 
-        goodEnough = anzZeilen * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace
+        goodEnough = anzZeilen * newZeilenhoehe <= playItSafeFactor * (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace)
         If Not goodEnough Then
-            Call autoSetZeilenhoehe(anzZeilen, segmentNeededSpace)
+            Call autoSetZeilenhoehe(anzZeilen, segmentNeededSpace, playItSafeFactor)
         Else
             _zeilenHoehe = newZeilenhoehe
         End If
@@ -637,7 +637,7 @@ Public Class clsPPTShapes
     ''' does reduce Ms height and width and phase height to 0.66 of origibal size   
     ''' </summary>
     ''' <param name="anzZeilen"></param>
-    Private Sub autoSetZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
+    Private Sub autoSetZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double, ByVal playItSafeFactor As Double)
 
         ' now try three different steps 
         Dim reductionFactor As Single = 0.8
@@ -674,7 +674,6 @@ Public Class clsPPTShapes
                 _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
 
                 If Not goodEnough Then
-                    ' set zeilenhoehe such that all fits into the drawing area, no matter whether there will be overlaps or not ... 
                     _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / anzZeilen
                 End If
 
@@ -2607,124 +2606,6 @@ Public Class clsPPTShapes
             Call makeShapeInvisible(_durationArrowShape)
             Call makeShapeInvisible(_durationTextShape)
             Call makeShapeInvisible(_segmentVorlagenShape)
-
-            'If Not IsNothing(_quarterMonthVorlagenShape) Then
-            '    _quarterMonthVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_yearVorlagenShape) Then
-            '    _yearVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_projectVorlagenShape) Then
-            '    _projectVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_phaseVorlagenShape) Then
-            '    _phaseVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_milestoneVorlagenShape) Then
-            '    _milestoneVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_ampelVorlagenShape) Then
-            '    _ampelVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarYearSeparator) Then
-            '    _calendarYearSeparator.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarQuartalSeparator) Then
-            '    _calendarQuartalSeparator.Delete()
-            'End If
-
-            'If Not IsNothing(_horizontalLineShape) Then
-            '    _horizontalLineShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendLineShape) Then
-            '    _legendLineShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendStartShape) Then
-            '    _legendStartShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendTextVorlagenShape) Then
-            '    _legendTextVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendPhaseVorlagenShape) Then
-            '    _legendPhaseVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendMilestoneVorlagenShape) Then
-            '    _legendMilestoneVorlagenShape.Delete()
-            'End If
-
-
-
-            'If Not IsNothing(_calendarHeightShape) Then
-            '    _calendarHeightShape.Delete()
-            'End If
-
-            'If Not IsNothing(_MsDescVorlagenShape) Then
-            '    _MsDescVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_MsDateVorlagenShape) Then
-            '    _MsDateVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_PhDescVorlagenShape) Then
-            '    _PhDescVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_PhDateVorlagenShape) Then
-            '    _PhDateVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarStepShape) Then
-            '    _calendarStepShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarMarkShape) Then
-            '    _calendarMarkShape.Delete()
-            'End If
-
-            'If Not IsNothing(_errorVorlagenShape) Then
-            '    _errorVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendBuColorShape) Then
-            '    _legendBuColorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_buColorShape) Then
-            '    _buColorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_rowDifferentiatorShape) Then
-            '    _rowDifferentiatorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_phaseDelimiterShape) Then
-            '    _phaseDelimiterShape.Delete()
-            'End If
-
-            'If Not IsNothing(_durationArrowShape) Then
-            '    _durationArrowShape.Delete()
-            'End If
-
-            'If Not IsNothing(_durationTextShape) Then
-            '    _durationTextShape.Delete()
-            'End If
-
-            'If Not IsNothing(_segmentVorlagenShape) Then
-            '    _segmentVorlagenShape.Delete()
-            'End If
 
         End If
     End Sub
