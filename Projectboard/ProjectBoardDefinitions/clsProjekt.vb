@@ -6422,10 +6422,22 @@ Public Class clsProjekt
             Dim selPhaseName As String = ""
             Dim breadcrumb As String = ""
 
-            Dim considerAllPhases As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
-
 
             If extended Then ' extended Sicht bzw. Report mit selektierte Phasen
+
+                Dim considerAllPhases As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+
+                '
+                Dim PhaseNameIDs As New Collection
+                Dim milestoneNameIDs As New Collection
+
+                If selectedPhases.Count > 0 Then
+                    PhaseNameIDs = getElemIdsOf(selectedPhases, False)
+                End If
+
+                If selectedMilestones.Count > 0 Then
+                    milestoneNameIDs = getElemIdsOf(selectedMilestones, True)
+                End If
 
                 Dim anzPhases As Integer = 0
                 Dim cphase As clsPhase = Nothing
@@ -6434,32 +6446,19 @@ Public Class clsProjekt
                 Dim endNr As Integer = CountPhases
 
                 If selectedPhases.Count > 0 Then
-                    benoetigteZeilen = berechneAnzZeilen(startNr, endNr, considerTimespace, selectedPhases, considerAllPhases, anzPhases)
+                    benoetigteZeilen = berechneAnzZeilen(startNr, endNr, considerTimespace, PhaseNameIDs, considerAllPhases, anzPhases)
                 Else
-                    benoetigteZeilen = 0
+                    benoetigteZeilen = 1
                 End If
 
-                ' ur: 28.09.2015
-                ' Bestimmen, zu welcher Phase die selektieren Meilenstein jeweils gezeichnet werden sollen und mitzählen, wieviele zusätzliche
-                ' Zeilen benötigt werden dazu.
-
-                Dim drawliste As New SortedList(Of String, SortedList)
-                Dim addLines As Integer = 1
 
                 If selectedMilestones.Count > 0 Then
 
-
-                    Call selMilestonesToselPhase(selectedPhases, selectedMilestones, False, addLines, drawliste)
+                    If getOrphanedMilestones(PhaseNameIDs, milestoneNameIDs).Count > 0 Then
+                        benoetigteZeilen = benoetigteZeilen + 1
+                    End If
 
                 End If
-
-
-                If anzPhases > 1 Then
-                    tmpValue = benoetigteZeilen + addLines    'ur: 17.04.2015:  +addlines für die übrigen Meilensteine
-                Else
-                    tmpValue = 1 + addLines              ' ur: 17.04.2015: + für die übrigen Meilensteine
-                End If
-
 
 
             Else    ' keine extended Sicht (bzw. Report) 
@@ -6484,7 +6483,6 @@ Public Class clsProjekt
             Dim benoetigteZeilen As Integer = 1
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
-            Dim considerAllphases As Boolean = (selectedPhaseIDs.Count + selectedMilestoneIDs.Count = 0)
 
             If Not extended Or swimlaneID = segmentID Then
                 tmpValue = 1
@@ -6502,14 +6500,24 @@ Public Class clsProjekt
                 ' in endNr ist die Phasen-Nummer des letzten Kindes 
                 Call Me.calcStartEndChildNrs(swimlaneID, startNr, endNr)
 
-                benoetigteZeilen = berechneAnzZeilen(startNr, endNr, considerTimespace, selectedPhaseIDs, considerAllphases, anzPhases)
+                If selectedPhaseIDs.Count > 0 Or considerAll Then
+                    benoetigteZeilen = berechneAnzZeilen(startNr, endNr, considerTimespace, selectedPhaseIDs, considerAll, anzPhases)
+                Else
+                    ' wenn nur Meilensteine gezeichnet werden sollen 
+                    benoetigteZeilen = 1
+                End If
+
 
                 Dim drawliste As New SortedList(Of String, SortedList)
-                Dim addLines As Integer = 1
+                Dim addLines As Integer = 0
 
-                If selectedMilestoneIDs.Count > 0 Then
 
-                    Call selMilestonesToselPhase(selectedPhaseIDs, selectedMilestoneIDs, False, addLines, drawliste)
+                If selectedMilestoneIDs.Count > 0 And selectedPhaseIDs.Count > 0 And Not considerAll Then
+
+                    ' find out whether or not there are milestones which are selected to draw , but there is no corresponding phase selected ir corresponding 
+                    If getOrphanedMilestones(selectedPhaseIDs, selectedMilestoneIDs).Count > 0 Then
+                        benoetigteZeilen = benoetigteZeilen + 1
+                    End If
 
                 End If
 
@@ -6526,11 +6534,21 @@ Public Class clsProjekt
         End Get
     End Property
 
+    ''' <summary>
+    ''' gets nr of line, input maybe of form [P:projektname]breadcrumb#elemname or 
+    ''' pahseNameID = 0§elemName§lfd-Nr
+    ''' </summary>
+    ''' <param name="startnr"></param>
+    ''' <param name="endNr"></param>
+    ''' <param name="considerTimeSpace"></param>
+    ''' <param name="selectedPhaseIDs"></param>
+    ''' <param name="considerAllPhases"></param>
+    ''' <param name="anzPhases"></param>
+    ''' <returns></returns>
     Private Function berechneAnzZeilen(ByVal startnr As Integer, ByVal endNr As Integer, ByVal considerTimeSpace As Boolean,
                                        ByVal selectedPhaseIDs As Collection, ByVal considerAllPhases As Boolean,
                                        ByRef anzPhases As Integer) As Integer
         Dim zeilenOffset As Integer = 1
-        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
         ' nimmt die bisher gezeichneten Phases auf , mit Startdatum, Duration in Days
         Dim belegungCurrentZeile As New SortedList(Of Date, Integer)
@@ -6553,29 +6571,38 @@ Public Class clsProjekt
                         Dim j As Integer = 1
                         While j <= selectedPhaseIDs.Count And Not found
 
-                            Dim type As Integer = -1
-                            Dim pvName As String = ""
-                            Call splitHryFullnameTo2(CStr(selectedPhaseIDs(j)), selPhaseName, breadCrumb, type, pvName)
+                            ' now determine whether selectedPhaseIDs is made of rea IDs 0§Name§lfd-Nr
+                            ' or is build as [P: V: C: <name>]<breadcrumb>#<elem-Name>
 
-                            If type = -1 Or
-                                    (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
-                                    (type = PTItemType.vorlage) Then
+                            Dim curSelectionItem As String = CStr(selectedPhaseIDs(j))
+                            If curSelectionItem.StartsWith("0§") Then
+                                found = (cphase.nameID = curSelectionItem)
+                            Else
+                                Dim type As Integer = -1
+                                Dim pvName As String = ""
+                                Call splitHryFullnameTo2(CStr(selectedPhaseIDs(j)), selPhaseName, breadCrumb, type, pvName)
 
-                                If cphase.name = selPhaseName Then
-                                    found = True
-                                End If
-                            ElseIf type = PTItemType.categoryList Then
+                                If type = -1 Or
+                                        (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                                        (type = PTItemType.vorlage) Then
 
-                                Try
-                                    Dim categoryItem As String = calcHryCategoryName(cphase.appearanceName, False)
-                                    If selectedPhaseIDs.Contains(categoryItem) Then
+                                    If cphase.name = selPhaseName Then
                                         found = True
                                     End If
-                                Catch ex As Exception
+                                ElseIf type = PTItemType.categoryList Then
 
-                                End Try
+                                    Try
+                                        Dim categoryItem As String = calcHryCategoryName(cphase.appearanceName, False)
+                                        If selectedPhaseIDs.Contains(categoryItem) Then
+                                            found = True
+                                        End If
+                                    Catch ex As Exception
 
+                                    End Try
+
+                                End If
                             End If
+
 
                             j = j + 1
                         End While
@@ -6588,28 +6615,21 @@ Public Class clsProjekt
                                     Or
                                     (considerTimeSpace And phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight)) Then
 
-                            With cphase
 
-                                'phasenName = .name
-                                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                                    If rowIsOccupied(belegungCurrentZeile, .getStartDate, .dauerInDays) Then
-                                        zeilenOffset = zeilenOffset + 1
-                                        lastEndDate = StartofCalendar.AddDays(-1)
-                                        belegungCurrentZeile.Clear()
-                                    Else
-                                        belegungCurrentZeile.Add(.getStartDate, .dauerInDays)
-                                    End If
+                            'phasenName = .name
+                            'If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                            If rowIsOccupied(belegungCurrentZeile, cphase.getStartDate, cphase.dauerInDays) Then
+                                zeilenOffset = zeilenOffset + 1
+                                belegungCurrentZeile.Clear()
+                                belegungCurrentZeile.Add(cphase.getStartDate, cphase.dauerInDays)
+                            Else
+                                belegungCurrentZeile.Add(cphase.getStartDate, cphase.dauerInDays)
 
-                                End If
+                            End If
 
-                                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                                    lastEndDate = .getEndDate
-                                End If
-
-                            End With
                             anzPhases = anzPhases + 1
                         Else
-
+                            'ignore - is not within timeFrame
                         End If
                     End If
                 End If
@@ -7411,6 +7431,81 @@ Public Class clsProjekt
         End Get
     End Property
 
+    ''' <summary>
+    ''' returns all Milestone-NameIDs which do not have their parent or Grand-/Grand-Parent listed in phaseNameIDs 
+    ''' </summary>
+    ''' <param name="phaseNameIDs"></param>
+    ''' <param name="msNameIDs"></param>
+    ''' <returns></returns>
+    Public Function getOrphanedMilestones(ByVal phaseNameIDs As Collection, ByVal msNameIDs As Collection) As Collection
+        Dim orphanCollection As New Collection
+
+        If IsNothing(phaseNameIDs) Then
+            orphanCollection = msNameIDs
+        ElseIf phaseNameIDs.Count = 0 Then
+            orphanCollection = msNameIDs
+        Else
+            For Each msNameID As String In msNameIDs
+
+                Dim myParentID As String = hierarchy.getParentIDOfID(msNameID)
+                Dim parentFound As Boolean = False
+
+                Do While myParentID <> "" And Not parentFound
+
+                    If phaseNameIDs.Contains(myParentID) Then
+                        parentFound = True
+                    Else
+                        myParentID = hierarchy.getParentIDOfID(myParentID)
+                    End If
+                Loop
+
+                If Not parentFound Then
+                    orphanCollection.Add(msNameID, msNameID)
+                End If
+
+            Next
+
+        End If
+
+        getOrphanedMilestones = orphanCollection
+
+    End Function
+
+    ''' <summary>
+    ''' returns all milestones which are myChilds / grand-Childs, existent in msNameIDs and their parent is not existent in phaseNAmeIDs
+    ''' Necessary if milestones should be drawn, but their immediate parent-Phase ist not element of phaseNameIDs
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="phaseNameIDS"></param>
+    ''' <param name="msNameIDs"></param>
+    ''' <returns></returns>
+    Public Function getmyMilesstonesToDraw(ByVal phaseNameID As String, ByVal phaseNameIDS As Collection, ByVal msNameIDs As Collection) As Collection
+        Dim myCollection As New Collection
+
+        For Each msNameID As String In msNameIDs
+
+            Dim myParentID As String = hierarchy.getParentIDOfID(msNameID)
+            Dim isMyMilestone As Boolean = False
+            Dim isOtherParentsMilestone As Boolean = False
+
+            Do While myParentID <> "" And Not isMyMilestone And Not isOtherParentsMilestone
+
+                If phaseNameIDS.Contains(myParentID) Then
+                    If myParentID = phaseNameID Then
+                        myCollection.Add(msNameID, msNameID)
+                        isMyMilestone = True
+                    Else
+                        isOtherParentsMilestone = True
+                    End If
+                Else
+                    myParentID = hierarchy.getParentIDOfID(myParentID)
+                End If
+            Loop
+
+        Next
+
+        getmyMilesstonesToDraw = myCollection
+    End Function
 
     ''' <summary>
     ''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
@@ -7611,9 +7706,6 @@ Public Class clsProjekt
 
                 End If
 
-
-
-
             Next mx
 
             drawMStoPhaseListe = drawMSinPhase
@@ -7632,7 +7724,7 @@ Public Class clsProjekt
             Dim phasenName As String = ""
             Dim benoetigteZeilen As Integer = 1
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-            Dim tmpValue As Integer
+
             Dim breadcrumb As String = ""
 
             Dim anzPhases As Integer = 0
@@ -7646,14 +7738,8 @@ Public Class clsProjekt
 
             benoetigteZeilen = berechneAnzZeilen(startNr, endNr, False, selectedPhases, considerAllPhases, anzPhases)
 
-            If anzPhases > 1 Then
-                tmpValue = benoetigteZeilen
-            Else
-                tmpValue = 1
-            End If
 
-
-            calcNeededLines = tmpValue
+            calcNeededLines = benoetigteZeilen
 
         End Get
 

@@ -14269,7 +14269,6 @@ Public Module testModule
         ' in endNr ist die Phasen-Nummer des letzten Kindes 
         Call hproj.calcStartEndChildNrs(swimlaneNameID, startNr, endNr)
 
-        'Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
 
         Dim copiedShape As pptNS.Shape
 
@@ -14477,25 +14476,6 @@ Public Module testModule
         End If
 
 
-        ' ###########################################################
-        ' jetzt werden die Phasen und Meilensteine gezeichnet, 
-        ' beginnend mit Phase <startNr+1> .. <endNr>
-
-        ' zum Bestimmen der optimierten Zeilenanzahl 
-        ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
-        'Dim dimension As Integer = endNr - startNr
-        'Dim lastEndDates(dimension) As Date
-        '' list of Phases dient dazu, die IDs der Phasen, die in dieser Zeile gezeichnet wurden aufzunehmen
-        '' damit wird ein Cap eingeführt, das heisst keine Phase wird in der Swimlane über ihrer Eltern-Phase gezeichnet 
-        'Dim listOfPhases(dimension) As Collection
-
-        'For i As Integer = 0 To dimension
-        '    lastEndDates(i) = StartofCalendar.AddDays(-1)
-        '    listOfPhases(i) = New Collection
-        'Next
-
-        'Dim maxOffsetZeile As Integer = 1
-        'Dim curOffsetZeile As Integer = 1
         Dim zeilenoffset As Integer = 1
 
 
@@ -14552,9 +14532,6 @@ Public Module testModule
             Dim minBestStart As Integer = 0
 
 
-
-            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-
             ' nimmt die bisher gezeichneten Phases auf , mit Startdatum, Duration in Days
             Dim belegungCurrentZeile As New SortedList(Of Date, Integer)
 
@@ -14575,71 +14552,17 @@ Public Module testModule
                                 ' ermittle den Zeilenoffset
                                 If extended Then
 
-                                    'currentLevel = hproj.hierarchy.getIndentLevel(curPhase.nameID)
-                                    '' wenn es sich um ein Element handelt, das in der Hierarchie höher als das vorhergehende war , dann wird das die neue Start-Zeile 
-                                    'If currentLevel < previousLevel Then
-                                    '    If bestStartAtLevel.ContainsKey(currentLevel) Then
-                                    '        minBestStart = bestStartAtLevel(currentLevel) - 1
-                                    '        If minBestStart < 0 Then
-                                    '            minBestStart = 0
-                                    '        End If
-                                    '    End If
-                                    'End If
-
-                                    'requiredZeilen = hproj.calcNeededLinesSwlNew(curPhase.nameID,
-                                    '                                                        selectedPhaseIDs,
-                                    '                                                        selectedMilestoneIDs,
-                                    '                                                        extended,
-                                    '                                                        considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                    '                                                        considerAll, segmentID)
-
-                                    If DateDiff(DateInterval.Day, lastEndDate, curPhase.getStartDate) < 0 Then
-                                        If rowIsOccupied(belegungCurrentZeile, curPhase.getStartDate, curPhase.dauerInDays) Then
-                                            zeilenoffset = zeilenoffset + 1
-                                            lastEndDate = StartofCalendar.AddDays(-1)
-                                            belegungCurrentZeile.Clear()
-                                        Else
-                                            belegungCurrentZeile.Add(curPhase.getStartDate, curPhase.dauerInDays)
-                                        End If
-
+                                    If rowIsOccupied(belegungCurrentZeile, curPhase.getStartDate, curPhase.dauerInDays) Then
+                                        zeilenoffset = zeilenoffset + 1
+                                        belegungCurrentZeile.Clear()
+                                        belegungCurrentZeile.Add(curPhase.getStartDate, curPhase.dauerInDays)
+                                    Else
+                                        belegungCurrentZeile.Add(curPhase.getStartDate, curPhase.dauerInDays)
                                     End If
 
-                                    'If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                                    '    lastEndDate = .getEndDate
-                                    'End If
-
-                                    'Dim bestStart As Integer = minBestStart
-                                    '' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
-                                    '' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
-
-
-
-                                    ''zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
-                                    'zeilenoffset = findeBesteZeile(lastEndDates, minBestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
-
-                                    '' wenn das aktuelle Element in der Hierarchie höher steht als das zuvor behandelte , dann wird die jetzt ermittelte Zeile als Start verwendet 
-                                    'If currentLevel < previousLevel Then
-                                    '    minBestStart = zeilenoffset
-                                    'End If
                                 Else
-                                    'requiredZeilen = 1
                                     zeilenoffset = 1
                                 End If
-
-                                'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
-                                ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
-                                'maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
-
-
-                                ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
-                                'If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
-                                '    listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
-                                'End If
-
-                                '' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
-                                'If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
-                                '    lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
-                                'End If
 
 
                                 aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
@@ -14703,22 +14626,10 @@ Public Module testModule
                     Dim a As Integer = swlIX
                 End Try
 
-                'previousLevel = currentLevel
-
-                'If bestStartAtLevel.ContainsKey(currentLevel) Then
-                '    If maxOffsetZeile > bestStartAtLevel.Item(currentLevel) Then
-                '        bestStartAtLevel.Item(currentLevel) = maxOffsetZeile
-                '    Else
-                '        ' nichts tun ..
-                '    End If
-                'Else
-                '    bestStartAtLevel.Add(currentLevel, maxOffsetZeile)
-                'End If
 
 
             Next
         End If
-
 
 
 

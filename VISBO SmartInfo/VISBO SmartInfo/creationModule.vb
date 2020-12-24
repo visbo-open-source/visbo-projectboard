@@ -2054,18 +2054,17 @@ Module creationModule
                         curSwimlaneIndex = curSwimlaneIndex + 1
                         curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
 
-                        If Not IsNothing(curSwl) Then
+                        If Not IsNothing(curSwl) And isSwimlanes2 Then
 
                             Dim segmentID As String = ""
-                            If isSwimlanes2 Then
-                                segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
+                            segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID) And Not lastSwimlaneWasSegment) Or
-                                        (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
+                                       (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
 
-                                If hproj.isSegment(curSwl.nameID) Then
-                                    segmentID = curSwl.nameID
-                                End If
+                            If hproj.isSegment(curSwl.nameID) Then
+                                segmentID = curSwl.nameID
                             End If
+
 
 
                             swimLaneZeilen = hproj.calcNeededLinesSwlNew(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
@@ -2073,20 +2072,20 @@ Module creationModule
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, segmentID)
 
-                            If isSwimlanes2 Then
-                                If segmentChanged And
+
+                            If segmentChanged And
                                 (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
-                                    If hproj.isSegment(curSwl.nameID) Then
-                                        curSegmentID = curSwl.nameID
-                                    Else
-                                        curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                                    End If
-
-                                    Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                                    segmentChanged = False
+                                If hproj.isSegment(curSwl.nameID) Then
+                                    curSegmentID = curSwl.nameID
+                                Else
+                                    curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
                                 End If
+
+                                Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                                segmentChanged = False
                             End If
+
 
                         Else
                             segmentChanged = False
