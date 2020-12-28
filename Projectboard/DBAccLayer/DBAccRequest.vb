@@ -1840,6 +1840,7 @@ Public Class Request
         Catch ex As Exception
 
             Throw New ArgumentException("cancelWriteProtections: " & ex.Message)
+
         End Try
 
         cancelWriteProtections = result

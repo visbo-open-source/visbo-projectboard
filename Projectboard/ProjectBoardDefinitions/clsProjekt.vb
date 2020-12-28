@@ -6417,7 +6417,6 @@ Public Class clsProjekt
 
             Dim benoetigteZeilen As Integer = 1
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-            Dim tmpValue As Integer
 
             Dim selPhaseName As String = ""
             Dim breadcrumb As String = ""
@@ -6462,11 +6461,11 @@ Public Class clsProjekt
 
 
             Else    ' keine extended Sicht (bzw. Report) 
-                tmpValue = 1
+                benoetigteZeilen = 1
             End If
 
 
-            calcNeededLines = tmpValue
+            calcNeededLines = benoetigteZeilen
 
         End Get
 
@@ -6479,13 +6478,12 @@ Public Class clsProjekt
                                                 ByVal considerAll As Boolean,
                                                 ByVal segmentID As String) As Integer
         Get
-            Dim tmpValue As Integer = 0
             Dim benoetigteZeilen As Integer = 1
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
 
             If Not extended Or swimlaneID = segmentID Then
-                tmpValue = 1
+                benoetigteZeilen = 1
             Else
                 ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
                 ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
@@ -6522,15 +6520,9 @@ Public Class clsProjekt
                 End If
 
 
-                If anzPhases > 1 Then
-                    tmpValue = benoetigteZeilen + addLines    'ur: 17.04.2015:  +addlines für die übrigen Meilensteine
-                Else
-                    tmpValue = 1 + addLines              ' ur: 17.04.2015: + für die übrigen Meilensteine
-                End If
-
             End If
 
-            calcNeededLinesSwlNew = tmpValue
+            calcNeededLinesSwlNew = benoetigteZeilen
         End Get
     End Property
 
@@ -7421,10 +7413,24 @@ Public Class clsProjekt
 
 
             ' jetzt muss umkopiert werden 
+            Dim outputCollection As New Collection
+            Dim errMsg As String = ""
+
             For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
-                iDkey = kvp.Value
-                iDCollection.Add(kvp.Value, kvp.Value)
+
+
+                Try
+                    iDCollection.Add(kvp.Value, kvp.Value)
+                Catch ex As Exception
+                    errMsg = "element with same name - but different upper-/lower case ignored: " & kvp.Value
+                    outputCollection.Add(errMsg)
+                End Try
+
             Next
+
+            If outputCollection.Count > 0 Then
+                Call showOutPut(outputCollection, "Naming Problem ...", "")
+            End If
 
             getElemIdsOf = iDCollection
 

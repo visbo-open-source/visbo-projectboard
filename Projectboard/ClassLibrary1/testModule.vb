@@ -14463,7 +14463,7 @@ Public Module testModule
 
             copiedShape = createPPTShapeFromShape(rds.rowDifferentiatorShape, rds.pptSlide)
             With copiedShape
-                .Top = CSng(curYPosition)
+                .Top = CSng(aktuelleYPosition)
                 .Left = rds.projectListLeft
                 .Height = kontrolleAnzZeilen * rds.zeilenHoehe
                 .Width = rds.drawingAreaRight - .Left
@@ -14474,9 +14474,6 @@ Public Module testModule
 
             End With
         End If
-
-
-        Dim zeilenoffset As Integer = 1
 
 
         Dim curPhase As clsPhase
@@ -14553,23 +14550,19 @@ Public Module testModule
                                 If extended Then
 
                                     If rowIsOccupied(belegungCurrentZeile, curPhase.getStartDate, curPhase.dauerInDays) Then
-                                        zeilenoffset = zeilenoffset + 1
+                                        curYPosition = curYPosition + rds.zeilenHoehe
                                         belegungCurrentZeile.Clear()
                                         belegungCurrentZeile.Add(curPhase.getStartDate, curPhase.dauerInDays)
                                     Else
                                         belegungCurrentZeile.Add(curPhase.getStartDate, curPhase.dauerInDays)
                                     End If
 
-                                Else
-                                    zeilenoffset = 1
                                 End If
 
 
-                                aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
-
                                 Try
                                     Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID,
-                                                            curPhase.nameID, aktuelleYPosition)
+                                                            curPhase.nameID, curYPosition)
                                 Catch ex As Exception
                                     Dim a As Integer = 1
                                 End Try
@@ -14598,7 +14591,7 @@ Public Module testModule
                                         ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
                                         Dim tmpCollection As New Collection
                                         Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj,
-                                                                          swimlaneNameID, curMs.nameID, aktuelleYPosition)
+                                                                          swimlaneNameID, curMs.nameID, curYPosition)
 
                                         ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
                                         Try
@@ -14642,8 +14635,8 @@ Public Module testModule
         toggleRowDifferentiator = Not toggleRowDifferentiator
 
         ' eine Zeile für die nächste Swimlane weiterschalten ...
-        'curYPosition = curYPosition + rds.zeilenHoehe
-        curYPosition = curYPosition + zeilenoffset * rds.zeilenHoehe
+        curYPosition = curYPosition + rds.zeilenHoehe
+
 
 
         ' ###########################################################
@@ -14909,12 +14902,11 @@ Public Module testModule
 
     End Sub
 
-
     ''' <summary>
-    ''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
+    ''' draws one or several projects 
     ''' </summary>
     ''' <param name="pptslide"></param>
-    ''' <param name="projectCollection">der ganz zahlige Teil-1 ist die Zeile, in dei auf der ppt gezeichnet werden soll </param>
+    ''' <param name="projectCollection"></param>
     ''' <param name="projDone"></param>
     ''' <param name="rds"></param>
     ''' <param name="selectedPhases"></param>
@@ -14923,8 +14915,7 @@ Public Module testModule
     ''' <param name="selectedCosts"></param>
     ''' <param name="worker"></param>
     ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String),
+    Sub zeichnePPTProjects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String),
                                 ByRef projDone As Integer,
                                 ByVal rds As clsPPTShapes,
                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
@@ -14945,25 +14936,21 @@ Public Module testModule
         Dim drawingAreaHeight As Double = rds.drawingAreaBottom - rds.drawingAreaTop
 
 
-        'Dim tagesEinheit As Double
         Dim projectsToDraw As Integer
         Dim copiedShape As pptNS.Shape
         Dim fullName As String
         Dim hproj As clsProjekt
 
-        Dim phaseShape As pptNS.Shape
-        Dim appear As clsAppearance
         Dim currentProjektIndex As Integer
+        Dim currentZeile As Integer = 1
 
         ' notwendig für das Positionieren des Duration Pfeils bzw. des DurationTextes
         Dim minX1 As Double
         Dim maxX2 As Double
 
 
-        'Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
         Dim anzahlTage As Integer = DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
         If anzahlTage <= 0 Then
-            ''Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
             Throw New ArgumentException(repMessages.getmsg(9))
         End If
 
@@ -15037,6 +15024,8 @@ Public Module testModule
         End If
 
         Dim startIX As Integer = projDone + 1
+
+        ' that is the iteration through all projects which need to be drawn
         For currentProjektIndex = startIX To projectsToDraw
 
             ' zurücksetzen minX1, maxX2 
@@ -15365,6 +15354,16 @@ Public Module testModule
 
                 Dim anzZeilenGezeichnet As Integer = 1
 
+                ' no support of categories in here any more. 
+                ' if this is necessary, check out Telair 4.1.0 , look for zeichnePPTprojects
+
+                Dim phaseNameIDs As Collection = hproj.getElemIdsOf(selectedPhases, False)
+                Dim milestoneNameIDs As Collection = hproj.getElemIdsOf(selectedMilestones, True)
+                Dim orphanedMilestones As New Collection
+                Dim myMilestones As New Collection
+
+                Dim belegungCurrentZeile As New SortedList(Of Date, Integer)
+
                 For i = 0 To hproj.CountPhases - 1
 
                     Dim cphase As clsPhase = hproj.getPhase(i + 1)
@@ -15372,57 +15371,30 @@ Public Module testModule
                     Dim phaseName As String = cphase.name
                     If Not IsNothing(cphase) Then
 
-                        ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
                         Dim found As Boolean = False
-                        Dim j As Integer = 1
-                        Dim breadcrumb As String = ""
-                        ' gibt den vollen Breadcrumb zurück 
-                        Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                        ' falls in selPhases Categories stehen 
-                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearanceName, False)
-                        Dim selPhaseName As String = ""
 
-                        While j <= selectedPhases.Count And Not found
+                        If i = 0 Then
+                            orphanedMilestones = hproj.getOrphanedMilestones(phaseNameIDs, milestoneNameIDs)
+                        Else
+                            orphanedMilestones.Clear()
+                        End If
 
-                            Dim type As Integer = -1
-                            Dim pvName As String = ""
-                            Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
-
-                            If type = -1 Or
-                                (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
-                                (type = PTItemType.vorlage) Then
-
-                                If cphase.name = selPhaseName Then
-                                    If vglBreadCrumb.EndsWith(breadcrumb) Then
-                                        found = True
-                                    Else
-                                        j = j + 1
-                                    End If
-                                Else
-                                    j = j + 1
-                                End If
-
-                            ElseIf type = PTItemType.categoryList Then
-
-                                If selectedPhases.Contains(vglCategoryName) Then
-                                    found = True
-                                Else
-                                    j = j + 1
-                                End If
-
-                            Else
-                                j = j + 1
-                            End If
+                        found = phaseNameIDs.Contains(cphase.nameID)
+                        ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
 
 
-                        End While
-
-                        If found Then           ' cphase ist eine der selektierten Phasen
+                        If found Then
+                            ' cphase ist eine der selektierten Phasen
+                            ' find out which milestones need to be drawn, these are all which are 
+                            ' 1. childs and exist in mielstoneIDs
+                            ' 2. childs or childs of child, exist in milestoneIDs, but their parents are not in PhaseNameIDs
+                            myMilestones = hproj.getmyMilesstonesToDraw(cphase.nameID, phaseNameIDs, milestoneNameIDs)
 
                             Dim projektstart As Integer = hproj.Start + hproj.StartOffset
 
 
                             Dim zeichnen As Boolean = True
+
                             ' erst noch prüfen , ob diese Phase tatsächlich im Zeitraum enthalten ist 
                             If awinSettings.mppShowAllIfOne Then
                                 zeichnen = True
@@ -15434,454 +15406,59 @@ Public Module testModule
                                 End If
                             End If
 
-
-
                             If zeichnen Then
 
-                                Dim missingPhaseDefinition As Boolean = PhaseDefinitions.Contains(phaseName)
-
+                                ' hier muss noch bestimmt werden, ob die YPos Werte entsprechend weitergeschaltet werden müssen 
                                 If awinSettings.mppExtendedMode Then
-                                    'phasenName = cphase.name
-                                    If Not IsNothing(lastPhase) Then
+                                    If rowIsOccupied(belegungCurrentZeile, cphase.getStartDate, cphase.dauerInDays) Then
 
-                                        ' Nachfragen, ob cphase und lastPhase überlappen
+                                        currentZeile = currentZeile + 1
 
-                                        If DateDiff(DateInterval.Day, lastPhase.getEndDate, cphase.getStartDate) < 0 Then
-                                            ' Phase muss in neue Zeile eingetragen werden
-                                            Dim tmpint As Integer
-                                            Dim drawliste As New SortedList(Of String, SortedList)
+                                        ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+                                        ' dafür: weiterschalten der Zeile
+                                        phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+                                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+                                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                                        projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+                                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                                        milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+                                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                                        ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+                                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
 
-                                            Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
-                                            If drawliste.ContainsKey(lastPhase.nameID) Then
-                                                ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
-                                                ' dafür: weiterschalten der Zeile
-                                                phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
-                                                ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                                                '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                                                ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                                                projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
-                                                ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                                                milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
-                                                ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                                                ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
-                                                anzZeilenGezeichnet = anzZeilenGezeichnet + 1
-
-
-                                                ' ur: Meilensteine aus drawliste.value zeichnen
-                                                Dim zeichnenMS As Boolean = False
-                                                Dim msliste As SortedList
-                                                Dim msi As Integer
-                                                msliste = drawliste(lastPhase.nameID)
-
-                                                For msi = 0 To msliste.Count - 1
-                                                    Dim msID As String = msliste.GetByIndex(msi)
-                                                    Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
-
-                                                    ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                                                    If IsNothing(milestone.getDate) Then
-                                                        zeichnenMS = False
-                                                    Else
-                                                        If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
-
-                                                            ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                                            If awinSettings.mppShowAllIfOne Then
-                                                                zeichnenMS = True
-                                                            Else
-                                                                If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
-                                                                    zeichnenMS = True
-                                                                Else
-                                                                    zeichnenMS = False
-                                                                End If
-                                                            End If
-                                                        Else
-                                                            zeichnenMS = False
-                                                        End If
-                                                    End If
-
-                                                    If zeichnenMS Then
-
-                                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
-                                                                                      milestone, hproj, milestoneGrafikYPos, rds)
-
-
-                                                    End If
-
-                                                Next
-
-                                            End If
-                                            phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
-                                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                                            projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
-                                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                                            milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
-                                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                                            ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
-                                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
-                                        Else
-                                            ' cphase und lastphase überlappen nicht, also auch kein weiterschalten der yPositionen
-
-                                            ' noch zu tun:ur: 01.10.2015:hier muss man sich merken, welche Phasen nun in dieser Zeile alle gezeichnet wurden, damit die Meilensteine der Phasen in der Hierarchie
-                                            ' unterhalb dieser Phasen passend dazugezeichnet werden können.
-                                        End If
+                                        belegungCurrentZeile.Clear()
+                                        belegungCurrentZeile.Add(cphase.getStartDate, cphase.dauerInDays)
+                                    Else
+                                        belegungCurrentZeile.Add(cphase.getStartDate, cphase.dauerInDays)
                                     End If
 
                                 End If
 
-                                appear = appearanceDefinitions.getPhaseAppearance(cphase)
-
-
-                                ' Ergänzung 19.4.16
-                                Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
-
-
-                                Dim phaseStart As Date = cphase.getStartDate
-                                Dim phaseEnd As Date = cphase.getEndDate
-                                'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
-                                ' erhänzt tk
-                                Dim phShortname As String = ""
-                                phShortname = hproj.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames,
-                                                                              awinSettings.mppUseAbbreviation)
-
-                                Call rds.calculatePPTx1x2(phaseStart, phaseEnd, x1, x2)
-
-
-
-                                If minX1 > x1 Then
-                                    minX1 = x1
-                                End If
-
-                                If maxX2 < x2 Then
-                                    maxX2 = x2
-                                End If
-
-                                ' jetzt müssen ggf der Phasen Name und das  Datum angebracht werden 
-                                If awinSettings.mppShowPhName Then
-
-                                    If phShortname.Trim.Length = 0 Then
-                                        phShortname = phaseName
-                                    End If
-
-
-                                    copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, pptslide)
-                                    With copiedShape
-
-                                        '.Name = .Name & .Id
-                                        Try
-                                            .Name = phShapeName & PTpptAnnotationType.text
-                                        Catch ex As Exception
-                                            ' Fehler abfangen ..
-                                        End Try
-
-                                        .Title = "Beschriftung"
-                                        .AlternativeText = ""
-
-                                        .TextFrame2.TextRange.Text = phShortname
-                                        .TextFrame2.MarginLeft = 0.0
-                                        .TextFrame2.MarginRight = 0.0
-                                        '.Top = CSng(projektGrafikYPos) - .Height
-                                        .Top = CSng(phasenGrafikYPos) + CSng(rds.yOffsetPhToText) - 2
-                                        .Left = CSng(x1)
-                                        If .Left < rds.drawingAreaLeft Then
-                                            .Left = CSng(rds.drawingAreaLeft)
-                                        End If
-                                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-
-                                    End With
-
-
-                                End If
-
-                                Dim phDateText As String = ""
-                                ' jetzt muss ggf das Datum angebracht werden 
-                                If awinSettings.mppShowPhDate Then
-                                    'Dim phDateText As String = phaseStart.ToShortDateString
-                                    phDateText = phaseStart.Day.ToString & "." & phaseStart.Month.ToString & " - " &
-                                                                phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
-                                    Dim rightX As Double, addHeight As Double
-
-
-                                    copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, pptslide)
-                                    With copiedShape
-
-                                        '.Name = .Name & .Id
-                                        Try
-                                            .Name = phShapeName & PTpptAnnotationType.datum
-                                        Catch ex As Exception
-
-                                        End Try
-
-                                        .Title = "Datum"
-                                        .AlternativeText = ""
-
-                                        .TextFrame2.TextRange.Text = phDateText
-                                        .TextFrame2.MarginLeft = 0.0
-                                        .TextFrame2.MarginRight = 0.0
-                                        '.Top = CSng(projektGrafikYPos)
-                                        .Top = CSng(phasenGrafikYPos) + CSng(rds.yOffsetPhToDate) + 1
-                                        .Left = CSng(x1) + 1
-                                        If .Left < rds.drawingAreaLeft Then
-                                            .Left = CSng(rds.drawingAreaLeft + 1)
-                                        End If
-                                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-
-                                        rightX = .Left + .Width
-                                        addHeight = .Height * 0.7
-
-                                    End With
-
-
-
-                                End If
-
-                                ' jetzt muss ggf das Phase Delimiter Shape angebracht werden 
-                                If Not IsNothing(rds.phaseDelimiterShape) And selectedPhases.Count > 1 Then
-
-                                    ' linker Delimiter 
-
-                                    copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, pptslide)
-                                    With copiedShape
-
-                                        .Height = 1.3 * appear.height
-                                        .Top = CSng(phasenGrafikYPos)
-                                        .Left = CSng(x1) - .Width * 0.5
-                                        .Name = .Name & .Id
-
-                                    End With
-
-                                    ' rechter Delimiter 
-
-                                    copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, pptslide)
-                                    With copiedShape
-
-                                        .Height = 1.3 * appear.height
-                                        .Top = CSng(phasenGrafikYPos)
-                                        .Left = CSng(x2) + .Width * 0.5
-                                        .Name = .Name & .Id
-
-                                    End With
-
-                                End If
-
-                                phaseShape = pptslide.Shapes.AddShape(appear.shpType,
-                                                                      CSng(x1),
-                                                                      CSng(phasenGrafikYPos),
-                                                                      CSng(x2 - x1),
-                                                                      rds.phaseVorlagenShape.Height)
-                                Call definePhPPTAppearance(phaseShape, appear)
-
-                                With phaseShape
-
-                                    Try
-                                        .Name = phShapeName
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                    '.Title = phaseName
-                                    '.AlternativeText = phDateText
-
-                                    If missingPhaseDefinition Then
-                                        .Fill.ForeColor.RGB = cphase.farbe
-                                    End If
-
-                                End With
-
-                                If awinSettings.mppEnableSmartPPT Then
-                                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                    '                                          True)
-                                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                    '                                       False)
-                                    'Dim originalName As String = cphase.originalName
-
-                                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                    Dim shortText As String = cphase.shortName
-                                    Dim originalName As String = cphase.originalName
-
-                                    Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
-                                    Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
-
-                                    If originalName = cphase.name Then
-                                        originalName = Nothing
-                                    End If
-
-                                    Call addSmartPPTMsPhInfo(phaseShape, hproj,
-                                                                fullBreadCrumb, cphase.name, shortText, originalName,
-                                                                bestShortName, bestLongName,
-                                                                phaseStart, phaseEnd,
-                                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
-                                                                cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
-                                End If
-
-                                phShapeNames.Add(phaseShape.Name)
-
-                                '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
-                                '  kann, ob diese überlappt
-
-                                If i < hproj.CountPhases - 1 Then
-                                    lastPhase = hproj.getPhase(i + 1)   ' zu diesem Zeitpunkt ist ebenfalls cphase = hproj.getPhase(i+1)
-                                End If
+                                Call zeichnePhaseinSwimlane(rds, phShapeNames, hproj, rootPhaseName, cphase.nameID, phasenGrafikYPos - phasenGrafikYrelPos)
 
                             End If
 
-
-
-                            ' zeichne jetzt die Meilensteine der aktuellen Phase
-                            ' ur: 29.04.2015: und baue eine Collection auf, die alle selektierten Meilensteine aus den unterschiedlichen Phasen beinhaltet.
-                            ' Sobald der Meilenstein/Phase gezeichnet wurde, wird er daraus gelöscht.
-                            ' ur: 19.03.2015: diese Schleife muss innerhalb der für die Phase liegen
-
                             Dim milestoneName As String = ""
                             Dim ms As clsMeilenstein = Nothing
-
-
-                            For ix As Integer = 1 To selectedMilestones.Count
-
-                                Dim breadcrumbMS As String = ""
-
-                                Dim type As Integer = -1
-                                Dim pvName As String = ""
-                                Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS, type, pvName)
-
-                                If type = -1 Or
-                                        (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
-                                        (type = PTItemType.vorlage) Then
-
-                                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
-                                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
-
-                                    Dim phaseNameID As String = ""
-
-                                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
-
-                                        ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
-
-                                        If Not IsNothing(ms) Then
-
-                                            Dim msDate As Date = ms.getDate
-
-                                            Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
-                                            phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
-
-                                            If phaseNameID <> phaseNameID1 Then
-                                                'Call MsgBox(" Schleife über Meilensteine,  Fehler in zeichnePPTprojects,")
-                                            End If
-
-                                            If phaseNameID = cphase.nameID Then
-                                                Dim zeichnenMS As Boolean
-
-                                                Dim hilfsvar As Integer = hproj.hierarchy.getIndexOfID(cphase.nameID)
-
-                                                If IsNothing(msDate) Then
-                                                    zeichnenMS = False
-                                                Else
-                                                    If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
-
-                                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                                        If awinSettings.mppShowAllIfOne Then
-                                                            zeichnenMS = True
-                                                        Else
-                                                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
-                                                                zeichnenMS = True
-                                                            Else
-                                                                zeichnenMS = False
-                                                            End If
-                                                        End If
-                                                    Else
-                                                        zeichnenMS = False
-                                                    End If
-                                                End If
-
-
-                                                If zeichnenMS Then
-
-                                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
-                                                                                      ms, hproj, milestoneGrafikYPos, rds)
-
-
-
-
-                                                End If
-
-
-                                            Else
-                                                ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
-                                                ' also: nichts tun
-                                            End If
-
-                                        End If
-
-
-                                    Next mx
-
-                                End If
-
-
-
-                            Next ix  ' nächsten selektieren Meilenstein überprüfen und ggfs. einzeichnen 
-
-                        End If
-                    End If
-
-
-                Next i      ' nächste Phase bearbeiten
-
-
-                ''''ur:30.09.2015: Es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen,
-                ''''               die Child von der lastphase ist.
-
-
-                If awinSettings.mppExtendedMode Then
-
-
-                    Dim tmpint As Integer
-                    Dim drawliste As New SortedList(Of String, SortedList)
-
-                    Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
-
-
-                    If Not IsNothing(lastPhase) Then
-                        ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
-
-                        If drawliste.ContainsKey(lastPhase.nameID) Then
-
-                            ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
-                            ' dafür: weiterschalten der Zeile
-                            phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
-                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                            projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
-                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                            milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
-                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                            ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
-                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
-
-
-                            ' ur: Meilensteine aus drawliste.value zeichnen
                             Dim zeichnenMS As Boolean = False
-                            Dim msliste As SortedList
-                            Dim msi As Integer
-                            msliste = drawliste(lastPhase.nameID)
 
-                            For msi = 0 To msliste.Count - 1
 
-                                Dim msID As String = msliste.GetByIndex(msi)
-                                Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+                            ' now draw all milestones which need to be drawn with this phase
+                            ' these are all child / childs of child milestones which are having this phase as the parent-phase which is shown   
+                            For Each msNameID As String In myMilestones
 
-                                ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                                If IsNothing(milestone.getDate) Then
-                                    zeichnenMS = False
-                                Else
-                                    If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+                                ms = hproj.getMilestoneByID(msNameID)
+                                If Not IsNothing(ms) Then
+
+                                    Dim msDate As Date = ms.getDate
+                                    If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
                                         ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
                                         If awinSettings.mppShowAllIfOne Then
                                             zeichnenMS = True
                                         Else
-                                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
                                                 zeichnenMS = True
                                             Else
                                                 zeichnenMS = False
@@ -15890,131 +15467,82 @@ Public Module testModule
                                     Else
                                         zeichnenMS = False
                                     End If
+
+                                    If zeichnenMS Then
+                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+                                                                                      ms, hproj, milestoneGrafikYPos, rds)
+
+
+                                    End If
                                 End If
 
-                                If zeichnenMS Then
-                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
-                                                                      milestone, hproj, milestoneGrafikYPos, rds)
-                                End If
                             Next
 
 
+                        ElseIf orphanedMilestones.Count > 0 Then
+                            ' here all orphaned milestones in rootPhase need to be drawn  
+                            Dim atleastOne As Boolean = False
+
+                            For Each msNameID As String In orphanedMilestones
+                                Dim zeichnenMS As Boolean = False
+
+                                Dim MS As clsMeilenstein = hproj.getMilestoneByID(msNameID)
+
+                                If Not IsNothing(MS) Then
+
+                                    Dim msDate As Date = MS.getDate
+                                    If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+
+                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                        If awinSettings.mppShowAllIfOne Then
+                                            zeichnenMS = True
+                                        Else
+                                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                                zeichnenMS = True
+                                            Else
+                                                zeichnenMS = False
+                                            End If
+                                        End If
+                                    Else
+                                        zeichnenMS = False
+                                    End If
+
+                                    If zeichnenMS Then
+
+                                        atleastOne = True
+                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+                                                                                      MS, hproj, milestoneGrafikYPos, rds)
+
+
+                                    End If
+                                End If
+
+                            Next
+
+                            If atleastOne Then
+                                currentZeile = currentZeile + 1
+
+                                ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+                                ' dafür: weiterschalten der Zeile
+                                phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+                                ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                                '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+                                ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                                projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+                                ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                                milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+                                ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                                ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+                                anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+                                belegungCurrentZeile.Clear()
+                            End If
+
                         End If
-
-
                     End If
 
-                    '''' ur: 01.10.2015: selektierte Meilensteine zeichnen, die zu keiner der selektierten Phasen gehören.
 
-                    If drawliste.ContainsKey(rootPhaseName) Then
-
-                        phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
-                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                        projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
-                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                        milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
-                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                        ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
-                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
-
-
-                        ' ur: Meilensteine aus drawliste.value zeichnen
-                        Dim zeichnenMS As Boolean = False
-                        Dim msliste As SortedList
-                        Dim msi As Integer
-                        msliste = drawliste(rootPhaseName)
-
-                        For msi = 0 To msliste.Count - 1
-
-                            Dim msID As String = msliste.GetByIndex(msi)
-                            Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
-
-                            ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                            If IsNothing(milestone.getDate) Then
-                                zeichnenMS = False
-                            Else
-                                If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
-
-                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                    If awinSettings.mppShowAllIfOne Then
-                                        zeichnenMS = True
-                                    Else
-                                        If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
-                                            zeichnenMS = True
-                                        Else
-                                            zeichnenMS = False
-                                        End If
-                                    End If
-                                Else
-                                    zeichnenMS = False
-                                End If
-                            End If
-
-                            If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
-                                                                  milestone, hproj, milestoneGrafikYPos, rds)
-                            End If
-                        Next
-
-                    End If
-
-                Else    ' Einzeilen-Modus: alle selektierten Meilensteine zeichnen, die nicht zu einer selektieren Phase gehören
-
-                    Dim tmpint As Integer
-                    Dim drawliste As New SortedList(Of String, SortedList)
-
-                    Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
-
-                    For Each kvp As KeyValuePair(Of String, SortedList) In drawliste
-
-                        ' ur: Meilensteine aus drawliste.value zeichnen
-                        Dim zeichnenMS As Boolean = False
-                        Dim msliste As SortedList
-                        Dim msi As Integer
-                        msliste = kvp.Value
-
-                        For msi = 0 To msliste.Count - 1
-
-                            Dim msID As String = msliste.GetByIndex(msi)
-                            Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
-
-                            ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                            If IsNothing(milestone.getDate) Then
-                                zeichnenMS = False
-                            Else
-                                If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
-
-                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                    If awinSettings.mppShowAllIfOne Then
-                                        zeichnenMS = True
-                                    Else
-                                        If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
-                                            zeichnenMS = True
-                                        Else
-                                            zeichnenMS = False
-                                        End If
-                                    End If
-                                Else
-                                    zeichnenMS = False
-                                End If
-                            End If
-
-                            If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
-                                                                  milestone, hproj, milestoneGrafikYPos, rds)
-                            End If
-                        Next
-
-                    Next kvp
-                End If
-
-                ' hier könnte jetzt eigentlich auch eine Behandlung stehen, um ggf mehrere Projekt-Namen, die in einer Zeile stehen, besser auf den zur Verfügung stehenden Platz zu verteilen
-                ' das kann aber immer noch später gemacht werden 
-                ' hier müsste das behandelt werden 
-                ' Ende dieser Behandlung 
-
+                Next i      ' nächste Phase bearbeiten
 
                 ' optionales zeichnen der BU Markierung 
                 If drawBUShape Then
@@ -16224,7 +15752,1323 @@ Public Module testModule
 
 
 
+
     End Sub
+    '''' <summary>
+    '''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
+    '''' </summary>
+    '''' <param name="pptslide"></param>
+    '''' <param name="projectCollection">der ganz zahlige Teil-1 ist die Zeile, in dei auf der ppt gezeichnet werden soll </param>
+    '''' <param name="projDone"></param>
+    '''' <param name="rds"></param>
+    '''' <param name="selectedPhases"></param>
+    '''' <param name="selectedMilestones"></param>
+    '''' <param name="selectedRoles"></param>
+    '''' <param name="selectedCosts"></param>
+    '''' <param name="worker"></param>
+    '''' <param name="e"></param>
+    '''' <remarks></remarks>
+    'Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String),
+    '                            ByRef projDone As Integer,
+    '                            ByVal rds As clsPPTShapes,
+    '                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
+    '                            ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+
+    '    Dim addOn As Double = 0.0
+    '    Dim msgTxt As String = ""
+
+    '    If Not IsNothing(rds.durationArrowShape) And Not IsNothing(rds.durationTextShape) Then
+
+    '        'addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height) * 11 / 15
+    '        addOn = System.Math.Max(rds.durationArrowShape.Height, rds.durationTextShape.Height) ' tk Änderung 
+
+    '    End If
+
+    '    ' Bestimmen der Zeichenfläche
+    '    Dim drawingAreaWidth As Double = rds.drawingAreaWidth
+    '    Dim drawingAreaHeight As Double = rds.drawingAreaBottom - rds.drawingAreaTop
+
+
+    '    'Dim tagesEinheit As Double
+    '    Dim projectsToDraw As Integer
+    '    Dim copiedShape As pptNS.Shape
+    '    Dim fullName As String
+    '    Dim hproj As clsProjekt
+
+    '    Dim phaseShape As pptNS.Shape
+    '    Dim appear As clsAppearance
+    '    Dim currentProjektIndex As Integer
+
+    '    ' notwendig für das Positionieren des Duration Pfeils bzw. des DurationTextes
+    '    Dim minX1 As Double
+    '    Dim maxX2 As Double
+
+
+    '    'Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
+    '    Dim anzahlTage As Integer = DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+    '    If anzahlTage <= 0 Then
+    '        ''Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
+    '        Throw New ArgumentException(repMessages.getmsg(9))
+    '    End If
+
+
+
+    '    ' Bestimmen der Position für den Projekt-Namen
+    '    Dim projektNamenXPos As Double = rds.projectListLeft
+    '    Dim projektNamenYPos As Double
+    '    Dim projektNamenYrelPos As Double
+    '    Dim x1 As Double
+    '    Dim x2 As Double
+    '    Dim projektGrafikYPos As Double
+    '    Dim projektGrafikYrelPos As Double
+    '    Dim phasenGrafikYPos As Double
+    '    Dim phasenGrafikYrelPos As Double
+    '    Dim milestoneGrafikYPos As Double
+    '    Dim milestoneGrafikYrelPos As Double
+    '    Dim ampelGrafikYPos As Double
+    '    Dim ampelGrafikYrelPos As Double
+    '    Dim rowYPos As Double
+    '    Dim grafikrelOffset As Double
+
+    '    Dim arrayOfNames() As String
+    '    Dim phShapeNames As New Collection
+    '    Dim msShapeNames As New Collection
+    '    Dim drawRowDifferentiator As Boolean
+    '    Dim toggleRowDifferentiator As Boolean
+    '    Dim drawBUShape As Boolean
+    '    Dim buFarbe As Long
+    '    Dim buName As String
+    '    Dim lastProjectName As String = ""
+    '    Dim lastPhase As clsPhase = Nothing
+
+    '    Dim lastProjectNameShape As pptNS.Shape = Nothing
+
+
+
+    '    ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
+    '    ' Änderung tk: die ProjektName, -Grafik, Milestone, Phasen Position wird jetzt relativ angegeben zum rowYPOS 
+    '    With rds
+    '        rowYPos = .drawingAreaTop
+    '        projektNamenYrelPos = 0.5 * (.zeilenHoehe - .projectNameVorlagenShape.Height) + addOn
+    '        projektGrafikYrelPos = 0.5 * (.zeilenHoehe - .projectVorlagenShape.Height) + addOn
+    '        phasenGrafikYrelPos = 0.5 * (.zeilenHoehe - .phaseVorlagenShape.Height) + addOn
+    '        milestoneGrafikYrelPos = 0.5 * (.zeilenHoehe - .milestoneVorlagenShape.Height) + addOn
+    '        ampelGrafikYrelPos = 0.5 * (.zeilenHoehe - .ampelVorlagenShape.Height) + addOn
+    '        grafikrelOffset = 0.5 * (.zeilenHoehe - .projectVorlagenShape.Height) + addOn
+    '    End With
+
+    '    ' initiales Setzen der YPositionen 
+    '    projektNamenYPos = rowYPos + projektNamenYrelPos
+    '    projektGrafikYPos = rowYPos + projektGrafikYrelPos
+    '    phasenGrafikYPos = rowYPos + phasenGrafikYrelPos
+    '    milestoneGrafikYPos = rowYPos + milestoneGrafikYrelPos
+    '    ampelGrafikYPos = rowYPos + ampelGrafikYrelPos
+
+    '    projectsToDraw = projectCollection.Count
+
+    '    If Not IsNothing(rds.rowDifferentiatorShape) Then
+    '        drawRowDifferentiator = True
+    '    Else
+    '        drawRowDifferentiator = False
+    '    End If
+    '    toggleRowDifferentiator = False
+
+    '    If Not IsNothing(rds.buColorShape) Then
+    '        drawBUShape = True
+    '        projektNamenXPos = projektNamenXPos + rds.buColorShape.Width + 3
+    '    Else
+    '        drawBUShape = False
+    '    End If
+
+    '    Dim startIX As Integer = projDone + 1
+    '    For currentProjektIndex = startIX To projectsToDraw
+
+    '        ' zurücksetzen minX1, maxX2 
+    '        minX1 = 100000.0
+    '        maxX2 = -100000.0
+
+    '        ' zurücksetzen der vergangenen Phase
+    '        lastPhase = Nothing
+
+
+    '        fullName = projectCollection.ElementAt(currentProjektIndex - 1).Value
+
+    '        If AlleProjekte.Containskey(fullName) Then
+
+    '            Dim msToDraw As New Collection      ' hier sind alle selektierten Meilensteine mit zugehörigen Phasen enthalten
+
+    '            hproj = AlleProjekte.getProject(fullName)
+
+
+    '            ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
+    '            If awinSettings.mppExtendedMode Then
+    '                Dim neededSpace As Double = hproj.calcNeededLines(selectedPhases, selectedMilestones, True, Not awinSettings.mppShowAllIfOne) * rds.zeilenHoehe
+    '                If neededSpace > drawingAreaHeight Then
+
+    '                    ' Projekt kann nicht gezeichnet werden, da nicht alle Phasen auf eine Seite passen, 
+    '                    ' trotzdem muss das Projekt weitergezählt werden, damit das nächste zu zeichnende Projekt angegangen wird
+    '                    projDone = projDone + 1
+    '                    ' zuwenig Platz auf der Seite
+    '                    ''Throw New ArgumentException("Für Projekt '" & fullName & "' ist zuwenig Platz auf einer Seite")
+    '                    Throw New ArgumentException(repMessages.getmsg(10) & fullName)
+
+    '                Else
+
+    '                    If projektGrafikYPos - grafikrelOffset + hproj.calcNeededLines(selectedPhases, selectedMilestones, True, Not awinSettings.mppShowAllIfOne) * rds.zeilenHoehe > rds.drawingAreaBottom Then
+    '                        Exit For
+    '                    End If
+    '                End If
+    '            End If
+
+    '            If Not IsNothing(worker) Then
+    '                If worker.WorkerSupportsCancellation Then
+
+    '                    If worker.CancellationPending Then
+    '                        e.Cancel = True
+    '                        msgTxt = "Berichterstellung abgebrochen ..."
+    '                        If awinSettings.englishLanguage Then
+    '                            msgTxt = "Report Creation cancelled ..."
+    '                        End If
+    '                        e.Result = msgTxt
+    '                        Exit For
+    '                    End If
+
+    '                    ' Zwischenbericht abgeben ...
+    '                    msgTxt = "Projekt '" & hproj.getShapeText & "' wird gezeichnet  ...."
+    '                    If awinSettings.englishLanguage Then
+    '                        msgTxt = "drawing Project '" & hproj.getShapeText & "'"
+    '                    End If
+    '                    e.Result = msgTxt
+    '                    If worker.WorkerReportsProgress Then
+    '                        worker.ReportProgress(0, e)
+    '                    End If
+    '                Else
+    '                    Call logfileSchreiben(msgTxt, "zeichnePPTprojects", 0)
+
+    '                End If
+    '            End If
+
+    '            '
+    '            ' zeichne den Projekt-Namen
+    '            ''projectNameVorlagenShape.Copy()
+    '            ''copiedShape = pptslide.Shapes.Paste()
+
+
+    '            Dim severalProjectsInOneLine As Boolean = False
+    '            If currentProjektIndex > 1 Then
+
+    '                If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) = CInt(projectCollection.ElementAt(currentProjektIndex - 2).Key) And
+    '                    Not IsNothing(lastProjectNameShape) Then
+    '                    ' mehrere Projekte in einer Zeile 
+    '                    severalProjectsInOneLine = True
+    '                Else
+    '                    ' normal Mode ... nur 1 Projekt pro Zeile 
+    '                End If
+
+    '            Else
+    '                ' normal Mode ... nur 1 Projekt pro Zeile 
+    '            End If
+
+
+    '            copiedShape = createPPTShapeFromShape(rds.projectNameVorlagenShape, pptslide)
+    '            ' wenn mehrere Projekte nacheinander in einer Zeile stehen 
+    '            If severalProjectsInOneLine Then
+
+    '                ' zuerst das lastProjectNAmeShape die MArgin lösche nund ganz nach oben schieben .. 
+    '                Dim offset As Double = projektNamenYrelPos
+
+    '                If Not IsNothing(lastProjectNameShape) Then
+    '                    With lastProjectNameShape
+    '                        If .TextFrame2.MarginTop > 0 Then
+    '                            .TextFrame2.MarginTop = 0
+    '                        End If
+    '                        If .TextFrame2.MarginBottom > 0 Then
+    '                            .TextFrame2.MarginBottom = 0
+    '                        End If
+
+    '                        .Top = rowYPos + 2
+    '                    End With
+    '                End If
+
+    '                ' jetzt das eigentliche Shape zeichnen 
+    '                With copiedShape
+
+    '                    If currentProjektIndex > 1 And lastProjectName = hproj.name Then
+    '                        .TextFrame2.TextRange.Text = "+ ... " & hproj.variantName
+    '                    Else
+    '                        .TextFrame2.TextRange.Text = "+ " & hproj.getShapeText
+    '                    End If
+
+    '                    ' die Oben und unten -Marge auf Null setzen, so dass der Text möglichst gut in die Zeile passt 
+    '                    If .TextFrame2.MarginTop > 0 Then
+    '                        .TextFrame2.MarginTop = 0
+    '                    End If
+    '                    If .TextFrame2.MarginBottom > 0 Then
+    '                        .TextFrame2.MarginBottom = 0
+    '                    End If
+
+    '                    ' das jetzt so positionieren, dass es nach rechts versetzt und bündig unten mit dem Zeilenrand abschliesst 
+    '                    .Left = lastProjectNameShape.Left + 8
+    '                    If lastProjectNameShape.Top + lastProjectNameShape.Height + 2 + .Height > rowYPos + rds.zeilenHoehe Then
+    '                        .Top = rowYPos + rds.zeilenHoehe - .Height
+    '                    Else
+    '                        .Top = lastProjectNameShape.Top + lastProjectNameShape.Height + 2
+    '                    End If
+
+
+
+    '                    lastProjectName = hproj.name
+    '                    .Name = .Name & .Id
+
+    '                    ' neu tk 3.6.20
+
+    '                    If awinSettings.mppEnableSmartPPT Then
+    '                        'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+    '                        '                                          True)
+    '                        'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+    '                        '                                       False)
+    '                        'Dim originalName As String = cphase.originalName
+
+    '                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+    '                        Dim shortText As String = hproj.name
+    '                        Dim originalName As String = Nothing
+
+    '                        Dim bestShortName As String = hproj.kundenNummer
+    '                        Dim bestLongName As String = hproj.getShapeText
+
+
+    '                        Call addSmartPPTMsPhInfo(copiedShape, hproj,
+    '                                       fullBreadCrumb, hproj.name, shortText, originalName,
+    '                                        bestShortName, bestLongName,
+    '                                        hproj.startDate, hproj.endeDate,
+    '                                        hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+    '                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+    '                    End If
+
+
+
+
+    '                End With
+    '            Else
+
+    '                With copiedShape
+    '                    .Top = CSng(projektNamenYPos)
+    '                    .Left = CSng(projektNamenXPos)
+    '                    If currentProjektIndex > 1 And lastProjectName = hproj.name Then
+    '                        .TextFrame2.TextRange.Text = "... " & hproj.variantName
+    '                    Else
+    '                        .TextFrame2.TextRange.Text = hproj.getShapeText
+    '                    End If
+
+    '                    lastProjectName = hproj.name
+    '                    .Name = .Name & .Id
+
+    '                    ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
+    '                    If awinSettings.mppEnableSmartPPT Then
+
+    '                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+    '                        Dim shortText As String = hproj.name
+    '                        Dim originalName As String = Nothing
+
+    '                        Dim bestShortName As String = hproj.kundenNummer
+    '                        Dim bestLongName As String = hproj.getShapeText
+
+
+    '                        Call addSmartPPTMsPhInfo(copiedShape, hproj,
+    '                                       fullBreadCrumb, hproj.name, shortText, originalName,
+    '                                        bestShortName, bestLongName,
+    '                                        hproj.startDate, hproj.endeDate,
+    '                                        hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+    '                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+    '                    End If
+
+
+    '                End With
+    '            End If
+
+    '            Dim projectNameShape As pptNS.Shape = copiedShape
+
+
+    '            ' zeichne jetzt ggf die Projekt-Ampel 
+    '            If awinSettings.mppShowAmpel And Not IsNothing(rds.ampelVorlagenShape) Then
+    '                Dim statusColor As Long
+    '                With hproj
+    '                    If .ampelStatus = 0 Then
+    '                        statusColor = awinSettings.AmpelNichtBewertet
+    '                    ElseIf .ampelStatus = 1 Then
+    '                        statusColor = awinSettings.AmpelGruen
+    '                    ElseIf .ampelStatus = 2 Then
+    '                        statusColor = awinSettings.AmpelGelb
+    '                    Else
+    '                        statusColor = awinSettings.AmpelRot
+    '                    End If
+    '                End With
+
+
+    '                copiedShape = createPPTShapeFromShape(rds.ampelVorlagenShape, pptslide)
+    '                With copiedShape
+    '                    .Top = CSng(ampelGrafikYPos)
+    '                    If severalProjectsInOneLine Then
+    '                        .Left = CSng(rds.drawingAreaLeft - 3)
+    '                    Else
+    '                        .Left = CSng(rds.drawingAreaLeft - (.Width + 3))
+    '                    End If
+    '                    .Left = CSng(rds.drawingAreaLeft - (.Width + 3))
+    '                    .Width = .Height
+    '                    .Line.ForeColor.RGB = CInt(statusColor)
+    '                    .Fill.ForeColor.RGB = CInt(statusColor)
+    '                    .Name = .Name & .Id
+    '                End With
+
+    '                ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+
+    '            End If
+
+
+    '            '
+    '            ' zeichne jetzt das Projekt 
+    '            Call rds.calculatePPTx1x2(hproj.startDate, hproj.endeDate, x1, x2)
+
+
+    '            ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+    '            With projectNameShape
+    '                ' alternative Behandlung: der Projekt-Name wird umgebrochen 
+    '                If .Left + .Width > x1 Then
+    '                    ' jetzt muss der Name entsprechend gekürzt werden 
+    '                    .TextFrame2.WordWrap = MsoTriState.msoTrue
+    '                    .Width = x1 - .Left
+    '                End If
+
+    '                ' jetzt, wenn es in die nächste Zeile reingeht, so weit hochschieben, dass der Name nicht mehr in die nächste Zeile reicht 
+    '                If .Top + .Height > rowYPos + rds.zeilenHoehe Then
+    '                    .Top = rowYPos + rds.zeilenHoehe - .Height
+    '                End If
+
+    '            End With
+
+    '            ' hier ggf die ProjectLine zeichnen 
+    '            If awinSettings.mppShowProjectLine Then
+
+
+    '                copiedShape = createPPTShapeFromShape(rds.projectVorlagenShape, pptslide)
+    '                With copiedShape
+    '                    .Top = CSng(projektGrafikYPos)
+    '                    .Left = CSng(x1)
+    '                    .Width = CSng(x2 - x1)
+    '                    .Name = .Name & .Id
+
+    '                    Try
+    '                        .Line.ForeColor.RGB = hproj.farbe
+    '                        If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+    '                            .Line.DashStyle = MsoLineDashStyle.msoLineDash
+    '                        End If
+    '                    Catch ex As Exception
+
+    '                    End Try
+
+
+
+    '                    ' neu tk 3.6.20 - das Shape mit dem Projekt-Namen soll auch aktualisiert werden 
+    '                    If awinSettings.mppEnableSmartPPT Then
+
+    '                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(rootPhaseName)
+    '                        Dim shortText As String = hproj.name
+    '                        Dim originalName As String = Nothing
+
+    '                        Dim bestShortName As String = hproj.kundenNummer
+    '                        Dim bestLongName As String = hproj.getShapeText
+
+
+    '                        Call addSmartPPTMsPhInfo(copiedShape, hproj,
+    '                                       fullBreadCrumb, hproj.name, shortText, originalName,
+    '                                        bestShortName, bestLongName,
+    '                                        hproj.startDate, hproj.endeDate,
+    '                                        hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+    '                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+    '                    End If
+
+
+
+
+    '                    ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+    '                    If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+    '                        .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+    '                    End If
+
+    '                    ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+    '                    If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+    '                        .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+    '                    End If
+    '                End With
+
+    '            End If
+
+    '            '
+    '            ' zeichne jetzt die Phasen 
+    '            '
+
+    '            Dim anzZeilenGezeichnet As Integer = 1
+
+    '            For i = 0 To hproj.CountPhases - 1
+
+    '                Dim cphase As clsPhase = hproj.getPhase(i + 1)
+
+    '                Dim phaseName As String = cphase.name
+    '                If Not IsNothing(cphase) Then
+
+    '                    ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
+    '                    Dim found As Boolean = False
+    '                    Dim j As Integer = 1
+    '                    Dim breadcrumb As String = ""
+    '                    ' gibt den vollen Breadcrumb zurück 
+    '                    Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+    '                    ' falls in selPhases Categories stehen 
+    '                    Dim vglCategoryName As String = calcHryCategoryName(cphase.appearanceName, False)
+    '                    Dim selPhaseName As String = ""
+
+    '                    While j <= selectedPhases.Count And Not found
+
+    '                        Dim type As Integer = -1
+    '                        Dim pvName As String = ""
+    '                        Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
+
+    '                        If type = -1 Or
+    '                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+    '                            (type = PTItemType.vorlage) Then
+
+    '                            If cphase.name = selPhaseName Then
+    '                                If vglBreadCrumb.EndsWith(breadcrumb) Then
+    '                                    found = True
+    '                                Else
+    '                                    j = j + 1
+    '                                End If
+    '                            Else
+    '                                j = j + 1
+    '                            End If
+
+    '                        ElseIf type = PTItemType.categoryList Then
+
+    '                            If selectedPhases.Contains(vglCategoryName) Then
+    '                                found = True
+    '                            Else
+    '                                j = j + 1
+    '                            End If
+
+    '                        Else
+    '                            j = j + 1
+    '                        End If
+
+
+    '                    End While
+
+    '                    If found Then           ' cphase ist eine der selektierten Phasen
+
+    '                        Dim projektstart As Integer = hproj.Start + hproj.StartOffset
+
+
+    '                        Dim zeichnen As Boolean = True
+    '                        ' erst noch prüfen , ob diese Phase tatsächlich im Zeitraum enthalten ist 
+    '                        If awinSettings.mppShowAllIfOne Then
+    '                            zeichnen = True
+    '                        Else
+    '                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight) Then
+    '                                zeichnen = True
+    '                            Else
+    '                                zeichnen = False
+    '                            End If
+    '                        End If
+
+
+
+    '                        If zeichnen Then
+
+    '                            Dim missingPhaseDefinition As Boolean = PhaseDefinitions.Contains(phaseName)
+
+    '                            If awinSettings.mppExtendedMode Then
+    '                                'phasenName = cphase.name
+    '                                If Not IsNothing(lastPhase) Then
+
+    '                                    ' Nachfragen, ob cphase und lastPhase überlappen
+
+    '                                    If DateDiff(DateInterval.Day, lastPhase.getEndDate, cphase.getStartDate) < 0 Then
+    '                                        ' Phase muss in neue Zeile eingetragen werden
+    '                                        Dim tmpint As Integer
+    '                                        Dim drawliste As New SortedList(Of String, SortedList)
+
+    '                                        Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
+    '                                        If drawliste.ContainsKey(lastPhase.nameID) Then
+    '                                            ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+    '                                            ' dafür: weiterschalten der Zeile
+    '                                            phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+    '                                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+    '                                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+    '                                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+    '                                            projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+    '                                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+    '                                            milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+    '                                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+    '                                            ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+    '                                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+
+    '                                            ' ur: Meilensteine aus drawliste.value zeichnen
+    '                                            Dim zeichnenMS As Boolean = False
+    '                                            Dim msliste As SortedList
+    '                                            Dim msi As Integer
+    '                                            msliste = drawliste(lastPhase.nameID)
+
+    '                                            For msi = 0 To msliste.Count - 1
+    '                                                Dim msID As String = msliste.GetByIndex(msi)
+    '                                                Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+
+    '                                                ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+    '                                                If IsNothing(milestone.getDate) Then
+    '                                                    zeichnenMS = False
+    '                                                Else
+    '                                                    If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+
+    '                                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+    '                                                        If awinSettings.mppShowAllIfOne Then
+    '                                                            zeichnenMS = True
+    '                                                        Else
+    '                                                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+    '                                                                zeichnenMS = True
+    '                                                            Else
+    '                                                                zeichnenMS = False
+    '                                                            End If
+    '                                                        End If
+    '                                                    Else
+    '                                                        zeichnenMS = False
+    '                                                    End If
+    '                                                End If
+
+    '                                                If zeichnenMS Then
+
+    '                                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+    '                                                                                  milestone, hproj, milestoneGrafikYPos, rds)
+
+
+    '                                                End If
+
+    '                                            Next
+
+    '                                        End If
+    '                                        phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+    '                                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+    '                                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+    '                                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+    '                                        projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+    '                                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+    '                                        milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+    '                                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+    '                                        ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+    '                                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+    '                                    Else
+    '                                        ' cphase und lastphase überlappen nicht, also auch kein weiterschalten der yPositionen
+
+    '                                        ' noch zu tun:ur: 01.10.2015:hier muss man sich merken, welche Phasen nun in dieser Zeile alle gezeichnet wurden, damit die Meilensteine der Phasen in der Hierarchie
+    '                                        ' unterhalb dieser Phasen passend dazugezeichnet werden können.
+    '                                    End If
+    '                                End If
+
+    '                            End If
+
+    '                            appear = appearanceDefinitions.getPhaseAppearance(cphase)
+
+
+    '                            ' Ergänzung 19.4.16
+    '                            Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
+
+
+    '                            Dim phaseStart As Date = cphase.getStartDate
+    '                            Dim phaseEnd As Date = cphase.getEndDate
+    '                            'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
+    '                            ' erhänzt tk
+    '                            Dim phShortname As String = ""
+    '                            phShortname = hproj.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames,
+    '                                                                          awinSettings.mppUseAbbreviation)
+
+    '                            Call rds.calculatePPTx1x2(phaseStart, phaseEnd, x1, x2)
+
+
+
+    '                            If minX1 > x1 Then
+    '                                minX1 = x1
+    '                            End If
+
+    '                            If maxX2 < x2 Then
+    '                                maxX2 = x2
+    '                            End If
+
+    '                            ' jetzt müssen ggf der Phasen Name und das  Datum angebracht werden 
+    '                            If awinSettings.mppShowPhName Then
+
+    '                                If phShortname.Trim.Length = 0 Then
+    '                                    phShortname = phaseName
+    '                                End If
+
+
+    '                                copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, pptslide)
+    '                                With copiedShape
+
+    '                                    '.Name = .Name & .Id
+    '                                    Try
+    '                                        .Name = phShapeName & PTpptAnnotationType.text
+    '                                    Catch ex As Exception
+    '                                        ' Fehler abfangen ..
+    '                                    End Try
+
+    '                                    .Title = "Beschriftung"
+    '                                    .AlternativeText = ""
+
+    '                                    .TextFrame2.TextRange.Text = phShortname
+    '                                    .TextFrame2.MarginLeft = 0.0
+    '                                    .TextFrame2.MarginRight = 0.0
+    '                                    '.Top = CSng(projektGrafikYPos) - .Height
+    '                                    .Top = CSng(phasenGrafikYPos) + CSng(rds.yOffsetPhToText) - 2
+    '                                    .Left = CSng(x1)
+    '                                    If .Left < rds.drawingAreaLeft Then
+    '                                        .Left = CSng(rds.drawingAreaLeft)
+    '                                    End If
+    '                                    .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+
+    '                                End With
+
+
+    '                            End If
+
+    '                            Dim phDateText As String = ""
+    '                            ' jetzt muss ggf das Datum angebracht werden 
+    '                            If awinSettings.mppShowPhDate Then
+    '                                'Dim phDateText As String = phaseStart.ToShortDateString
+    '                                phDateText = phaseStart.Day.ToString & "." & phaseStart.Month.ToString & " - " &
+    '                                                            phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
+    '                                Dim rightX As Double, addHeight As Double
+
+
+    '                                copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, pptslide)
+    '                                With copiedShape
+
+    '                                    '.Name = .Name & .Id
+    '                                    Try
+    '                                        .Name = phShapeName & PTpptAnnotationType.datum
+    '                                    Catch ex As Exception
+
+    '                                    End Try
+
+    '                                    .Title = "Datum"
+    '                                    .AlternativeText = ""
+
+    '                                    .TextFrame2.TextRange.Text = phDateText
+    '                                    .TextFrame2.MarginLeft = 0.0
+    '                                    .TextFrame2.MarginRight = 0.0
+    '                                    '.Top = CSng(projektGrafikYPos)
+    '                                    .Top = CSng(phasenGrafikYPos) + CSng(rds.yOffsetPhToDate) + 1
+    '                                    .Left = CSng(x1) + 1
+    '                                    If .Left < rds.drawingAreaLeft Then
+    '                                        .Left = CSng(rds.drawingAreaLeft + 1)
+    '                                    End If
+    '                                    .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+
+    '                                    rightX = .Left + .Width
+    '                                    addHeight = .Height * 0.7
+
+    '                                End With
+
+
+
+    '                            End If
+
+    '                            ' jetzt muss ggf das Phase Delimiter Shape angebracht werden 
+    '                            If Not IsNothing(rds.phaseDelimiterShape) And selectedPhases.Count > 1 Then
+
+    '                                ' linker Delimiter 
+
+    '                                copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, pptslide)
+    '                                With copiedShape
+
+    '                                    .Height = 1.3 * appear.height
+    '                                    .Top = CSng(phasenGrafikYPos)
+    '                                    .Left = CSng(x1) - .Width * 0.5
+    '                                    .Name = .Name & .Id
+
+    '                                End With
+
+    '                                ' rechter Delimiter 
+
+    '                                copiedShape = createPPTShapeFromShape(rds.phaseDelimiterShape, pptslide)
+    '                                With copiedShape
+
+    '                                    .Height = 1.3 * appear.height
+    '                                    .Top = CSng(phasenGrafikYPos)
+    '                                    .Left = CSng(x2) + .Width * 0.5
+    '                                    .Name = .Name & .Id
+
+    '                                End With
+
+    '                            End If
+
+    '                            phaseShape = pptslide.Shapes.AddShape(appear.shpType,
+    '                                                                  CSng(x1),
+    '                                                                  CSng(phasenGrafikYPos),
+    '                                                                  CSng(x2 - x1),
+    '                                                                  rds.phaseVorlagenShape.Height)
+    '                            Call definePhPPTAppearance(phaseShape, appear)
+
+    '                            With phaseShape
+
+    '                                Try
+    '                                    .Name = phShapeName
+    '                                Catch ex As Exception
+
+    '                                End Try
+
+    '                                '.Title = phaseName
+    '                                '.AlternativeText = phDateText
+
+    '                                If missingPhaseDefinition Then
+    '                                    .Fill.ForeColor.RGB = cphase.farbe
+    '                                End If
+
+    '                            End With
+
+    '                            If awinSettings.mppEnableSmartPPT Then
+    '                                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+    '                                '                                          True)
+    '                                'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+    '                                '                                       False)
+    '                                'Dim originalName As String = cphase.originalName
+
+    '                                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+    '                                Dim shortText As String = cphase.shortName
+    '                                Dim originalName As String = cphase.originalName
+
+    '                                Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+    '                                Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
+    '                                If originalName = cphase.name Then
+    '                                    originalName = Nothing
+    '                                End If
+
+    '                                Call addSmartPPTMsPhInfo(phaseShape, hproj,
+    '                                                            fullBreadCrumb, cphase.name, shortText, originalName,
+    '                                                            bestShortName, bestLongName,
+    '                                                            phaseStart, phaseEnd,
+    '                                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+    '                                                            cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
+    '                            End If
+
+    '                            phShapeNames.Add(phaseShape.Name)
+
+    '                            '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
+    '                            '  kann, ob diese überlappt
+
+    '                            If i < hproj.CountPhases - 1 Then
+    '                                lastPhase = hproj.getPhase(i + 1)   ' zu diesem Zeitpunkt ist ebenfalls cphase = hproj.getPhase(i+1)
+    '                            End If
+
+    '                        End If
+
+
+
+    '                        ' zeichne jetzt die Meilensteine der aktuellen Phase
+    '                        ' ur: 29.04.2015: und baue eine Collection auf, die alle selektierten Meilensteine aus den unterschiedlichen Phasen beinhaltet.
+    '                        ' Sobald der Meilenstein/Phase gezeichnet wurde, wird er daraus gelöscht.
+    '                        ' ur: 19.03.2015: diese Schleife muss innerhalb der für die Phase liegen
+
+    '                        Dim milestoneName As String = ""
+    '                        Dim ms As clsMeilenstein = Nothing
+
+
+    '                        For ix As Integer = 1 To selectedMilestones.Count
+
+    '                            Dim breadcrumbMS As String = ""
+
+    '                            Dim type As Integer = -1
+    '                            Dim pvName As String = ""
+    '                            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS, type, pvName)
+
+    '                            If type = -1 Or
+    '                                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+    '                                    (type = PTItemType.vorlage) Then
+
+    '                                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+    '                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
+
+    '                                Dim phaseNameID As String = ""
+
+    '                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+    '                                    ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+
+    '                                    If Not IsNothing(ms) Then
+
+    '                                        Dim msDate As Date = ms.getDate
+
+    '                                        Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
+    '                                        phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
+
+    '                                        If phaseNameID <> phaseNameID1 Then
+    '                                            'Call MsgBox(" Schleife über Meilensteine,  Fehler in zeichnePPTprojects,")
+    '                                        End If
+
+    '                                        If phaseNameID = cphase.nameID Then
+    '                                            Dim zeichnenMS As Boolean
+
+    '                                            Dim hilfsvar As Integer = hproj.hierarchy.getIndexOfID(cphase.nameID)
+
+    '                                            If IsNothing(msDate) Then
+    '                                                zeichnenMS = False
+    '                                            Else
+    '                                                If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+
+    '                                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+    '                                                    If awinSettings.mppShowAllIfOne Then
+    '                                                        zeichnenMS = True
+    '                                                    Else
+    '                                                        If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+    '                                                            zeichnenMS = True
+    '                                                        Else
+    '                                                            zeichnenMS = False
+    '                                                        End If
+    '                                                    End If
+    '                                                Else
+    '                                                    zeichnenMS = False
+    '                                                End If
+    '                                            End If
+
+
+    '                                            If zeichnenMS Then
+
+    '                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+    '                                                                                  ms, hproj, milestoneGrafikYPos, rds)
+
+
+
+
+    '                                            End If
+
+
+    '                                        Else
+    '                                            ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+    '                                            ' also: nichts tun
+    '                                        End If
+
+    '                                    End If
+
+
+    '                                Next mx
+
+    '                            End If
+
+
+
+    '                        Next ix  ' nächsten selektieren Meilenstein überprüfen und ggfs. einzeichnen 
+
+    '                    End If
+    '                End If
+
+
+    '            Next i      ' nächste Phase bearbeiten
+
+
+    '            ''''ur:30.09.2015: Es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen,
+    '            ''''               die Child von der lastphase ist.
+
+
+    '            If awinSettings.mppExtendedMode Then
+
+
+    '                Dim tmpint As Integer
+    '                Dim drawliste As New SortedList(Of String, SortedList)
+
+    '                Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
+
+
+    '                If Not IsNothing(lastPhase) Then
+    '                    ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
+
+    '                    If drawliste.ContainsKey(lastPhase.nameID) Then
+
+    '                        ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+    '                        ' dafür: weiterschalten der Zeile
+    '                        phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+    '                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+    '                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+    '                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+    '                        projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+    '                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+    '                        milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+    '                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+    '                        ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+    '                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+
+    '                        ' ur: Meilensteine aus drawliste.value zeichnen
+    '                        Dim zeichnenMS As Boolean = False
+    '                        Dim msliste As SortedList
+    '                        Dim msi As Integer
+    '                        msliste = drawliste(lastPhase.nameID)
+
+    '                        For msi = 0 To msliste.Count - 1
+
+    '                            Dim msID As String = msliste.GetByIndex(msi)
+    '                            Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+
+    '                            ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+    '                            If IsNothing(milestone.getDate) Then
+    '                                zeichnenMS = False
+    '                            Else
+    '                                If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+
+    '                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+    '                                    If awinSettings.mppShowAllIfOne Then
+    '                                        zeichnenMS = True
+    '                                    Else
+    '                                        If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+    '                                            zeichnenMS = True
+    '                                        Else
+    '                                            zeichnenMS = False
+    '                                        End If
+    '                                    End If
+    '                                Else
+    '                                    zeichnenMS = False
+    '                                End If
+    '                            End If
+
+    '                            If zeichnenMS Then
+    '                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+    '                                                                  milestone, hproj, milestoneGrafikYPos, rds)
+    '                            End If
+    '                        Next
+
+
+    '                    End If
+
+
+    '                End If
+
+    '                '''' ur: 01.10.2015: selektierte Meilensteine zeichnen, die zu keiner der selektierten Phasen gehören.
+
+    '                If drawliste.ContainsKey(rootPhaseName) Then
+
+    '                    phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+    '                    ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+    '                    '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+    '                    ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+    '                    projektNamenYPos = projektNamenYPos + rds.zeilenHoehe
+    '                    ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+    '                    milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+    '                    ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+    '                    ampelGrafikYPos = ampelGrafikYPos + rds.zeilenHoehe
+    '                    anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+
+    '                    ' ur: Meilensteine aus drawliste.value zeichnen
+    '                    Dim zeichnenMS As Boolean = False
+    '                    Dim msliste As SortedList
+    '                    Dim msi As Integer
+    '                    msliste = drawliste(rootPhaseName)
+
+    '                    For msi = 0 To msliste.Count - 1
+
+    '                        Dim msID As String = msliste.GetByIndex(msi)
+    '                        Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+
+    '                        ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+    '                        If IsNothing(milestone.getDate) Then
+    '                            zeichnenMS = False
+    '                        Else
+    '                            If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+
+    '                                ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+    '                                If awinSettings.mppShowAllIfOne Then
+    '                                    zeichnenMS = True
+    '                                Else
+    '                                    If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+    '                                        zeichnenMS = True
+    '                                    Else
+    '                                        zeichnenMS = False
+    '                                    End If
+    '                                End If
+    '                            Else
+    '                                zeichnenMS = False
+    '                            End If
+    '                        End If
+
+    '                        If zeichnenMS Then
+    '                            Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+    '                                                              milestone, hproj, milestoneGrafikYPos, rds)
+    '                        End If
+    '                    Next
+
+    '                End If
+
+    '            Else    ' Einzeilen-Modus: alle selektierten Meilensteine zeichnen, die nicht zu einer selektieren Phase gehören
+
+    '                Dim tmpint As Integer
+    '                Dim drawliste As New SortedList(Of String, SortedList)
+
+    '                Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
+
+    '                For Each kvp As KeyValuePair(Of String, SortedList) In drawliste
+
+    '                    ' ur: Meilensteine aus drawliste.value zeichnen
+    '                    Dim zeichnenMS As Boolean = False
+    '                    Dim msliste As SortedList
+    '                    Dim msi As Integer
+    '                    msliste = kvp.Value
+
+    '                    For msi = 0 To msliste.Count - 1
+
+    '                        Dim msID As String = msliste.GetByIndex(msi)
+    '                        Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+
+    '                        ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+    '                        If IsNothing(milestone.getDate) Then
+    '                            zeichnenMS = False
+    '                        Else
+    '                            If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+
+    '                                ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+    '                                If awinSettings.mppShowAllIfOne Then
+    '                                    zeichnenMS = True
+    '                                Else
+    '                                    If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+    '                                        zeichnenMS = True
+    '                                    Else
+    '                                        zeichnenMS = False
+    '                                    End If
+    '                                End If
+    '                            Else
+    '                                zeichnenMS = False
+    '                            End If
+    '                        End If
+
+    '                        If zeichnenMS Then
+    '                            Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2,
+    '                                                              milestone, hproj, milestoneGrafikYPos, rds)
+    '                        End If
+    '                    Next
+
+    '                Next kvp
+    '            End If
+
+    '            ' hier könnte jetzt eigentlich auch eine Behandlung stehen, um ggf mehrere Projekt-Namen, die in einer Zeile stehen, besser auf den zur Verfügung stehenden Platz zu verteilen
+    '            ' das kann aber immer noch später gemacht werden 
+    '            ' hier müsste das behandelt werden 
+    '            ' Ende dieser Behandlung 
+
+
+    '            ' optionales zeichnen der BU Markierung 
+    '            If drawBUShape Then
+    '                buName = hproj.businessUnit
+    '                buFarbe = awinSettings.AmpelNichtBewertet
+
+    '                If Not IsNothing(buName) Then
+
+    '                    If buName.Length > 0 Then
+    '                        Dim found As Boolean = False
+    '                        Dim ix As Integer = 1
+    '                        While ix <= businessUnitDefinitions.Count And Not found
+    '                            If businessUnitDefinitions.ElementAt(ix - 1).Value.name = buName Then
+    '                                found = True
+    '                                buFarbe = businessUnitDefinitions.ElementAt(ix - 1).Value.color
+    '                            Else
+    '                                ix = ix + 1
+    '                            End If
+    '                        End While
+    '                    End If
+
+    '                End If
+
+
+
+    '                copiedShape = createPPTShapeFromShape(rds.buColorShape, pptslide)
+    '                With copiedShape
+    '                    .Top = CSng(rowYPos)
+    '                    .Left = CSng(rds.projectListLeft)
+    '                    '' '' ''Dim neededLines As Double = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+    '                    '' '' ''.Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
+    '                    .Height = anzZeilenGezeichnet * rds.zeilenHoehe
+    '                    .Fill.ForeColor.RGB = CInt(buFarbe)
+    '                    .Name = .Name & .Id
+    '                    ' width ist die in der Vorlage angegebene Width 
+    '                End With
+
+    '            End If
+
+
+    '            ' optionales zeichnen der Zeilen-Markierung
+    '            If drawRowDifferentiator And toggleRowDifferentiator Then
+    '                ' zeichnen des RowDifferentiators 
+
+    '                copiedShape = createPPTShapeFromShape(rds.rowDifferentiatorShape, pptslide)
+    '                With copiedShape
+    '                    .Top = CSng(rowYPos)
+    '                    .Left = CSng(rds.projectListLeft)
+    '                    '''''.Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
+    '                    .Height = anzZeilenGezeichnet * rds.zeilenHoehe
+    '                    .Width = rds.drawingAreaRight - .Left
+    '                    .Name = .Name & .Id
+    '                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+    '                End With
+    '            End If
+
+    '            ' jetzt muss ggf die duration eingezeichnet werden 
+    '            If Not IsNothing(rds.durationArrowShape) And Not IsNothing(rds.durationTextShape) Then
+
+    '                ' Pfeil mit Länge der Dauer zeichnen 
+
+    '                copiedShape = createPPTShapeFromShape(rds.durationArrowShape, pptslide)
+    '                Dim pfeilbreite As Double = maxX2 - minX1
+
+    '                With copiedShape
+    '                    .Top = CSng(rowYPos) + 3 + 0.5 * (addOn - .Height)
+    '                    .Left = CSng(minX1)
+    '                    .Width = CSng(pfeilbreite)
+    '                    .Name = .Name & .Id
+    '                End With
+
+    '                ' Text für die Dauer eintragen
+    '                Dim dauerInTagen As Long
+    '                Dim dauerInM As Double
+    '                Dim tmpDate1 As Date, tmpDate2 As Date
+
+    '                Call hproj.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones, tmpDate1, tmpDate2, dauerInTagen)
+    '                dauerInM = 12 * dauerInTagen / 365
+
+
+    '                copiedShape = createPPTShapeFromShape(rds.durationTextShape, pptslide)
+
+    '                With copiedShape
+    '                    .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
+    '                    .Top = CSng(rowYPos) + 3 + 0.5 * (addOn - .Height)
+    '                    .Left = CSng(minX1 + (pfeilbreite - .Width) / 2)
+    '                    .Name = .Name & .Id
+    '                End With
+
+    '            End If
+
+
+    '            projDone = projDone + 1
+    '            ' Behandlung 
+
+
+    '            ' weiter schalten muss nur gemacht werden, wenn das nächste Projekt in der Collection nicht in der gleichen Zeile sein sollte
+    '            ' falls das nächste Projekt in der gleichen Zeile sein sollte, so werdendas ist in der Routine bestimmeMinMaxProjekte .. festgelegt; gezeichnet wird wie auf der PRojekt-Tafel dargestellt ... 
+    '            ' es können also auch zwei PRojekte (z.B Projekt und Nachfolger)  in einer Zeile sein ... 
+    '            If currentProjektIndex <= projectCollection.Count - 1 Then
+    '                If CInt(projectCollection.ElementAt(currentProjektIndex - 1).Key) < CInt(projectCollection.ElementAt(currentProjektIndex).Key) Then
+
+    '                    ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
+    '                    toggleRowDifferentiator = Not toggleRowDifferentiator
+
+    '                    If Not awinSettings.mppExtendedMode Then
+    '                        rowYPos = rowYPos + rds.zeilenHoehe
+    '                    Else
+    '                        rowYPos = rowYPos + anzZeilenGezeichnet * rds.zeilenHoehe
+    '                    End If
+    '                    lastProjectNameShape = Nothing
+    '                Else
+    '                    ' rowYPos bleibt unverändert 
+    '                    lastProjectNameShape = projectNameShape
+    '                End If
+    '            Else
+    '                ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
+    '                toggleRowDifferentiator = Not toggleRowDifferentiator
+
+    '                If Not awinSettings.mppExtendedMode Then
+    '                    rowYPos = rowYPos + rds.zeilenHoehe
+    '                Else
+    '                    rowYPos = rowYPos + anzZeilenGezeichnet * rds.zeilenHoehe
+    '                End If
+    '                lastProjectNameShape = Nothing
+    '            End If
+
+
+    '            ' Ende Behandlung 
+
+    '            ' jetzt alle Werte in Abhängigkeit von rowYPos wieder setzen ... 
+    '            projektNamenYPos = rowYPos + projektNamenYrelPos
+    '            projektGrafikYPos = rowYPos + projektGrafikYrelPos
+    '            phasenGrafikYPos = rowYPos + phasenGrafikYrelPos
+    '            milestoneGrafikYPos = rowYPos + milestoneGrafikYrelPos
+    '            ampelGrafikYPos = rowYPos + ampelGrafikYrelPos
+
+
+    '            'phasenGrafikYPos = phasenGrafikYPos + rds.zeilenHoehe
+    '            'milestoneGrafikYPos = milestoneGrafikYPos + rds.zeilenHoehe
+
+    '            If projektGrafikYPos > rds.drawingAreaBottom Then
+    '                Exit For
+    '            End If
+
+
+
+    '        End If
+
+
+    '    Next            ' nächstes Projekt zeichnen
+
+
+    '    '
+    '    ' wenn  Texte gezeichnet wurden, müssen jetzt die Phasen in den Vordergrund geholt werden, danach auf alle Fälle auch die Meilensteine 
+    '    Dim anzElements As Integer
+    '    If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or
+    '        awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
+    '        ' Phasen vorholen 
+
+    '        anzElements = phShapeNames.Count
+
+    '        If anzElements > 0 Then
+
+    '            ReDim arrayOfNames(anzElements - 1)
+    '            For ix = 1 To anzElements
+    '                arrayOfNames(ix - 1) = CStr(phShapeNames.Item(ix))
+    '            Next
+
+    '            Try
+    '                CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+    '            Catch ex As Exception
+
+    '            End Try
+
+    '        End If
+
+
+    '    End If
+
+    '    ' jetzt die Meilensteine in Vordergrund holen ...
+    '    anzElements = msShapeNames.Count
+
+    '    If anzElements > 0 Then
+
+    '        ReDim arrayOfNames(anzElements - 1)
+    '        For ix = 1 To anzElements
+    '            arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
+    '        Next
+
+    '        Try
+    '            CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+    '        Catch ex As Exception
+
+    '        End Try
+
+    '    End If
+
+
+    '    If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
+    '        'Throw New ArgumentException("es konnten nur " & _
+    '        '                            currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
+    '        '                            " Projekten gezeichnet werden ... " & vbLf & _
+    '        '                            "bitte verwenden Sie ein anderes Vorlagen-Format")
+    '        Throw New ArgumentException(repMessages.getmsg(12) & currentProjektIndex.ToString & repMessages.getmsg(13) & projectsToDraw.ToString)
+    '    End If
+
+
+
+    'End Sub
 
     ''' <summary>
     ''' Zeichnet den Meilenste in MS im PPTslide an Position MilestoneGrafikYPOs
@@ -16490,7 +17334,7 @@ Public Module testModule
     ''' <param name="phaseID"></param>
     ''' <param name="yPosition"></param>
     ''' <remarks></remarks>
-    Private Sub zeichnePhaseinSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection,
+    Public Sub zeichnePhaseinSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection,
                                            ByVal hproj As clsProjekt,
                                            ByVal swimlaneID As String,
                                            ByVal phaseID As String,
@@ -16869,10 +17713,10 @@ Public Module testModule
                     Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
 
                     If originalName = cMilestone.name Then
-                            originalName = Nothing
-                        End If
+                        originalName = Nothing
+                    End If
 
-                        Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
+                    Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
                     Call addSmartPPTMsPhInfo(milestoneTypShape, hproj,
                                                     fullBreadCrumb, cMilestone.name, shortText, originalName,
                                                     bestShortName, bestLongName,
@@ -17550,11 +18394,11 @@ Public Module testModule
 
 
             Dim hproj As New clsProjekt
-                Dim hhproj As New clsProjekt
-                Dim maxZeilen As Integer = 0
-                Dim anzZeilen As Integer = 0
-                Dim gesamtAnzZeilen As Integer = 0
-                Dim projekthoehe As Double = zeilenhoehe_sav
+            Dim hhproj As New clsProjekt
+            Dim maxZeilen As Integer = 0
+            Dim anzZeilen As Integer = 0
+            Dim gesamtAnzZeilen As Integer = 0
+            Dim projekthoehe As Double = zeilenhoehe_sav
 
             If awinSettings.mppExtendedMode Then
 
@@ -17608,13 +18452,13 @@ Public Module testModule
 
             If pptFirstTime Then
 
-                    'ur: 25.03.2015: sichern der im Format veränderten Folie
-                    pptslide.Copy()
-                    pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
-                    pptFirstTime = False
-                    legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+                'ur: 25.03.2015: sichern der im Format veränderten Folie
+                pptslide.Copy()
+                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                pptFirstTime = False
+                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
 
-                End If
+            End If
 
             ' zeichne den Kalender
             'Dim calendargroup As pptNS.Shape = Nothing
@@ -17660,11 +18504,15 @@ Public Module testModule
 
             Try
 
-
-                Call zeichnePPTprojects(pptslide, projCollection, objectsDone,
+                Call zeichnePPTProjects(pptslide, projCollection, objectsDone,
                                 rds,
                                 selectedPhases, selectedMilestones, selectedRoles, selectedCosts,
                                 worker, e)
+
+                'Call zeichnePPTprojects(pptslide, projCollection, objectsDone,
+                '                rds,
+                '                selectedPhases, selectedMilestones, selectedRoles, selectedCosts,
+                '                worker, e)
 
 
             Catch ex As Exception
@@ -18797,7 +19645,7 @@ Public Module testModule
         Dim newShape As pptNS.Shape = Nothing
 
         Try
-            If srcShape.AutoShapeType <> MsoShapeType.msoShapeTypeMixed Then
+            If srcShape.AutoShapeType <> MsoShapeType.msoShapeTypeMixed And Not srcShape.Type = MsoShapeType.msoTextBox Then
                 newShape = pptSlide.Shapes.AddShape(srcShape.AutoShapeType, srcShape.Left, srcShape.Top, srcShape.Width, srcShape.Height)
 
                 srcShape.PickUp()
