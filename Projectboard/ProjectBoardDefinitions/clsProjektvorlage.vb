@@ -2992,9 +2992,6 @@
                                 tagessatz = curRole.tagessatzIntern
                             End If
 
-                            'Dim dimension As Integer
-                            'dimension = curRole.getDimension
-                            'ReDim tempArray(dimension)
                             tempArray = curRole.Xwerte
 
                             For i = phasenStart To phasenStart + tempArray.Length - 1
