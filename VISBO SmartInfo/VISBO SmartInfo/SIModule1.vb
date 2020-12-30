@@ -518,34 +518,44 @@ Module SIModule1
 
                 ' Behandeln der myUserRole 
                 ' jetzt wird die für die Slide passende Rolle gesucht 
-                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                If awinSettings.visboServer = True Then
+                    myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                    If IsNothing(myCustomUserRole) Then
 
-                If meldungen.Count > 0 Then
-                    Call MsgBox(meldungen.Item(1))
-                    tmpResult = False
-                Else
+                        msg = "Error: Keine Berechtigung"
+                        tmpResult = False
+                    Else
+                        tmpResult = True
+                    End If
 
-                    '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
-                    'Call RoleDefinitions.buildTopNodes()
-                    'Call RoleDefinitions.buildOrgaTeamChilds()
 
-                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                    Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                    If meldungen.Count > 0 Then
+                        Call MsgBox(meldungen.Item(1))
+                        tmpResult = False
+                    End If
 
-                        If IsNothing(customFieldDefinitions) Then
-                            'Call MsgBox(err.errorMsg)
-                        End If
-                    Catch ex As Exception
+                    If tmpResult Then
+                        '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
+                        'Call RoleDefinitions.buildTopNodes()
+                        'Call RoleDefinitions.buildOrgaTeamChilds()
 
-                    End Try
+                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                        Try
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                    ' in allen Slides den Sicht Schutz aufheben 
-                    protectionSolved = True
-                    Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
+                            If IsNothing(customFieldDefinitions) Then
+                                customFieldDefinitions = New clsCustomFieldDefinitions
+                                'Call MsgBox(err.errorMsg)
+                            End If
+                        Catch ex As Exception
 
+                        End Try
+                    End If
                 End If
 
+                ' in allen Slides den Sicht Schutz aufheben 
+                protectionSolved = True
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
 
             End If
 
