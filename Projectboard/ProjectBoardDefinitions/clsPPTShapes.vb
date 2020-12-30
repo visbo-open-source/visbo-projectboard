@@ -32,17 +32,9 @@ Public Class clsPPTShapes
     Private _legendAreaTop As Double = 0.0
     Private _legendAreaBottom As Double = 0.0
 
-    ' enthalten die relativen Abstände der Text-Shapes zu ihrem Phasen/Meilenstein Element 
-    Private _yOffsetMsToText As Double = -2.0
-    Private _yOffsetMsToDate As Double = 2.0
-
-    Private _yOffsetPhToText As Double = 2.0
-    Private _yOffsetPhToDate As Double = -2.0
-
     Private _containerShape As pptNS.Shape = Nothing
     Private _calendarLineShape As pptNS.Shape = Nothing
     Private _legendLineShape As pptNS.Shape = Nothing
-
 
     ' enthält das PPTStartofCalendar and PPTEndOfCalendar
     Private _PPTStartOFCalendar As Date = StartofCalendar
@@ -70,6 +62,7 @@ Public Class clsPPTShapes
     Private _YMilestoneText As Double = 0.0
     Private _YMilestoneDate As Double = 0.0
 
+    Private _YSegmentText As Double = 0.0
     Private _YAmpel As Double = 0.0
 
     Private _avgMsHeight As Double = 5.0
@@ -323,23 +316,23 @@ Public Class clsPPTShapes
 
     End Function
 
-    ''' <summary>
-    ''' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
-    ''' yOffsetMsToText, yOffsetMsToDate
-    ''' yOffsetPhToText, yOffsetPhToDate
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub calcRelDisTxtToElm()
+    '''' <summary>
+    '''' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+    '''' yOffsetMsToText, yOffsetMsToDate
+    '''' yOffsetPhToText, yOffsetPhToDate
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub calcRelDisTxtToElm()
 
 
-        _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
-        _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
+    '    _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
+    '    _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
 
-        _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
-        _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
+    '    _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
+    '    _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
 
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' berechnet anhand der Daten des Startdatums, Ende-Datums die korrespondierenden x1, x2 Koordinaten
@@ -480,6 +473,7 @@ Public Class clsPPTShapes
     ''' defines te relative offsets for Phase-Text, Phase Date , Milestone Text, and Milestone Date
     ''' </summary>
     Private Sub bestimmeRelativeOffsets()
+
         If Not IsNothing(projectNameVorlagenShape) Then
 
             With projectNameVorlagenShape
@@ -527,9 +521,9 @@ Public Class clsPPTShapes
         ' Date and Text of Phases
         Try
             If phaseVorlagenShape.Top >= PhDescVorlagenShape.Top Then
-                _YPhasenText = -1 * (0.5 * phaseVorlagenShape.Height + 2)
-            Else
                 _YPhasenText = 0.5 * phaseVorlagenShape.Height + 2 + PhDescVorlagenShape.Height
+            Else
+                _YPhasenText = -1 * (0.5 * phaseVorlagenShape.Height + 2)
             End If
         Catch ex As Exception
 
@@ -537,9 +531,9 @@ Public Class clsPPTShapes
 
         Try
             If phaseVorlagenShape.Top >= PhDateVorlagenShape.Top Then
-                _YPhasenDatum = -1 * (0.5 * phaseVorlagenShape.Height + 2)
-            Else
                 _YPhasenDatum = 0.5 * phaseVorlagenShape.Height + 2 + PhDateVorlagenShape.Height
+            Else
+                _YPhasenDatum = -1 * (0.5 * phaseVorlagenShape.Height + 2)
             End If
         Catch ex As Exception
 
@@ -555,9 +549,9 @@ Public Class clsPPTShapes
         ' Date and Text of Milestones
         Try
             If milestoneVorlagenShape.Top >= MsDescVorlagenShape.Top Then
-                _YMilestoneText = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
-            Else
                 _YMilestoneText = 0.5 * milestoneVorlagenShape.Height + 2 + MsDescVorlagenShape.Height
+            Else
+                _YMilestoneText = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
             End If
         Catch ex As Exception
 
@@ -566,9 +560,19 @@ Public Class clsPPTShapes
         ' Date and Text of Milestones
         Try
             If milestoneVorlagenShape.Top >= MsDateVorlagenShape.Top Then
-                _YMilestoneDate = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
-            Else
                 _YMilestoneDate = 0.5 * milestoneVorlagenShape.Height + 2 + MsDateVorlagenShape.Height
+            Else
+                _YMilestoneDate = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            If Not IsNothing(segmentVorlagenShape) Then
+                With segmentVorlagenShape
+                    _YSegmentText = 0.5 * segmentVorlagenShape.Height
+                End With
             End If
         Catch ex As Exception
 
@@ -2024,55 +2028,6 @@ Public Class clsPPTShapes
         End Get
     End Property
 
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetMsToText As Double
-        Get
-            yOffsetMsToText = _yOffsetMsToText
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetMsToDate As Double
-        Get
-            yOffsetMsToDate = _yOffsetMsToDate
-        End Get
-    End Property
-
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetPhToText As Double
-        Get
-            yOffsetPhToText = _yOffsetPhToText
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetPhToDate As Double
-        Get
-            yOffsetPhToDate = _yOffsetPhToDate
-        End Get
-    End Property
-
     Public ReadOnly Property PPTStartOFCalendar As Date
         Get
             PPTStartOFCalendar = _PPTStartOFCalendar
@@ -2301,6 +2256,12 @@ Public Class clsPPTShapes
     Public ReadOnly Property YMilestoneDate As Double
         Get
             YMilestoneDate = _YMilestoneDate
+        End Get
+    End Property
+
+    Public ReadOnly Property YSegmentText As Double
+        Get
+            YSegmentText = _YSegmentText
         End Get
     End Property
 

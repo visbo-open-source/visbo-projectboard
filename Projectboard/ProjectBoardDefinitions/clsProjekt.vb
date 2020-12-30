@@ -6127,69 +6127,6 @@ Public Class clsProjekt
 
     End Sub
 
-    ' ''' <summary>
-    ' ''' berechnet die Koordinaten der Phase mit Nummer  phaseNr. 
-    ' ''' </summary>
-    ' ''' <param name="phaseNr"></param>
-    ' ''' <param name="top"></param>
-    ' ''' <param name="left"></param>
-    ' ''' <param name="width"></param>
-    ' ''' <param name="height"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
-
-    '    Dim cphase As clsPhase
-
-    '    Try
-
-    '        Dim projektStartdate As Date = Me.startDate
-    '        Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
-
-    '        If startpunkt < 0 Then
-    '            Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
-    '        End If
-
-    '        cphase = Me.getPhase(phaseNr)
-    '        Dim phasenStart As Integer = startpunkt + cphase.startOffsetinDays
-    '        Dim phasenDauer As Integer = cphase.dauerInDays
-
-
-
-    '        If Me.tfZeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
-
-
-    '            If phaseNr = 1 Then
-    '                Me.CalculateShapeCoord(top, left, width, height)
-
-    '                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
-    '                ' Änderung 28.11 jetzt wird tagesgenau positioniert 
-    '                left = (phasenStart / 365) * boxWidth * 12
-    '                width = ((phasenDauer) / 365) * boxWidth * 12
-    '                height = 0.8 * boxHeight
-    '            Else
-    '                If top <= 0 Then
-    '                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
-    '                Else
-    '                    ' nichts tun : top wird an der Aufrufenden Stelle gesetzt
-    '                    ' zeichneProjektinPlantafel2 Änderung 18.3.14 
-    '                End If
-
-    '                left = (phasenStart / 365) * boxWidth * 12
-    '                width = ((phasenDauer) / 365) * boxWidth * 12
-    '                height = 0.6 * boxHeight
-    '            End If
-
-
-    '        Else
-    '            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
-    '        End If
-
-    '    Catch ex As Exception
-    '        Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name & "Phase: " & phaseNr.ToString)
-    '    End Try
-
-
-    'End Sub
 
     ''' <summary>
     ''' gibt für die angegebene Phasen-Nummer den zeilenoffset zurück sowie die 
@@ -6268,30 +6205,6 @@ Public Class clsProjekt
 
     End Sub
 
-
-    'Public Sub calculateResultCoord(ByVal resultDate As Date, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
-
-
-
-    '    Dim msStart As Integer = DateDiff(DateInterval.Day, StartofCalendar, resultDate)
-    '    Dim faktor As Double = 0.66
-
-    '    'Dim tagebisResult As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start - 1), resultDate)
-    '    'Dim ratio As Double = tagebisResult / anzahlTage
-
-    '    If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
-    '        top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.05
-    '        left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
-    '        'width = boxWidth
-    '        'height = boxWidth
-    '        width = boxHeight * faktor
-    '        height = boxHeight * faktor
-    '    Else
-    '        Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
-    '    End If
-
-
-    'End Sub
 
     Public Sub calculateMilestoneCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, ByVal b2h As Double,
                                     ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
@@ -6927,7 +6840,10 @@ Public Class clsProjekt
 
                     If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
                         ' ist Kind Element, daher aufnehmen 
-                        childCollection.Add(CStr(item), CStr(item))
+                        If Not childCollection.Contains(CStr(item)) Then
+                            childCollection.Add(CStr(item), CStr(item))
+                        End If
+
                     End If
                 End If
             Next
@@ -7429,7 +7345,7 @@ Public Class clsProjekt
             Next
 
             If outputCollection.Count > 0 Then
-                Call showOutPut(outputCollection, "Naming Problem ...", "")
+                'Call showOutPut(outputCollection, "Naming Problem ...", "")
             End If
 
             getElemIdsOf = iDCollection
@@ -7465,9 +7381,14 @@ Public Class clsProjekt
                     End If
                 Loop
 
-                If Not parentFound Then
-                    orphanCollection.Add(msNameID, msNameID)
-                End If
+                Try
+                    If Not parentFound Then
+                        orphanCollection.Add(msNameID, msNameID)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
 
             Next
 
@@ -7498,8 +7419,13 @@ Public Class clsProjekt
 
                 If phaseNameIDS.Contains(myParentID) Then
                     If myParentID = phaseNameID Then
-                        myCollection.Add(msNameID, msNameID)
-                        isMyMilestone = True
+                        Try
+                            isMyMilestone = True
+                            myCollection.Add(msNameID, msNameID)
+                        Catch ex As Exception
+
+                        End Try
+
                     Else
                         isOtherParentsMilestone = True
                     End If
@@ -7513,212 +7439,212 @@ Public Class clsProjekt
         getmyMilesstonesToDraw = myCollection
     End Function
 
-    ''' <summary>
-    ''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
-    '''  (gezeichnet zur nächst höheren aber auch selektierten Phase) beim Report benötigt werden
-    ''' außerdem werden in drawMStoPhaseListe die selektierten Meilensteine zu der passenden selektierten Phase gemerkt
-    ''' </summary>
-    ''' <param name="selectedPhases"></param>
-    ''' <param name="selectedMilestones"></param>
-    ''' <param name="considerTimespace"></param>
-    ''' <param name="anzLines"></param>
-    ''' <param name="drawMStoPhaseListe"></param>
-    ''' <remarks></remarks>
-    Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean,
-                                       ByRef anzLines As Integer, ByRef drawMStoPhaseListe As SortedList(Of String, SortedList))
+    '''' <summary>
+    '''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
+    ''''  (gezeichnet zur nächst höheren aber auch selektierten Phase) beim Report benötigt werden
+    '''' außerdem werden in drawMStoPhaseListe die selektierten Meilensteine zu der passenden selektierten Phase gemerkt
+    '''' </summary>
+    '''' <param name="selectedPhases"></param>
+    '''' <param name="selectedMilestones"></param>
+    '''' <param name="considerTimespace"></param>
+    '''' <param name="anzLines"></param>
+    '''' <param name="drawMStoPhaseListe"></param>
+    '''' <remarks></remarks>
+    'Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean,
+    '                                   ByRef anzLines As Integer, ByRef drawMStoPhaseListe As SortedList(Of String, SortedList))
 
 
-        If selectedMilestones.Count > 0 Then
+    '    If selectedMilestones.Count > 0 Then
 
-            Dim drawMSinPhase As New SortedList(Of String, SortedList)
-            ' Phasen die zusätzliche MS einzuzeichnen haben
-            Dim listMS As New SortedList
-            Dim found As Boolean = False
-            Dim parentID As String = ""
-            Dim selMSName As String = ""
-            Dim selPHName As String = ""
-            Dim msnameID As String = ""
-            Dim mx As Integer, j As Integer
-            Dim breadcrumb As String = ""
+    '        Dim drawMSinPhase As New SortedList(Of String, SortedList)
+    '        ' Phasen die zusätzliche MS einzuzeichnen haben
+    '        Dim listMS As New SortedList
+    '        Dim found As Boolean = False
+    '        Dim parentID As String = ""
+    '        Dim selMSName As String = ""
+    '        Dim selPHName As String = ""
+    '        Dim msnameID As String = ""
+    '        Dim mx As Integer, j As Integer
+    '        Dim breadcrumb As String = ""
 
-            For mx = 1 To selectedMilestones.Count  ' Schleife über alle selektierten Meilensteine
-                found = False
+    '        For mx = 1 To selectedMilestones.Count  ' Schleife über alle selektierten Meilensteine
+    '            found = False
 
-                ' Herausfinden der UniqueID der selektierten Meilensteine
-                Dim mstype As Integer = -1
-                Dim pvname As String = ""
-                Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb, mstype, pvname)
+    '            ' Herausfinden der UniqueID der selektierten Meilensteine
+    '            Dim mstype As Integer = -1
+    '            Dim pvname As String = ""
+    '            Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb, mstype, pvname)
 
-                If mstype = -1 Or
-                    (mstype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
-                    (mstype = PTItemType.vorlage) Then
+    '            If mstype = -1 Or
+    '                (mstype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+    '                (mstype = PTItemType.vorlage) Then
 
-                    Dim msNameIndices() As Integer
-                    msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
+    '                Dim msNameIndices() As Integer
+    '                msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
 
-                    If msNameIndices(0) = 0 Then
-                        ' Änderung tk: in diesem Fall gibt es den Meilenstein gar nicht 
-                        ' einfach in der Schleife weitermachen ...
-                    Else
-                        For j = 0 To msNameIndices.Length - 1
+    '                If msNameIndices(0) = 0 Then
+    '                    ' Änderung tk: in diesem Fall gibt es den Meilenstein gar nicht 
+    '                    ' einfach in der Schleife weitermachen ...
+    '                Else
+    '                    For j = 0 To msNameIndices.Length - 1
 
-                            msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
+    '                        msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
 
-                            parentID = Me.hierarchy.getParentIDOfID(msnameID)
-                            'While Not (x = rootPhaseName Or found)
-                            Dim zaehler As Integer = 0
+    '                        parentID = Me.hierarchy.getParentIDOfID(msnameID)
+    '                        'While Not (x = rootPhaseName Or found)
+    '                        Dim zaehler As Integer = 0
 
-                            ' -------------------------------------------
-                            ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
-                            ' das found = false hat vorher gefehlt ... 
-                            found = False
-                            ' Ende Änderung tk 9.4.16 -------------------
+    '                        ' -------------------------------------------
+    '                        ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
+    '                        ' das found = false hat vorher gefehlt ... 
+    '                        found = False
+    '                        ' Ende Änderung tk 9.4.16 -------------------
 
-                            While Not found
-                                zaehler = zaehler + 1
-                                ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
-                                Dim phind As Integer = 1
-                                While Not found And phind <= selectedPhases.Count
+    '                        While Not found
+    '                            zaehler = zaehler + 1
+    '                            ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
+    '                            Dim phind As Integer = 1
+    '                            While Not found And phind <= selectedPhases.Count
 
-                                    Dim phtype As Integer = -1
-                                    pvname = ""
-                                    Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
+    '                                Dim phtype As Integer = -1
+    '                                pvname = ""
+    '                                Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
-                                    If phtype = -1 Or
-                                        (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
-                                        (phtype = PTItemType.vorlage) Then
+    '                                If phtype = -1 Or
+    '                                    (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+    '                                    (phtype = PTItemType.vorlage) Then
 
-                                        Dim phNameIndices() As Integer
-                                        phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
-                                        If phNameIndices.Contains(Me.hierarchy.getIndexOfID(parentID)) Then
-                                            found = True
-                                        End If
+    '                                    Dim phNameIndices() As Integer
+    '                                    phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
+    '                                    If phNameIndices.Contains(Me.hierarchy.getIndexOfID(parentID)) Then
+    '                                        found = True
+    '                                    End If
 
-                                    ElseIf phtype = PTItemType.categoryList Then
-                                        ' 3.12.17 Behandlung muss noch überprüft / gemacht werden 
-                                        Try
-                                            found = selectedPhases.Contains(calcHryCategoryName(pvname, False))
-                                        Catch ex As Exception
-                                            found = False
-                                        End Try
-                                    End If
+    '                                ElseIf phtype = PTItemType.categoryList Then
+    '                                    ' 3.12.17 Behandlung muss noch überprüft / gemacht werden 
+    '                                    Try
+    '                                        found = selectedPhases.Contains(calcHryCategoryName(pvname, False))
+    '                                    Catch ex As Exception
+    '                                        found = False
+    '                                    End Try
+    '                                End If
 
-                                    phind = phind + 1
+    '                                phind = phind + 1
 
-                                End While
-                                If Not found Then
-                                    parentID = Me.hierarchy.getParentIDOfID(parentID) 'Parent eine Stufe höher finden
-                                    If parentID = Nothing Or parentID = "" Then
-                                        parentID = rootPhaseName
-                                        found = True
-                                    End If
-                                End If
+    '                            End While
+    '                            If Not found Then
+    '                                parentID = Me.hierarchy.getParentIDOfID(parentID) 'Parent eine Stufe höher finden
+    '                                If parentID = Nothing Or parentID = "" Then
+    '                                    parentID = rootPhaseName
+    '                                    found = True
+    '                                End If
+    '                            End If
 
-                            End While
+    '                        End While
 
-                            If zaehler > 1 Or parentID = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
-                                ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
+    '                        If zaehler > 1 Or parentID = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
+    '                            ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
 
-                                If drawMSinPhase.ContainsKey(parentID) Then
-                                    listMS = drawMSinPhase(parentID)
-                                Else
-                                    listMS = New SortedList
-                                    drawMSinPhase.Add(parentID, listMS)
-                                End If
+    '                            If drawMSinPhase.ContainsKey(parentID) Then
+    '                                listMS = drawMSinPhase(parentID)
+    '                            Else
+    '                                listMS = New SortedList
+    '                                drawMSinPhase.Add(parentID, listMS)
+    '                            End If
 
-                                If Not listMS.Contains(msnameID) Then
-                                    listMS.Add(msnameID, msnameID)
+    '                            If Not listMS.Contains(msnameID) Then
+    '                                listMS.Add(msnameID, msnameID)
 
-                                End If
+    '                            End If
 
-                            End If
+    '                        End If
 
-                        Next j
-                    End If
-                ElseIf mstype = PTItemType.categoryList Then
+    '                    Next j
+    '                End If
+    '            ElseIf mstype = PTItemType.categoryList Then
 
-                    Dim idCollection As Collection = Me.getMilestoneIDsWithCat(pvname)
-                    For Each tmpID As String In idCollection
-                        msnameID = tmpID
-                        parentID = Me.hierarchy.getParentIDOfID(msnameID)
-                        'While Not (x = rootPhaseName Or found)
-                        Dim zaehler As Integer = 0
+    '                Dim idCollection As Collection = Me.getMilestoneIDsWithCat(pvname)
+    '                For Each tmpID As String In idCollection
+    '                    msnameID = tmpID
+    '                    parentID = Me.hierarchy.getParentIDOfID(msnameID)
+    '                    'While Not (x = rootPhaseName Or found)
+    '                    Dim zaehler As Integer = 0
 
-                        ' -------------------------------------------
-                        ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
-                        ' das found = false hat vorher gefehlt ... 
-                        found = False
-                        ' Ende Änderung tk 9.4.16 -------------------
+    '                    ' -------------------------------------------
+    '                    ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
+    '                    ' das found = false hat vorher gefehlt ... 
+    '                    found = False
+    '                    ' Ende Änderung tk 9.4.16 -------------------
 
-                        While Not found
-                            zaehler = zaehler + 1
-                            ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
-                            Dim phind As Integer = 1
-                            While Not found And phind <= selectedPhases.Count
+    '                    While Not found
+    '                        zaehler = zaehler + 1
+    '                        ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
+    '                        Dim phind As Integer = 1
+    '                        While Not found And phind <= selectedPhases.Count
 
-                                Dim phtype As Integer = -1
-                                pvname = ""
-                                Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
+    '                            Dim phtype As Integer = -1
+    '                            pvname = ""
+    '                            Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
-                                If phtype = -1 Or
-                                    (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
-                                    (phtype = PTItemType.vorlage) Then
+    '                            If phtype = -1 Or
+    '                                (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+    '                                (phtype = PTItemType.vorlage) Then
 
-                                    Dim phNameIndices() As Integer
-                                    phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
-                                    If phNameIndices.Contains(Me.hierarchy.getIndexOfID(parentID)) Then
-                                        found = True
-                                    End If
-                                ElseIf phtype = PTItemType.categoryList Then
-                                    ' 3.12.17 Behandlung muss noch überprüft / gemacht werden 
-                                    Try
-                                        found = selectedPhases.Contains(calcHryCategoryName(pvname, False))
-                                    Catch ex As Exception
-                                        found = False
-                                    End Try
-                                End If
+    '                                Dim phNameIndices() As Integer
+    '                                phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
+    '                                If phNameIndices.Contains(Me.hierarchy.getIndexOfID(parentID)) Then
+    '                                    found = True
+    '                                End If
+    '                            ElseIf phtype = PTItemType.categoryList Then
+    '                                ' 3.12.17 Behandlung muss noch überprüft / gemacht werden 
+    '                                Try
+    '                                    found = selectedPhases.Contains(calcHryCategoryName(pvname, False))
+    '                                Catch ex As Exception
+    '                                    found = False
+    '                                End Try
+    '                            End If
 
-                                phind = phind + 1
+    '                            phind = phind + 1
 
-                            End While
-                            If Not found Then
-                                parentID = Me.hierarchy.getParentIDOfID(parentID) 'Parent eine Stufe höher finden
-                                If parentID = Nothing Or parentID = "" Then
-                                    parentID = rootPhaseName
-                                    found = True
-                                End If
-                            End If
+    '                        End While
+    '                        If Not found Then
+    '                            parentID = Me.hierarchy.getParentIDOfID(parentID) 'Parent eine Stufe höher finden
+    '                            If parentID = Nothing Or parentID = "" Then
+    '                                parentID = rootPhaseName
+    '                                found = True
+    '                            End If
+    '                        End If
 
-                        End While
+    '                    End While
 
-                        If zaehler > 1 Or parentID = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
-                            ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
+    '                    If zaehler > 1 Or parentID = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
+    '                        ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
 
-                            If drawMSinPhase.ContainsKey(parentID) Then
-                                listMS = drawMSinPhase(parentID)
-                            Else
-                                listMS = New SortedList
-                                drawMSinPhase.Add(parentID, listMS)
-                            End If
+    '                        If drawMSinPhase.ContainsKey(parentID) Then
+    '                            listMS = drawMSinPhase(parentID)
+    '                        Else
+    '                            listMS = New SortedList
+    '                            drawMSinPhase.Add(parentID, listMS)
+    '                        End If
 
-                            If Not listMS.Contains(msnameID) Then
-                                listMS.Add(msnameID, msnameID)
+    '                        If Not listMS.Contains(msnameID) Then
+    '                            listMS.Add(msnameID, msnameID)
 
-                            End If
+    '                        End If
 
-                        End If
+    '                    End If
 
-                    Next
+    '                Next
 
-                End If
+    '            End If
 
-            Next mx
+    '        Next mx
 
-            drawMStoPhaseListe = drawMSinPhase
-            anzLines = drawMStoPhaseListe.Count
-        End If
+    '        drawMStoPhaseListe = drawMSinPhase
+    '        anzLines = drawMStoPhaseListe.Count
+    '    End If
 
-    End Sub
+    'End Sub
     ''' <summary>
     ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt, wenn alle zughörigen Phasen gezeichnet werden
     ''' </summary>

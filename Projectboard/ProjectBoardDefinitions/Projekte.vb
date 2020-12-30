@@ -27595,8 +27595,10 @@ Public Module Projekte
             For Each kvp As KeyValuePair(Of Date, Integer) In belegung
                 If DateDiff(DateInterval.Day, startDate, kvp.Key) > 0 Then
                     foundEmptySpace = (DateDiff(DateInterval.Day, startDate.AddDays(duration), kvp.Key) >= 0)
+                    foundOverlap = Not foundEmptySpace
                 Else
-                    foundOverlap = DateDiff(DateInterval.Day, kvp.Key.AddDays(kvp.Value), startDate) < 0
+                    ' in diesem Fall ist der Start der neuen Phase nach dem aktuell betrachteten Zeit-Segment  
+                    foundOverlap = (DateDiff(DateInterval.Day, kvp.Key.AddDays(kvp.Value), startDate) < 0)
                 End If
                 If foundEmptySpace Or foundOverlap Then
                     Exit For
