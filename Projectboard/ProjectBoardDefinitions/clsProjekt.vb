@@ -4404,9 +4404,6 @@ Public Class clsProjekt
 
 
 
-
-
-
     End Sub
 
     ''' <summary>
@@ -5203,35 +5200,6 @@ Public Class clsProjekt
 
     End Sub
 
-    '''' <summary>
-    '''' nur temporär: setzt bei Meilensteinen des Namens gleichverteilt eine Rechnung an .. 
-    '''' </summary>
-    '''' <param name="name"></param>
-    'Public Sub setMilestoneInvoices(ByVal name As String)
-
-    '    Dim msNameIndices() As Integer
-    '    msNameIndices = Me.hierarchy.getMilestoneHryIndices(name)
-    '    Dim anzMilestones As Integer = msNameIndices.Length
-
-    '    If anzMilestones = 0 Or msNameIndices(0) = 0 Then
-    '        Exit Sub
-    '    End If
-
-
-    '    Try
-    '        Dim singleInvoice As Double = budgetWerte.Sum / anzMilestones * 1.15
-    '        For Each msID As Integer In msNameIndices
-    '            Dim msnameID As String = Me.hierarchy.getIDAtIndex(msID)
-    '            Dim curMS As clsMeilenstein = Me.getMilestoneByID(msnameID)
-
-    '            curMS.invoice = New KeyValuePair(Of Double, Integer)(singleInvoice, 30)
-    '        Next
-    '    Catch ex As Exception
-
-    '    End Try
-
-
-    'End Sub
 
     ''' <summary>
     ''' gibt den Bedarf der Rolle in dem Monat X an; X=1 entspricht StartofCalendar usw.
@@ -5438,50 +5406,6 @@ Public Class clsProjekt
 
         End Get
     End Property
-    ' wird wohl überhaupt nicht mehr benötigt - es gibt keine Aufrufe !? 
-    ' ''' <summary>
-    ' ''' kopiert alle Meilensteine, aber ohne Bewertung 
-    ' ''' </summary>
-    ' ''' <param name="newproj"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub copyMilestonesTo(ByRef newproj As clsProjekt)
-
-    '    Dim newresult As clsMeilenstein
-    '    Dim newphase As clsPhase
-
-    '    ' Kopiere die Ampel - und die Ampel-Bewertung
-    '    With newproj
-    '        .ampelStatus = Me.ampelStatus
-    '        .ampelErlaeuterung = Me.ampelErlaeuterung
-    '    End With
-
-    '    For Each cphase In MyBase.Liste
-
-    '        Try
-    '            newphase = newproj.getPhase(cphase.name)
-    '            ' wenn gefunden dann alle Results kopieren 
-    '            For r = 1 To cphase.countMilestones
-    '                newresult = New clsMeilenstein(parent:=newphase)
-    '                cphase.getMilestone(r).CopyToWithoutBewertung(newresult)
-
-    '                Try
-    '                    newphase.addMilestone(newresult)
-    '                Catch ex As Exception
-
-    '                End Try
-
-    '            Next
-
-    '        Catch ex As Exception
-    '            ' in diesem Falle gibt es die komplette Phase in dem Projekt nicht mehr 
-    '            ' dann muss auch nichts gemacht werden 
-    '        End Try
-
-
-    '    Next
-
-    'End Sub
-
 
 
     Public Sub copyBewertungenTo(ByRef newproj As clsProjekt)

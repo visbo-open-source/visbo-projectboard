@@ -27600,9 +27600,11 @@ Public Module Projekte
                     ' in diesem Fall ist der Start der neuen Phase nach dem aktuell betrachteten Zeit-Segment  
                     foundOverlap = (DateDiff(DateInterval.Day, kvp.Key.AddDays(kvp.Value), startDate) < 0)
                 End If
+
                 If foundEmptySpace Or foundOverlap Then
                     Exit For
                 End If
+
             Next
 
             tmpResult = foundOverlap
