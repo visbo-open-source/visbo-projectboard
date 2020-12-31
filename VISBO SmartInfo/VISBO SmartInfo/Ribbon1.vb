@@ -1080,21 +1080,30 @@ Public Class Ribbon1
                             showRangeLeft = 0
                             showRangeRight = 0
 
+                            Dim savePath As String
+                            Dim fullFileName As String
                             Try
-                                ' jetzt den Namen auf das Projekt setzen, wenn er nicht schon vorher gesetzt wurde .. 
-
-                                Dim savePath As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
-                                Dim fullFileName As String = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
-                                If anzP > 1 Then
-                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiprojekt-Report")
-                                End If
-
-                                pptAPP.ActivePresentation.SaveAs(fullFileName)
-
+                                savePath = My.Computer.FileSystem.SpecialDirectories.MyDocuments
                             Catch ex As Exception
-
+                                savePath = My.Computer.FileSystem.SpecialDirectories.Temp
                             End Try
 
+                            Try
+                                If anzP > 1 Then
+                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Multiproject-Report")
+                                Else
+                                    fullFileName = My.Computer.FileSystem.CombinePath(savePath, hproj.name)
+                                End If
+
+                            Catch ex As Exception
+                                fullFileName = My.Computer.FileSystem.CombinePath(savePath, "Single Project Report")
+                            End Try
+
+                            Try
+                                pptAPP.ActivePresentation.SaveAs(fullFileName)
+                            Catch ex As Exception
+                                Call MsgBox("Could not save powerpoint to " & fullFileName)
+                            End Try
 
                         Else
                             Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
