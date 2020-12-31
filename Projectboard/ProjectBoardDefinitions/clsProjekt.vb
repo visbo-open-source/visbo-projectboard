@@ -6317,10 +6317,19 @@ Public Class clsProjekt
         Get
             Dim benoetigteZeilen As Integer = 1
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-
+            Dim cphase As clsPhase = getPhaseByID(swimlaneID)
 
             If Not extended Or swimlaneID = segmentID Then
                 benoetigteZeilen = 1
+
+            ElseIf swimlaneID = rootPhaseName Then
+
+                If cphase.getMilestoneIDs.Count > 0 Then
+                    benoetigteZeilen = 1
+                Else
+                    benoetigteZeilen = 0
+                End If
+
             Else
                 ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
                 ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
@@ -6342,19 +6351,17 @@ Public Class clsProjekt
                     benoetigteZeilen = 1
                 End If
 
+                'Dim myOrphanedMilestones As New Collection
 
-                Dim drawliste As New SortedList(Of String, SortedList)
-                Dim addLines As Integer = 0
+                'If selectedMilestoneIDs.Count > 0 And selectedPhaseIDs.Count > 0 And Not considerAll Then
+                '    myOrphanedMilestones = getmyMilesstonesToDraw(swimlaneID, selectedPhaseIDs, selectedMilestoneIDs)
+                'End If
 
+                'Dim myDirectMilestones As Integer = cphase.getMilestoneIDs.Count
 
-                If selectedMilestoneIDs.Count > 0 And selectedPhaseIDs.Count > 0 And Not considerAll Then
-
-                    ' find out whether or not there are milestones which are selected to draw , but there is no corresponding phase selected ir corresponding 
-                    If getOrphanedMilestones(selectedPhaseIDs, selectedMilestoneIDs).Count > 0 Then
-                        benoetigteZeilen = benoetigteZeilen + 1
-                    End If
-
-                End If
+                'If (myDirectMilestones + myOrphanedMilestones.Count) > 0 Then
+                '    benoetigteZeilen = benoetigteZeilen + 1
+                'End If
 
 
             End If

@@ -18773,42 +18773,44 @@ Public Module testModule
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                  considerAll, curSegmentID)
 
+
                 Do While (curSwimlaneIndex <= swimLanesToDo) And
                         (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
 
-                    If Not IsNothing(worker) Then
-                        ' Zwischen-Meldung ausgeben ...
-                        If worker.WorkerSupportsCancellation Then
-                            If worker.CancellationPending Then
-                                e.Cancel = True
-                                msgTxt = "Berichterstellung abgebrochen ..."
-                                If awinSettings.englishLanguage Then
-                                    msgTxt = "Report Creation cancelled ..."
+                    If swimLaneZeilen > 0 Then
+                        If Not IsNothing(worker) Then
+                            ' Zwischen-Meldung ausgeben ...
+                            If worker.WorkerSupportsCancellation Then
+                                If worker.CancellationPending Then
+                                    e.Cancel = True
+                                    msgTxt = "Berichterstellung abgebrochen ..."
+                                    If awinSettings.englishLanguage Then
+                                        msgTxt = "Report Creation cancelled ..."
+                                    End If
+                                    e.Result = msgTxt
+                                    Exit Sub
                                 End If
-                                e.Result = msgTxt
-                                Exit Sub
+
                             End If
 
+
+                            ' Zwischenbericht abgeben ...
+                            msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Drawing Swimlane '" & elemNameOfElemID(curSwl.nameID) & "'  ...."
+                            End If
+                            e.Result = msgTxt
+                            If worker.WorkerReportsProgress Then
+                                worker.ReportProgress(0, e)
+                            Else
+                                Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
+                            End If
                         End If
 
 
-                        ' Zwischenbericht abgeben ...
-                        msgTxt = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
-                        If awinSettings.englishLanguage Then
-                            msgTxt = "Drawing Swimlane '" & elemNameOfElemID(curSwl.nameID) & "'  ...."
-                        End If
-                        e.Result = msgTxt
-                        If worker.WorkerReportsProgress Then
-                            worker.ReportProgress(0, e)
-                        Else
-                            Call logfileSchreiben("Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
-                        End If
-                    End If
-
-
-                    ' jetzt die Swimlane zeichnen
-                    ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
-                    Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
+                        ' jetzt die Swimlane zeichnen
+                        ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
+                        Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow,
                                                   hproj, curSwl.nameID, considerAll,
                                                   breadcrumbArray,
                                                   considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
@@ -18816,12 +18818,14 @@ Public Module testModule
                                                   selectedRoles, selectedCosts,
                                                   swimLaneZeilen, curSegmentID)
 
+
+                    End If
+
                     ' merken, ob die letzte gezeichnete Swimlane eigentlich die Meilensteine des Segments waren ...
                     Dim lastSwimlaneWasSegment As Boolean = isSwimlanes2 And (curSwl.nameID = curSegmentID)
 
 
                     prevSwl = curSwl
-
                     curSwimlaneIndex = curSwimlaneIndex + 1
                     curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isSwimlanes2)
 
@@ -18830,8 +18834,8 @@ Public Module testModule
                         Dim segmentID As String = ""
                         If isSwimlanes2 Then
                             segmentChanged = (hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <>
-                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID) And Not lastSwimlaneWasSegment) Or
-                                        (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
+                                    hproj.hierarchy.getParentIDOfID(curSwl.nameID) And Not lastSwimlaneWasSegment) Or
+                                    (hproj.isSegment(prevSwl.nameID) And hproj.isSegment(curSwl.nameID))
 
                             If hproj.isSegment(curSwl.nameID) Then
                                 segmentID = curSwl.nameID
@@ -18840,13 +18844,13 @@ Public Module testModule
 
 
                         swimLaneZeilen = hproj.calcNeededLinesSwlNew(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs,
-                                                                                 awinSettings.mppExtendedMode,
-                                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
-                                                                                 considerAll, segmentID)
+                                                                             awinSettings.mppExtendedMode,
+                                                                             considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
+                                                                             considerAll, segmentID)
 
                         If isSwimlanes2 Then
                             If segmentChanged And
-                                (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
+                            (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
                                 If hproj.isSegment(curSwl.nameID) Then
                                     curSegmentID = curSwl.nameID
@@ -18862,6 +18866,7 @@ Public Module testModule
                     Else
                         segmentChanged = False
                     End If
+
 
 
                 Loop

@@ -637,7 +637,7 @@ Public Class clsPPTShapes
                     phaseHeight = _phaseVorlagenShape.Height * reductionFactor
 
                     newZeilenhoehe = 1.1 * System.Math.Max(msHeight, phaseHeight)
-                    If anzZeilen * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace Then
+                    If (anzZeilen + 1) * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace Then
                         goodEnough = True
                         _zeilenHoehe = newZeilenhoehe
                     Else
@@ -653,7 +653,7 @@ Public Class clsPPTShapes
                 _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
 
                 If Not goodEnough Then
-                    _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / anzZeilen
+                    _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / (anzZeilen + 1)
                 End If
 
             Catch ex As Exception
