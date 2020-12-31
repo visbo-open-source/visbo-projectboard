@@ -7128,9 +7128,9 @@ Imports System.Web
 
                         If outPutCollection.Count > 0 Then
                             If awinSettings.englishLanguage Then
-                                Call showOutPut(outPutCollection, "Import Actual Data", "please check the notifications ...")
+                                Call showOutPut(outPutCollection, "no Import because of errors", "please check the notifications ...")
                             Else
-                                Call showOutPut(outPutCollection, "Import Istdaten", "folgende Probleme sind aufgetaucht")
+                                Call showOutPut(outPutCollection, "Kein Import wegen Fehler", "folgende Probleme sind aufgetaucht")
                             End If
 
                         End If
