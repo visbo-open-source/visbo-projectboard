@@ -18907,6 +18907,9 @@ Public Module testModule
         ' jetzt werden alle Shapes gelöscht ... 
         Call rds.setShapesInvisible()
 
+        ' jezt wird das containershape in den Hintergrund gesetzt 
+        Call rds.containerShape.ZOrder(MsoZOrderCmd.msoSendToBack)
+
 
     End Sub
 

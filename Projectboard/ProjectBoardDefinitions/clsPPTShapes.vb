@@ -587,7 +587,6 @@ Public Class clsPPTShapes
 
         Dim goodEnough As Boolean = False
         Dim newZeilenhoehe As Double = _zeilenHoehe
-        Dim playItSafeFactor As Double = 0.9
 
         Dim heights(3) As Single
         heights(0) = MsDescVorlagenShape.Height
@@ -597,9 +596,9 @@ Public Class clsPPTShapes
 
         newZeilenhoehe = Me.minZeilenhöhe + heights.Max
 
-        goodEnough = anzZeilen * newZeilenhoehe <= playItSafeFactor * (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace)
+        goodEnough = (anzZeilen + 1) * newZeilenhoehe <= (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace)
         If Not goodEnough Then
-            Call autoSetZeilenhoehe(anzZeilen, segmentNeededSpace, playItSafeFactor)
+            Call enforceAppropriateRowHeight(anzZeilen, segmentNeededSpace)
         Else
             _zeilenHoehe = newZeilenhoehe
         End If
@@ -616,51 +615,19 @@ Public Class clsPPTShapes
     ''' does reduce Ms height and width and phase height to 0.66 of origibal size   
     ''' </summary>
     ''' <param name="anzZeilen"></param>
-    Private Sub autoSetZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double, ByVal playItSafeFactor As Double)
+    Private Sub enforceAppropriateRowHeight(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
 
         ' now try three different steps 
         Dim reductionFactor As Single = 0.8
-        Dim goodEnough As Boolean = False
 
-        Dim msHeight As Single = _milestoneVorlagenShape.Height
-        Dim msWidth As Single = _milestoneVorlagenShape.Width
-        Dim phaseHeight As Single = _phaseVorlagenShape.Height
-        Dim newZeilenhoehe As Double = _zeilenHoehe
+        ' now milestones and phases are reduced by 80% 
+        ' then a zeilenhohe is calculated so that all fits in ... 
+        _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
+        _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
+        _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
 
-        If anzZeilen > 0 Then
-            ' first step
-            Try
-                Dim ix As Integer = 1
-                Do While Not goodEnough And ix <= 2
-                    msHeight = _milestoneVorlagenShape.Height * reductionFactor
-                    msWidth = _milestoneVorlagenShape.Width * reductionFactor
-                    phaseHeight = _phaseVorlagenShape.Height * reductionFactor
+        _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / (anzZeilen + 1)
 
-                    newZeilenhoehe = 1.1 * System.Math.Max(msHeight, phaseHeight)
-                    If (anzZeilen + 1) * newZeilenhoehe <= Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace Then
-                        goodEnough = True
-                        _zeilenHoehe = newZeilenhoehe
-                    Else
-                        ix = ix + 1
-                    End If
-                Loop
-
-                ' now set new height and widths for phase and milestones
-                reductionFactor = msHeight / _milestoneVorlagenShape.Height
-
-                _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
-                _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
-                _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
-
-                If Not goodEnough Then
-                    _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / (anzZeilen + 1)
-                End If
-
-            Catch ex As Exception
-
-            End Try
-
-        End If
 
     End Sub
 
