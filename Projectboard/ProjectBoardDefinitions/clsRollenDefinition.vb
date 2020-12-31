@@ -117,7 +117,7 @@
     ' gibt die Liste der Teams an, in dem die PErson ist 
     ' der Double Wert sagt, wieviel Prozent der Kapa der Person in das Team einfliesst ; Summe sollte 100% nicht überschreiten;
     ' keine harte Grenze, verursacht nur Warnung 
-    Private _teamIDs As SortedList(Of Integer, Double)
+    Private _skillIDs As SortedList(Of Integer, Double)
 
     ' gibt an, ob es sich um eine interne oder externe Rolle handelt, nur von Bedeutung wenn es sich um ein Blatt handelt ... 
     ' bei externen Rollen werden die Kapa-Values über die Monate automatisch angepasst ; Beauftragt 100 MT bis Juni, abgerufen bis Mrz 30, dann verbleiben 70 in den Monaten Apr - Jun   
@@ -137,16 +137,16 @@
 
 
     ' gibt an, ob es sich um eine Team Definition handelt 
-    Private _isTeam As Boolean
-    Public Property isTeam As Boolean
+    Private _isSkill As Boolean
+    Public Property isSkill As Boolean
         Get
-            isTeam = _isTeam
+            isSkill = _isSkill Or _isSkillParent
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
-                _isTeam = value
+                _isSkill = value
             Else
-                _isTeam = False
+                _isSkill = False
             End If
         End Set
     End Property
@@ -193,7 +193,7 @@
     ''' getTeamProperty gibt dann und nur dann true, wenn die Rolle Kinder enthält, die alle Team-Member in der Rolle selber sind ...  
     ''' </summary>
     ''' <returns></returns>
-    Public Function getTeamProperty() As Boolean
+    Public Function getSkillProperty() As Boolean
 
         Dim tmpResult As Boolean = False
         Dim myUID As Integer = _uuid
@@ -207,7 +207,7 @@
                     Dim childRoleID As Integer = _subRoleIDs.ElementAt(i).Key
                     Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(childRoleID)
 
-                    tmpResult = childRole.getTeamIDs.ContainsKey(myUID)
+                    tmpResult = childRole.getSkillIDs.ContainsKey(myUID)
                     i = i + 1
 
                 Catch ex As Exception
@@ -219,7 +219,7 @@
 
         End If
 
-        getTeamProperty = tmpResult
+        getSkillProperty = tmpResult
 
     End Function
 
@@ -252,16 +252,16 @@
     Private _uuid As Integer
     'Private Kapa() As Double
 
-    Private _isTeamParent As Boolean
-    Public Property isTeamParent As Boolean
+    Private _isSkillParent As Boolean
+    Public Property isSkillParent As Boolean
         Get
-            isTeamParent = _isTeamParent
+            isSkillParent = _isSkillParent
         End Get
         Set(value As Boolean)
             If Not IsNothing(value) Then
-                _isTeamParent = value
+                _isSkillParent = value
             Else
-                _isTeamParent = False
+                _isSkillParent = False
             End If
 
         End Set
@@ -329,27 +329,20 @@
         Get
             ' tk 15.1.20 wenn es sich bei der Rolle um ein Team handelt und es sich um einen Ressourcen-Manager handelt , dann werden nur die 
             ' Skillgruppen gezeigt, die mindestens ein Mitglied in dem Team haben 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And (Me.isTeam = True Or Me.isTeamParent) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager And Me.isSkill = True Then
+                ' alle Kinder der Skill bringen, aber nur die, die Teil der Organisations-Unit von Ressourcen Manager sind .. 
 
                 Dim restrictedToOrgaID As Integer = CInt(myCustomUserRole.specifics)
                 Dim restrictedSubRoleIDs As New SortedList(Of Integer, Double)
 
                 For Each kvp As KeyValuePair(Of Integer, Double) In _subRoleIDs
+
+                    ' wenn das Kind der Skill mindestens eine gemeinsame Ressourcen hat ... 
+                    If RoleDefinitions.getCommonChildsOfParents(restrictedToOrgaID, kvp.Key).Count > 0 Then
+                        restrictedSubRoleIDs.Add(kvp.Key, 1.0)
+                    End If
+
                     Dim roleName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-
-
-
-                    Dim childIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(roleName)
-                    If childIDs.Count = 0 Then
-                        ' jetzt die Rolle selber aufnehmen 
-                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                        childIDs.Add(roleNameID, 1.0)
-                    End If
-
-                    Dim childIDArray As String() = childIDs.Keys.ToArray
-                    If RoleDefinitions.hasAnyChildParentRelationsship(childIDArray, restrictedToOrgaID) Then
-                        restrictedSubRoleIDs.Add(kvp.Key, kvp.Value)
-                    End If
 
                 Next
 
@@ -362,9 +355,9 @@
         End Get
     End Property
 
-    Public ReadOnly Property getTeamIDs As SortedList(Of Integer, Double)
+    Public ReadOnly Property getSkillIDs As SortedList(Of Integer, Double)
         Get
-            getTeamIDs = _teamIDs
+            getSkillIDs = _skillIDs
         End Get
     End Property
 
@@ -417,16 +410,16 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTeamCount As Integer
+    Public ReadOnly Property getSkillCount As Integer
         Get
             Dim tmpValue As Integer = 0
-            If Not IsNothing(_teamIDs) Then
-                tmpValue = _teamIDs.Count
+            If Not IsNothing(_skillIDs) Then
+                tmpValue = _skillIDs.Count
             Else
                 tmpValue = 0
             End If
 
-            getTeamCount = tmpValue
+            getSkillCount = tmpValue
         End Get
     End Property
 
@@ -439,11 +432,11 @@
     ''' <remarks></remarks>
     Public Sub addSubRole(ByVal subRoleUid As Integer, ByVal subRolePrz As Double)
 
-        If Not _subRoleIDs.ContainsKey(subRoleUid) And _teamIDs.Count = 0 Then
-            If _teamIDs.Count = 0 Then
+        If Not _subRoleIDs.ContainsKey(subRoleUid) And _skillIDs.Count = 0 Then
+            If _skillIDs.Count = 0 Then
                 _subRoleIDs.Add(subRoleUid, subRolePrz)
             Else
-                Throw New ArgumentException("unzulässig für Parentship: hat Team-Zugehörigkeit " & _teamIDs.Count.ToString)
+                Throw New ArgumentException("unzulässig für Parentship: hat Team-Zugehörigkeit " & _skillIDs.Count.ToString)
             End If
         End If
 
@@ -453,13 +446,13 @@
     ''' fügt die entsprechende uid als Team hinzu 
     ''' dann dürfen keine Kinder existieren ! 
     ''' </summary>
-    ''' <param name="teamUid"></param>
+    ''' <param name="skillUid"></param>
     ''' <param name="teamPrz"></param>
-    Public Sub addTeam(ByVal teamUid As Integer, ByVal teamPrz As Double)
+    Public Sub addSkill(ByVal skillUid As Integer, ByVal teamPrz As Double)
 
-        If Not _teamIDs.ContainsKey(teamUid) Then
+        If Not _skillIDs.ContainsKey(skillUid) Then
             If _subRoleIDs.Count = 0 Then
-                _teamIDs.Add(teamUid, teamPrz)
+                _skillIDs.Add(skillUid, teamPrz)
             Else
                 Throw New ArgumentException("unzulässig für Team-Membership: hat Kinder " & _subRoleIDs.Count.ToString)
             End If
@@ -514,15 +507,15 @@
             End If
 
             ' jetzt die TeamIDs prüfen 
-            If Me._teamIDs.Count = vglRole.getTeamIDs.Count Then
-                If Me._teamIDs.Count = 0 Then
+            If Me._skillIDs.Count = vglRole.getSkillIDs.Count Then
+                If Me._skillIDs.Count = 0 Then
                     stillok = True
                 Else
 
                     Dim i As Integer = 0
-                    Do While i < Me._teamIDs.Count And stillok
-                        stillok = (Me._teamIDs.ElementAt(i).Key = vglRole.getTeamIDs.ElementAt(i).Key And
-                                   Me._teamIDs.ElementAt(i).Value = vglRole.getTeamIDs.ElementAt(i).Value)
+                    Do While i < Me._skillIDs.Count And stillok
+                        stillok = (Me._skillIDs.ElementAt(i).Key = vglRole.getSkillIDs.ElementAt(i).Key And
+                                   Me._skillIDs.ElementAt(i).Value = vglRole.getSkillIDs.ElementAt(i).Value)
                         i = i + 1
                     Loop
 
@@ -541,7 +534,7 @@
                             (CLng(Me.farbe) = CLng(vglRole.farbe)) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
-                            (Me.isTeam = vglRole.isTeam) And
+                            (Me.isSkill = vglRole.isSkill) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern) And
                             (Me.employeeNr = vglRole.employeeNr) And
                             (Me.entryDate.Date = vglRole.entryDate.Date) And
@@ -571,15 +564,15 @@
         ReDim _kapazitaet(240)
 
         _isExternRole = False
-        _isTeam = False
+        _isSkill = False
 
         ' tk wird aktuell noch nicht in der DB gespeichert, wird beim buildOrgaTeams gesetzt 
-        _isTeamParent = False
+        _isSkillParent = False
 
         'ReDim _externeKapazitaet(240)
 
         _subRoleIDs = New SortedList(Of Integer, Double)
-        _teamIDs = New SortedList(Of Integer, Double)
+        _skillIDs = New SortedList(Of Integer, Double)
 
         _employeeNr = ""
         _entryDate = Date.MinValue

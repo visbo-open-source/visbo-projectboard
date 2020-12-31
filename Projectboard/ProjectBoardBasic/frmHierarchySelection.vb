@@ -1793,16 +1793,12 @@ Public Class frmHierarchySelection
 
                     Dim nodelist As New SortedList(Of Integer, Double)
                     Try
-                        Dim teamID As Integer
-                        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID)
+                        Dim skillID As Integer
+                        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(node.Name, skillID)
 
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager And Not curRole.isTeam Then
-                            Dim virtualChilds As Integer() = RoleDefinitions.getVirtualChildIDs(curRole.UID, True)
-                            For Each vcID As Integer In virtualChilds
-                                If Not nodelist.ContainsKey(vcID) Then
-                                    nodelist.Add(vcID, 1.0)
-                                End If
-                            Next
+                        If nrTag.isSkill And skillID > 0 Then
+                            Dim curSkill As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillID)
+                            nodelist = curSkill.getSubRoleIDs
                         Else
                             nodelist = curRole.getSubRoleIDs
                         End If
@@ -5141,9 +5137,6 @@ Public Class frmHierarchySelection
             .CheckBoxes = True
 
 
-            ' alle Rollen in geladenen Projekte zeigen 
-            ' tk 10.9.18 immer alle Rollen zeigen ... 
-            'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
             If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or
@@ -5199,16 +5192,37 @@ Public Class frmHierarchySelection
 
                     ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
 
-                    If role.isTeam Then
+                    If role.isSkill Then
                         ' toplevelNode kann nur Team sein, nicht Team-Member
-                        nrTag.isTeam = True
+                        nrTag.isSkill = True
+                        nrTag.isRole = False
                         nrTag.isTeamMember = False
                     End If
 
                     topLevelNode.Tag = nrTag
 
+                    If role.isSkill Then
+                        Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(role.UID).UID
+                        Try
+                            ' suche den Top-Vater Knoten zu der umfassendenOrga-Unit
+                            ' nötig, weil eine Skill auch in Kombination mit einer höheren Orga-Unit angegeben werden kann
 
-                    topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
+                            Dim topParentIDS As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(embracingRoleID))
+                            If Not IsNothing(topParentIDS) Then
+                                Dim ix As Integer = topParentIDS.Length - 1
+                                If ix >= 0 Then
+                                    embracingRoleID = topParentIDS(ix)
+                                End If
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                        topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(embracingRoleID, role.UID)
+                    Else
+                        topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
+                    End If
+
 
 
                     If selectedRoles.Contains(topLevelNode.Name) Then
@@ -5248,24 +5262,27 @@ Public Class frmHierarchySelection
 
 
             Dim nrTag As New clsNodeRoleTag
-            If currentRole.isTeam Then
+            If currentRole.isSkill Then
 
                 nrTag = New clsNodeRoleTag
                 With nrTag
-                    .isTeam = True
+                    .isRole = False
+                    .isSkill = True
                     .isTeamMember = False
                 End With
 
-            ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
+            ElseIf currentRole.getSkillIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isSkill Then
 
                 nrTag = New clsNodeRoleTag
-                Dim teamID As Integer
-                Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
+
+                ' tk 23.10 muss auf parentNode.text gehen 
+                'Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
+                Dim parentID As Integer = RoleDefinitions.getRoledef(parentNode.Text).UID
                 With nrTag
-                    .isTeam = False
+                    .isSkill = False
                     .isTeamMember = True
                     .membershipID = parentID
-                    .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
+                    .membershipPrz = 1.0
                 End With
             End If
 
@@ -5280,7 +5297,14 @@ Public Class frmHierarchySelection
 
             currentNode.Tag = nrTag
 
-            currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+            If currentRole.isSkill Then
+                Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(currentRole.UID).UID
+
+
+                currentNode.Name = RoleDefinitions.bestimmeRoleNameID(embracingRoleID, currentRole.UID)
+            Else
+                currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, nrTag.membershipID)
+            End If
 
 
             If selectedRoles.Contains(currentNode.Name) Then

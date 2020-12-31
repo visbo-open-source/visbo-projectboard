@@ -5,6 +5,7 @@
 Public Class clsVisboZustaende
 
     Private _auslastungsArray(,) As Double
+    ' enthält den zuletzt eingegebenen Rollen-Kosten Namen 
     Private _oldValue As String
 
     Public Property showTimeZoneBalken As Boolean
@@ -84,6 +85,10 @@ Public Class clsVisboZustaende
     End Property
 
 
+    ''' <summary>
+    ''' gibt den zuletzt eingegebenen Wert zurück 
+    ''' </summary>
+    ''' <returns></returns>
     Public Property oldValue As String
         Get
             oldValue = _oldValue

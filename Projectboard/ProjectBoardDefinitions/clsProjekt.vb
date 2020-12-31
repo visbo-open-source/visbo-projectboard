@@ -1432,39 +1432,47 @@ Public Class clsProjekt
 
         Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
 
-        ' hier passiert das jetzt 
-        Dim roleNameIDs As New SortedList(Of String, Double)
+
+
+        Dim childRoleIDs As New SortedList(Of Integer, Double)
+        Dim childSkillIDs As New SortedList(Of Integer, Double)
 
         If Not IsNothing(rolesToBeDeleted) Then
+
             For Each roleName As String In rolesToBeDeleted
 
-                Dim teamID As Integer = -1
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleName, teamID)
-                If Not IsNothing(tmpRole) Then
+                Dim skillID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleName, skillID)
 
-                    Dim curRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, teamID)
+                Dim tmpSkill As clsRollenDefinition = Nothing
 
-                    If includingChilds Then
-                        Dim tmpRoleIDS As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(curRoleNameID, type:=PTcbr.all)
-                        For Each srKvP As KeyValuePair(Of String, Double) In tmpRoleIDS
-                            If roleNameIDs.ContainsKey(srKvP.Key) Then
-                                ' muss nichts getan werden - ist schon in der Liste  
-                            Else
-                                ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
-                                ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
-                                roleNameIDs.Add(srKvP.Key, 1.0)
-                            End If
-                        Next
-                    Else
+                If skillID > 0 Then
+                    tmpSkill = RoleDefinitions.getRoleDefByID(skillID)
+                End If
 
-                        If Not roleNameIDs.ContainsKey(curRoleNameID) Then
-                            roleNameIDs.Add(curRoleNameID, 1.0)
-                        End If
+                If includingChilds Then
 
+                    If Not IsNothing(tmpRole) Then
+                        childRoleIDs = RoleDefinitions.getSubRoleIDsOf(tmpRole.name)
+                    End If
+
+                    If Not IsNothing(tmpSkill) Then
+                        childSkillIDs = RoleDefinitions.getSubRoleIDsOf(tmpSkill.name)
+                    End If
+
+
+                Else
+
+                    If Not IsNothing(tmpRole) Then
+                        childRoleIDs.Add(tmpRole.UID, 1.0)
+                    End If
+
+
+                    If Not IsNothing(tmpSkill) Then
+                        childSkillIDs.Add(tmpSkill.UID, 1.0)
                     End If
 
                 End If
-
 
 
             Next
@@ -1477,20 +1485,34 @@ Public Class clsProjekt
             Dim cPhase As clsPhase = newProj.getPhase(ip)
 
             If Not IsNothing(rolesToBeDeleted) Then
-                If roleNameIDs.Count > 0 Then
+                If childRoleIDs.Count > 0 Or childSkillIDs.Count > 0 Then
                     Dim delCollection As New Collection
+
                     For dx As Integer = 1 To cPhase.countRoles
                         Dim tmpRole As clsRolle = cPhase.getRole(dx)
-                        Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
-                        If roleNameIDs.ContainsKey(tmpKey) Then
-                            ' löschen 
-                            If Not delCollection.Contains(tmpKey) Then
-                                delCollection.Add(tmpKey, tmpKey)
+                        Dim found As Boolean = False
+
+                        If childRoleIDs.Count > 0 And childSkillIDs.Count > 0 Then
+                            found = childRoleIDs.ContainsKey(tmpRole.uid) And childSkillIDs.ContainsKey(tmpRole.teamID)
+
+                        ElseIf childRoleIDs.Count = 0 And childSkillIDs.Count > 0 Then
+                            found = childSkillIDs.ContainsKey(tmpRole.teamID)
+
+                        ElseIf childRoleIDs.Count > 0 And childSkillIDs.Count = 0 Then
+                            found = childRoleIDs.ContainsKey(tmpRole.uid)
+
+                        End If
+
+                        If found Then
+                            Dim foundKey As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+                            If Not delCollection.Contains(foundKey) Then
+                                delCollection.Add(foundKey, foundKey)
                             End If
                         End If
+
                     Next
 
-                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    ' jetzt müssen alle delCollection Einträge in der Phase gelöscht werden 
                     For Each item As String In delCollection
                         If item <> "" Then
                             cPhase.removeRoleByNameID(item)
@@ -3646,7 +3668,9 @@ Public Class clsProjekt
             Dim cphase As clsPhase = getPhase(i)
             Dim newPhase As clsPhase = newProj.getPhase(i)
             Dim toDoList As New SortedList(Of String, clsRolle)
-            Dim toDoListSR As New SortedList(Of String, Integer)
+            'Dim toDoListSR As New SortedList(Of String, Integer)
+            ' toDoList SR enthält jetzt die Original Detail Rolle als Key und als Value die RoleID;TeamID auf die es gemappt werden soll 
+            Dim toDoListSR As New SortedList(Of String, String)
 
             For Each curRole As clsRolle In cphase.rollenListe
 
@@ -3658,57 +3682,41 @@ Public Class clsProjekt
                 Dim roleNameID As String = copiedRole.getNameID
 
                 ' tk ist es einer Skill/Team zugeordnet 
-                Dim teamID As Integer = -1
-                Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+                Dim oldteamID As Integer = curRole.teamID
+                Dim oldroleID As Integer = curRole.uid
+
+                Dim newRoleID As Integer = oldroleID
+                ' for now, Nov 2020: newTeamID = oldTeamID . Once there are more complex hierachies in Skills, decide which should be the new teamID  
+                Dim newTeamID As Integer = oldteamID
 
                 Dim found As Boolean = False
                 Dim ix As Integer = 1
 
-                ' tk 19.1.20 um rollen mit Skills der Skill-Gruppe zuzuordnen ... 
-                ' Anfang ... 
-                If teamID > 0 And RoleDefinitions.containsUid(teamID) Then
-
+                If summaryRoleIDs.Contains(oldroleID) Then
+                    ' fertig , nichts machen 
+                Else
+                    ' bestimme newRoleID
                     Do While ix <= summaryRoleIDs.Length And Not found
-                        If teamID = summaryRoleIDs(ix - 1) Then
+
+                        If RoleDefinitions.hasAnyChildParentRelationsship(oldroleID, summaryRoleIDs(ix - 1)) Then
+                            'If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
                             found = True
-                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(teamID, summaryRoleIDs(ix - 1)) Then
-                            found = True
+                            newRoleID = summaryRoleIDs(ix - 1)
                         Else
                             ix = ix + 1
                         End If
+
                     Loop
 
-                End If
-
-                If Not found Then
-                    ix = 1
-                End If
-                ' Ende ...
-
-                Do While ix <= summaryRoleIDs.Length And Not found
-
-                    If copiedRole.uid <> summaryRoleIDs(ix - 1) Then
-                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 ersetzt wird 
-                        If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1), includingVirtualChilds:=True) Then
-                            found = True
-
-                        ElseIf RoleDefinitions.hasAnyChildParentRelationsship(copiedRole.uid, summaryRoleIDs(ix - 1)) Then
-                            found = True
-
-                        Else
-                            ix = ix + 1
-                        End If
-                    Else
-                        ix = ix + 1
+                    If found Then
+                        Dim mapToRoleSkillID As String = RoleDefinitions.bestimmeRoleNameID(newRoleID, newTeamID)
+                        ' in toDoList eintragen 
+                        toDoList.Add(roleNameID, copiedRole)
+                        toDoListSR.Add(roleNameID, mapToRoleSkillID)
                     End If
-
-                Loop
-
-                If found Then
-                    ' in toDoList eintragen 
-                    toDoList.Add(roleNameID, copiedRole)
-                    toDoListSR.Add(roleNameID, summaryRoleIDs(ix - 1))
                 End If
+
+
 
             Next
 
@@ -3719,18 +3727,29 @@ Public Class clsProjekt
                 ' löschen der alten, detaillierten Rollen ..
                 For Each kvp As KeyValuePair(Of String, clsRolle) In toDoList
 
-                    Dim teamID As Integer = -1
-                    Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(toDoListSR.Item(kvp.Key))
+                    ' find out what roleID, what teamID
+
+                    Dim oldTeamID As Integer = -1
+                    Dim oldRoleID As Integer = RoleDefinitions.parseRoleNameID(kvp.Key, oldTeamID)
+                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(kvp.Key, oldTeamID)
+
+                    Dim newTeamID As Integer = -1
+                    Dim newRoleID As Integer = RoleDefinitions.parseRoleNameID(toDoListSR.Item(kvp.Key), newTeamID)
 
                     ' jetzt wird die alte Rolle removed ..
                     newPhase.removeRoleByNameID(kvp.Key)
 
                     ' jetzt wird der Umrechnungsfaktor bestimmt 
-                    Dim curTagessatz As Double = kvp.Value.tagessatzIntern
-                    Dim sRoleTagessatz As Double = sRoleDef.tagessatzIntern
+                    Dim oldTagessatz As Double = kvp.Value.tagessatzIntern
+
+                    Dim newTagessatz As Double = RoleDefinitions.getRoleDefByID(newRoleID).tagessatzIntern
+                    If newTeamID > 0 Then
+                        newTagessatz = RoleDefinitions.getRoleDefByID(newTeamID).tagessatzIntern
+                    End If
+
                     Dim ptFaktor As Double = 1.0
-                    If curTagessatz > 0 And sRoleTagessatz > 0 Then
-                        ptFaktor = curTagessatz / sRoleTagessatz
+                    If oldTagessatz > 0 And newTagessatz > 0 Then
+                        ptFaktor = oldTagessatz / newTagessatz
                     End If
 
                     ' jetzt werden die PT Werte der current Role umgerechnet ... damit die Kosten gleich bleiben: PT * tagessatz
@@ -3739,8 +3758,8 @@ Public Class clsProjekt
                     Next
 
                     ' jetzt wird die curRole "umdefiniert" 
-                    kvp.Value.uid = sRoleDef.UID
-                    kvp.Value.teamID = -1
+                    kvp.Value.uid = newRoleID
+                    kvp.Value.teamID = newTeamID
 
                     ' jetzt wird sie in die Phase aufgenommen ..
                     newPhase.addRole(kvp.Value)
@@ -4301,7 +4320,7 @@ Public Class clsProjekt
             Exit Sub
         End If
 
-        ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf Null setzen 
+        ' jetzt alle Werte im hproj, deren Rollen zu ActualDataOrgaUnits gehören auf die bisher gesetzten Werte gesetzt 
         For p As Integer = 1 To CountPhases
             Dim curPhase As clsPhase = getPhase(p)
             Dim oldPhase As clsPhase = oldProj.getPhaseByID(curPhase.nameID)
@@ -4311,9 +4330,16 @@ Public Class clsProjekt
 
                 For r = 1 To curPhase.countRoles
                     Dim curRole As clsRolle = curPhase.getRole(r)
+                    Dim mergeOldValues As Boolean = True
+                    Dim curNameID As String = RoleDefinitions.bestimmeRoleNameID(curRole.uid, curRole.teamID)
 
+                    If considerAllRoles Then
+                        mergeOldValues = True
+                    Else
+                        mergeOldValues = RoleDefinitions.hasAnyChildParentRelationsship(curNameID, actualDataParentIDs)
+                    End If
 
-                    If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                    If mergeOldValues Then
                         Dim endIndex As Integer = System.Math.Min(columnOFActualData - columnOfPhaseStart, curRole.getDimension)
 
                         For ix As Integer = 0 To endIndex
@@ -4335,11 +4361,11 @@ Public Class clsProjekt
                                 If Not doneKeyValues.Contains(keyValue) Then
                                     doneKeyValues.Add(keyValue)
                                 End If
-
+                                '  else braucht man hier nicht, passeiert oben schon 
                             End If
 
                         Else
-                            ' do nothing - curPhase remains as it is ... 
+                            ' do nothing - curPhase remains as it is Werte aus der Vergangenheit sind bereits auf Null gesetzt  
                         End If
 
                     End If
@@ -4601,45 +4627,72 @@ Public Class clsProjekt
             ElseIf pstart <= arrayEnde Then
                 ReDim tmpResult(arrayEnde - pstart)
                 If isRole Then
-                    ' enthält diese Phase überhaupt diese Rolle ?
-                    Dim teamID As Integer = -1
-                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
-                    If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
 
-                        cphase = getPhaseByID(phaseNameID)
-                        Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
-                        If Not IsNothing(tmpRole) Then
-                            tagessatz = tmpRole.tagessatzIntern
-                            xWerte = tmpRole.Xwerte
-                        Else
-                            ReDim tmpResult(0)
-                            tmpResult(0) = 0
-                            notYetDone = False
-                        End If
+                    Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                    If Not IsNothing(tmpRole) Then
+                        tagessatz = tmpRole.tagessatzIntern
+                        xWerte = tmpRole.Xwerte
                     Else
                         ReDim tmpResult(0)
                         tmpResult(0) = 0
                         notYetDone = False
                     End If
+
+                    ' enthält diese Phase überhaupt diese Rolle ?
+                    ' braucht man nicht mehr 
+                    'Dim teamID As Integer = -1
+                    'Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+
+                    'If cphase.containsRoleSkillID(rcNameID) Then
+
+                    'End If
+                    'If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
+
+                    '    cphase = getPhaseByID(phaseNameID)
+                    '    Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                    '    If Not IsNothing(tmpRole) Then
+                    '        tagessatz = tmpRole.tagessatzIntern
+                    '        xWerte = tmpRole.Xwerte
+                    '    Else
+                    '        ReDim tmpResult(0)
+                    '        tmpResult(0) = 0
+                    '        notYetDone = False
+                    '    End If
+                    'Else
+                    '    ReDim tmpResult(0)
+                    '    tmpResult(0) = 0
+                    '    notYetDone = False
+                    'End If
                 ElseIf rcNameID <> "" Then
                     If CostDefinitions.containsName(rcNameID) Then
-                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
-                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
 
-                            cphase = getPhaseByID(phaseNameID)
-                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
-                            If Not IsNothing(tmpCost) Then
-                                xWerte = tmpCost.Xwerte
-                            Else
-                                ReDim tmpResult(0)
-                                tmpResult(0) = 0
-                                notYetDone = False
-                            End If
+                        Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                        If Not IsNothing(tmpCost) Then
+                            xWerte = tmpCost.Xwerte
                         Else
                             ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If
+
+
+                        'Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                        'If rcLists.phaseContainsCost(phaseNameID, costID) Then
+
+                        '    cphase = getPhaseByID(phaseNameID)
+                        '    Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                        '    If Not IsNothing(tmpCost) Then
+                        '        xWerte = tmpCost.Xwerte
+                        '    Else
+                        '        ReDim tmpResult(0)
+                        '        tmpResult(0) = 0
+                        '        notYetDone = False
+                        '    End If
+                        'Else
+                        '    ReDim tmpResult(0)
+                        '    tmpResult(0) = 0
+                        '    notYetDone = False
+                        'End If
 
                     Else
                         notYetDone = False
@@ -4704,7 +4757,10 @@ Public Class clsProjekt
                 Dim roleUID As Integer = currentRoleDef.UID
                 Dim tagessatz As Double = currentRoleDef.tagessatzIntern
 
-                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+                'Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(currentRoleDef.name)
+                Dim tmpCollection As New Collection
+                tmpCollection.Add(currentRoleDef.name)
+                Dim listOfPhases As Collection = getPhaseIdsWithRoleCost(tmpCollection, True)
 
                 For Each phNameID As String In listOfPhases
 
@@ -7201,43 +7257,7 @@ Public Class clsProjekt
         End Get
     End Property
 
-    Public ReadOnly Property getPhaseIdsWithRoleCost(ByVal namenListe As Collection, ByVal namesAreRoleIDs As Boolean) As Collection
-        Get
-            Dim iDCollection As New Collection
-            Dim teamID As Integer = -1
 
-            For i As Integer = 1 To Me.CountPhases
-
-                Dim cphase As clsPhase = Me.getPhase(i)
-                Dim phaseNameID As String = cphase.nameID
-
-                If namesAreRoleIDs Then
-                    For Each tmpItem As String In namenListe
-                        Dim roleID As Integer = RoleDefinitions.getRoleDefByIDKennung(tmpItem, teamID).UID
-                        If Me.rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
-                            If Not iDCollection.Contains(phaseNameID) Then
-                                iDCollection.Add(phaseNameID, phaseNameID)
-                            End If
-                        End If
-                    Next
-                Else
-                    ' Kosten 
-                    For Each tmpItem As String In namenListe
-                        Dim costID As Integer = CostDefinitions.getCostdef(tmpItem).UID
-                        If Me.rcLists.phaseContainsCost(phaseNameID, costID) Then
-                            If Not iDCollection.Contains(phaseNameID) Then
-                                iDCollection.Add(phaseNameID, phaseNameID)
-                            End If
-                        End If
-                    Next
-                End If
-
-
-            Next
-
-            getPhaseIdsWithRoleCost = iDCollection
-        End Get
-    End Property
 
     ''' <summary>
     ''' gibt zu der angegebenen elemID alle Kind und Kindes-KinderIDs zurück

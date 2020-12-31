@@ -1712,24 +1712,27 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' macht er jetzt immer, wenn das cproj keine Ressourcenbedarfe enthält
+                If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
+                    ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
+                    Try
+                        Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
+                        If Not IsNothing(tmpProj) Then
+                            hproj = tmpProj
+                        End If
+                    Catch ex As Exception
+                        Call MsgBox("resources from former version could Not be copied ... ")
+                    End Try
+
+                End If
+
+
                 If fileFrom3rdParty Then
 
                     .farbe = cproj.farbe
                     .Schrift = cproj.Schrift
                     .Schriftfarbe = cproj.Schriftfarbe
 
-                    If hproj.getGesamtKostenBedarf.Sum = 0 And cproj.getGesamtKostenBedarf.Sum > 0 Then
-                        ' dann wurde in VISBO eine Ressourcen- und Kostenplanung gemacht , die jetzt übernommen werden muss
-                        Try
-                            Dim tmpProj As clsProjekt = hproj.updateProjectWithRessourcesFrom(cproj)
-                            If Not IsNothing(tmpProj) Then
-                                hproj = tmpProj
-                            End If
-                        Catch ex As Exception
-                            Call MsgBox("resources from former version could Not be copied ... ")
-                        End Try
-
-                    End If
 
 
                     ' jetzt müssen Verantwortlicher für Projekt, actualDataUntil, Budget, Risiko, Beschreibung, Ampel und Ampel-Text übernommen werden 
@@ -6477,7 +6480,7 @@ Public Module awinGeneralModules
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-        Dim columnSummen As Integer = visboZustaende.meColRC + 1
+        Dim columnSummen As Integer = visboZustaende.meColRC + 2
         Dim columnRC As Integer = visboZustaende.meColRC
         Dim tmpSum As Double = 0.0
 
@@ -6507,7 +6510,7 @@ Public Module awinGeneralModules
                                        ixZeitraum, ix, anzLoops)
 
                     If isRole Then
-                        If RoleDefinitions.containsNameOrID(rcNameID) Then
+                        If RoleDefinitions.isValidCombination(rcNameID) Then
                             Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
 
                             If Not IsNothing(tmpRole) Then
@@ -6832,7 +6835,7 @@ Public Module awinGeneralModules
         Dim found As Boolean = False
 
         Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-        Dim vglRcNameID As String = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglRcNameID As String = getRCNameIDfromExcelRange(CType(ws.Range(ws.Cells(zeile, colRcName), ws.Cells(zeile, colRcName + 1)), Excel.Range))
         Dim vglPhaseNameID As String = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
 
 
@@ -6852,7 +6855,7 @@ Public Module awinGeneralModules
             If Not found Then
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-                vglRcNameID = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglRcNameID = getRCNameIDfromExcelRange(CType(ws.Range(ws.Cells(zeile, colRcName), ws.Cells(zeile, colRcName + 1)), Excel.Range))
                 vglPhaseNameID = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
             End If
 
@@ -7767,12 +7770,15 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
-
                                                     End If
                                                 End If
 
@@ -7860,12 +7866,15 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
-
                                                     End If
                                                 End If
 
@@ -7956,11 +7965,16 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
+
 
                                                     End If
                                                 End If
@@ -8051,11 +8065,17 @@ Public Module awinGeneralModules
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                            ' passt bereits 
+                                                        If Not IsNothing(vglProj) Then
+                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                ' passt bereits 
+                                                            Else
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            End If
                                                         Else
                                                             tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
                                                         End If
+
+
 
                                                     End If
                                                 End If

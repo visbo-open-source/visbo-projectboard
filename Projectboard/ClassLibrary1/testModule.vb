@@ -3600,8 +3600,10 @@ Public Module testModule
                 ' nimm die erste und stell sie dar
                 Dim tmpTeamID As Integer = -1
                 Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(1), tmpTeamID)
-                If RoleDefinitions.containsUid(tmpRoleID) Then
+                If RoleDefinitions.containsUid(tmpRoleID) And tmpTeamID = -1 Then
                     qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+                ElseIf RoleDefinitions.containsUid(tmpRoleID) And RoleDefinitions.containsUID(tmpTeamID) Then
+                    qualifier2 = selectedRoles.Item(1)
                 Else
                     qualifier2 = ""
                 End If
@@ -3617,11 +3619,15 @@ Public Module testModule
                         Dim tmpTeamID As Integer = -1
                         If selectedRoles.Count >= ix Then
                             Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
-                            If RoleDefinitions.containsUid(tmpRoleID) Then
+                            If RoleDefinitions.containsUid(tmpRoleID) And tmpTeamID = -1 Then
                                 qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+                            ElseIf RoleDefinitions.containsUid(tmpRoleID) And RoleDefinitions.containsUid(tmpTeamID) Then
+                                qualifier2 = selectedRoles.Item(ix)
                             Else
                                 qualifier2 = ""
                             End If
+
+
                         End If
 
                     End If
@@ -3642,12 +3648,7 @@ Public Module testModule
 
 
         End If
-        ' jetzt ist in q2 entweder der leere String oder eine gültiger Name
-        If qualifier2 <> "" Then
-            Dim tmpteamID As Integer = -1
-            Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(qualifier2, tmpteamID)
-            qualifier2 = RoleDefinitions.bestimmeRoleNameID(tmpRoleID, -1)
-        End If
+
 
         bestimmeRoleQ2 = qualifier2
 
@@ -22411,6 +22412,8 @@ Public Module testModule
     ''' <param name="pptslide"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    ''' 
+
     Public Function pptCopypptPaste(ByVal srcShape As pptNS.Shape, ByVal pptslide As pptNS.Slide) As pptNS.ShapeRange
 
         pptCopypptPaste = Nothing
