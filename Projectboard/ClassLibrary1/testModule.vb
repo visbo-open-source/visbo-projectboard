@@ -19159,7 +19159,7 @@ Public Module testModule
     End Function
 
     ''' <summary>
-    ''' creates a new ppt Shpae based on the srcShape. Replaces the pptCopyPptShape 
+    ''' creates a new ppt She based on the srcShape. Replaces the pptCopyPptShape 
     ''' </summary>
     ''' <param name="srcShape"></param>
     ''' <param name="pptSlide"></param>

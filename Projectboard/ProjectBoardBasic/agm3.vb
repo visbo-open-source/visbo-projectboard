@@ -5120,6 +5120,8 @@ Public Module agm3
         Dim lastplanProjekte As New clsProjekte
         Dim beauftragungsProjekte As New clsProjekte
 
+        Dim lastDate As Date = DateSerial(2020, 11, 30)
+
 
         If Not IsNothing(roleCollection) Then
 
@@ -5140,13 +5142,18 @@ Public Module agm3
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                    Dim lastplan As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, kvp.Value.timeStamp.AddDays(-1))
+                    Dim lastplan As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, lastDate)
                     Dim lastPlanValues() As Double = Nothing
                     If Not IsNothing(lastplan) Then
                         ' jetzt die Werte für die Beauftragung schreiben 
                         lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
                                                   von, bis, curRole, Nothing, unit, PTVergleichsArt.planningFrom, lastPlanValues)
+
+
+                        If Not lastplanProjekte.contains(lastplan.name) Then
+                            lastplanProjekte.Add(lastplan, False)
+                        End If
 
                         zeile = zeile + 1
                     End If
@@ -5160,6 +5167,10 @@ Public Module agm3
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
                                                   von, bis, curRole, Nothing, unit, PTVergleichsArt.beauftragung, baselineValues)
 
+                        If Not beauftragungsProjekte.contains(beauftragung.name) Then
+                            beauftragungsProjekte.Add(beauftragung, False)
+                        End If
+
                         zeile = zeile + 1
                     End If
 
@@ -5171,6 +5182,11 @@ Public Module agm3
 
                 Next
 
+                Dim sumValues() As Double = ShowProjekte.getRoleValuesInMonth(roleNameID, considerAllNeedsOfRolesHavingTheseSkills:=True)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, sumValues)
+
+                zeile = zeile + 1
 
             Next
 
@@ -5183,6 +5199,18 @@ Public Module agm3
                 Dim curCost As clsKostenartDefinition = CostDefinitions.getCostdef(costCollection.Item(i))
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    Dim lastplan As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, lastDate)
+                    Dim lastPlanValues() As Double = Nothing
+                    If Not IsNothing(lastplan) Then
+                        ' jetzt die Werte für die Beauftragung schreiben 
+                        lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, curCost.name, True, False)
+                        Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, lastPlanValues)
+
+                        zeile = zeile + 1
+                    End If
+
 
                     Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, kvp.Value.timeStamp)
                     Dim baselineValues() As Double = Nothing
