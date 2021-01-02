@@ -5404,7 +5404,7 @@ Public Module agm2
                 hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                 ' aufbauen der RcLists
-                hproj.updateRcLists()
+                ' hproj.updateRcLists()
 
                 Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
 
@@ -5458,7 +5458,7 @@ Public Module agm2
                         mapProj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping, wbs_elemID_liste)
 
                         ' aufbauen der RcLists - evt. nicht nötig
-                        mapProj.updateRcLists()
+                        ' mapProj.updateRcLists()
                         If IsNothing(mapProj) Then
                             Call MsgBox("Kein Mapping erfolgt")
                         End If
