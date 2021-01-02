@@ -6511,6 +6511,7 @@ Public Module agm2
                         Dim oldrng = .Range("Phasen_des_Projekts")
                         ' Änderung tk: es muss die Spalte der Rollen betrachtet werden , wenn die Spalte der Phasen betrachtet wird, werden bei der letzten Phase die Rollen nicht mitgenommen 
                         Dim columnOffset As Integer = oldrng.Column
+                        Dim withSkills As Boolean = False
 
                         ' es muss das Maximum aus den beiden Spalten Pahse und Ressourcen gesucht werden
                         Dim lastrow1 As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
@@ -6535,6 +6536,7 @@ Public Module agm2
                             ressSumOffset = -1              ' keine Summe vorhanden
                             Call logger(ptErrLevel.logInfo, "alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
                         Else
+                            withSkills = (gefundenRange.Column = 4)
 
                             If Not isNewSteckbriefFormat Then
                                 ' die beiden ersten Spalten verbinden, sofern nicht schon gemacht und abspeichern
@@ -6546,6 +6548,7 @@ Public Module agm2
                                     verbRange.Merge()
 
                                 Next
+
 
                                 ressOff = gefundenRange.Column - rng.Column - 1
                                 ressSumOffset = gefundenRange.Column - rng.Column - 2
@@ -6629,6 +6632,20 @@ Public Module agm2
                             Catch ex1 As Exception
                                 hname = ""
                             End Try
+
+                            Dim teamName As String = ""
+                            If withSkills Then
+                                Try
+
+                                    If Not IsNothing(CType(zelle.Offset(0, 2), Excel.Range).Value) Then
+                                        teamName = CType(CType(zelle.Offset(0, 2), Excel.Range).Value, String).Trim
+                                    End If
+
+                                Catch ex1 As Exception
+                                    teamName = ""
+                                End Try
+                            End If
+
 
                             If Len(phaseName) > 0 And Len(hname) <= 0 Then
                                 chkPhase = True
@@ -6833,7 +6850,13 @@ Public Module agm2
                                             If RoleDefinitions.containsName(hname) Then
                                                 Try
                                                     r = CInt(RoleDefinitions.getRoledef(hname).UID)
+                                                    Dim teamID As Integer = -1
 
+                                                    If teamName <> "" Then
+                                                        If RoleDefinitions.containsName(teamName) Then
+                                                            teamID = RoleDefinitions.getRoledef(teamName).UID
+                                                        End If
+                                                    End If
 
                                                     ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
                                                     Try
@@ -6902,6 +6925,7 @@ Public Module agm2
                                                     crole = New clsRolle(ende - anfang)
                                                     With crole
                                                         .uid = r
+                                                        .teamID = teamID
                                                         .Xwerte = Xwerte
                                                     End With
 
@@ -11321,7 +11345,7 @@ Public Module agm2
 
                         If RoleDefinitions.containsName(tmpStr1(0).Trim) Then
 
-                            If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isTeam Then
+                            If RoleDefinitions.getRoledef(tmpStr1(0).Trim).isSkill Then
                                 tmpResult = tmpStr1(0).Trim
                             End If
                         End If
@@ -11333,7 +11357,7 @@ Public Module agm2
                             If tmpStr2.Length > 1 Then
                                 Dim tmpName As String = "#" & tmpStr2(1).Trim
                                 If RoleDefinitions.containsName(tmpName) Then
-                                    If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                    If RoleDefinitions.getRoledef(tmpName).isSkill Then
                                         tmpResult = tmpName
                                     End If
                                 End If
@@ -11345,7 +11369,7 @@ Public Module agm2
                                 If tmpstr4.Length > 1 Then
                                     Dim tmpName As String = "#" & tmpstr4(1).Trim
                                     If RoleDefinitions.containsName(tmpName) Then
-                                        If RoleDefinitions.getRoledef(tmpName).isTeam Then
+                                        If RoleDefinitions.getRoledef(tmpName).isSkill Then
                                             tmpResult = tmpName
                                         End If
                                     End If
@@ -12742,7 +12766,8 @@ Public Module agm2
                         For iz As Integer = firstRowOfProject To lastRowOFProject
 
                             Dim currentCell As Excel.Range = CType(currentWS.Cells(iz, colRoleName), Excel.Range)
-                            Dim roleNameID As String = getRCNameIDfromExcelCell(currentCell)
+                            ' tk 23.8.20 wenn das hier nochmal gebraucht wird, dann muss gecheckt werden, ob mittlerweile auch die Skills im Export ausgegeben werden ... 
+                            Dim roleNameID As String = getRCNameIDfromExcelRange(currentCell)
                             Dim chckRoleName As String = ""
 
                             Try
@@ -17799,7 +17824,7 @@ Public Module agm2
 
 
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                Dim rcNameID As String = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(zeile, columnRC), meWS.Cells(zeile, columnRC + 1)), Excel.Range))
 
                 Dim isRole As Boolean = RoleDefinitions.containsName(rcName)
 
@@ -17961,7 +17986,8 @@ Public Module agm2
                         Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                     End If
                     Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=currentRole.name)
-                    Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
+                    'Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)
+                    Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
 
                 Catch ex As Exception
 
@@ -17984,7 +18010,7 @@ Public Module agm2
     ''' vorab gecheckt: hat die Phase überhaupt Planungs-Monate oder liegt sie vollständig in der Vergangenheit ? 
     ''' </summary>
     ''' <param name="zeile"></param>
-    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal rcNameID As String, ByVal isRole As Boolean)
+    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal rcName As String, ByVal skillName As String, ByVal isRole As Boolean)
 
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentRow As Excel.Range
@@ -17996,7 +18022,7 @@ Public Module agm2
         ' tk 26.1.20 
         Dim rcIndentLevel As Integer = 0
         If isRole Then
-            rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
+            rcIndentLevel = RoleDefinitions.getRoleIndent(rcName)
         End If
 
         Try
@@ -18005,7 +18031,7 @@ Public Module agm2
             Dim columnRC As Integer = visboZustaende.meColRC
 
             Dim currentValue As String = getStringFromExcelCell(ws.Cells(zeile, columnRC))
-            insertRow = (currentValue <> "" Or rcNameID = "")
+            insertRow = (currentValue <> "" Or rcName = "")
 
 
             Dim columnEndData As Integer = visboZustaende.meColED
@@ -18046,53 +18072,16 @@ Public Module agm2
                 End If
 
                 ' hier wird jetzt der Rollen- bzw Kostenart-Name eingetragen 
-                Dim rcName As String = rcNameID
+
                 Dim islocked As Boolean = False
                 Dim teamID As Integer = -1
 
-                If isRole And rcNameID <> "" Then
-                    ' der rcname muss erst noch bestimmt werden 
-                    'Dim teamID As Integer = -1
-                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
-                    If roleID > 0 Then
-                        rcName = RoleDefinitions.getRoleDefByID(roleID).name
-                    End If
-                End If
-                ' ---------------------------------------------------------------------
-                'Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
-                ' --------------------------------------
-                ' Beginn WriteMECellWithRoleNameID
 
-                Dim teamName As String = ""
-                ' tk 4.3.19 es muss newzeile sein, statt zeile 
-                Dim currentCell As Excel.Range = CType(.Cells(newZeile, columnRC), Excel.Range)
-                ' erst mal alle Kommentare löschen 
-                currentCell.ClearComments()
 
-                If isRole Then
-                    If rcName = rcNameID Or rcNameID = "" Then
-                        ' nichts weiter tun ... rcName wird als Value geschrieben
+                '' Jetzt wird die Zelle geschrieben 
 
-                    ElseIf rcNameID.Length > 0 Then
-
-                        If Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)) Then
-                            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
-
-                            If Not IsNothing(teamRole) Then
-                                teamName = teamRole.name
-                            End If
-                        End If
-
-                    End If
-
-                Else
-                    ' nichts weiter tun ... rcName wird als Kosten-Name geschrieben
-
-                End If
-
-                ' Jetzt wird die Zelle geschrieben 
-
-                With currentCell
+                Dim currentCell As Excel.Range = CType(.Range(.Cells(newZeile, columnRC), .Cells(newZeile, columnRC + 1)), Excel.Range)
+                With currentCell.Cells(1, 1)
                     .Value = rcName
                     .Locked = islocked
                     .IndentLevel = rcIndentLevel
@@ -18100,19 +18089,19 @@ Public Module agm2
                     If .Locked = False Then
                         .Interior.ColorIndex = XlColorIndex.xlColorIndexNone
                     End If
-                    ' eigentlich hier nicht mehr notwendig - es gibt hier keine Validation
-                    'Try
-                    '    If Not IsNothing(.Validation) Then
-                    '        .Validation.Delete()
-                    '    End If
-                    'Catch ex As Exception
 
-                    'End Try
+                End With
 
-                    If teamName.Length > 0 Then
-                        Dim newComment As Excel.Comment = .AddComment(Text:=teamName)
+                With currentCell.Cells(1, 2)
+                    If skillName <> "" Then
+                        rcIndentLevel = RoleDefinitions.getRoleIndent(skillName)
+                        .IndentLevel = rcIndentLevel
                     End If
-
+                    .Value = skillName
+                    .Locked = islocked
+                    If .Locked = False Then
+                        .Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+                    End If
                 End With
                 ' 
                 ' Ende WriteMECellWithRoleNameID -----------------------------------
@@ -18134,7 +18123,7 @@ Public Module agm2
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
             CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range).Select()
 
-            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range)
+            With CType(ws.Range(ws.Cells(newZeile, columnRC), ws.Cells(newZeile, columnRC + 1)), Excel.Range)
 
                 ' wenn eine neue Zeile eingefügt ist  müssen die jetzt wieder auf frei gesetzt werden 
                 .Locked = False
@@ -18157,7 +18146,7 @@ Public Module agm2
                 '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
                 'End If
                 .oldRow = newZeile
-                .oldValue = rcNameID
+                .oldValue = rcName
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
 
@@ -18304,7 +18293,7 @@ Public Module agm2
             Dim zeile As Integer = currentCell.Row
             Dim spalte As Integer = currentCell.Column
 
-            Call meRCZeileEinfuegen(zeile, "", True)
+            Call meRCZeileEinfuegen(zeile, "", "", True)
 
             ' neueZeile highlighten, ale Zeile to Normal
             'Call highlightRow(zeile + 1, zeile)
@@ -18416,7 +18405,7 @@ Public Module agm2
             Dim spalte As Integer = 1
 
 
-            Dim startSpalteDaten As Integer = 7
+            Dim startSpalteDaten As Integer = 7 + 1
             Dim roleCostInput As Excel.Range = Nothing
 
             tmpName = ""
@@ -18433,8 +18422,11 @@ Public Module agm2
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
-                    maxRCLengthVorkommen = 14
-                    CType(.Cells(1, 6), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+
+
+                    maxRCLengthVorkommen = 20
+                    CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
@@ -18442,8 +18434,10 @@ Public Module agm2
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+
                     maxRCLengthVorkommen = 20
-                    CType(.Cells(1, 6), Excel.Range).Value = "Summe" & vbLf & "[PT]"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Summe" & vbLf & "[PT]"
 
                 End If
 
@@ -18676,7 +18670,7 @@ Public Module agm2
 
                                 Next r
 
-                                ' tk 25.7.19 jetzt werdenalle validRole gemäß ihrer Reihenfolge PosIX dargestellt
+                                ' tk 25.7.19 jetzt werden alle validRole gemäß ihrer Reihenfolge PosIX dargestellt
 
                                 For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
 
@@ -18713,7 +18707,7 @@ Public Module agm2
                                     If ok Then
 
                                         With currentWS
-                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            CType(.Cells(zeile, 6 + 1), Excel.Range).Value = zeilensumme
                                             editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                         End With
 
@@ -18770,9 +18764,9 @@ Public Module agm2
                                                                                 ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
 
                                         If ok Then
-
+                                            ' hier wird der Wert reingeschrieben ... 
                                             With currentWS
-                                                CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                                CType(.Cells(zeile, 6 + 1), Excel.Range).Value = zeilensumme
                                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                             End With
 
@@ -18923,6 +18917,17 @@ Public Module agm2
 
                     infoBlock.Cells(1, 1).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
+                    ' jetzt die Skill Breite festlegen 
+                    infoBlock = CType(.Columns(startSpalteDaten - 2), Excel.Range)
+                    If infoBlock.ColumnWidth < 20 Then
+                        infoBlock.ColumnWidth = 20
+                    End If
+
+                    ' jetzt die Skill Breite festlegen 
+                    infoBlock = CType(.Columns(startSpalteDaten - 3), Excel.Range)
+                    If infoBlock.ColumnWidth < 20 Then
+                        infoBlock.ColumnWidth = 20
+                    End If
 
                 End With
             Catch ex As Exception
@@ -18994,6 +18999,7 @@ Public Module agm2
 
         Try
 
+
             ' Schreiben der Projekt-Informationen 
             With CType(currentWS, Excel.Worksheet)
 
@@ -19015,15 +19021,15 @@ Public Module agm2
 
                 ' Rolle oder Kostenart schreiben 
                 Dim isLocked As Boolean = isProtectedbyOthers Or (hasActualdata And rcName <> "")
-                Call writeMECellWithRoleNameID(CType(.Cells(zeile, 5), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
+                Call writeMECellWithRoleNameID(CType(.Range(.Cells(zeile, 5), .Cells(zeile, 5 + 1)), Excel.Range), isLocked, rcName, rcNameID, isRole, indentlevelRC)
 
 
                 ' das Format der Zeile mit der Summe
-                CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("##,##0.#")
-                CType(.Cells(zeile, 6), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                CType(.Cells(zeile, 6 + 1), Excel.Range).NumberFormat = Format("##,##0.#")
+                CType(.Cells(zeile, 6 + 1), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
                 If summeEditierenErlaubt Then
-                    With CType(.Cells(zeile, 6), Excel.Range)
+                    With CType(.Cells(zeile, 6 + 1), Excel.Range)
 
                         If Not isProtectedbyOthers Then
                             .Locked = False
@@ -23176,12 +23182,15 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
-                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
+                                        parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         If curLevel = maxIndent And readingGroups Then
-                                            'If Not parentRole.isTeam Then
-                                            '    parentRole.isTeam = True
+
+                                            ' ur:2.1.21 wird oben gesetzt
+                                            'If Not parentRole.isSkill Then
+                                            '    parentRole.isSkill = True
                                             'End If
+
                                             If subRole.getSubRoleCount > 0 Then
                                                 ' Fehler ! 
                                                 If awinSettings.englishLanguage Then
@@ -23192,7 +23201,7 @@ Public Module agm2
 
                                                 meldungen.Add(errMsg)
                                             Else
-                                                subRole.addTeam(parentRole.UID, przSatz)
+                                                subRole.addSkill(parentRole.UID, przSatz)
                                             End If
 
                                         End If
@@ -23240,15 +23249,14 @@ Public Module agm2
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
 
                                         parentRole.addSubRole(subRole.UID, przSatz)
-                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
+                                        parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         If readingGroups Then
                                             ' hier kann er eigentlich nie hinkommen ...
                                             If curLevel = maxIndent Then
-                                                'If Not parentRole.isTeam Then
-                                                '    parentRole.isTeam = True
+                                                'If Not parentRole.isSkill Then
+                                                '    parentRole.isSkill = True
                                                 'End If
-
                                                 If subRole.getSubRoleCount > 0 Then
                                                     ' Fehler ! 
                                                     If awinSettings.englishLanguage Then
@@ -23256,15 +23264,15 @@ Public Module agm2
                                                     Else
                                                         errMsg = "zeile: " & ix.ToString & " : " & subRole.name & " kann als Sammelrolle kein Team-Mitglied sein!"
                                                     End If
-
                                                     meldungen.Add(errMsg)
                                                 Else
-                                                    subRole.addTeam(parentRole.UID, przSatz)
+                                                    subRole.addSkill(parentRole.UID, przSatz)
                                                 End If
 
                                             Else
+
                                                 If subRole.getSubRoleCount = 0 Then
-                                                    subRole.isTeam = readingGroups
+                                                    subRole.isSkill = readingGroups
                                                 End If
                                             End If
                                         End If
@@ -23713,7 +23721,7 @@ Public Module agm2
                                         przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, relpercentCol), Excel.Range), 0.0, 0.0, 1.0)
                                         ' Wenn bei readRoleDefinitions mit readingGroups = true kein percent angegeben ist, so muss isTeam auf true gesetzt werden
                                         If (przSatz = 0) Then
-                                            .isTeam = True
+                                            .isSkill = True
                                         End If
 
                                         ' alternativ kann dies auch explizit angegeben sein
@@ -23723,7 +23731,7 @@ Public Module agm2
                                             Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
 
                                             If positiveCriterias.Contains(tmpValue) Then
-                                                .isTeam = True
+                                                .isSkill = True
                                             End If
                                         End If
 
@@ -23972,7 +23980,7 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
-                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
+                                        parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         If curLevel = maxIndent And readingGroups Then
                                             'If Not parentRole.isTeam Then
@@ -23988,7 +23996,7 @@ Public Module agm2
 
                                                 meldungen.Add(errMsg)
                                             Else
-                                                subRole.addTeam(parentRole.UID, przSatz)
+                                                subRole.addSkill(parentRole.UID, przSatz)
                                             End If
 
                                         End If
@@ -24042,7 +24050,7 @@ Public Module agm2
                                         Dim parentRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(parents(curLevel - 1))
                                         Dim subRole As clsRollenDefinition = neueRollendefinitionen.getRoledef(curRoleName)
                                         parentRole.addSubRole(subRole.UID, przSatz)
-                                        parentRole.isTeam = readingGroups            'Team-Marker setzen
+                                        parentRole.isSkill = readingGroups            'Team-Marker setzen
 
                                         ' hier kann er eigentlich nie hinkommen ...
                                         If curLevel = maxIndent And readingGroups Then
@@ -24060,7 +24068,7 @@ Public Module agm2
 
                                                 meldungen.Add(errMsg)
                                             Else
-                                                subRole.addTeam(parentRole.UID, przSatz)
+                                                subRole.addSkill(parentRole.UID, przSatz)
                                             End If
 
                                         End If

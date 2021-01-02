@@ -6645,7 +6645,7 @@ Imports System.Web
 
                     ' TopNodes und OrgaTeamChilds bauen 
                     Call importedOrga.allRoles.buildTopNodes()
-                    Call importedOrga.allRoles.buildOrgaTeamChilds()
+                    Call importedOrga.allRoles.buildOrgaSkillChilds()
 
                     ' jetzt wird die Orga als Setting weggespeichert ... 
                     Dim err As New clsErrorCodeMsg
@@ -12027,7 +12027,7 @@ Imports System.Web
         End Try
 
         Dim rcName As String = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
-        Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(currentRow, visboZustaende.meColRC), Excel.Range))
+        Dim rcNameID As String = getRCNameIDfromExcelRange(CType(meWS.Range(meWS.Cells(currentRow, visboZustaende.meColRC), meWS.Cells(currentRow, visboZustaende.meColRC + 1)), Excel.Range))
 
         Dim rcNameTeamID As Integer = -1
         Dim rcID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, rcNameTeamID)
@@ -12037,15 +12037,9 @@ Imports System.Web
             rcName = ""
         End If
 
-        ' tk 18.1.2020 rausnehmen besser !
-        'Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
-        '    currentRow = currentRow + 1
-        '    rcName = CStr(meWS.Cells(currentRow, visboZustaende.meColRC).value)
-        '    If IsNothing(rcName) Then
-        '        rcName = ""
-        '    End If
-        'Loop
-        ' Ende tk 18.1.2020
+        If IsNothing(rcNameID) Then
+            rcNameID = ""
+        End If
 
         ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
         If rcName = "" Then
@@ -12059,13 +12053,14 @@ Imports System.Web
             End Try
 
         Else
-            If RoleDefinitions.containsName(rcName) Then
+            If RoleDefinitions.containsNameOrID(rcNameID) Then
                 prcTyp = DiagrammTypen(1)
             ElseIf CostDefinitions.containsName(rcName) Then
                 prcTyp = DiagrammTypen(2)
             Else
                 prcTyp = DiagrammTypen(1)
                 rcName = RoleDefinitions.getDefaultTopNodeName
+                rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, "")
             End If
 
         End If
@@ -12175,17 +12170,35 @@ Imports System.Web
                 hproj = ShowProjekte.getProject(pName)
                 Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
                                                                      chTop, chLeft, chWidth, chHeight, False, True)
+
+                selectedProjekte.Clear(False)
+                selectedProjekte.Add(hproj, False)
             End If
 
-            ' dann das PRCCollectionChart ...
+
+
+            ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
-            chWidth = 2 * stdBreite
+            chWidth = stdBreite
+
+
 
             Dim myCollection As New Collection
             myCollection.Add(rcName)
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
                                                                    chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
+
+            ' das Auslastungs-Chart Skill
+            repObj = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = stdBreite
+
+            myCollection.Clear()
+            myCollection.Add(rcNameID)
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                   chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
+                                                                   isMESkillChart:=True)
 
             ' jetzt das Portfolio Chart Budget anzeigen ... 
             Dim obj As Excel.ChartObject = Nothing
@@ -12239,7 +12252,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                        If Not IsNothing(potentialParents) Then
+                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
                             Dim tmpParentName As String = ""
 
@@ -12297,7 +12310,7 @@ Imports System.Web
                     If rcName <> "" Then
                         Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                        If Not IsNothing(potentialParents) Then
+                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
                             Dim tmpParentName As String = ""
 

@@ -316,9 +316,13 @@ Public Class clsMeilenstein
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
-            ' tk. 28.11.17
+
+            ' tk/ute. 29.11.20
             If MilestoneDefinitions.Contains(Me.name) Then
                 _appearance = MilestoneDefinitions.getAppearance(Me.name)
+            End If
+            If _appearance = "" Then
+                _appearance = awinSettings.defaultMilestoneClass
             End If
             appearance = _appearance
         End Get

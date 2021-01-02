@@ -2827,7 +2827,7 @@ Public Class Request
                                 organisationResult.allRoles.buildTopNodes()
 
                                 ' aufbauen der OrgaTeamChilds
-                                organisationResult.allRoles.buildOrgaTeamChilds()
+                                organisationResult.allRoles.buildOrgaSkillChilds()
 
                             Case Else
 
@@ -2968,7 +2968,7 @@ Public Class Request
                         result.allRoles.buildTopNodes()
 
                         ' aufbauen der OrgaTeamChilds
-                        result.allRoles.buildOrgaTeamChilds()
+                        result.allRoles.buildOrgaSkillChilds()
 
                     Else
                         Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)

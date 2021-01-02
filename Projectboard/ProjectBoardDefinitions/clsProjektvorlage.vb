@@ -8,7 +8,7 @@
     Public hierarchy As clsHierarchy
 
     ' Änderung tk 20.9.16 sortierte Listen, wo welche Rollen vorkommen ... 
-    Public rcLists As clsListOfCostAndRoles
+    'Public rcLists As clsListOfCostAndRoles
 
 
 
@@ -360,39 +360,6 @@
     End Sub
 
     ''' <summary>
-    ''' wenn die rclists null sind, weil z.Bsp Projekt aus MS Project aufgebaut wurde 
-    ''' dann werden die hier nachträglich aufgebaut
-    ''' </summary>
-    Public Sub updateRcLists()
-
-        ' evt. vorhandene Listen löschen
-        rcLists = New clsListOfCostAndRoles
-
-        For p = 1 To AllPhases.Count
-
-            Dim cPhase As clsPhase = getPhase(p)
-
-            For Each role As clsRolle In cPhase.rollenListe
-                Try
-                    rcLists.addRP(role.uid, cPhase.nameID, role.teamID)
-                Catch ex As Exception
-
-                End Try
-            Next
-
-            For Each cost As clsKostenart In cPhase.kostenListe
-                Try
-                    rcLists.addCP(cost.KostenTyp, cPhase.nameID)
-                Catch ex As Exception
-
-                End Try
-            Next
-        Next
-
-
-    End Sub
-
-    ''' <summary>
     ''' gibt den kürzesten eindeutigen Namen für das Element zurück, der sich finden lässt
     ''' optional kann die SwimlaneID mitgegeben werden - dann wird nur nach eindeutigen Namen innerhalb der swimlanes gesucht 
     ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
@@ -401,8 +368,8 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
-                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean, _
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String,
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean,
                                              Optional ByVal swimlaneID As String = rootPhaseName) As String
         Get
             Dim elemName As String = elemNameOfElemID(nameID)
@@ -426,7 +393,7 @@
                 swlBC = ""
             Else
                 If istElemID(swimlaneID) Then
-                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID), _
+                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID),
                                                   Me.hierarchy.getBreadCrumb(swimlaneID))
                 End If
             End If
@@ -2768,7 +2735,10 @@
         End Get
 
     End Property
-
+    ' tk 15.10 Änderungen in getRessourcen Bedarfe 
+    ' alter Code hier 
+    ' 
+    ' 
 
     ''' <summary>
     ''' berechnet den monatlichen Ressourcenbedarf , ggf in Euro 
@@ -2781,24 +2751,22 @@
     Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
                                                     Optional ByVal outPutInEuro As Boolean = False,
-                                                    Optional takeITAsIs As Boolean = False) As Double()
+                                                    Optional ByVal considerAllOtherNeedsOfRolesHavingTheseSkills As Boolean = False) As Double()
         Get
             Dim roleValues() As Double
 
-            Dim anzRollen As Integer
-            Dim anzPhasen As Integer
 
-            Dim i As Integer, p As Integer, r As Integer
-            Dim phase As clsPhase
-            Dim role As clsRolle
+
+            Dim i As Integer
 
             Dim phasenStart As Integer
             Dim tempArray As Double()
 
 
-            Dim roleUID As Integer
-            Dim teamID As Integer = -1
+            Dim roleUID As Integer = -1
+            Dim skillUID As Integer = -1
             Dim roleName As String = "" ' kann eigentlich raus; ist nur drin, weil dann leichter debuggable ...
+            Dim skillName As String = ""
             Dim roleNameID As String = ""
 
             ' wenn roleID mit Nothing oder "" aufgerufen wird, dann sollen alle Personalkosten berechnet werden ... 
@@ -2812,136 +2780,242 @@
                 End If
             End If
 
-
-
-
+            ' new staff 
             If _Dauer > 0 Then
-
-                Dim lookingForRoleNameIDs As SortedList(Of String, Double) = Nothing
-                Dim existingRoleNameIds As Collection = Nothing
-                Dim matchingRoleNameIDs As SortedList(Of String, Double) = Nothing
-
-
-                If calculateAll Then
-
-                    existingRoleNameIds = getRoleNameIDs
-                    ' umkopieren ...
-                    matchingRoleNameIDs = New SortedList(Of String, Double)
-
-                    For Each existingRoleNameID As String In existingRoleNameIds
-                        If Not matchingRoleNameIDs.ContainsKey(existingRoleNameID) Then
-                            matchingRoleNameIDs.Add(existingRoleNameID, 1.0)
-                        End If
-                    Next
-
-                Else
-
-                    If IsNumeric(roleID) Then
-                        roleUID = CInt(roleID)
-                        roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
-                    Else
-
-                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
-                        If roleUID > 0 Then
-                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                            roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                        Else
-                            ReDim roleValues(0)
-                            getRessourcenBedarf = roleValues
-                            Exit Property
-                        End If
-
-                    End If
-
-                    ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
-                    ' ein Team kann nicht zu sich selber gehören ...
-                    If roleUID = teamID Then
-                        teamID = -1
-                    End If
-
-                    ' takeItAs wird in Bericht APVCV gebraucht , um die einzelnen 
-                    If (Not inclSubRoles) Or (takeITAsIs) Then
-                        matchingRoleNameIDs = New SortedList(Of String, Double)
-                        ' einfach die RoleNameID übernehmen 
-                        matchingRoleNameIDs.Add(roleNameID, 1.0)
-
-                    Else
-                        existingRoleNameIds = getRoleNameIDs
-                        ' hier müssen jetzt die virtuellen Kinder noch ergänzt werden ... 
-                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all, includingVirtualChilds:=True)
-
-                        matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
-
-                    End If
-
-
-                End If
-
 
                 ReDim roleValues(_Dauer - 1)
 
-                For Each mrkvp As KeyValuePair(Of String, Double) In matchingRoleNameIDs
+                If calculateAll Then
+                    ' weitermachen .. 
+                ElseIf IsNumeric(roleID) Then
+                    roleUID = CInt(roleID)
+                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
+                Else
+                    roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), skillUID)
+                    If roleUID > 0 Then
+                        roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, skillUID)
+                    Else
+                        ReDim roleValues(0)
+                        getRessourcenBedarf = roleValues
+                        Exit Property
+                    End If
 
-                    Dim tmpTeamID As Integer
-                    Dim curRoleName = RoleDefinitions.getRoleDefByIDKennung(mrkvp.Key, tmpTeamID).name
+                End If
 
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(curRoleName)
-                    anzPhasen = listOfPhases.Count
+                Dim listOfRoleIDs As New SortedList(Of Integer, Double)
+                Dim listOfSkillIDs As New SortedList(Of Integer, Double)
+                Dim doNotConsiderSkillIDs As New SortedList(Of Integer, Double)
+                ' tk wenn berechnet wird, was alle anderen Skills , non-Skill-Bedarfe für die betrachteten Orga-Einheiten, Personen sind 
 
-                    For p = 1 To anzPhasen
-                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
 
-                        With phase
-                            ' Off1
-                            anzRollen = .countRoles
-                            phasenStart = .relStart - 1
 
-                            Dim found As Boolean = False
 
-                            For r = 1 To anzRollen
-                                role = .getRole(r)
-                                Dim chckID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
+                If skillUID > 0 Then
 
-                                With role
-                                    If chckID = mrkvp.Key Then
-                                        Dim dimension As Integer
-                                        Dim tagessatz As Double = 1.0
-                                        If outPutInEuro Then
-                                            tagessatz = role.tagessatzIntern
+                    If Not considerAllOtherNeedsOfRolesHavingTheseSkills Then
+                        ' jetzt muss die RoleID ggf auf den obersten PArent gesetzt werdne; denn es kann ja auch einen Rollenbedarf Organisation; FrontEndGui geben
+                        Dim embracingRoleID As Integer = RoleDefinitions.getContainingRoleOfSkillMembers(skillUID).UID
+                        ' wenn die RoleUID einer der Väter von der embracing RoleID ist 
+                        ' extension necessary dann notwendig, wenn alle Skills gesucht werden müssen , nicht nur die Skillbedarfe, die zu einer bestimmten einschränkenden Orga-Einheit gehören  
+                        Dim extensionNecessary As Boolean = (embracingRoleID = roleUID) Or RoleDefinitions.hasAnyChildParentRelationsship(embracingRoleID, roleUID)
+                        If extensionNecessary Then
+                            Try
+                                ' suche den Top-Vater Knoten zu der umfassendenOrga-Unit
+                                ' nötig, weil eine Skill auch in Kombination mit einer höheren Orga-Unit angegeben werden kann
+
+                                Dim topParentIDS As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(embracingRoleID))
+                                If Not IsNothing(topParentIDS) Then
+                                    Dim ix As Integer = topParentIDS.Length - 1
+                                    If ix >= 0 Then
+                                        If topParentIDS(ix) > 0 Then
+                                            roleUID = topParentIDS(ix)
                                         End If
+                                    End If
+                                End If
+                            Catch ex As Exception
 
-                                        dimension = .getDimension
-                                        ReDim tempArray(dimension)
-                                        tempArray = .Xwerte
+                            End Try
+                        End If
+                    End If
 
-                                        For i = phasenStart To phasenStart + dimension
-                                            If outPutInEuro Then
-                                                roleValues(i) = roleValues(i) + tempArray(i - phasenStart) * tagessatz / 1000
-                                            Else
-                                                roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                    If RoleDefinitions.getRoleDefByID(roleUID).isCombinedRole Then
+                        ' muss nur gemacht werden, wenn es sich nicht schon um eine PErson handelt 
+                        Dim commonListOFIDs As List(Of Integer) = RoleDefinitions.getCommonChildsOfParents(roleUID, skillUID)
+
+                        If considerAllOtherNeedsOfRolesHavingTheseSkills Then
+                            ' jetzt nur die CommonList betrachten , denn nur die Bedarfe mit Skills <> SkillName dieser Personen zählen jetzt hier rein
+                            For Each tmpID As Integer In commonListOFIDs
+                                If Not listOfRoleIDs.ContainsKey(tmpID) Then
+                                    listOfRoleIDs.Add(tmpID, 1)
+                                End If
+                            Next
+                        Else
+                            ' jetzt auch deren Väter betrachten , denn die können ja auch einen definierten Need für die Skill haben 
+                            For Each tmpID As Integer In commonListOFIDs
+                                Try
+                                    ' liefert alle Parent-Rollen IDs inkl der eigenen Role-ID...
+                                    Dim parentArray As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(tmpID))
+                                    If Not IsNothing(parentArray) Then
+                                        For ix As Integer = 0 To parentArray.Length - 1
+                                            If parentArray(ix) > 0 Then
+                                                If Not listOfRoleIDs.ContainsKey(parentArray(ix)) Then
+                                                    listOfRoleIDs.Add(parentArray(ix), 1)
+                                                End If
                                             End If
 
-                                        Next i
+                                        Next
                                     End If
-                                End With
+                                Catch ex As Exception
+
+                                End Try
+
+                            Next
+                        End If
 
 
-                            Next r
+                    Else
+                        ' andernfalls einfach diese PErson aufnehmen 
+                        listOfRoleIDs.Add(roleUID, 1)
+                    End If
 
-                        End With ' phase
+                    ' tk 28.10 jetzt nicht mehr notwendig 
+                    ' now narrow Role-List down to all roles beeing parent to a person with that skill or being such a person
+                    'Dim delList As New List(Of Integer)
+                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                    '    If Not RoleDefinitions.roleHasSkill(kvp.Key, skillUID) Then
+                    '        Try
+                    '            delList.Add(kvp.Key)
+                    '        Catch ex As Exception
+
+                    '        End Try
+
+                    '    End If
+                    'Next
+
+                    'For Each tmpRoleID As Integer In delList
+                    '    listOfRoleIDs.Remove(tmpRoleID)
+                    'Next
 
 
-                    Next p ' Loop über alle Phasen
+                    ' jetzt bestimme die Liste mit den Skills 
+                    Dim curSkilldef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(skillUID)
+                    If Not IsNothing(curSkilldef) Then
+                        If curSkilldef.isCombinedRole And inclSubRoles Then
+                            listOfSkillIDs = RoleDefinitions.getSubRoleIDsOf(curSkilldef.name, type:=PTcbr.placeholders)
+                        Else
+                            listOfSkillIDs.Add(curSkilldef.UID, 1.0)
+                        End If
+                    End If
+                Else
+                    If roleUID > 0 Then
+                        Dim curRoledef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUID)
+                        If Not IsNothing(curRoledef) Then
+                            If curRoledef.isCombinedRole And inclSubRoles Then
+                                listOfRoleIDs = RoleDefinitions.getSubRoleIDsOf(curRoledef.name)
+                            Else
+                                listOfRoleIDs.Add(curRoledef.UID, 1.0)
+                            End If
+                        End If
+                    End If
+                End If
 
-                Next ' Loop über for each srkvp
+                ' limit to all roleUIDs having the skill, but calculate alle resource needs for given roleIDs
+                If listOfSkillIDs.Count > 0 And considerAllOtherNeedsOfRolesHavingTheseSkills And inclSubRoles Then
 
+                    ' tk das hier ist nicht nötig , die Role-List enthält alle relevanten IDs 
+                    'Dim delList As New List(Of Integer)
+                    'For Each kvp As KeyValuePair(Of Integer, Double) In listOfRoleIDs
+                    '    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                    '    If Not tmpRole.isCombinedRole Then
+                    '        Dim found As Boolean = False
+                    '        Dim ix As Integer = listOfSkillIDs.Count
+                    '        Do While ix <= listOfSkillIDs.Count And Not found
+                    '            found = tmpRole.getSkillIDs.ContainsKey(listOfSkillIDs.ElementAt(ix - 1).Key)
+                    '            ix = ix + 1
+                    '        Loop
+
+                    '        If Not found Then
+                    '            delList.Add(kvp.Key)
+                    '        End If
+                    '    Else
+                    '        delList.Add(kvp.Key)
+                    '    End If
+                    'Next
+
+                    '' jetzt die Liste bereinigen, so dass sie nur noch Rollen enthält, die die angegebene Skill haben ... 
+                    'For Each tmpRoleID As Integer In delList
+                    '    listOfRoleIDs.Remove(tmpRoleID)
+                    'Next
+
+                    ' jetzt für die weitere Verarbeitung die Liste von Skills löschen
+                    ' damit werden alle RoleIDs, die eine dieser Skills haben berücksichtigt, aber es werden alle Ressourcenbedarfe gerechnet 
+                    For Each kvp As KeyValuePair(Of Integer, Double) In listOfSkillIDs
+                        doNotConsiderSkillIDs.Add(kvp.Key, kvp.Value)
+                    Next
+                    listOfSkillIDs.Clear()
+                End If
+
+
+                ' jetzt Loop über alle Phasen  
+                For Each cPhase As clsPhase In AllPhases
+                    Dim nrRoles As Integer = cPhase.countRoles
+
+                    phasenStart = cPhase.relStart - 1
+
+                    For ir As Integer = 1 To nrRoles
+                        Dim curRole As clsRolle = cPhase.getRole(ir)
+                        Dim relevant As Boolean = False
+
+                        If listOfRoleIDs.Count > 0 And listOfSkillIDs.Count = 0 Then
+                            If considerAllOtherNeedsOfRolesHavingTheseSkills And curRole.teamID > 0 Then
+                                relevant = listOfRoleIDs.ContainsKey(curRole.uid) And Not doNotConsiderSkillIDs.ContainsKey(curRole.teamID)
+                            Else
+                                relevant = listOfRoleIDs.ContainsKey(curRole.uid)
+                            End If
+
+
+                        ElseIf listOfRoleIDs.Count = 0 And listOfSkillIDs.Count > 0 Then
+                            relevant = listOfSkillIDs.ContainsKey(curRole.teamID)
+
+                        ElseIf listOfRoleIDs.Count > 0 And listOfSkillIDs.Count > 0 Then
+                            relevant = listOfRoleIDs.ContainsKey(curRole.uid) And listOfSkillIDs.ContainsKey(curRole.teamID)
+                        ElseIf calculateAll Then
+                            relevant = True
+                        End If
+
+                        If relevant Then
+
+                            Dim tagessatz As Double = 1.0
+                            If outPutInEuro Then
+                                tagessatz = curRole.tagessatzIntern
+                            End If
+
+                            'Dim dimension As Integer
+                            'dimension = curRole.getDimension
+                            'ReDim tempArray(dimension)
+                            tempArray = curRole.Xwerte
+
+                            For i = phasenStart To phasenStart + tempArray.Length - 1
+                                If outPutInEuro Then
+                                    roleValues(i) = roleValues(i) + tempArray(i - phasenStart) * tagessatz / 1000
+                                Else
+                                    roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                End If
+
+                            Next i
+                        End If
+                    Next
+                Next
                 getRessourcenBedarf = roleValues
 
             Else
                 ReDim roleValues(0)
                 getRessourcenBedarf = roleValues
             End If
+
+
 
         End Get
     End Property
@@ -3152,7 +3226,7 @@
         Get
             Dim propResult As New SortedList(Of String, String)
             Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
-            Dim roleID As String = ""
+            Dim roleNameID As String = ""
             Dim isTeamMember As Boolean = False
 
             If Not IsNothing(cPhase) Then
@@ -3160,12 +3234,12 @@
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
 
-                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
+                    roleNameID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '
-                    If Not propResult.ContainsKey(roleID) Then
-                        propResult.Add(roleID, roleID)
+                    If Not propResult.ContainsKey(roleNameID) Then
+                        propResult.Add(roleNameID, roleNameID)
                     End If
 
                 Next r
@@ -3174,6 +3248,8 @@
             getRoleIDs = propResult
         End Get
     End Property
+
+
 
     ''' <summary>
     ''' gibt die vorkommenden Kostenarten-Bezeichner in der Form "Name" zurück; es gibt noch keine Hierarchie bei den Kosten 
@@ -3884,6 +3960,81 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt eine Collection von Phasen zurück, die eine der angegebenen NameIDs in der Form "roleID;SkillID" enthalten 
+    ''' </summary>
+    ''' <param name="namenListe"></param>
+    ''' <param name="namesAreRoleIDs"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getPhaseIdsWithRoleCost(ByVal namenListe As Collection, ByVal namesAreRoleIDs As Boolean) As Collection
+        Get
+            Dim iDCollection As New Collection
+            Dim teamID As Integer = -1
+
+            For i As Integer = 1 To Me.CountPhases
+
+                Dim cphase As clsPhase = Me.getPhase(i)
+                Dim phaseNameID As String = cphase.nameID
+
+                If namesAreRoleIDs Then
+                    For Each tmpItem As String In namenListe
+
+                        If cphase.containsRoleSkillID(tmpItem) Then
+                            If Not iDCollection.Contains(phaseNameID) Then
+                                iDCollection.Add(phaseNameID, phaseNameID)
+                            End If
+                        End If
+
+                        'Dim roleID As Integer = RoleDefinitions.getRoleDefByIDKennung(tmpItem, teamID).UID
+                        'If Me.rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
+                        '    If Not iDCollection.Contains(phaseNameID) Then
+                        '        iDCollection.Add(phaseNameID, phaseNameID)
+                        '    End If
+                        'End If
+                    Next
+                Else
+                    ' Kosten 
+                    For Each tmpItem As String In namenListe
+
+                        Dim costID As Integer = CostDefinitions.getCostdef(tmpItem).UID
+                        If cphase.containsCostID(costID) Then
+                            If Not iDCollection.Contains(phaseNameID) Then
+                                iDCollection.Add(phaseNameID, phaseNameID)
+                            End If
+                        End If
+                        ' tk eliminieren rcLists
+                        'If Me.rcLists.phaseContainsCost(phaseNameID, costID) Then
+                        '    If Not iDCollection.Contains(phaseNameID) Then
+                        '        iDCollection.Add(phaseNameID, phaseNameID)
+                        '    End If
+                        'End If
+                    Next
+                End If
+
+
+            Next
+
+            getPhaseIdsWithRoleCost = iDCollection
+        End Get
+    End Property
+
+    'Public ReadOnly Property getPhasesWithSkill(ByVal skillName As String) As Collection
+    '    Get
+    '        Dim phaseCollection As New Collection
+    '        Dim skill As clsRollenDefinition = RoleDefinitions.getRoledef(skillName)
+    '        If Not IsNothing(skill) Then
+    '            For Each cPhase As clsPhase In AllPhases
+    '                If cPhase.containsSkillID(skill.UID) Then
+    '                    If Not phaseCollection.Contains(cPhase.nameID) Then
+    '                        phaseCollection.Add(cPhase.nameID, cPhase.nameID)
+    '                    End If
+    '                End If
+    '            Next
+    '        End If
+    '        getPhasesWithSkill = phaseCollection
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' gibt eine sortierte Liste an Deliverables zurück; 
@@ -4804,7 +4955,7 @@
         hierarchy = New clsHierarchy
 
         ' Änderung / Ergänzung tk 20.09.16
-        rcLists = New clsListOfCostAndRoles
+        'rcLists = New clsListOfCostAndRoles
 
         relStart = 1
         ' Erloes meint eigentlich Budget eigentlich Budget ...

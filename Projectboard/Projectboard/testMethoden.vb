@@ -39,7 +39,7 @@ Module testMethoden
             hproj = kvp.Value
 
             Dim usedRollen1 As Collection = hproj.getRoleNames
-            Dim usedRollen2 As Collection = hproj.rcLists.getRoleNames
+            Dim usedRollen2 As Collection = hproj.getRoleNames
 
             ' Test auf Identität der beiden usedRollen1,2
 
@@ -57,7 +57,7 @@ Module testMethoden
             End If
 
             Dim usedRollen3 As Collection = hproj.getRoleNameIDs
-            Dim usedRollen4 As Collection = hproj.rcLists.getRoleNameIDs
+            Dim usedRollen4 As Collection = hproj.getRoleNameIDs
 
             ' Test auf Identität der beiden usedRollen1,2
 
@@ -75,7 +75,7 @@ Module testMethoden
 
 
             Dim usedCost1 As Collection = hproj.getCostNames
-            Dim usedCost2 As Collection = hproj.rcLists.getCostNames
+            Dim usedCost2 As Collection = hproj.getCostNames
 
             If usedCost1.Count <> usedCost2.Count Then
                 atleastOne = True
@@ -231,8 +231,8 @@ Module testMethoden
 
                     ix = 0
                     For Each roleID As Integer In testRoleIDs
-                        array1 = kvp.Value.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False, takeITAsIs:=False)
-                        array2 = aggregatedProject.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False, takeITAsIs:=False)
+                        array1 = kvp.Value.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False)
+                        array2 = aggregatedProject.getRessourcenBedarf(roleID, inclSubRoles:=True, outPutInEuro:=False)
 
                         If arraysAreDifferent(array1, array2) Then
                             errMsg = "Unterschiede Projekt / Aggregated Projekt: )" & kvp.Value.name

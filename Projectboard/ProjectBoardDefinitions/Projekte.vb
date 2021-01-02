@@ -22707,13 +22707,13 @@ Public Module Projekte
                 .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
 
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                ' keinen Blattschutz setzen
+                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Stammdaten").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            'appInstance.ActiveWorkbook.Worksheets("Stammdaten").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
@@ -22744,6 +22744,8 @@ Public Module Projekte
                     tbl = .Range("Zeitleiste")
                     rowOffset = tbl.Row         ' Reihen-Offset für die Zeitleiste
                     columnOffset = tbl.Column   ' Spalten-Offset für die Zeitleiste
+
+
 
                     ' Monat und Jahreszahl in die ersten beiden Felder der Zeitleiste eintragen'
                     .Range("Zeitleiste").Cells(columnOffset).value = "= StartDatum"
@@ -22906,14 +22908,17 @@ Public Module Projekte
                     anzahlItems = cphase.countRoles
 
                     Dim itemName As String
+                    Dim teamName As String
                     ' jetzt werden Rollen geschrieben 
                     For r = 1 To anzahlItems
                         itemName = cphase.getRole(r).name
+                        teamName = cphase.getRole(r).teamName
                         dimension = cphase.getRole(r).getDimension
                         'ReDim values(cphase.relEnde - cphase.relStart)
                         ReDim values(dimension)
                         values = cphase.getRole(r).Xwerte
-                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
+                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset - 1).value = itemName
+                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = teamName
 
                         For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
@@ -22932,7 +22937,7 @@ Public Module Projekte
                         dimension = cphase.getCost(k).getDimension
                         ReDim values(dimension)
                         values = cphase.getCost(k).Xwerte
-                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
+                        .Range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset - 1).value = itemName
                         For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
@@ -22943,18 +22948,18 @@ Public Module Projekte
                 Next p
 
                 ' Blattschutz setzen
-                appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
-                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
-                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+                'appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
+                'Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
+                '                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
                 '. Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
 
             End With
         Catch ex As Exception
             ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
-                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
-                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+            'appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
+            'Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
+            '                                                           AllowInsertingRows:=True, AllowDeletingRows:=True)
             '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
@@ -23273,14 +23278,14 @@ Public Module Projekte
                 .Visible = Excel.XlSheetVisibility.xlSheetHidden
 
                 ' Blattschutz setzen
-                appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                'appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
 
         Catch ex As Exception
 
             ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            'appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Settings")
         End Try
@@ -23530,9 +23535,9 @@ Public Module Projekte
 
 
             ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Termine").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
-                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
-                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+            'appInstance.ActiveWorkbook.Worksheets("Termine").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
+            'Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True,
+            '                                                           AllowInsertingRows:=True, AllowDeletingRows:=True)
             '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
 
@@ -23768,7 +23773,7 @@ Public Module Projekte
 
 
                     ' Blattschutz setzen
-                    .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                    '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
                 Catch ex As Exception
 
@@ -23778,8 +23783,8 @@ Public Module Projekte
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
-                                                                       Contents:=True, Scenarios:=True)
+            'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True,
+            '                                                           Contents:=True, Scenarios:=True)
 
 
             appInstance.EnableEvents = formerEE
@@ -25211,6 +25216,22 @@ Public Module Projekte
                         Next
 
                     Case PTpfdk.Rollen
+
+                        If mycollection.Count = RoleDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
+
+                        Else
+
+                            For i = 1 To mycollection.Count
+                                cName = CStr(mycollection.Item(i))
+                                ' bei den cNames ist es jetzt roleUid;teamUid bzw roleUid; von daher einfach umverändert übernehmen 
+                                'IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
+                                IDkennung = IDkennung & "#" & cName
+                            Next
+
+                        End If
+
+                    Case PTpfdk.Skill
 
                         If mycollection.Count = RoleDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"

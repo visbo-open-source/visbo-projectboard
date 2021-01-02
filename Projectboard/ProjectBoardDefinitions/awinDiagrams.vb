@@ -126,11 +126,13 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <param name="prcTyp"></param>
+    ''' <param name="isMESkillChart">gibt an, ob das Skill-Chart in Mass-Edit gezeigt werden soll</param>
     ''' <remarks>myCollection am 23.5 per byval übergeben, damit im Falle der Rollen myCollection ausgeweitet werden kann ...</remarks>
     Sub awinCreateprcCollectionDiagram(ByVal myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                        ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean,
                                        Optional ByVal givenTitleSize As Double = 12.0,
-                                       Optional ByVal noLegend As Boolean = False)
+                                       Optional ByVal noLegend As Boolean = False,
+                                       Optional ByVal isMESkillChart As Boolean = False)
 
         Dim von As Integer, bis As Integer
 
@@ -244,7 +246,12 @@ Public Module awinDiagrams
         ElseIf prcTyp = DiagrammTypen(1) Then
             ' Rollen 
 
-            chtobjName = calcChartKennung("pf", PTpfdk.Rollen, myCollection)
+            If isMESkillChart Then
+                chtobjName = calcChartKennung("pf", PTpfdk.Skill, myCollection)
+            Else
+                chtobjName = calcChartKennung("pf", PTpfdk.Rollen, myCollection)
+            End If
+
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Rollen)
@@ -336,7 +343,7 @@ Public Module awinDiagrams
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-
+        Dim teamID As Integer = -1
 
         With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
@@ -443,7 +450,7 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             ' Rollen 
                             einheit = " " & awinSettings.kapaEinheit
-                            Dim teamID As Integer = -1
+
                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
 
                             objektFarbe = tmpRole.farbe
@@ -457,19 +464,51 @@ Public Module awinDiagrams
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.placeholders,
                                                                                    excludedNames:=myCollection)
+
+
                                     edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.realRoles,
                                                                                    excludedNames:=myCollection)
+
                                 Else
+
                                     datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                                    considerAllSubRoles:=True,
                                                                                    type:=PTcbr.all,
                                                                                    excludedNames:=myCollection)
+
+                                    If teamID > 0 Then
+
+                                        ' get all needs for people constituting the skill, but do not consider the skill
+                                        edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.all,
+                                                                                   considerAllNeedsOfRolesHavingTheseSkills:=True,
+                                                                                   excludedNames:=myCollection)
+
+
+                                    End If
+
+
+
                                 End If
 
                             Else
                                 datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+
+                                If teamID > 0 Then
+
+                                    edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                               considerAllSubRoles:=True,
+                                                                               type:=PTcbr.all,
+                                                                               considerAllNeedsOfRolesHavingTheseSkills:=True,
+                                                                               excludedNames:=myCollection)
+
+
+
+                                End If
+
                             End If
 
 
@@ -631,13 +670,14 @@ Public Module awinDiagrams
                                 End If
                             Else
                                 legendName = prcName
-                                Dim teamID As Integer = -1
-                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
-                                If teamID <= 0 Then
+
+                                Dim tmpTeamID As Integer = -1
+                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, tmpTeamID)
+                                If tmpTeamID <= 0 Then
                                     legendName = tmpRole.name
                                 Else
                                     Try
-                                        legendName = tmpRole.name & " (" & RoleDefinitions.getRoleDefByID(teamID).name & ")"
+                                        legendName = tmpRole.name & " (" & RoleDefinitions.getRoleDefByID(tmpTeamID).name & ")"
                                     Catch ex As Exception
                                         legendName = tmpRole.name
                                     End Try
@@ -713,7 +753,8 @@ Public Module awinDiagrams
                                             End If
                                         End If
 
-
+                                    ElseIf prcTyp = DiagrammTypen(1) And teamID > 0 Then
+                                        .Name = "Skill"
                                     Else
                                         .Name = legendName
                                     End If
@@ -722,7 +763,7 @@ Public Module awinDiagrams
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     If myCollection.Count = 1 Then
-                                        If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Then
+                                        If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Or teamID > 0 Then
                                             .ChartType = Excel.XlChartType.xlColumnStacked
                                         Else
                                             .ChartType = Excel.XlChartType.xlColumnClustered
@@ -733,20 +774,25 @@ Public Module awinDiagrams
                                     .HasDataLabels = False
                                 End With
 
-                                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                                If prcTyp = DiagrammTypen(1) And (sumRoleShowsPlaceHolderAndAssigned Or teamID > 0) Then
                                     ' alle anderen zeigen 
                                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                        ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
-                                        If repMessages.getmsg(277) <> "" Then
-                                            .Name = legendName & ": " & repMessages.getmsg(277)
-                                        Else
+                                        If sumRoleShowsPlaceHolderAndAssigned Then
                                             If awinSettings.englishLanguage Then
                                                 .Name = legendName & ": assigned"
                                             Else
                                                 .Name = legendName & ": zugeordnet"
                                             End If
+                                        Else
+                                            If awinSettings.englishLanguage Then
+                                                .Name = "all other"
+                                            Else
+                                                .Name = "alle anderen"
+                                            End If
                                         End If
+                                        ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
+
 
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
                                         .Values = edatenreihe
@@ -1287,6 +1333,7 @@ Public Module awinDiagrams
         ReDim VarValues(bis - von)
         ReDim msdatenreihe(3, bis - von)
 
+        Dim teamID As Integer = -1
 
         found = False
         myCollection = New Collection
@@ -1502,7 +1549,7 @@ Public Module awinDiagrams
 
                 ElseIf prcTyp = DiagrammTypen(1) Then
                     einheit = " " & awinSettings.kapaEinheit
-                    Dim teamID As Integer = -1
+
                     Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
 
                     objektFarbe = tmpRole.farbe
@@ -1510,11 +1557,13 @@ Public Module awinDiagrams
                     If tmpRole.isCombinedRole Then
 
                         If awinSettings.showPlaceholderAndAssigned Then
+
                             sumRoleShowsPlaceHolderAndAssigned = True
                             datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                            considerAllSubRoles:=True,
                                                                            type:=PTcbr.placeholders,
                                                                            excludedNames:=myCollection)
+
                             edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
                                                                            considerAllSubRoles:=True,
                                                                            type:=PTcbr.realRoles,
@@ -1524,14 +1573,38 @@ Public Module awinDiagrams
                                                                            considerAllSubRoles:=True,
                                                                            type:=PTcbr.all,
                                                                            excludedNames:=myCollection)
+
+                            If teamID > 0 Then
+
+                                ' get all needs for people constituting the skill, but do not consider the skill
+                                edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                           considerAllSubRoles:=True,
+                                                                           type:=PTcbr.all,
+                                                                           considerAllNeedsOfRolesHavingTheseSkills:=True,
+                                                                           excludedNames:=myCollection)
+
+
+                            End If
                         End If
 
                     Else
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+
+                        If teamID > 0 Then
+
+                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                       considerAllSubRoles:=True,
+                                                                       type:=PTcbr.all,
+                                                                       considerAllNeedsOfRolesHavingTheseSkills:=True,
+                                                                       excludedNames:=myCollection)
+
+
+
+                        End If
                     End If
 
 
-                    If (awinSettings.showValuesOfSelected) And myCollection.Count = 1 Then
+                    If (awinSettings.showValuesOfSelected) And myCollection.Count = 1 And teamID <= 0 Then
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
                         If tmpRole.isCombinedRole Then
                             tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
@@ -1752,7 +1825,7 @@ Public Module awinDiagrams
                         ' Ergänzung wegen Anzeige selektierter Objekte 
                         ' wenn der Wert größer ist als Null, dann Anzeigen ... 
                         If myCollection.Count = 1 Then
-                            If (awinSettings.showValuesOfSelected) And selectedProjekte.Count > 0 Then
+                            If (awinSettings.showValuesOfSelected) And selectedProjekte.Count > 0 And teamID <= 0 Then
                                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                                     .HasDataLabels = False
                                     If selectedProjekte.Count = 1 Then
@@ -1784,7 +1857,7 @@ Public Module awinDiagrams
                             End If
                         Else
                             legendName = prcName
-                            Dim teamID As Integer = -1
+
                             Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
                             If teamID <= 0 Then
                                 legendName = tmpRole.name
@@ -1809,18 +1882,18 @@ Public Module awinDiagrams
                                 End If
 
                             Else
-                                If selectedProjekte.Count > 0 And myCollection.Count = 1 And awinSettings.showValuesOfSelected = True Then
+                                If selectedProjekte.Count > 0 And myCollection.Count = 1 And awinSettings.showValuesOfSelected = True And teamID <= 0 Then
                                     If awinSettings.englishLanguage Then
                                         .Name = "all other projects"
                                     Else
                                         .Name = "alle anderen Projekte"
                                     End If
+
+                                ElseIf prcTyp = DiagrammTypen(1) And teamID > 0 Then
+                                    .Name = "Skill"
+
                                 Else
-                                    If awinSettings.englishLanguage Then
-                                        .Name = legendName
-                                    Else
-                                        .Name = legendName
-                                    End If
+                                    .Name = legendName
                                 End If
                             End If
 
@@ -1829,7 +1902,7 @@ Public Module awinDiagrams
                             .XValues = Xdatenreihe
                             If myCollection.Count = 1 Then
                                 If isWeightedValues Or sumRoleShowsPlaceHolderAndAssigned Or
-                                    (selectedProjekte.Count > 0 And awinSettings.showValuesOfSelected) Then
+                                    (selectedProjekte.Count > 0 And awinSettings.showValuesOfSelected And teamID <= 0) Then
                                     .ChartType = Excel.XlChartType.xlColumnStacked
                                 Else
                                     .ChartType = Excel.XlChartType.xlColumnClustered
@@ -1840,15 +1913,24 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
 
-                        If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                        If prcTyp = DiagrammTypen(1) And (sumRoleShowsPlaceHolderAndAssigned Or teamID > 0) Then
                             ' alle anderen zeigen 
                             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                If awinSettings.englishLanguage Then
-                                    .Name = legendName & ": assigned"
+                                If sumRoleShowsPlaceHolderAndAssigned Then
+                                    If awinSettings.englishLanguage Then
+                                        .Name = legendName & ": assigned"
+                                    Else
+                                        .Name = legendName & ": zugeordnet"
+                                    End If
                                 Else
-                                    .Name = legendName & ": zugeordnet"
+                                    If awinSettings.englishLanguage Then
+                                        .Name = "all other skills"
+                                    Else
+                                        .Name = "alle anderen Skills"
+                                    End If
                                 End If
+
 
                                 .Interior.Color = awinSettings.AmpelNichtBewertet
                                 .Values = edatenreihe
@@ -1864,7 +1946,7 @@ Public Module awinDiagrams
 
                 End If
 
-                If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
+                If prcTyp = DiagrammTypen(1) And (sumRoleShowsPlaceHolderAndAssigned Or teamID > 0) Then
                     For i = 0 To bis - von
                         seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) +
                                                     edatenreihe(i)
@@ -1980,10 +2062,14 @@ Public Module awinDiagrams
             ElseIf prcTyp = DiagrammTypen(1) Then
 
                 einheit = awinSettings.kapaEinheit
-                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
-                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
-                                        Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 And teamID <= 0 Then
+                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " &
+                                        Format(seriesSumDatenreihe.Sum, "##,##0") & " / " &
                                         Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    'ElseIf teamID > 0 Then
+                    '    titleSumme = " (" & Format(datenreihe.Sum, "##,##0") & " / " &
+                    '                        Format(edatenreihe.Sum, "##,##0") & " / " &
+                    '                        Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
                 Else
                     titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
                                     Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
@@ -2007,7 +2093,7 @@ Public Module awinDiagrams
 
             Dim startRedGreen As Integer = -1
             Dim lengthRedGreen As Integer = -1
-            If prcTyp = DiagrammTypen(1) And Not awinSettings.showValuesOfSelected Then
+            If prcTyp = DiagrammTypen(1) And (Not awinSettings.showValuesOfSelected Or teamID > 0) Then
                 ' Rolle 
                 Dim scInfo As New clsSmartPPTChartInfo
                 Dim scInfoQ2 As String = prcName
@@ -6233,6 +6319,9 @@ Public Module awinDiagrams
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
+        Dim rcName As String = ""
+        Dim rcNameID As String = ""
+
         Dim formerShowValuesOfSelected As Boolean = awinSettings.showValuesOfSelected
         Dim i As Integer, p As Integer
 
@@ -6255,6 +6344,12 @@ Public Module awinDiagrams
             If Not IsNothing(roleCost) Then
                 If RoleDefinitions.containsName(roleCost) Then
                     isRole = True
+                    rcName = roleCost
+                ElseIf RoleDefinitions.containsNameOrID(roleCost, False) Then
+                    isRole = True
+                    Dim skillID As Integer = -1
+                    rcNameID = roleCost
+                    rcName = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID).name
                 ElseIf CostDefinitions.containsName(roleCost) Then
                     isRole = False
                 Else
@@ -6298,8 +6393,15 @@ Public Module awinDiagrams
                                 istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                                 Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
-                                                                    roleCost:=roleCost,
+                                                                    roleCost:=rcName,
                                                                     isRole:=isRole)
+
+                            ElseIf istSkillDiagramm(chtobj) And rcNameID <> "" Then
+
+                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
+                                                                    roleCost:=rcNameID,
+                                                                    isRole:=isRole)
+
 
                             End If
                         Case 99
@@ -7680,7 +7782,8 @@ Public Module awinDiagrams
     ''' <returns></returns>
     Public Function bestimmeChartDiagramTitle(ByVal scInfo As clsSmartPPTChartInfo, ByVal tsum As Double, vsum As Double,
                                               ByRef startRed As Integer, ByRef lengthRed As Integer,
-                                              Optional ByVal calledFromMassEdit As Boolean = False) As String
+                                              Optional ByVal calledFromMassEdit As Boolean = False,
+                                              Optional ByVal isMESkillChart As Boolean = False) As String
 
         Dim tmpResult As String = ""
         Dim bezeichner As String = ""

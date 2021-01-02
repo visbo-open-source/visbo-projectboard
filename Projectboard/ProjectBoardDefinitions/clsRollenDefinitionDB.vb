@@ -72,7 +72,7 @@
                     End If
 
                     Try
-                        .addTeam(CInt(kvp.Key), tmpValue)
+                        .addSkill(CInt(kvp.Key), tmpValue)
                     Catch ex As Exception
                         Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
                     End Try
@@ -88,7 +88,7 @@
 
             ' 23.11.18 
             .isExternRole = Me.isExternRole
-            .isTeam = Me.isTeam
+            .isSkill = Me.isTeam
 
             .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
@@ -241,8 +241,8 @@
             End If
 
             ' tk 23.11.18 
-            If .getTeamCount >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
+            If .getSkillCount >= 1 Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getSkillIDs
                     Me.teamIDs.Add(CStr(kvp.Key), kvp.Value.ToString)
                 Next
             End If
@@ -254,7 +254,7 @@
 
             ' 23.11.18 
             Me.isExternRole = .isExternRole
-            Me.isTeam = .isTeam
+            Me.isTeam = .isSkill
 
             Me.tagessatzIntern = .tagessatzIntern
             Me.kapazitaet = .kapazitaet

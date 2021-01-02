@@ -84,7 +84,7 @@ Public Class clsRollenDefinitionWeb
                     tmpValue = 1.0
                 End If
                 Try
-                    roleDef.addTeam(CInt(sr.key), tmpValue)
+                    roleDef.addSkill(CInt(sr.key), tmpValue)
                 Catch ex As Exception
                     Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
                 End Try
@@ -107,13 +107,15 @@ Public Class clsRollenDefinitionWeb
 
         ' tk 23.11.18 
         roleDef.isExternRole = Me.isExternRole
-        roleDef.isTeam = Me.isTeam
+
+        roleDef.isSkill = Me.isTeam
         ' 9.11.20 ur for a smart change to tagessatz
         If Not IsNothing(Me.tagessatz) Then
             roleDef.tagessatzIntern = Me.tagessatz
         Else
             roleDef.tagessatzIntern = Me.tagessatzIntern
         End If
+
 
         ' jetzt die Übernahme der Kapazitäten 
         ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
@@ -392,8 +394,8 @@ Public Class clsRollenDefinitionWeb
 
             End If
 
-            If .getTeamCount >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
+            If .getSkillCount >= 1 Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getSkillIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
                     'sr.value = kvp.Value.ToString
@@ -409,10 +411,12 @@ Public Class clsRollenDefinitionWeb
 
             ' tk 23.11.18 
             isExternRole = .isExternRole
-            isTeam = .isTeam
+            isTeam = .isSkill
             ' ur 27.04.20 
-            ' ur 9.11.20 wird nicht mehr in DB gespeicher
-            'isTeamParent = .isTeamParent
+
+            ' ur 2.1.21 wird nicht mehr in DB gespeichert
+            'isTeamParent = .isSkillParent
+
 
             ' tk 8.1.20
             aliases = .aliases
