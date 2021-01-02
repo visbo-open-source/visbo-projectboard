@@ -8829,7 +8829,8 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' Test-Funktion: überprüft die Team-Definitionen 
+    ''' Test-Funktion: 
+    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definiotion ? 
     ''' </summary>
     ''' <returns></returns>
     Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
@@ -8844,16 +8845,21 @@ Public Module Module1
             Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
+
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
+                Dim childrenOfchild As SortedList(Of Integer, Double) = childRole.getSubRoleIDs
+                If childrenOfchild.Count = 0 Then
+                    ' then and only then check it out
+                    ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
 
-                ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
-
-                If Not ok Then
-                    Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
-                    outputCollection.Add(outmsg)
-                    atleastOneError = True
-                    ok = True
+                    If Not ok Then
+                        Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
+                        outputCollection.Add(outmsg)
+                        atleastOneError = True
+                        ok = True
+                    End If
                 End If
+
             Next
 
         Next
