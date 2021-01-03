@@ -1915,7 +1915,7 @@ Public Module agm3
                 Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
 
-                Call ImportAllianzIstdaten(monat, readPastAndFutureData, createUnknownProjects, oCollection)
+                Call ImportIstdatenStdFormat(monat, readPastAndFutureData, createUnknownProjects, oCollection)
 
             End If
 

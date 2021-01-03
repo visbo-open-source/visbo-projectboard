@@ -13288,7 +13288,7 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzIstdaten(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+    Public Sub ImportIstdatenStdFormat(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
                                   ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
@@ -13463,6 +13463,7 @@ Public Module agm2
 
                 ' tk 2.1.2021 Vorab Schleife 
                 ' 1. Schleife find out which project has actualdata from when to when .. 
+                ' und die dazugehörigen Min - Max Dates Integer 
                 Dim MinMaxInformations As New SortedList(Of String, Integer())
 
                 ' holds all valid pname / roleName Combinations , roleNameIDs
@@ -13694,7 +13695,7 @@ Public Module agm2
                     zeile = zeile + 1
                 End While
 
-                ' not create the arrays and structure to tae the values 
+                ' now create the arrays and structure to the the values 
                 For Each kvp As KeyValuePair(Of String, List(Of String)) In validPNameRoleNameIDs
 
                     If Not validProjectNames.ContainsKey(kvp.Key) Then
@@ -13726,8 +13727,7 @@ Public Module agm2
 
                 zeile = 2
 
-                ' 2. Schleife: ermittle die Menge aller bekannten Projekte ... 
-                ' und die dazugehörigen Min - Max Dates Integr 
+                ' 2. Schleife: now get the values for all the projects and roleNAmes
                 ' Fehler-Protokollierung passiert so alles in der 1. Scjleife 
                 While zeile <= lastRow
 
@@ -13738,73 +13738,10 @@ Public Module agm2
                         Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
 
                         Dim roleName As String = fullRoleName
+                        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
 
-                        'Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
-                        Dim teamName As String = ""
-
-                        Dim roleNameID As String = ""
-                        Dim parentReferat As String = ""
-                        Dim weitermachen As Boolean = False
-
-                        ' diese IF Abfrage dient in erster Linie dazu, die referatsCollection aufzubauen, also alle Referate zu bestimmen, zu denen jetzt Istdaten vorhanden sind
-                        ' die bisherigen Planungs-Werte dieser Referate werden überschrieben  
-
-                        ' Abfrage #1 : ist es ein Team, dann dem Team zuordnen, nicht der dort angegebenen Person 
-                        ' dann, wenn kein Team bekannt: ist es eine bekannte Person, wenn nein: wer ist das Referat ... 
-                        If teamName.Length > 0 Then
-                            ' dann ist bereits sichergestellt, dass es sich um ein Team handelt ... 
-
-                            ' jetzt muss geprüft werden, ob die Rolle bekannt ist
-                            ' wenn nein, darf sie nicht aufgenommen werden, weil andernfalls eine Rolle auf das Team kontiert, aber eben keine Kapa dazu beiträgt
-
-                            If RoleDefinitions.containsNameOrID(roleName) Then
-                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste, True)
-
-                                If parentReferat.Length > 0 Then
-                                    ' alles in Ordnung 
-                                    roleName = teamName
-                                    teamName = ""
-                                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
-                                    weitermachen = True
-                                Else
-                                    ' Parent Referat nicht gefunden - 
-                                    ' Fehlermeldung ... 
-                                    weitermachen = False
-
-
-                                End If
-
-                            Else
-                                ' Rolle nicht gefunden , Wert darf / sollte nicht aufgenommen werden
-                                weitermachen = False
-
-                            End If
-
-
-
-
-                        ElseIf RoleDefinitions.containsNameOrID(roleName) Then
-
-                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste, True)
-
-                            If parentReferat.Length > 0 Then
-                                ' Beste Alternative 
-                                weitermachen = True
-                                roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, teamName)
-                            Else
-                                ' Parent Referat nicht gefunden - 
-                                ' Fehlermeldung ... 
-                                weitermachen = False
-
-                            End If
-                        Else
-                            weitermachen = False
-
-                        End If
-
-                        If weitermachen Then
-
+                        If Not IsNothing(currentRole) Then
                             Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                             Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
 
@@ -13816,6 +13753,7 @@ Public Module agm2
 
                             Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
 
+
                             Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
                             Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
                             Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
@@ -13824,145 +13762,27 @@ Public Module agm2
                             Dim shallContinue As Boolean = False
                             Dim currentProj As clsProjekt = Nothing
 
-                            Dim heuteColumn As Integer = getColumnOfDate(Date.Now)
+                            ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
+                            Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
 
-                            If Not handledNames.ContainsKey(tmpPName) Then
-                                shallContinue = False
+                            Dim weitermachen As Boolean = False
+                            If (curIstPTValue > 0 And curIstEuroValue = 0) Then
+                                ' der Wert ist schon in curIstPtValue 
+                                weitermachen = True
+                            ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
+                                curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
+                                weitermachen = True
                             Else
-                                shallContinue = (handledNames.Item(tmpPName).Length > 0)
+                                weitermachen = False
                             End If
 
-                            If Not readAll Then
-                                shallContinue = currentDateColumn < heuteColumn
-                            Else
-                                ' readAll:
-                                shallContinue = True
+                            If weitermachen Then
+                                validProjectNames.Item(pName).Item(roleName)(ixPos) = curIstPTValue
                             End If
 
-                            If shallContinue Then
-                                'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
-                                ' nur dann handelt es sich um ein zuordenbares Projekt ... 
-                                ' nur dann geht es um gültige Werte
-
-                                ' jetzt wird eine sortedlist of sortedlist aufgebaut
-                                ' Projekte, dann Rollen mit Values 
-                                ' 
-                                pName = handledNames.Item(tmpPName)
-                                Dim pvkey As String = calcProjektKey(pName, "")
-                                currentProj = AlleProjekte.getProject(pvkey)
-
-                                If Not IsNothing(currentProj) Then
-
-
-                                    ' alt .... 
-                                    ' Aktualisieren des Eintrags - die gibt es jetzt bereits alle
-                                    Dim roleValues As New SortedList(Of String, Double())
-                                    Dim tmpValues() As Double
-
-                                    Dim dimensionOfActualDataArray As Integer = MinMaxInformations.Item(pName)(1) - MinMaxInformations.Item(pName)(0)
-                                    ReDim tmpValues(dimensionOfActualDataArray)
-                                    Dim teamID As Integer = -1
-                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
-
-                                    If Not IsNothing(hrole) Then
-                                        Dim tagessatz As Double = hrole.tagessatzIntern
-                                        If tagessatz <= 0 Then
-                                            tagessatz = 800.0
-                                        End If
-
-                                        If Not validProjectNames.ContainsKey(pName) Then
-
-                                            roleValues = New SortedList(Of String, Double())
-                                            ' wird doch überhaupt nicht gebraucht
-                                            'ReDim tmpValues(monat - 1)
-                                            If readAll Then
-                                                ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                If curMonat <= monat Then
-                                                    tmpValues(curMonat - 1) = curIstPTValue / tagessatz
-                                                Else
-                                                    tmpValues(curMonat - 1) = curZuwPTValue
-                                                End If
-                                            Else
-                                                ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                                tmpValues(curMonat - 1) = curIstPTValue / tagessatz
-                                            End If
-
-
-                                            roleValues.Add(roleNameID, tmpValues)
-                                            validProjectNames.Add(pName, roleValues)
-
-                                        Else
-                                            roleValues = validProjectNames.Item(pName)
-                                            If roleValues.ContainsKey(roleNameID) Then
-                                                ' rolle ist bereits enthalten 
-                                                ' also summieren 
-                                                tmpValues = roleValues.Item(roleNameID)
-                                                If readAll Then
-                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                    If curMonat <= monat Then
-                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstPTValue / tagessatz
-                                                    Else
-                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
-                                                    End If
-                                                Else
-                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstPTValue / tagessatz
-                                                End If
-
-                                            Else
-                                                ' Rolle ist noch nicht enthalten 
-                                                'ReDim tmpValues(monat - 1)
-
-                                                If readAll Then
-                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                    If curMonat <= monat Then
-                                                        tmpValues(curMonat - 1) = curIstPTValue / tagessatz
-                                                    Else
-                                                        tmpValues(curMonat - 1) = curZuwPTValue
-                                                    End If
-                                                Else
-                                                    ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                                    tmpValues(curMonat - 1) = curIstPTValue / tagessatz
-                                                End If
-
-                                                roleValues.Add(roleNameID, tmpValues)
-                                            End If
-
-                                        End If
-                                    Else
-                                        ' darf/kann eigentlich nicht sein ...
-                                        logmessage = "unbekannte Rolle ohne Referat: " & roleName
-                                        outputCollection.Add(logmessage)
-
-                                        ReDim logArray(3)
-                                        logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        Call logfileSchreiben(logArray)
-                                    End If
-
-
-
-
-
-
-                                Else
-                                    ' darf/kann eigentlich nicht sein ...
-                                    logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
-                                    outputCollection.Add(logmessage)
-
-                                    ReDim logArray(3)
-                                    logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
-                                    logArray(1) = ""
-                                    logArray(2) = pvkey
-                                    Call logfileSchreiben(logArray)
-                                End If
-
-                            End If
-
-
+                        Else
+                            ' Fehler wurde bereits in Schleife 1 entdeckt und protokolliert 
                         End If
-
 
 
                     Catch ex As Exception
@@ -13980,47 +13800,16 @@ Public Module agm2
 
                 End While
 
-                ' jetzt kommt die zweite Bearbeitungs-Welle
-                ' das Rausschreiben der Test Records 
-
-                ' Protokoll schreiben ...
-                ' tk 8.5.19 nicht mehr machen 
-                'For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
-
-                '    Dim protocolLine As String = ""
-                '    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
-
-                '        ' jetzt schreiben 
-                '        Dim teamID As Integer = -1
-                '        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                '        Dim curTagessatz As Double = hrole.tagessatzIntern
-
-                '        ReDim logArray(3)
-                '        logArray(0) = "Importiert wurde: "
-                '        logArray(1) = ""
-                '        logArray(2) = vPKvP.Key
-                '        logArray(3) = rVKvP.Key & ": " & hrole.name
-
-
-                '        ReDim logDblArray(rVKvP.Value.Length - 1)
-                '        For i As Integer = 0 To rVKvP.Value.Length - 1
-                '            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                '            logDblArray(i) = rVKvP.Value(i) * curTagessatz
-                '        Next
-
-                '        Call logfileSchreiben(logArray, logDblArray)
-                '    Next
-
-                'Next
-                ' Protokoll schreiben Ende ... 
 
                 Dim gesamtIstValue As Double = 0.0
 
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", AlleProjekte, Date.Now)
                     Dim oldPlanValue As Double = 0.0
                     Dim newIstValue As Double = 0.0
+
+                    Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
 
                     If Not IsNothing(hproj) Then
                         ' es wird pro Projekt eine Variante erzeugt 
@@ -14089,7 +13878,9 @@ Public Module agm2
                         ' tk 18.7.19 
                         ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
                         Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
-                        Call newProj.deleteTeamMembersWithNull()
+
+                        ' tk das war eine allianz spezifische Sache - nicht mehr machen 
+                        'Call newProj.deleteTeamMembersWithNull()
 
                         If chckVorher <> newProj.getAllPersonalKosten.Sum Then
                             outPutLine = "PErsonalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
