@@ -139,10 +139,18 @@ Public Class clsRollenDefinitionWeb
 
             If Not IsNothing(Me.kapazitaet) Then
                 Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+                logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+                If startingIndex > 0 Then
+                    For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
+                    Next
+                Else ' ur:2020-11-20 - wenn später der startofcalendar im customization verschoben wurde
+                    startingIndex = DateDiff(DateInterval.Month, Me.startOfCal.ToLocalTime, StartofCalendar) + 1
+                    For i As Integer = 1 To nrWebCapaValues - startingIndex
+                        roleDef.kapazitaet(i) = Me.kapazitaet(i + startingIndex - 1)
+                    Next
+                End If
 
-                For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
-                    roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
-                Next
             End If
 
         Else
@@ -498,7 +506,9 @@ Public Class clsRollenDefinitionWeb
         employeeNr = ""
         defaultDayCapa = -1
         entryDate = Date.MinValue.ToUniversalTime
-        exitDate = CDate("31.12.2200").ToUniversalTime
+        'exitDate = CDate("31.12.2200").ToUniversalTime
+        exitDate = DateAndTime.DateSerial(2200, 12, 31)
+        Dim maxDate As Date = Date.MaxValue.ToUniversalTime
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
@@ -515,7 +525,8 @@ Public Class clsRollenDefinitionWeb
         employeeNr = ""
         defaultDayCapa = -1
         entryDate = Date.MinValue.ToUniversalTime
-        exitDate = CDate("31.12.2200").ToUniversalTime
+        'exitDate = CDate("2200.31.12").ToUniversalTime
+        exitDate = DateAndTime.DateSerial(2200, 12, 31)
 
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub

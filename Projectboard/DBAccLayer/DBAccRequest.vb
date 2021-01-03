@@ -1572,7 +1572,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrievPortfolioNamesFromDB", ex.Message)
             Throw New ArgumentException("retrievePortfolioNamesFromDB: " & ex.Message)
         End Try
 
@@ -2347,7 +2347,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveOrganisationFromDB", "There is something wrong, reading the organisation: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveOrganisationFromDB = result
@@ -2400,7 +2400,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveCustomFieldsFromDB", "There is something wrong, reading the Customfields: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveCustomFieldsFromDB = result
@@ -2461,7 +2461,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logDebug, "retrieveCustomizationFromDB", "There is something wrong, reading the Customizations: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveCustomizationFromDB = result
@@ -2520,7 +2520,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logDebug, "retrieveAppearancesFromDB", "There is something wrong, reading the appearances: (" & err.errorCode & ") " & err.errorMsg)
         End Try
 
         retrieveAppearancesFromDB = result
@@ -2561,8 +2561,9 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            logger(ptErrLevel.logError, "retrieveVCsForUser", "error reading the VC for the user: (" & err.errorCode & ") " & err.errorMsg)
         End Try
+
         retrieveVCsForUser = result
     End Function
 

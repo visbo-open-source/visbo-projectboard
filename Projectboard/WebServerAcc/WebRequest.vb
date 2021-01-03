@@ -2855,13 +2855,16 @@ Public Class Request
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
         validfrom = validfrom.ToUniversalTime
+        Call logfileSchreiben(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "," & validfrom.ToString & "," & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
 
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
 
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
 
@@ -2872,7 +2875,7 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
-
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
                             Dim latestOrga As New clsVCSettingOrganisation
@@ -2888,6 +2891,7 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
+                            Call logfileSchreiben(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
                         End If
 
                         webOrganisation.copyTo(result)
@@ -2899,6 +2903,7 @@ Public Class Request
                         result.allRoles.buildOrgaSkillChilds()
 
                     Else
+                        Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                         If err.errorCode = 403 Then
                             Call MsgBox(err.errorMsg)
                         End If
@@ -2906,10 +2911,12 @@ Public Class Request
 
                     End If
                 Else
+                    Call logfileSchreiben(ptErrLevel.logError, err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                     Call MsgBox(err.errorMsg)
 
                 End If
             Else
+                Call logfileSchreiben(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                 If err.errorCode = 403 Then
                     Call MsgBox(err.errorMsg)
                 End If
@@ -2919,8 +2926,12 @@ Public Class Request
 
 
         Catch ex As Exception
+
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "retrieveOrganisationFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
+
+        Call logfileSchreiben(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
         retrieveOrganisationFromDB = result
     End Function
 
@@ -3216,13 +3227,10 @@ Public Class Request
     ''' <param name="method">Typ des Rest-Request  GET/POST/PUT/DELETE</param>
     Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
 
-
         Dim response As HttpWebResponse = Nothing
         Dim hresp As HttpWebResponse = Nothing
 
-
         Dim proxyAuth As New frmProxyAuth   ' Formular zum erfragen der Proxy-Authentifizierung
-
 
         ''Dim registeredModules As IEnumerator = AuthenticationManager.RegisteredModules
         ''Call MsgBox("The following authentication modules are now registered with the system:")
@@ -3234,16 +3242,12 @@ Public Class Request
 
         Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
 
-
         If awinSettings.visboDebug Then
             Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL))
             Call MsgBox("ProxyURL zu " & awinSettings.databaseURL & " : " & proxyUri.ToString)
         End If
 
-
         Dim myProxy As New System.Net.WebProxy
-
-
 
         If awinSettings.proxyURL <> "" Then
 
@@ -3270,11 +3274,7 @@ Public Class Request
 
         End If
 
-
         Dim credentialsErfragt As Boolean = False
-
-
-
 
         Try
             ' ur: 20190326: wird für tls1.2 benötigt - sicherer und ist in nginX definiert
@@ -3345,7 +3345,7 @@ Public Class Request
                             End If
 
                         End If
-
+                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRrequest now was successful: (anzError=" & anzError.ToString & ")")
 
                         hresp = Nothing
                         toDo = False
@@ -3354,54 +3354,12 @@ Public Class Request
 
                         anzError = anzError + 1
 
+                        Select Case ex.Status
 
-                        If ex.Status = WebExceptionStatus.ConnectFailure Then
+                            Case WebExceptionStatus.ConnectFailure
 
-                            request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-                            request.Method = method
-                            request.ContentType = visboContentType
-                            request.Headers.Add("access-key", token)
-                            request.UserAgent = visboUserAgent
-
-
-                            netcred = New NetworkCredential
-                            Dim proxyName As String = ""
-
-                            If awinSettings.proxyURL <> "" Then
-
-                                'erneuter Versuch mit myProxy
-                                proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
-                                If proxyName = awinSettings.databaseURL Then
-                                    proxyName = ""
-                                End If
-                            Else
-                                If Not IsNothing(myProxy.Address) Then
-                                    proxyName = myProxy.Address.ToString
-                                Else
-                                    proxyName = ""
-                                End If
-                            End If
-
-                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
-
-                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                myProxy.Address = New Uri(proxyName)
-                                request.Proxy = myProxy
-                            End If
-
-                            ' abgefragte Credentials beim Proxy eintragen
-                            If Not IsNothing(request.Proxy) Then
-                                request.Proxy.Credentials = netcred
-                            End If
-
-                        End If
-
-                        If ex.Status = WebExceptionStatus.ProtocolError Then
-
-                            hresp = ex.Response
-
-
-                            If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
+                                Dim msgtxt As String = "first try form request.GetRequestStream(): " & ex.Status
+                                Call logfileSchreiben(msgtxt, "(1)GetRestServerResponse", anzFehler)
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                                 request.Method = method
@@ -3409,62 +3367,137 @@ Public Class Request
                                 request.Headers.Add("access-key", token)
                                 request.UserAgent = visboUserAgent
 
-                                If credentialsErfragt And anzError = 2 Then
-                                    Call MsgBox(hresp.Headers.ToString)
-                                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & vbCrLf & hresp.Headers.ToString & vbCrLf & ex.Message)
+                                netcred = New NetworkCredential
+                                Dim proxyName As String = ""
+
+                                If awinSettings.proxyURL <> "" Then
+
+                                    'erneuter Versuch mit myProxy
+                                    proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+                                    If proxyName = awinSettings.databaseURL Then
+                                        proxyName = ""
+                                    End If
+                                Else
+                                    If Not IsNothing(myProxy.Address) Then
+                                        proxyName = myProxy.Address.ToString
+                                    Else
+                                        proxyName = ""
+                                    End If
                                 End If
 
-                                Select Case anzError
+                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
 
-                                    Case 1
+                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                    myProxy.Address = New Uri(proxyName)
+                                End If
+                                request.Proxy = myProxy
 
-                                        ' DefaultCredentials versuchen
+                                ' abgefragte Credentials beim Proxy eintragen
+                                If Not IsNothing(request.Proxy) Then
+                                    request.Proxy.Credentials = netcred
+                                End If
 
-                                        If myProxy.Address = Nothing Then
-                                            request.Proxy = defaultProxy
-                                        Else
-                                            request.Proxy = myProxy
-                                        End If
 
-                                        request.UseDefaultCredentials = True
-                                        request.Credentials = CredentialCache.DefaultCredentials
-                                        'request.Credentials = CredentialCache.DefaultNetworkCredentials
+                            Case WebExceptionStatus.ProtocolError
 
-                                    Case 2
-                                        ' Abfragen der Proxy-Authentifizierung erforderlich
+                                hresp = ex.Response
 
-                                        netcred = New NetworkCredential
-                                        Dim proxyName As String = ""
+                                If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
 
-                                        If awinSettings.proxyURL <> "" Then
-                                            proxyName = awinSettings.proxyURL
-                                        Else
-                                            If Not IsNothing(hresp) Then
-                                                proxyName = hresp.ResponseUri.ToString
+                                    request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                                    request.Method = method
+                                    request.ContentType = visboContentType
+                                    request.Headers.Add("access-key", token)
+                                    request.UserAgent = visboUserAgent
+
+                                    If credentialsErfragt And anzError = 2 Then
+                                        Call MsgBox(hresp.Headers.ToString)
+                                        Throw New ArgumentException("Fehler bei GetRequestStream:  " & vbCrLf & hresp.Headers.ToString & vbCrLf & ex.Message)
+                                    End If
+
+                                    Select Case anzError
+
+                                        Case 1
+
+                                            ' DefaultCredentials versuchen
+
+                                            If myProxy.Address = Nothing Then
+                                                request.Proxy = defaultProxy
+                                            Else
+                                                request.Proxy = myProxy
                                             End If
 
-                                        End If
+                                            request.UseDefaultCredentials = True
+                                            request.Credentials = CredentialCache.DefaultCredentials
+                                           'request.Credentials = CredentialCache.DefaultNetworkCredentials
 
-                                        credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+                                        Case 2
+                                            ' Abfragen der Proxy-Authentifizierung erforderlich
 
-                                        If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                            myProxy.Address = New Uri(proxyName)
-                                            request.Proxy = myProxy
-                                        End If
+                                            netcred = New NetworkCredential
+                                            Dim proxyName As String = ""
 
-                                        ' abgefragte Credentials beim Proxy eintragen
-                                        If Not IsNothing(request.Proxy) Then
-                                            request.Proxy.Credentials = netcred
-                                        End If
+                                            If awinSettings.proxyURL <> "" Then
+                                                proxyName = awinSettings.proxyURL
+                                            Else
+                                                If Not IsNothing(hresp) Then
+                                                    proxyName = hresp.ResponseUri.ToString
+                                                End If
 
-                                        'credentialsErfragt = True 'zum Erkennen, ob Credentials für Proxy schon mal abgefragt wurden
-                                        anzError = 1            ' wieder zurückgesetzt
-                                End Select
+                                            End If
 
-                            Else
-                                Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
-                            End If
-                        End If
+                                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                myProxy.Address = New Uri(proxyName)
+                                                request.Proxy = myProxy
+                                            End If
+
+                                            ' abgefragte Credentials beim Proxy eintragen
+                                            If Not IsNothing(request.Proxy) Then
+                                                request.Proxy.Credentials = netcred
+                                            End If
+
+                                            'credentialsErfragt = True 'zum Erkennen, ob Credentials für Proxy schon mal abgefragt wurden
+                                            anzError = 1            ' wieder zurückgesetzt
+                                    End Select
+
+                                Else
+                                    Dim msgtxt As String = "second try form request.GetRequestStream(): " & hresp.StatusCode
+                                    Call logfileSchreiben(msgtxt, "(2)GetRestServerResponse", anzFehler)
+
+                                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                                End If
+
+                            Case WebExceptionStatus.Timeout
+                            Case WebExceptionStatus.ConnectionClosed
+                            Case WebExceptionStatus.UnknownError
+                            Case WebExceptionStatus.TrustFailure
+                            Case WebExceptionStatus.Timeout
+                            Case WebExceptionStatus.Success
+                            Case WebExceptionStatus.ServerProtocolViolation
+                            Case WebExceptionStatus.SendFailure
+                            Case WebExceptionStatus.SecureChannelFailure
+                            Case WebExceptionStatus.RequestProhibitedByProxy
+                            Case WebExceptionStatus.RequestProhibitedByCachePolicy
+                            Case WebExceptionStatus.RequestCanceled
+                            Case WebExceptionStatus.ReceiveFailure
+                            Case WebExceptionStatus.ProxyNameResolutionFailure
+                            Case WebExceptionStatus.PipelineFailure
+                            Case WebExceptionStatus.Pending
+                            Case WebExceptionStatus.NameResolutionFailure
+                            Case WebExceptionStatus.MessageLengthLimitExceeded
+                            Case WebExceptionStatus.KeepAliveFailure
+                            Case WebExceptionStatus.ConnectionClosed
+                            Case WebExceptionStatus.CacheEntryNotFound
+                            Case Else
+                                Dim msgtxt As String = "WebExceptionStatus: " & ex.Status
+                                Dim outputCollection As New Collection
+                                outputCollection.Add(msgtxt)
+                                Call logfileSchreiben(msgtxt, "(3)GetRestServerResponse", anzFehler)
+                                response = hresp
+                                Exit While
+                        End Select
 
                     End Try
 
@@ -3484,81 +3517,96 @@ Public Class Request
                     While toDo And anzError < 3
                         Try
                             response = request.GetResponse()
+
                             toDo = False
 
                         Catch ex As WebException
 
                             anzError = anzError + 1
-
-                            If ex.Status = WebExceptionStatus.ProtocolError Then
-
-                                hresp = ex.Response
-                                Select Case hresp.StatusCode
-
-                                    Case HttpStatusCode.ProxyAuthenticationRequired
-
-                                        request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-                                        request.Method = method
-                                        request.ContentType = "application/json"
-                                        request.Headers.Add("access-key", token)
-                                        request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
-
-                                        Select Case anzError
-
-                                            Case 1
-
-                                                If myProxy.Address = Nothing Then
-                                                    request.Proxy = defaultProxy
-                                                Else
-                                                    request.Proxy = myProxy
-                                                End If
-
-                                                request.UseDefaultCredentials = True
-                                                request.Credentials = CredentialCache.DefaultCredentials
+                            Select Case ex.Status
 
 
-                                            Case 2
-                                                ' Abfragen der Proxy-Authentifizierung erforderlich
+                                Case WebExceptionStatus.ProtocolError
 
-                                                netcred = New NetworkCredential
-                                                Dim proxyName As String = ""
+                                    hresp = ex.Response
+                                    Select Case hresp.StatusCode
 
-                                                If awinSettings.proxyURL <> "" Then
-                                                    proxyName = awinSettings.proxyURL
-                                                End If
+                                        Case HttpStatusCode.ProxyAuthenticationRequired
 
-                                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+                                            request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                                            request.Method = method
+                                            request.ContentType = "application/json"
+                                            request.Headers.Add("access-key", token)
+                                            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                        & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
 
-                                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                                    myProxy.Address = New Uri(proxyName)
-                                                    request.Proxy = myProxy
-                                                End If
+                                            Select Case anzError
 
-                                                ' ur: für wingate-Proxy
-                                                If Not IsNothing(request.Proxy) Then
-                                                    request.Proxy.Credentials = netcred
-                                                End If
-                                        End Select
-                                        'Case HttpStatusCode.BadRequest
-                                        '    Exit While
-                                        'Case HttpStatusCode.Unauthorized
-                                        '    Exit While
-                                        'Case HttpStatusCode.Forbidden
-                                        '    Exit While
-                                        'Case HttpStatusCode.NotFound
-                                        '    Exit While
-                                    Case Else
-                                        response = hresp
-                                        Exit While
-                                End Select
-                            End If
+                                                Case 1
+
+                                                    If myProxy.Address = Nothing Then
+                                                        request.Proxy = defaultProxy
+                                                    Else
+                                                        request.Proxy = myProxy
+                                                    End If
+
+                                                    request.UseDefaultCredentials = True
+                                                    request.Credentials = CredentialCache.DefaultCredentials
+
+
+                                                Case 2
+                                                    ' Abfragen der Proxy-Authentifizierung erforderlich
+
+                                                    netcred = New NetworkCredential
+                                                    Dim proxyName As String = ""
+
+                                                    If awinSettings.proxyURL <> "" Then
+                                                        proxyName = awinSettings.proxyURL
+                                                    End If
+
+                                                    credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                                    If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                        myProxy.Address = New Uri(proxyName)
+                                                        request.Proxy = myProxy
+                                                    End If
+
+                                                    ' ur: für wingate-Proxy
+                                                    If Not IsNothing(request.Proxy) Then
+                                                        request.Proxy.Credentials = netcred
+                                                    End If
+                                            End Select
+                                            'Case HttpStatusCode.BadRequest
+                                            '    Exit While
+                                            'Case HttpStatusCode.Unauthorized
+                                            '    Exit While
+                                            'Case HttpStatusCode.Forbidden
+                                            '    Exit While
+                                            'Case HttpStatusCode.NotFound
+                                            '    Exit While
+
+                                        Case Else
+                                            Dim msgtxt As String = "WebExceptionStatus: " & ex.Status & " HttpStatusCode: (" & hresp.StatusCode & ") " & hresp.StatusDescription
+                                            Call logfileSchreiben(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
+                                            response = hresp
+                                            Exit While
+                                    End Select
+
+                                Case Else
+                                    Dim msgtxt As String = "WebExceptionStatus: (" & ex.Status & ") " & ex.Message
+                                    Call logfileSchreiben(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
+                                    response = hresp
+                                    Exit While
+                            End Select
+
+
 
                         End Try
 
                     End While
 
                 Else
+                    logger(ptErrLevel.logInfo, "GetRestServerResponse", "GetResponse now was successful: (anzError=" & anzError.ToString & ")")
                     response = hresp
                 End If
 
@@ -3589,11 +3637,12 @@ Public Class Request
         Try
 
             If IsNothing(httpresp) Then
+                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
                 cookies = httpresp.Cookies
-
+                logger(ptErrLevel.logInfo, "ReadResponseContent", "HttpWebResponse: Status: (" & httpresp.StatusCode & ")" & "Content: (" & httpresp.ContentLength & ")")
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
 
@@ -3602,12 +3651,13 @@ Public Class Request
                     End Using
 
                 Catch ex As Exception
-
+                    logger(ptErrLevel.logError, "ReadResponseContent", "Error with exception of the StreamReader( httpresp.GetResponseStream )")
                 End Try
 
             End If
 
         Catch ex As Exception
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "ReadResponseContent", anzFehler)
             Throw New ArgumentException("ReadResponseContent:" & ex.Message)
         End Try
 
@@ -5540,12 +5590,14 @@ Public Class Request
 
             Dim serverUri As New Uri(serverUriString)
 
+            logger(ptErrLevel.logInfo, "GETOneVCsetting", "before reading the vcSetting " & type & " : (" & err.errorCode & ")")
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 If errcode = 200 Then
+                    Call logfileSchreiben(ptErrLevel.logInfo, errmsg, "GETOneVCSetting: " & type, anzFehler)
                     Select Case type
                         Case settingTypes(ptSettingTypes.customroles)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
@@ -5565,6 +5617,7 @@ Public Class Request
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
+                    Call logfileSchreiben(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
                 Else
                     webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
                 End If
@@ -5583,6 +5636,7 @@ Public Class Request
             err.errorMsg = "GETOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "GETOneVCSetting: " & type, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5681,6 +5735,7 @@ Public Class Request
             err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "POSTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5787,6 +5842,7 @@ Public Class Request
             err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "PUTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5841,6 +5897,8 @@ Public Class Request
             End If
 
         Catch ex As Exception
+
+            Call logfileSchreiben(ptErrLevel.logError, ex.Message, "PUTOneVP: " & errcode, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 

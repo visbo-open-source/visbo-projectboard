@@ -20770,9 +20770,11 @@ Public Module agm2
 
                         End If
                     End If
+                Else
+                    Call logfileSchreiben(ptErrLevel.logInfo, " reading appearances successful", "awinsetTypen", anzFehler)
                 End If
             Catch ex As Exception
-
+                Call logfileSchreiben(ptErrLevel.logError, " reading appearances with error", "awinsetTypen", anzFehler)
             End Try
 
 
@@ -20782,6 +20784,7 @@ Public Module agm2
             customizations = CType(databaseAcc, DBAccLayer.Request).retrieveCustomizationFromDB("", Date.Now, False, err)
             If Not IsNothing(customizations) Then
                 StartofCalendar = customizations.kalenderStart
+                Call logfileSchreiben(ptErrLevel.logInfo, " reading customization successful: StartofCalendar: " & StartofCalendar.ToLongDateString, "awinsetTypen", anzFehler)
             End If
 
             Try
@@ -20944,7 +20947,7 @@ Public Module agm2
                     Else
                         noCustomizationFound = True
                     End If
-
+                    Call logger(ptErrLevel.logInfo, "awinsetTypen", "customizations now set")
 
                 End If
 
@@ -21255,8 +21258,8 @@ Public Module agm2
                     '    Call RoleDefinitions.buildTopNodes()
                     'End If
 
-
-                    ' Logfile wird geschlossen
+                    'ur: 2020-11-20 Versuch alle Logmeldungen in einem Window
+                    '' Logfile wird geschlossen
                     Call logfileSchliessen()
 
                 End If ' if special ="ProjectBoard"
@@ -22894,13 +22897,15 @@ Public Module agm2
                                     Try
                                         If Not IsNothing(c.Offset(0, 7).Value) Then
                                             If CStr(c.Offset(0, 7).Value).Trim = "" Then
-                                                .exitDate = CDate("31.12.2200").Date
+                                                '.exitDate = CDate("31.12.2200")
+                                                .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                             Else
                                                 Dim tmpValue As Date = CDate(c.Offset(0, 7).Value)
                                                 .exitDate = tmpValue
                                             End If
                                         Else
-                                            .exitDate = CDate("31.12.2200")
+                                            '.exitDate = CDate("31.12.2200")
+                                            .exitDate = DateAndTime.DateSerial(2200, 12, 31).Date
                                         End If
                                     Catch ex As Exception
                                         If awinSettings.englishLanguage Then
