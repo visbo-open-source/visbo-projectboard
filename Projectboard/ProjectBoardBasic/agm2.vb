@@ -7117,7 +7117,8 @@ Public Module agm2
                     Else
                         stillOk = False
                     End If
-                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Or
+                        roleType = ptCustomUserRoles.OrgaAdmin Then
 
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
@@ -13293,6 +13294,27 @@ Public Module agm2
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
         Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
 
+        ' für die Meldungen
+        Dim outPutLine As String = ""
+
+        If IsNothing(istDatenReferatsliste) And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+            istDatenReferatsliste = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+        End If
+
+        If IsNothing(istDatenReferatsliste) Then
+            outPutLine = "no Information what plan-data needs to be substituted ... "
+            outputCollection.Add(outPutLine)
+            Exit Sub
+        End If
+
+        If istDatenReferatsliste.Length = 0 Then
+            outPutLine = "no Information what plan-data needs to be substituted ... "
+            outputCollection.Add(outPutLine)
+            Exit Sub
+        End If
+
+
+
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
 
@@ -13302,8 +13324,7 @@ Public Module agm2
         ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
         Dim projectRoleValues(,,) As Double = Nothing
 
-        ' für die Meldungen
-        Dim outPutLine As String = ""
+
 
         Dim lastRow As Integer = -1
         Dim updatedProjects As Integer = 0
@@ -13464,7 +13485,6 @@ Public Module agm2
                         ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
                         Dim tmpReferat As String = ""
-                        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
 
                         Dim roleName As String = fullRoleName
 
@@ -13602,10 +13622,12 @@ Public Module agm2
                         If weitermachen Then
 
                             Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
-                            Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
-                            If IsNothing(tmpPNr) Then
-                                tmpPNr = ""
+                            Dim tmpPNr As String = ""
+
+                            If Not IsNothing(CType(.Cells(zeile, colProjectNr), Excel.Range).Value) Then
+                                tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
                             End If
+
 
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
                             Dim pName As String = makeValidProjectName(tmpPName)
@@ -13613,7 +13635,7 @@ Public Module agm2
                                 pName = makeValidProjectName(tmpPName)
                             Else
                                 pName = tmpPName
-                            End If
+                                End If
 
                             ' jetzt sollen die Projekte geladen werden, die referenziert werden 
                             If Not handledNames.ContainsKey(tmpPName) Then
@@ -13621,7 +13643,7 @@ Public Module agm2
                             End If
 
                             Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
-                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                                Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
 
                             Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
 
@@ -13633,7 +13655,7 @@ Public Module agm2
                             Dim shallContinue As Boolean = False
 
                             ' tk 2.1.21 - jetzt werden die Projekt gleich mal in AlleProjekte geholt, falls nicht schon vorhanden 
-                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, tmpPNr)
+                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, kdNr:=tmpPNr)
 
                             If Not IsNothing(hproj) Then
                                 If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
@@ -13644,19 +13666,18 @@ Public Module agm2
                                     End If
                                 End If
 
-                                Dim pKey As String = calcProjektKey(hproj)
-                                If MinMaxInformations.ContainsKey(pKey) Then
-                                    If MinMaxInformations.Item(pKey)(0) > currentDateColumn Then
-                                        MinMaxInformations.Item(pKey)(0) = currentDateColumn
+                                If MinMaxInformations.ContainsKey(pName) Then
+                                    If MinMaxInformations.Item(pName)(0) > currentDateColumn Then
+                                        MinMaxInformations.Item(pName)(0) = currentDateColumn
                                     End If
 
-                                    If MinMaxInformations.Item(pKey)(1) < currentDateColumn Then
-                                        MinMaxInformations.Item(pKey)(1) = currentDateColumn
+                                    If MinMaxInformations.Item(pName)(1) < currentDateColumn Then
+                                        MinMaxInformations.Item(pName)(1) = currentDateColumn
                                     End If
 
                                 Else
                                     Dim tmpColArray() As Integer = {1000000, 0}
-                                    MinMaxInformations.Add(pKey, tmpColArray)
+                                    MinMaxInformations.Add(pName, tmpColArray)
                                 End If
 
                                 ' now build / update the validPName / RoleNames
@@ -13667,12 +13688,14 @@ Public Module agm2
                                         validPNameRoleNameIDs.Item(hproj.name).Add(roleName)
                                     End If
                                 Else
-                                    Dim tmpRoleNameListe As New List(Of String)
-                                    tmpRoleNameListe.Add(roleName)
+                                    Dim tmpRoleNameListe As New List(Of String) From {
+                                        roleName
+                                    }
                                     validPNameRoleNameIDs.Add(pName, tmpRoleNameListe)
                                 End If
+                            Else
+                                ' Call logger
                             End If
-
 
                         End If
 
@@ -13730,8 +13753,13 @@ Public Module agm2
 
 
                         If Not IsNothing(currentRole) Then
+
                             Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
-                            Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+                            Dim tmpPNr As String = ""
+
+                            If Not IsNothing(CType(.Cells(zeile, colProjectNr), Excel.Range).Value) Then
+                                tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+                            End If
 
                             'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
                             Dim pName As String = handledNames(tmpPName)
@@ -13747,8 +13775,6 @@ Public Module agm2
                             Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
                             Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
 
-                            Dim shallContinue As Boolean = False
-                            Dim currentProj As clsProjekt = Nothing
 
                             ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
                             Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
@@ -13791,104 +13817,119 @@ Public Module agm2
 
                 Dim gesamtIstValue As Double = 0.0
 
+
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", AlleProjekte, Date.Now)
-                    Dim oldPlanValue As Double = 0.0
-                    Dim newIstValue As Double = 0.0
 
-                    Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
+                    ' now verify whether the actual data is covered by the project at all .. 
+                    Dim projstart As Integer = getColumnOfDate(hproj.startDate)
+                    Dim projEnd As Integer = getColumnOfDate(hproj.endeDate)
 
-                    If Not IsNothing(hproj) Then
-                        ' es wird pro Projekt eine Variante erzeugt 
-                        Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                        Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                    Dim allOk As Boolean = projstart <= MinMaxInformations.Item(hproj.name)(0) And
+                        projEnd >= MinMaxInformations.Item(hproj.name)(1)
 
-                        ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
-                        ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
-                        ' True: die Werte werden auf Null gesetzt 
-                        Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                    If allOk Then
+                        Dim oldPlanValue As Double = 0.0
+                        Dim newIstValue As Double = 0.0
 
-                        'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
-                        'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                        Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
 
-                        newIstValue = calcIstValueOf(vPKvP.Value)
+                        If Not IsNothing(hproj) Then
+                            ' es wird pro Projekt eine Variante erzeugt 
+                            Dim istDatenVName As String = ptVariantFixNames.acd.ToString
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
-                        gesamtIstValue = gesamtIstValue + newIstValue
+                            ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                            ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                            ' True: die Werte werden auf Null gesetzt 
+                            Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
-                        ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
-                        Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+                            'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
+                            'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
-                        Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
-                        Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
-                        ' Test tk 
-                        'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
+                            newIstValue = calcIstValueOf(vPKvP.Value)
 
-                        Dim abweichungGesamt As Double = 0.0
-                        If gesamtNachher <> checkNachher Then
-                            abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
-                        End If
+                            gesamtIstValue = gesamtIstValue + newIstValue
 
-                        Dim abweichungIst As Double = 0.0
-                        If checkIstValue <> newIstValue Then
-                            abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
-                        End If
+                            ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
 
-                        If awinSettings.visboDebug Then
-                            If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
-                                ReDim logArray(3)
-                                logArray(0) = "Import Istdaten old/new/diff/check1/check2"
-                                logArray(1) = ""
-                                logArray(2) = vPKvP.Key
-                                logArray(3) = ""
+                            Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                            Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                            ' Test tk 
+                            'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
 
-                                ReDim logDblArray(4)
-                                logDblArray(0) = oldPlanValue
-                                logDblArray(1) = newIstValue
-                                logDblArray(2) = oldPlanValue - newIstValue
-                                logDblArray(3) = checkIstValue
-                                logDblArray(4) = gesamtNachher - checkNachher
-
-                                Call logfileSchreiben(logArray, logDblArray)
-
+                            Dim abweichungGesamt As Double = 0.0
+                            If gesamtNachher <> checkNachher Then
+                                abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
                             End If
+
+                            Dim abweichungIst As Double = 0.0
+                            If checkIstValue <> newIstValue Then
+                                abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
+                            End If
+
+                            If awinSettings.visboDebug Then
+                                If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                    ReDim logArray(3)
+                                    logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                    logArray(1) = ""
+                                    logArray(2) = vPKvP.Key
+                                    logArray(3) = ""
+
+                                    ReDim logDblArray(4)
+                                    logDblArray(0) = oldPlanValue
+                                    logDblArray(1) = newIstValue
+                                    logDblArray(2) = oldPlanValue - newIstValue
+                                    logDblArray(3) = checkIstValue
+                                    logDblArray(4) = gesamtNachher - checkNachher
+
+                                    Call logfileSchreiben(logArray, logDblArray)
+
+                                End If
+                            End If
+
+                            Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
+                            With newProj
+                                .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+                                .variantName = ""   ' eliminieren von VariantenName acd
+                                .variantDescription = ""
+                            End With
+
+                            ' tk 18.7.19 
+                            ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
+                            Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
+
+                            ' tk das war eine allianz spezifische Sache - nicht mehr machen 
+                            'Call newProj.deleteTeamMembersWithNull()
+
+                            If chckVorher <> newProj.getAllPersonalKosten.Sum Then
+                                outPutLine = "Personalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
+                                outputCollection.Add(outPutLine)
+                            End If
+
+                            ' jetzt in die Import-Projekte eintragen 
+                            updatedProjects = updatedProjects + 1
+                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                        Else
+                            ReDim logArray(5)
+                            logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logfileSchreiben(logArray)
                         End If
-
-                        Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
-                        With newProj
-                            .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
-                            .variantName = ""   ' eliminieren von VariantenName acd
-                            .variantDescription = ""
-                        End With
-
-                        ' tk 18.7.19 
-                        ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
-                        Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
-
-                        ' tk das war eine allianz spezifische Sache - nicht mehr machen 
-                        'Call newProj.deleteTeamMembersWithNull()
-
-                        If chckVorher <> newProj.getAllPersonalKosten.Sum Then
-                            outPutLine = "PErsonalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
-                            outputCollection.Add(outPutLine)
-                        End If
-
-                        ' jetzt in die Import-Projekte eintragen 
-                        updatedProjects = updatedProjects + 1
-                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
-
                     Else
-                        ReDim logArray(5)
-                        logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
-                        logArray(3) = ""
-                        logArray(4) = ""
-
-                        Call logfileSchreiben(logArray)
+                        outPutLine = "ActualData do not fit to the timeframe the project cobers ... " & hproj.name
+                        outputCollection.Add(outPutLine)
                     End If
+
 
                 Next
 
@@ -20599,26 +20640,6 @@ Public Module agm2
 
                 appInstance = New Excel.Application
 
-                ' ur:12.09.2019 !!! Es soll kein Customization File mehr notwendig sein
-
-                ' hier muss jetzt das Customization File aufgemacht werden ...
-
-                ''Try
-                ''    xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, [ReadOnly]:=True, Editable:=False)
-                ''    myCustomizationFile = appInstance.ActiveWorkbook.Name
-
-                ''    Call logfileOpen()
-
-                ''    Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
-
-                ''    If awinSettings.visboDebug Then
-                ''        Call MsgBox("Windows-User: " & myWindowsName)
-                ''    End If
-
-                ''Catch ex As Exception
-                ''    Call msgbox("Customization File nicht gefunden - Abbruch")
-                ''    'Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-                ''End Try
 
             ElseIf special = "ProjectBoard" Then
 

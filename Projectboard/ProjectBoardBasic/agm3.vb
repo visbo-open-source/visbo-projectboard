@@ -1927,27 +1927,32 @@ Public Module agm3
             ' Schliessen des CustomUser Role-Files
             appInstance.Workbooks(wbName).Close(SaveChanges:=True)
 
-            'sessionConstellationP enthält alle Projekte aus dem Import 
-            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+            If oCollection.Count = 0 Then
+                'sessionConstellationP enthält alle Projekte aus dem Import 
+                Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
 
 
-            If sessionConstellationP.count > 0 Then
+                If sessionConstellationP.count > 0 Then
 
-                If projectConstellations.Contains(scenarioNameP) Then
-                    projectConstellations.Remove(scenarioNameP)
+                    If projectConstellations.Contains(scenarioNameP) Then
+                        projectConstellations.Remove(scenarioNameP)
+                    End If
+
+                    projectConstellations.Add(sessionConstellationP)
+                    ' jetzt auf Projekt-Tafel anzeigen 
+                    Call loadSessionConstellation(scenarioNameP, False, True)
+
+                Else
+                    Call MsgBox("keine Projekte importiert ...")
                 End If
 
-                projectConstellations.Add(sessionConstellationP)
-                ' jetzt auf Projekt-Tafel anzeigen 
-                Call loadSessionConstellation(scenarioNameP, False, True)
-
+                If ImportProjekte.Count > 0 Then
+                    ImportProjekte.Clear(False)
+                End If
             Else
-                Call MsgBox("keine Projekte importiert ...")
+                Call showOutPut(oCollection, "Errors occurred .. no import", "")
             End If
 
-            If ImportProjekte.Count > 0 Then
-                ImportProjekte.Clear(False)
-            End If
 
         Catch ex As Exception
 
