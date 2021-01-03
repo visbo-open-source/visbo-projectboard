@@ -1905,20 +1905,22 @@ Public Module agm3
 
             ' das Formular aufschalten mit 
             '
-            Dim editActualDataMonth As New frmProvideActualDataMonth
+            'Dim editActualDataMonth As New frmProvideActualDataMonth
 
-            If editActualDataMonth.ShowDialog = DialogResult.OK Then
+            'If editActualDataMonth.ShowDialog = DialogResult.OK Then
 
-                Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+            '    Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
 
-                Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
-                Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+            '    Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+            '    Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
 
-                Call ImportIstdatenStdFormat(monat, readPastAndFutureData, createUnknownProjects, oCollection)
+            '    Call ImportIstdatenStdFormat(monat, readPastAndFutureData, createUnknownProjects, oCollection)
 
-            End If
+            'End If
 
+            Dim readAll As Boolean = False
+            Call ImportIstdatenStdFormat(readAll, oCollection)
 
             Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 

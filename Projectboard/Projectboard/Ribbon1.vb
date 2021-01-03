@@ -5555,7 +5555,8 @@ Imports System.Web
                                     Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
                                     Dim outputCollection As New Collection
-                                    Call ImportIstdatenStdFormat(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                                    Call MsgBox("not yet implemented ...")
+                                    'Call ImportIstdatenStdFormat(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                                 End If
 

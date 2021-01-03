@@ -13282,14 +13282,13 @@ Public Module agm2
 
     End Sub
 
+
     ''' <summary>
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
-    ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
-    ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
-    ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportIstdatenStdFormat(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
-                                  ByRef outputCollection As Collection)
+    ''' <param name="readAll"></param>
+    ''' <param name="outputCollection"></param>
+    Public Sub ImportIstdatenStdFormat(ByVal readAll As Boolean, ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
         Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
@@ -13331,21 +13330,10 @@ Public Module agm2
         Next
 
 
-        'Dim lastValidMonth As Integer = monat
-        'If readAll Then
-        '    lastValidMonth = 12
-        'End If
 
-        ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
-        ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
         Try
 
 
-            If monat < 1 Or monat > 12 Then
-                logmessage = "ungültige Angabe des ActualDataUntil-Monats: " & monat
-                outputCollection.Add(logmessage)
-                Exit Sub
-            End If
 
             ' jetzt kommt die eigentliche Import Behandlung 
             Dim currentWS As Excel.Worksheet = Nothing
@@ -13868,7 +13856,7 @@ Public Module agm2
                             End If
                         End If
 
-
+                        Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
                         With newProj
                             .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
                             .variantName = ""   ' eliminieren von VariantenName acd
