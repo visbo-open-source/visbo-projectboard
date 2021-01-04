@@ -1,7 +1,6 @@
-﻿Imports ProjectBoardDefinitions
-Public Class clsCustomizationWeb
+﻿Public Class clsCustomizationDB
 
-
+    Public id As Date
     Public businessUnitDefinitions As List(Of clsBusinessUnit)
     Public phaseDefinitions As List(Of clsPhasenDefinition)
     Public milestoneDefinitions As List(Of clsMeilensteinDefinition)
@@ -803,7 +802,7 @@ Public Class clsCustomizationWeb
             .ergebnisfarbe1 = Me.ergebnisfarbe1
             .ergebnisfarbe2 = Me.ergebnisfarbe2
             .weightStrategicFit = Me.weightStrategicFit
-            .kalenderStart = Me.kalenderStart.ToLocalTime
+            .kalenderStart = Me.kalenderStart
             .zeitEinheit = Me.zeitEinheit
             .kapaEinheit = Me.kapaEinheit
             .offsetEinheit = Me.offsetEinheit
@@ -891,7 +890,7 @@ Public Class clsCustomizationWeb
             Me.ergebnisfarbe1 = .ergebnisfarbe1
             Me.ergebnisfarbe2 = .ergebnisfarbe2
             Me.weightStrategicFit = .weightStrategicFit
-            Me.kalenderStart = .kalenderStart.ToUniversalTime
+            Me.kalenderStart = .kalenderStart
             Me.zeitEinheit = .zeitEinheit
             Me.kapaEinheit = .kapaEinheit
             Me.offsetEinheit = .offsetEinheit
@@ -930,6 +929,7 @@ Public Class clsCustomizationWeb
 
     Public Sub New()
 
+        id = Date.MinValue
         businessUnitDefinitions = New List(Of clsBusinessUnit)
         phaseDefinitions = New List(Of clsPhasenDefinition)
         milestoneDefinitions = New List(Of clsMeilensteinDefinition)

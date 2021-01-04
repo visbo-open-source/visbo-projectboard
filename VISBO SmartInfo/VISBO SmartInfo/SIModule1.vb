@@ -2,11 +2,12 @@
 Imports ClassLibrary1
 Imports DBAccLayer
 Imports ProjectBoardBasic
-Imports PowerPoint = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core.MsoThemeColorIndex
 
-Module Module1
+Module SIModule1
+    ' benötigt zum Lesen customization
+    Public pseudoappInstance As Microsoft.Office.Interop.Excel.Application = Nothing
 
     'Friend Const hiddenExcelSheetName As String = "visboupdate"
     Friend WithEvents pptAPP As PowerPoint.Application
@@ -23,6 +24,7 @@ Module Module1
     Friend Const protectionTag As String = "VisboProtection"
     Friend Const protectionValue As String = "VisboValue"
     Friend Const noVariantName As String = "-9999999"
+
 
     Friend myPPTWindow As PowerPoint.DocumentWindow = Nothing
 
@@ -41,6 +43,7 @@ Module Module1
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
 
+
     ' die VISBO TimeMachine nimmt alle PRojekte und Timestamps auf 
     Friend timeMachine As New clsPPTTimeMachine
 
@@ -54,6 +57,8 @@ Module Module1
     ' was ist der aktuelle Timestamp der Slide 
     Friend currentTimestamp As Date = Date.MinValue
     Friend previousTimeStamp As Date = Date.MinValue
+
+
 
     ' in der Liste werden für jede Präsentation die beiden Varianten-Namen Previous und current gemerkt 
     ' 0 = previous, 1 = current
@@ -423,7 +428,7 @@ Module Module1
         Dim meldungen As New Collection
 
         ' sind die Zugangsdaten mit den aktuellen identisch ?
-        ' wenn nein, dann wird noDBaccess auf false gesetzt 
+        ' wenn nein, dann wird noDBAccessInPPT auf false gesetzt 
         Call getDBsettings(sld)
 
         ' hier muss demnächst die Abfrage rein, ob der anwender auch die entsprechende customUserRole hat, um die Slide zu aktualisieren / zu sehen 
@@ -512,34 +517,44 @@ Module Module1
 
                 ' Behandeln der myUserRole 
                 ' jetzt wird die für die Slide passende Rolle gesucht 
-                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                If awinSettings.visboServer = True Then
+                    myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"), meldungen)
+                    If IsNothing(myCustomUserRole) Then
 
-                If meldungen.Count > 0 Then
-                    Call MsgBox(meldungen.Item(1))
-                    tmpResult = False
-                Else
+                        msg = "Error: Keine Berechtigung"
+                        tmpResult = False
+                    Else
+                        tmpResult = True
+                    End If
 
-                    '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
-                    'Call RoleDefinitions.buildTopNodes()
-                    'Call RoleDefinitions.buildOrgaTeamChilds()
 
-                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                    Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
+                    If meldungen.Count > 0 Then
+                        Call MsgBox(meldungen.Item(1))
+                        tmpResult = False
+                    End If
 
-                        If IsNothing(customFieldDefinitions) Then
-                            'Call MsgBox(err.errorMsg)
-                        End If
-                    Catch ex As Exception
+                    If tmpResult Then
+                        '' tk 5.2.20 evtl jetzt noch machen:  mit dieser USerRole nochmal die Top Nodes bauen 
+                        'Call RoleDefinitions.buildTopNodes()
+                        'Call RoleDefinitions.buildOrgaTeamChilds()
 
-                    End Try
+                        ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                        Try
+                            customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
-                    ' in allen Slides den Sicht Schutz aufheben 
-                    protectionSolved = True
-                    Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
+                            If IsNothing(customFieldDefinitions) Then
+                                customFieldDefinitions = New clsCustomFieldDefinitions
+                                'Call MsgBox(err.errorMsg)
+                            End If
+                        Catch ex As Exception
 
+                        End Try
+                    End If
                 End If
 
+                ' in allen Slides den Sicht Schutz aufheben 
+                protectionSolved = True
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
 
             End If
 
@@ -825,6 +840,11 @@ Module Module1
             End If
 
         End If
+
+        ' tk 5.12.20 damit beim Schliessen nicht die alten Listen erhalten bleiben 
+        smartSlideLists = New clsSmartSlideListen
+
+        My.Settings.Save()
 
 
     End Sub
@@ -1470,6 +1490,12 @@ Module Module1
         Dim key As String = Pres.Name
         currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
 
+        ' die müssen zurück gesetzt werden , weil neue PResentation 
+        ' müssen auch erst gesetzt werden, wenn neue Slide
+        currentSldHasProjectTemplates = False
+        currentSldHasPortfolioTemplates = False
+
+
         If currentPresHasVISBOElements Then
 
             currentTimestamp = getCurrentTimestampFromPresentation(Pres)
@@ -1898,9 +1924,274 @@ Module Module1
                         Next
 
                     Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionText
-                        For i = 0 To 1000
-                            i = i + 1
-                        Next
+                        Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
+
+                        If Not IsNothing(shpRange) And slideHasSmartElements Then
+
+                            ' jetzt muss hier die Behandlung für Office 2010 rein 
+                            Dim correctErrorShape1 As PowerPoint.Shape = Nothing
+                            Dim correctErrorShape2 As PowerPoint.Shape = Nothing
+
+                            ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                            ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                            ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                            ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
+                            If pptAPP.Version = "14.0" Then
+                                Try
+                                    correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
+
+                            If ((pptAPP.Version = "14.0") And
+                                (((Not propertiesPane.Visible) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
+                                (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
+                                ' Erzeugen eines Hilfs-Elements
+
+                                ' Ist es 
+                                If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
+                                    ' nichts machen 
+                                Else
+                                    If IsNothing(correctErrorShape1) Then
+                                        ' erzeugen und selektieren der beiden Shapes  
+                                        Dim oldShape As PowerPoint.Shape = shpRange(1)
+
+                                        Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+
+
+
+                                        If Not IsNothing(helpShape1) Then
+                                            helpShape1.Name = "visboCorrectError1"
+                                            helpShape1.Tags.Add("formerSN", oldShape.Name)
+                                            helpShape1.Select()
+                                        End If
+
+
+
+                                    ElseIf IsNothing(correctErrorShape2) Then
+
+                                        ' jetzt die zweite Welle 
+                                        propertiesPane.Visible = True
+
+                                        Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                                   0, 0, 50, 50)
+                                        If Not IsNothing(helpShape2) Then
+                                            helpShape2.Name = "visboCorrectError2"
+                                            helpShape2.Select()
+                                        End If
+                                    Else
+
+
+                                        ' Selektieren des vorher geklickten shapes 
+                                        Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
+                                        Dim formerSelShape As PowerPoint.Shape = Nothing
+
+                                        If formerShapeName.Length > 0 Then
+                                            Try
+
+                                                formerSelShape = currentSlide.Shapes(formerShapeName)
+
+                                                ' Löschen der Hilfs-Shapes 
+                                                correctErrorShape1.Delete()
+                                                correctErrorShape2.Delete()
+
+                                                ' Selektieren des formerShapes
+                                                formerSelShape.Select()
+
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+                                    End If
+                                End If
+
+                            Else
+                                ' es sind ein oder mehrere Shapes selektiert worden 
+                                Dim i As Integer = 0
+                                If shpRange.Count = 1 Then
+
+                                    ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                                    ' Listbox passt 
+
+                                    '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                                    '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                                    ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                                    ' ''    If infoFrm.rdbName.Visible Then
+                                    ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                                    ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                                    ' ''        End If
+                                    ' ''    End If
+                                    ' ''End If
+
+
+                                    ' jetzt ggf die angezeigten Marker löschen 
+                                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                                        Call deleteMarkerShapes()
+                                    ElseIf markerShpNames.Count > 1 Then
+                                        Call deleteMarkerShapes(shpRange(1).Name)
+                                    End If
+
+                                    ' prüfen, ob es ein Kommentar ist 
+                                    Dim tmpShape As PowerPoint.Shape = shpRange(1)
+                                    If isCommentShape(tmpShape) Then
+                                        Call markReferenceShape(tmpShape.Name)
+                                    End If
+                                ElseIf shpRange.Count > 1 Then
+                                    ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                                    For Each tmpShape As PowerPoint.Shape In shpRange
+                                        If isCommentShape(tmpShape) Then
+                                            Call markReferenceShape(tmpShape.Name)
+                                        End If
+                                    Next
+                                ElseIf shpRange.Count = 0 Then
+
+                                    Call deleteMarkerShapes()
+
+                                End If
+
+
+                                For Each tmpShape As PowerPoint.Shape In shpRange
+
+                                    If tmpShape.Tags.Count > 0 Then
+
+                                        'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
+
+                                        If isRelevantShape(tmpShape) Then
+                                            If bekannteIDs.ContainsKey(tmpShape.Id) Or
+                                        tmpShape.Name.EndsWith(shadowName) Then
+
+                                                If Not relevantShapeNames.Contains(tmpShape.Name) Then
+                                                    relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                                End If
+
+                                            Else
+                                                ' die vorhandenen Tags löschen ... und den Namen ändern 
+                                                Call deleteShpTags(tmpShape)
+                                            End If
+
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+                                '' Anfang ... das war vorher innerhalb der next Schleife .. 
+                                ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                                If relevantShapeNames.Count >= 1 Then
+
+                                    ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                                    For ix As Integer = 1 To relevantShapeNames.Count
+                                        arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                                    Next
+
+                                    selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+
+                                ElseIf isSymbolShape(shpRange(1)) Then
+
+                                    selectedPlanShapes = shpRange
+                                    Call aktualisiereInfoPane(shpRange(1))
+
+                                Else
+                                    ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
+                                    Call checkHomeChangeBtnEnablement()
+                                    Try
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    ' ur: wegen Pane
+                                    ' ''If formIsShown Then
+                                    ' ''    Call aktualisiereInfoFrm(Nothing)
+                                    ' ''End If
+                                End If
+                                '' Ende ...
+
+                                If Not isSymbolShape(shpRange(1)) Then
+                                    If Not IsNothing(selectedPlanShapes) Then
+
+                                        Dim tmpShape As PowerPoint.Shape = Nothing
+                                        Dim elemWasMoved As Boolean = False
+
+                                        Dim isPCard As Boolean = isProjectCard(shpRange(1))
+
+                                        If Not isPCard Then
+                                            For Each tmpShape In selectedPlanShapes
+                                                ' hier sind nur noch richtige Shapes  
+
+                                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                                If elemWasMoved Then
+                                                    homeButtonRelevance = True
+                                                Else
+                                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                                        changedButtonRelevance = True
+                                                    End If
+                                                End If
+
+                                            Next
+                                        Else
+                                            tmpShape = selectedPlanShapes(1)
+                                        End If
+
+
+                                        ' hier wird die Information zu dem selektierten Shape angezeigt 
+                                        If Not IsNothing(propertiesPane) Then
+                                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                                        End If
+                                        ' ur: wegen Pane
+                                        If formIsShown Then
+                                            If isPCard Then
+                                                Call aktualisiereInfoFrm(Nothing)
+                                            Else
+                                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                            End If
+
+                                        End If
+
+
+                                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                                        Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                                        ' kann jetzt wieder aktiviert werden ...
+                                        If Not IsNothing(propertiesPane) Then
+                                            propertiesPane.Visible = True
+                                        End If
+                                    Else
+
+                                        Call checkHomeChangeBtnEnablement()
+                                        If propertiesPane.Visible Then
+                                            Call aktualisiereInfoPane(Nothing)
+                                        End If
+
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
+                        'For i = 0 To 1000
+                        '    i = i + 1
+                        'Next
 
 
                     Case Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionNone
@@ -2042,6 +2333,8 @@ Module Module1
         ' neu ergänzt wegen zu verwendender vpid
         Dim vpid As String = getVPIDFromTags(tmpShape)
 
+        Dim shapeHeight As Single = 0.0
+
         If isProjectCard(tmpShape) Then
             isPCard = True
             pvName = getPVnameFromTags(tmpShape)
@@ -2069,13 +2362,26 @@ Module Module1
             If isPCard Then
                 checkIT = True
                 isMilestone = False
+                shapeHeight = 0.0
             ElseIf pptShapeIsMilestone(tmpShape) Then
                 checkIT = True
                 isMilestone = True
+                shapeHeight = tmpShape.Height
                 ' nichts tun 
             ElseIf pptShapeIsPhase(tmpShape) Then
                 checkIT = True
                 isMilestone = False
+                Try
+                    If tmpShape.TextFrame2.TextRange.Text <> "" Then
+                        ' dann handelt es sich nicht um einen echtes Phasen Shape, sondern um die Swimlnae Beschriftung
+                        shapeHeight = 0.0
+                    Else
+                        shapeHeight = tmpShape.Height
+                    End If
+                Catch ex As Exception
+
+                End Try
+
             Else
                 ' nichts tun 
                 checkIT = False
@@ -2092,7 +2398,7 @@ Module Module1
                 Exit Sub
             End If
 
-            Call smartSlideLists.addCN(tmpName, shapeName, isMilestone)
+            Call smartSlideLists.addCN(tmpName, shapeName, isMilestone, shapeHeight)
 
 
             If Not isPCard Then
@@ -2709,7 +3015,7 @@ Module Module1
                                             Dim err As New clsErrorCodeMsg
                                             Dim realTimestamp As Date
 
-                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, curTimeStamp)
+                                            Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, vpid, realTimestamp, err, , curTimeStamp)
 
                                             Dim hproj As clsProjekt = calcUnionProject(aktConst, False, curTimeStamp)
 
@@ -3347,7 +3653,7 @@ Module Module1
                         Dim realTimestamp As Date
                         Dim hproj As clsProjekt
 
-                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err, curTimeStamp)
+                        Dim aktConst As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(scInfo.pName, scInfo.vpid, realTimestamp, err,, curTimeStamp)
 
                         If Not IsNothing(aktConst) Then
                             hproj = calcUnionProject(aktConst, False, curTimeStamp)
@@ -7112,7 +7418,7 @@ Module Module1
     End Function
 
     ''' <summary>
-    ''' prüft, ob irgendeine VISBO Slide entahlten ist; kann auch frozen sein
+    ''' prüft, ob irgendeine VISBO Slide enthalten ist; kann auch frozen sein
     ''' </summary>
     ''' <param name="pres"></param>
     ''' <returns></returns>
@@ -8545,6 +8851,38 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' determines whether or not the shape is a reporting component template
+    ''' i.e contains certain keywords in .AlternativeText 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    Public Function isProjectReportingComponent(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim keyWords As String() = {"Swimlanes", "Swimlanes2", "AlleProjektElemente", "Einzelprojektsicht"}
+        Dim searchtext = curShape.AlternativeText
+
+        If IsNothing(searchtext) Then
+            isProjectReportingComponent = False
+        Else
+            isProjectReportingComponent = keyWords.Contains(curShape.AlternativeText)
+        End If
+
+    End Function
+
+    Public Function isMultiProjectReportingComponent(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim keyWords As String() = {"Multiprojektsicht"}
+        Dim searchtext = curShape.AlternativeText
+
+        If IsNothing(searchtext) Then
+            isMultiProjectReportingComponent = False
+        Else
+            isMultiProjectReportingComponent = keyWords.Contains(curShape.AlternativeText)
+        End If
+
+    End Function
+
+    ''' <summary>
     ''' liefert den Enumeration Typ des Comments zurück 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -9157,6 +9495,46 @@ Module Module1
         Next
 
     End Sub
+
+
+    ''' <summary>
+    ''' sets the global parameters currentSldhasprojecttemplates, 
+    ''' </summary>
+    ''' <param name="sld"></param>
+    ''' <returns></returns>
+    Public Function slideHasReportComponents(ByVal sld As PowerPoint.Slide) As Boolean
+
+        Dim found As Boolean = False
+        currentSldHasProjectTemplates = False
+        currentSldHasMultiProjectTemplates = False
+        currentSldHasPortfolioTemplates = False
+
+        Try
+            If smartSlideLists.getElementNamen.Count > 0 Then
+                ' nix weitermachen, dann sollen keine weiteren hier erstellt werden können 
+            Else
+                For Each pptShape As PowerPoint.Shape In sld.Shapes
+                    If Not currentSldHasProjectTemplates Then
+                        currentSldHasProjectTemplates = projectComponentNames.Contains(pptShape.Title) Or projectComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                    If Not currentSldHasMultiProjectTemplates Then
+                        currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(pptShape.Title) Or multiprojectComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                    If Not currentSldHasPortfolioTemplates Then
+                        currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(pptShape.Title) Or portfolioComponentNames.Contains(pptShape.AlternativeText)
+                    End If
+
+                Next
+            End If
+
+        Catch ex As Exception
+            found = False
+        End Try
+
+        slideHasReportComponents = currentSldHasProjectTemplates Or currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates
+    End Function
 
     'Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
 
@@ -10542,6 +10920,12 @@ Module Module1
         ' die aktuelle Slide setzen 
         If Not IsNothing(Sld) Then
 
+
+            ' re-set parameters necessary for Creating reporting templates
+            currentSldHasProjectTemplates = False
+            currentSldHasMultiProjectTemplates = False
+            currentSldHasPortfolioTemplates = False
+
             If currentPresHasVISBOElements Then
                 ' nur dann muss irgendwas weitergemacht werden ..
 
@@ -10638,5 +11022,6 @@ Module Module1
         End If
 
     End Sub
+
 
 End Module

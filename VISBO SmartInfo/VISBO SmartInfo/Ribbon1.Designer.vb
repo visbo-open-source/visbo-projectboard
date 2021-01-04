@@ -59,15 +59,19 @@
         Me.activateInfo = Me.Factory.CreateRibbonButton
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.btnFreeze = Me.Factory.CreateRibbonButton
+        Me.Group1 = Me.Factory.CreateRibbonGroup
+        Me.btn_CreateReport = Me.Factory.CreateRibbonButton
+        Me.addElement = Me.Factory.CreateRibbonButton
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
+        Me.Settings = Me.Factory.CreateRibbonMenu
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.varianten_Tab = Me.Factory.CreateRibbonButton
-        Me.Create_Button = Me.Factory.CreateRibbonButton
+        Me.btn_ImportAppCust = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.Group2.SuspendLayout()
         Me.Group3.SuspendLayout()
         Me.Group4.SuspendLayout()
+        Me.Group1.SuspendLayout()
         Me.SmartInfo.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -82,6 +86,7 @@
         Me.Tab2.Groups.Add(Me.Group2)
         Me.Tab2.Groups.Add(Me.Group3)
         Me.Tab2.Groups.Add(Me.Group4)
+        Me.Tab2.Groups.Add(Me.Group1)
         Me.Tab2.Groups.Add(Me.SmartInfo)
         Me.Tab2.Label = "VISBO"
         Me.Tab2.Name = "Tab2"
@@ -244,30 +249,52 @@
         Me.btnFreeze.ShowImage = True
         Me.btnFreeze.SuperTip = resources.GetString("btnFreeze.SuperTip")
         '
+        'Group1
+        '
+        Me.Group1.Items.Add(Me.btn_CreateReport)
+        Me.Group1.Items.Add(Me.addElement)
+        Me.Group1.Label = "Create / Add "
+        Me.Group1.Name = "Group1"
+        '
+        'btn_CreateReport
+        '
+        Me.btn_CreateReport.KeyTip = "CR"
+        Me.btn_CreateReport.Label = "Create Report"
+        Me.btn_CreateReport.Name = "btn_CreateReport"
+        Me.btn_CreateReport.ScreenTip = """ScreenTip"""
+        Me.btn_CreateReport.SuperTip = """SuperTip"""
+        '
+        'addElement
+        '
+        Me.addElement.Label = "Add Phase / Milestone"
+        Me.addElement.Name = "addElement"
+        '
         'SmartInfo
         '
-        Me.SmartInfo.Items.Add(Me.settingsTab)
-        Me.SmartInfo.Items.Add(Me.varianten_Tab)
-        Me.SmartInfo.Items.Add(Me.Create_Button)
+        Me.SmartInfo.Items.Add(Me.Settings)
         Me.SmartInfo.Name = "SmartInfo"
+        '
+        'Settings
+        '
+        Me.Settings.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Settings.Image = Global.VISBO_SmartInfo.My.Resources.Resources.gear
+        Me.Settings.Items.Add(Me.settingsTab)
+        Me.Settings.Items.Add(Me.btn_ImportAppCust)
+        Me.Settings.Label = "Settings"
+        Me.Settings.Name = "Settings"
+        Me.Settings.ShowImage = True
         '
         'settingsTab
         '
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
+        Me.settingsTab.ShowImage = True
         '
-        'varianten_Tab
+        'btn_ImportAppCust
         '
-        Me.varianten_Tab.Label = "Variants"
-        Me.varianten_Tab.Name = "varianten_Tab"
-        Me.varianten_Tab.Visible = False
-        '
-        'Create_Button
-        '
-        Me.Create_Button.Label = "Create from Template"
-        Me.Create_Button.Name = "Create_Button"
-        Me.Create_Button.ScreenTip = "creates report from template"
-        Me.Create_Button.Visible = False
+        Me.btn_ImportAppCust.Label = "Import CustomSettings"
+        Me.btn_ImportAppCust.Name = "btn_ImportAppCust"
+        Me.btn_ImportAppCust.ShowImage = True
         '
         'Ribbon1
         '
@@ -285,6 +312,8 @@
         Me.Group3.PerformLayout()
         Me.Group4.ResumeLayout(False)
         Me.Group4.PerformLayout()
+        Me.Group1.ResumeLayout(False)
+        Me.Group1.PerformLayout()
         Me.SmartInfo.ResumeLayout(False)
         Me.SmartInfo.PerformLayout()
         Me.ResumeLayout(False)
@@ -302,7 +331,6 @@
     Friend WithEvents Group4 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents SmartInfo As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents varianten_Tab As Microsoft.Office.Tools.Ribbon.RibbonButton
 
     Protected Overrides Sub Finalize()
         MyBase.Finalize()
@@ -323,8 +351,6 @@
         'End Try
 
     End Sub
-
-    Friend WithEvents Create_Button As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnDate As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton
@@ -333,6 +359,11 @@
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFreeze As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnToggle As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Group1 As Microsoft.Office.Tools.Ribbon.RibbonGroup
+    Friend WithEvents addElement As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btn_CreateReport As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Settings As Microsoft.Office.Tools.Ribbon.RibbonMenu
+    Friend WithEvents btn_ImportAppCust As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

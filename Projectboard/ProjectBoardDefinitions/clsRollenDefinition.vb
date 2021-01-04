@@ -273,10 +273,7 @@
     Public Property tagessatzIntern As Double
     Public Property kapazitaet As Double()
 
-    ' tk Allianz 21.11.18 nicht mehr gültig ..
-    'Public Property tagessatzExtern As Double
 
-    'Public Property externeKapazitaet As Double()
 
     ''' <summary>
     ''' bestimmt, ob die aktuelle Instanz irgendein Kind oder Kindeskind hat, das in tmpCollection aufgeführt ist
@@ -485,7 +482,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinition) As Boolean
+    Public ReadOnly Property isIdenticalTo(ByVal vglRole As clsRollenDefinition, Optional ByVal mitKapa As Boolean = True) As Boolean
         Get
             Dim stillok As Boolean = True
 
@@ -531,7 +528,6 @@
 
                 stillok = (Me.UID = vglRole.UID) And
                             (Me.name = vglRole.name) And
-                            (CLng(Me.farbe) = CLng(vglRole.farbe)) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isSkill = vglRole.isSkill) And
@@ -540,17 +536,31 @@
                             (Me.entryDate.Date = vglRole.entryDate.Date) And
                             (Me.exitDate.Date = vglRole.exitDate.Date) And
                             (Me.defaultDayCapa = vglRole.defaultDayCapa)
-                'And _
-                '            (Me.tagessatzExtern = vglRole.tagessatzExtern)
+                '(CLng(Me.farbe) = CLng(vglRole.farbe)) And
 
             End If
-
-            ' jetzt die Kapa-Arrays vergleichen 
+            ' jetzt die aliases vergleichen
             If stillok Then
-                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
-                'And _
-                '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+                If Not IsNothing(Me.aliases) Then
+                    For Each aliasName As String In Me.aliases
+                        If Not IsNothing(vglRole.aliases) Then
+                            stillok = stillok And vglRole.aliases.Contains(aliasName)
+                        Else
+                            stillok = False
+                        End If
+                    Next
+                End If
             End If
+
+            ' kapaArray nur vergleichen, wenn mitKapa = true ist
+            If mitKapa Then
+                ' jetzt die Kapa-Arrays vergleichen 
+                If stillok Then
+                    stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
+
+                End If
+            End If
+
 
             isIdenticalTo = stillok
 
@@ -569,7 +579,6 @@
         ' tk wird aktuell noch nicht in der DB gespeichert, wird beim buildOrgaTeams gesetzt 
         _isSkillParent = False
 
-        'ReDim _externeKapazitaet(240)
 
         _subRoleIDs = New SortedList(Of Integer, Double)
         _skillIDs = New SortedList(Of Integer, Double)

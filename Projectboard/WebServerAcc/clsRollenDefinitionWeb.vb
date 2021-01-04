@@ -13,7 +13,8 @@ Public Class clsRollenDefinitionWeb
     Public isTeam As Boolean
 
     ' 27.04.20 ur wird nun auch in der DB gespeichert
-    Public isTeamParent As Boolean
+    '9.11.20 nicht mehr in DB speichern
+    'Public isTeamParent As Boolean
 
     ' 8.1.2020 dazugekommen
     Public aliases As String()
@@ -28,12 +29,10 @@ Public Class clsRollenDefinitionWeb
     Public farbe As Long
     Public defaultKapa As Double
     Public tagessatzIntern As Double
+    '9.11.20 ur wird nun doppelt geführt und dann später wird tagessatzintern ausgeführt
+    Public tagessatz As Double
 
     Public kapazitaet() As Double
-
-    ' tk 23.11. nicht mehr relevant, bleibt drin, um alte Datenmodelle behandeln zu können 
-    Public tagessatzExtern As Double = Nothing
-    Public externeKapazitaet() As Double = Nothing
 
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
@@ -108,9 +107,15 @@ Public Class clsRollenDefinitionWeb
 
         ' tk 23.11.18 
         roleDef.isExternRole = Me.isExternRole
-        roleDef.isSkill = Me.isTeam
 
-        roleDef.tagessatzIntern = Me.tagessatzIntern
+        roleDef.isSkill = Me.isTeam
+        ' 9.11.20 ur for a smart change to tagessatz
+        If Not IsNothing(Me.tagessatz) Then
+            roleDef.tagessatzIntern = Me.tagessatz
+        Else
+            roleDef.tagessatzIntern = Me.tagessatzIntern
+        End If
+
 
         ' jetzt die Übernahme der Kapazitäten 
         ' Rollen, die Kinder haben tragen niemals Kapa , also immer Null 
@@ -139,7 +144,9 @@ Public Class clsRollenDefinitionWeb
 
             If Not IsNothing(Me.kapazitaet) Then
                 Dim startingIndex As Integer = DateDiff(DateInterval.Month, StartofCalendar, Me.startOfCal.ToLocalTime) + 1
+
                 logger(ptErrLevel.logInfo, "clsRollenDefinitionWeb.copyto: ", "orgaUnit: " & Me.name & " - startingIndex: " & startingIndex)
+
                 If startingIndex > 0 Then
                     For i As Integer = startingIndex To startingIndex + nrWebCapaValues - 1
                         roleDef.kapazitaet(i) = Me.kapazitaet(i - startingIndex + 1)
@@ -318,6 +325,7 @@ Public Class clsRollenDefinitionWeb
     End Sub
 
     Public Sub copyFrom(ByVal roleDef As clsRollenDefinition)
+
         With roleDef
 
             Dim dbKapa() As Double = Nothing
@@ -329,7 +337,8 @@ Public Class clsRollenDefinitionWeb
                 For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
-                    sr.value = kvp.Value.ToString
+                    'sr.value = kvp.Value.ToString
+                    sr.value = kvp.Value
                     Me.subRoleIDs.Add(sr)
                 Next
 
@@ -389,7 +398,8 @@ Public Class clsRollenDefinitionWeb
                 For Each kvp As KeyValuePair(Of Integer, Double) In .getSkillIDs
                     Dim sr As New clsSubRoleID
                     sr.key = kvp.Key
-                    sr.value = kvp.Value.ToString
+                    'sr.value = kvp.Value.ToString
+                    sr.value = kvp.Value
                     Me.teamIDs.Add(sr)
                 Next
             End If
@@ -403,7 +413,10 @@ Public Class clsRollenDefinitionWeb
             isExternRole = .isExternRole
             isTeam = .isSkill
             ' ur 27.04.20 
-            isTeamParent = .isSkillParent
+
+            ' ur 2.1.21 wird nicht mehr in DB gespeichert
+            'isTeamParent = .isSkillParent
+
 
             ' tk 8.1.20
             aliases = .aliases
@@ -412,7 +425,10 @@ Public Class clsRollenDefinitionWeb
             entryDate = .entryDate.ToUniversalTime
             exitDate = .exitDate.ToUniversalTime
 
-            tagessatzIntern = .tagessatzIntern
+            tagessatz = .tagessatzIntern
+            tagessatzIntern = tagessatz
+
+
 
             ' tk 17.5.20 effiziente Organisation
             ' jetzt nur den Array übergeben, der die vom Default abweichenden Werte enthält 
@@ -421,10 +437,6 @@ Public Class clsRollenDefinitionWeb
             ' dieser startOfCal gibt jetzt an, wo der Array genau zu beginnen hat ...
             startOfCal = startOfNonStandardValues.ToUniversalTime
 
-
-            ' tk 3.12.18 wird nicht mehr benötigt ...
-            tagessatzExtern = Nothing
-            externeKapazitaet = Nothing
 
         End With
     End Sub

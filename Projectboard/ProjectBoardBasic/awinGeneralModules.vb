@@ -316,7 +316,7 @@ Public Module awinGeneralModules
     ''' macht den Teil des ClearSession, der so ggf auch in Powerpoint, Project etc gemacht werden kann, um 
     ''' alle Strukturen zurückzusetzen
     ''' </summary>
-    Public Sub emptyAllVISBOStructures()
+    Public Sub emptyAllVISBOStructures(Optional ByVal calledFromPPT As Boolean = False)
 
         ShowProjekte.Clear()
         AlleProjekte.Clear()
@@ -325,19 +325,26 @@ Public Module awinGeneralModules
         ImportProjekte.Clear(False)
 
         ' die ProjectConstellations bleiben erhalten - aber sie sind einfach 
-        projectConstellations.clearLoadedPortfolios()
+        ' projectConstellations.clearLoadedPortfolios()
+        projectConstellations.Clear()
 
 
         ' es gibt ja nix mehr in der Session 
         currentConstellationName = ""
 
-        ' jetzt den Datenbank Cache Löschen 
-        Dim clearOK As Boolean = False
-        Try
-            clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
-        Catch ex As Exception
-            Call MsgBox("Error when clearing session: " & ex.Message)
-        End Try
+        '
+        ' jetzt den Datenbank Cache Löschen , aber nur wenn es nicht von Powerpoint Add-In aus aufgerufen wird
+        If Not calledFromPPT Then
+            Dim clearOK As Boolean = False
+            Try
+                clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
+            Catch ex As Exception
+                Call MsgBox("Warning: no Cache clearing " & ex.Message)
+            End Try
+        End If
+        '
+        '
+
 
     End Sub
 
@@ -2126,8 +2133,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
                             logArray(3) = visboDBname
 
-
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
                             ' damit an der aufrufenden Stelle der richtige pName steht ...
                             pname = visboDBname
@@ -2150,7 +2156,7 @@ Public Module awinGeneralModules
                             ix = ix + 1
                         Next
 
-                        Call logfileSchreiben(logArray)
+                        Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                         fctResult = False
 
@@ -2175,7 +2181,7 @@ Public Module awinGeneralModules
                                     logArray(3) = visboDBname
 
 
-                                    Call logfileSchreiben(logArray)
+                                    Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
                                     ' damit an der aufrufenden Stelle der richtige pName steht ...
                                     pname = visboDBname
@@ -2191,8 +2197,7 @@ Public Module awinGeneralModules
                                 logArray(2) = pname
                                 logArray(3) = visboDBname
 
-
-                                Call logfileSchreiben(logArray)
+                                Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                                 fctResult = False
                             End If
@@ -2204,7 +2209,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
                             logArray(3) = visboDBname
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logError, "isKnownProject", logArray)
 
                             fctResult = False
                         End If
@@ -2238,7 +2243,7 @@ Public Module awinGeneralModules
                             logArray(4) = pname
 
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logInfo, "isKnownProject", logArray)
 
 
                         Else
@@ -2249,7 +2254,7 @@ Public Module awinGeneralModules
                             logArray(2) = pname
 
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logError, "isKnownProject", logArray)
                         End If
 
                     Else
@@ -2381,7 +2386,7 @@ Public Module awinGeneralModules
                 Dim i As Integer = 1
                 While i <= completeStr.Length And resultValue = True
 
-                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType("", Char)}, 2)
 
                     If roleCostStr.Length = 2 Then
 
@@ -2617,7 +2622,7 @@ Public Module awinGeneralModules
                                             logmsg(1) = impProjekt.name
                                             logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
                                             logmsg(3) = "kein Import ! "
-                                            Call logfileSchreiben(logmsg)
+                                            Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
                                         Else
                                             ' jetzt in AlleProjekte eintragen ... 
                                             AlleProjekte.Add(impProjekt)
@@ -2649,7 +2654,7 @@ Public Module awinGeneralModules
                                                 logmsg(1) = impProjekt.kundenNummer
                                                 logmsg(2) = "VISBO DB - Name " & vglProj.name
                                                 logmsg(3) = "neuer Name " & newName
-                                                Call logfileSchreiben(logmsg)
+                                                Call logger(ptErrLevel.logWarning, "verarbeiteImportProjekte", logmsg)
                                             Else
                                                 ' kann eigentlich nicht sein 
                                                 ReDim logmsg(3)
@@ -2657,8 +2662,7 @@ Public Module awinGeneralModules
                                                 logmsg(1) = nameCollection.Item(1)
                                                 logmsg(2) = "bitte kontaktieren Sie ihren System-Administrator! "
                                                 logmsg(3) = "kein Import ! "
-                                                Call logfileSchreiben(logmsg)
-
+                                                Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
                                             End If
 
                                         ElseIf nameCollection.Count > 1 Then
@@ -2673,7 +2677,7 @@ Public Module awinGeneralModules
                                                 logmsg(ia + 2) = nameCollection.Item(ia)
                                             Next
 
-                                            Call logfileSchreiben(logmsg)
+                                            Call logger(ptErrLevel.logError, "verarbeiteImportProjekte", logmsg)
 
                                         End If
 
@@ -2841,8 +2845,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, phaseName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
                             currentPH = hproj.getPhase(name:=phaseName, breadcrumb:=breadCrumb, lfdNr:=1)
 
@@ -2880,8 +2884,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, milestoneName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTItemType.projekt And pvName = hproj.name) Or
-                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
+                            (type = PTItemType.vorlage) Then
 
                             currentMS = hproj.getMilestone(milestoneName, breadCrumb, 1)
 
@@ -3517,6 +3521,7 @@ Public Module awinGeneralModules
             hproj = projektliste.getProject(key)
             ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
 
+
             If IsNothing(hproj) Then
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
@@ -3743,81 +3748,89 @@ Public Module awinGeneralModules
                 '' ''Dim projsOfCurConstellation As SortedList(Of String, clsProjekt) =
                 '' ''    CType(databaseAcc, DBAccLayer.Request).retrieveProjectsOfOneConstellationFromDB(kvp.Key, err, storedAtOrBefore)
 
-                ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
-                Dim curSummaryProjVorgabe As clsProjekt = Nothing
-                Dim curSummaryProjToUse As clsProjekt = Nothing
+                If kvp.Value.variantName = "" Then    ' StandardVariante der Constellation
 
-                Dim vorgabeBudget As Double = -1
-                ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
+                    ' hier wird die Summary Projekt Vorlage erst mal geholt , um das vorgegebene Budget zu ermitteln
+                    Dim curSummaryProjVorgabe As clsProjekt = Nothing
+                    Dim curSummaryProjToUse As clsProjekt = Nothing
 
-                Dim variantName As String = ptVariantFixNames.pfv.ToString
-                ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
-                ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
-                ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
-                If onlySessionLoad And Not awinSettings.loadPFV Then
-                    variantName = ""
-                End If
+                    Dim vorgabeBudget As Double = -1
+                    ' hole die Vorgabe des Summary Projekts, die enthält nämlich die Vorgabe für das Budget 
 
-                curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
-                If Not IsNothing(curSummaryProjVorgabe) Then
-                    vorgabeBudget = curSummaryProjVorgabe.Erloes
-                End If
-
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
-                    ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
-
-                    If IsNothing(curSummaryProjVorgabe) Then
-                        ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
-                        curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
+                    Dim variantName As String = ptVariantFixNames.pfv.ToString
+                    ' tk 22.7.19 es muss unterschiedenwerden, ob nur von der Session geladen werden soll 
+                    ' das ist z.B wichtig, um nach einem Import von Projekten und den dazugehörigen Projekten die nur in der Session vorhandenen 
+                    ' Summary PRojekte, die zu dem Zeitpunkt alle Variante-Name = "" haben zu finden 
+                    If onlySessionLoad And Not awinSettings.loadPFV Then
+                        variantName = ""
                     End If
-                    curSummaryProjToUse = curSummaryProjVorgabe
-                Else
-                    curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
-                End If
 
+                    curSummaryProjVorgabe = getProjektFromSessionOrDB(kvp.Value.constellationName, variantName, AlleProjekte, storedAtOrBefore)
+                    If Not IsNothing(curSummaryProjVorgabe) Then
+                        vorgabeBudget = curSummaryProjVorgabe.Erloes
+                    End If
 
-                If Not IsNothing(curSummaryProjToUse) Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                        ' laden von Datenbank, er ist hier bereits fertig, aber wenn es nothing sein sollte, dann erstelle es .. 
 
-                    ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
-                    Dim srKey As String = calcProjektKey(curSummaryProjToUse)
-
-                    If showSummaryProject Then
-                        ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
-                        If AlleProjekte.Containskey(srKey) Then
-                            AlleProjekte.Remove(srKey, True)
+                        If IsNothing(curSummaryProjVorgabe) Then
+                            ' hier muss das Budget aus den einzelnen Projekten errechnet werden 
+                            curSummaryProjVorgabe = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=-1, description:="Summen-Projekt von " & kvp.Key)
                         End If
-
-                        Try
-                            AlleProjekte.Add(curSummaryProjToUse, updateCurrentConstellation:=True, checkOnConflicts:=True)
-                            Dim cItem As New clsConstellationItem
-                            With cItem
-                                .projectName = kvp.Value.constellationName
-                                .variantName = curSummaryProjToUse.variantName
-                                .projectTyp = CType(curSummaryProjToUse.projectType, ptPRPFType).ToString
-                                .zeile = zaehler
-                                .show = True
-                            End With
-                            zaehler = zaehler + 1
-                            activeSummaryConstellation.add(cItem, sKey:=zaehler)
-                        Catch ex As Exception
-
-                        End Try
+                        curSummaryProjToUse = curSummaryProjVorgabe
                     Else
-                        '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
-                        '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
-                        If AlleProjektSummaries.Containskey(srKey) Then
-                            AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
-                        End If
-
-                        Try
-                            AlleProjektSummaries.Add(curSummaryProjToUse, updateCurrentConstellation:=False, checkOnConflicts:=False)
-                        Catch ex As Exception
-
-                        End Try
+                        curSummaryProjToUse = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=vorgabeBudget, description:="Summen-Projekt von " & kvp.Key)
                     End If
 
+
+                    If Not IsNothing(curSummaryProjToUse) Then
+
+                        ' der Summary-Projekt Key ist nicht unbedingt gleich de kvp.key 
+                        Dim srKey As String = calcProjektKey(curSummaryProjToUse)
+
+                        If showSummaryProject Then
+                            ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
+                            If AlleProjekte.Containskey(srKey) Then
+                                AlleProjekte.Remove(srKey, True)
+                            End If
+
+                            Try
+                                AlleProjekte.Add(curSummaryProjToUse, updateCurrentConstellation:=True, checkOnConflicts:=True)
+                                Dim cItem As New clsConstellationItem
+                                With cItem
+                                    .projectName = kvp.Value.constellationName
+                                    .variantName = curSummaryProjToUse.variantName
+                                    .projectTyp = CType(curSummaryProjToUse.projectType, ptPRPFType).ToString
+                                    .zeile = zaehler
+                                    .show = True
+                                End With
+                                zaehler = zaehler + 1
+                                activeSummaryConstellation.add(cItem, sKey:=zaehler)
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+                            '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                            '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                            If AlleProjektSummaries.Containskey(srKey) Then
+                                AlleProjektSummaries.Remove(srKey, updateCurrentConstellation:=False)
+                            End If
+
+                            Try
+                                AlleProjektSummaries.Add(curSummaryProjToUse, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                    End If
+
+                Else
+                    ' Variante der Constellation kann kein Summary-Projekt haben
                 End If
+
             Next
+
 
             If showSummaryProject Then
                 ' damit der Name des einen Portfolios übernommen wird ...
@@ -3954,7 +3967,7 @@ Public Module awinGeneralModules
                 Dim budget As Double = -1.0
                 Dim calculateAndStoreSummaryProjekt As Boolean = False
                 Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
-
+                ' TODO: currentConstellation.variantName berücksichtigen
                 Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
 
                 Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
@@ -3963,7 +3976,12 @@ Public Module awinGeneralModules
                 ' tk 5.2.20 das sollte immer (!) neu berechnet werden, schließlich haben sich ja di eProjekte geändert 
                 ' und wenn das alles identisch ist, dann wird das durch die spätere Überprüfung rausgefunden ... 
                 'calculateAndStoreSummaryProjekt = IsNothing(oldSummaryP) Or myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager
-                calculateAndStoreSummaryProjekt = True
+                If currentConstellation.variantName = "" Then
+                    calculateAndStoreSummaryProjekt = True
+                Else
+                    calculateAndStoreSummaryProjekt = False
+                End If
+
                 Dim sproj As clsProjekt = Nothing
 
                 If calculateAndStoreSummaryProjekt Then
@@ -4201,9 +4219,14 @@ Public Module awinGeneralModules
                         If dbConstellations.ContainsKey(currentConstellation.constellationName) Then
                             Dim dbConstellation As clsConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(currentConstellation.constellationName,
                                                                                                            dbConstellations(currentConstellation.constellationName),
-                                                                                                           cTimestamp, err,
-                                                                                                           DBtimeStamp)
-                            storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                                                                                                           ctimestamp, err, variantName:=currentConstellation.variantName,
+                                                                                                           storedAtOrBefore:=DBtimeStamp)
+                            ' dbConstellation ist nothing, wenn z.B. die Variante noch nicht existiert
+                            If Not IsNothing(dbConstellation) Then
+                                storeRequired = Not currentConstellation.isIdentical(dbConstellation)
+                            Else
+                                storeRequired = True
+                            End If
                         End If
                     End If
 
@@ -4212,7 +4235,6 @@ Public Module awinGeneralModules
 
                 ' hier wird geprüft, ob die sich überhaupt verändert hat  
                 If storeRequired Then
-
 
                     ' ur: 26.10.2019: nicht mehr Date.now, da sonst das Summary-Projekt einen Timestamp hat, der vor dem Portfolio liegt, was unlogisch ist
 
@@ -4232,10 +4254,12 @@ Public Module awinGeneralModules
                             End If
 
                             If awinSettings.englishLanguage Then
-                                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+                                outputLine = "Saved ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbTab &
+                                    "Variante: " & currentConstellation.variantName & vbLf & tsMessage
 
                             Else
-                                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbLf & tsMessage
+                                outputLine = "Gespeichert ... " & vbLf & "Portfolio: " & currentConstellation.constellationName & vbTab &
+                                    "Variante: " & currentConstellation.variantName & vbLf & tsMessage
                             End If
 
                             outPutCollection.Add(outputLine)
@@ -4251,18 +4275,18 @@ Public Module awinGeneralModules
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputLine = "Portfolio contains at least one project with more than one variant - please correct: " & currentConstellation.constellationName
+                            outputLine = "Portfolio contains at least one project with more than one variant - please correct: " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         Else
-                            outputLine = "Portfolio darf pro Projekt nicht mehr als 1 Variante enthalten - bitte korrigieren: " & currentConstellation.constellationName
+                            outputLine = "Portfolio darf pro Projekt nicht mehr als 1 Variante enthalten - bitte korrigieren: " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         End If
                         outPutCollection.Add(outputLine)
                     End If
                 Else
                     If awinSettings.englishLanguage Then
-                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName
+                        outputLine = "not stored: Portfolio identical to DB-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         outPutCollection.Add(outputLine)
                     Else
-                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName
+                        outputLine = "nicht gespeichert: Portfolio identisch mit Datenbank-Version : " & currentConstellation.constellationName & "[" & currentConstellation.variantName & "]"
                         outPutCollection.Add(outputLine)
                     End If
 
@@ -4312,11 +4336,12 @@ Public Module awinGeneralModules
         If deleteDB Then
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
+                Dim pName As String = getPnameFromKey(constellationName)
+                Dim vName As String = getVariantnameFromKey(constellationName)
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(constellationName, vpid, err)
+                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(pName, vpid, vName, err)
                 If returnValue = False Then
-                    Call MsgBox("Fehler bei Löschen Portfolio : " & constellationName)
+                    Call MsgBox("Fehler bei Löschen Portfolio : " & pName & "[" & vName & "]")
                 Else
                     ' jetzt muss die Planung wie die Beauftragung des Portfolio Projekts gelöscht werden ... 
                     'Dim planungsKey As String = calcProjektKey(activeConstellation.constellationName, "")
@@ -4327,17 +4352,22 @@ Public Module awinGeneralModules
                 End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
-                returnValue = False
+                    returnValue = False
             End If
         End If
 
         If returnValue Then
             Try
+                If Not IsNothing(constellationName) Then
+                    projectConstellations.Remove(constellationName)
+                Else
+                    Call MsgBox("Es wurde keine Portfolio ausgewählt")
+                End If
                 If Not IsNothing(activeConstellation) Then
                     ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
                     projectConstellations.Remove(activeConstellation.constellationName)
                 Else
-                    Call MsgBox("Es wurde keine Portfolio ausgewählt")
+                    Call MsgBox("Es wurde kein Portfolio ausgewählt")
                 End If
 
             Catch ex1 As Exception
@@ -4372,7 +4402,12 @@ Public Module awinGeneralModules
             outputCollection.Add(outputLine)
         Else
             ' ab diesem Wert soll neu gezeichnet werden 
-            Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+            Dim freieZeile As Integer = 2
+
+            If Not calledFromPPT Then
+                freieZeile = projectboardShapes.getMaxZeile
+            End If
+
 
             hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, "", storedAtORBefore, err)
 
@@ -5199,6 +5234,38 @@ Public Module awinGeneralModules
 
     End Function
 
+
+
+
+    ''' <summary>
+    ''' 
+    ''' liefert die Liste von Varianten-Namen, die es zu einem vp  mit Name pName oder vpid gibt 
+    ''' 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vpid"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getVariantListeFromPName(ByVal pName As String, Optional ByVal vpid As String = "",
+                                             Optional ByVal vpType As Integer = ptPRPFType.project,
+                                             Optional ByVal portfolioliste As SortedList(Of String, String) = Nothing) As Collection
+        Dim tmpResult As New Collection
+        Dim err As New clsErrorCodeMsg
+
+        If Not IsNothing(portfolioliste) Then
+            For Each kvp As KeyValuePair(Of String, String) In portfolioliste
+                If kvp.Key.Contains(pName) Then
+                    tmpResult.Add(kvp.Value)
+                End If
+            Next
+        Else
+            tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName, err, vpType)
+        End If
+
+
+        getVariantListeFromPName = tmpResult
+
+    End Function
 
 
 
@@ -7151,7 +7218,7 @@ Public Module awinGeneralModules
                             If reportname = "" Then
                                 Dim aktDate As String = Date.Now.ToString
                                 reportname = aktDate & "Report.pptx"
-                                Call logfileSchreiben("EinzelprojektReport mit ' " & projekte & "/" & variante & "/" &
+                                Call logger(ptErrLevel.logInfo, "EinzelprojektReport mit ' " & projekte & "/" & variante & "/" &
                                                       profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
                             Else
                                 reportname = reportname & ".pptx"
@@ -7180,11 +7247,11 @@ Public Module awinGeneralModules
                             reportErstellen = True
                         Else
 
-                            Call logfileSchreiben("reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
+                            Call logger(ptErrLevel.logError, "reportErstellen", "Projekt '" & projekte & "' existiert nicht in DB!", anzFehler)
 
                         End If
                     Else
-                        Call logfileSchreiben("reportErstellen", "Vorlagendatei " & vorlagendateiname & " existiert nicht!", anzFehler)
+                        Call logger(ptErrLevel.logError, "reportErstellen", "Vorlagendatei " & vorlagendateiname & " existiert nicht!", anzFehler)
                     End If
 
                 Catch ex As Exception
@@ -7239,7 +7306,7 @@ Public Module awinGeneralModules
                                     End If
                                 Else
 
-                                    Call logfileSchreiben("reportErstellen", "Projekt '" & kvp.Value.projectName & " mit TimeStamp '" & timestamp.ToString & "' existiert nicht in DB!", anzFehler)
+                                    Call logger(ptErrLevel.logError, "reportErstellen", "Projekt '" & kvp.Value.projectName & " mit TimeStamp '" & timestamp.ToString & "' existiert nicht in DB!", anzFehler)
 
                                 End If  ' if hproj existiert
                             Next
@@ -7276,7 +7343,7 @@ Public Module awinGeneralModules
                                 If reportname = "" Then
                                     Dim aktDate As String = Date.Now.ToString
                                     reportname = aktDate & "MP Report.pptx"
-                                    Call logfileSchreiben("MulitprojektReport mit ' " & projekte & "/" &
+                                    Call logger(ptErrLevel.logInfo, "MulitprojektReport mit ' " & projekte & "/" &
                                                           profilname & "/ ... wurde in " & reportname & "ersatzweise gespeichert", "reportErstellen", anzFehler)
                                 Else
                                     reportname = reportname & ".pptx"
@@ -7306,12 +7373,12 @@ Public Module awinGeneralModules
 
                             End If
                         Else
-                            Call logfileSchreiben("reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
+                            Call logger(ptErrLevel.logError, "reportErstellen", "angegebene Constellation nicht in der DB", anzFehler)
 
                         End If
 
                     Else
-                        Call logfileSchreiben("reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
+                        Call logger(ptErrLevel.logError, "reportErstellen", "keine Constellations in der DB vorhanden", anzFehler)
                     End If
 
                 Catch ex As Exception

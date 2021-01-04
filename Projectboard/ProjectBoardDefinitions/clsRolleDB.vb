@@ -14,7 +14,6 @@ Public Class clsRolleDB
     Public farbe As Object
     Public startkapa As Integer
     Public tagessatzIntern As Double
-    Public tagessatzExtern As Double
     Public isCalculated As Boolean
 
     Sub copyFrom(ByVal role As clsRolle)
@@ -28,8 +27,6 @@ Public Class clsRolleDB
             Me.name = Nothing
             Me.farbe = Nothing
             Me.startkapa = Nothing
-            Me.tagessatzIntern = Nothing
-            Me.tagessatzExtern = Nothing
             Me.isCalculated = Nothing
 
         End With

@@ -368,8 +368,8 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
-                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean, _
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String,
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean,
                                              Optional ByVal swimlaneID As String = rootPhaseName) As String
         Get
             Dim elemName As String = elemNameOfElemID(nameID)
@@ -393,7 +393,7 @@
                 swlBC = ""
             Else
                 If istElemID(swimlaneID) Then
-                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID), _
+                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID),
                                                   Me.hierarchy.getBreadCrumb(swimlaneID))
                 End If
             End If
@@ -758,8 +758,8 @@
 
     ''' <summary>
     ''' entfernt die Phase mit der übergebenen nameID 
-    ''' dabei kann angegeben werden, was mit den Kind-Elementen passieren soll: löschen oder umhängen 
-    ''' die rootPhase kann nicht gelöscht werden; in diesem Fall wird eine Exception geworfen  
+    ''' Dabei kann angegeben werden, was mit den Kind-Elementen passieren soll: löschen oder umhängen;
+    ''' Die rootPhase kann nicht gelöscht werden; In diesem Fall wird eine Exception geworfen  
     ''' </summary>
     ''' <param name="nameID">der eindeutige Identifier aus der Hierarchie-Liste</param>
     ''' <param name="deleteAllChilds" >
@@ -1436,7 +1436,7 @@
                     Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
                     If type = -1 Or
-                        (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                        (type = PTItemType.vorlage) Then
 
                         Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
                         ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -1496,7 +1496,7 @@
                     Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
 
                     If type = -1 Or
-                        (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                        (type = PTItemType.vorlage) Then
 
                         Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
                         ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -2992,9 +2992,6 @@
                                 tagessatz = curRole.tagessatzIntern
                             End If
 
-                            'Dim dimension As Integer
-                            'dimension = curRole.getDimension
-                            'ReDim tempArray(dimension)
                             tempArray = curRole.Xwerte
 
                             For i = phasenStart To phasenStart + tempArray.Length - 1

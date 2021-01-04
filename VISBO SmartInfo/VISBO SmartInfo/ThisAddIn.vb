@@ -55,8 +55,8 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
-        visboClient = "VISBO Smartinfo / "
-
+        ' visboClient = "VISBO Smartinfo / "
+        visboClient = divClients(client.VisboSmartinfo)
         ' Refresh von Projekte im Cache  in Minuten
         cacheUpdateDelay = 10
 
@@ -79,6 +79,9 @@ Public Class ThisAddIn
 
 
         Try
+            ' User spezifische Settings für Report Creation gemerkt in my.settings
+            Call writeSettings()
+
             ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
             My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
             If My.Settings.rememberUserPWD Then
@@ -116,11 +119,13 @@ Public Class ThisAddIn
 
     End Sub
 
-    Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation
+    Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation, Application.PresentationSave
 
         ' das muss hier bleiben und kann nicht nach Module1 verlagert werden .. 
 
-        If presentationHasAnySmartSlides(Pres) Then
+        currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
+
+        If currentPresHasVISBOElements Then
 
             Dim hsearchPane As Microsoft.Office.Tools.CustomTaskPane
             Dim hPropPane As Microsoft.Office.Tools.CustomTaskPane
@@ -240,4 +245,5 @@ Public Class ThisAddIn
     Private Sub ThisAddIn_BindingContextChanged(sender As Object, e As EventArgs) Handles Me.BindingContextChanged
 
     End Sub
+
 End Class

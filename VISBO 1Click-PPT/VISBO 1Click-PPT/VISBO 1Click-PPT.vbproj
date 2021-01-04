@@ -300,7 +300,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>BE0C69CECC92B53D65D23735221377CF02372720</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>B7FCEFD6591B5C2F4D3E3AC3CE012FEFBBEC9D62</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <MyType>Windows</MyType>
