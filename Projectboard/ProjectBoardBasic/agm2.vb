@@ -13613,7 +13613,7 @@ Public Module agm2
                                     logArray(4) = ""
                                     logArray(5) = ""
 
-                                    Call logger(ptErrLevel.logWarning, "ImportAllianzIstdaten", logArray)
+                                    Call logger(ptErrLevel.logWarning, "ImportIstdatenStdFormat", logArray)
 
                                 End If
 
@@ -13637,7 +13637,7 @@ Public Module agm2
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
                             End If
 
 
@@ -13673,7 +13673,7 @@ Public Module agm2
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
 
                             End If
                         Else
@@ -13689,8 +13689,7 @@ Public Module agm2
                             logArray(4) = teamName
                             logArray(5) = parentReferat
 
-                            Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
-                            protocolEntryWritten = True
+                            Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
 
                         End If
 
@@ -13969,8 +13968,7 @@ Public Module agm2
                                     logDblArray(3) = checkIstValue
                                     logDblArray(4) = gesamtNachher - checkNachher
 
-                                    Call logfileSchreiben(logArray, logDblArray)
-                                    'Call logger(ptErrLevel.logDebug, "importAllianzIstdaten", logArray, logDblArray)
+                                    Call logger(ptErrLevel.logDebug, "importIstdatenStdFormat", logArray, logDblArray)
 
                                 End If
                             End If
@@ -14008,7 +14006,7 @@ Public Module agm2
                             logArray(3) = ""
                             logArray(4) = ""
 
-                            Call logfileSchreiben(logArray)
+                            Call logger(ptErrLevel.logsevereError, "importIstdatenStdFormat", logArray)
                         End If
                     Else
 
