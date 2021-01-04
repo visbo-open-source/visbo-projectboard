@@ -13428,8 +13428,6 @@ Public Module agm2
 
         Try
 
-
-
             ' jetzt kommt die eigentliche Import Behandlung 
             Dim currentWS As Excel.Worksheet = Nothing
             Try
@@ -13516,8 +13514,6 @@ Public Module agm2
                 Exit Sub
             End If
 
-            ' hier wird das Logfile jetzt geöffnet 
-            ''Call logfileOpen()
 
             With currentWS
 
@@ -13539,7 +13535,7 @@ Public Module agm2
 
                 'Dim cacheProjekte As New clsProjekteAlle
 
-                ' im key steht der NAme aus der Datei , im Value steht der Name i CacheProjekte
+                ' im key steht der Name aus der Datei , im Value steht der Name aus AlleProjekte 
                 Dim handledNames As New SortedList(Of String, String)
                 ' nimmt die unbekannten / nicht erkannten Role-Names auf 
                 Dim unKnownRoleNames As New SortedList(Of String, Boolean)
@@ -13722,7 +13718,7 @@ Public Module agm2
                             End If
 
                             Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
-                                Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
 
 
                             Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
@@ -13776,6 +13772,14 @@ Public Module agm2
                                 End If
                             Else
                                 ' Call logger
+                                ReDim logArray(5)
+                                logArray(0) = "Unbekanntes Projekt"
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = pName
+                                logArray(4) = ""
+                                logArray(5) = ""
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
                             End If
 
                         End If
@@ -14010,13 +14014,15 @@ Public Module agm2
                         End If
                     Else
 
-                        outPutLine = "ActualData do not fit to the timeframe the project cobers ... " & hproj.name
+                        outPutLine = "ActualData does not fit to the timeframe the project covers ... " & hproj.name
                         outputCollection.Add(outPutLine)
 
                         ReDim logArray(5)
-                        logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
+                        logArray(0) = "No fit in time-Frame: " & hproj.name
+                        logArray(1) = "Actual-Data: " & getDateofColumn(MinMaxInformations.Item(hproj.name)(0), False).ToShortDateString & " - " &
+                            getDateofColumn(MinMaxInformations.Item(hproj.name)(1), True).ToShortDateString
+                        logArray(2) = "Project: " & getDateofColumn(projstart, False).ToShortDateString & " - " &
+                            getDateofColumn(projEnd, True).ToShortDateString
                         logArray(3) = ""
                         logArray(4) = ""
 
