@@ -8934,12 +8934,12 @@ Public Module agm2
                             orgaCopy = Nothing
                         End If
 
-                        ' merge von imported Roles and existing Roles
-                        Dim mergedRoleDefinitions As clsRollen = mergeOldAndNewRoleDefs(orgaCopy.allRoles, newRoleDefinitions, outputCollection)
+                        ' ur TODO:  merge von imported Roles and existing Roles
+                        Dim mergedRoleDefinitions As clsRollen = mergeOldAndNewRoleDefs(orgaCopy, newRoleDefinitions, outputCollection)
 
                         'bis hier ist alles in Ordnung 
                         With importedOrga
-                            .allRoles = newRoleDefinitions
+                            .allRoles = mergedRoleDefinitions
                             .allCosts = newCostDefinitions
                             .validFrom = validFrom
                         End With
@@ -24119,9 +24119,15 @@ Public Module agm2
 
     End Sub
 
-    Public Function mergeOldAndNewRoleDefs(ByVal oldRoledefs As clsRollen, ByVal newRoledefs As clsRollen, ByRef outputCollection As Collection) As clsRollen
+    Public Function mergeOldAndNewRoleDefs(ByVal oldOrga As clsOrganisation, ByVal newRoledefs As clsRollen, ByRef outputCollection As Collection) As clsRollen
 
         Dim result As New clsRollen
+        If Not IsNothing(oldOrga) Then
+            ' ur TODO: hier sollte der Merge von alten und neuen Rollendefinitionen stattfinden
+            result = newRoledefs
+        Else
+            result = newRoledefs
+        End If
         mergeOldAndNewRoleDefs = result
     End Function
 
