@@ -31,6 +31,8 @@
     ' ur: 21.06.2019 ergänzt
     ' gibt den Zeitpunkt an, zu dem das Portfolio zusammengestellt wurde
     Private _timestamp As Date
+
+
     Public Property timestamp As Date
         Get
             timestamp = _timestamp
@@ -61,6 +63,22 @@
     End Property
 
 
+    'ur:22.09.2020 ergänzt
+    ' gibt den Namen der Variante an. Standard = ""
+    Private _variantName As String
+    Public Property variantName As String
+        Get
+            variantName = _variantName
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                If value <> "" Then
+                    _variantName = value
+                End If
+            End If
+        End Set
+    End Property
+
 
     Private _constellationName As String = "Last"
 
@@ -73,23 +91,24 @@
         Dim istgleich As Boolean = False
 
         If constellationName = vglC.constellationName Then
-            If sortCriteria = vglC.sortCriteria Then
-                If Not sortedListsAreDifferent(sortListe, vglC.sortListe, 1, ) Then
-                    If count = vglC.count Then
-                        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            If variantName = vglC.variantName Then
+                If sortCriteria = vglC.sortCriteria Then
+                    If Not sortedListsAreDifferent(sortListe, vglC.sortListe, 1, ) Then
+                        If count = vglC.count Then
+                            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
 
-                            Dim vglItem As clsConstellationItem = vglC.getItem(kvp.Key)
-                            If Not IsNothing(vglItem) Then
-                                istgleich = kvp.Value.isIdentical(vglItem)
-                            Else
-                                istgleich = False
-                                Exit For
-                            End If
+                                Dim vglItem As clsConstellationItem = vglC.getItem(kvp.Key)
+                                If Not IsNothing(vglItem) Then
+                                    istgleich = kvp.Value.isIdentical(vglItem)
+                                Else
+                                    istgleich = False
+                                    Exit For
+                                End If
 
-                        Next
+                            Next
+                        End If
                     End If
                 End If
-
             End If
         End If
 
@@ -543,65 +562,65 @@
             Next
 
         Else
-            _sortType = ptSortCriteria.customTF
-            ' neu 
-            Dim newSortList As New SortedList(Of String, String)
-            Dim noShowList As New SortedList(Of String, clsConstellationItem)
+            '_sortType = ptSortCriteria.customTF
+            '' neu 
+            'Dim newSortList As New SortedList(Of String, String)
+            'Dim noShowList As New SortedList(Of String, clsConstellationItem)
 
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
-                If kvp.Value.show = True Then
-                    Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
-                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
-                    While newSortList.ContainsKey(sortkey)
-                        sortkey = calcSortKeyCustomTF1(sortkey)
-                    End While
+            'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+            '    ' erstmal prüfen , ob die sortliste das Projekt nicht schon enthält ...
+            '    If kvp.Value.show = True Then
+            '        Dim sortkey As String = calcSortKeyCustomTF(kvp.Value.zeile)
+            '        ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+            '        While newSortList.ContainsKey(sortkey)
+            '            sortkey = calcSortKeyCustomTF1(sortkey)
+            '        End While
 
-                    ' jetzt ist er eindeutig 
-                    newSortList.Add(sortkey, kvp.Value.projectName)
-                Else
-                    ' erstmal in die NoShow Liste packen 
-                    noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
-                End If
+            '        ' jetzt ist er eindeutig 
+            '        newSortList.Add(sortkey, kvp.Value.projectName)
+            '    Else
+            '        ' erstmal in die NoShow Liste packen 
+            '        noShowList.Add(calcProjektKey(kvp.Value.projectName, kvp.Value.variantName), kvp.Value)
+            '    End If
 
-            Next
+            'Next
 
-            ' jetzt müssen alle NoShow-Items behandelt werden ..
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
-                If newSortList.ContainsValue(kvp.Value.projectName) Then
-                    ' ist schon enthalten, also cItem.zeile anpassen 
-                    Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
-                        (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
-                Else
-                    ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
-                    ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
-                    Dim noShowZeile As Integer
-                    If kvp.Value.zeile >= 2 Then
-                        noShowZeile = kvp.Value.zeile
-                    Else
-                        If newSortList.Count > 0 Then
-                            noShowZeile = getTFzeilefromSortKeyCustomTF _
-                                                   (newSortList.Last.Key) + 1
-                        Else
-                            noShowZeile = 2
-                        End If
-                    End If
+            '' jetzt müssen alle NoShow-Items behandelt werden ..
+            'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In noShowList
+            '    If newSortList.ContainsValue(kvp.Value.projectName) Then
+            '        ' ist schon enthalten, also cItem.zeile anpassen 
+            '        Me.getItem(kvp.Key).zeile = getTFzeilefromSortKeyCustomTF _
+            '            (newSortList.ElementAt(newSortList.IndexOfValue(kvp.Value.projectName)).Key)
+            '    Else
+            '        ' ist noch nicht enthalten, also ist das Projekt in keiner Variante angezeigt
+            '        ' und soll demzufolge eine Zeile-Nummer höher, also ans Ende positioniert werden 
+            '        Dim noShowZeile As Integer
+            '        If kvp.Value.zeile >= 2 Then
+            '            noShowZeile = kvp.Value.zeile
+            '        Else
+            '            If newSortList.Count > 0 Then
+            '                noShowZeile = getTFzeilefromSortKeyCustomTF _
+            '                                       (newSortList.Last.Key) + 1
+            '            Else
+            '                noShowZeile = 2
+            '            End If
+            '        End If
 
-                    Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
-                    ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
-                    While newSortList.ContainsKey(tmpKey)
-                        tmpKey = calcSortKeyCustomTF1(tmpKey)
-                    End While
+            '        Dim tmpKey As String = calcSortKeyCustomTF(noShowZeile)
+            '        ' jetzt wird der Schlüssel solange verändert, bis er eindeutig ist ... 
+            '        While newSortList.ContainsKey(tmpKey)
+            '            tmpKey = calcSortKeyCustomTF1(tmpKey)
+            '        End While
 
-                    ' jetzt ist er eindeutig 
-                    newSortList.Add(tmpKey, kvp.Value.projectName)
-                    Me.getItem(kvp.Key).zeile = noShowZeile
+            '        ' jetzt ist er eindeutig 
+            '        newSortList.Add(tmpKey, kvp.Value.projectName)
+            '        Me.getItem(kvp.Key).zeile = noShowZeile
 
-                End If
-            Next
+            '    End If
+            'Next
 
-            ' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
-            Me.sortListe(ptSortCriteria.customTF) = newSortList
+            '' jetzt enthält die newSortList alle Projekt-Namen mit den richtigen sortkeys ...
+            'Me.sortListe(ptSortCriteria.customTF) = newSortList
 
         End If
 
@@ -638,6 +657,8 @@
                 If _sortType <> value Or istNull Or istLeer Then
                     ' nur wenn es unterschiedlich oder wenn es noch gar nicht gesetzt ist, muss etwas getan werden 
                     Call Me.buildSortlist(value)
+
+
                 End If
 
             End If
@@ -935,7 +956,7 @@
 
     ''' <summary>
     ''' gibt das clsConstellationItem zurück, das angezeigt wird. 
-    ''' pro Constelaltion können zwar mehrere Varianten vorkommen, aber nur eine kann das Attribut show haben 
+    ''' pro Constellation können zwar mehrere Varianten vorkommen, aber nur eine kann das Attribut show haben 
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <returns></returns>
@@ -1041,6 +1062,7 @@
 
             With copyResult
                 .constellationName = cName
+                .variantName = Me.variantName
                 .vpID = Me.vpID
 
                 .timestamp = Me.timestamp
@@ -1616,6 +1638,7 @@
 
         ' tk 11.5.19 , wenn vpID = Nothing: existiert noch nicht in Datenbank 
         _vpID = Nothing
+        _variantName = ""
 
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
@@ -1643,6 +1666,7 @@
         _vpID = Nothing
 
         Me.constellationName = cName
+        Me.variantName = ""
 
         If IsNothing(projektListe) Then
             ' bereits fertig - es ist eine leere Constellation mit Name cNAme

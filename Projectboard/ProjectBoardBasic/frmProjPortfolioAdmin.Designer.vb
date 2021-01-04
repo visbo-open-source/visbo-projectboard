@@ -27,6 +27,7 @@ Partial Class frmProjPortfolioAdmin
         Me.ToolTipStand = New System.Windows.Forms.ToolTip(Me.components)
         Me.portfolioBrowserHelp = New System.Windows.Forms.HelpProvider()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.txtBoxVariantName = New System.Windows.Forms.TextBox()
         Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
         Me.storeToDBasWell = New System.Windows.Forms.CheckBox()
@@ -60,6 +61,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.txtBoxVariantName)
         Me.Panel1.Controls.Add(Me.chkbxPermanent)
         Me.Panel1.Controls.Add(Me.requiredDate)
         Me.Panel1.Controls.Add(Me.storeToDBasWell)
@@ -77,16 +79,25 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.TreeViewProjekte)
         Me.Panel1.Location = New System.Drawing.Point(-4, 0)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(368, 534)
+        Me.Panel1.Size = New System.Drawing.Size(337, 579)
         Me.Panel1.TabIndex = 0
+        '
+        'txtBoxVariantName
+        '
+        Me.txtBoxVariantName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtBoxVariantName.Location = New System.Drawing.Point(16, 513)
+        Me.txtBoxVariantName.Name = "txtBoxVariantName"
+        Me.txtBoxVariantName.Size = New System.Drawing.Size(310, 20)
+        Me.txtBoxVariantName.TabIndex = 92
         '
         'chkbxPermanent
         '
         Me.chkbxPermanent.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.chkbxPermanent.AutoSize = True
-        Me.chkbxPermanent.Location = New System.Drawing.Point(266, 436)
+        Me.chkbxPermanent.Location = New System.Drawing.Point(256, 464)
         Me.chkbxPermanent.Name = "chkbxPermanent"
         Me.chkbxPermanent.Size = New System.Drawing.Size(76, 17)
         Me.chkbxPermanent.TabIndex = 91
@@ -96,17 +107,17 @@ Partial Class frmProjPortfolioAdmin
         'requiredDate
         '
         Me.requiredDate.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.requiredDate.Location = New System.Drawing.Point(128, 9)
+        Me.requiredDate.Location = New System.Drawing.Point(102, 8)
         Me.requiredDate.Name = "requiredDate"
         Me.requiredDate.ShowCheckBox = True
-        Me.requiredDate.Size = New System.Drawing.Size(213, 20)
+        Me.requiredDate.Size = New System.Drawing.Size(224, 20)
         Me.requiredDate.TabIndex = 90
         '
         'storeToDBasWell
         '
         Me.storeToDBasWell.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.storeToDBasWell.AutoSize = True
-        Me.storeToDBasWell.Location = New System.Drawing.Point(258, 485)
+        Me.storeToDBasWell.Location = New System.Drawing.Point(253, 539)
         Me.storeToDBasWell.Name = "storeToDBasWell"
         Me.storeToDBasWell.Size = New System.Drawing.Size(79, 17)
         Me.storeToDBasWell.TabIndex = 89
@@ -118,7 +129,7 @@ Partial Class frmProjPortfolioAdmin
         Me.backToInit.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.backToInit.BackColor = System.Drawing.SystemColors.Control
         Me.backToInit.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_delete
-        Me.backToInit.Location = New System.Drawing.Point(229, 435)
+        Me.backToInit.Location = New System.Drawing.Point(221, 463)
         Me.backToInit.Name = "backToInit"
         Me.backToInit.Size = New System.Drawing.Size(17, 16)
         Me.backToInit.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -130,7 +141,7 @@ Partial Class frmProjPortfolioAdmin
         Me.onlyInactive.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.onlyInactive.BackColor = System.Drawing.SystemColors.Control
         Me.onlyInactive.Image = Global.ProjectBoardBasic.My.Resources.Resources.nur_ungecheckte_Projekte
-        Me.onlyInactive.Location = New System.Drawing.Point(205, 435)
+        Me.onlyInactive.Location = New System.Drawing.Point(197, 463)
         Me.onlyInactive.Name = "onlyInactive"
         Me.onlyInactive.Size = New System.Drawing.Size(17, 16)
         Me.onlyInactive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -142,7 +153,7 @@ Partial Class frmProjPortfolioAdmin
         Me.onlyActive.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.onlyActive.BackColor = System.Drawing.SystemColors.Control
         Me.onlyActive.Image = Global.ProjectBoardBasic.My.Resources.Resources.nur_gecheckte_Projekte
-        Me.onlyActive.Location = New System.Drawing.Point(182, 435)
+        Me.onlyActive.Location = New System.Drawing.Point(174, 463)
         Me.onlyActive.Name = "onlyActive"
         Me.onlyActive.Size = New System.Drawing.Size(17, 16)
         Me.onlyActive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -154,7 +165,7 @@ Partial Class frmProjPortfolioAdmin
         Me.deleteFilterIcon.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.deleteFilterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.deleteFilterIcon.Enabled = False
-        Me.deleteFilterIcon.Location = New System.Drawing.Point(149, 435)
+        Me.deleteFilterIcon.Location = New System.Drawing.Point(141, 463)
         Me.deleteFilterIcon.Name = "deleteFilterIcon"
         Me.deleteFilterIcon.Size = New System.Drawing.Size(17, 16)
         Me.deleteFilterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -166,7 +177,7 @@ Partial Class frmProjPortfolioAdmin
         Me.filterIcon.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.filterIcon.BackColor = System.Drawing.SystemColors.Control
         Me.filterIcon.Image = Global.ProjectBoardBasic.My.Resources.Resources.funnel_add
-        Me.filterIcon.Location = New System.Drawing.Point(125, 435)
+        Me.filterIcon.Location = New System.Drawing.Point(117, 463)
         Me.filterIcon.Name = "filterIcon"
         Me.filterIcon.Size = New System.Drawing.Size(17, 16)
         Me.filterIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -178,9 +189,9 @@ Partial Class frmProjPortfolioAdmin
         Me.dropboxScenarioNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.dropboxScenarioNames.FormattingEnabled = True
-        Me.dropboxScenarioNames.Location = New System.Drawing.Point(23, 459)
+        Me.dropboxScenarioNames.Location = New System.Drawing.Point(16, 485)
         Me.dropboxScenarioNames.Name = "dropboxScenarioNames"
-        Me.dropboxScenarioNames.Size = New System.Drawing.Size(318, 21)
+        Me.dropboxScenarioNames.Size = New System.Drawing.Size(310, 21)
         Me.dropboxScenarioNames.TabIndex = 80
         '
         'SelectionSet
@@ -190,7 +201,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
         Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(24, 436)
+        Me.SelectionSet.Location = New System.Drawing.Point(16, 463)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(17, 16)
         Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -203,7 +214,7 @@ Partial Class frmProjPortfolioAdmin
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Cursor = System.Windows.Forms.Cursors.Default
         Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(72, 436)
+        Me.collapseCompletely.Location = New System.Drawing.Point(64, 464)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(17, 16)
         Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -215,7 +226,7 @@ Partial Class frmProjPortfolioAdmin
         Me.expandCompletely.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(95, 436)
+        Me.expandCompletely.Location = New System.Drawing.Point(87, 464)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(17, 16)
         Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -228,7 +239,7 @@ Partial Class frmProjPortfolioAdmin
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(44, 436)
+        Me.SelectionReset.Location = New System.Drawing.Point(36, 464)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(17, 16)
         Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -240,7 +251,7 @@ Partial Class frmProjPortfolioAdmin
         Me.lblStandvom.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.lblStandvom.AutoSize = True
         Me.lblStandvom.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblStandvom.Location = New System.Drawing.Point(53, 11)
+        Me.lblStandvom.Location = New System.Drawing.Point(33, 11)
         Me.lblStandvom.Name = "lblStandvom"
         Me.lblStandvom.Size = New System.Drawing.Size(61, 13)
         Me.lblStandvom.TabIndex = 75
@@ -249,7 +260,7 @@ Partial Class frmProjPortfolioAdmin
         'OKButton
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.OKButton.Location = New System.Drawing.Point(23, 502)
+        Me.OKButton.Location = New System.Drawing.Point(16, 554)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(200, 22)
         Me.OKButton.TabIndex = 74
@@ -262,17 +273,17 @@ Partial Class frmProjPortfolioAdmin
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TreeViewProjekte.Location = New System.Drawing.Point(26, 33)
-        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.TreeViewProjekte.Location = New System.Drawing.Point(16, 33)
+        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
-        Me.TreeViewProjekte.Size = New System.Drawing.Size(316, 391)
+        Me.TreeViewProjekte.Size = New System.Drawing.Size(310, 422)
         Me.TreeViewProjekte.TabIndex = 73
         '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(366, 535)
+        Me.ClientSize = New System.Drawing.Size(333, 580)
         Me.Controls.Add(Me.Panel1)
         Me.portfolioBrowserHelp.SetHelpString(Me, """das ist die Hilfe""")
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
@@ -313,4 +324,5 @@ Partial Class frmProjPortfolioAdmin
     Public WithEvents lblStandvom As Windows.Forms.Label
     Friend WithEvents OKButton As Windows.Forms.Button
     Public WithEvents TreeViewProjekte As Windows.Forms.TreeView
+    Friend WithEvents txtBoxVariantName As Windows.Forms.TextBox
 End Class

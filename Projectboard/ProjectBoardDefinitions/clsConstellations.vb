@@ -28,12 +28,12 @@
     ''' </summary>
     ''' <param name="portfolioName"></param>
     ''' <returns></returns>
-    Public Function addToLoadedSessionPortfolios(ByVal portfolioName As String) As Boolean
+    Public Function addToLoadedSessionPortfolios(ByVal portfolioName As String, Optional ByVal vName As String = "") As Boolean
         Dim tmpResult As Boolean = True
-
-        If Me.Contains(portfolioName) Then
-            If Not _listOfLoadedSessionPortfolios.ContainsKey(portfolioName) Then
-                _listOfLoadedSessionPortfolios.Add(portfolioName, True)
+        Dim pvName As String = calcPortfolioKey(portfolioName, vName)
+        If Me.Contains(pvName) Then
+            If Not _listOfLoadedSessionPortfolios.ContainsKey(pvName) Then
+                _listOfLoadedSessionPortfolios.Add(pvName, True)
             End If
         Else
             tmpResult = False
@@ -65,7 +65,17 @@
     End Sub
 
     ''' <summary>
+    ''' setzt die Liste aller Portfolios der Session zurück 
+    ''' </summary>
+    Public Sub Clear()
+        _listOfLoadedSessionPortfolios.Clear()
+        _allConstellations.Clear()
+        AlleProjektSummaries.Clear(False)
+    End Sub
+
+    ''' <summary>
     ''' gibt das Gesamt Budget des Zeitraums im Gesamt-Portfolio zurück 
+    ''' noch TODO
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property getBudgetOfLoadedPortfolios() As Double
@@ -177,15 +187,19 @@
 
     End Property
 
-    Public ReadOnly Property getConstellation(name As String) As clsConstellation
-        Get
+    Public ReadOnly Property getConstellation(name As String, Optional ByVal vname As String = "") As clsConstellation
 
-            If _allConstellations.ContainsKey(name) Then
-                getConstellation = _allConstellations.Item(name)
+        Get
+            If name <> "" Then
+                Dim pvname As String = calcPortfolioKey(name, vname)
+                If _allConstellations.ContainsKey(pvname) Then
+                    getConstellation = _allConstellations.Item(pvname)
+                Else
+                    getConstellation = Nothing
+                End If
             Else
                 getConstellation = Nothing
             End If
-
         End Get
     End Property
 
@@ -200,11 +214,11 @@
     ''' </summary>
     ''' <param name="item">Constellation</param>
     Sub Add(ByVal item As clsConstellation)
-
+        Dim trennzeichen = "#"
         Try
-            _allConstellations.Add(item.constellationName, item)
+            _allConstellations.Add(item.constellationName & trennzeichen & item.variantName, item)
         Catch ex As Exception
-            Dim errmsg = "Program-/Portfolio Name existiert bereits: " & item.constellationName
+            Dim errmsg = "Program-/Portfolio Name existiert bereits: " & item.constellationName & "[" & item.variantName & "]"
             Throw New ArgumentException(errmsg)
         End Try
 
@@ -235,17 +249,17 @@
     ''' <param name="item"></param>
     ''' <remarks></remarks>
     Public Sub update(item As clsConstellation)
-
+        Dim trennzeichen As String = "#"
         Me.clearLoadedPortfolios()
-
-        If Me._allConstellations.ContainsKey(item.constellationName) Then
-            Me._allConstellations.Remove(item.constellationName)
+        Dim pvName As String = calcPortfolioKey(item)
+        If Me._allConstellations.ContainsKey(pvName) Then
+            Me._allConstellations.Remove(pvName)
         End If
 
-        Me._allConstellations.Add(item.constellationName, item)
+        Me._allConstellations.Add(pvName, item)
 
         ' jetzt das in loadedSessionPortfolios reinbringen 
-        Me.addToLoadedSessionPortfolios(item.constellationName)
+        Me.addToLoadedSessionPortfolios(item.constellationName, item.variantName)
 
     End Sub
 

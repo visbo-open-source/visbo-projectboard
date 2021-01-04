@@ -9,9 +9,23 @@ Public Class frmSelectPhasesMilestones
     Public selectedMilestones As New Collection
     Public selectedPhases As New Collection
 
+    ' steuert ob die showrangeLEft und showrangeRight Daten gezeigt werden 
+    Public Property addElementMode As Boolean
+
 
     Private dontFire As Boolean = False
     Dim hryStufenValue As Integer = 50
+
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        _addElementMode = False
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+
+    End Sub
+
     Private Sub frmSelectPhasesMilestones_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
@@ -23,6 +37,16 @@ Public Class frmSelectPhasesMilestones
             Me.Left = 100
         End If
 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            vonDate.MinDate = getDateofColumn(showRangeLeft, False).AddMonths(-3)
+            vonDate.MaxDate = getDateofColumn(showRangeRight, True).AddMonths(-1)
+            vonDate.Value = getDateofColumn(showRangeLeft, False)
+
+            bisDate.MinDate = getDateofColumn(showRangeLeft, False).AddMonths(1)
+            bisDate.MaxDate = getDateofColumn(showRangeRight, True).AddMonths(24)
+            bisDate.Value = getDateofColumn(showRangeRight, True)
+        End If
+
 
         ' Button Visibility und Texte definieren 
         Call defineFrmButtonVisibility()
@@ -31,7 +55,7 @@ Public Class frmSelectPhasesMilestones
         selectedMilestones.Clear()
         selectedPhases.Clear()
 
-        Call buildHryTreeViewinPPT(PTItemType.projekt)
+        Call buildHryTreeViewInPPT(PTItemType.projekt)
 
 
 
@@ -51,10 +75,18 @@ Public Class frmSelectPhasesMilestones
             rdbProjStruktTyp.Visible = False
         End If
 
+        zeitLabel.Visible = Not addElementMode
+        vonDate.Visible = Not addElementMode
+        bisDate.Visible = Not addElementMode
+
         If awinSettings.englishLanguage Then
+            zeitLabel.Text = "Timeframe"
+            einstellungen.Text = "Settings"
             Me.Text = "Selection of projects, phases, milestones"
             Me.Ok_Button.Text = "Confirm selection"
         Else
+            zeitLabel.Text = "Zeitraum"
+            einstellungen.Text = "Einstellungen"
             Me.Text = "Auswahl von Projekten, Phasen, Meilensteinen"
             Me.Ok_Button.Text = "Auswahl bestätigen"
         End If
@@ -62,7 +94,7 @@ Public Class frmSelectPhasesMilestones
     End Sub
 
     ''' <summary>
-    ''' baut den TreeView aus Projekte, Phasen udn Meilensteinen auf 
+    ''' baut den TreeView aus Projekte, Phasen und Meilensteinen auf 
     ''' </summary>
     ''' <param name="auswahl"></param>
     Private Sub buildHryTreeViewInPPT(ByVal auswahl As PTItemType)
@@ -92,8 +124,10 @@ Public Class frmSelectPhasesMilestones
 
                     If kvp.Value.hierarchy.count > 0 Then
                         topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                        'topLevel.Name = kennung & kvp.Key
+                        topLevel.Name = kennung & calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        'topLevel.Text = kvp.Key
+                        topLevel.Text = kvp.Value.getShapeText
 
                         hry = kvp.Value.hierarchy
 
@@ -127,8 +161,10 @@ Public Class frmSelectPhasesMilestones
 
                     If kvp.Value.hierarchy.count > 0 Then
                         topLevel = .Nodes.Add(kvp.Key)
-                        topLevel.Name = kennung & kvp.Key
-                        topLevel.Text = kvp.Key
+                        'topLevel.Name = kennung & kvp.Key
+                        topLevel.Name = kennung & calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        'topLevel.Text = kvp.Key
+                        topLevel.Text = kvp.Value.getShapeText
                         hry = kvp.Value.hierarchy
 
                         If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
@@ -285,7 +321,7 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
             curHry = selectedProjekte.getProject(1).hierarchy
         Else
-            curHry = ShowProjekte.getProject(PVname).hierarchy
+            curHry = ShowProjekte.getProject(getPnameFromKey(PVname)).hierarchy
         End If
 
 
@@ -472,6 +508,7 @@ Public Class frmSelectPhasesMilestones
 
         Dim initialNode As TreeNode = TreeViewProjects.SelectedNode
         Dim checkMode As Boolean
+        Dim hnode As TreeNode
 
         dontFire = True
         Try
@@ -485,7 +522,6 @@ Public Class frmSelectPhasesMilestones
                             .Nodes.Item(i - 1).Checked = checkMode
                         Next
                     End If
-
                 End With
 
             ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
@@ -532,6 +568,25 @@ Public Class frmSelectPhasesMilestones
                     End While
                 End With
             End If
+
+            ' ProjektKnoten selektieren
+            hnode = initialNode
+
+            ' finde den obersten Node
+            While Not IsNothing(hnode.Parent)
+                hnode = hnode.Parent
+            End While
+
+            ' selektieren ihn, wenn checkmode = true
+            If checkMode Then
+                hnode.Checked = checkMode
+            Else
+                ' wenn nun alle knoten deselektiert sind, obersten Knoten auch deselektieren
+                If Not subNodesSelected(hnode) Then
+                    hnode.Checked = False
+                End If
+            End If
+
         Catch ex As Exception
             dontFire = False
         End Try
@@ -543,7 +598,11 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
-    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles Ok_Button.Click
+    Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles OK_Button.Click
+
+        ' showRangeLeft und showrange Right bestimmen
+        showRangeLeft = getColumnOfDate(vonDate.Value)
+        showRangeRight = getColumnOfDate(bisDate.Value)
 
 
         Dim anzahlKnoten As Integer
@@ -570,7 +629,7 @@ Public Class frmSelectPhasesMilestones
                 ' und daraus die Hierarchie 
                 If tmpNode.Level = 0 Then
                     hry = getHryFromNode(tmpNode)
-                    Type = getTypeFromNode(tmpNode)
+                    type = getTypeFromNode(tmpNode)
                     pvName = getPVnameFromNode(tmpNode)
                     If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
 
@@ -728,8 +787,8 @@ Public Class frmSelectPhasesMilestones
         If type = PTItemType.vorlage Then
 
             ' jetzt anders ... 
-            If selectedProjekte.contains(pvName) Then
-                tmpResult = selectedProjekte.getProject(pvName).hierarchy
+            If selectedProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = selectedProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
             'If Projektvorlagen.Contains(pvName) Then
@@ -737,8 +796,8 @@ Public Class frmSelectPhasesMilestones
             'End If
 
         Else
-            If ShowProjekte.contains(pvName) Then
-                tmpResult = ShowProjekte.getProject(pvName).hierarchy
+            If ShowProjekte.contains(getPnameFromKey(pvName)) Then
+                tmpResult = ShowProjekte.getProject(getPnameFromKey(pvName)).hierarchy
             End If
 
         End If
@@ -767,6 +826,17 @@ Public Class frmSelectPhasesMilestones
             Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")}, 2)
             If tmpStr.Length >= 2 Then
                 tmpResult = tmpStr(1)
+            End If
+
+        End If
+
+        If AlleProjekte.Count > 0 Then
+            Dim tmpList As Collection = AlleProjekte.getVariantNames(tmpResult, False)
+
+            If tmpList.Count > 0 Then
+                Dim variantName As String = CStr(tmpList.Item(1))
+                tmpResult = calcProjektKey(tmpResult, variantName)
+                Dim hproj As clsProjekt = AlleProjekte.getProject(tmpResult, variantName)
             End If
 
         End If
@@ -927,7 +997,7 @@ Public Class frmSelectPhasesMilestones
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     Private Sub expandTree_Click(sender As Object, e As EventArgs) Handles expandTree.Click
-        
+
         With TreeViewProjects
             .ExpandAll()
         End With
@@ -958,6 +1028,19 @@ Public Class frmSelectPhasesMilestones
     Private Sub rdbProjStruktTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbProjStruktTyp.CheckedChanged
 
         If rdbProjStruktTyp.Checked Then
+            ' ist ein Item gecheckt - dann setze das auf selectedProjekte ..
+            Dim found As Boolean = False
+            For Each tmpNode As TreeNode In TreeViewProjects.Nodes
+                If tmpNode.Level = 0 And tmpNode.Checked = True Then
+                    Dim pvName As String = tmpNode.Name.Substring(2)
+                    Dim myProject As clsProjekt = AlleProjekte.getProject(pvName)
+                    If Not IsNothing(myProject) Then
+                        selectedProjekte.Clear(False)
+                        selectedProjekte.Add(myProject, False)
+                        Exit For
+                    End If
+                End If
+            Next
             Call buildHryTreeViewInPPT(PTItemType.vorlage)
         Else
             selectedPhases.Clear()
@@ -977,5 +1060,32 @@ Public Class frmSelectPhasesMilestones
 
     End Sub
 
+    Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
+        If Not dontFire Then
+            dontFire = True
+            vonDate.Value = vonDate.Value.AddDays(-1 * vonDate.Value.Day + 1)
+        Else
+            dontFire = True
+        End If
+    End Sub
+
+    Private Sub bisDate_ValueChanged(sender As Object, e As EventArgs) Handles bisDate.ValueChanged
+        If Not dontFire Then
+            dontFire = True
+            bisDate.Value = bisDate.Value.AddDays(-1 * bisDate.Value.Day + 1).AddMonths(1).AddDays(-1)
+        Else
+            dontFire = False
+        End If
+    End Sub
+
+    Private Sub einstellungen_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles einstellungen.LinkClicked
+        Dim mppFrm As New frmMppSettings
+        Dim dialogreturn As DialogResult
+
+        mppFrm.calledfrom = "frmSelectPPTTempl"
+
+        dialogreturn = mppFrm.ShowDialog
+
+    End Sub
 
 End Class

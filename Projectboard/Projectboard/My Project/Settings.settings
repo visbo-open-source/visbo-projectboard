@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Tom\Documents\VISBO Demo Systeme\VISBO Project Add-In\</Value>
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">visboproject</Value>
+      <Value Profile="(Default)">bhtc</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
@@ -33,7 +33,7 @@
       <Value Profile="(Default)">% Abgeschlossen&lt;</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">TMS</Value>
     </Setting>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

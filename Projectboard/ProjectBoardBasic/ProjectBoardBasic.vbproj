@@ -90,6 +90,12 @@
     <Compile Include="frmInfoActualDataMonth.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmLoadConstellation.Designer.vb">
+      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmLoadConstellation.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmProvideActualDataMonth.Designer.vb">
       <DependentUpon>frmProvideActualDataMonth.vb</DependentUpon>
     </Compile>
@@ -346,6 +352,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmLoadCockpit.resx">
       <DependentUpon>frmLoadCockpit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLoadConstellation.resx">
+      <DependentUpon>frmLoadConstellation.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmMoveTimeSpan.resx">
       <DependentUpon>frmMoveTimeSpan.vb</DependentUpon>
