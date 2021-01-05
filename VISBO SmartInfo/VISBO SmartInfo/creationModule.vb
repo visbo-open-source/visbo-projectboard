@@ -524,121 +524,142 @@ Module creationModule
 
                             Case "Projekt-Name"
 
-                                fullName = hproj.getShapeText
+                                Try
+                                    fullName = hproj.getShapeText
 
-                                If qualifier.Length > 0 Then
-                                    If qualifier.Trim <> "Enlarge13" Then
-                                        .TextFrame2.TextRange.Text = fullName & ": " & qualifier
+                                    If qualifier.Length > 0 Then
+                                        If qualifier.Trim <> "Enlarge13" Then
+                                            .TextFrame2.TextRange.Text = fullName & ": " & qualifier
+                                        Else
+                                            .TextFrame2.TextRange.Text = fullName
+                                        End If
                                     Else
                                         .TextFrame2.TextRange.Text = fullName
                                     End If
-                                Else
-                                    .TextFrame2.TextRange.Text = fullName
-                                End If
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
 
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                           ptReportBigTypes.components, ptReportComponents.prName)
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                               ptReportBigTypes.components, ptReportComponents.prName)
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Projekt-Name':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+
 
                             Case "selectedItems"
 
-                                Dim selTxt As String = ""
+                                Try
 
-                                If selectedRoles.Count > 0 Then
-                                    For Each tmpRoleID As String In selectedRoles
-                                        Dim teamID As Integer = -1
-                                        Dim tmpRoleName As String = RoleDefinitions.getRoleDefByIDKennung(tmpRoleID, teamID).name
-                                        If selTxt = "" Then
-                                            selTxt = tmpRoleName
-                                        Else
-                                            selTxt = selTxt & "; " & tmpRoleName
-                                        End If
-                                    Next
-                                End If
+                                    Dim selTxt As String = ""
 
-                                If selectedCosts.Count > 0 Then
-                                    Dim firstTime As Boolean = True
-                                    For Each tmpCostName As String In selectedCosts
-                                        If selTxt = "" Then
-                                            selTxt = tmpCostName
-                                        Else
-                                            If firstTime Then
-                                                selTxt = selTxt & vbLf & tmpCostName
+                                    If selectedRoles.Count > 0 Then
+                                        For Each tmpRoleID As String In selectedRoles
+                                            Dim teamID As Integer = -1
+                                            Dim tmpRoleName As String = RoleDefinitions.getRoleDefByIDKennung(tmpRoleID, teamID).name
+                                            If selTxt = "" Then
+                                                selTxt = tmpRoleName
                                             Else
-                                                selTxt = selTxt & "; " & tmpCostName
+                                                selTxt = selTxt & "; " & tmpRoleName
                                             End If
-                                        End If
-                                        firstTime = False
-                                    Next
-                                End If
+                                        Next
+                                    End If
 
-                                ' wenn nichts in selTxtx drin steht , ist es auch gut. Dann "verschwindet" dieses Feld ...
-                                .TextFrame2.TextRange.Text = selTxt
-                                .AlternativeText = ""
-                                .Title = ""
+                                    If selectedCosts.Count > 0 Then
+                                        Dim firstTime As Boolean = True
+                                        For Each tmpCostName As String In selectedCosts
+                                            If selTxt = "" Then
+                                                selTxt = tmpCostName
+                                            Else
+                                                If firstTime Then
+                                                    selTxt = selTxt & vbLf & tmpCostName
+                                                Else
+                                                    selTxt = selTxt & "; " & tmpCostName
+                                                End If
+                                            End If
+                                            firstTime = False
+                                        Next
+                                    End If
+
+                                    ' wenn nichts in selTxtx drin steht , ist es auch gut. Dann "verschwindet" dieses Feld ...
+                                    .TextFrame2.TextRange.Text = selTxt
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'selectedItems':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
 
 
                             Case "Custom-Field"
-                                If qualifier.Length > 0 Then
-                                    ' existiert der überhaupt 
-                                    Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
 
-                                    If uid <> -1 Then
-                                        Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
+                                Try
+                                    If qualifier.Length > 0 Then
+                                        ' existiert der überhaupt 
+                                        Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
 
-                                        Select Case cftype
-                                            Case ptCustomFields.Str
-                                                Dim wert As String = hproj.getCustomSField(uid)
-                                                If Not IsNothing(wert) Then
-                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert
-                                                Else
-                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                                End If
+                                        If uid <> -1 Then
+                                            Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
 
-                                            Case ptCustomFields.Dbl
-                                                Dim wert As Double = hproj.getCustomDField(uid)
-                                                If Not IsNothing(wert) Then
-                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
-                                                Else
-                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                                End If
-
-                                            Case ptCustomFields.bool
-                                                Dim wert As Boolean = hproj.getCustomBField(uid)
-
-                                                If Not IsNothing(wert) Then
-                                                    If wert Then
-                                                        ' Sprache !
-                                                        .TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                            Select Case cftype
+                                                Case ptCustomFields.Str
+                                                    Dim wert As String = hproj.getCustomSField(uid)
+                                                    If Not IsNothing(wert) Then
+                                                        .TextFrame2.TextRange.Text = qualifier & ": " & wert
                                                     Else
-                                                        ' Sprache !
-                                                        .TextFrame2.TextRange.Text = qualifier & ": No"
+                                                        .TextFrame2.TextRange.Text = qualifier & " : n.a"
                                                     End If
 
-                                                Else
-                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
-                                                End If
+                                                Case ptCustomFields.Dbl
+                                                    Dim wert As Double = hproj.getCustomDField(uid)
+                                                    If Not IsNothing(wert) Then
+                                                        .TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                                    Else
+                                                        .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                    End If
 
-                                        End Select
+                                                Case ptCustomFields.bool
+                                                    Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                                    If Not IsNothing(wert) Then
+                                                        If wert Then
+                                                            ' Sprache !
+                                                            .TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                        Else
+                                                            ' Sprache !
+                                                            .TextFrame2.TextRange.Text = qualifier & ": No"
+                                                        End If
+
+                                                    Else
+                                                        .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                    End If
+
+                                            End Select
 
 
-                                        Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                           ptReportBigTypes.components, ptReportComponents.prCustomField)
+                                            Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                               ptReportBigTypes.components, ptReportComponents.prCustomField)
+                                        Else
+                                            .TextFrame2.TextRange.Text = "Custom-Field " & qualifier &
+                                                " does not exist ... !"
+                                        End If
+
                                     Else
-                                        .TextFrame2.TextRange.Text = "Custom-Field " & qualifier &
-                                            " does not exist ... !"
+                                        ' n.a"
+                                        .TextFrame2.TextRange.Text = "Custom-Field without Name ..."
                                     End If
 
-                                Else
-                                    ' n.a"
-                                    .TextFrame2.TextRange.Text = "Custom-Field without Name ..."
-                                End If
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Custom-Field':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
-                                .AlternativeText = ""
-                                .Title = ""
 
                             Case "AllePlanElemente"
 
@@ -706,6 +727,10 @@ Module creationModule
 
 
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'AllePlanElemente':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
 
@@ -741,6 +766,10 @@ Module creationModule
 
 
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'Multiprojektsicht':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
                                 End Try
@@ -770,6 +799,10 @@ Module creationModule
 
 
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'Einzelprojektsicht':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
                                 End Try
@@ -797,6 +830,10 @@ Module creationModule
                                     .Title = ""
 
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'Swimlanes':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                     .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
@@ -832,6 +869,10 @@ Module creationModule
                                     .Title = ""
 
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'Swimlanes2':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
@@ -877,7 +918,8 @@ Module creationModule
                                     .Title = ""
 
                                 Catch ex As Exception
-
+                                    msgTxt = "Component 'TableMilestoneAPVCV':" & ex.Message
+                                    msgCollection.Add(msgTxt)
                                 End Try
 
                             Case "TableBudgetCostAPVCV"
@@ -902,7 +944,8 @@ Module creationModule
                                     .Title = ""
 
                                 Catch ex As Exception
-
+                                    msgTxt = "Component 'TableBudgetCostAPVCV':" & ex.Message
+                                    msgCollection.Add(msgTxt)
                                 End Try
 
 
@@ -938,262 +981,367 @@ Module creationModule
                                     .Title = ""
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
+
+                                    msgTxt = "Component 'ProjektBedarfsChart':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+
                                 End Try
 
 
 
                             Case "Ampel-Farbe"
 
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Ampel-Farbe"
-                                    Else
-                                        boxName = "Traffic Light"
-                                    End If
-                                    'boxName = repMessages.getmsg(230)
-                                End If
-
-                                Select Case hproj.ampelStatus
-                                    Case 0
-                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
-                                    Case 1
-                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
-                                    Case 2
-                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
-                                    Case 3
-                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
-                                    Case Else
-                                End Select
-
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prAmpel
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
-
-                                .AlternativeText = ""
-                                .Title = ""
-
-                            Case "Ampel-Text"
-
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Ampel-Text"
-                                    Else
-                                        boxName = "Traffic Light Explanation"
-                                    End If
-                                    'boxName = repMessages.getmsg(225)
-                                End If
-                                '.TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
-                                ' keine String Ampel-Text mehr rein-machen
-                                .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
-
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prAmpelText
-                                qualifier2 = boxName
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
-
-                                .AlternativeText = ""
-                                .Title = ""
-
-                            Case "Business-Unit"
-
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Business-Unit:"
-                                    Else
-                                        boxName = "Business-Unit:"
-                                    End If
-                                    'boxName = repMessages.getmsg(226)
-                                End If
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
-
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prBusinessUnit
-                                qualifier2 = boxName
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
-
-                                .AlternativeText = ""
-                                .Title = ""
-
-                            Case "Beschreibung"
-
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Beschreibung"
-                                    Else
-                                        boxName = "Description"
-                                    End If
-                                    'boxName = repMessages.getmsg(227)
-                                End If
-                                '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
-                                ' jetzt ohne boxName ...
-                                '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
-                                .TextFrame2.TextRange.Text = hproj.description
-
                                 Try
-                                    If hproj.variantDescription.Length > 0 Then
-                                        ' jetzt ohne boxName
-                                        '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf &
-                                        '    "Varianten-Beschreibung: " & hproj.variantDescription
 
-                                        .TextFrame2.TextRange.Text = hproj.description & vbLf & vbLf &
-                                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Ampel-Farbe"
+                                        Else
+                                            boxName = "Traffic Light"
+                                        End If
+                                        'boxName = repMessages.getmsg(230)
                                     End If
+
+                                    Select Case hproj.ampelStatus
+                                        Case 0
+                                            .Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
+                                        Case 1
+                                            .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
+                                        Case 2
+                                            .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
+                                        Case 3
+                                            .Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
+                                        Case Else
+                                    End Select
+
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prAmpel
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                              bigType, compID)
+
+                                    .AlternativeText = ""
+                                    .Title = ""
                                 Catch ex As Exception
+
+                                    msgTxt = "Component 'Ampel-Farbe':" & ex.Message
+                                    msgCollection.Add(msgTxt)
 
                                 End Try
 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prDescription
-                                qualifier2 = boxName
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                            Case "Ampel-Text"
+
+                                Try
+
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Ampel-Text"
+                                        Else
+                                            boxName = "Traffic Light Explanation"
+                                        End If
+                                        'boxName = repMessages.getmsg(225)
+                                    End If
+                                    '.TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
+                                    ' keine String Ampel-Text mehr rein-machen
+                                    .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prAmpelText
+                                    qualifier2 = boxName
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Ampel-Text':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+                            Case "Business-Unit"
+
+                                Try
+
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Business-Unit:"
+                                        Else
+                                            boxName = "Business-Unit:"
+                                        End If
+                                        'boxName = repMessages.getmsg(226)
+                                    End If
+                                    .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
+
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prBusinessUnit
+                                    qualifier2 = boxName
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Business-Unit':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+                            Case "Beschreibung"
+
+                                Try
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Beschreibung"
+                                        Else
+                                            boxName = "Description"
+                                        End If
+                                        'boxName = repMessages.getmsg(227)
+                                    End If
+                                    '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
+                                    ' jetzt ohne boxName ...
+                                    '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
+                                    .TextFrame2.TextRange.Text = hproj.description
+
+                                    Try
+                                        If hproj.variantDescription.Length > 0 Then
+                                            ' jetzt ohne boxName
+                                            '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf &
+                                            '    "Varianten-Beschreibung: " & hproj.variantDescription
+
+                                            .TextFrame2.TextRange.Text = hproj.description & vbLf & vbLf &
+                                            "Varianten-Beschreibung: " & hproj.variantDescription
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prDescription
+                                    qualifier2 = boxName
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Beschreibung':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "SymTrafficLight"
 
-                                ' hier wird das entsprechende Licht gesetzt ...
-                                Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymTrafficLight
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                Try
+                                    ' hier wird das entsprechende Licht gesetzt ...
+                                    Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymTrafficLight
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                              bigType, compID)
+
+                                    pptShape.AlternativeText = ""
+                                    pptShape.Title = ""
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymTrafficLight':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
 
                             Case "SymRisks"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymRisks
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymRisks
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymRisks':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "SymGoals"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymDescription
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymDescription
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymGoals':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
 
                             Case "SymFinance"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymFinance
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymFinance
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymFinance':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "SymSchedules"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymSchedules
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymSchedules
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymSchedules':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "SymTeam"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymTeam
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymTeam
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymTeam':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "SymProject"
-                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prSymProject
-                                qualifier2 = ""
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+
+                                Try
+                                    ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prSymProject
+                                    qualifier2 = ""
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'SymProject':" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
 
                             Case "Stand:"
 
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Version:"
-                                    Else
-                                        boxName = "Stand:"
+                                Try
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Version:"
+                                        Else
+                                            boxName = "Stand:"
+                                        End If
+                                        'boxName = repMessages.getmsg(223)
                                     End If
-                                    'boxName = repMessages.getmsg(223)
-                                End If
 
-                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
-                                '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prStand
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                    .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult) & " (DB: " & hproj.timeStamp.ToString("d", repCult) & ")"
+                                    '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prStand
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Stand:'" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
 
                             Case "Laufzeit:"
 
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Project Time:"
-                                    Else
-                                        boxName = "Laufzeit:"
+                                Try
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Project Time:"
+                                        Else
+                                            boxName = "Laufzeit:"
+                                        End If
+                                        'boxName = repMessages.getmsg(228)
                                     End If
-                                    'boxName = repMessages.getmsg(228)
-                                End If
-                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.startDate, hproj.endeDate)
+                                    .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.startDate, hproj.endeDate)
 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prLaufzeit
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prLaufzeit
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Laufzeit:'" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
 
                             Case "Verantwortlich:"
 
-                                If boxName = kennzeichnung Then
-                                    If englishLanguage Then
-                                        boxName = "Verantwortlich:"
-                                    Else
-                                        boxName = "Responsible:"
+                                Try
+                                    If boxName = kennzeichnung Then
+                                        If englishLanguage Then
+                                            boxName = "Verantwortlich:"
+                                        Else
+                                            boxName = "Responsible:"
+                                        End If
+                                        'boxName = repMessages.getmsg(229)
                                     End If
-                                    'boxName = repMessages.getmsg(229)
-                                End If
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
+                                    .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
 
-                                bigType = ptReportBigTypes.components
-                                compID = ptReportComponents.prVerantwortlich
-                                qualifier2 = boxName
-                                Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
-                                                          bigType, compID)
+                                    bigType = ptReportBigTypes.components
+                                    compID = ptReportComponents.prVerantwortlich
+                                    qualifier2 = boxName
+                                    Call addSmartPPTCompInfo(pptShape, hproj, Nothing, ptPRPFType.project, qualifier, qualifier2,
+                                                              bigType, compID)
 
-                                .AlternativeText = ""
-                                .Title = ""
+                                    .AlternativeText = ""
+                                    .Title = ""
+                                Catch ex As Exception
+                                    msgTxt = "Component 'Laufzeit:'" & ex.Message
+                                    msgCollection.Add(msgTxt)
+                                End Try
+
+
                             Case Else
+                                msgTxt = "unknown Component: " & kennzeichnung
+                                msgCollection.Add(msgTxt)
                         End Select
 
 
@@ -1652,10 +1800,21 @@ Module creationModule
             .ChartTitle.Font.Size = titleFontSize
             .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
 
-            If startRed > 0 And lengthRed > 0 Then
-                ' die aktuelle Summe muss rot eingefärbt werden 
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+
+            If tDatenSumme < vDatensumme * 0.98 Then
+                If startRed > 0 And lengthRed > 0 Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+                    lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbGreen
+                End If
+
+            ElseIf tDatenSumme > 1.02 * vDatensumme Then
+                If startRed > 0 And lengthRed > 0 Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
                     lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                End If
+
             End If
 
         End With
@@ -1743,9 +1902,7 @@ Module creationModule
 
         ' jetzt werden die noch fehlenden Shapes erstellt .. 
         If rds.getMissingShpNames(kennzeichnung).Count > 0 Then
-            Dim msHeight As Single = 9.0
-            Dim phHeight As Single = 5.6
-            Call rds.createMandatoryDrawingShapes(kennzeichnung, msHeight, phHeight)
+            Call rds.createMandatoryDrawingShapes(kennzeichnung)
         End If
 
 
@@ -2201,9 +2358,7 @@ Module creationModule
 
 
         If rds.getMissingShpNames(kennzeichnung).Count > 0 Then
-            Dim msHeight As Single = 9
-            Dim phHeight As Single = 5.6
-            Call rds.createMandatoryDrawingShapes(kennzeichnung, msHeight, phHeight)
+            Call rds.createMandatoryDrawingShapes(kennzeichnung)
         End If
 
 
@@ -2549,6 +2704,7 @@ Module creationModule
                 Call rds.calculatePPTx1x2(hproj.startDate, hproj.endeDate, x1, x2)
 
                 If Not istEinzelProjektSicht Then
+
                     copiedShape = createPPTShapeFromShape(rds.projectNameVorlagenShape, rds.pptSlide)
                     With copiedShape
                         .Top = CSng(rowYPos - rds.YprojectName)
@@ -2641,19 +2797,25 @@ Module creationModule
                 ' hier ggf die ProjectLine zeichnen 
                 If awinSettings.mppShowProjectLine Then
 
+                    ' tk 5.1.2021
+                    Dim projectLineShapeName As String = calcPPTShapeName(hproj, rootPhaseName)
 
                     copiedShape = createPPTShapeFromShape(rds.projectVorlagenShape, rds.pptSlide)
                     With copiedShape
                         .Top = CSng(rowYPos - rds.YProjectLine)
                         .Left = CSng(x1)
                         .Width = CSng(x2 - x1)
-                        .Name = .Name & .Id
+                        '.Name = .Name & .Id
+                        .Name = projectLineShapeName & .Id
 
                         Try
                             .Line.ForeColor.RGB = hproj.farbe
                             If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
                                 .Line.DashStyle = MsoLineDashStyle.msoLineDash
+                            Else
+                                .Line.DashStyle = MsoLineDashStyle.msoLineSolid
                             End If
+
                         Catch ex As Exception
 
                         End Try
@@ -2670,13 +2832,19 @@ Module creationModule
                             Dim bestShortName As String = hproj.kundenNummer
                             Dim bestLongName As String = hproj.getShapeText
 
-
                             Call addSmartPPTMsPhInfo(copiedShape, hproj,
-                                           fullBreadCrumb, hproj.name, shortText, originalName,
+                                           fullBreadCrumb, ".", shortText, originalName,
                                             bestShortName, bestLongName,
                                             hproj.startDate, hproj.endeDate,
                                             hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
                                             hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
+
+                            'Call addSmartPPTMsPhInfo(copiedShape, hproj,
+                            '               fullBreadCrumb, hproj.name, shortText, originalName,
+                            '                bestShortName, bestLongName,
+                            '                hproj.startDate, hproj.endeDate,
+                            '                hproj.ampelStatus, hproj.ampelErlaeuterung, hproj.getPhase(1).getAllDeliverables("#"),
+                            '                hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
                         End If
 
 
@@ -2933,8 +3101,13 @@ Module creationModule
                 ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
                 toggleRowDifferentiator = Not toggleRowDifferentiator
                 If atleastOneOrphanedMS And Not atLeastOnePhaseDrawn Then
-                    ' rowYPos ist schon richtig gesetzt 
-                    ' wird weitergeschaltet, nachdem orphanedMilestones gezeichnet sind .. 
+                    If Not awinSettings.mppExtendedMode Then
+                        rowYPos = rowYPos + rds.zeilenHoehe
+                    Else
+                        ' rowYPos ist schon richtig gesetzt 
+                        ' wird weitergeschaltet, nachdem orphanedMilestones gezeichnet sind .. 
+                    End If
+
                 Else
                     rowYPos = rowYPos + rds.zeilenHoehe
                 End If
@@ -2947,6 +3120,7 @@ Module creationModule
 
 
             End If
+
 
 
         Next            ' nächstes Projekt zeichnen

@@ -13499,7 +13499,9 @@ Public Module testModule
         Dim qmHeightfaktor As Double = rds.quarterMonthVorlagenShape.Height / KalenderHoehe
 
         ' jetzt muss calendartop neu gesetzt werden 
-        rds.setCalendarTop = rds.calendarLineShape.Top + KalenderHoehe
+        rds.setCalendarTop = rds.containerTop + 2
+        rds.setDrawingareaTop = rds.calendarTop + KalenderHoehe + 30
+        'rds.setCalendarTop = rds.calendarLineShape.Top + KalenderHoehe
 
         ' wird für not MinCal benötigt 
         Dim beschrifteLevel2 As Boolean = False
@@ -14380,13 +14382,16 @@ Public Module testModule
 
         If awinSettings.mppShowProjectLine Then
 
+            ' tk 5.1.2021
+            Dim swlLineShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
 
             copiedShape = createPPTShapeFromShape(rds.projectVorlagenShape, rds.pptSlide)
             With copiedShape
                 .Top = CSng(curYPosition - rds.YProjectLine)
                 .Left = CSng(x1)
                 .Width = CSng(x2 - x1)
-                .Name = .Name & .Id
+                '.Name = .Name & .Id
+                .Name = swlLineShapeName & .Id
 
                 shapeNameCollection.Add(.Name)
 

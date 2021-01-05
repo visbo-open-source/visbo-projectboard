@@ -2331,7 +2331,14 @@ Module SIModule1
         Dim pvName As String = ""
         ' neu ergänzt wegen dem Element projectCard
         Dim isPCard As Boolean = False
+
+        ' neu ergänzt - prüft ob es sich um eine PRojekt- btw Phasen Linie handelt 
         ' neu ergänzt wegen zu verwendender vpid
+
+        ' following checks whether the line is a project resp Phase Line
+        Dim isProjectOrSwimlaneLine As Boolean = (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine) And
+            isRelevantMSPHShape(tmpShape)
+
         Dim vpid As String = getVPIDFromTags(tmpShape)
 
         Dim shapeHeight As Single = 0.0
@@ -2354,9 +2361,12 @@ Module SIModule1
             End If
         End If
 
+        'If (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or
+        'tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine) And Not isPCard Then
+        '
 
         If (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or
-            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine) And Not isPCard Then
+            ((tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine) And Not isProjectOrSwimlaneLine)) And Not isPCard Then
             ' nichts tun 
         Else
             ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
@@ -8697,6 +8707,8 @@ Module SIModule1
 
         isRelevantMSPHShape = tmpResult
     End Function
+
+
 
     ''' <summary>
     ''' true, wenn es sich um eine sogenannte Projekt-Karte handelt ...

@@ -617,16 +617,31 @@ Public Class clsPPTShapes
     ''' <param name="anzZeilen"></param>
     Private Sub enforceAppropriateRowHeight(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
 
-        ' now try three different steps 
-        Dim reductionFactor As Single = 0.8
-
-        ' now milestones and phases are reduced by 80% 
-        ' then a zeilenhohe is calculated so that all fits in ... 
-        _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
-        _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
-        _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
+        ' now try  
+        Dim stopReduction As Single = 0.4
 
         _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / (anzZeilen + 1)
+        Dim phMsHeight As Single = Math.Max(_milestoneVorlagenShape.Height, _phaseVorlagenShape.Height)
+
+
+        If _zeilenHoehe >= phMsHeight Then
+            ' all ok, done 
+        Else
+            ' now change milestoneHeight, phaseHeight so that proportions remain and elements do not overlap 
+            ' unless reduction is not smaller than stopReduction 
+            Dim reductionFactor As Single = CSng(_zeilenHoehe / phMsHeight)
+            If reductionFactor < stopReduction Then
+                reductionFactor = stopReduction
+                ' now overlaps are accepted 
+            End If
+
+            ' now milestones and phases are reduced by reductionFactor 
+            _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
+            _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
+            _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
+
+        End If
+
 
 
     End Sub
@@ -652,9 +667,7 @@ Public Class clsPPTShapes
     ''' 
     ''' </summary>
     ''' <param name="kennzeichnung">steuert, ob am linken Rand Projekt-Namen bzw. Swimlane-Namen ausgegeben werden </param>
-    ''' <param name="msHeight">gibt die Höhe und Breite eines Meilensteins an</param>
-    ''' <param name="phHeight">gibt die Höhe einer Phase an </param>
-    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String, ByVal msHeight As Single, ByVal phHeight As Single)
+    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String)
 
         Dim tmpErg As String = ""
         Dim tmpName As String = ""
@@ -671,6 +684,9 @@ Public Class clsPPTShapes
 
         Dim calendarLineStart As Integer = 90
         Dim buStart As Integer = 5
+
+        Dim msHeight As Single = 14.1
+        Dim phHeight As Single = 5.1
 
 
         ' der Kalender-Start soll in Abhängigkeit von kennzeichneung weiter links oder weiter rechts begionnen 
@@ -963,8 +979,6 @@ Public Class clsPPTShapes
 
             End If
 
-
-
             If IsNothing(_calendarYearSeparator) Then
                 Dim beginX As Single = _containerShape.Left + 30
                 Dim beginY As Single = _containerShape.Top + 30
@@ -1149,7 +1163,7 @@ Public Class clsPPTShapes
 
             If IsNothing(_errorVorlagenShape) Then
                 _errorVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDescVorlagenShape
+                With _errorVorlagenShape
                     .TextFrame2.TextRange.Text = "Error-Message"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -1199,7 +1213,7 @@ Public Class clsPPTShapes
 
             If IsNothing(_segmentVorlagenShape) Then
                 _segmentVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDescVorlagenShape
+                With _segmentVorlagenShape
                     .TextFrame2.TextRange.Text = "Segment-Name"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -1945,6 +1959,13 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public WriteOnly Property setDrawingareaTop As Double
+        Set(value As Double)
+            If value > _containerTop And value < _containerBottom Then
+                _drawingAreaTop = value
+            End If
+        End Set
+    End Property
 
     Public ReadOnly Property drawingAreaTop As Double
         Get
@@ -2285,7 +2306,7 @@ Public Class clsPPTShapes
 
 
         ' bestimme den Anfang , wo gezeichnet wird 
-        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 15
+        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 30
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then

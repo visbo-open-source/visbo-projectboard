@@ -5192,7 +5192,7 @@ Public Module Module1
 
                     If showRangeLeft >= 0 Then
                         .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
-                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, True)))
                     End If
 
                     If .Tags.Item("BID").Length > 0 Then
