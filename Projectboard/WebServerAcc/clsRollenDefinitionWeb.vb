@@ -111,7 +111,11 @@ Public Class clsRollenDefinitionWeb
         roleDef.isSkill = Me.isTeam
         ' 9.11.20 ur for a smart change to tagessatz
         If Not IsNothing(Me.tagessatz) Then
-            roleDef.tagessatzIntern = Me.tagessatz
+            If Me.tagessatz = 0 Then
+                roleDef.tagessatzIntern = Me.tagessatzIntern
+            Else
+                roleDef.tagessatzIntern = Me.tagessatz
+            End If
         Else
             roleDef.tagessatzIntern = Me.tagessatzIntern
         End If
