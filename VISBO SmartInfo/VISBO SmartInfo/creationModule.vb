@@ -507,12 +507,6 @@ Module creationModule
                         height = .Height
                         width = .Width
 
-                        ' ur:27.04.2016
-                        ' ''Try
-                        ' ''    boxName = .TextFrame2.TextRange.Text
-                        ' ''Catch ex As Exception
-                        ' ''    boxName = " "
-                        ' ''End Try
 
                         If CBool(.TextFrame2.HasText) Then
                             boxName = .TextFrame2.TextRange.Text
