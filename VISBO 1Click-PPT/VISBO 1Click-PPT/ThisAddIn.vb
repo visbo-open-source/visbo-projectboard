@@ -75,7 +75,7 @@ Public Class ThisAddIn
                 Try
                     If Not IsNothing(appInstance.Workbooks(myLogfile)) Then
                         ' Schließen des LogFiles
-                        Call logfileSchliessen()
+                        'Call logfileSchliessen()
                     End If
                 Catch ex As Exception
 
@@ -154,7 +154,8 @@ Public Class ThisAddIn
 
                 If Not IsNothing(appInstance.Workbooks(myLogfile)) Then
                     ' Schließen des LogFiles
-                    Call logfileSchliessen()
+
+                    'Call logfileSchliessen()
                 End If
 
 

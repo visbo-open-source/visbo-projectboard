@@ -49,7 +49,7 @@ Module oneClickGeneralModules
 
 
                     If Not loginErfolgreich Then
-                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                        'Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                         Call MsgBox("LOGIN cancelled ...")
                         Throw New ArgumentException("LOGIN cancelled ...")
                     Else
