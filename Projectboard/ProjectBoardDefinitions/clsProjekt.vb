@@ -788,8 +788,8 @@ Public Class clsProjekt
             Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
             If type = -1 Or
-                (type = PTItemType.projekt And pvName = Me.name) Or
-                (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                (type = PTItemType.vorlage) Then
 
                 Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
                 ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -6619,8 +6619,8 @@ Public Class clsProjekt
                                 Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
 
                                 If type = -1 Or
-                                    (type = PTItemType.projekt And pvName = Me.name) Or
-                                    (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                                    (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                                    (type = PTItemType.vorlage) Then
 
                                     If cphase.name = selPhaseName Then
                                         found = True
@@ -7055,8 +7055,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
             If type = -1 Or
-                (type = PTItemType.projekt And Me.name = pvName) Or
-                (type = PTItemType.vorlage And Me.VorlagenName = pvName) Then
+                (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                (type = PTItemType.vorlage) Then
 
                 If strict Then
                     ' breadcrumb soll unverändert beachtet werden 
@@ -7109,8 +7109,8 @@ Public Class clsProjekt
             Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
             If type = -1 Or
-                (type = PTItemType.projekt And Me.name = pvName) Or
-                (type = PTItemType.vorlage And Me.VorlagenName = pvName) Then
+                (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                (type = PTItemType.vorlage) Then
 
                 If strict Then
                     ' breadcrumb soll unverändert beachtet werden 
@@ -7162,8 +7162,8 @@ Public Class clsProjekt
                     Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
                     If type = -1 Or
-                        (type = PTItemType.projekt And pvName = Me.name) Or
-                        (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                        (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                        (type = PTItemType.vorlage) Then
 
                         Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
                         ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -7224,8 +7224,8 @@ Public Class clsProjekt
                     Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
 
                     If type = -1 Or
-                        (type = PTItemType.projekt And pvName = Me.name) Or
-                        (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                        (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                        (type = PTItemType.vorlage) Then
 
                         Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
                         ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -7297,6 +7297,7 @@ Public Class clsProjekt
         End Get
     End Property
 
+
     ''' <summary>
     ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
     ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
@@ -7359,9 +7360,10 @@ Public Class clsProjekt
                     Dim pvName As String = ""
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb, type, pvName)
 
+
                     If type = -1 Or
-                        (type = PTItemType.projekt And pvName = Me.name) Or
-                        (type = PTItemType.vorlage And pvName = Me.VorlagenName) Then
+                        (type = PTItemType.projekt And pvName = calcProjektKey(Me.name, Me.variantName)) Or
+                        (type = PTItemType.vorlage) Then
 
                         If namesAreMilestones Then
                             milestoneIndices = Me.hierarchy.getMilestoneIndices(itemName, itemBreadcrumb)
@@ -7522,8 +7524,8 @@ Public Class clsProjekt
                 Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb, mstype, pvname)
 
                 If mstype = -1 Or
-                    (mstype = PTItemType.projekt And pvname = Me.name) Or
-                    (mstype = PTItemType.vorlage And pvname = Me.VorlagenName) Then
+                    (mstype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+                    (mstype = PTItemType.vorlage) Then
 
                     Dim msNameIndices() As Integer
                     msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
@@ -7557,8 +7559,8 @@ Public Class clsProjekt
                                     Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
                                     If phtype = -1 Or
-                                        (phtype = PTItemType.projekt And pvname = Me.name) Or
-                                        (phtype = PTItemType.vorlage And pvname = Me.VorlagenName) Then
+                                        (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+                                        (phtype = PTItemType.vorlage) Then
 
                                         Dim phNameIndices() As Integer
                                         phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
@@ -7633,8 +7635,8 @@ Public Class clsProjekt
                                 Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
                                 If phtype = -1 Or
-                                    (phtype = PTItemType.projekt And pvname = Me.name) Or
-                                    (phtype = PTItemType.vorlage And pvname = Me.VorlagenName) Then
+                                    (phtype = PTItemType.projekt And pvname = calcProjektKey(Me.name, Me.variantName)) Or
+                                    (phtype = PTItemType.vorlage) Then
 
                                     Dim phNameIndices() As Integer
                                     phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)

@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ExcelWorkbook1</RootNamespace>
     <AssemblyName>Projectboard</AssemblyName>
-    <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
+    <VSTO_HostDocumentName>VISBO Projectboard.xlsx</VSTO_HostDocumentName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
@@ -23,15 +23,15 @@
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>c:\publish\VISBO Visual Board\</PublishUrl>
+    <PublishUrl>c:\publish\VISBO Projectboard\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>4.1.1.1</ApplicationVersion>
+    <ApplicationVersion>4.1.2.0</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
-    <ProductName>Projectboard</ProductName>
+    <ProductName>VISBO Projectboard</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VISBO VisualBoard</FriendlyName>
@@ -167,56 +167,56 @@
       <DependentUpon>Tabelle1.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle1.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle2.Designer.vb">
       <DependentUpon>Tabelle2.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle2.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle3.Designer.vb">
       <DependentUpon>Tabelle3.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle3.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle4.Designer.vb">
       <DependentUpon>Tabelle4.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle4.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle5.Designer.vb">
       <DependentUpon>Tabelle5.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle5.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle6.Designer.vb">
       <DependentUpon>Tabelle6.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle6.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle7.Designer.vb">
       <DependentUpon>Tabelle7.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle7.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="Tabelle8.Designer.vb">
       <DependentUpon>Tabelle8.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="Tabelle8.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <Compile Include="testMethoden.vb" />
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
     <Compile Include="ThisWorkbook.vb">
-      <DependentUpon>Projectboard.xlsx</DependentUpon>
+      <DependentUpon>VISBO Projectboard.xlsx</DependentUpon>
     </Compile>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>PublicVbMyResourcesResXFileCodeGenerator</Generator>
@@ -255,7 +255,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Projectboard.xlsx" />
+    <None Include="VISBO Projectboard.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Projectboard_1_TemporaryKey.pfx" />
@@ -426,7 +426,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>B3CD6F8B9570918AB170D31451B35BEA0D7608A1</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>AD1559135B014B40D1053ED18ABAAB4EF98CE1F9</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -443,8 +443,8 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office15\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]Projectboard.xlsx&quot;" />
-        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="4CE1966EBBC6E22F558E7D1CF5A18A8064579582">
+        <ProjectProperties HostName="VISBO Projectboard.xlsx" HostPackage="{3F2B7691-D1D1-402F-9370-2704A737CF60}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office15\excel.exe" DebugInfoCommandLine="/x &quot;[$OUTPUT]VISBO Projectboard.xlsx&quot;" />
+        <Host Name="Excel Document" Path=".\VISBO Projectboard.xlsx" PublishedHash="4CE1966EBBC6E22F558E7D1CF5A18A8064579582">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="MPT" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
           <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />

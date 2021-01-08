@@ -3,6 +3,7 @@ Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports System.Windows.Forms
+Imports System.IO
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
@@ -30,6 +31,7 @@ Public Module Module1
     Public noDB As Boolean = True
 
     'Name des VisboClient
+    'Public visboClient As String = divClients(client.Projectboard)
     Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos
@@ -72,6 +74,21 @@ Public Module Module1
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
+    Public logDate As Date = Date.Now
+
+    ' verschiedene Fehlerstufen
+    Public errorLevel() As String = {"[INFO]", "[DEBUG)", "[WARN]", "[ERROR]", "[SevERROR]"}
+
+    ''' <summary>
+    ''' Werte-Bereich: {0=Info, 1=Warning; 2=Error; 3=severeError}
+    ''' </summary>
+    Public Enum ptErrLevel
+        logInfo = 0
+        logDebug = 1
+        logWarning = 2
+        logError = 3
+        logsevereError = 4
+    End Enum
 
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
@@ -268,6 +285,13 @@ Public Module Module1
 
 
     Public Const maxProjektdauer As Integer = 60
+
+    Public divClients() As String = {"VISBO Projectboard / ", "VISBO Smartinfo / ", "VISBO MSProjectAddIn / "}
+    Public Enum client
+        Projectboard = 0
+        VisboSmartInfo = 1
+        VisboMSProject = 2
+    End Enum
 
     Public Enum ptVariantFixNames
         pfv = 0 ' für den Portfolio Manager, für die Vorgaben reserviert
@@ -471,6 +495,7 @@ Public Module Module1
         massEditRessCost = 1
         massEditTermine = 2
         massEditAttribute = 3
+        powerpointAddIn = 4
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
@@ -729,6 +754,7 @@ Public Module Module1
         project = 0
         pVariant = 1
         timestamp = 2
+        portfolio = 3
     End Enum
     Public Enum PTlicense
         swimlanes = 0
@@ -869,6 +895,7 @@ Public Module Module1
         setWriteProtection = 10
         loadPVInPPT = 11
         loadProjectAsTemplate = 12
+        loadMultiPVInPPT = 13
     End Enum
 
     ''' <summary>
@@ -1140,7 +1167,7 @@ Public Module Module1
     '            'End Try
 
     '        Catch ex As Exception
-    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
+    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul:  awinLoescheProjekt")
     '            Exit Sub
     '        End Try
 
@@ -1579,27 +1606,31 @@ Public Module Module1
     Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
 
         Dim tmpResult As clsProjekt = hproj
+        Try
 
-        If Not IsNothing(hproj) Then
-            ' wenn customUserRole = Portfolio 
-            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
-                If Not IsNothing(idArray) Then
-                    If idArray.Length >= 1 Then
-                        tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+            If Not IsNothing(hproj) Then
+                ' wenn customUserRole = Portfolio 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                    If Not IsNothing(idArray) Then
+                        If idArray.Length >= 1 Then
+                            tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+                        End If
                     End If
+
                 End If
 
+                ' tk 12.06.2020 
+
+                ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
+                'If tmpResult.name.StartsWith("E_Kunde") Then
+                '    Call tmpResult.setMilestoneInvoices("Finalization")
+                'End If
+
             End If
-
-            ' tk 12.06.2020 
-
-            ' jetzt wird testweise das hproj.setMilestone Invoices gemacht - temporär einfach für Test und Demo Zwecke ... 
-            'If tmpResult.name.StartsWith("E_Kunde") Then
-            '    Call tmpResult.setMilestoneInvoices("Finalization")
-            'End If
-
-        End If
+        Catch ex As Exception
+            Call MsgBox("Fehler in prepProjectForRoles : " & ex.Message)
+        End Try
 
         prepProjectForRoles = tmpResult
 
@@ -3383,7 +3414,7 @@ Public Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function erzeugeIndent(ByVal level As Integer) As String
-        Dim indentDelta As String = "   "
+        Dim indentDelta As String = " "
         Dim tmpStr As String = ""
 
         If level = -1 Then
@@ -3397,6 +3428,54 @@ Public Module Module1
         erzeugeIndent = tmpStr
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt den Level der Einrückung (Indent) zurück, abhängig von 'anzLeerzeichen' je Stufe)
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="fuellz"></param>
+    ''' <param name="anzFuellz"></param>
+    ''' <returns></returns>
+    Public Function bestimmeIndent(ByVal text As String, Optional fuellz As String = " ", Optional ByVal anzFuellz As Integer = 1) As Integer
+        Dim tmpstr As String = ""
+        Dim indentLevel As Double = 0
+
+        If Not IsNothing(text) Then
+            If fuellz = " " Then
+                Dim origTextLge As Integer = text.Length
+                Dim textLgeOhneLeadingSpace As Integer = LTrim(text).Length
+                If anzFuellz <> 0 Then
+                    indentLevel = CInt((origTextLge - textLgeOhneLeadingSpace) / anzFuellz)
+                Else
+                    indentLevel = -1
+                End If
+            Else
+                Dim tmparray() As String = Split(text, fuellz)
+                Dim i As Integer = 0
+
+                While tmparray(i) = ""
+                    i += 1
+                End While
+                If anzFuellz <> 0 Then
+                    indentLevel = i / anzFuellz
+                Else
+                    indentLevel = -1
+                End If
+
+            End If
+
+        Else
+
+        End If
+        If IsNumeric(indentLevel) Then
+            bestimmeIndent = CInt(indentLevel)
+        Else
+            bestimmeIndent = -1
+        End If
+
+    End Function
+
 
     ''' <summary>
     ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
@@ -3505,8 +3584,9 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
-    ''' es kann unterschieden werden zwischen [P:Projekt-Name], 
+    ''' returns a real pvname if its [P:] , that is pName#vname or the empty string
+    ''' gibt ausserdem den Elem-Name und Breadcrumb, type 
+    ''' type kann sein: -1, keine Unterscheidung, 0:=[V:Vorlagen-Name] 1:= [P:Projekt-Name], 
     ''' [V:Vorlagen-Name] und [C:Category-Name]
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -3519,6 +3599,7 @@ Public Module Module1
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
+        Dim tmpPvName As String = ""
 
         ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
         If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or
@@ -3533,12 +3614,12 @@ Public Module Module1
 
             Dim startPos As Integer = 3
             Dim endPos As Integer = fullname.IndexOf("]") + 1
-            pvName = fullname.Substring(startPos, endPos - startPos - 1)
+            tmpPvName = fullname.Substring(startPos, endPos - startPos - 1)
 
             fullname = fullname.Substring(endPos)
         Else
             type = -1
-            pvName = ""
+            tmpPvName = ""
         End If
 
         tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
@@ -3558,6 +3639,17 @@ Public Module Module1
             elemName = "?"
         End If
         breadcrumb = tmpBC
+
+        ' tk 7.12.20 jetzt muss der Pv name noch normiert werden auf pname#vname oder "" 
+        If type = PTItemType.projekt Then
+            If tmpPvName = "" Or tmpPvName.Contains("#") Then
+                pvName = tmpPvName
+            Else
+                pvName = calcProjektKey(tmpPvName, "")
+            End If
+        Else
+            pvName = tmpPvName
+        End If
 
     End Sub
 
@@ -5108,7 +5200,7 @@ Public Module Module1
             If prpf = ptPRPFType.portfolio And Not IsNothing(hportfolio) Then
                 ' hier handelt es sich um ein Portfolio
                 pName = hportfolio.constellationName
-                vName = ""
+                vName = hportfolio.variantName
                 vpid = hportfolio.vpID
 
             Else
@@ -7334,76 +7426,169 @@ Public Module Module1
     End Sub
 
 
+    '''' <summary>
+    '''' initialisert das Logfile
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub logfileInit()
+
+    '    Try
+
+    '        With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+    '            .Name = "logBuch"
+    '            CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+    '            CType(.Columns(1), Excel.Range).ColumnWidth = 15
+    '            CType(.Columns(2), Excel.Range).ColumnWidth = 10
+    '            CType(.Columns(3), Excel.Range).ColumnWidth = 50
+    '            CType(.Columns(4), Excel.Range).ColumnWidth = 100
+    '        End With
+    '    Catch ex As Exception
+    '        Call MsgBox("Error bei logfileInit")
+    '    End Try
+
+
+    'End Sub
+    ''''' <summary>
+    '''' schreibt in das logfile
+    '''' </summary>
+    '''' <param name="text"></param>
+    '''' <param name="addOn"></param>
+    '''' <remarks></remarks>
+    'Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+
+    '    Dim obj As Object
+
+    '    Try
+    '        obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+    '        With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+
+    '            CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+    '            CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+    '            CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+    '            CType(.Cells(1, 3), Excel.Range).Value = addOn
+    '            CType(.Cells(1, 4), Excel.Range).Value = text
+
+    '        End With
+    '        anzFehler = anzFehler + 1
+    '        xlsLogfile.Save()
+
+    '    Catch ex As Exception
+
+    '    End Try
+    'End Sub
+
+
     ''' <summary>
-    ''' initialisert das Logfile
+    '''  schreibt in das logfile mit Errorlevel
     ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub logfileInit()
-
-        Try
-
-            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
-                .Name = "logBuch"
-                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
-                CType(.Columns(1), Excel.Range).ColumnWidth = 100
-                CType(.Columns(2), Excel.Range).ColumnWidth = 50
-                CType(.Columns(3), Excel.Range).ColumnWidth = 20
-            End With
-        Catch ex As Exception
-
-        End Try
-
-
-    End Sub
-    ''' <summary>
-    ''' schreibt in das logfile 
-    ''' </summary>
+    ''' <param name="errLevel"></param>
     ''' <param name="text"></param>
     ''' <param name="addOn"></param>
-    ''' <remarks></remarks>
-    Public Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
-
-        Dim obj As Object
+    ''' <param name="anzFehler"></param>
+    Public Sub logger(ByVal errLevel As Integer, ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
 
         Try
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                CType(.Cells(1, 1), Excel.Range).Value = text
-                CType(.Cells(1, 2), Excel.Range).Value = addOn
-                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
-                CType(.Cells(1, 3), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-            End With
-            anzFehler = anzFehler + 1
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+            logf.writeline(strMeld)
+            logf.close()
 
 
         Catch ex As Exception
+            If awinSettings.englishLanguage Then
+                Call MsgBox("ERROR while Writing to logfile" & ex.Message)
+            Else
+                Call MsgBox("Fehler beim Schreiben ins logfile" & ex.Message)
+            End If
 
         End Try
 
+
+        'Dim obj As Object
+
+        'Try
+        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+
+        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+        '        CType(.Cells(1, 2), Excel.Range).Value = errorLevel(errLevel)
+        '        CType(.Cells(1, 3), Excel.Range).Value = addOn
+        '        CType(.Cells(1, 4), Excel.Range).Value = text
+
+        '    End With
+        '    anzFehler = anzFehler + 1
+        '    xlsLogfile.Save()
+
+        'Catch ex As Exception
+
+        'End Try
+
     End Sub
+
+
 
     ''' <summary>
     ''' schreibt die Inhalte der Collection als String in das Logfile
     ''' </summary>
     ''' <param name="meldungen"></param>
-    Public Sub logfileSchreiben(ByVal meldungen As Collection)
-        Dim obj As Object
-        Dim anzZeilen As Integer = meldungen.Count
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal meldungen As Collection)
 
         Try
+            Dim anzZeilen As Integer = meldungen.Count
+
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
 
             For i As Integer = 1 To anzZeilen
 
-                ' neue Zeile einfügen 
-                obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-
                 Dim text As String = CStr(meldungen.Item(i))
-                With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                    CType(.Cells(1, 1), Excel.Range).Value = text
-                End With
-            Next
+                strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & logTrennz & text
+                logf.writeline(strMeld)
 
+            Next
+            logf.close()
         Catch ex As Exception
 
         End Try
@@ -7413,141 +7598,268 @@ Public Module Module1
     ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
     ''' </summary>
     ''' <param name="text"></param>
-    Public Sub logfileSchreiben(ByVal text() As String)
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String)
 
-        Dim obj As Object
         Try
             Dim anzSpalten As Integer = text.Length
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                For ix As Integer = 1 To anzSpalten
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
-                Next
-                CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-            End With
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+
+            ' Meldungstext zusammensetzen aus dem text-array
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+            For i As Integer = 1 To anzSpalten
+                strMeld = strMeld & logTrennz & CStr(text(i))
+            Next
+
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            logf.writeline(strMeld)
+            logf.close()
+
         Catch ex As Exception
 
         End Try
 
     End Sub
 
-    Public Sub logfileSchreiben(ByVal text() As String, ByVal values() As Double)
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal text() As String, ByVal values() As Double)
 
-        Dim obj As Object
+
         Try
-            Dim anzSpaltenText As Integer = text.Length
+            Dim anzSpalten As Integer = text.Length
             Dim anzSpaltenValues As Integer = values.Length
-            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
-                For ix As Integer = 1 To anzSpaltenText
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
-                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
-                Next
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
 
-                For ix As Integer = 1 To anzSpaltenValues
-                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
-                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
-                Next
-                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
-                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
-            End With
-
-
-        Catch ex As Exception
-
-        End Try
-
-    End Sub
-
-    ''' <summary>
-    ''' öffnet das LogFile
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub logfileOpen()
-
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        If appInstance.ScreenUpdating Then
-            appInstance.ScreenUpdating = False
-        End If
-
-
-        ' aktives Workbook merken im Variable actualWB
-        Dim actualWB As String = appInstance.ActiveWorkbook.Name
-
-        Dim logfileOrdner As String = "logfiles"
-        Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
-        Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
-        Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
-
-        If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
-            My.Computer.FileSystem.CreateDirectory(logfilePath)
-        End If
-
-        ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
-        Try
-            If myLogfile <> "" Then
-                Call logfileSchliessen()
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
             End If
-        Catch ex As Exception
-
-        End Try
-
-        Try
-            ' Logfile neu anlegen 
-            xlsLogfile = appInstance.Workbooks.Add
-            ' schreibt Sheet Namen in logfile ...  
-            Call logfileInit()
-
-            xlsLogfile.SaveAs(logfileNamePath)
-            myLogfile = xlsLogfile.Name
-
-        Catch ex As Exception
-            logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
-                                            "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
-            appInstance.ScreenUpdating = True
-            Throw New ArgumentException(logmessage)
-        End Try
-
-
-
-        ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
-        appInstance.Workbooks(actualWB).Activate()
-
-        If appInstance.ScreenUpdating <> formerSU Then
-            appInstance.ScreenUpdating = formerSU
-        End If
-
-
-    End Sub
-
-
-
-    ''' <summary>
-    ''' schliesst  das logfile 
-    ''' </summary>  
-    ''' <remarks></remarks>
-    Public Sub logfileSchliessen()
-
-        appInstance.EnableEvents = False
-
-        Try
-
-            If myLogfile <> "" Then
-                appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
-                myLogfile = ""
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
             End If
 
+            ' Meldungstext zusammensetzen aus dem text-array
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn
+            For i As Integer = 1 To anzSpalten
+                strMeld = strMeld & logTrennz & CStr(text(i))
+            Next
+            For k As Integer = 1 To anzSpaltenValues
+                strMeld = strMeld & logTrennz & Format(values(k), "#,##0.##")
+            Next
+
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            logf.writeline(strMeld)
+            logf.close()
 
         Catch ex As Exception
-            Call MsgBox("Fehler beim Schließen des Logfiles")
-        End Try
 
-        appInstance.EnableEvents = True
+        End Try
+        'Dim obj As Object
+        'Try
+        '    Dim anzSpaltenText As Integer = text.Length
+        '    Dim anzSpaltenValues As Integer = values.Length
+        '    obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+        '    With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+        '        CType(.Cells(1, 1), Excel.Range).Value = Date.Now
+        '        CType(.Cells(1, 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+        '        CType(.Cells(1, 2), Excel.Range).Value = "[INFO]"
+
+        '        For ix As Integer = 3 To anzSpaltenText + 2
+        '            CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+        '            CType(.Cells(1, ix), Excel.Range).Value = text(ix - 3)
+        '        Next
+
+        '        For ix As Integer = 3 To anzSpaltenValues + 2
+        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 3)
+        '            CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
+        '        Next
+        '    End With
+        '    xlsLogfile.Save()
+
+        'Catch ex As Exception
+
+        'End Try
+
     End Sub
+
+
+    Public Sub logger(ByVal errLevel As Integer, ByVal addOn As String, ByVal strLog As String)
+        Try
+
+            Dim strMeld As String
+            Const ForReading = 1, ForWriting = 2, ForAppending = 8
+            Const logTrennz As String = " , "
+            ' logfile-stream erzeugen
+            Dim fs = CreateObject("Scripting.FileSystemObject")
+
+            ' FileNamen zusammenbauen
+            Dim logfileOrdner As String = "logfiles"
+            If IsNothing(awinPath) Then
+                Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, "VISBO")
+            End If
+            Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+            Dim logfileName As String = "logfile" & "_" & logDate.Year.ToString & logDate.Month.ToString("0#") & logDate.Day.ToString("0#") & "_" & logDate.TimeOfDay.ToString.Replace(":", "-") & ".txt"
+            Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+            ' Fragen, ob bereits existiert - eventuell nicht nötig
+            If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+                My.Computer.FileSystem.CreateDirectory(logfilePath)
+            End If
+            ' logfile öffnen
+            Dim logf = fs.OpenTextFile(logfileNamePath, ForAppending, True, 0)
+            strMeld = "[" & Format(Now, "dd.MM.yyyy hh:mm:ss") & "] " & logTrennz & errorLevel(errLevel) & logTrennz & addOn & " , " & strLog
+            logf.writeline(strMeld)
+            logf.close()
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+    '''' <summary>
+    '''' öffnet das LogFile
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub logfileOpen()
+
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
+    '    If appInstance.ScreenUpdating Then
+    '        appInstance.ScreenUpdating = False
+    '    End If
+
+
+    '    ' aktives Workbook merken im Variable actualWB
+    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+    '    Dim logfileOrdner As String = "logfiles"
+    '    Dim logfilePath As String = My.Computer.FileSystem.CombinePath(awinPath, logfileOrdner)
+    '    Dim logfileName As String = "logfile" & "_" & Date.Now.Year.ToString & Date.Now.Month.ToString("0#") & Date.Now.Day.ToString("0#") & "_" & Date.Now.TimeOfDay.ToString.Replace(":", "-") & ".xlsx"
+    '    Dim logfileNamePath As String = My.Computer.FileSystem.CombinePath(logfilePath, logfileName)
+
+    '    If Not My.Computer.FileSystem.DirectoryExists(logfilePath) Then
+    '        My.Computer.FileSystem.CreateDirectory(logfilePath)
+    '    End If
+
+    '    ' Prüfen, ob es bereits ein offenes Logfile gibt ... 
+    '    Try
+    '        If myLogfile <> "" Then
+    '            ''Call logfileSchliessen()
+    '        End If
+    '    Catch ex As Exception
+
+    '    End Try
+
+    '    Try
+    '        ' Logfile neu anlegen 
+    '        xlsLogfile = appInstance.Workbooks.Add
+    '        ' schreibt Sheet Namen in logfile ...  
+    '        Call logfileInit()
+
+    '        xlsLogfile.SaveAs(logfileNamePath)
+    '        myLogfile = xlsLogfile.Name
+
+    '    Catch ex As Exception
+    '        logmessage = "Erzeugen von " & logfileNamePath & " fehlgeschlagen" & vbLf &
+    '                                        "bitte schliessen Sie die Anwendung und kontaktieren Sie ggf. ihren System-Administrator"
+    '        appInstance.ScreenUpdating = True
+    '        Throw New ArgumentException(logmessage)
+    '    End Try
+
+
+
+    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+    '    appInstance.Workbooks(actualWB).Activate()
+
+    '    If appInstance.ScreenUpdating <> formerSU Then
+    '        appInstance.ScreenUpdating = formerSU
+    '    End If
+
+
+    'End Sub
+
+
+    '''' <summary>
+    '''' schliesst  das logfile 
+    '''' </summary>  
+    '''' <remarks></remarks>
+    'Public Sub logfileSchliessen()
+
+    '    appInstance.EnableEvents = False
+
+    '    Try
+
+    '        If myLogfile <> "" Then
+    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+    '            myLogfile = ""
+    '        End If
+
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler beim Schließen des Logfiles")
+    '    End Try
+
+    '    appInstance.EnableEvents = True
+    'End Sub
+
+    '''' <summary>
+    '''' schliesst  das logfile 
+    '''' </summary>  
+    '''' <remarks></remarks>
+    'Public Sub logfileSchliessen()
+
+
+    '    ' aktives Workbook merken im Variable actualWB
+    '    Dim actualWB As String = appInstance.ActiveWorkbook.Name
+
+    '    appInstance.EnableEvents = False
+
+    '    Try
+
+    '        If myLogfile <> "" Then
+    '            appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
+    '            myLogfile = ""
+    '        End If
+
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler beim Schließen des Logfiles")
+    '    End Try
+
+    '    appInstance.EnableEvents = True
+
+    '    ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
+    '    appInstance.Workbooks(actualWB).Activate()
+    'End Sub
 
     ''' <summary>
     ''' zeigt die in der OutputCollection gesammelten Rückmeldungen in einem Fenster mit Scrollbar 
@@ -8517,7 +8829,8 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' Test-Funktion: überprüft die Team-Definitionen 
+    ''' Test-Funktion: 
+    ''' Die Teams, deren Kinder Roles sind: haben die wiederum die entsprechende Skill Definiotion ? 
     ''' </summary>
     ''' <returns></returns>
     Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
@@ -8532,14 +8845,21 @@ Public Module Module1
             Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
+
                 Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
-                ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
-                If Not ok Then
-                    Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
-                    outputCollection.Add(outmsg)
-                    atleastOneError = True
-                    ok = True
+                Dim childrenOfchild As SortedList(Of Integer, Double) = childRole.getSubRoleIDs
+                If childrenOfchild.Count = 0 Then
+                    ' then and only then check it out
+                    ok = ok And childRole.getSkillIDs.ContainsKey(kvp.Key)
+
+                    If Not ok Then
+                        Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
+                        outputCollection.Add(outmsg)
+                        atleastOneError = True
+                        ok = True
+                    End If
                 End If
+
             Next
 
         Next
@@ -9003,6 +9323,97 @@ Public Module Module1
     End Sub
 
 
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
 
+    Public Function deleteBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+
+        If name.Contains(bracket_auf) Then
+            Dim hstr() As String = Split(name, bracket_auf)
+            If hstr.Length > 1 Then
+                name = hstr(1)
+            End If
+        End If
+        If name.Contains(bracket_zu) Then
+            Dim hstr() As String = Split(name, bracket_zu)
+            If hstr.Length > 1 Then
+                name = hstr(0)
+            End If
+        End If
+
+        deleteBrackets = name
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Namen 'name' ohne öffnende und schließende runde Klammer zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <returns></returns>
+
+    Public Function addBrackets(ByVal name As String,
+                                Optional ByVal bracket_auf As String = "(",
+                                Optional ByVal bracket_zu As String = ")") As String
+
+        Dim trennzeichen As String = "#"
+
+        If name.Contains(trennzeichen) Then
+            Dim hstr() As String = Split(name, trennzeichen)
+            If hstr.Length > 1 Then
+                name = hstr(0) & bracket_auf & hstr(1) & bracket_zu
+            End If
+        End If
+
+        addBrackets = name
+
+    End Function
+
+    'Private Declare Function GetIpAddrTable_API Lib "IpHlpApi" Alias "GetIpAddrTable" (pIPAddrTable As Object, pdwSize As Long, ByVal bOrder As Long) As Long
+
+    '' Returns an array with the local IP addresses (as strings).
+    '' Author: Christian d'Heureuse, www.source-code.biz
+    'Public Function GetIpAddrTable() As String()
+    '    Dim Buf(0 To 511) As Byte
+    '    Dim BufSize As Long : BufSize = UBound(Buf) + 1
+    '    Dim rc As Long
+    '    rc = GetIpAddrTable_API(Buf(0), BufSize, 1)
+    '    If rc <> 0 Then
+    '        Err.Raise(vbObjectError, , "GetIpAddrTable failed with return value " & rc)
+    '    End If
+    '    Dim NrOfEntries As Integer : NrOfEntries = Buf(1) * 256 + Buf(0)
+    '    Dim IpAddrs() As String
+    '    ReDim IpAddrs(0 To NrOfEntries - 1)
+    '    If NrOfEntries = 0 Then
+    '        GetIpAddrTable = IpAddrs
+    '        Exit Function
+    '    End If
+
+    '    Dim i As Integer
+    '    For i = 0 To NrOfEntries - 1
+    '        Dim j As Integer, s As String : s = ""
+    '        For j = 0 To 3 : s = s & IIf(j > 0, ".", "") & Buf(4 + i * 24 + j) : Next
+    '        IpAddrs(i) = s
+    '    Next
+    '    GetIpAddrTable = IpAddrs
+    'End Function
+
+
+
+    '' Test program for GetIpAddrTable.
+    'Public Sub Test()
+    '    Dim IpAddrs() As String
+    '    IpAddrs = GetIpAddrTable()
+    '    Debug.Print("Nr of IP addresses: " & (UBound(IpAddrs) - LBound(IpAddrs) + 1).ToString)
+    '    Dim i As Integer
+    '    For i = LBound(IpAddrs) To UBound(IpAddrs)
+    '        Debug.Print(IpAddrs(i))
+    '    Next
+    'End Sub
 
 End Module

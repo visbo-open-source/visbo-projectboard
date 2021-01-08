@@ -1095,7 +1095,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg) As Collection
+    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg, Optional ByVal vpType As Integer = ptPRPFType.project) As Collection
 
         Dim ergebnisCollection As New Collection
 
@@ -1103,7 +1103,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' nun ist sicher die VPs aufgebaut
-            Dim vp As clsVP = GETvpid(projectName, err)
+            Dim vp As clsVP = GETvpid(projectName, err, vpType)
 
             If vp._id <> "" Then
                 ' alle Variantenamen in der Collection sammeln
@@ -1713,13 +1713,13 @@ Public Class Request
                             End If
 
                         Else
+
                             If aktvp.lock.Count > 0 Then
                                 For Each lock As clsVPLock In aktvp.lock
                                     If lock.expiresAt > Date.UtcNow Then
 
                                         If vname = lock.variantName And
                                             LCase(aktUser.email) = LCase(lock.email) Then
-
                                             deletePossible = True
                                             Exit For
                                         End If
@@ -1772,6 +1772,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveProjectsOfOneConstellationFromDB(ByVal portfolioName As String, ByVal vpid As String,
                                                              ByRef err As clsErrorCodeMsg,
+                                                             Optional ByVal variantName As String = noVariantName,
                                                              Optional ByVal storedAtOrBefore As Date = Nothing) As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
@@ -1789,7 +1790,7 @@ Public Class Request
                 vpid = vp._id
             End If
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
             vpfid = listOfPortfolios.Last.Value._id
             intermediate = GETallVPvOfOneVPf(aktVCid, vpfid, err, storedAtOrBefore, True)
 
@@ -1829,6 +1830,7 @@ Public Class Request
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
+                                                   Optional ByVal variantName As String = noVariantName,
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation
@@ -1852,11 +1854,11 @@ Public Class Request
             End If
 
 
-            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err)
+            listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName)
 
             If listOfPortfolios.Count = 0 Then
 
-                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, True)
+                listOfPortfolios = GETallVPf(vpid, storedAtOrBefore, err, variantName, True)
             End If
 
 
@@ -1865,7 +1867,7 @@ Public Class Request
                 For Each pf As KeyValuePair(Of Date, clsVPf) In listOfPortfolios
 
                     If pf.Key < storedAtOrBefore Then
-                        If pf.value.variantName = "" Then
+                        If pf.Value.variantName = variantName Then
                             vpf = pf.Value
                         Else
                         End If
@@ -2037,6 +2039,9 @@ Public Class Request
                                            ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
+        Dim storedVP As Boolean = False
+        Dim storedVPVariant As Boolean = False
+        Dim standardVariante As String = ""
 
         Try
             Dim vpType As Integer = ptPRPFType.portfolio
@@ -2045,19 +2050,19 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New List(Of clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            '                       cVP = GETvpid(c.constellationName, vpType:=2)
+
             cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
 
-            'cVPf = clsConst2clsVPf(c)
-
-            If cVP._id = "" Then
+            If cVP._id = "" _
+                Or (cVP._id <> "" And cVP.vpType <> ptPRPFType.portfolio) Then
                 '' ur: war nur zu Testzwecken: 
                 '' Call MsgBox("es ist noch kein VisboPortfolio angelegt")
 
                 ' Portfolio-Name
                 cVP.name = c.constellationName
+                ' _id
+                cVP._id = Nothing
                 ' ur:14.12.2018: liste der User ist nicht mehr in den VPs enthalten
                 '' berechtiger User
                 'Dim user As New clsUser
@@ -2073,34 +2078,69 @@ Public Class Request
                 newVP = POSTOneVP(cVP, err)
                 If newVP.Count > 0 Then
                     cVP._id = newVP.Item(0)._id
+                    storedVP = True
                 Else
-                    Throw New ArgumentException("FEHLER beim erstellen des VisboPortfolioProject")
+                    Throw New ArgumentException("FEHLER beim Speichern des Portfolios: " & vbLf & err.errorMsg)
+                End If
+            Else
+                storedVP = True
+            End If
+
+            If storedVP Then
+                Dim vname = c.variantName
+                Dim aktvp As clsVP = cVP
+                ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
+                If vname <> "" And aktvp.Variant.Count > 0 Then
+                    For Each var As clsVPvariant In aktvp.Variant
+                        If var.variantName = vname Then
+                            storedVPVariant = True
+                        End If
+                    Next
                 End If
 
+                ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
+                If Not storedVPVariant Then
+                    If vname <> "" Then
+                        storedVPVariant = POSTVPVariant(cVP._id, vname, err)
+                    Else
+                        ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                        storedVPVariant = True
+                    End If
+                End If
             End If
 
             cVPf = clsConst2clsVPf(c)
 
-            If Not IsNothing(cVPf) Then
-                cVPf.vpid = cVP._id
+            If storedVP And storedVPVariant Then
+                If Not IsNothing(cVPf) Then
+                    cVPf.vpid = cVP._id
 
-                'uir:21.06.2019 ist nun in clsConstellation enthalten
-                '' timestamp setzen
-                'cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+                    If cVP._id <> "" Then
 
+                        newVPf = POSTOneVPf(cVPf, err)
 
-                If cVP._id <> "" Then
+                        If newVPf.Count > 0 Then
 
-                    newVPf = POSTOneVPf(cVPf, err)
+                            ' prüfen ob bereits eine standardvariante dieses Portfolios existiert, wenn nicht, wird sie angelegt
+                            Dim listofPortfolios As SortedList(Of Date, clsVPf) = GETallVPf(cVP._id, Date.MinValue, err, standardVariante)
+                            Dim stdVPfExists As Boolean = False
+                            If Not (listofPortfolios.Count > 0) Then
+                                cVPf.variantName = standardVariante
+                                Dim stdVPf As List(Of clsVPf) = POSTOneVPf(cVPf, err)
+                                stdVPfExists = (stdVPf.Count > 0)
+                            Else
+                                stdVPfExists = True
+                            End If
 
-                    If newVPf.Count > 0 Then
-                        result = True
+                            result = stdVPfExists And True
+                        End If
+
                     End If
+                Else
 
                 End If
-            Else
-
             End If
+
 
         Catch ex As Exception
             'Call MsgBox(ex.Message)
@@ -2116,7 +2156,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="cName"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function removeConstellationFromDB(ByVal cName As String, ByVal cVpid As String,
+                                              ByVal vName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -2127,14 +2168,31 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New SortedList(Of Date, clsVPf)
 
-            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
-            'cVP = GETvpid(c.constellationName, vpType:=2)
             If cVpid = "" Then
                 cVP = GETvpid(cName, err, ptPRPFType.portfolio)
                 cVpid = cVP._id
             End If
 
-            newVPf = GETallVPf(cVpid, Date.Now.ToUniversalTime, err)
+            ' Basis Portfolio kann nicht gelöscht werden, solange noch varianten vorhanden sind
+            If vName = "" Then
+                cVP = GETvpid(cName, err, ptPRPFType.portfolio)
+                If Not IsNothing(cVP) Then
+
+                    If cVP.Variant.Count = 1 And
+                        cVP.Variant.Item(0).variantName = ptVariantFixNames.pfv.ToString Then
+                        ' do nothing
+                    ElseIf cVP.Variant.Count = 0 Then
+                        'do nothing
+                    Else
+                        err.errorCode = 0
+                        err.errorMsg = "The base portfolio can only be deleted, if there don't exist any variant"
+                        Return result
+                    End If
+                End If
+            End If
+
+            ' ab hier ist sichergestellt, dass für vname = "" keine Varianten mehr existieren
+            newVPf = GETallVPf(cVpid, Date.MinValue, err, vName)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
@@ -2157,12 +2215,21 @@ Public Class Request
                     'Call MsgBox("Es gab mehrer Portfolio-Versionen zu: " & c.constellationName)
                 End If
             Else
-                ' aktuell existiert keine PortfolioVersion zu vpid
-                ' TODO: was ist, wenn nur der Token is dead war?!?!?
+                ' aktuell existiert keine PortfolioVersion zu vpid, aber der request zum Server war erfolgreich
+                If err.errorCode = 200 Then
+                    result = True
+                End If
             End If
 
             If result = True Then
-                result = DELETEOneVP(cVpid, err)
+                If vName <> "" Then
+                    Dim varID As String = findVariantID(cVpid, vName)
+                    result = DELETEVPVariant(cVpid, err, varID)
+                Else
+                    ' BasisPortfolio mit pfv als letztes übrig geblieben
+                    result = DELETEOneVP(cVpid, err)
+                End If
+
             End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -2218,9 +2285,7 @@ Public Class Request
 
         Try
             ' alle vp des aktuellen Users und aktuellen vc holen
-            If VRScache.VPsN.Count <= 0 Then
-                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
-            End If
+            VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
 
             vplist = VRScache.VPsN
 
@@ -2585,23 +2650,23 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
-                    ' timestamp und validFrom auf den ersten des Monats setzen
-                    listofOrgaWeb.validFrom = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
-                    Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
+                    ' validFrom auf den ersten des Monats setzen
+                    Dim newOrgavalidFrom As Date = DateSerial(listofOrgaWeb.validFrom.Year, listofOrgaWeb.validFrom.Month, 1)
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = newOrgavalidFrom.ToString("u")
+                    CType(newsetting, clsVCSettingOrganisation).value.validFrom = newOrgavalidFrom.ToUniversalTime
                     CType(newsetting, clsVCSettingOrganisation).userId = ""
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
 
                     If anzSetting = 1 Then
-
+                        Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
                         ' Update der Organisation - Setting
-                        If CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Month = listofOrgaWeb.validFrom.Month And
-                            CType(oldsetting, clsVCSettingOrganisation).value.validFrom.Year = listofOrgaWeb.validFrom.Year Then
+                        If oldvalidFromlocal.Month = listofOrgaWeb.validFrom.Month And
+                            oldvalidFromlocal.Year = listofOrgaWeb.validFrom.Year Then
                             ' timestamp und validFrom bleibt wie gehabt (gleich der bisherigen Setting Orga)
-                            validFrom = oldsetting.timestamp
-                            CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp
+                            ' CType(newsetting, clsVCSettingOrganisation).timestamp = oldsetting.timestamp.ToString("u")
+                            CType(newsetting, clsVCSettingOrganisation).timestamp = DateTimeToISODate(oldsetting.timestamp)
                             CType(newsetting, clsVCSettingOrganisation).value.validFrom = oldsetting.value.validFrom
                             newsetting._id = settingID
                             result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
@@ -2854,14 +2919,17 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
+        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
         validfrom = validfrom.ToUniversalTime
+        Call logger(ptErrLevel.logInfo, "Beginning with parameters: (" & name & "|" & validfrom.ToString & "|" & refnext & ")", "retrieveOrganisationFromDB: ", anzFehler)
 
         Dim webOrganisation As New clsOrganisationWeb
         Try
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "before reading the vcSetting Organisation")
 
             setting = New List(Of clsVCSettingOrganisation)
             setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
-
+            logger(ptErrLevel.logInfo, "retrieveOrganisationFromDB", "after reading the vcSetting Organisation: (" & err.errorCode & ")")
             If err.errorCode = 200 Then
                 If Not IsNothing(setting) Then
 
@@ -2872,6 +2940,8 @@ Public Class Request
 
                             settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
                             webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+
+                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & "| validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
 
                         Else
                             ' die Organisation suchen, die am nächsten an validFrom liegt
@@ -2888,6 +2958,8 @@ Public Class Request
 
                             webOrganisation = latestOrga.value
 
+                            Call logger(ptErrLevel.logInfo, "Anzahl empfangener Organisationen: " & anzSetting & ", latest validFrom: " & webOrganisation.validFrom.ToString, "retrieveOrganisationFromDB: ", anzFehler)
+
                         End If
 
                         webOrganisation.copyTo(result)
@@ -2899,6 +2971,7 @@ Public Class Request
                         result.allRoles.buildOrgaSkillChilds()
 
                     Else
+                        Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                         If err.errorCode = 403 Then
                             Call MsgBox(err.errorMsg)
                         End If
@@ -2906,10 +2979,12 @@ Public Class Request
 
                     End If
                 Else
+                    Call logger(ptErrLevel.logError, err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                     Call MsgBox(err.errorMsg)
 
                 End If
             Else
+                Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)
                 If err.errorCode = 403 Then
                     Call MsgBox(err.errorMsg)
                 End If
@@ -2919,8 +2994,12 @@ Public Class Request
 
 
         Catch ex As Exception
+
+            Call logger(ptErrLevel.logError, ex.Message, "retrieveOrganisationFromDB(" & name & "," & validfrom.ToString & "," & refnext & ")", anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
+
+        Call logger(ptErrLevel.logInfo, "end: ", "retrieveOrganisationFromDB: ", anzFehler)
         retrieveOrganisationFromDB = result
     End Function
 
@@ -3216,13 +3295,10 @@ Public Class Request
     ''' <param name="method">Typ des Rest-Request  GET/POST/PUT/DELETE</param>
     Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
 
-
         Dim response As HttpWebResponse = Nothing
         Dim hresp As HttpWebResponse = Nothing
 
-
         Dim proxyAuth As New frmProxyAuth   ' Formular zum erfragen der Proxy-Authentifizierung
-
 
         ''Dim registeredModules As IEnumerator = AuthenticationManager.RegisteredModules
         ''Call MsgBox("The following authentication modules are now registered with the system:")
@@ -3234,16 +3310,12 @@ Public Class Request
 
         Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
 
-
         If awinSettings.visboDebug Then
             Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL))
             Call MsgBox("ProxyURL zu " & awinSettings.databaseURL & " : " & proxyUri.ToString)
         End If
 
-
         Dim myProxy As New System.Net.WebProxy
-
-
 
         If awinSettings.proxyURL <> "" Then
 
@@ -3270,11 +3342,7 @@ Public Class Request
 
         End If
 
-
         Dim credentialsErfragt As Boolean = False
-
-
-
 
         Try
             ' ur: 20190326: wird für tls1.2 benötigt - sicherer und ist in nginX definiert
@@ -3345,7 +3413,7 @@ Public Class Request
                             End If
 
                         End If
-
+                        logger(ptErrLevel.logInfo, "GetRestServerResponse", "ServerRrequest now was successful: (anzError=" & anzError.ToString & ")")
 
                         hresp = Nothing
                         toDo = False
@@ -3354,54 +3422,12 @@ Public Class Request
 
                         anzError = anzError + 1
 
+                        Select Case ex.Status
 
-                        If ex.Status = WebExceptionStatus.ConnectFailure Then
+                            Case WebExceptionStatus.ConnectFailure
 
-                            request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-                            request.Method = method
-                            request.ContentType = visboContentType
-                            request.Headers.Add("access-key", token)
-                            request.UserAgent = visboUserAgent
-
-
-                            netcred = New NetworkCredential
-                            Dim proxyName As String = ""
-
-                            If awinSettings.proxyURL <> "" Then
-
-                                'erneuter Versuch mit myProxy
-                                proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
-                                If proxyName = awinSettings.databaseURL Then
-                                    proxyName = ""
-                                End If
-                            Else
-                                If Not IsNothing(myProxy.Address) Then
-                                    proxyName = myProxy.Address.ToString
-                                Else
-                                    proxyName = ""
-                                End If
-                            End If
-
-                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
-
-                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                myProxy.Address = New Uri(proxyName)
-                                request.Proxy = myProxy
-                            End If
-
-                            ' abgefragte Credentials beim Proxy eintragen
-                            If Not IsNothing(request.Proxy) Then
-                                request.Proxy.Credentials = netcred
-                            End If
-
-                        End If
-
-                        If ex.Status = WebExceptionStatus.ProtocolError Then
-
-                            hresp = ex.Response
-
-
-                            If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
+                                Dim msgtxt As String = "first try form request.GetRequestStream(): " & ex.Status
+                                Call logger(ptErrLevel.logInfo, msgtxt, "(1)GetRestServerResponse", anzFehler)
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                                 request.Method = method
@@ -3409,62 +3435,137 @@ Public Class Request
                                 request.Headers.Add("access-key", token)
                                 request.UserAgent = visboUserAgent
 
-                                If credentialsErfragt And anzError = 2 Then
-                                    Call MsgBox(hresp.Headers.ToString)
-                                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & vbCrLf & hresp.Headers.ToString & vbCrLf & ex.Message)
+                                netcred = New NetworkCredential
+                                Dim proxyName As String = ""
+
+                                If awinSettings.proxyURL <> "" Then
+
+                                    'erneuter Versuch mit myProxy
+                                    proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+                                    If proxyName = awinSettings.databaseURL Then
+                                        proxyName = ""
+                                    End If
+                                Else
+                                    If Not IsNothing(myProxy.Address) Then
+                                        proxyName = myProxy.Address.ToString
+                                    Else
+                                        proxyName = ""
+                                    End If
                                 End If
 
-                                Select Case anzError
+                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
 
-                                    Case 1
+                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                    myProxy.Address = New Uri(proxyName)
+                                End If
+                                request.Proxy = myProxy
 
-                                        ' DefaultCredentials versuchen
+                                ' abgefragte Credentials beim Proxy eintragen
+                                If Not IsNothing(request.Proxy) Then
+                                    request.Proxy.Credentials = netcred
+                                End If
 
-                                        If myProxy.Address = Nothing Then
-                                            request.Proxy = defaultProxy
-                                        Else
-                                            request.Proxy = myProxy
-                                        End If
 
-                                        request.UseDefaultCredentials = True
-                                        request.Credentials = CredentialCache.DefaultCredentials
-                                        'request.Credentials = CredentialCache.DefaultNetworkCredentials
+                            Case WebExceptionStatus.ProtocolError
 
-                                    Case 2
-                                        ' Abfragen der Proxy-Authentifizierung erforderlich
+                                hresp = ex.Response
 
-                                        netcred = New NetworkCredential
-                                        Dim proxyName As String = ""
+                                If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
 
-                                        If awinSettings.proxyURL <> "" Then
-                                            proxyName = awinSettings.proxyURL
-                                        Else
-                                            If Not IsNothing(hresp) Then
-                                                proxyName = hresp.ResponseUri.ToString
+                                    request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                                    request.Method = method
+                                    request.ContentType = visboContentType
+                                    request.Headers.Add("access-key", token)
+                                    request.UserAgent = visboUserAgent
+
+                                    If credentialsErfragt And anzError = 2 Then
+                                        Call MsgBox(hresp.Headers.ToString)
+                                        Throw New ArgumentException("Fehler bei GetRequestStream:  " & vbCrLf & hresp.Headers.ToString & vbCrLf & ex.Message)
+                                    End If
+
+                                    Select Case anzError
+
+                                        Case 1
+
+                                            ' DefaultCredentials versuchen
+
+                                            If myProxy.Address = Nothing Then
+                                                request.Proxy = defaultProxy
+                                            Else
+                                                request.Proxy = myProxy
                                             End If
 
-                                        End If
+                                            request.UseDefaultCredentials = True
+                                            request.Credentials = CredentialCache.DefaultCredentials
+                                           'request.Credentials = CredentialCache.DefaultNetworkCredentials
 
-                                        credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+                                        Case 2
+                                            ' Abfragen der Proxy-Authentifizierung erforderlich
 
-                                        If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                            myProxy.Address = New Uri(proxyName)
-                                            request.Proxy = myProxy
-                                        End If
+                                            netcred = New NetworkCredential
+                                            Dim proxyName As String = ""
 
-                                        ' abgefragte Credentials beim Proxy eintragen
-                                        If Not IsNothing(request.Proxy) Then
-                                            request.Proxy.Credentials = netcred
-                                        End If
+                                            If awinSettings.proxyURL <> "" Then
+                                                proxyName = awinSettings.proxyURL
+                                            Else
+                                                If Not IsNothing(hresp) Then
+                                                    proxyName = hresp.ResponseUri.ToString
+                                                End If
 
-                                        'credentialsErfragt = True 'zum Erkennen, ob Credentials für Proxy schon mal abgefragt wurden
-                                        anzError = 1            ' wieder zurückgesetzt
-                                End Select
+                                            End If
 
-                            Else
-                                Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
-                            End If
-                        End If
+                                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                myProxy.Address = New Uri(proxyName)
+                                                request.Proxy = myProxy
+                                            End If
+
+                                            ' abgefragte Credentials beim Proxy eintragen
+                                            If Not IsNothing(request.Proxy) Then
+                                                request.Proxy.Credentials = netcred
+                                            End If
+
+                                            'credentialsErfragt = True 'zum Erkennen, ob Credentials für Proxy schon mal abgefragt wurden
+                                            anzError = 1            ' wieder zurückgesetzt
+                                    End Select
+
+                                Else
+                                    Dim msgtxt As String = "second try form request.GetRequestStream(): " & hresp.StatusCode
+                                    Call logger(ptErrLevel.logInfo, msgtxt, "(2)GetRestServerResponse", anzFehler)
+
+                                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                                End If
+
+                            Case WebExceptionStatus.Timeout
+                            Case WebExceptionStatus.ConnectionClosed
+                            Case WebExceptionStatus.UnknownError
+                            Case WebExceptionStatus.TrustFailure
+                            Case WebExceptionStatus.Timeout
+                            Case WebExceptionStatus.Success
+                            Case WebExceptionStatus.ServerProtocolViolation
+                            Case WebExceptionStatus.SendFailure
+                            Case WebExceptionStatus.SecureChannelFailure
+                            Case WebExceptionStatus.RequestProhibitedByProxy
+                            Case WebExceptionStatus.RequestProhibitedByCachePolicy
+                            Case WebExceptionStatus.RequestCanceled
+                            Case WebExceptionStatus.ReceiveFailure
+                            Case WebExceptionStatus.ProxyNameResolutionFailure
+                            Case WebExceptionStatus.PipelineFailure
+                            Case WebExceptionStatus.Pending
+                            Case WebExceptionStatus.NameResolutionFailure
+                            Case WebExceptionStatus.MessageLengthLimitExceeded
+                            Case WebExceptionStatus.KeepAliveFailure
+                            Case WebExceptionStatus.ConnectionClosed
+                            Case WebExceptionStatus.CacheEntryNotFound
+                            Case Else
+                                Dim msgtxt As String = "WebExceptionStatus: " & ex.Status
+                                Dim outputCollection As New Collection
+                                outputCollection.Add(msgtxt)
+                                Call logger(ptErrLevel.logInfo, msgtxt, "(3)GetRestServerResponse", anzFehler)
+                                response = hresp
+                                Exit While
+                        End Select
 
                     End Try
 
@@ -3484,81 +3585,96 @@ Public Class Request
                     While toDo And anzError < 3
                         Try
                             response = request.GetResponse()
+
                             toDo = False
 
                         Catch ex As WebException
 
                             anzError = anzError + 1
-
-                            If ex.Status = WebExceptionStatus.ProtocolError Then
-
-                                hresp = ex.Response
-                                Select Case hresp.StatusCode
-
-                                    Case HttpStatusCode.ProxyAuthenticationRequired
-
-                                        request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-                                        request.Method = method
-                                        request.ContentType = "application/json"
-                                        request.Headers.Add("access-key", token)
-                                        request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
-
-                                        Select Case anzError
-
-                                            Case 1
-
-                                                If myProxy.Address = Nothing Then
-                                                    request.Proxy = defaultProxy
-                                                Else
-                                                    request.Proxy = myProxy
-                                                End If
-
-                                                request.UseDefaultCredentials = True
-                                                request.Credentials = CredentialCache.DefaultCredentials
+                            Select Case ex.Status
 
 
-                                            Case 2
-                                                ' Abfragen der Proxy-Authentifizierung erforderlich
+                                Case WebExceptionStatus.ProtocolError
 
-                                                netcred = New NetworkCredential
-                                                Dim proxyName As String = ""
+                                    hresp = ex.Response
+                                    Select Case hresp.StatusCode
 
-                                                If awinSettings.proxyURL <> "" Then
-                                                    proxyName = awinSettings.proxyURL
-                                                End If
+                                        Case HttpStatusCode.ProxyAuthenticationRequired
 
-                                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+                                            request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                                            request.Method = method
+                                            request.ContentType = "application/json"
+                                            request.Headers.Add("access-key", token)
+                                            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                        & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
 
-                                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
-                                                    myProxy.Address = New Uri(proxyName)
-                                                    request.Proxy = myProxy
-                                                End If
+                                            Select Case anzError
 
-                                                ' ur: für wingate-Proxy
-                                                If Not IsNothing(request.Proxy) Then
-                                                    request.Proxy.Credentials = netcred
-                                                End If
-                                        End Select
-                                        'Case HttpStatusCode.BadRequest
-                                        '    Exit While
-                                        'Case HttpStatusCode.Unauthorized
-                                        '    Exit While
-                                        'Case HttpStatusCode.Forbidden
-                                        '    Exit While
-                                        'Case HttpStatusCode.NotFound
-                                        '    Exit While
-                                    Case Else
-                                        response = hresp
-                                        Exit While
-                                End Select
-                            End If
+                                                Case 1
+
+                                                    If myProxy.Address = Nothing Then
+                                                        request.Proxy = defaultProxy
+                                                    Else
+                                                        request.Proxy = myProxy
+                                                    End If
+
+                                                    request.UseDefaultCredentials = True
+                                                    request.Credentials = CredentialCache.DefaultCredentials
+
+
+                                                Case 2
+                                                    ' Abfragen der Proxy-Authentifizierung erforderlich
+
+                                                    netcred = New NetworkCredential
+                                                    Dim proxyName As String = ""
+
+                                                    If awinSettings.proxyURL <> "" Then
+                                                        proxyName = awinSettings.proxyURL
+                                                    End If
+
+                                                    credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                                    If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                        myProxy.Address = New Uri(proxyName)
+                                                        request.Proxy = myProxy
+                                                    End If
+
+                                                    ' ur: für wingate-Proxy
+                                                    If Not IsNothing(request.Proxy) Then
+                                                        request.Proxy.Credentials = netcred
+                                                    End If
+                                            End Select
+                                            'Case HttpStatusCode.BadRequest
+                                            '    Exit While
+                                            'Case HttpStatusCode.Unauthorized
+                                            '    Exit While
+                                            'Case HttpStatusCode.Forbidden
+                                            '    Exit While
+                                            'Case HttpStatusCode.NotFound
+                                            '    Exit While
+
+                                        Case Else
+                                            Dim msgtxt As String = "WebExceptionStatus: " & ex.Status & " HttpStatusCode: (" & hresp.StatusCode & ") " & hresp.StatusDescription
+                                            Call logger(ptErrLevel.logError, msgtxt, "(4)GetRestServerResponse", anzFehler)
+                                            response = hresp
+                                            Exit While
+                                    End Select
+
+                                Case Else
+                                    Dim msgtxt As String = "WebExceptionStatus: (" & ex.Status & ") " & ex.Message
+                                    Call logger(ptErrLevel.logError, msgtxt, "(5)GetRestServerResponse", anzFehler)
+                                    response = hresp
+                                    Exit While
+                            End Select
+
+
 
                         End Try
 
                     End While
 
                 Else
+                    logger(ptErrLevel.logInfo, "GetRestServerResponse", "GetResponse now was successful: (anzError=" & anzError.ToString & ")")
                     response = hresp
                 End If
 
@@ -3589,11 +3705,14 @@ Public Class Request
         Try
 
             If IsNothing(httpresp) Then
+
+                logger(ptErrLevel.logError, "ReadResponseContent", "HttpWebResponse: nothing")
+
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
                 cookies = httpresp.Cookies
-
+                logger(ptErrLevel.logInfo, "ReadResponseContent", "HttpWebResponse: Status: (" & httpresp.StatusCode & ")" & "Content: (" & httpresp.ContentLength & ")")
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
 
@@ -3602,12 +3721,13 @@ Public Class Request
                     End Using
 
                 Catch ex As Exception
-
+                    logger(ptErrLevel.logError, "ReadResponseContent", "Error with exception of the StreamReader( httpresp.GetResponseStream )")
                 End Try
 
             End If
 
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "ReadResponseContent", anzFehler)
             Throw New ArgumentException("ReadResponseContent:" & ex.Message)
         End Try
 
@@ -4212,8 +4332,10 @@ Public Class Request
                                 Dim variantID As String = findVariantID(vpid, variantName)
                                 If variantID <> "" Then
                                     serverUriString = serverUriString & "&variantID=" & variantID
-                                Else
+                                ElseIf variantName <> "" Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
+                                Else
+                                    serverUriString = serverUriString & "&variantID=" & variantID
                                 End If
                             End If
                         Else
@@ -4231,8 +4353,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
                             Else
@@ -4248,8 +4372,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
 
@@ -4476,8 +4602,10 @@ Public Class Request
                                 Dim variantID As String = findVariantID(vpid, variantName)
                                 If variantID <> "" Then
                                     serverUriString = serverUriString & "&variantID=" & variantID
-                                Else
+                                ElseIf variantName <> "" Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
+                                Else
+                                    serverUriString = serverUriString & "&variantID=" & variantID
                                 End If
                             End If
                         Else
@@ -4495,8 +4623,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
                             Else
@@ -4512,8 +4642,10 @@ Public Class Request
                                     Dim variantID As String = findVariantID(vpid, variantName)
                                     If variantID <> "" Then
                                         serverUriString = serverUriString & "&variantID=" & variantID
-                                    Else
+                                    ElseIf variantName <> "" Then
                                         serverUriString = serverUriString & "&variantName=" & variantName
+                                    Else
+                                        serverUriString = serverUriString & "&variantID=" & variantID
                                     End If
                                 End If
 
@@ -4592,13 +4724,17 @@ Public Class Request
     ''' <param name="err"></param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
     ''' </summary>
-    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg,
+    Private Function GETallVPf(ByVal vpid As String,
+                               ByVal timestamp As Date,
+                               ByRef err As clsErrorCodeMsg,
+                               Optional ByVal variantName As String = noVariantName,
                                Optional ByVal refNext As Boolean = False) As SortedList(Of Date, clsVPf)
 
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
         Dim errmsg As String = ""
         Dim errcode As Integer
+        Dim nextUrlTrennzeichen As String = "?"
 
         Try
             Dim serverUriString As String
@@ -4612,11 +4748,21 @@ Public Class Request
             If timestamp <= Date.MinValue Then
                 serverUriString = serverUriString
             Else
-                serverUriString = serverUriString & "?refDate=" & refDate
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refDate=" & refDate
+                nextUrlTrennzeichen = "&"
+            End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantID=" & variantID
+                Else
+                    serverUriString = serverUriString & nextUrlTrennzeichen & "variantName=" & variantName
+                End If
+                nextUrlTrennzeichen = "&"
             End If
 
             If refNext Then
-                serverUriString = serverUriString & "&refNext=1"
+                serverUriString = serverUriString & nextUrlTrennzeichen & "refNext=1"
             End If
 
 
@@ -5540,12 +5686,14 @@ Public Class Request
 
             Dim serverUri As New Uri(serverUriString)
 
+            logger(ptErrLevel.logInfo, "GETOneVCsetting", "before reading the vcSetting " & type & " : (" & err.errorCode & ")")
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 If errcode = 200 Then
+                    Call logger(ptErrLevel.logInfo, errmsg, "GETOneVCSetting: " & type, anzFehler)
                     Select Case type
                         Case settingTypes(ptSettingTypes.customroles)
                             webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
@@ -5565,6 +5713,7 @@ Public Class Request
                         Case Else
                             Call MsgBox("settingType = " & type)
                     End Select
+                    Call logger(ptErrLevel.logInfo, "Result of: " & result.count, "GETOneVCSetting: " & type, anzFehler)
                 Else
                     webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
                 End If
@@ -5583,6 +5732,7 @@ Public Class Request
             err.errorMsg = "GETOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "GETOneVCSetting: " & type, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5681,6 +5831,7 @@ Public Class Request
             err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "POSTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5787,6 +5938,7 @@ Public Class Request
             err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
 
         Catch ex As Exception
+            Call logger(ptErrLevel.logError, ex.Message, "PUTOneVCsetting: " & type, anzFehler)
             'Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5841,6 +5993,8 @@ Public Class Request
             End If
 
         Catch ex As Exception
+
+            Call logger(ptErrLevel.logError, ex.Message, "PUTOneVP: " & errcode, anzFehler)
             Throw New ArgumentException(ex.Message)
         End Try
 
@@ -5974,7 +6128,7 @@ Public Class Request
                 Dim newLock As clsVPLock = webVPLockantwort.lock.ElementAt(0)
                 If VRScache.VPsId(vpid).lock.Count = 0 Then
                     VRScache.VPsId(vpid).lock.Add(newLock)
-                    VRScache.VPsN(pname).lock.Add(newLock)
+                    'VRScache.VPsN(pname).lock.Add(newLock)
                 Else
                     Dim variantNotFound As Boolean = True
                     ' suchen, ob bereits ein Lock für diese Variante besteht, der dann erneuert wird.
@@ -5985,16 +6139,16 @@ Public Class Request
                                 VRScache.VPsId(vpid).lock.Remove(lastlock)
                                 VRScache.VPsId(vpid).lock.Add(newLock)
                             End If
-                            If VRScache.VPsN(pname).lock.Contains(lastlock) Then
-                                VRScache.VPsN(pname).lock.Remove(lastlock)
-                                VRScache.VPsN(pname).lock.Add(newLock)
-                            End If
+                            'If VRScache.VPsN(pname).lock.Contains(lastlock) Then
+                            '    VRScache.VPsN(pname).lock.Remove(lastlock)
+                            '    VRScache.VPsN(pname).lock.Add(newLock)
+                            'End If
                             Exit For
                         End If
                     Next
                     If variantNotFound Then
                         VRScache.VPsId(vpid).lock.Add(newLock)
-                        VRScache.VPsN(pname).lock.Add(newLock)
+                        'VRScache.VPsN(pname).lock.Add(newLock)
                     End If
 
                 End If
@@ -6048,9 +6202,20 @@ Public Class Request
             Else
                 serverUriString = serverUriString & "/" & vpid & "/lock"
             End If
-            'If variantName <> "" Then
-            serverUriString = serverUriString & "?variantName=" & variantName
-            'End If
+            If variantName <> noVariantName Then
+                Dim variantID As String = findVariantID(vpid, variantName)
+                If variantID <> "" Then
+                    serverUriString = serverUriString & "?variantID=" & variantID
+                Else
+                    If variantName = "" Then
+                        serverUriString = serverUriString & "?variantID="
+                    Else
+                        serverUriString = serverUriString & "?variantName=" & variantName
+                    End If
+
+                End If
+            End If
+
 
 
 
@@ -6218,27 +6383,30 @@ Public Class Request
 
                 ' Request absetzen
                 Dim Antwort As String
-                Dim webVPVarAntwort As clsWebVPVariant = Nothing
+                Dim webVPVarAntwort As clsWebVP = Nothing
 
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                     Antwort = ReadResponseContent(httpresp)
                     errcode = CType(httpresp.StatusCode, Integer)
                     errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
                 End Using
 
                 If errcode = 200 Then
 
-                    Dim anzvar As Integer = webVPVarAntwort.Variant.Count
+                    Dim anzvar As Integer = webVPVarAntwort.vp.Item(0).Variant.Count
+                    Dim pname As String = GETpName(vpid)
                     If anzvar = 0 Then
                         VRScache.VPsId(vpid).Variant.Clear()
-                    Else
-                        VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                        VRScache.VPsN(pname).Variant.Clear()
+
+                    ElseIf webVPVarAntwort.vp.Count = 1 Then
+                        VRScache.VPsId(vpid) = webVPVarAntwort.vp.Item(0)
+                        VRScache.VPsN(pname) = webVPVarAntwort.vp.Item(0)
                     End If
 
-                    Dim pname As String = GETpName(vpid)
-                    ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
-                    result = VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count
+                    result = (VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count)
+                    result = True
 
                 Else
                     ' Fehlerbehandlung je nach errcode
@@ -6712,6 +6880,7 @@ Public Class Request
             With result
                 .vpID = vpf.vpid
                 .constellationName = vpf.name
+                .variantName = vpf.variantName
                 .timestamp = vpf.timestamp
 
                 ' Aufbau der Constellation.allitems
@@ -6734,10 +6903,23 @@ Public Class Request
 
 
                 Next
+
                 ' hier wird die Sortliste aufgebaut ... 
                 .sortCriteria = vpf.sortType
                 ' tk die Sort-Liste ist im Befehl vorher bereits aufgebaut 
-                ' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+                '' außer
+                'If AlleProjekte.Count < 1 And vpf.sortType <> ptSortCriteria.alphabet And ptSortCriteria.customTF Then
+                '    Dim newsortlist As New SortedList(Of String, String)
+                '    For i As Integer = 0 To vpf.sortList.Count - 1
+
+                '        Dim pname As String = GETpName(vpf.sortList.Item(i))
+                '        Dim nrPname As String = i.ToString & pname
+                '        newsortlist.Add(nrPname, pname)
+                '    Next
+                '    .sortListe(vpf.sortType) = newsortlist
+                'End If
+                '' Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+
             End With
 
         Catch ex As Exception
@@ -6763,6 +6945,7 @@ Public Class Request
 
             With result
                 .name = c.constellationName
+                .variantName = c.variantName
                 ._id = ""
                 .timestamp = DateTimeToISODate(c.timestamp.ToUniversalTime)
 

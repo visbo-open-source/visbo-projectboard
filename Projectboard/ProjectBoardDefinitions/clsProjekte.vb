@@ -1195,8 +1195,8 @@ Public Class clsProjekte
                             Call splitHryFullnameTo2(fullphaseName, phaseName, breadcrumb, type, pvName)
 
                             If type = -1 Or
-                                (type = PTItemType.projekt And pvName = kvp.Value.name) Or
-                                (type = PTItemType.vorlage And pvName = kvp.Value.VorlagenName) Then
+                                (type = PTItemType.projekt And pvName = calcProjektKey(kvp.Value)) Or
+                                (type = PTItemType.vorlage) Then
 
                                 Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
@@ -1232,8 +1232,8 @@ Public Class clsProjekte
                                 Call splitHryFullnameTo2(fullmilestoneName, milestoneName, breadcrumb, type, pvName)
 
                                 If type = -1 Or
-                                    (type = PTItemType.projekt And pvName = kvp.Value.name) Or
-                                    (type = PTItemType.vorlage And pvName = kvp.Value.VorlagenName) Then
+                                    (type = PTItemType.projekt And pvName = calcProjektKey(kvp.Value)) Or
+                                    (type = PTItemType.vorlage) Then
 
                                     Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
                                     ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -1333,8 +1333,8 @@ Public Class clsProjekte
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
                             If type = -1 Or
-                                (type = PTItemType.projekt And pvName = kvp.Value.name) Or
-                                (type = PTItemType.vorlage And pvName = kvp.Value.VorlagenName) Then
+                                (type = PTItemType.projekt And pvName = calcProjektKey(kvp.Value)) Or
+                                (type = PTItemType.vorlage) Then
 
                                 hproj = kvp.Value
                                 Dauer = hproj.anzahlRasterElemente
@@ -1772,8 +1772,8 @@ Public Class clsProjekte
                 hproj = kvp.Value
 
                 If type = -1 Or
-                    (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Or
-                    (type = PTItemType.projekt And pvName = hproj.name) Then
+                    (type = PTItemType.vorlage) Or
+                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Then
                     ' Aktion machen
 
                     ' neuer Code
@@ -1863,8 +1863,8 @@ Public Class clsProjekte
                 hproj = kvp.Value
 
                 If type = -1 Or
-                    (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Or
-                    (type = PTItemType.projekt And pvName = hproj.name) Then
+                    (type = PTItemType.vorlage) Or
+                    (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Then
                     ' Aktion machen
 
                     Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)

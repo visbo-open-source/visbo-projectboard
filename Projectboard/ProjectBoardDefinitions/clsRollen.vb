@@ -26,40 +26,12 @@ Public Class clsRollen
     Private _positionIndices As SortedList(Of String, Integer)
 
     ''' <summary>
-    ''' wird aktuell nur in ImportMSProject benötigt .. wird gebraucht, um eine unbekannte Rolel in RoleDefinitions aufzunehmen ..
+    ''' wird aktuell nur in ImportMSProject benötigt .. wird gebraucht, um  unbekannte Rolen mit UID in missingRoleDefinitions aufzunehmen ..
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property getFreeRoleID() As Integer
         Get
-            Dim tmpResult As Integer = -1
-            Dim last As Integer = -1
-            Dim current As Integer = -1
-
-            If _allRollen.Count > 0 Then
-                For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
-                    If last = -1 Then
-                        ' nichts tun 
-                    Else
-                        If kvp.Key > last + 1 Then
-                            tmpResult = last + 1
-                        End If
-                    End If
-
-                    last = kvp.Key
-
-                Next
-
-                ' wenn immer noch nix gefunden ...
-                If tmpResult = -1 Then
-                    tmpResult = _allRollen.Last.Key + 1
-                End If
-
-            Else
-                tmpResult = 1
-            End If
-
-            getFreeRoleID = tmpResult
-
+            getFreeRoleID = _allRollen.Last.Key + 1
         End Get
     End Property
 
@@ -108,6 +80,63 @@ Public Class clsRollen
                 errMsg = roledef.UID.ToString & " already exists"
             Else
                 errMsg = roledef.UID.ToString & " existiert bereits"
+            End If
+
+            Throw New ArgumentException(errMsg)
+        End If
+
+    End Sub
+
+
+    ''' <summary>
+    ''' löscht die Rollendefinition roledef aus der Liste der Rollen einer Organisation
+    ''' </summary>
+    ''' <param name="roledef"></param>
+    Public Sub remove(roledef As clsRollenDefinition)
+
+        Dim errMsg As String = ""
+        ' Änderung tk: umgestellt auf 
+
+        If _allRollen.ContainsKey(roledef.UID) Then
+            _allRollen.Remove(roledef.UID)
+
+            If _allNames.ContainsKey(roledef.name) Then
+                _allNames.Remove(roledef.name)
+
+                ' jetzt müssen noch die Alias-Namen aufgenommen werden, sofern es welche gibt ... 
+                If Not IsNothing(roledef.aliases) Then
+                    If roledef.aliases(0) <> "" Then
+                        For Each aliasItem As String In roledef.aliases
+                            If _allNames.ContainsKey(aliasItem) Then
+                                _allNames.Remove(aliasItem)
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    errMsg = aliasItem & " doesn't exists"
+                                Else
+                                    errMsg = aliasItem & " existiert nicht"
+                                End If
+
+                                Throw New ArgumentException(errMsg)
+                            End If
+                        Next
+                    End If
+                End If
+            Else
+
+                If awinSettings.englishLanguage Then
+                    errMsg = roledef.name & " doesn't exists"
+                Else
+                    errMsg = roledef.name & " existiert nicht"
+                End If
+
+                Throw New ArgumentException(errMsg)
+            End If
+
+        Else
+            If awinSettings.englishLanguage Then
+                errMsg = roledef.UID.ToString & " doesn't exists"
+            Else
+                errMsg = roledef.UID.ToString & " existiert nicht"
             End If
 
             Throw New ArgumentException(errMsg)
@@ -2142,6 +2171,7 @@ Public Class clsRollen
     End Property
 
     Public Sub New()
+
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
         _allNames = New SortedList(Of String, Integer)
