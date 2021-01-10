@@ -227,36 +227,6 @@ Public Class clsMeilensteine
     '    End Get
     'End Property
 
-    ''' <summary>
-    ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
-    ''' wenn es den nicht gibt, wird die Default Milestone Klasse verwendet 
-    ''' </summary>
-    ''' <param name="name"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getShapeApp(ByVal name As String) As clsAppearance
-        Get
-            Dim appearanceID As String
-            Dim defaultMilestoneAppearance As String = "Meilenstein Default"
-
-            'Dim key As String = calcKey(name, belongsTo)
-
-            If _allMilestones.ContainsKey(name) Then
-                appearanceID = _allMilestones.Item(name).darstellungsKlasse
-                If appearanceID = "" Then
-                    appearanceID = defaultMilestoneAppearance
-                End If
-            Else
-                appearanceID = defaultMilestoneAppearance
-            End If
-
-            ' jetzt ist in der AppearanceID was drin ... 
-            getShapeApp = appearanceDefinitions.Item(appearanceID)
-
-
-        End Get
-    End Property
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
@@ -276,23 +246,6 @@ Public Class clsMeilensteine
 
             getAbbrev = msAbbrev
 
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' gibt die Darstellungsklasse des Elements zurück 
-    ''' </summary>
-    ''' <param name="name"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getAppearance(ByVal name As String) As String
-        Get
-            Dim tmpErg As String = ""
-            If _allMilestones.ContainsKey(name) Then
-                tmpErg = _allMilestones.Item(name).darstellungsKlasse
-            End If
-            getAppearance = tmpErg
         End Get
     End Property
 

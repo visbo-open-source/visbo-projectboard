@@ -2763,8 +2763,9 @@ Public Module Projekte
         Dim tdatenreiheB() As Double
         Dim tdatenreiheL() As Double
         Dim tdatenreiheC() As Double
-        Dim tmpCollection As New Collection
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        Dim tmpCollection As New Collection From {
+            hproj.name & "#" & auswahl.ToString
+        }
         ' Bestimmen der Werte 
 
         Select Case auswahl
@@ -18983,28 +18984,10 @@ Public Module Projekte
 
                         Else
 
-                            'Dim tmpName As String = elemNameOfElemID(phasenNameID)
-                            'If PhaseDefinitions.Contains(tmpName) Then
-                            '    vorlagenShape = PhaseDefinitions.getShape(tmpName)
-                            'Else
-                            '    vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
-                            'End If
-
-
-                            'phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType,
-                            '    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                            'vorlagenShape.PickUp()
-                            'phaseShape.Apply()
-
                             'ur:190725
-                            Dim appear As New clsAppearance
-                            Dim tmpName As String = elemNameOfElemID(phasenNameID)
-                            If PhaseDefinitions.Contains(tmpName) Then
+                            Dim appear As clsAppearance = appearanceDefinitions.getPhaseAppearance(cphase)
 
-                                appear = appearanceDefinitions(PhaseDefinitions.getAppearance(tmpName))
-                            Else
-                                appear = appearanceDefinitions(missingPhaseDefinitions.getAppearance(tmpName))
-                            End If
+                            Dim tmpName As String = elemNameOfElemID(phasenNameID)
 
                             phaseShape = worksheetShapes.AddShape(Type:=appear.shpType,
                               Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
@@ -19069,12 +19052,9 @@ Public Module Projekte
                             'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                             'ur:190725
-                            Dim appear As New clsAppearance
-                            If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                appear = appearanceDefinitions(cMilestone.appearance)
-                            Else
-                                appear = appearanceDefinitions(cMilestone.appearance)
-                            End If
+
+                            Dim appear As clsAppearance = appearanceDefinitions.getMileStoneAppearance(cMilestone)
+
                             Dim factorB2H As Double = appear.width / appear.height
 
 
@@ -19791,12 +19771,8 @@ Public Module Projekte
 
                                 'Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
                                 'ur:190725
-                                Dim appear As New clsAppearance
-                                If MilestoneDefinitions.Contains(cMilestone.name) Then
-                                    appear = appearanceDefinitions(cMilestone.appearance)
-                                Else
-                                    appear = appearanceDefinitions(cMilestone.appearance)
-                                End If
+                                Dim appear As clsAppearance = appearanceDefinitions.getMileStoneAppearance(cMilestone)
+
                                 Dim factorB2H As Double = appear.width / appear.height
 
 
@@ -20710,14 +20686,7 @@ Public Module Projekte
                         cphase = hproj.getPhaseByID(phaseNameID)
                         Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(cphase.name)
 
-                        ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
-                        If PhaseDefinitions.Contains(cphase.name) Then
-                            'vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-                            appear = PhaseDefinitions.getShapeapp(cphase.name)
-                        Else
-                            'vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-                            appear = missingPhaseDefinitions.getShapeApp(cphase.name)
-                        End If
+                        appear = appearanceDefinitions.getPhaseAppearance(cphase)
 
 
                         Try
@@ -20744,12 +20713,7 @@ Public Module Projekte
                             If shpElement Is Nothing Then
 
 
-                                'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
 
-                                'phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType,
-                                '                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                'vorlagenshape.PickUp()
-                                'phasenShape.Apply()
                                 phasenShape = .Shapes.AddShape(Type:=appear.shpType,
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
                                 With phasenShape
@@ -20909,7 +20873,7 @@ Public Module Projekte
 
                 End If
             Else
-                Dim appear As clsAppearance = appearanceDefinitions(PhaseDefinitions.getAppearance(myphase.name))
+                Dim appear As clsAppearance = appearanceDefinitions.getPhaseAppearance(myphase)
                 myShape.Rotation = appear.Rotation
                 myShape.Fill.BackColor.RGB = appear.BGcolor
                 myShape.Fill.ForeColor.RGB = appear.FGcolor
@@ -24537,295 +24501,6 @@ Public Module Projekte
     End Sub
 
 
-
-    'Public Sub awinReadProjectTemplate(ByVal pname As String, ByVal intern As Boolean)
-
-
-    '    Dim lastRow As Integer
-    '    Dim rng As Excel.Range
-    '    Dim zelle As Excel.Range
-    '    Dim zeile As Integer, spalte As Integer
-    '    Dim hproj As New clsProjektvorlage
-
-    '    zeile = 1
-    '    spalte = 1
-
-
-    '    Try
-    '        With appInstance.ActiveWorkbook.Worksheets("General Information")
-
-    '            hproj.VorlagenName = CType(.cells(zeile, spalte + 1).value, String).Trim
-    '            hproj.Schrift = .cells(zeile, spalte + 1).font.size
-    '            hproj.Schriftfarbe = .cells(zeile, spalte + 1).font.color
-    '            hproj.farbe = .cells(zeile, spalte + 1).interior.color
-
-    '            ' earliest
-    '            hproj.earliestStart = -6
-    '            ' latest
-    '            hproj.latestStart = 6
-
-
-    '        End With
-    '    Catch ex As Exception
-    '        Throw New ArgumentException("Fehler beim auslesen General Information")
-    '    End Try
-
-
-    '    Try
-    '        With appInstance.ActiveWorkbook.Worksheets("Project Needs")
-
-    '            Dim chkPhase As Boolean = True
-    '            Dim Xwerte As Double()
-    '            Dim crole As clsRolle
-    '            Dim cphase As New clsPhase(hproj, True)
-    '            Dim ccost As clsKostenart
-    '            Dim phaseName As String
-    '            Dim anfang As Integer, ende As Integer
-    '            Dim farbeAktuell As Object
-    '            Dim r As Integer, k As Integer
-    '            'Dim valueRange As Excel.Range
-
-    '            zeile = 2
-
-    '            lastRow = System.Math.Max(.cells(2000, 1).End(XlDirection.xlUp).row, .cells(2000, 2).End(XlDirection.xlUp).row) + 1
-    '            rng = .range(.cells(2, 1), .cells(lastRow, 1))
-
-    '            For Each zelle In rng
-    '                Select Case chkPhase
-    '                    Case True
-    '                        ' hier wird die Phasen Information ausgelesen
-
-    '                        If Len(CType(zelle.Value, String)) > 1 Then
-    '                            phaseName = CType(zelle.Value, String).Trim
-
-    '                            If Len(phaseName) > 0 Then
-
-    '                                cphase = New clsPhase(hproj, True)
-
-    '                                ' Auslesen der Phasen Dauer
-    '                                anfang = 1
-    '                                While zelle.Offset(0, anfang + 1).Interior.ColorIndex = -4142
-    '                                    anfang = anfang + 1
-    '                                End While
-
-    '                                ende = anfang + 1
-    '                                farbeAktuell = zelle.Offset(0, ende).Interior.Color
-    '                                While zelle.Offset(0, ende + 1).Interior.Color = farbeAktuell
-    '                                    ende = ende + 1
-    '                                End While
-    '                                ende = ende - 1
-
-    '                                chkPhase = False
-
-
-    '                                With cphase
-    '                                    .name = phaseName
-    '                                    ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-    '                                    Dim startOffset As Integer = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(anfang - 1))
-    '                                    'Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
-    '                                    '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
-    '                                    Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
-    '                                    .changeStartandDauer(startOffset, dauerIndays)
-
-    '                                    .Offset = 0
-    '                                End With
-
-    '                            End If
-
-    '                        End If
-
-
-
-    '                    Case False ' auslesen Rollen- bzw. Kosten-Information
-
-    '                        ' hier wird die Rollen bzw Kosten Information ausgelesen
-    '                        Dim hname As String
-    '                        Try
-    '                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
-    '                        Catch ex1 As Exception
-    '                            hname = ""
-    '                        End Try
-
-
-    '                        If Len(hname) > 0 Then
-
-    '                            '
-    '                            ' handelt es sich um die Ressourcen Definition?
-    '                            '
-    '                            If RoleDefinitions.Contains(hname) Then
-    '                                Try
-    '                                    r = RoleDefinitions.getRoledef(hname).UID
-
-    '                                    ReDim Xwerte(ende - anfang)
-
-
-    '                                    For m = anfang To ende
-    '                                        Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
-    '                                    Next m
-
-    '                                    crole = New clsRolle(ende - anfang)
-    '                                    With crole
-    '                                        .RollenTyp = r
-    '                                        .Xwerte = Xwerte
-    '                                    End With
-
-    '                                    With cphase
-    '                                        .AddRole(crole)
-    '                                    End With
-    '                                Catch ex As Exception
-    '                                    '
-    '                                    ' handelt es sich um die Kostenart Definition?
-    '                                    ' 
-
-
-    '                                End Try
-
-    '                            ElseIf CostDefinitions.Contains(hname) Then
-
-    '                                Try
-
-    '                                    k = CostDefinitions.getCostdef(hname).UID
-
-    '                                    ReDim Xwerte(ende - anfang)
-
-    '                                    For m = anfang To ende
-    '                                        Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
-    '                                    Next m
-
-    '                                    ccost = New clsKostenart(ende - anfang)
-    '                                    With ccost
-    '                                        .KostenTyp = k
-    '                                        .Xwerte = Xwerte
-    '                                    End With
-
-
-    '                                    With cphase
-    '                                        .AddCost(ccost)
-    '                                    End With
-
-    '                                Catch ex As Exception
-
-    '                                End Try
-
-    '                            End If
-
-
-    '                        Else
-
-    '                            chkPhase = True
-    '                            hproj.AddPhase(cphase)
-
-    '                        End If
-
-
-    '                End Select
-    '                zeile = zeile + 1
-    '            Next zelle
-
-
-
-    '        End With
-    '    Catch ex As Exception
-    '        Throw New ArgumentException("Fehler in awinImportProject, Lesen Project Needs")
-    '    End Try
-
-
-    '    ' hier werden die mit den Phasen verbundenen Results ausgelesen ...
-
-    '    Try
-    '        With appInstance.ActiveWorkbook.Worksheets("Settings")
-    '            rng = .Range("Phasen")
-    '            Dim rngZeile As Excel.Range
-    '            Dim lastColumn As Integer
-    '            Dim resultName As String = ""
-    '            Dim phaseName As String
-    '            Dim tmpPhase As New clsPhase(hproj, True)
-    '            Dim tmpStr() As String
-    '            Dim defaultOffset As Integer
-
-
-    '            Dim anzTage As Integer
-
-    '            For Each zelle In rng
-
-    '                Try
-    '                    phaseName = zelle.Value.trim
-
-    '                    tmpPhase = hproj.getPhase(phaseName)
-    '                    defaultOffset = tmpPhase.dauerInDays
-    '                Catch ex As Exception
-
-    '                End Try
-
-    '                If Not tmpPhase Is Nothing Then
-
-    '                    rngZeile = rng.Rows(zelle.Row)
-    '                    lastColumn = .cells(zelle.Row, 2000).End(XlDirection.xlToLeft).column
-
-    '                    Dim specified As Boolean
-    '                    For i = 4 To lastColumn
-
-    '                        specified = False
-    '                        Try
-    '                            resultName = .cells(zelle.Row, i).value.ToString.Trim
-
-    '                            tmpStr = resultName.Split(New Char() {"(", ")"}, 10)
-
-    '                            If tmpStr.Length > 1 Then
-
-    '                                Try
-    '                                    If awinSettings.offsetEinheit = "d" Then
-    '                                        anzTage = CType(tmpStr(1), Integer)
-    '                                    Else
-    '                                        anzTage = CType(tmpStr(1), Integer) * 7
-    '                                    End If
-
-    '                                    resultName = tmpStr(0).Trim
-    '                                    specified = True
-    '                                Catch ex1 As Exception
-    '                                    resultName = .cells(zelle.Row, i).value.ToString.Trim
-    '                                    anzTage = defaultOffset
-    '                                End Try
-
-    '                            End If
-
-
-    '                            Dim tmpResult As New clsResult(parent:=tmpPhase)
-
-    '                            If resultName.Length > 0 Then
-    '                                With tmpResult
-    '                                    .name = resultName
-    '                                    If specified Then
-    '                                        .offset = anzTage
-    '                                    Else
-    '                                        .offset = defaultOffset
-    '                                    End If
-    '                                End With
-
-    '                                tmpPhase.AddResult(tmpResult)
-
-    '                            End If
-    '                        Catch ex As Exception
-
-    '                        End Try
-    '                    Next
-
-    '                End If
-
-    '            Next
-
-    '        End With
-    '    Catch ex As Exception
-
-    '    End Try
-
-
-
-    '    Projektvorlagen.Add(hproj)
-
-
-    'End Sub
-
     ''' <summary>
     ''' gibt einen String zurück, z.Bsp Jan 16 - Dez 16
     ''' Inout sind zwei Datumsangaben 
@@ -26099,35 +25774,6 @@ Public Module Projekte
                 dateText = "-"
             End If
 
-            ' Nicht ausliefern!
-            ' das folgende dient auch Testzwecken ... wenn die beiden verschiedenen Arten, die Meilenstein Index Nummer zu bestimmen , 
-            ' nicht übereinstimmen, wird einn  eine Fehlermeldung ausgegeben werden 
-
-            'Try
-            '    Dim cphase As clsPhase
-            '    Dim parentPhaseNameID As String
-            '    parentPhaseNameID = hproj.hierarchy.nodeItem(milestoneNameID).parentNodeKey
-            '    cphase = hproj.getPhaseByID(parentPhaseNameID)
-            '    msNr = cphase.getlfdNr(milestoneNameID)
-            '    phaseName = cphase.name
-
-            '    ' die elegantere, und neue Methode basierend auf der Hierarchie Liste
-            '    msNr2 = hproj.hierarchy.nodeItem(milestoneNameID).indexOfElem
-            '    phaseName2 = elemNameOfElemID(hproj.hierarchy.nodeItem(milestoneNameID).parentNodeKey)
-
-            '    If msNr <> msNr2 Then
-            '        Call MsgBox("hier stimmt was nicht: " & vbLf & msNr & " <> " & msNr2)
-            '    End If
-
-            '    If phaseName <> phaseName2 Then
-            '        Call MsgBox("hier stimmt was nicht: " & vbLf & phaseName & " <> " & phaseName2)
-            '    End If
-            'Catch ex1 As Exception
-            '    Call MsgBox("hier stimmt was nicht: (mit Fehler)" & vbLf & msNr & " <> " & msNr2 & vbLf & _
-            '                phaseName & " <> " & phaseName2)
-            'End Try
-
-
 
 
         Catch ex As Exception
@@ -26182,53 +25828,6 @@ Public Module Projekte
 
 
         End If
-
-        ' tk 9.4.19 nicht mehr zeigen 
-        'With formMilestone
-
-        '    .milestone = cMilestone
-        '    .curProject = hproj
-
-        '    .projectName.Text = hproj.getShapeText
-        '    .breadCrumb.Text = breadCrumb
-
-        '    .resultDate.Text = dateText
-        '    .resultName.Text = milestoneName
-
-        '    '
-        '    ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
-
-        '    '' tk 29.5.16 das braucht man doch jetzt nicht mehr ..? 
-        '    ''Dim tmpstr() As String
-        '    ''If .rdbDeliverables.Checked Then
-        '    ''    tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-        '    ''Else
-        '    ''    tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-        '    ''End If
-
-        '    ''Dim newString As String = ""
-        '    ''If tmpstr.Length > 0 Then
-        '    ''    .bewertungsText.Lines = tmpstr
-        '    ''Else
-        '    Dim tmpstr() As String
-
-        '    If .rdbDeliverables.Checked Then
-        '        tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-        '    Else
-        '        tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-        '    End If
-
-        '    .bewertungsText.Lines = tmpstr
-        '    ''End If
-
-
-        '    If .Visible Then
-        '    Else
-        '        .Visible = True
-        '        .Show()
-        '    End If
-
-        'End With
 
 
     End Sub
@@ -26420,128 +26019,7 @@ Public Module Projekte
     End Sub
 
 
-    'Public Sub updatePhaseInformation(ByVal phaseShape As Excel.Shape)
 
-    '    Dim tmpstr() As String
-    '    Dim projectName As String
-    '    Dim phaseName As String
-    '    Dim cPhase As clsPhase
-
-    '    Dim ok As Boolean = True
-    '    Dim hproj As New clsProjekt
-
-    '    Dim phaseStartdate As Date
-    '    Dim phaseEnddate As Date
-    '    Dim phaseDauerDays As Integer
-
-
-
-    '    With phaseShape
-
-    '        tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
-    '        projectName = tmpstr(0)
-
-    '    End With
-
-    '    Try
-    '        hproj = ShowProjekte.getProject(projectName)
-    '    Catch ex As Exception
-    '        hproj = Nothing
-    '        ok = False
-    '    End Try
-
-    '    If ok Then
-
-    '        cPhase = New clsPhase(hproj)
-    '        Try
-    '            phaseName = tmpstr(1).Trim
-    '            cPhase = hproj.getPhase(phaseName)
-    '            'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
-
-    '            phaseStartdate = cPhase.getStartDate
-    '            phaseEnddate = cPhase.getEndDate
-    '            phaseDauerDays = cPhase.dauerInDays
-
-
-    '            With formPhase
-
-    '                If specialListofPhases.Contains(phaseName) Then
-
-    '                    .projectName.Text = projectName
-    '                    .phaseName.Text = phaseName
-    '                    .Height = 440
-    '                    .lessonsLearnedControl.Visible = True
-    '                    .erlaeuterung.Visible = True
-    '                    .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
-    '                    .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
-    '                        ", Projekt " & projectName
-    '                    .explEnabler.Text = "Enabler der Phase " & phaseName & _
-    '                        ", Projekt " & projectName
-    '                    .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
-    '                        ", Projekt " & projectName
-
-    '                    .phaseStart.Text = phaseStartdate.ToShortDateString
-    '                    .phaseStart.TextAlign = HorizontalAlignment.Left
-
-    '                    .phaseEnde.Text = phaseEnddate.ToShortDateString
-    '                    .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-    '                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-    '                    .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-
-    '                    If .Visible Then
-    '                    Else
-    '                        .Visible = True
-    '                        .Show()
-    '                    End If
-
-
-    '                Else
-
-    '                    .projectName.Text = projectName
-    '                    .phaseName.Text = phaseName
-    '                    .Height = 220
-    '                    .erlaeuterung.Visible = False
-
-    '                    .phaseStart.Text = phaseStartdate.ToShortDateString
-    '                    .phaseStart.TextAlign = HorizontalAlignment.Left
-
-    '                    .phaseEnde.Text = phaseEnddate.ToShortDateString
-    '                    .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-    '                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-    '                    .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-    '                    If .Visible Then
-    '                    Else
-    '                        .Visible = True
-    '                        .Show()
-    '                    End If
-
-
-    '                End If
-
-
-    '            End With
-
-
-    '        Catch ex As Exception
-    '            phaseName = ""
-    '            ok = False
-    '        End Try
-
-
-    '    Else
-    '        'Call MsgBox("keine Information abrufbar ...")
-    '    End If
-
-
-
-
-
-
-    'End Sub
 
     ''' <summary>
     ''' aktualisiert die Phasen-Information zu dem Projekt; 
@@ -26651,39 +26129,6 @@ Public Module Projekte
                 End If
             End If
         End If
-
-
-
-        ' tk 9.4.19 nicht mehr zeigen 
-        'With formPhase
-
-        '    .phaseNameID = phaseNameID
-        '    .curProject = hproj
-
-        '    .projectName.Text = hproj.getShapeText
-        '    .breadCrumb.Text = breadCrumb
-
-        '    .phaseName.Text = phaseName
-
-
-        '    .phaseStart.Text = startdateText
-        '    .phaseStart.TextAlign = HorizontalAlignment.Left
-
-        '    .phaseEnde.Text = enddateText
-        '    .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-        '    .phaseDauer.Text = dauerText
-        '    .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-        '    If .Visible Then
-        '    Else
-        '        .Visible = True
-        '        .Show()
-        '    End If
-
-
-
-        'End With
 
 
     End Sub
@@ -28206,48 +27651,85 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' wird benutzt, um die Anzahl Zeilen, die für die Darstellung einer Swimlane benötigt werden, zu minimieren
+    ''' determines whether or not a new phase can be drawn without overlaps into current Line
+    ''' already drawn phase are described in belegung with startdate as key, duration as value 
     ''' </summary>
-    ''' <param name="matrix">ist so dimensioniert, dass es die maximale Anzahl Zeilen, die in einer Swimlane überhaupt vorkommen können, darstellen kann; 
-    ''' matrix(i) enthält das letzte Datum, das in Zeile i vorkam; i läuft von 0 an</param>
-    ''' <param name="bestStart" >enthält die Zeile, bis zu der nach oben gegangen werden kann; 0: die Swimlane selber; 
-    ''' x: di ezeile, in der die (Groß-)Eltern Phase ist ... es soll keine 
-    ''' keine Phase über ihrer Eltern-Phase gezeichnet werden </param>
-    ''' <param name="maxZeile">das ist die bisher maximal aufgetretene Anzahl Zeilen, die notwendig war</param>
-    ''' <param name="startdate">das Startdatum der neuen Phase</param>
-    ''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
+    ''' <param name="belegung"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="duration"></param>
     ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal bestStart As Integer, ByVal maxZeile As Integer,
-                                        ByVal startdate As Date,
-                                        ByVal requiredZeilen As Integer) As Integer
+    Public Function rowIsOccupied(ByVal belegung As SortedList(Of Date, Integer), ByVal startDate As Date, duration As Integer) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim foundEmptySpace As Boolean = False
+        Dim foundOverlap As Boolean = False
 
-
-        Dim dimension As Integer = matrix.Length - 1
-        Dim found As Boolean
-
-        Do While bestStart <= dimension And Not found
-
-            found = True
-            For i As Integer = 1 To requiredZeilen
-                If bestStart + i - 1 <= dimension Then
-                    found = found And (matrix(bestStart + i - 1) <= startdate)
+        If belegung.Count = 0 Then
+            ' nichts tun, kann nicht belegt sein 
+        Else
+            For Each kvp As KeyValuePair(Of Date, Integer) In belegung
+                If DateDiff(DateInterval.Day, startDate, kvp.Key) > 0 Then
+                    foundEmptySpace = (DateDiff(DateInterval.Day, startDate.AddDays(duration), kvp.Key) >= 0)
+                    foundOverlap = Not foundEmptySpace
+                Else
+                    ' in diesem Fall ist der Start der neuen Phase nach dem aktuell betrachteten Zeit-Segment  
+                    foundOverlap = (DateDiff(DateInterval.Day, kvp.Key.AddDays(kvp.Value), startDate) < 0)
                 End If
+
+                If foundEmptySpace Or foundOverlap Then
+                    Exit For
+                End If
+
             Next
 
-            If Not found Then
-                bestStart = bestStart + 1
-            End If
+            tmpResult = foundOverlap
 
-        Loop
-
-        If found Then
-            findeBesteZeile = bestStart + 1
-        Else
-            findeBesteZeile = maxZeile + 1
         End If
-
+        rowIsOccupied = tmpResult
     End Function
+
+    '''' <summary>
+    '''' wird benutzt, um die Anzahl Zeilen, die für die Darstellung einer Swimlane benötigt werden, zu minimieren
+    '''' </summary>
+    '''' <param name="matrix">ist so dimensioniert, dass es die maximale Anzahl Zeilen, die in einer Swimlane überhaupt vorkommen können, darstellen kann; 
+    '''' matrix(i) enthält das letzte Datum, das in Zeile i vorkam; i läuft von 0 an</param>
+    '''' <param name="bestStart" >enthält die Zeile, bis zu der nach oben gegangen werden kann; 0: die Swimlane selber; 
+    '''' x: di ezeile, in der die (Groß-)Eltern Phase ist ... es soll keine 
+    '''' keine Phase über ihrer Eltern-Phase gezeichnet werden </param>
+    '''' <param name="maxZeile">das ist die bisher maximal aufgetretene Anzahl Zeilen, die notwendig war</param>
+    '''' <param name="startdate">das Startdatum der neuen Phase</param>
+    '''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public Function findeBesteZeile(ByVal matrix() As Date, ByVal bestStart As Integer, ByVal maxZeile As Integer,
+    '                                    ByVal startdate As Date,
+    '                                    ByVal requiredZeilen As Integer) As Integer
+
+
+    '    Dim dimension As Integer = matrix.Length - 1
+    '    Dim found As Boolean
+
+    '    Do While bestStart <= dimension And Not found
+
+    '        found = True
+    '        For i As Integer = 1 To requiredZeilen
+    '            If bestStart + i - 1 <= dimension Then
+    '                found = found And (matrix(bestStart + i - 1) <= startdate)
+    '            End If
+    '        Next
+
+    '        If Not found Then
+    '            bestStart = bestStart + 1
+    '        End If
+
+    '    Loop
+
+    '    If found Then
+    '        findeBesteZeile = bestStart + 1
+    '    Else
+    '        findeBesteZeile = maxZeile + 1
+    '    End If
+
+    'End Function
 
     ''' <summary>
     ''' gibt Menge aller auftretenden Rollen NameIDs der Form roleID;teamID oder roleID in hproj, lproj, bproj zurück 

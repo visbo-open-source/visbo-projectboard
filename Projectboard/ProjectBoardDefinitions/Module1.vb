@@ -159,7 +159,8 @@ Public Module Module1
     Public PfChartBubbleNames() As String
 
 
-    Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
+    'Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
+    Public appearanceDefinitions As New clsAppearances
     Public RoleDefinitions As New clsRollen
     Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
@@ -4301,15 +4302,15 @@ Public Module Module1
         Dim ergebnis As String = ""
         Dim found As Boolean = False
         Dim index As Integer = 0
-        Dim anzElements As Integer = appearanceDefinitions.Count
+        Dim anzElements As Integer = appearanceDefinitions.liste.Count
 
 
         Do While Not found And index <= anzElements - 1
 
-            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And
-                    isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
+            If completeText.Contains(appearanceDefinitions.liste.ElementAt(index).Key.Trim) And
+                    isMilestone = appearanceDefinitions.liste.ElementAt(index).Value.isMilestone Then
                 found = True
-                ergebnis = appearanceDefinitions.ElementAt(index).Key
+                ergebnis = appearanceDefinitions.liste.ElementAt(index).Key
             Else
                 index = index + 1
             End If
@@ -5304,7 +5305,7 @@ Public Module Module1
 
                     If showRangeLeft >= 0 Then
                         .Tags.Add("SRLD", CStr(getDateofColumn(showRangeLeft, False)))
-                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, False)))
+                        .Tags.Add("SRRD", CStr(getDateofColumn(showRangeRight, True)))
                     End If
 
                     If .Tags.Item("BID").Length > 0 Then

@@ -76,7 +76,7 @@ Public Class clsResultWeb
                 End If
 
                 If Not IsNothing(Me.appearance) Then
-                    .appearance = Me.appearance
+                    .appearanceName = Me.appearance
                 End If
 
                 If Not IsNothing(Me.percentDone) Then
@@ -167,7 +167,7 @@ Public Class clsResultWeb
 
             Me.shortName = .shortName
             Me.originalName = .originalName
-            Me.appearance = .appearance
+            Me.appearance = .appearanceName
 
             ' Dokumenten-Url und Applikation
             Me.docURL = .DocURL

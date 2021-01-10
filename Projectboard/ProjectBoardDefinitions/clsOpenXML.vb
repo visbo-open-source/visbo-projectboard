@@ -313,7 +313,7 @@ Public Class clsOpenXML
                 Me.name = .name
                 Me.originalName = .originalName
                 Me.abbreviation = .shortName
-                Me.appearance = .appearance
+                Me.appearance = .appearanceName
                 Me.color = .farbe
                 Me.breadCrumb = .parentProject.hierarchy.getBreadCrumb(.nameID)
 
@@ -854,7 +854,7 @@ Public Class clsOpenXML
 
                     .shortName = Me.abbreviation
                     .originalName = Me.originalName
-                    .appearance = Me.appearance
+                    .appearanceName = Me.appearance
                     .farbe = Me.color
 
                     .verantwortlich = Me.responsible

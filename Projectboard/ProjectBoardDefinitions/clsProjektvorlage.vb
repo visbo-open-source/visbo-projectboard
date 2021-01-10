@@ -1892,7 +1892,6 @@
 
 
                 If isSwimlane2 Then
-                    ' noch nicht implementiert 
                     Dim found As Boolean = False
                     Dim ix As Integer = 1
 
@@ -1957,7 +1956,7 @@
                 If lookingforMS Then
                     Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
                     If Not IsNothing(cMilestone) Then
-                        Dim catName As String = cMilestone.appearance
+                        Dim catName As String = cMilestone.appearanceName
                         If Not nameCollection.Contains(catName) Then
                             nameCollection.Add(Item:=catName, Key:=catName)
                         End If
@@ -1965,7 +1964,7 @@
                 Else
                     Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
                     If Not IsNothing(cPhase) Then
-                        Dim catName As String = cPhase.appearance
+                        Dim catName As String = cPhase.appearanceName
                         If Not nameCollection.Contains(catName) Then
                             nameCollection.Add(Item:=catName, Key:=catName)
                         End If
@@ -1997,8 +1996,8 @@
                 If lookingforMS Then
                     Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
                     If Not IsNothing(cMilestone) Then
-                        Dim catName As String = cMilestone.appearance
-                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        Dim catName As String = cMilestone.appearanceName
+                        Dim sortkey As Integer = appearanceDefinitions.liste.IndexOfKey(catName)
                         If Not tmpSortList.ContainsKey(sortkey) Then
                             tmpSortList.Add(key:=sortkey, value:=catName)
                         End If
@@ -2006,8 +2005,8 @@
                 Else
                     Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
                     If Not IsNothing(cPhase) Then
-                        Dim catName As String = cPhase.appearance
-                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        Dim catName As String = cPhase.appearanceName
+                        Dim sortkey As Integer = appearanceDefinitions.liste.IndexOfKey(catName)
                         If Not tmpSortList.ContainsKey(sortkey) Then
                             tmpSortList.Add(key:=sortkey, value:=catName)
                         End If
@@ -2112,13 +2111,6 @@
                 Next
 
             Else
-                Dim ankerName As String = "BHTC milestones"
-                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
-
-
-                If Not IsNothing(ankerPhase) Then
-                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
-                End If
 
                 If parentNameID.Length > 1 Then
 
@@ -2196,76 +2188,44 @@
     ''' <summary>
     ''' gibt die Anzahl der Segmente, das heisst die Anzahl Phasen auf Hierarchie-Stufe 1 zurück 
     ''' </summary>
-    ''' <param name="considerAll">sollen alle Elemente betrachtet werden </param>
-    ''' <param name="breadCrumbArray">es sollen nur die Elemente betrachtet werden, die </param>
-    ''' <param name="isBhtcSchema"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSegmentsCount(ByVal considerAll As Boolean, _
-                                                   ByVal breadCrumbArray() As String, _
-                                                   ByVal isBhtcSchema As Boolean) As Integer
+    Public ReadOnly Property getSegmentsCount() As Integer
         Get
-
-            Dim ankerName As String = "BHTC milestones"
             Dim anzSegments = 0
-            Dim sptr As Integer
 
-            If Not IsNothing(breadCrumbArray) Then
-                sptr = breadCrumbArray.Length - 1
-            Else
-                sptr = -1
-            End If
-
-            Dim fullSwlBreadCrumb As String
-
-
-            If Not isBhtcSchema Then
-                anzSegments = 0
-            Else
-                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
-                Dim parentNameID As String = ""
-
-                If Not IsNothing(ankerPhase) Then
-                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
-                End If
-
-                If parentNameID.Length > 1 Then
-
-                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
-
-                    For Each obj As Object In segmentCollection
-                        Dim segmentNameID As String = CStr(obj)
-                        fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
-
-                        If considerAll Then
-                            anzSegments = anzSegments + 1
-                        Else
-                            ' ist eines der Elemente im aktuellen Segment enthalten ? 
-                            Dim found As Boolean = False
-                            Dim index = 0
-                            Do While Not found And index <= sptr
-                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
-                                    found = True
-                                Else
-                                    index = index + 1
-                                End If
-                            Loop
-                            If found Then
-                                anzSegments = anzSegments + 1
-                            End If
-                        End If
-
-                    Next
-
-                End If
-
-            End If
-
+            Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+            anzSegments = segmentCollection.Count
             getSegmentsCount = anzSegments
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' return whether or not project is having only phases in Level 1 with child Phases
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property isSuitedForSwimlane2() As Boolean
+        Get
+            Dim tmpResult As Boolean = True
+            Dim anzLevel1PhasesWithoutChilds As Integer = 0
+
+            Dim childIDs As Collection = hierarchy.getChildIDsOf(rootPhaseName, False)
+
+            For Each childID As String In childIDs
+                Dim anzChilds As Integer = hierarchy.getChildIDsOf(childID, False).Count
+                If anzChilds = 0 Then
+                    tmpResult = False
+                    Exit For
+                End If
+            Next
+
+
+            isSuitedForSwimlane2 = tmpResult
+        End Get
+    End Property
+
 
 
     ''' <summary>
@@ -3625,7 +3585,7 @@
                     Dim tmpID As String = hry.getIDAtIndex(ix)
                     Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(tmpID)
                     If Not IsNothing(cMilestone) Then
-                        Dim catName As String = cMilestone.appearance
+                        Dim catName As String = cMilestone.appearanceName
                         If Not tmpCollection.Contains(catName) Then
                             tmpCollection.Add(catName, catName)
                         End If
@@ -3659,7 +3619,7 @@
 
                     If Not IsNothing(cMilestone) Then
 
-                        If cMilestone.appearance = category Then
+                        If cMilestone.appearanceName = category Then
 
                             If Not tmpCollection.Contains(msID) Then
                                 tmpCollection.Add(msID, msID)
@@ -3696,7 +3656,7 @@
                     Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(msID)
 
                     If Not IsNothing(cMilestone) Then
-                        If cMilestone.appearance = category Then
+                        If cMilestone.appearanceName = category Then
                             found = True
                         End If
                     End If
@@ -3732,7 +3692,7 @@
                 Dim tmpID As String = hry.getIDAtIndex(ix)
                 Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
                 If Not IsNothing(cPhase) Then
-                    Dim catName As String = cPhase.appearance
+                    Dim catName As String = cPhase.appearanceName
                     If Not tmpCollection.Contains(catName) Then
                         tmpCollection.Add(catName, catName)
                     End If
@@ -3768,7 +3728,7 @@
 
                 If Not IsNothing(cPhase) Then
 
-                    If cPhase.appearance = category Then
+                    If cPhase.appearanceName = category Then
 
                         If Not tmpCollection.Contains(phID) Then
                             tmpCollection.Add(phID, phID)
@@ -3808,7 +3768,7 @@
                 Dim cphase As clsPhase = Me.getPhaseByID(phID)
 
                 If Not IsNothing(cphase) Then
-                    If cphase.appearance = category Then
+                    If cphase.appearanceName = category Then
                         found = True
                     End If
                 End If

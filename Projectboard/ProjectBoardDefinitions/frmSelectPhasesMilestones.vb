@@ -249,11 +249,11 @@ Public Class frmSelectPhasesMilestones
                         If isMilestone Then
                             cMilestone = hproj.getMilestoneByID(childNameID)
                             ' bool'sche Wert gibtz an, ob es sich um einen Meilenstein handelt 
-                            categoryElem = calcHryCategoryName(cMilestone.appearance, True)
+                            categoryElem = calcHryCategoryName(cMilestone.appearanceName, True)
                         Else
                             cPhase = hproj.getPhaseByID(childNameID)
                             ' bool'sche Wert gibt an, ob es sich um einen Meilenstein handelt
-                            categoryElem = calcHryCategoryName(cPhase.appearance, False)
+                            categoryElem = calcHryCategoryName(cPhase.appearanceName, False)
                         End If
                     End If
 

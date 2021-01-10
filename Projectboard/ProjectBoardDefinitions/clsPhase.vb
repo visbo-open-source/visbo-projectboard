@@ -819,8 +819,9 @@ Public Class clsPhase
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property appearance As String
+    Public Property appearanceName As String
         Get
+
             ' tk/ute 29.11.20 
             If PhaseDefinitions.Contains(Me.name) Then
                 _appearance = PhaseDefinitions.getAppearance(Me.name)
@@ -828,49 +829,18 @@ Public Class clsPhase
             If _appearance = "" Then
                 _appearance = awinSettings.defaultPhaseClass
             End If
-            appearance = _appearance
+
+            appearanceName = _appearance
+
         End Get
         Set(value As String)
-            If appearanceDefinitions.ContainsKey(value) Then
+            If appearanceDefinitions.liste.ContainsKey(value) Then
                 _appearance = value
             Else
                 _appearance = awinSettings.defaultPhaseClass
             End If
         End Set
     End Property
-
-    '''' <summary>
-    '''' gibt das Shape für die Phase zurück
-    '''' falls es keine explizite Definition gibt: die Form der ersten Phase in der AppearnceDefinitions-Liste 
-    '''' </summary>
-    '''' <value></value>
-    '''' <returns></returns>
-    '''' <remarks></remarks>
-    'Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
-    '    Get
-
-    '        Dim tmpClass As String
-    '        Dim found As Boolean = True
-
-    '        If PhaseDefinitions.Contains(Me.name) Then
-    '            tmpClass = PhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
-
-    '        ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
-    '            tmpClass = missingPhaseDefinitions.getPhaseDef(Me.name).darstellungsKlasse
-
-    '        Else
-    '            tmpClass = _appearance
-    '            found = False
-    '        End If
-
-    '        getShape = appearanceDefinitions.Item(tmpClass).form
-
-    '        If Not found Then
-    '            getShape.Fill.ForeColor.RGB = _color
-    '        End If
-
-    '    End Get
-    'End Property
 
 
     ''' <summary>
@@ -1752,12 +1722,12 @@ Public Class clsPhase
 
 
             If PhaseDefinitions.Contains(tmpName) Then
-                    abbrev = PhaseDefinitions.getAbbrev(tmpName)
-                ElseIf missingPhaseDefinitions.Contains(tmpName) Then
-                    abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
-                Else
-                    abbrev = ""
-                End If
+                abbrev = PhaseDefinitions.getAbbrev(tmpName)
+            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+            Else
+                abbrev = ""
+            End If
 
             shortName = abbrev
 
@@ -1869,10 +1839,8 @@ Public Class clsPhase
 
                 Dim phName As String = elemNameOfElemID(_nameID)
 
-                If PhaseDefinitions.Contains(phName) Or missingPhaseDefinitions.Contains(phName) Then
-                    'ur:190725
-                    'farbe = Me.getShape.Fill.ForeColor.RGB
-                    farbe = appearanceDefinitions.Item(Me.appearance).FGcolor
+                If Not IsNothing(appearanceDefinitions.getPhaseAppearance(name, appearanceName)) Then
+                    farbe = appearanceDefinitions.liste.Item(Me.appearanceName).FGcolor
                 Else
                     farbe = _color
                 End If
@@ -2928,7 +2896,7 @@ Public Class clsPhase
             .originalName = originalName
 
 
-            .appearance = appearance
+            .appearanceName = appearanceName
             .farbe = farbe
             .verantwortlich = verantwortlich
             .percentDone = percentDone
@@ -3064,7 +3032,7 @@ Public Class clsPhase
             .originalName = originalName
 
 
-            .appearance = appearance
+            .appearanceName = appearanceName
             .farbe = farbe
             .verantwortlich = verantwortlich
             .percentDone = percentDone
@@ -3799,7 +3767,7 @@ Public Class clsPhase
         '    .colorIndex = 0
         'End With
         'Me.addBewertung(tmpB)
-        
+
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
         _allMilestones = New List(Of clsMeilenstein)
@@ -3879,7 +3847,7 @@ Public Class clsPhase
         End Try
 
         _verantwortlich = ""
-        
+
         _offset = 0
         _earliestStart = -999
         _latestStart = -999

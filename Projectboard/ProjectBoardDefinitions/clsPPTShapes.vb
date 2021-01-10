@@ -32,17 +32,9 @@ Public Class clsPPTShapes
     Private _legendAreaTop As Double = 0.0
     Private _legendAreaBottom As Double = 0.0
 
-    ' enthalten die relativen Abstände der Text-Shapes zu ihrem Phasen/Meilenstein Element 
-    Private _yOffsetMsToText As Double = -2.0
-    Private _yOffsetMsToDate As Double = 2.0
-
-    Private _yOffsetPhToText As Double = 2.0
-    Private _yOffsetPhToDate As Double = -2.0
-
     Private _containerShape As pptNS.Shape = Nothing
     Private _calendarLineShape As pptNS.Shape = Nothing
     Private _legendLineShape As pptNS.Shape = Nothing
-
 
     ' enthält das PPTStartofCalendar and PPTEndOfCalendar
     Private _PPTStartOFCalendar As Date = StartofCalendar
@@ -69,6 +61,9 @@ Public Class clsPPTShapes
     Private _YMilestone As Double = 0.0
     Private _YMilestoneText As Double = 0.0
     Private _YMilestoneDate As Double = 0.0
+
+    Private _YSegmentText As Double = 0.0
+    Private _YAmpel As Double = 0.0
 
     Private _avgMsHeight As Double = 5.0
     Public Property avgMSHeight As Double
@@ -105,7 +100,6 @@ Public Class clsPPTShapes
         If Not IsNothing(shape) Then
 
             Try
-                'shape.Delete()
                 shape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
             Catch ex As Exception
 
@@ -322,23 +316,23 @@ Public Class clsPPTShapes
 
     End Function
 
-    ''' <summary>
-    ''' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
-    ''' yOffsetMsToText, yOffsetMsToDate
-    ''' yOffsetPhToText, yOffsetPhToDate
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub calcRelDisTxtToElm()
+    '''' <summary>
+    '''' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+    '''' yOffsetMsToText, yOffsetMsToDate
+    '''' yOffsetPhToText, yOffsetPhToDate
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Public Sub calcRelDisTxtToElm()
 
 
-        _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
-        _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
+    '    _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
+    '    _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
 
-        _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
-        _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
+    '    _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
+    '    _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
 
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' berechnet anhand der Daten des Startdatums, Ende-Datums die korrespondierenden x1, x2 Koordinaten
@@ -413,133 +407,99 @@ Public Class clsPPTShapes
     Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer,
                                    ByVal considerAll As Boolean)
 
+        ' now: take the greater between PhaseName and Milestone, Phase Heigght plus Descriptions
+        Dim descriptionHeightSizes() As Single = {12, 12, 12, 12}
 
-        Dim minY As Double = _containerBottom, maxY As Double = _containerTop
+        Try
+            descriptionHeightSizes(0) = PhDescVorlagenShape.Height
+        Catch ex As Exception
 
-        ' bestimme als erstes die maximale/minimale Y-Koordinate, die sich ergibt wenn man alle -relevanten- Shapes berücksichtigt 
-        '
-        '
-        If Not IsNothing(projectNameVorlagenShape) Then
+        End Try
 
-            With projectNameVorlagenShape
-                minY = System.Math.Min(minY, .Top)
-                maxY = System.Math.Max(maxY, .Top + .Height)
-            End With
+        Try
+            descriptionHeightSizes(1) = PhDateVorlagenShape.Height
+        Catch ex As Exception
 
-        End If
+        End Try
 
-        ' soll überhaupt eine Dauer angezeigt werden ? 
-        If awinSettings.mppSortiertDauer Then
+        Try
+            descriptionHeightSizes(2) = MsDescVorlagenShape.Height
+        Catch ex As Exception
 
-            If IsNothing(durationTextShape) Then
-                With durationTextShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
+        End Try
+        Try
+            descriptionHeightSizes(3) = MsDateVorlagenShape.Height
+        Catch ex As Exception
+
+        End Try
+
+        Dim PhMsHeightSizes() As Single = {20, 30}
+
+        Try
+            PhMsHeightSizes(0) = phaseVorlagenShape.Height
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            PhMsHeightSizes(1) = milestoneVorlagenShape.Height
+        Catch ex As Exception
+
+        End Try
+
+        Dim zwResult As Double = PhMsHeightSizes.Max + 2 * descriptionHeightSizes.Max + 6
+        Try
+            If Not IsNothing(projectNameVorlagenShape) Then
+                zwResult = System.Math.Max(zwResult, projectNameVorlagenShape.Height)
             End If
+        Catch ex As Exception
 
-            If IsNothing(durationArrowShape) Then
-                With durationArrowShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
-        End If
+        End Try
 
-
-        If awinSettings.mppShowProjectLine And Not IsNothing(projectVorlagenShape) Then
-            With projectVorlagenShape
-                minY = System.Math.Min(minY, .Top)
-                maxY = System.Math.Max(maxY, .Top + .Height)
-            End With
-        End If
-
-        ' Müssen Phasen überhaupt gezeichnet werden ? 
-        If anzphasen > 0 Or considerAll Then
-            If Not IsNothing(phaseVorlagenShape) Then
-                With phaseVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
-
-            If Not awinSettings.mppUseInnerText Then
-                If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
-                    With PhDescVorlagenShape
-                        minY = System.Math.Min(minY, .Top)
-                        maxY = System.Math.Max(maxY, .Top + .Height)
-                    End With
-                End If
-
-                If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
-                    With PhDateVorlagenShape
-                        minY = System.Math.Min(minY, .Top)
-                        maxY = System.Math.Max(maxY, .Top + .Height)
-                    End With
-                End If
-            End If
-
-
-        End If
-
-        ' Müssen Meilensteine überhaupt gezeichnet werden ? 
-        If anzMeilensteine > 0 Or considerAll Then
-            If Not IsNothing(milestoneVorlagenShape) Then
-                With milestoneVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
-
-            If Not IsNothing(MsDescVorlagenShape) And awinSettings.mppShowMsName Then
-                With MsDescVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
-
-            If Not IsNothing(MsDateVorlagenShape) And awinSettings.mppShowMsDate Then
-                With MsDateVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
-
-        End If
-
-        '
-        '
-        ' jetzt ist die minimale/maximale Ausdehnung bestimmt 
-
-        If minY <= maxY Then
-            _zeilenHoehe = (maxY - minY) * 1.03
-        End If
+        _zeilenHoehe = zwResult
 
 
         ' und jetzt werden die relativen Offsets bestimmt 
         '
         '
+        Call bestimmeRelativeOffsets()
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' defines te relative offsets for Phase-Text, Phase Date , Milestone Text, and Milestone Date
+    ''' </summary>
+    Private Sub bestimmeRelativeOffsets()
 
         If Not IsNothing(projectNameVorlagenShape) Then
 
             With projectNameVorlagenShape
-                _YprojectName = .Top - minY
+                _YprojectName = 0.5 * projectNameVorlagenShape.Height
             End With
 
+        End If
+
+        If Not IsNothing(ampelVorlagenShape) Then
+            With ampelVorlagenShape
+                _YAmpel = 0.5 * ampelVorlagenShape.Height
+            End With
         End If
 
         ' soll überhaupt eine Dauer angezeigt werden ? 
         If awinSettings.mppSortiertDauer Then
 
-            If IsNothing(durationTextShape) Then
+            If Not IsNothing(durationTextShape) Then
                 With durationTextShape
-                    _YDurationText = .Top - minY
+                    _YDurationText = 0.5 * _zeilenHoehe + durationTextShape.Height
                 End With
             End If
 
-            If IsNothing(durationArrowShape) Then
+            If Not IsNothing(durationArrowShape) Then
                 With durationArrowShape
-                    _YDurationArrow = .Top - minY
+                    _YDurationArrow = _YDurationText + 0.5 * durationArrowShape.Height
                 End With
             End If
         End If
@@ -547,85 +507,142 @@ Public Class clsPPTShapes
 
         If awinSettings.mppShowProjectLine And Not IsNothing(projectVorlagenShape) Then
             With projectVorlagenShape
-                _YProjectLine = .Top - minY
+                _YProjectLine = 0.5 * projectVorlagenShape.Height
             End With
         End If
 
-        ' Müssen Phasen überhaupt gezeichnet werden ? 
-        If anzphasen > 0 Or considerAll Then
-            If Not IsNothing(phaseVorlagenShape) Then
-                With phaseVorlagenShape
-                    _YPhase = .Top - minY
-                End With
-            End If
-
-            If Not awinSettings.mppUseInnerText Then
-                If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
-                    With PhDescVorlagenShape
-                        _YPhasenText = .Top - minY
-                    End With
-                End If
-
-                If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
-                    With PhDateVorlagenShape
-                        _YPhasenDatum = .Top - minY
-                    End With
-                End If
-            End If
-
-
+        ' Phases 
+        If Not IsNothing(phaseVorlagenShape) Then
+            With phaseVorlagenShape
+                _YPhase = 0.5 * phaseVorlagenShape.Height
+            End With
         End If
 
-        ' Müssen Meilensteine überhaupt gezeichnet werden ? 
-        If anzMeilensteine > 0 Or considerAll Then
-            If Not IsNothing(milestoneVorlagenShape) Then
-                With milestoneVorlagenShape
-                    _YMilestone = .Top - minY
-                End With
+        ' Date and Text of Phases
+        Try
+            If phaseVorlagenShape.Top >= PhDescVorlagenShape.Top Then
+                _YPhasenText = 0.5 * phaseVorlagenShape.Height + 2 + PhDescVorlagenShape.Height
+            Else
+                _YPhasenText = -1 * (0.5 * phaseVorlagenShape.Height + 2)
             End If
+        Catch ex As Exception
 
-            If Not IsNothing(MsDescVorlagenShape) And awinSettings.mppShowMsName Then
-                With MsDescVorlagenShape
-                    _YMilestoneText = .Top - minY
-                End With
+        End Try
+
+        Try
+            If phaseVorlagenShape.Top >= PhDateVorlagenShape.Top Then
+                _YPhasenDatum = 0.5 * phaseVorlagenShape.Height + 2 + PhDateVorlagenShape.Height
+            Else
+                _YPhasenDatum = -1 * (0.5 * phaseVorlagenShape.Height + 2)
             End If
+        Catch ex As Exception
 
-            If Not IsNothing(MsDateVorlagenShape) And awinSettings.mppShowMsDate Then
-                With MsDateVorlagenShape
-                    _YMilestoneDate = .Top - minY
-                End With
-            End If
+        End Try
 
+        ' Milestones
+        If Not IsNothing(milestoneVorlagenShape) Then
+            With milestoneVorlagenShape
+                _YMilestone = 0.5 * milestoneVorlagenShape.Height
+            End With
         End If
 
+        ' Date and Text of Milestones
+        Try
+            If milestoneVorlagenShape.Top >= MsDescVorlagenShape.Top Then
+                _YMilestoneText = 0.5 * milestoneVorlagenShape.Height + 2 + MsDescVorlagenShape.Height
+            Else
+                _YMilestoneText = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
+            End If
+        Catch ex As Exception
 
-        '
-        '
-        ' jetzt sind die relativen Offsets alle bestimmt; zumindest die, die aufgrund settings überhaupt relevant sind 
+        End Try
 
+        ' Date and Text of Milestones
+        Try
+            If milestoneVorlagenShape.Top >= MsDateVorlagenShape.Top Then
+                _YMilestoneDate = 0.5 * milestoneVorlagenShape.Height + 2 + MsDateVorlagenShape.Height
+            Else
+                _YMilestoneDate = -1 * (0.5 * milestoneVorlagenShape.Height + 2)
+            End If
+        Catch ex As Exception
 
+        End Try
 
+        Try
+            If Not IsNothing(segmentVorlagenShape) Then
+                With segmentVorlagenShape
+                    _YSegmentText = 0.5 * segmentVorlagenShape.Height
+                End With
+            End If
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 
     ''' <summary>
-    ''' setzt die Zeilenhöhe auf ein Minimum bzw. auf ein absolutes Minimum. 
-    ''' beim Minimum bleibt Platz für eine Beschreibung, beim absoluten Minimum wird gewährleistet, dass sich Meilenstein bzw. Phasen aus zwei Zeilen noch nicht überlappen.  
+    ''' first try: define default row Height resp. zeilenhohe  
     ''' </summary>
-    Public Sub setZeilenhöhe(ByVal absoluteMinimum As Boolean)
+    Public Sub setZeilenhoehe(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
 
-        If absoluteMinimum Then
+        Dim goodEnough As Boolean = False
+        Dim newZeilenhoehe As Double = _zeilenHoehe
 
-            _zeilenHoehe = Me.minZeilenhöhe
+        Dim heights(3) As Single
+        heights(0) = MsDescVorlagenShape.Height
+        heights(1) = MsDateVorlagenShape.Height
+        heights(2) = PhDescVorlagenShape.Height
+        heights(3) = PhDateVorlagenShape.Height
+
+        newZeilenhoehe = Me.minZeilenhöhe + heights.Max
+
+        goodEnough = (anzZeilen + 1) * newZeilenhoehe <= (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace)
+        If Not goodEnough Then
+            Call enforceAppropriateRowHeight(anzZeilen, segmentNeededSpace)
         Else
-            Dim heights(3) As Single
-            heights(0) = MsDescVorlagenShape.Height
-            heights(1) = MsDateVorlagenShape.Height
-            heights(2) = PhDescVorlagenShape.Height
-            heights(3) = PhDateVorlagenShape.Height
-
-            _zeilenHoehe = Me.minZeilenhöhe + heights.Max
+            _zeilenHoehe = newZeilenhoehe
         End If
+
+        ' und jetzt werden die relativen Offsets aktualisiert 
+        '
+        '
+        Call bestimmeRelativeOffsets()
+
+    End Sub
+
+    ''' <summary>
+    ''' called if space ist not sufficient , defines a zeilehohe which enables drawing of the whole thing
+    ''' does reduce Ms height and width and phase height to 0.66 of origibal size   
+    ''' </summary>
+    ''' <param name="anzZeilen"></param>
+    Private Sub enforceAppropriateRowHeight(ByVal anzZeilen As Integer, ByVal segmentNeededSpace As Double)
+
+        ' now try  
+        Dim stopReduction As Single = 0.4
+
+        _zeilenHoehe = (Math.Abs(_drawingAreaTop - _drawingAreaBottom) - segmentNeededSpace) / (anzZeilen + 1)
+        Dim phMsHeight As Single = Math.Max(_milestoneVorlagenShape.Height, _phaseVorlagenShape.Height)
+
+
+        If _zeilenHoehe >= phMsHeight Then
+            ' all ok, done 
+        Else
+            ' now change milestoneHeight, phaseHeight so that proportions remain and elements do not overlap 
+            ' unless reduction is not smaller than stopReduction 
+            Dim reductionFactor As Single = CSng(_zeilenHoehe / phMsHeight)
+            If reductionFactor < stopReduction Then
+                reductionFactor = stopReduction
+                ' now overlaps are accepted 
+            End If
+
+            ' now milestones and phases are reduced by reductionFactor 
+            _milestoneVorlagenShape.Height = _milestoneVorlagenShape.Height * reductionFactor
+            _milestoneVorlagenShape.Width = _milestoneVorlagenShape.Width * reductionFactor
+            _phaseVorlagenShape.Height = _phaseVorlagenShape.Height * reductionFactor
+
+        End If
+
+
 
     End Sub
 
@@ -650,9 +667,7 @@ Public Class clsPPTShapes
     ''' 
     ''' </summary>
     ''' <param name="kennzeichnung">steuert, ob am linken Rand Projekt-Namen bzw. Swimlane-Namen ausgegeben werden </param>
-    ''' <param name="msHeight">gibt die Höhe und Breite eines Meilensteins an</param>
-    ''' <param name="phHeight">gibt die Höhe einer Phase an </param>
-    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String, ByVal msHeight As Single, ByVal phHeight As Single)
+    Public Sub createMandatoryDrawingShapes(ByVal kennzeichnung As String)
 
         Dim tmpErg As String = ""
         Dim tmpName As String = ""
@@ -669,6 +684,9 @@ Public Class clsPPTShapes
 
         Dim calendarLineStart As Integer = 90
         Dim buStart As Integer = 5
+
+        Dim msHeight As Single = 14.1
+        Dim phHeight As Single = 5.1
 
 
         ' der Kalender-Start soll in Abhängigkeit von kennzeichneung weiter links oder weiter rechts begionnen 
@@ -961,8 +979,6 @@ Public Class clsPPTShapes
 
             End If
 
-
-
             If IsNothing(_calendarYearSeparator) Then
                 Dim beginX As Single = _containerShape.Left + 30
                 Dim beginY As Single = _containerShape.Top + 30
@@ -1147,7 +1163,7 @@ Public Class clsPPTShapes
 
             If IsNothing(_errorVorlagenShape) Then
                 _errorVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDescVorlagenShape
+                With _errorVorlagenShape
                     .TextFrame2.TextRange.Text = "Error-Message"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -1197,7 +1213,7 @@ Public Class clsPPTShapes
 
             If IsNothing(_segmentVorlagenShape) Then
                 _segmentVorlagenShape = _pptSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, 50, 10, 50, 10)
-                With _MsDescVorlagenShape
+                With _segmentVorlagenShape
                     .TextFrame2.TextRange.Text = "Segment-Name"
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -1943,6 +1959,13 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public WriteOnly Property setDrawingareaTop As Double
+        Set(value As Double)
+            If value > _containerTop And value < _containerBottom Then
+                _drawingAreaTop = value
+            End If
+        End Set
+    End Property
 
     Public ReadOnly Property drawingAreaTop As Double
         Get
@@ -1990,55 +2013,6 @@ Public Class clsPPTShapes
     Public ReadOnly Property legendAreaBottom As Double
         Get
             legendAreaBottom = _legendAreaBottom
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetMsToText As Double
-        Get
-            yOffsetMsToText = _yOffsetMsToText
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetMsToDate As Double
-        Get
-            yOffsetMsToDate = _yOffsetMsToDate
-        End Get
-    End Property
-
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetPhToText As Double
-        Get
-            yOffsetPhToText = _yOffsetPhToText
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property yOffsetPhToDate As Double
-        Get
-            yOffsetPhToDate = _yOffsetPhToDate
         End Get
     End Property
 
@@ -2187,6 +2161,12 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public ReadOnly Property YAmpel As Double
+        Get
+            YAmpel = _YAmpel
+        End Get
+    End Property
+
     ''' <summary>
     ''' Readonly: relativer Top des Phasen-Balkens
     ''' wird gesetzt in Methode bestimmeZeilenhoehe
@@ -2267,6 +2247,12 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public ReadOnly Property YSegmentText As Double
+        Get
+            YSegmentText = _YSegmentText
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
@@ -2320,7 +2306,7 @@ Public Class clsPPTShapes
 
 
         ' bestimme den Anfang , wo gezeichnet wird 
-        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 5
+        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 30
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then
@@ -2550,124 +2536,6 @@ Public Class clsPPTShapes
             Call makeShapeInvisible(_durationArrowShape)
             Call makeShapeInvisible(_durationTextShape)
             Call makeShapeInvisible(_segmentVorlagenShape)
-
-            'If Not IsNothing(_quarterMonthVorlagenShape) Then
-            '    _quarterMonthVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_yearVorlagenShape) Then
-            '    _yearVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_projectVorlagenShape) Then
-            '    _projectVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_phaseVorlagenShape) Then
-            '    _phaseVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_milestoneVorlagenShape) Then
-            '    _milestoneVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_ampelVorlagenShape) Then
-            '    _ampelVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarYearSeparator) Then
-            '    _calendarYearSeparator.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarQuartalSeparator) Then
-            '    _calendarQuartalSeparator.Delete()
-            'End If
-
-            'If Not IsNothing(_horizontalLineShape) Then
-            '    _horizontalLineShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendLineShape) Then
-            '    _legendLineShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendStartShape) Then
-            '    _legendStartShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendTextVorlagenShape) Then
-            '    _legendTextVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendPhaseVorlagenShape) Then
-            '    _legendPhaseVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendMilestoneVorlagenShape) Then
-            '    _legendMilestoneVorlagenShape.Delete()
-            'End If
-
-
-
-            'If Not IsNothing(_calendarHeightShape) Then
-            '    _calendarHeightShape.Delete()
-            'End If
-
-            'If Not IsNothing(_MsDescVorlagenShape) Then
-            '    _MsDescVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_MsDateVorlagenShape) Then
-            '    _MsDateVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_PhDescVorlagenShape) Then
-            '    _PhDescVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_PhDateVorlagenShape) Then
-            '    _PhDateVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarStepShape) Then
-            '    _calendarStepShape.Delete()
-            'End If
-
-            'If Not IsNothing(_calendarMarkShape) Then
-            '    _calendarMarkShape.Delete()
-            'End If
-
-            'If Not IsNothing(_errorVorlagenShape) Then
-            '    _errorVorlagenShape.Delete()
-            'End If
-
-            'If Not IsNothing(_legendBuColorShape) Then
-            '    _legendBuColorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_buColorShape) Then
-            '    _buColorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_rowDifferentiatorShape) Then
-            '    _rowDifferentiatorShape.Delete()
-            'End If
-
-            'If Not IsNothing(_phaseDelimiterShape) Then
-            '    _phaseDelimiterShape.Delete()
-            'End If
-
-            'If Not IsNothing(_durationArrowShape) Then
-            '    _durationArrowShape.Delete()
-            'End If
-
-            'If Not IsNothing(_durationTextShape) Then
-            '    _durationTextShape.Delete()
-            'End If
-
-            'If Not IsNothing(_segmentVorlagenShape) Then
-            '    _segmentVorlagenShape.Delete()
-            'End If
 
         End If
     End Sub

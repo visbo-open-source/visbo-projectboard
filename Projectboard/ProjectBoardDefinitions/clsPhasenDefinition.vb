@@ -28,7 +28,7 @@
         End Get
 
         Set(value As String)
-            If value = "" Or Not appearanceDefinitions.ContainsKey(value) Then
+            If value = "" Or Not appearanceDefinitions.liste.ContainsKey(value) Then
                 _darstellungsKlasse = defaultName
             Else
                 _darstellungsKlasse = value
@@ -46,10 +46,10 @@
     Public ReadOnly Property farbe As Long
         Get
 
-            If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
+            If appearanceDefinitions.liste.ContainsKey(_darstellungsKlasse) Then
                 'ur:190722
                 '_arbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
+                _farbe = appearanceDefinitions.liste.Item(_darstellungsKlasse).FGcolor
             Else
 
                 _farbe = awinSettings.missingDefinitionColor
@@ -111,10 +111,8 @@
         _schwellWert = 0
 
         Try
-            If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
-                'ur:190722
-                '_farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
+            If appearanceDefinitions.liste.ContainsKey(_darstellungsKlasse) Then
+                _farbe = appearanceDefinitions.liste.Item(_darstellungsKlasse).FGcolor
             End If
         Catch ex As Exception
             _farbe = CLng(RGB(120, 120, 120))

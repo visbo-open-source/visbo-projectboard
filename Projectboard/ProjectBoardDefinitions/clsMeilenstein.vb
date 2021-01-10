@@ -153,7 +153,7 @@ Public Class clsMeilenstein
                 If Me.name = vglMS.name And
                     Me.shortName = vglMS.shortName And
                     Me.originalName = vglMS.originalName And
-                    Me.appearance = vglMS.appearance And
+                    Me.appearanceName = vglMS.appearanceName And
                     Me.verantwortlich = vglMS.verantwortlich And
                     Me.offset = vglMS.offset And
                     Me.countDeliverables = vglMS.countDeliverables And
@@ -241,7 +241,7 @@ Public Class clsMeilenstein
     ''' <param name="item"></param>
     ''' <remarks></remarks>
     Public Sub addDeliverable(ByVal item As String)
-        
+
         If Not _deliverables.Contains(item) Then
             _deliverables.Add(item)
         End If
@@ -314,7 +314,7 @@ Public Class clsMeilenstein
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property appearance As String
+    Public Property appearanceName As String
         Get
 
             ' tk/ute. 29.11.20
@@ -324,53 +324,18 @@ Public Class clsMeilenstein
             If _appearance = "" Then
                 _appearance = awinSettings.defaultMilestoneClass
             End If
-            appearance = _appearance
+
+            appearanceName = _appearance
+
         End Get
         Set(value As String)
-            If appearanceDefinitions.ContainsKey(value) Then
+            If appearanceDefinitions.liste.ContainsKey(value) Then
                 _appearance = value
             Else
                 _appearance = awinSettings.defaultMilestoneClass
             End If
         End Set
     End Property
-
-    '''' <summary>
-    '''' gibt das Shape für den Meilenstein zurück
-    '''' falls es keine explizite Definition gibt: die Form des ersten Meilensteins in der AppearnceDefinitions-Liste 
-    '''' </summary>
-    '''' <value></value>
-    '''' <returns></returns>
-    '''' <remarks></remarks>
-    'Public ReadOnly Property getShape As Microsoft.Office.Interop.Excel.Shape
-    '    Get
-
-    '        Dim tmpClass As String
-    '        Dim found As Boolean = True
-    '        Dim appear As New clsAppearance
-
-    '        If MilestoneDefinitions.Contains(Me.name) Then
-    '            tmpClass = MilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
-
-    '        ElseIf missingMilestoneDefinitions.Contains(Me.name) Then
-    '            tmpClass = missingMilestoneDefinitions.getMilestoneDef(Me.name).darstellungsKlasse
-
-    '        Else
-    '            tmpClass = _appearance
-    '            found = False
-    '        End If
-
-    '        'getShape = appearanceDefinitions.Item(tmpClass).form
-    '        appear = appearanceDefinitions.Item(tmpClass)
-    '        getShape = CType(appInstance.Worksheets(arrWsNames(ptTables.MPT)),
-    '            Microsoft.Office.Interop.Excel.Worksheet).Shapes.AddShape(appear.shpType, 0, 0, appear.width, appear.height)
-
-    '        If Not found Then
-    '            getShape.Fill.ForeColor.RGB = _color
-    '        End If
-
-    '    End Get
-    'End Property
 
     ''' <summary>
     ''' liest/schreibt den Ampel-Status, das ist die 1. Bewertung
@@ -474,10 +439,10 @@ Public Class clsMeilenstein
 
                 Dim msName As String = elemNameOfElemID(_nameID)
 
-                If MilestoneDefinitions.Contains(msName) Or missingMilestoneDefinitions.Contains(msName) Then
+                If Not IsNothing(appearanceDefinitions.getMileStoneAppearance(name, appearanceName)) Then
                     'ur:190725
                     'farbe = Me.getShape.Fill.ForeColor.RGB
-                    farbe = appearanceDefinitions.Item(Me.appearance).FGcolor
+                    farbe = appearanceDefinitions.getMileStoneAppearance(name, appearanceName).FGcolor
                 Else
                     farbe = _color
                 End If
@@ -711,7 +676,7 @@ Public Class clsMeilenstein
                     ' Änderung tk, 20.6.18 value.date , um zu normieren ...
                     _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset).Date, value.Date)
                 Catch ex As Exception
-                    Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf & _
+                    Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf &
                                         ex.Message)
                 End Try
 
@@ -799,7 +764,7 @@ Public Class clsMeilenstein
 
             .shortName = Me._shortName
             .originalName = Me._originalName
-            .appearance = Me._appearance
+            .appearanceName = Me._appearance
             .farbe = Me._color
             .verantwortlich = Me._verantwortlich
             .percentDone = Me._percentDone

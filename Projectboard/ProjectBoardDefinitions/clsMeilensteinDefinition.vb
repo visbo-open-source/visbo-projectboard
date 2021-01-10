@@ -31,7 +31,7 @@
         End Get
 
         Set(value As String)
-            If value = "" Or Not appearanceDefinitions.ContainsKey(value) Then
+            If value = "" Or Not appearanceDefinitions.liste.ContainsKey(value) Then
                 _darstellungsKlasse = defaultName
             Else
                 _darstellungsKlasse = value
@@ -49,10 +49,10 @@
     Public ReadOnly Property farbe As Long
         Get
 
-            If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
+            If appearanceDefinitions.liste.ContainsKey(_darstellungsKlasse) Then
                 'ur: 19022
                 'farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
-                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).FGcolor
+                _farbe = appearanceDefinitions.liste.Item(_darstellungsKlasse).FGcolor
             Else
                 _farbe = awinSettings.AmpelNichtBewertet
             End If
@@ -61,11 +61,7 @@
             farbe = _farbe
 
         End Get
-        'Set(value As Long)
 
-        '    _farbe = value
-
-        'End Set
     End Property
 
     ' Angabe der UID des Meilensteins
