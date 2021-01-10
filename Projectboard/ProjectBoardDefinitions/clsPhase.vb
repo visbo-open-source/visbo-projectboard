@@ -822,13 +822,13 @@ Public Class clsPhase
     Public Property appearanceName As String
         Get
 
-            ' tk/ute 29.11.20 
-            If PhaseDefinitions.Contains(Me.name) Then
-                _appearance = PhaseDefinitions.getAppearance(Me.name)
-            End If
-            If _appearance = "" Then
-                _appearance = awinSettings.defaultPhaseClass
-            End If
+            '' tk/ute 29.11.20 
+            'If PhaseDefinitions.Contains(Me.name) Then
+            '    _appearance = PhaseDefinitions.getAppearance(Me.name)
+            'End If
+            'If _appearance = "" Then
+            '    _appearance = awinSettings.defaultPhaseClass
+            'End If
 
             appearanceName = _appearance
 

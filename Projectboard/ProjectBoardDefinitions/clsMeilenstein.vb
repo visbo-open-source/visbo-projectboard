@@ -317,14 +317,13 @@ Public Class clsMeilenstein
     Public Property appearanceName As String
         Get
 
-            ' tk/ute. 29.11.20
-            If MilestoneDefinitions.Contains(Me.name) Then
-                _appearance = MilestoneDefinitions.getAppearance(Me.name)
-            End If
-            If _appearance = "" Then
-                _appearance = awinSettings.defaultMilestoneClass
-            End If
-
+            '' tk/ute. 29.11.20
+            'If MilestoneDefinitions.Contains(Me.name) Then
+            '    _appearance = MilestoneDefinitions.getAppearance(Me.name)
+            'End If
+            'If _appearance = "" Then
+            '    _appearance = awinSettings.defaultMilestoneClass
+            'End If
             appearanceName = _appearance
 
         End Get
