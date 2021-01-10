@@ -23,7 +23,12 @@ Public Class clsRollen
 
     ' tk 25.7.19 in welcher relativen Position im Baum sind die einzelnen IDs
     ' Key = NameID, value = relative Position
-    Private _positionIndices As SortedList(Of String, Integer)
+    ' tk 9.1.21
+    'Private _positionIndices As SortedList(Of String, Integer)
+    ' key enthält die RoleID, value die relative Position
+    Private _positionIndicesRoles As SortedList(Of Integer, Integer)
+    ' key enthält die SkillID, value die relative Position 
+    Private _positionIndicesSkills As SortedList(Of Integer, Integer)
 
     ''' <summary>
     ''' wird aktuell nur in ImportMSProject benötigt .. wird gebraucht, um  unbekannte Rolen mit UID in missingRoleDefinitions aufzunehmen ..
@@ -308,21 +313,34 @@ Public Class clsRollen
     Public ReadOnly Property roleHasSkill(ByVal roleID As Integer, ByVal skillID As Integer) As Boolean
         Get
             Dim result As Boolean = False
-            Dim curRole As clsRollenDefinition = getRoleDefByID(roleID)
-            Dim curSkill As clsRollenDefinition = getRoleDefByID(skillID)
 
-            If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
-                Try
-                    If Not curRole.isSkill And curSkill.isSkill Then
-                        If curRole.isCombinedRole Then
-                            result = getCommonChildsOfParents(roleID, skillID).Count > 0
-                        Else
-                            result = curRole.getSkillIDs.ContainsKey(skillID)
+            If roleID > 0 And skillID > 0 Then
+                Dim curRole As clsRollenDefinition = getRoleDefByID(roleID)
+                Dim curSkill As clsRollenDefinition = getRoleDefByID(skillID)
+
+                If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
+                    Try
+                        If Not curRole.isSkill And curSkill.isSkill Then
+
+                            result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                            'If curRole.isCombinedRole Then
+                            '    result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                            'Else
+                            '    If curSkill.isCombinedRole Then
+                            '        result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                            '    Else
+                            '        result = curRole.getSkillIDs.ContainsKey(curSkill.UID)
+                            '    End If
+
+                            'End If
                         End If
-                    End If
-                Catch ex As Exception
+                    Catch ex As Exception
 
-                End Try
+                    End Try
+
+
+                End If
+
             End If
 
             roleHasSkill = result
@@ -346,15 +364,25 @@ Public Class clsRollen
             If Not IsNothing(curRole) And Not IsNothing(curSkill) Then
                 Try
                     If Not curRole.isSkill And curSkill.isSkill Then
-                        If curRole.isCombinedRole Then
-                            result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
-                        Else
-                            result = curRole.getSkillIDs.ContainsKey(curSkill.UID)
-                        End If
+
+                        result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                        'If curRole.isCombinedRole Then
+                        '    result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                        'Else
+                        '    If curSkill.isCombinedRole Then
+                        '        result = getCommonChildsOfParents(curRole.UID, curSkill.UID).Count > 0
+                        '    Else
+                        '        result = curRole.getSkillIDs.ContainsKey(curSkill.UID)
+                        '    End If
+
+                        'End If
                     End If
                 Catch ex As Exception
 
                 End Try
+
+            ElseIf (Not IsNothing(curRole) And IsNothing(curSkill)) Then
+                result = (skillName = "")
             End If
 
             roleHasSkill = result
@@ -663,13 +691,19 @@ Public Class clsRollen
     ''' </summary>
     Private Sub setRelativePositionIndicesOfRoles()
         Dim topLevelNodes As List(Of Integer) = getTopLevelNodeIDs
-        Dim posIX As Integer = 1
-
+        Dim posRoleIX As Integer = 1
+        Dim posSkillIX As Integer = 1
         If Not IsNothing(topLevelNodes) Then
 
             For Each topLevelNodeID As Integer In topLevelNodes
 
-                Call setrelativeIndicesOFParentNode(topLevelNodeID, -1, posIX)
+                Dim nodeIsSkill As Boolean = _allRollen.Item(topLevelNodeID).isSkill
+                If nodeIsSkill Then
+                    Call setrelativeRoleIndicesOFParentNode(topLevelNodeID, nodeIsSkill, posSkillIX)
+                Else
+                    Call setrelativeRoleIndicesOFParentNode(topLevelNodeID, nodeIsSkill, posRoleIX)
+                End If
+
 
             Next
 
@@ -680,38 +714,48 @@ Public Class clsRollen
     ''' 
     ''' </summary>
     ''' <param name="nodeID">ID des Top Knotens dessen Baum analysiert werden soll </param>
-    ''' <param name="teamID">ID des Teams </param>
+    ''' <param name="nodeIsSkill">gibt an ob es sich um eine Skill handelt</param>
     ''' <param name="posIX">byref übergebener PositionsIndex</param>
-    Private Sub setrelativeIndicesOFParentNode(ByVal nodeID As Integer, ByVal teamID As Integer, ByRef posIX As Integer)
+    Private Sub setrelativeRoleIndicesOFParentNode(ByVal nodeID As Integer, ByVal nodeIsSkill As Boolean, ByRef posIX As Integer)
 
-        Dim roleNameID As String = bestimmeRoleNameID(nodeID, teamID)
+        Dim myPositionIndices As SortedList(Of Integer, Integer) = _positionIndicesRoles
 
-        If Not _positionIndices.ContainsKey(roleNameID) Then
-            _positionIndices.Add(roleNameID, posIX)
+        If nodeIsSkill Then
+            myPositionIndices = _positionIndicesSkills
+        End If
+
+        If Not myPositionIndices.ContainsKey(nodeID) Then
+            myPositionIndices.Add(nodeID, posIX)
             posIX = posIX + 1
 
             Dim parentrole As clsRollenDefinition = getRoleDefByID(nodeID)
-            If parentrole.isSkill Then
-                teamID = parentrole.UID
-            Else
-                teamID = -1
-            End If
+            ' kann nur Role sein ... 
+            ' tk 9.1.21
+            'If parentrole.isSkill Then
+            '    teamID = parentrole.UID
+            'Else
+            '    teamID = -1
+            'End If
 
             For ci As Integer = 1 To parentrole.getSubRoleCount
                 Dim childrole As clsRollenDefinition = getRoleDefByID(parentrole.getSubRoleIDs.ElementAt(ci - 1).Key)
                 If childrole.getSubRoleCount = 0 Then
 
-                    roleNameID = bestimmeRoleNameID(childrole.UID, teamID)
-
-                    If Not _positionIndices.ContainsKey(roleNameID) Then
-                        _positionIndices.Add(roleNameID, posIX)
-                        posIX = posIX + 1
+                    If nodeIsSkill And Not childrole.isSkill Then
+                        ' do nothing , because now ChildRole is a Role such as Anton etc; not any more a skill . 
                     Else
-                        ' darf eigentlich nicht sein 
-                        Call MsgBox("Error: Position in Role-Definition " & childrole.name & " (" & roleNameID & ")")
+                        If Not myPositionIndices.ContainsKey(childrole.UID) Then
+                            myPositionIndices.Add(childrole.UID, posIX)
+                            posIX = posIX + 1
+                        Else
+                            ' darf eigentlich nicht sein 
+                            Call MsgBox("Error: Position in Role-Definition " & childrole.name & " (" & childrole.UID & ")")
+                        End If
                     End If
+
                 Else
-                    Call setrelativeIndicesOFParentNode(childrole.UID, teamID, posIX)
+                    ' assumes that all childs of Skill are skill as well 
+                    Call setrelativeRoleIndicesOFParentNode(childrole.UID, nodeIsSkill, posIX)
                 End If
 
             Next
@@ -719,42 +763,44 @@ Public Class clsRollen
 
     End Sub
 
-    ''' <summary>
-    ''' gibt die Positions-Indices zurück 
-    ''' im Fehlerfall werden die Role-IDs als Sortier-Kriterium verwnedte 
-    ''' </summary>
-    ''' <param name="NameIDListe"></param>
-    ''' <returns></returns>
-    Public Function getPositionIndices(ByVal NameIDListe As String()) As SortedList(Of Integer, String)
-        Dim tmpResult As New SortedList(Of Integer, String)
-        Dim errorPos As Integer = 999999
 
-        Dim errorOccurred As Boolean = False
-        Try
-            For Each tmpID As String In NameIDListe
-                If _positionIndices.ContainsKey(tmpID) Then
-                    Dim posIX As Integer = _positionIndices.Item(tmpID)
-                    Do While tmpResult.ContainsKey(posIX)
-                        posIX = posIX + 1
-                    Loop
-                    tmpResult.Add(posIX, tmpID)
-                Else
-                    errorPos = errorPos + 1
-                    Do While tmpResult.ContainsKey(errorPos)
-                        errorPos = errorPos + 1
-                    Loop
-                    tmpResult.Add(errorPos, tmpID)
-                End If
 
-            Next
-        Catch ex As Exception
-            errorOccurred = True
+    '''' <summary>
+    '''' gibt die Positions-Indices zurück 
+    '''' im Fehlerfall werden die Role-IDs als Sortier-Kriterium verwnedte 
+    '''' </summary>
+    '''' <param name="NameIDListe"></param>
+    '''' <returns></returns>
+    'Public Function getPositionIndices(ByVal NameIDListe As String()) As SortedList(Of Integer, String)
+    '    Dim tmpResult As New SortedList(Of Integer, String)
+    '    Dim errorPos As Integer = 999999
 
-        End Try
+    '    Dim errorOccurred As Boolean = False
+    '    Try
+    '        For Each tmpID As String In NameIDListe
+    '            If _positionIndicesRoles.ContainsKey(tmpID) Then
+    '                Dim posIX As Integer = _positionIndicesRoles.Item(tmpID)
+    '                Do While tmpResult.ContainsKey(posIX)
+    '                    posIX = posIX + 1
+    '                Loop
+    '                tmpResult.Add(posIX, tmpID)
+    '            Else
+    '                errorPos = errorPos + 1
+    '                Do While tmpResult.ContainsKey(errorPos)
+    '                    errorPos = errorPos + 1
+    '                Loop
+    '                tmpResult.Add(errorPos, tmpID)
+    '            End If
 
-        getPositionIndices = tmpResult
+    '        Next
+    '    Catch ex As Exception
+    '        errorOccurred = True
 
-    End Function
+    '    End Try
+
+    '    getPositionIndices = tmpResult
+
+    'End Function
 
     ''' <summary>
     ''' gibt die Position im Orga-Baum als Positions-Index zurück. 
@@ -762,12 +808,25 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="nameID"></param>
     ''' <returns></returns>
-    Public Function getPositionIndex(ByVal nameID As String) As Integer
-        Dim posIX As Integer
+    Public Function getPositionIndex(ByVal nameID As String) As Double
+
+        Dim posIX As Double
+
+        Dim teamID As Integer = -1
+        Dim roleID As Integer = parseRoleNameID(nameID, teamID)
 
         Try
-            If _positionIndices.ContainsKey(nameID) Then
-                posIX = _positionIndices.Item(nameID)
+            If _positionIndicesRoles.ContainsKey(roleID) And teamID = -1 Then
+                posIX = CDbl(_positionIndicesRoles.Item(roleID))
+
+            ElseIf _positionIndicesRoles.ContainsKey(roleID) And teamID > 0 Then
+                ' es soll immer ein Skill-PosIX rauskommen < 1 
+                Dim maxValue As Integer = _positionIndicesSkills.Values.Max + 1
+                If _positionIndicesSkills.ContainsKey(teamID) Then
+                    posIX = _positionIndicesRoles.Item(roleID) + _positionIndicesSkills.Item(teamID) / maxValue
+                Else
+                    posIX = -1
+                End If
             Else
                 posIX = -1
             End If
@@ -2176,7 +2235,8 @@ Public Class clsRollen
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
         _allNames = New SortedList(Of String, Integer)
         _topLevelNodeIDs = New List(Of Integer)
-        _positionIndices = New SortedList(Of String, Integer)
+        _positionIndicesRoles = New SortedList(Of Integer, Integer)
+        _positionIndicesSkills = New SortedList(Of Integer, Integer)
 
         ' wird erst in buildOrgaTeamChilds initialisiert und aufgebaut 
         _orgaSkillChilds = Nothing

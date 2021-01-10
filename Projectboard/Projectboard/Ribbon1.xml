@@ -214,7 +214,9 @@
             <!--<button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>-->
             <menu id="PT2G2M" getLabel ="bestimmeLabel" getVisible="chckVisibility" size ="large" imageMso="EditDocument">
               <!--label="Modify Ressourcen und Kosten"-->
-              <button id="PT2G1M2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
+              <button id="PT2G1M2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
+              <!--label="Modify Ressourcen und Kosten"-->
+              <button id="PT2G1M2B9" getVisible="chckVisibility" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEditC" supertip ="hier können die Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Attributes"-->
               <button id="PT2G1M2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ampel, Ampel-Erläuterung und aktuelle Risiko Einschätzung editiert werden"/>
               <!--label="Modify Dates of Phases & Milestones"-->

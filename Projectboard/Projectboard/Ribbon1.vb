@@ -565,354 +565,363 @@ Imports System.Web
                 dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
                 'dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, err)
 
-                Try
-                    timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
-                    'Dim heute As String = Date.Now.ToString
-                    If timeStampsCollection.Count > 0 Then
-                        With loadConstellationFrm
-                            If deleteFromDB Then
-                                If awinSettings.englishLanguage Then
-                                    .Text = "Delete Portfolio"
-                                Else
-                                    .Text = "Portfolio Löschen"
+                If dbPortfolioNames.Count > 0 Then
+
+                    Try
+                        timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
+                        'Dim heute As String = Date.Now.ToString
+                        If timeStampsCollection.Count > 0 Then
+                            With loadConstellationFrm
+                                If deleteFromDB Then
+                                    If awinSettings.englishLanguage Then
+                                        .Text = "Delete Portfolio"
+                                    Else
+                                        .Text = "Portfolio Löschen"
+                                    End If
                                 End If
-                            End If
-                            .constellationsToShow = dbPortfolioNames
-                            '.constellationsToShow = dbConstellations
-                            .retrieveFromDB = True
-                            If timeStampsCollection.Count > 0 Then
-                                '.earliestDate = CDate(timeStampsCollection.Item(1))
-                                .earliestDate = CDate(timeStampsCollection.Item(timeStampsCollection.Count)).Date.AddHours(23).AddMinutes(59)
+                                .constellationsToShow = dbPortfolioNames
+                                '.constellationsToShow = dbConstellations
+                                .retrieveFromDB = True
+                                If timeStampsCollection.Count > 0 Then
+                                    '.earliestDate = CDate(timeStampsCollection.Item(1))
+                                    .earliestDate = CDate(timeStampsCollection.Item(timeStampsCollection.Count)).Date.AddHours(23).AddMinutes(59)
+                                Else
+                                    .earliestDate = Date.Now.Date.AddHours(23).AddMinutes(59)
+                                End If
+
+                                '.listOfTimeStamps = timeStampsCollection
+                            End With
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        enableOnUpdate = False
+
+                        If AlleProjekte.Count > 0 Then
+                            loadConstellationFrm.addToSession.Checked = False
+                        Else
+                            loadConstellationFrm.addToSession.Checked = False
+                            loadConstellationFrm.addToSession.Visible = False
+                        End If
+
+                        If deleteFromDB Then
+                            loadConstellationFrm.addToSession.Checked = False
+                            loadConstellationFrm.addToSession.Visible = False
+                            loadConstellationFrm.loadAsSummary.Checked = False
+                            loadConstellationFrm.loadAsSummary.Visible = False
+                        End If
+
+                        'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
+
+
+                        returnValue = loadConstellationFrm.ShowDialog
+
+                        sw.StartTimer()
+
+                        If returnValue = DialogResult.OK Then
+
+                            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
+                            Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
+
+
+                            If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
+                                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
                             Else
-                                .earliestDate = Date.Now.Date.AddHours(23).AddMinutes(59)
+                                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
                             End If
 
-                            '.listOfTimeStamps = timeStampsCollection
-                        End With
+
+                            Dim constellationsToDo As New clsConstellations
+
+                            ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
+                            Dim constellationsChecked As New SortedList(Of String, String)
+
+                            ' WaitCursor einschalten ...
+                            Cursor.Current = Cursors.WaitCursor
+
+                            If clearBoard Then
+                                ' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
+                                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                                projectConstellations.clearLoadedPortfolios()
+                            End If
+
+                            ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
+                            constellationsChecked = New SortedList(Of String, String)
+
+                            For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
+                                If tNode.Checked Then
+                                    Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
+                                    For Each vNode As TreeNode In tNode.Nodes
+                                        If vNode.Checked Then
+                                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                                Dim vname As String = deleteBrackets(vNode.Text)
+                                                constellationsChecked.Add(tNode.Text, vname)
+                                            Else
+                                                Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                                            End If
+                                            checkedVariants = checkedVariants + 1
+                                        End If
+                                    Next
+                                    If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
+                                        If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                            constellationsChecked.Add(tNode.Text, "")
+                                        End If
+
+                                    ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
+                                        ' alles schon getan
+                                    Else
+                                        Call MsgBox("Error in Portfolio-Auswahl")
+                                    End If
+                                End If
+                            Next
+
+                            If deleteFromDB Then
+                                For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
+
+                                    Dim pName As String = pvName.Key        'portfolio-Name
+                                    Dim vName As String = pvName.Value      'variantenName
+
+                                    Try
+                                        ' lösche Portfolio (pName,vName) aus der db
+                                        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(pName,
+                                                                                                         dbPortfolioNames(pName),
+                                                                                                         vName,
+                                                                                                        err)
+                                        If awinSettings.englishLanguage Then
+                                            If result Then
+                                                outputLine = pName & "[" & vName & "] deleted"
+                                            Else
+                                                outputLine = pName & "[" & vName & "] couldn't be deleted"
+                                            End If
+                                            outPutCollection.Add(outputLine)
+                                        Else
+                                            If result Then
+                                                outputLine = pName & "[" & vName & "] gelöscht"
+                                            Else
+                                                outputLine = pName & "[" & vName & "] konnte nicht gelöscht werden"
+                                            End If
+                                            outPutCollection.Add(outputLine)
+                                        End If
+
+
+                                    Catch ex As Exception
+                                        outputLine = ex.Message
+                                        outPutCollection.Add(outputLine)
+                                    End Try
+                                Next
+
+                                If outPutCollection.Count > 0 Then
+                                    Dim msgH As String, msgE As String
+                                    If awinSettings.englishLanguage Then
+                                        msgH = "Delete Portfolios"
+                                        msgE = "following results:"
+                                    Else
+                                        msgH = "Löschen Portfolio/s"
+                                        msgE = "Rückmeldungen"
+
+                                    End If
+
+                                    Call showOutPut(outPutCollection, msgH, msgE)
+                                End If
+
+                            Else
+
+                                For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
+
+                                    Dim pName As String = pvName.Key        'portfolio-Name
+                                    Dim vName As String = pvName.Value      'variantenName
+
+                                    ' Plausibilitätsprüfung: darf das geladen werden 
+                                    Try
+                                        ' Check ...
+                                        'Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
+                                        Dim checkconst As clsConstellation = Nothing
+
+                                        ' pName ist nicht mehr in der Session geladen
+                                        If IsNothing(checkconst) Then
+
+                                            ' hole Portfolio (pName,vName) aus der db
+                                            checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
+                                                                                                                               dbPortfolioNames(pName),
+                                                                                                                               cTimestamp, err,
+                                                                                                                               variantName:=vName,
+                                                                                                                               storedAtOrBefore:=storedAtOrBefore)
+
+                                            If Not IsNothing(checkconst) Then
+                                                ' tmpname in die Session-Liste wieder aufnehmen
+                                                projectConstellations.Add(checkconst)
+                                            Else
+                                                Call MsgBox("Portfolio nicht mehr vorhanden!")
+                                            End If
+
+                                        End If
+
+                                        If Not IsNothing(projectConstellations.getConstellation(pName, vName)) Then
+
+                                            Dim ok As Boolean = False
+                                            If (Not AlleProjekte.containsAnySummaryProject _
+                                                And Not projectConstellations.getConstellation(pName, vName).containsAnySummaryProject _
+                                                And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
+                                                ' alles in Ordnung 
+                                                ok = True
+                                            Else
+                                                If Not ShowProjekte.hasAnyConflictsWith(pName, True) Then
+                                                    ok = True
+                                                End If
+                                            End If
+
+                                            If ok Then
+                                                ' aufnehmen ...
+                                                Dim constellation As clsConstellation = projectConstellations.getConstellation(pName, vName)
+
+                                                If Not IsNothing(constellation) Then
+                                                    If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                                        If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                                            constellationsToDo.Add(constellation)
+                                                        Else
+                                                            Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                                            constellation.constellationName)
+                                                        End If
+
+                                                    End If
+
+                                                Else
+                                                    ' hole Portfolio (pName,vName) aus den db
+                                                    constellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
+                                                                                                                               dbPortfolioNames(pName),
+                                                                                                                               cTimestamp, err,
+                                                                                                                               variantName:=vName,
+                                                                                                                               storedAtOrBefore:=storedAtOrBefore)
+                                                    If Not IsNothing(constellation) Then
+                                                        If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                                            If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
+                                                                constellationsToDo.Add(constellation)
+                                                            Else
+                                                                Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
+                                                                            constellation.constellationName)
+                                                            End If
+
+                                                        End If
+                                                        projectConstellations.Add(constellation)
+                                                    End If
+
+
+                                                    ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
+                                                    'If constellation.containsAnySummaryProject Then
+                                                    '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
+                                                    '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
+                                                    '        If Not IsNothing(tmpProj) Then
+                                                    '            If Not AlleProjekte.Containskey(spKvP.Key) Then
+                                                    '                AlleProjekte.Add(tmpProj, )
+                                                    '            End If
+                                                    '        End If
+                                                    '        If spKvP.Value.variantName = portfolioVName Then
+                                                    '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
+                                                    '        End If
+                                                    '    Next
+                                                    'Else
+                                                    '    If Not IsNothing(constellation) Then
+                                                    '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                                                    '    End If
+                                                    'End If
+
+                                                    ' war vorher ..
+                                                    If Not IsNothing(constellation) Then
+                                                        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName, constellation.variantName)
+                                                    End If
+                                                End If
+
+                                            Else
+                                                ' Meldung, und dann nicht aufnehmen 
+                                                Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                                             "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
+                                            End If
+                                        End If
+
+                                    Catch ex As Exception
+                                        Dim tstmsg As String = ex.Message
+                                    End Try
+
+                                Next
+
+                                sw.StartTimer()
+
+                                'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
+                                Dim clearSession As Boolean = False
+                                If constellationsToDo.Count > 0 Then
+
+                                    Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProject:=showSummaryProjects)
+
+                                    ' Timer
+                                    If awinSettings.visboDebug Then
+                                        Call MsgBox("PTLadenKonstellation 2nd Part took: " & sw.EndTimer & "milliseconds")
+                                    End If
+
+
+                                    ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
+                                    ' aber nur, wenn es nicht nur von der Session geholt wird  
+                                    If Not noDB Then
+                                        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+                                    End If
+                                End If
+
+                                ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
+                                ' Window so positionieren, dass die Projekte sichtbar sind ...  
+                                If ShowProjekte.Count > 0 Then
+                                    Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                                    If boardWasEmpty Or clearBoard Then
+                                        If leftborder - 12 > 0 Then
+                                            appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                                        Else
+                                            appInstance.ActiveWindow.ScrollColumn = 1
+                                        End If
+                                    End If
+                                End If
+
+                                appInstance.ScreenUpdating = True
+
+                                Cursor.Current = Cursors.Default
+                            End If
+
+
+
+                        End If
+
+
+
+
+                        ' Timer
+                        If awinSettings.visboDebug Then
+                            Call MsgBox("PTLadenKonstellation 3rd Part took: " & sw.EndTimer & "milliseconds")
+                        End If
+
+                        enableOnUpdate = True
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("there is no portfolio ...")
+                    Else
+                        Call MsgBox("kein Portfolio vorhanden ...")
                     End If
 
-                Catch ex As Exception
+                End If
 
-                End Try
 
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
             End If
         Else
             Call MsgBox("ControlID = " & ControlID)
-            'Dim sessionPortfolioNames As New SortedList(Of String, String)
-            'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-            '    sessionPortfolioNames.Add(kvp.Key, kvp.Value.variantName)
-            'Next
-            'With loadConstellationFrm
-            '    'ur:13.12.2019
-            '    '.constellationsToShow = projectConstellations
-            '    .constellationsToShow = sessionPortfolioNames
-            '    .retrieveFromDB = False
-            'End With
-        End If
-
-        enableOnUpdate = False
-
-        If AlleProjekte.Count > 0 Then
-            loadConstellationFrm.addToSession.Checked = False
-        Else
-            loadConstellationFrm.addToSession.Checked = False
-            loadConstellationFrm.addToSession.Visible = False
-        End If
-
-        If deleteFromDB Then
-            loadConstellationFrm.addToSession.Checked = False
-            loadConstellationFrm.addToSession.Visible = False
-            loadConstellationFrm.loadAsSummary.Checked = False
-            loadConstellationFrm.loadAsSummary.Visible = False
-        End If
-
-        'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
-
-
-        returnValue = loadConstellationFrm.ShowDialog
-
-        sw.StartTimer()
-
-        If returnValue = DialogResult.OK Then
-
-            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
-            Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
-
-
-            If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
-                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
-            Else
-                storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
-            End If
-
-
-            Dim constellationsToDo As New clsConstellations
-
-            ' Liste der ausgewählten Portfolio/Variante Paaren (pro Portfolio nur eine Variante)
-            Dim constellationsChecked As New SortedList(Of String, String)
-
-            ' WaitCursor einschalten ...
-            Cursor.Current = Cursors.WaitCursor
-
-            If clearBoard Then
-                ' es muss schon unterschieden werden, ob nur von Session geladen werden soll 
-                AlleProjekte.Clear(updateCurrentConstellation:=True)
-                projectConstellations.clearLoadedPortfolios()
-            End If
-
-            ' liste, welche Portfolios und Portfolio-Varianten geladen werden sollen, wird erstellt
-            constellationsChecked = New SortedList(Of String, String)
-
-            For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
-                If tNode.Checked Then
-                    Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
-                    For Each vNode As TreeNode In tNode.Nodes
-                        If vNode.Checked Then
-                            If Not constellationsChecked.ContainsKey(tNode.Text) Then
-                                Dim vname As String = deleteBrackets(vNode.Text)
-                                constellationsChecked.Add(tNode.Text, vname)
-                            Else
-                                Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
-                            End If
-                            checkedVariants = checkedVariants + 1
-                        End If
-                    Next
-                    If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
-                        If Not constellationsChecked.ContainsKey(tNode.Text) Then
-                            constellationsChecked.Add(tNode.Text, "")
-                        End If
-
-                    ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
-                        ' alles schon getan
-                    Else
-                        Call MsgBox("Error in Portfolio-Auswahl")
-                    End If
-                End If
-            Next
-
-            If deleteFromDB Then
-                For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
-
-                    Dim pName As String = pvName.Key        'portfolio-Name
-                    Dim vName As String = pvName.Value      'variantenName
-
-                    Try
-                        ' lösche Portfolio (pName,vName) aus der db
-                        Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(pName,
-                                                                                         dbPortfolioNames(pName),
-                                                                                         vName,
-                                                                                        err)
-                        If awinSettings.englishLanguage Then
-                            If result Then
-                                outputLine = pName & "[" & vName & "] deleted"
-                            Else
-                                outputLine = pName & "[" & vName & "] couldn't be deleted"
-                            End If
-                            outPutCollection.Add(outputLine)
-                        Else
-                            If result Then
-                                outputLine = pName & "[" & vName & "] gelöscht"
-                            Else
-                                outputLine = pName & "[" & vName & "] konnte nicht gelöscht werden"
-                            End If
-                            outPutCollection.Add(outputLine)
-                        End If
-
-
-                    Catch ex As Exception
-                        outputLine = ex.Message
-                        outPutCollection.Add(outputLine)
-                    End Try
-                Next
-
-                If outPutCollection.Count > 0 Then
-                    Dim msgH As String, msgE As String
-                    If awinSettings.englishLanguage Then
-                        msgH = "Delete Portfolios"
-                        msgE = "following results:"
-                    Else
-                        msgH = "Löschen Portfolio/s"
-                        msgE = "Rückmeldungen"
-
-                    End If
-
-                    Call showOutPut(outPutCollection, msgH, msgE)
-                End If
-
-            Else
-
-                For Each pvName As KeyValuePair(Of String, String) In constellationsChecked
-
-                    Dim pName As String = pvName.Key        'portfolio-Name
-                    Dim vName As String = pvName.Value      'variantenName
-
-                    ' Plausibilitätsprüfung: darf das geladen werden 
-                    Try
-                        ' Check ...
-                        'Dim checkconst As clsConstellation = projectConstellations.getConstellation(tmpName)
-                        Dim checkconst As clsConstellation = Nothing
-
-                        ' pName ist nicht mehr in der Session geladen
-                        If IsNothing(checkconst) Then
-
-                            ' hole Portfolio (pName,vName) aus der db
-                            checkconst = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
-                                                                                                               dbPortfolioNames(pName),
-                                                                                                               cTimestamp, err,
-                                                                                                               variantName:=vName,
-                                                                                                               storedAtOrBefore:=storedAtOrBefore)
-
-                            If Not IsNothing(checkconst) Then
-                                ' tmpname in die Session-Liste wieder aufnehmen
-                                projectConstellations.Add(checkconst)
-                            Else
-                                Call MsgBox("Portfolio nicht mehr vorhanden!")
-                            End If
-
-                        End If
-
-                        If Not IsNothing(projectConstellations.getConstellation(pName, vName)) Then
-
-                            Dim ok As Boolean = False
-                            If (Not AlleProjekte.containsAnySummaryProject _
-                                And Not projectConstellations.getConstellation(pName, vName).containsAnySummaryProject _
-                                And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
-                                ' alles in Ordnung 
-                                ok = True
-                            Else
-                                If Not ShowProjekte.hasAnyConflictsWith(pName, True) Then
-                                    ok = True
-                                End If
-                            End If
-
-                            If ok Then
-                                ' aufnehmen ...
-                                Dim constellation As clsConstellation = projectConstellations.getConstellation(pName, vName)
-
-                                If Not IsNothing(constellation) Then
-                                    If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                        If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
-                                            constellationsToDo.Add(constellation)
-                                        Else
-                                            Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
-                                                            constellation.constellationName)
-                                        End If
-
-                                    End If
-
-                                Else
-                                    ' hole Portfolio (pName,vName) aus den db
-                                    constellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName,
-                                                                                                               dbPortfolioNames(pName),
-                                                                                                               cTimestamp, err,
-                                                                                                               variantName:=vName,
-                                                                                                               storedAtOrBefore:=storedAtOrBefore)
-                                    If Not IsNothing(constellation) Then
-                                        If Not constellationsToDo.Contains(constellation.constellationName) Then
-                                            If Not constellationsToDo.hasAnyConflictsWith(constellation) Then
-                                                constellationsToDo.Add(constellation)
-                                            Else
-                                                Call MsgBox("keine Aufnahme wegen Konflikten (gleiche Projekte enthalten): " & vbLf &
-                                                            constellation.constellationName)
-                                            End If
-
-                                        End If
-                                        projectConstellations.Add(constellation)
-                                    End If
-
-
-                                    ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
-                                    'If constellation.containsAnySummaryProject Then
-                                    '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
-                                    '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
-                                    '        If Not IsNothing(tmpProj) Then
-                                    '            If Not AlleProjekte.Containskey(spKvP.Key) Then
-                                    '                AlleProjekte.Add(tmpProj, )
-                                    '            End If
-                                    '        End If
-                                    '        If spKvP.Value.variantName = portfolioVName Then
-                                    '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
-                                    '        End If
-                                    '    Next
-                                    'Else
-                                    '    If Not IsNothing(constellation) Then
-                                    '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
-                                    '    End If
-                                    'End If
-
-                                    ' war vorher ..
-                                    If Not IsNothing(constellation) Then
-                                        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName, constellation.variantName)
-                                    End If
-                                End If
-
-                            Else
-                                ' Meldung, und dann nicht aufnehmen 
-                                Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
-                                             "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
-                            End If
-                        End If
-
-                    Catch ex As Exception
-                        Dim tstmsg As String = ex.Message
-                    End Try
-
-                Next
-
-                sw.StartTimer()
-
-                'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
-                Dim clearSession As Boolean = False
-                If constellationsToDo.Count > 0 Then
-
-                    Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProject:=showSummaryProjects)
-
-                    ' Timer
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("PTLadenKonstellation 2nd Part took: " & sw.EndTimer & "milliseconds")
-                    End If
-
-
-                    ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
-                    ' aber nur, wenn es nicht nur von der Session geholt wird  
-                    If Not noDB Then
-                        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
-                    End If
-                End If
-
-                ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
-                ' Window so positionieren, dass die Projekte sichtbar sind ...  
-                If ShowProjekte.Count > 0 Then
-                    Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
-                    If boardWasEmpty Or clearBoard Then
-                        If leftborder - 12 > 0 Then
-                            appInstance.ActiveWindow.ScrollColumn = leftborder - 12
-                        Else
-                            appInstance.ActiveWindow.ScrollColumn = 1
-                        End If
-                    End If
-                End If
-
-                appInstance.ScreenUpdating = True
-
-                Cursor.Current = Cursors.Default
-            End If
-
-
 
         End If
 
 
-
-
-        ' Timer
-        If awinSettings.visboDebug Then
-            Call MsgBox("PTLadenKonstellation 3rd Part took: " & sw.EndTimer & "milliseconds")
-        End If
-
-        enableOnUpdate = True
 
     End Sub
 
@@ -1410,7 +1419,7 @@ Imports System.Web
     Sub PT0ShowProjektInfo1(control As IRibbonControl)
 
         With visboZustaende
-            If IsNothing(formProjectInfo1) And .projectBoardMode = ptModus.massEditRessCost Then
+            If IsNothing(formProjectInfo1) And (.projectBoardMode = ptModus.massEditRessSkills Or .projectBoardMode = ptModus.massEditCosts) Then
 
                 formProjectInfo1 = New frmProjectInfo1
                 Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
@@ -3118,11 +3127,18 @@ Imports System.Web
                     tmpLabel = "Edit"
                 End If
 
-            Case "PT2G1M2B1" ' Massen-Edit Ressourcen und Kosten
+            Case "PT2G1M2B1" ' Massen-Edit Ressourcen 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Ressourcen und Kosten"
+                    tmpLabel = "Ändern von Ressourcen Bedarfen"
                 Else
-                    tmpLabel = "Modify monthly Resource and Cost Needs"
+                    tmpLabel = "Modify monthly Resource Needs"
+                End If
+
+            Case "PT2G1M2B9" ' Massen-Edit Kosten
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ändern von Kosten"
+                Else
+                    tmpLabel = "Modify monthly Cost Needs"
                 End If
 
             Case "PT2G1M2B2" ' Massen-Edit Phasen Meilensteine ändern
@@ -4015,7 +4031,7 @@ Imports System.Web
                     chckVisibility = False
 
                 Case "PTMEC" ' Charts und Info 
-                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                         chckVisibility = True
                     Else
                         chckVisibility = False
@@ -4023,7 +4039,7 @@ Imports System.Web
 
 
                 Case "PTmassEdit" ' Charts und Info 
-                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                         chckVisibility = Not (myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.InternalViewer Or
                         myCustomUserRole.customUserRole = ptCustomUserRoles.ExternalViewer)
@@ -4032,7 +4048,7 @@ Imports System.Web
                     End If
 
                 Case "PTMECsettings" ' Charts und Info 
-                    If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                    If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                         chckVisibility = True
                     Else
                         chckVisibility = False
@@ -4050,12 +4066,17 @@ Imports System.Web
     ''' es werden nur Projekte an MassEdit übergeben ... sollten Summary Projekte in der Selection sein, werden die erst durch ihre Projekte, die im Show sind, ersetzt 
     ''' </summary>
     ''' <param name="meModus"></param>
-    Private Sub massEditRcTeAt(ByVal meModus As Integer)
+    Private Sub massEditRcTeAt(ByVal meModus As ptModus)
         Dim todoListe As New Collection
         Dim projektTodoliste As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
+
+
+        ' now set visbozustaende
+        ' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
+        visboZustaende.meModus = meModus
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -4089,9 +4110,6 @@ Imports System.Web
 
                 ' jetzt muss ggf noch showrangeLeft und showrangeRight gesetzt werden  
 
-
-
-
                 Call enableControls(meModus)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
@@ -4107,7 +4125,7 @@ Imports System.Web
                 Try
                     enableOnUpdate = False
 
-                    If meModus = ptModus.massEditRessCost Then
+                    If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
                         If showRangeLeft = 0 Then
                             showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
@@ -4138,7 +4156,7 @@ Imports System.Web
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
-                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
+                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight, meModus)
 
 
                     ElseIf meModus = ptModus.massEditTermine Then
@@ -4183,7 +4201,7 @@ Imports System.Web
                     ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
                     Dim tableTyp As Integer = ptTables.meRC
 
-                    If meModus = ptModus.massEditRessCost Then
+                    If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
                         tableTyp = ptTables.meRC
                     ElseIf meModus = ptModus.massEditTermine Then
                         tableTyp = ptTables.meTE
@@ -4205,7 +4223,7 @@ Imports System.Web
                             .FreezePanes = False
                             .Split = False
 
-                            If meModus = ptModus.massEditRessCost Then
+                            If (meModus = ptModus.massEditRessSkills Or meModus = ptModus.massEditCosts) Then
 
                                 If awinSettings.meExtendedColumnsView = True Then
                                     .SplitRow = 1
@@ -4327,7 +4345,7 @@ Imports System.Web
         Dim nameCollection As New Collection
 
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-            ' ist erlaubt 
+            ' es ist dem Portfolio Manager erlaubt, Summary Projekte zu editieren ... 
 
         ElseIf Not noSummaryProjectsareSelected(nameCollection) Then
 
@@ -4335,9 +4353,25 @@ Imports System.Web
 
         End If
 
-        Call massEditRcTeAt(ptModus.massEditRessCost)
+        Call massEditRcTeAt(ptModus.massEditRessSkills)
 
 
+    End Sub
+
+    Sub Tom2G2MassEditC(control As IRibbonControl)
+        ' check ob auch keine Summary Projects selektiert sind ...
+        Dim nameCollection As New Collection
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            ' es ist dem Portfolio Manager erlaubt, Summary Projekte zu editieren ... 
+
+        ElseIf Not noSummaryProjectsareSelected(nameCollection) Then
+
+            Exit Sub
+
+        End If
+
+        Call massEditRcTeAt(ptModus.massEditCosts)
     End Sub
 
     ''' <summary>
@@ -4457,7 +4491,7 @@ Imports System.Web
             ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
             Dim tableTyp As Integer = ptTables.meRC
 
-            If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 tableTyp = ptTables.meRC
                 Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
 
@@ -9515,7 +9549,7 @@ Imports System.Web
                          AllowDeletingRows:=True,
                          AllowSorting:=True,
                          AllowFiltering:=True)
-                .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
                 .EnableAutoFilter = True
             End With
         End If

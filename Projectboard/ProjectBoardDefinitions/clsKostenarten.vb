@@ -120,6 +120,30 @@
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' returns a list of cost-Names having 'substr' in the Name
+    ''' </summary>
+    ''' <param name="substr"></param>
+    ''' <returns></returns>
+    Public Function getCostNamesContainingSubStr(ByVal substr As String) As List(Of String)
+        Dim tmpResult As New SortedList(Of String, Boolean)
+
+        If substr.Length > 0 Then
+            For Each kvp As KeyValuePair(Of Integer, clsKostenartDefinition) In _allKostenarten
+
+                If kvp.Value.name.Contains(substr) Then
+                    If Not tmpResult.ContainsKey(kvp.Value.name) Then
+                        tmpResult.Add(kvp.Value.name, True)
+                    End If
+                End If
+            Next
+        End If
+
+        getCostNamesContainingSubStr = tmpResult.Keys.ToList
+    End Function
+
+
     ''' <summary>
     ''' gibt die Kostenart mit ID = uid zurück; Nothing, wenn sie nicht existiert
     ''' </summary>

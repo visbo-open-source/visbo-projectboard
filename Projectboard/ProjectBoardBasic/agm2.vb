@@ -3680,9 +3680,10 @@ Public Module agm2
                     End With
 
                     ' ProjektPhase wird hinzugefügt
-                    Dim hrchynode As New clsHierarchyNode
-                    hrchynode.elemName = cphase.name
-                    hrchynode.parentNodeKey = ""
+                    Dim hrchynode As New clsHierarchyNode With {
+                        .elemName = cphase.name,
+                        .parentNodeKey = ""
+                    }
                     hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
                     parentphase = cphase
                     parentelemID = cphase.nameID
@@ -18311,7 +18312,7 @@ Public Module agm2
                              AllowDeletingRows:=True,
                              AllowSorting:=True,
                              AllowFiltering:=True)
-                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+                    .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
                     .EnableAutoFilter = True
                 End With
             End If
@@ -18331,6 +18332,7 @@ Public Module agm2
     ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
     ''' ur: 05.06.2018: nicht mehr:Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
     ''' und was der längste eingetragene Namen ist ... Am Schluss wird notfalls die Spaltenbreite verlängert, damit auch der längste Namen reingeht ... 
+    ''' in Abhängigkeit von meModus werden nur Rollen oder nur Kosten gezeigt ... 
     ''' </summary>
     ''' <param name="todoListe">enthält die pvNames der Projekte</param>"
     ''' <param name="von"></param>
@@ -18338,7 +18340,8 @@ Public Module agm2
     ''' <remarks>seit 15.9 ohne die Mahle Spalten für Auslastung und Freie Tage. 
     ''' das ist in dem Branch MahleSaveMassEdit festgelaten </remarks>
     Public Sub writeOnlineMassEditRessCost(ByVal todoListe As Collection,
-                                           ByVal von As Integer, ByVal bis As Integer)
+                                           ByVal von As Integer, ByVal bis As Integer,
+                                           ByVal meModus As ptModus)
         Dim err As New clsErrorCodeMsg
 
         Dim maxRCLengthAbsolut As Integer = 0
@@ -18407,6 +18410,10 @@ Public Module agm2
 
             Dim startSpalteDaten As Integer = 7 + 1
             Dim roleCostInput As Excel.Range = Nothing
+            Dim ptUnit As String = "PT"
+            If awinSettings.englishLanguage Then
+                ptUnit = "PD"
+            End If
 
             tmpName = ""
 
@@ -18421,23 +18428,46 @@ Public Module agm2
                     CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
-                    CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
-                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
 
+                    If meModus = ptModus.massEditRessSkills Then
+                        CType(.Cells(1, 5), Excel.Range).Value = "Resource"
+                        CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+                    Else
+                        CType(.Cells(1, 5), Excel.Range).Value = "Cost"
+                        CType(.Cells(1, 6), Excel.Range).Value = ""
+                    End If
 
                     maxRCLengthVorkommen = 20
-                    CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
+
+                    If meModus = ptModus.massEditRessSkills Then
+                        CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & ptUnit
+                    Else
+                        CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & "[T€]"
+                    End If
+
 
                 Else
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
                     CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
-                    CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
-                    CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+
+                    If meModus = ptModus.massEditRessSkills Then
+                        CType(.Cells(1, 5), Excel.Range).Value = "Ressource"
+                        CType(.Cells(1, 6), Excel.Range).Value = "Skill"
+                    Else
+                        CType(.Cells(1, 5), Excel.Range).Value = "Kostenart"
+                        CType(.Cells(1, 6), Excel.Range).Value = ""
+                    End If
+
+
 
                     maxRCLengthVorkommen = 20
-                    CType(.Cells(1, 7), Excel.Range).Value = "Summe" & vbLf & "[PT]"
+                    If meModus = ptModus.massEditRessSkills Then
+                        CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & ptUnit
+                    Else
+                        CType(.Cells(1, 7), Excel.Range).Value = "Sum" & vbLf & "[T€]"
+                    End If
 
                 End If
 
@@ -18455,6 +18485,10 @@ Public Module agm2
                 Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
                 Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
 
+                If meModus = ptModus.massEditCosts Then
+                    ' ausblenden der Spalte für Skills 
+                    CType(.Columns(6), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn.Hidden = True
+                End If
 
                 Try
                     If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then
@@ -18621,130 +18655,79 @@ Public Module agm2
 
                                 Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
 
-                                Dim validRoles As New SortedList(Of Integer, clsRolle)
-                                Dim posIX As Integer = 1
-                                Dim lastIX As Integer = 1
+                                Dim validRoles As New SortedList(Of Double, clsRolle)
+                                Dim posIX As Double = 1
+                                'Dim lastIX As Integer = 1
 
+                                If meModus = ptModus.massEditRessSkills Then
 
-                                For r As Integer = 1 To cphase.countRoles
+                                    For r As Integer = 1 To cphase.countRoles
 
-                                    Dim role As clsRolle = cphase.getRole(r)
-                                    ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
-                                    ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
+                                        Dim role As clsRolle = cphase.getRole(r)
+                                        ' tk 25.7.19 - dient dazu eine Reihenfolge der Rollen herzustellen nach ihrer Position im Orga-Baum 
+                                        ' so dass für den Anwender eine wiedererkennbare Reihenfolge entsteht und nicht Kraut- und Rüben wie es aktuell ist ...  
 
-                                    Dim roleName As String = role.name
-                                    Dim roleUID As Integer = role.uid
-                                    Dim teamID As Integer = role.teamID
+                                        Dim roleName As String = role.name
+                                        Dim roleUID As Integer = role.uid
+                                        Dim teamID As Integer = role.teamID
 
-                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                                    Dim indentLevelRole As Integer = 0
-                                    Dim validRole As Boolean = True
-                                    Dim isVirtualChild As Boolean = False
+                                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                                        Dim indentLevelRole As Integer = 0
+                                        Dim validRole As Boolean = True
+                                        Dim isVirtualChild As Boolean = False
 
-                                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                                        If myCustomUserRole.specifics.Length > 0 Then
-                                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+                                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                                            If myCustomUserRole.specifics.Length > 0 Then
+                                                If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
-                                                ' tk 6.5.19
-                                                validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                                    ' tk 6.5.19
+                                                    validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
 
-                                                If validRole Then
-                                                    If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
-                                                        isVirtualChild = True
+                                                    If validRole Then
+                                                        If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
+                                                            isVirtualChild = True
+                                                        End If
                                                     End If
-                                                End If
 
+                                                End If
                                             End If
                                         End If
-                                    End If
 
 
-                                    If validRole Then
-                                        posIX = RoleDefinitions.getPositionIndex(roleNameID)
-                                        If posIX = -1 Then
-                                            posIX = lastIX
-                                        End If
-                                        validRoles.Add(posIX, role)
-                                        lastIX = posIX + 1
-                                    End If
-
-                                Next r
-
-                                ' tk 25.7.19 jetzt werden alle validRole gemäß ihrer Reihenfolge PosIX dargestellt
-
-                                For Each kvp As KeyValuePair(Of Integer, clsRolle) In validRoles
-
-                                    Dim roleName As String = kvp.Value.name
-                                    Dim roleUID As Integer = kvp.Value.uid
-                                    Dim teamID As Integer = kvp.Value.teamID
-
-                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
-                                    ' tk 19.1.20 
-                                    Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
-
-
-                                    Dim xValues() As Double = kvp.Value.Xwerte
-
-                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                    zeilensumme = schnittmenge.Sum
-
-                                    ' ggf Schreibschutz setzen für die Zeile setzen
-                                    Dim lockZeile As Boolean = Not hasForecastMonths
-                                    Dim lockText As String = ""
-
-                                    If isProtectedbyOthers Then
-                                        lockZeile = True
-                                        lockText = protectionText
-                                    End If
-
-                                    Dim roleHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, roleNameID, True, False).Sum > 0
-
-                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, roleName, roleNameID, True,
-                                                                        lockText, von, bis,
-                                                                        actualDataRelColumn, roleHasActualData, summeEditierenErlaubt,
-                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, roleIndentLevel)
-
-                                    If ok Then
-
-                                        With currentWS
-                                            CType(.Cells(zeile, 6 + 1), Excel.Range).Value = zeilensumme
-                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                        End With
-
-                                        If schnittmenge.Sum > 0 Then
-                                            For l As Integer = 0 To bis - von
-
-                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                                Else
-                                                    editRange.Cells(1, l + 1).value = ""
-                                                End If
-
-                                            Next
-                                        Else
-                                            editRange.Value = ""
+                                        If validRole Then
+                                            posIX = RoleDefinitions.getPositionIndex(roleNameID)
+                                            'If posIX = -1 Then
+                                            '    posIX = lastIX
+                                            'End If
+                                            If Not validRoles.ContainsKey(posIX) Then
+                                                validRoles.Add(posIX, role)
+                                                'lastIX = posIX + 1
+                                            Else
+                                                ' make sure each role is in validRoles
+                                                posIX = 10000000.0
+                                                Do While validRoles.ContainsKey(posIX)
+                                                    posIX = posIX + 0.000001
+                                                Loop
+                                                validRoles.Add(posIX, role)
+                                            End If
                                         End If
 
-                                        atLeastOne = True
+                                    Next r
 
-                                        zeile = zeile + 1
-                                    Else
-                                        Call MsgBox("not ok")
-                                    End If
+                                    ' tk 25.7.19 jetzt werden alle validRole gemäß ihrer Reihenfolge PosIX dargestellt
 
-                                Next kvp
+                                    For Each kvp As KeyValuePair(Of Double, clsRolle) In validRoles
 
-                                ' jetzt kommt die Behandlung der Kostenarten
+                                        Dim roleName As String = kvp.Value.name
+                                        Dim roleUID As Integer = kvp.Value.uid
+                                        Dim teamID As Integer = kvp.Value.teamID
 
-                                ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
+                                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                                        ' tk 19.1.20 
+                                        Dim roleIndentLevel As Integer = RoleDefinitions.getRoleIndent(roleNameID)
 
-                                If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
-                                    For c = 1 To cphase.countCosts
 
-                                        Dim cost As clsKostenart = cphase.getCost(c)
-                                        Dim costName As String = cost.name
-                                        Dim xValues() As Double = cost.Xwerte
-
+                                        Dim xValues() As Double = kvp.Value.Xwerte
 
                                         schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                                         zeilensumme = schnittmenge.Sum
@@ -18758,13 +18741,15 @@ Public Module agm2
                                             lockText = protectionText
                                         End If
 
-                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
-                                                                                lockText, von, bis,
-                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
-                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
+                                        Dim roleHasActualData As Boolean = hproj.getPhaseRCActualValues(cphase.nameID, roleNameID, True, False).Sum > 0
+
+                                        Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, roleName, roleNameID, True,
+                                                                        lockText, von, bis,
+                                                                        actualDataRelColumn, roleHasActualData, summeEditierenErlaubt,
+                                                                        ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, roleIndentLevel)
 
                                         If ok Then
-                                            ' hier wird der Wert reingeschrieben ... 
+
                                             With currentWS
                                                 CType(.Cells(zeile, 6 + 1), Excel.Range).Value = zeilensumme
                                                 editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
@@ -18791,8 +18776,73 @@ Public Module agm2
                                             Call MsgBox("not ok")
                                         End If
 
-                                    Next c
+                                    Next kvp
+
+                                ElseIf meModus = ptModus.massEditCosts Then
+
+                                    ' jetzt kommt die Behandlung der Kostenarten
+
+                                    ' aber nur wenn CustomUSerRole <> ressourcen Manager ist 
+
+                                    If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
+                                        For c = 1 To cphase.countCosts
+
+                                            Dim cost As clsKostenart = cphase.getCost(c)
+                                            Dim costName As String = cost.name
+                                            Dim xValues() As Double = cost.Xwerte
+
+
+                                            schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                            zeilensumme = schnittmenge.Sum
+
+                                            ' ggf Schreibschutz setzen für die Zeile setzen
+                                            Dim lockZeile As Boolean = Not hasForecastMonths
+                                            Dim lockText As String = ""
+
+                                            If isProtectedbyOthers Then
+                                                lockZeile = True
+                                                lockText = protectionText
+                                            End If
+
+                                            Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevelPhMS, lockZeile, zeile, costName, "", False,
+                                                                                lockText, von, bis,
+                                                                                actualDataRelColumn, hasActualData, summeEditierenErlaubt,
+                                                                                ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen, 1)
+
+                                            If ok Then
+                                                ' hier wird der Wert reingeschrieben ... 
+                                                With currentWS
+                                                    CType(.Cells(zeile, 6 + 1), Excel.Range).Value = zeilensumme
+                                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                                End With
+
+                                                If schnittmenge.Sum > 0 Then
+                                                    For l As Integer = 0 To bis - von
+
+                                                        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                            editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                        Else
+                                                            editRange.Cells(1, l + 1).value = ""
+                                                        End If
+
+                                                    Next
+                                                Else
+                                                    editRange.Value = ""
+                                                End If
+
+                                                atLeastOne = True
+
+                                                zeile = zeile + 1
+                                            Else
+                                                Call MsgBox("not ok")
+                                            End If
+
+                                        Next c
+                                    End If
+
+
                                 End If
+
 
 
                                 If Not atLeastOne Then
@@ -18918,12 +18968,15 @@ Public Module agm2
                     infoBlock.Cells(1, 1).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
                     ' jetzt die Skill Breite festlegen 
-                    infoBlock = CType(.Columns(startSpalteDaten - 2), Excel.Range)
-                    If infoBlock.ColumnWidth < 20 Then
-                        infoBlock.ColumnWidth = 20
+                    If meModus = ptModus.massEditRessSkills Then
+                        infoBlock = CType(.Columns(startSpalteDaten - 2), Excel.Range)
+                        If infoBlock.ColumnWidth < 20 Then
+                            infoBlock.ColumnWidth = 20
+                        End If
                     End If
 
-                    ' jetzt die Skill Breite festlegen 
+
+                    ' jetzt die Resource bzw Kostenart Skill festlegen 
                     infoBlock = CType(.Columns(startSpalteDaten - 3), Excel.Range)
                     If infoBlock.ColumnWidth < 20 Then
                         infoBlock.ColumnWidth = 20

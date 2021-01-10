@@ -193,7 +193,7 @@
     ''' getTeamProperty gibt dann und nur dann true, wenn die Rolle Kinder enthält, die alle Team-Member in der Rolle selber sind ...  
     ''' </summary>
     ''' <returns></returns>
-    Public Function getSkillProperty() As Boolean
+    Public Function isSkillLeaf() As Boolean
 
         Dim tmpResult As Boolean = False
         Dim myUID As Integer = _uuid
@@ -219,7 +219,7 @@
 
         End If
 
-        getSkillProperty = tmpResult
+        isSkillLeaf = tmpResult
 
     End Function
 

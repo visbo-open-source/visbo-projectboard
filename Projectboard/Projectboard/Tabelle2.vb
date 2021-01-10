@@ -49,6 +49,23 @@ Public Class Tabelle2
             Call MsgBox("Fehler in Laden des Sheets ...")
         End Try
 
+        ' jetzt die Spalte 6 einblenden bzw. ausblenden 
+        Try
+            If visboZustaende.meModus = ptModus.massEditCosts Then
+                CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+            ElseIf visboZustaende.meModus = ptModus.massEditRessSkills Then
+                If RoleDefinitions.getAllSkillIDs.Count > 0 Then
+                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
+                Else
+                    CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+                End If
+
+            End If
+        Catch ex As Exception
+            CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
+        End Try
+
+
         ' jetzt den AutoFilter setzen 
         Try
 
@@ -82,7 +99,7 @@ Public Class Tabelle2
                              AllowDeletingRows:=True,
                              AllowSorting:=True,
                              AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableSelection = XlEnableSelection.xlNoRestrictions
                     .EnableAutoFilter = True
                 End With
             End If
@@ -326,8 +343,18 @@ Public Class Tabelle2
         ' die Rechtsklick-Behandlung soll auf alle Fälle abgeschaltet werden 
         Cancel = True
 
+        Dim criteriaFulfilled As Boolean = False
+
+        If visboZustaende.meModus = ptModus.massEditRessSkills Then
+            criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1)
+
+        ElseIf visboZustaende.meModus = ptModus.massEditCosts Then
+            criteriaFulfilled = (Target.Column = columnRC) And (Target.Row > 1)
+
+        End If
+
         ' prüfen, ob sich die selektierte Zelle in der Role-/Cost Spalte befindet 
-        If Target.Column = columnRC Or Target.Column = columnRC + 1 Then
+        If (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1) Then
 
             Try
                 Dim frmMERoleCost As New frmMEhryRoleCost
@@ -447,7 +474,7 @@ Public Class Tabelle2
                                         AllowDeletingRows:=True,
                                         AllowSorting:=True,
                                         AllowFiltering:=True)
-                            .EnableSelection = XlEnableSelection.xlUnlockedCells
+                            .EnableSelection = XlEnableSelection.xlNoRestrictions
                             .EnableAutoFilter = True
                         End With
                         Cancel = True
@@ -456,7 +483,7 @@ Public Class Tabelle2
 
 
                 Else
-                        Call MsgBox("bitte nur eine Zelle selektieren ...")
+                    Call MsgBox("bitte nur eine Zelle selektieren ...")
                     Target.Cells(1, 1).value = visboZustaende.oldValue
                 End If
 
@@ -476,7 +503,7 @@ Public Class Tabelle2
                              AllowDeletingRows:=True,
                              AllowSorting:=True,
                              AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
                     .EnableAutoFilter = True
                 End With
 
@@ -532,6 +559,12 @@ Public Class Tabelle2
                 Dim rcNameID As String = ""
 
                 Dim skillName As String = ""
+                If visboZustaende.meModus = ptModus.massEditRessSkills Then
+                    If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                        skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                    End If
+                End If
+
 
                 If Not IsNothing(meWS.Cells(zeile, columnRC).value) Then
                     rcName = CStr(meWS.Cells(zeile, columnRC).value).Trim
@@ -556,174 +589,201 @@ Public Class Tabelle2
                             If Target.Column = columnRC Then
                                 ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
 
-                                ' steht jetzt in rcNAme 
-                                'newRCName = CStr(Target.Cells(1, 1).value)
+                                Dim weitermachen As Boolean = True
 
                                 Dim skillID As Integer = -1
                                 Dim tryRcName As String = rcName
+
                                 If IsNothing(rcName) Then
                                     If Not IsNothing(visboZustaende.oldValue) Then
-                                        If visboZustaende.oldValue <> "" Then
+                                        If visboZustaende.oldValue <> "" And skillName = "" Then
                                             Dim errMsg As String = "um Rolle /Kostenart zu löschen bitte entsprechenden Menupunkt nutzen ... "
                                             If awinSettings.englishLanguage Then
                                                 errMsg = "to delete a role or cost, please use the according menu-item ..."
                                             End If
                                             Call MsgBox(errMsg)
                                             Target.Cells(1, 1).value = visboZustaende.oldValue
+                                            weitermachen = False
+
+                                        ElseIf skillName <> "" Then
+                                            Try
+                                                rcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoledef(skillName).UID).name
+                                                Target.Cells(1, 1).value = rcName
+                                                tryRcName = rcName
+                                            Catch ex As Exception
+                                                Target.Cells(1, 1).value = visboZustaende.oldValue
+                                                weitermachen = False
+                                            End Try
+
                                         End If
                                     End If
 
                                 ElseIf rcName.Trim = "" Then
 
-                                    If visboZustaende.oldValue <> "" Then
+                                    If visboZustaende.oldValue <> "" And skillName = "" Then
                                         Dim errMsg As String = "um Rolle /Kostenart zu löschen bitte entsprechenden Menupunkt nutzen ... "
                                         If awinSettings.englishLanguage Then
                                             errMsg = "to delete a role or cost, please use the according menu-item ..."
                                         End If
                                         Call MsgBox(errMsg)
                                         Target.Cells(1, 1).value = visboZustaende.oldValue
+                                        weitermachen = False
+                                    ElseIf skillName <> "" Then
+                                        Try
+                                            rcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoledef(skillName).UID).name
+                                            Target.Cells(1, 1).value = rcName
+                                            tryRcName = rcName
+                                        Catch ex As Exception
+                                            Target.Cells(1, 1).value = visboZustaende.oldValue
+                                            weitermachen = False
+                                        End Try
                                     End If
 
+                                End If
 
-                                ElseIf isValidRCChange(tryRcName, visboZustaende.oldValue, skillName, False) Then
-                                    ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
-                                    ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
+                                If weitermachen Then
 
-                                    ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
-                                    ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
+                                    If isValidRCChange(tryRcName, visboZustaende.oldValue, skillName, False) Then
+                                        ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
+                                        ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
 
-                                    ' jetzt ist 
+                                        ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
+                                        ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
 
-                                    If Not isCost Then
+                                        ' jetzt ist 
 
-                                        If tryRcName <> rcName Then
-                                            ' tryRCName kann in isValidRCChange geändert worden sein 
-                                            rcName = tryRcName
-                                            meWS.Cells(zeile, columnRC).value = rcName
-                                        End If
+                                        If Not isCost Then
 
-                                        ' isCOst ist falsch und isValidRCChange ... 
-                                        isRole = True
-
-                                        If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
-                                            skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
-                                            If skillName.Length > 0 Then
-                                                If RoleDefinitions.containsName(skillName) Then
-                                                    skillID = RoleDefinitions.getRoledef(skillName).UID
-                                                End If
+                                            If tryRcName <> rcName Then
+                                                ' tryRCName kann in isValidRCChange geändert worden sein 
+                                                rcName = tryRcName
+                                                meWS.Cells(zeile, columnRC).value = rcName
                                             End If
 
-                                        End If
+                                            ' isCOst ist falsch und isValidRCChange ... 
+                                            isRole = True
 
-                                        rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
-
-                                    End If
-
-
-                                    If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
-
-                                        Dim rcIndentLevel As Integer = 0
-                                        If isRole Then
-                                            ' es handelt sich um eine Rollen-Änderung
-
-
-                                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID)
-
-                                            ' jetzt den Indentlevel der Rolle vestimmen bestimmen 
-                                            rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
-                                            currentCell.IndentLevel = rcIndentLevel
-
-                                            Dim newRoleID As Integer = tmpRole.UID
-                                            If visboZustaende.oldValue.Trim.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
-                                                ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
-                                                Try
-                                                    auslastungChanged = True
-                                                    Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, skillID)
-                                                    If IsNothing(cRole) Then
-                                                    Else
-                                                        'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, skillID, False)
-                                                        cRole.uid = newRoleID
-                                                        'hproj.rcLists.addRP(newRoleID, cphase.nameID, skillID)
+                                            If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
+                                                skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
+                                                If skillName.Length > 0 Then
+                                                    If RoleDefinitions.containsName(skillName) Then
+                                                        skillID = RoleDefinitions.getRoledef(skillName).UID
                                                     End If
-
-
-                                                Catch ex As Exception
-                                                    visboZustaende.oldValue = ""
-                                                    ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
-                                                    ' andere nicht belegte gewechselt 
-                                                End Try
-
-                                            Else
-                                                ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
-                                                ' muss an dieser Stelle nur die  gar nichts gemacht werden ..
-                                                ' es sollen aber gleich die Auslastungs-Werte aktualisiert werden ...
-                                                auslastungChanged = True
-                                            End If
-
-
-                                        ElseIf isCost Then
-                                            ' es handelt sich um eine Kostenart Änderung 
-                                            If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
-                                                ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
-                                                Dim newCostID As Integer = CostDefinitions.getCostdef(rcName).UID
-                                                Dim cCost As clsKostenart = cphase.getCost(visboZustaende.oldValue)
-                                                If IsNothing(cCost) Then
-                                                Else
-                                                    'hproj.rcLists.removeCP(cCost.KostenTyp, cphase.nameID)
-                                                    cCost.KostenTyp = newCostID
-                                                    'hproj.rcLists.addCP(newCostID, cphase.nameID)
                                                 End If
-                                                kostenChanged = True
-                                            Else
-                                                ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
-                                                ' muss an dieser Stelle noch gar nichts gemacht werden ..
+
                                             End If
+
+                                            rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+
+                                        End If
+
+
+                                        If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
+
+                                            Dim rcIndentLevel As Integer = 0
+                                            If isRole Then
+                                                ' es handelt sich um eine Rollen-Änderung
+
+
+                                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID)
+
+                                                ' jetzt den Indentlevel der Rolle vestimmen bestimmen 
+                                                rcIndentLevel = RoleDefinitions.getRoleIndent(rcNameID)
+                                                currentCell.IndentLevel = rcIndentLevel
+
+                                                Dim newRoleID As Integer = tmpRole.UID
+                                                If visboZustaende.oldValue.Trim.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
+                                                    ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
+                                                    Try
+                                                        auslastungChanged = True
+                                                        Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue, skillID)
+                                                        If IsNothing(cRole) Then
+                                                        Else
+                                                            'hproj.rcLists.removeRP(cRole.uid, cphase.nameID, skillID, False)
+                                                            cRole.uid = newRoleID
+                                                            'hproj.rcLists.addRP(newRoleID, cphase.nameID, skillID)
+                                                        End If
+
+
+                                                    Catch ex As Exception
+                                                        visboZustaende.oldValue = ""
+                                                        ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
+                                                        ' andere nicht belegte gewechselt 
+                                                    End Try
+
+                                                Else
+                                                    ' es kam eine neue Rolle hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
+                                                    ' muss an dieser Stelle nur die  gar nichts gemacht werden ..
+                                                    ' es sollen aber gleich die Auslastungs-Werte aktualisiert werden ...
+                                                    auslastungChanged = True
+                                                End If
+
+
+                                            ElseIf isCost Then
+                                                ' es handelt sich um eine Kostenart Änderung 
+                                                If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
+                                                    ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
+                                                    Dim newCostID As Integer = CostDefinitions.getCostdef(rcName).UID
+                                                    Dim cCost As clsKostenart = cphase.getCost(visboZustaende.oldValue)
+                                                    If IsNothing(cCost) Then
+                                                    Else
+                                                        'hproj.rcLists.removeCP(cCost.KostenTyp, cphase.nameID)
+                                                        cCost.KostenTyp = newCostID
+                                                        'hproj.rcLists.addCP(newCostID, cphase.nameID)
+                                                    End If
+                                                    kostenChanged = True
+                                                Else
+                                                    ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
+                                                    ' muss an dieser Stelle noch gar nichts gemacht werden ..
+                                                End If
+                                            Else
+                                                ' falsche/unbekannte Eingabe
+                                                Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
+                                                If awinSettings.englishLanguage Then
+                                                    errMsg = "unknown role/cost ..."
+                                                End If
+                                                Call MsgBox(errMsg)
+
+                                                Target.Cells(1, 1).value = visboZustaende.oldValue
+                                            End If
+
+
                                         Else
-                                            ' falsche/unbekannte Eingabe
-                                            Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
+                                            Dim errMsg As String = "keine Doppelbelegung innerhalb einer Projektphase erlaubt ... "
                                             If awinSettings.englishLanguage Then
-                                                errMsg = "unknown role/cost ..."
+                                                errMsg = "no duplicates within one phase, please"
                                             End If
                                             Call MsgBox(errMsg)
 
                                             Target.Cells(1, 1).value = visboZustaende.oldValue
+
+                                            If visboZustaende.oldValue = "" Or IsNothing(visboZustaende.oldValue) Then
+                                                ' Zeile löschen mit Doppelbelegung
+                                                Call massEditZeileLoeschen("")
+
+                                            ElseIf RoleDefinitions.containsName(visboZustaende.oldValue) Then
+                                                Target.ClearComments()
+
+                                            End If
+
+
                                         End If
+
+                                        ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
+                                        Call defineHeaderTitleOfRoleCost(Target.Row)
+
+
 
 
                                     Else
-                                        Dim errMsg As String = "keine Doppelbelegung innerhalb einer Projektphase erlaubt ... "
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "no duplicates within one phase, please"
-                                        End If
-                                        Call MsgBox(errMsg)
-
+                                        'Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
+                                        'If awinSettings.englishLanguage Then
+                                        '    errMsg = "unknown role/cost ..."
+                                        'End If
+                                        'Call MsgBox(errMsg)
                                         Target.Cells(1, 1).value = visboZustaende.oldValue
-
-                                        If visboZustaende.oldValue = "" Or IsNothing(visboZustaende.oldValue) Then
-                                            ' Zeile löschen mit Doppelbelegung
-                                            Call massEditZeileLoeschen("")
-
-                                        ElseIf RoleDefinitions.containsName(visboZustaende.oldValue) Then
-                                            Target.ClearComments()
-
-                                        End If
-
-
                                     End If
 
-                                    ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
-                                    Call defineHeaderTitleOfRoleCost(Target.Row)
-
-
-
-
-                                Else
-                                    Dim errMsg As String = "unbekannte Rolle / Kostenart ..."
-                                    If awinSettings.englishLanguage Then
-                                        errMsg = "unknown role/cost ..."
-                                    End If
-                                    Call MsgBox(errMsg)
-                                    Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
                             ElseIf Target.Column = columnRC + 1 Then
@@ -817,21 +877,21 @@ Public Class Tabelle2
 
                                     End If
                                 Else
-                                    Dim errMsg As String = ""
-                                    If isCost Then
-                                        errMsg = "bei Kostenart ist Skill Angabe nicht zugelassen ... "
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "costs do not carry skills ... "
-                                        End If
-                                    Else
-                                        errMsg = "Skill existiert in der angegebenen Organisations-Einheit nicht ..."
+                                    'Dim errMsg As String = ""
+                                    'If isCost Then
+                                    '    errMsg = "bei Kostenart ist Skill Angabe nicht zugelassen ... "
+                                    '    If awinSettings.englishLanguage Then
+                                    '        errMsg = "costs do not carry skills ... "
+                                    '    End If
+                                    'Else
+                                    '    errMsg = "Skill existiert in der angegebenen Organisations-Einheit nicht ..."
 
-                                        If awinSettings.englishLanguage Then
-                                            errMsg = "skill does not exist in orga-unit ..."
-                                        End If
-                                    End If
+                                    '    If awinSettings.englishLanguage Then
+                                    '        errMsg = "skill does not exist in orga-unit ..."
+                                    '    End If
+                                    'End If
 
-                                    Call MsgBox(errMsg)
+                                    'Call MsgBox(errMsg)
                                     Target.Cells(1, 1).value = visboZustaende.oldValue
                                 End If
 
@@ -1056,24 +1116,24 @@ Public Class Tabelle2
                 ElseIf Target.Columns.Count > 1 Then
 
                     If isRole Or isCost Then
-                        Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
+                            Call updateDataValuesInProject(Target, isRole, rcName, rcNameID, pName, phaseNameID,
                                                                 auslastungChanged, summenChanged, kostenChanged, roleCostNames)
+                        End If
+
                     End If
 
-                End If
 
 
 
+                    'If auslastungChanged And awinSettings.meExtendedColumnsView Then
+                    '    'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
+                    'End If
 
-                'If auslastungChanged And awinSettings.meExtendedColumnsView Then
-                '    'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
-                'End If
+                    ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
+                    ' aber für Testzwecke gut geeignet ist ...
 
-                ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
-                ' aber für Testzwecke gut geeignet ist ...
-
-                'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
-                If summenChanged Then
+                    'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
+                    If summenChanged Then
 
                         If IsNothing(cphase) Then
                             ' wenn in Zweig target.columns.count > 1 gewesen
@@ -1102,12 +1162,12 @@ Public Class Tabelle2
                             If Not IsNothing(formProjectInfo1) Then
                                 Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
                             End If
-                        ' tk 18.1.20
-                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
-                        'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
+                            ' tk 18.1.20
+                            Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=rcName)
+                            'Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRoleName:=rcName)
 
-                        Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
-                    End If
+                            Call awinNeuZeichnenDiagramme(typus:=8, roleCost:=rcNameID)
+                        End If
 
                     Catch ex As Exception
 
@@ -2002,61 +2062,61 @@ Public Class Tabelle2
         Dim rcName As String = ""
         Dim skillName As String = ""
         Dim tmpValue As Boolean = False
+        Dim msgTxt As String = ""
 
-        If isSkillCheck Then
-            ' es handelt sich um den Skill Check 
-            rcName = otherValue
-            skillName = newValue
+        If visboZustaende.meModus = ptModus.massEditRessSkills Then
 
-            ' hier muss die Prüfung rein , ob es eine bekannte Skill ist ...
-            If Not RoleDefinitions.containsName(skillName) Then
-                Dim skillNamesList As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(skillName, otherValue)
-                If skillNamesList.Count = 1 Then
-                    skillName = CStr(skillNamesList.Item(0))
-                    newValue = skillName
-                Else
-                    ' Formular mit Liste zeigen 
-                    Dim selectionFrm As New frmSelectOneItem
-                    If awinSettings.englishLanguage Then
-                        selectionFrm.Text = "Select one skill"
-                    Else
-                        selectionFrm.Text = "Wählen Sie eine Skill"
-                    End If
-                    selectionFrm.itemsCollection = skillNamesList
-                    If selectionFrm.ShowDialog = DialogResult.OK Then
-                        skillName = CStr(selectionFrm.itemList.SelectedItem)
+            If isSkillCheck Then
+                ' es handelt sich um den Skill Check 
+                rcName = otherValue
+                skillName = newValue
+
+                ' hier muss die Prüfung rein , ob es eine bekannte Skill ist ...
+                If Not RoleDefinitions.containsName(skillName) Then
+                    Dim skillNamesList As List(Of String) = RoleDefinitions.getSkillNamesContainingSubStr(skillName, otherValue)
+                    If skillNamesList.Count = 1 Then
+                        skillName = CStr(skillNamesList.Item(0))
                         newValue = skillName
+                    ElseIf skillNamesList.Count > 1 Then
+                        ' Formular mit Liste zeigen 
+                        Dim selectionFrm As New frmSelectOneItem
+                        If awinSettings.englishLanguage Then
+                            selectionFrm.Text = "Select one skill"
+                        Else
+                            selectionFrm.Text = "Wählen Sie eine Skill"
+                        End If
+                        selectionFrm.itemsCollection = skillNamesList
+                        If selectionFrm.ShowDialog = DialogResult.OK Then
+                            skillName = CStr(selectionFrm.itemList.SelectedItem)
+                            newValue = skillName
+                        End If
                     End If
                 End If
-            End If
 
-            If rcName <> "" Then
-                ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
-                ' wenn es sich um eine Kostenart handelt : sillok = false
-                tmpValue = RoleDefinitions.roleHasSkill(rcName, skillName)
-            Else
-                ' anderfalls muss geprüft werden ob es sich um eine gültige Skill handelt ... 
-                Dim tmpSkill As clsRollenDefinition = RoleDefinitions.getRoledef(skillName)
-                If Not IsNothing(tmpSkill) Then
-                    tmpValue = tmpSkill.isSkill
+                If rcName <> "" Then
+                    ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
+                    ' wenn es sich um eine Kostenart handelt : sillok = false
+                    tmpValue = RoleDefinitions.roleHasSkill(rcName, skillName)
+                Else
+                    ' anderfalls muss geprüft werden ob es sich um eine gültige Skill handelt ... 
+                    Dim tmpSkill As clsRollenDefinition = RoleDefinitions.getRoledef(skillName)
+                    If Not IsNothing(tmpSkill) Then
+                        tmpValue = tmpSkill.isSkill
+                    End If
                 End If
-            End If
 
-        Else
-            ' es handelt sich um den RCName Check
-            rcName = newValue
-            skillName = otherValue
-            ' hier muss die Prüfung rein , ob es eine bekannte Kostenart ist ...
-            If CostDefinitions.containsName(rcName) Then
-                tmpValue = True
             Else
+                ' es handelt sich um den RCName Check
+                rcName = newValue
+                skillName = otherValue
+                ' hier muss die Prüfung rein , ob es eine bekannte Kostenart ist ...
                 ' hier muss die Prüfung rein , ob es eine bekannte Rolle ist ...
                 If Not RoleDefinitions.containsName(rcName) Then
                     Dim roleNamesList As List(Of String) = RoleDefinitions.getRoleNamesContainingSubStr(rcName, otherValue)
                     If roleNamesList.Count = 1 Then
                         rcName = CStr(roleNamesList.Item(0))
                         newValue = rcName
-                    Else
+                    ElseIf roleNamesList.Count > 1 Then
                         ' Formular mit Liste zeigen 
                         Dim selectionFrm As New frmSelectOneItem
                         If awinSettings.englishLanguage Then
@@ -2070,14 +2130,28 @@ Public Class Tabelle2
                             newValue = rcName
                         End If
                     End If
+
                 End If
 
-                Dim stillOk As Boolean = True
+                Dim stillOk As Boolean = RoleDefinitions.containsName(rcName)
 
-                If skillName <> "" Then
+                If Not stillOk Then
+                    msgTxt = "unbekannt: " & rcName
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "unknown: " & rcName
+                    End If
+                End If
+
+                If skillName <> "" And stillOk Then
                     ' prüfen, ob es diese Skill denn überhaupt für die Rolle gibt 
                     ' wenn es sich um eine Kostenart handelt : sillok = false
                     stillOk = RoleDefinitions.roleHasSkill(rcName, skillName)
+                    If Not stillOk Then
+                        msgTxt = "passt nicht zu Skill " & skillName & ": " & rcName
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "does not have appropriate skill: " & skillName & ": " & rcName
+                        End If
+                    End If
                 End If
 
                 If stillOk Then
@@ -2131,18 +2205,55 @@ Public Class Tabelle2
                                     ' ist nicht erlaubt
                                     tmpValue = False
                                 End If
-
+                            Else
+                                tmpValue = False
                             End If
 
                         End If
                     End If
-
+                Else
+                    Call MsgBox(msgTxt)
+                    tmpValue = False
                 End If
+
 
             End If
 
-        End If
+        ElseIf visboZustaende.meModus = ptModus.massEditCosts Then
+            rcName = newValue
+            skillName = otherValue
 
+            If Not CostDefinitions.containsName(rcName) Then
+                Dim costNamesList As List(Of String) = CostDefinitions.getCostNamesContainingSubStr(rcName)
+                If costNamesList.Count = 1 Then
+                    rcName = CStr(costNamesList.Item(0))
+                    newValue = rcName
+                ElseIf costNamesList.Count > 1 Then
+                    ' Formular mit Liste zeigen 
+                    Dim selectionFrm As New frmSelectOneItem
+                    If awinSettings.englishLanguage Then
+                        selectionFrm.Text = "Select one Cost"
+                    Else
+                        selectionFrm.Text = "Wählen Sie eine Kostenart"
+                    End If
+                    selectionFrm.itemsCollection = costNamesList
+                    If selectionFrm.ShowDialog = DialogResult.OK Then
+                        rcName = CStr(selectionFrm.itemList.SelectedItem)
+                        newValue = rcName
+                    Else
+                        rcName = ""
+                        newValue = ""
+                    End If
+                End If
+            End If
+
+            If rcName <> "" Then
+                If CostDefinitions.containsName(rcName) Then
+                    tmpValue = True
+                End If
+            End If
+
+        End If
 
 
         isValidRCChange = tmpValue

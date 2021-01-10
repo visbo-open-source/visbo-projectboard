@@ -77,7 +77,7 @@ Public Class Tabelle4
                              AllowDeletingRows:=False,
                              AllowSorting:=True,
                              AllowFiltering:=True)
-                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                    .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
                     .EnableAutoFilter = True
                 End With
             End If

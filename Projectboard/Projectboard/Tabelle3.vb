@@ -126,7 +126,7 @@ Public Class Tabelle3
                          AllowDeletingRows:=False,
                          AllowSorting:=False,
                          AllowFiltering:=True)
-                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
                 .EnableAutoFilter = True
             End With
 

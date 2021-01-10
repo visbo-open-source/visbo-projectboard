@@ -1344,7 +1344,7 @@ Public Module awinDiagrams
 
         ' bestimmen, ob man sich auf der Projekt-Tafel befindet oder aber im MassEdit Ressourcen, Termine, Attribute
         Try
-            If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts Then
                 ' bestimmen des prcTyp
                 If isRole Then
                     prcTyp = DiagrammTypen(1)
@@ -1443,7 +1443,7 @@ Public Module awinDiagrams
         ' Änderung tk 26.10.15 
         ' damit Diagramm-Title manuell geändert werden kann und dann beim Update , bis auf die Summe 
         ' unverändert bleibt, wird der hier rausgelesen; das darf aber nicht im Massen-Edit sein ....
-        If Not visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+        If Not (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
             Dim tmpstr() As String = chtobj.Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 20)
             If tmpstr(0).Length > 0 Then
                 diagramTitle = tmpstr(0).TrimEnd
@@ -2200,7 +2200,7 @@ Public Module awinDiagrams
         'End With
 
         ' Skalierung nur ändern, wenn erforderlich, weil der maxwert höher ist als die bisherige Skalierung ... 
-        If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+        If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
             With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                 .MaximumScaleIsAuto = True
                 '.MaximumScale = hmxWert + 1
@@ -2888,7 +2888,7 @@ Public Module awinDiagrams
 
             Dim wasProtected As Boolean = .ProtectContents
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 .Unprotect(Password:="x")
                 awinSettings.meEnableSorting = True
             End If
@@ -3279,7 +3279,7 @@ Public Module awinDiagrams
 
                 Dim wasProtected As Boolean = .ProtectContents
 
-                If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                     .Unprotect(Password:="x")
                     awinSettings.meEnableSorting = True
                 End If
@@ -4065,7 +4065,7 @@ Public Module awinDiagrams
 
             Dim wasProtected As Boolean = .ProtectContents
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 .Unprotect(Password:="x")
                 awinSettings.meEnableSorting = True
             End If
@@ -4493,7 +4493,7 @@ Public Module awinDiagrams
 
             Dim wasProtected As Boolean = .ProtectContents
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 .Unprotect(Password:="x")
                 awinSettings.meEnableSorting = True
             End If
@@ -4916,7 +4916,7 @@ Public Module awinDiagrams
 
             Dim wasProtected As Boolean = .ProtectContents
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 .Unprotect(Password:="x")
                 awinSettings.meEnableSorting = True
             End If
@@ -5682,7 +5682,7 @@ Public Module awinDiagrams
 
             Dim wasProtected As Boolean = .ProtectContents
 
-            If .ProtectContents And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            If .ProtectContents And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
                 .Unprotect(Password:="x") ' damit Chart selektierbar ist ...
                 awinSettings.meEnableSorting = True ' damit es konsistent ist mit Menu Anzeige 
             End If

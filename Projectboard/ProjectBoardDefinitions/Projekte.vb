@@ -24165,7 +24165,7 @@ Public Module Projekte
                                 AllowDeletingRows:=True,
                                 AllowSorting:=True,
                                 AllowFiltering:=True)
-            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+            .EnableSelection = Excel.XlEnableSelection.xlNoRestrictions
             .EnableAutoFilter = True
 
             '.Protect(Password:=pwd,

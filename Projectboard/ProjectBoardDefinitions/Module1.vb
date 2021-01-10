@@ -492,10 +492,11 @@ Public Module Module1
 
     Public Enum ptModus
         graficboard = 0
-        massEditRessCost = 1
+        massEditRessSkills = 1
         massEditTermine = 2
         massEditAttribute = 3
         powerpointAddIn = 4
+        massEditCosts = 5
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
