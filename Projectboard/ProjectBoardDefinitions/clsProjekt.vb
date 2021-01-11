@@ -12,7 +12,7 @@ Public Class clsProjekt
     'Private AllPhases As List(Of clsPhase)
     'Private _relStart As Integer
     Private _imarge As Double
-    Private _uuid As Long
+    'Private _uuid As Long
 
     Private _StartOffset As Integer
     Private _Start As Integer
@@ -32,7 +32,7 @@ Public Class clsProjekt
     Private _description As String = ""
 
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
-    Private NullDatum As Date = StartofCalendar
+    Private ReadOnly NullDatum As Date = StartofCalendar
 
     ' tk ergänzt am 12.6.18 eine Kundeninterne Nummer 
     ' kann als eine vom Kunden vergebene Kundenspezifische Projekt-Nummer benutzt werden

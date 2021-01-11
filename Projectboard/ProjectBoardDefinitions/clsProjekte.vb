@@ -38,10 +38,6 @@ Public Class clsProjekte
 
                 End If
 
-                '' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
-                'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
-                '    currentConstellationName = currentConstellationName & "(*)"
-                'End If
             End If
 
 

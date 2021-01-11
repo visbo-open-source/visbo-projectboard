@@ -7150,7 +7150,8 @@ Public Module agm2
                     Else
                         stillOk = False
                     End If
-                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Then
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Or roleType = ptCustomUserRoles.ProjektLeitung Or
+                        roleType = ptCustomUserRoles.OrgaAdmin Then
 
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
@@ -13333,17 +13334,37 @@ Public Module agm2
 
     End Sub
 
+
     ''' <summary>
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
-    ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
-    ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
-    ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzIstdaten(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
-                                  ByRef outputCollection As Collection)
+    ''' <param name="readAll"></param>
+    ''' <param name="outputCollection"></param>
+    Public Sub ImportIstdatenStdFormat(ByVal readAll As Boolean, ByRef outputCollection As Collection)
 
         ' alle Einträge zu dieser Referatsliste werden gelöscht 
         Dim istDatenReferatsliste() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+
+        ' für die Meldungen
+        Dim outPutLine As String = ""
+
+        If IsNothing(istDatenReferatsliste) And myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+            istDatenReferatsliste = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+        End If
+
+        If IsNothing(istDatenReferatsliste) Then
+            outPutLine = "no Information what plan-data needs to be substituted ... "
+            outputCollection.Add(outPutLine)
+            Exit Sub
+        End If
+
+        If istDatenReferatsliste.Length = 0 Then
+            outPutLine = "no Information what plan-data needs to be substituted ... "
+            outputCollection.Add(outPutLine)
+            Exit Sub
+        End If
+
+
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -13354,8 +13375,7 @@ Public Module agm2
         ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
         Dim projectRoleValues(,,) As Double = Nothing
 
-        ' für die Meldungen
-        Dim outPutLine As String = ""
+
 
         Dim lastRow As Integer = -1
         Dim updatedProjects As Integer = 0
@@ -13382,33 +13402,20 @@ Public Module agm2
         Next
 
 
-        Dim lastValidMonth As Integer = monat
-        If readAll Then
-            lastValidMonth = 12
-        End If
 
-        ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
-        ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
         Try
-
-
-            If monat < 1 Or monat > 12 Then
-                logmessage = "ungültige Angabe des ActualDataUntil-Monats: " & monat
-                outputCollection.Add(logmessage)
-                Exit Sub
-            End If
 
             ' jetzt kommt die eigentliche Import Behandlung 
             Dim currentWS As Excel.Worksheet = Nothing
             Try
                 currentWS = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
-                If Not currentWS.Name.Contains("Bericht") Then
-                    currentWS = CType(appInstance.ActiveWorkbook.Worksheets("Bericht_RL_Kapa_Excel"),
+                If Not currentWS.Name.Contains("Istdaten") Then
+                    currentWS = CType(appInstance.ActiveWorkbook.Worksheets("Istdaten"),
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
                 End If
             Catch ex As Exception
-                logmessage = "Keine Tabelle mit Namen 'Bericht_RL_Kapa_Excel> gefunden' ... Abbruch"
+                logmessage = "Keine Tabelle mit Namen 'Istdaten gefunden' ... Abbruch"
                 outputCollection.Add(logmessage)
                 Exit Sub
             End Try
@@ -13477,15 +13484,13 @@ Public Module agm2
             ' hat die Datei die richtige Header-Struktur ? 
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
-            If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
+            If Not isCorrectIstDatenStructure(firstZeile, 3) Then
                 logmessage = "Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!"
                 outputCollection.Add(logmessage)
 
                 Exit Sub
             End If
 
-            ' hier wird das Logfile jetzt geöffnet 
-            ''Call logfileOpen()
 
             With currentWS
 
@@ -13493,56 +13498,47 @@ Public Module agm2
                 lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' welche Werte sollen ausgelesen werden, wo stehen die 
-                Dim colISExtern As Integer = CType(.Range("F1"), Excel.Range).Column
-                Dim colResource As Integer = CType(.Range("G1"), Excel.Range).Column
-                Dim colProjectNr As Integer = CType(.Range("C1"), Excel.Range).Column
-                Dim colPname As Integer = CType(.Range("D1"), Excel.Range).Column
-                Dim colActivity As Integer = CType(.Range("E1"), Excel.Range).Column
-                Dim colYear As Integer = CType(.Range("H1"), Excel.Range).Column
-                Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
-                Dim colEuroActuals As Integer = CType(.Range("L1"), Excel.Range).Column
-                Dim colReferat As Integer = CType(.Range("A1"), Excel.Range).Column
+                Dim colProjectNr As Integer = CType(.Range("A1"), Excel.Range).Column
+                Dim colPname As Integer = CType(.Range("B1"), Excel.Range).Column
+                Dim colActivity As Integer = CType(.Range("C1"), Excel.Range).Column
+                Dim colISExtern As Integer = CType(.Range("D1"), Excel.Range).Column
+                Dim colResource As Integer = CType(.Range("E1"), Excel.Range).Column
+                Dim colYear As Integer = CType(.Range("F1"), Excel.Range).Column
+                Dim colMonth As Integer = CType(.Range("G1"), Excel.Range).Column
+                Dim colPTActuals As Integer = CType(.Range("H1"), Excel.Range).Column
+                Dim colEuroActuals As Integer = CType(.Range("I1"), Excel.Range).Column
                 Dim colPTZuweisung As Integer = CType(.Range("J1"), Excel.Range).Column
+                Dim colEuroZuweisung As Integer = CType(.Range("K1"), Excel.Range).Column
 
-                Dim cacheProjekte As New clsProjekteAlle
+                'Dim cacheProjekte As New clsProjekteAlle
 
-                ' im key steht der NAme aus der Datei , im Value steht der Name i CacheProjekte
+                ' im key steht der Name aus der Datei , im Value steht der Name aus AlleProjekte 
                 Dim handledNames As New SortedList(Of String, String)
                 ' nimmt die unbekannten / nicht erkannten Role-Names auf 
                 Dim unKnownRoleNames As New SortedList(Of String, Boolean)
 
-                ' 1. Schleife: ermittle die Menge aller bekannten Projekte ... 
-                While zeile <= lastRow
+                ' tk 2.1.2021 Vorab Schleife 
+                ' 1. Schleife find out which project has actualdata from when to when .. 
+                ' und die dazugehörigen Min - Max Dates Integer 
+                Dim MinMaxInformations As New SortedList(Of String, Integer())
 
+                ' holds all valid pname / roleName Combinations , roleNameIDs
+                Dim validPNameRoleNameIDs As New SortedList(Of String, List(Of String))
+
+                Dim minValue As Integer = 1000000000
+                Dim maxValue As Integer = 0
+                While zeile <= lastRow
                     Try
                         ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
-                        Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
+                        Dim tmpReferat As String = ""
+
                         Dim roleName As String = fullRoleName
-                        Dim rawTeamName As String = CStr(CType(.Cells(zeile, colActivity), Excel.Range).Value).Trim
 
-                        If roleName.StartsWith("*") Then
-                            roleName = roleName.Substring(1)
-                        End If
 
-                        Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
+                        'Dim teamName As String = getAllianzTeamNameFromCell(CType(.Cells(zeile, colActivity), Excel.Range))
+                        Dim teamName As String = ""
 
-                        If rawTeamName.StartsWith("#") And teamName = "" Then
-                            CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-
-                            outPutLine = "ggf. wurde ein Team nicht erkannt ... " & rawTeamName
-                            outputCollection.Add(outPutLine)
-
-                            ReDim logArray(5)
-                            logArray(0) = "ggf. wurde ein Team nicht erkannt ... "
-                            logArray(1) = ""
-                            logArray(2) = ""
-                            logArray(3) = rawTeamName
-                            logArray(4) = ""
-                            logArray(5) = ""
-
-                            Call logger(ptErrLevel.logWarning, "ImportAllianzIstdaten", logArray)
-                        End If
 
                         Dim roleNameID As String = ""
                         Dim parentReferat As String = ""
@@ -13575,18 +13571,22 @@ Public Module agm2
                                     CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
 
-                                    outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
+                                    If awinSettings.englishLanguage Then
+                                        outPutLine = "no Actual Data Department for Role  " & roleName
+                                    Else
+                                        outPutLine = "Es konnte zur Rolle keine Ist-Daten Organisation identifiziert werden: " & roleName
+                                    End If
                                     outputCollection.Add(outPutLine)
 
                                     ReDim logArray(5)
-                                    logArray(0) = "Rolle hat kein Ist-Daten Referat "
+                                    logArray(0) = outPutLine
                                     logArray(1) = ""
                                     logArray(2) = ""
                                     logArray(3) = fullRoleName
                                     logArray(4) = ""
                                     logArray(5) = ""
 
-                                    Call logger(ptErrLevel.logWarning, "ImportAllianzIstdaten", logArray)
+                                    Call logger(ptErrLevel.logWarning, "ImportIstdatenStdFormat", logArray)
 
                                 End If
 
@@ -13595,18 +13595,22 @@ Public Module agm2
                                 weitermachen = False
                                 CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
-                                outPutLine = "Rolle nicht bekannt: " & roleName
+                                If awinSettings.englishLanguage Then
+                                    outPutLine = "unknown Ressource  " & roleName
+                                Else
+                                    outPutLine = "unbekannte Rolle " & roleName
+                                End If
                                 outputCollection.Add(outPutLine)
 
                                 ReDim logArray(5)
-                                logArray(0) = "unbekannte Rolle "
+                                logArray(0) = outPutLine
                                 logArray(1) = ""
                                 logArray(2) = ""
                                 logArray(3) = fullRoleName
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
                             End If
 
 
@@ -13626,271 +13630,236 @@ Public Module agm2
                                 weitermachen = False
                                 CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
 
+                                If awinSettings.englishLanguage Then
+                                    outPutLine = "no Actual Data Department for Role  " & roleName
+                                Else
+                                    outPutLine = "Es konnte zur Rolle keine Ist-Daten Organisation identifiziert werden: " & roleName
+                                End If
 
-                                outPutLine = "Es konnte zur Rolle kein Ist-Daten Referat identifiziert werden: " & roleName
                                 outputCollection.Add(outPutLine)
 
                                 ReDim logArray(5)
-                                logArray(0) = "Rolle hat kein Ist-Daten Referat "
+                                logArray(0) = outPutLine
                                 logArray(1) = ""
                                 logArray(2) = ""
                                 logArray(3) = fullRoleName
                                 logArray(4) = ""
                                 logArray(5) = ""
 
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
 
                             End If
                         Else
+                            weitermachen = False
                             outPutLine = "Rolle nicht bekannt: " & roleName
                             outputCollection.Add(outPutLine)
 
-                            Dim protocolEntryWritten As Boolean = False
+                            ReDim logArray(5)
+                            logArray(0) = "unbekannte Rolle "
+                            logArray(1) = ""
+                            logArray(2) = ""
+                            logArray(3) = fullRoleName
+                            logArray(4) = teamName
+                            logArray(5) = parentReferat
 
-                            ' Rolle ist nicht enthalten, wenn ein Team angegeben wurde: nimm zu diesem Team das entsprechende Referat
+                            Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
 
-                            ' es muss als letzte Alternative das Referat genommen werden ... 
-                            If tmpReferat = "D-BITSV-KB" Then
-                                tmpReferat = "D-BITSV-KB0"
-                            End If
-                            parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
-
-                            If parentReferat.Length > 0 Then
-                                ' 3. Beste Alternative 
-                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbYellow
-                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbGreen
-                                weitermachen = True
-                                ' IN Folge sollen die Werte dem Team zugeordnet werden 
-                                roleName = parentReferat
-                                teamName = ""
-
-                                roleNameID = RoleDefinitions.bestimmeRoleNameID(roleName, "")
-                            Else
-                                ' Fehlermeldung 
-                                ' 
-                                weitermachen = False
-                                CType(.Cells(zeile, colResource), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                CType(.Cells(zeile, colActivity), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                CType(.Cells(zeile, colReferat), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-
-                                outPutLine = "Es konnte weder Rolle, noch Team noch Referat identifiziert werden: Rolle, Zeile: " & roleName & ", " & zeile
-                                outputCollection.Add(outPutLine)
-
-                                ReDim logArray(5)
-                                logArray(0) = "Keine Identifikation möglich: weder Rolle, noch Team noch Referat"
-                                logArray(1) = ""
-                                logArray(2) = ""
-                                logArray(3) = fullRoleName
-                                logArray(4) = teamName
-                                logArray(5) = parentReferat
-
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
-                                protocolEntryWritten = True
-
-                            End If
-
-
-                            If Not protocolEntryWritten Then
-                                ReDim logArray(5)
-                                logArray(0) = "unbekannte Rolle "
-                                logArray(1) = ""
-                                logArray(2) = ""
-                                logArray(3) = fullRoleName
-                                logArray(4) = teamName
-                                logArray(5) = parentReferat
-
-                                Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
-
-                            End If
 
                         End If
 
+                        ' now it is safe that role Name exists and 
                         If weitermachen Then
 
                             Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
-                            Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+                            Dim tmpPNr As String = ""
 
-                            Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+                            If Not IsNothing(CType(.Cells(zeile, colProjectNr), Excel.Range).Value) Then
+                                tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+                            End If
 
-                            Dim isExtern As Boolean = False
 
-                            Try
-                                Dim tstExtern As String = CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value)
-                                isExtern = (tstExtern = "Extern")
-                            Catch ex1 As Exception
-                                isExtern = False
-                            End Try
 
+                            'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+                            Dim pName As String = makeValidProjectName(tmpPName)
+                            If Not isValidPVName(tmpPName) Then
+                                pName = makeValidProjectName(tmpPName)
+                            Else
+                                pName = tmpPName
+                            End If
+
+
+
+
+                            ' jetzt sollen die Projekte geladen werden, die referenziert werden 
+                            If Not handledNames.ContainsKey(tmpPName) Then
+                                handledNames.Add(tmpPName, pName)
+                            End If
+
+                            Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
                             Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+
+
+                            Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
+
+
+                            Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
                             Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
                             Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
+                            Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
 
                             Dim shallContinue As Boolean = False
-                            Dim oldProj As clsProjekt = Nothing
 
-                            If Not handledNames.ContainsKey(tmpPName) Then
+                            ' tk 2.1.21 - jetzt werden die Projekt gleich mal in AlleProjekte geholt, falls nicht schon vorhanden 
+                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, kdNr:=tmpPNr)
 
-                                ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
-                                If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable, createUnknown) Then
-                                    shallContinue = True
-                                    handledNames.Add(tmpPName, pName)
+                            If Not IsNothing(hproj) Then
+                                If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                                    AlleProjekte.Add(hproj)
 
-                                Else
-                                    outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
-                                    outputCollection.Add(outPutLine)
-
-                                    CType(.Cells(zeile, colPname), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-                                    CType(.Cells(zeile, colProjectNr), Excel.Range).Interior.Color = Excel.XlRgbColor.rgbRed
-
-                                    ReDim logArray(5)
-                                    logArray(0) = "unbekannte PNr / Projekt "
-                                    logArray(1) = tmpPNr
-                                    logArray(2) = pName
-                                    logArray(3) = ""
-                                    logArray(4) = ""
-                                    logArray(5) = ""
-                                    Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
-
-                                    shallContinue = False
-                                    handledNames.Add(tmpPName, "")
-
+                                    If Not ShowProjekte.contains(hproj.name) Then
+                                        ShowProjekte.Add(hproj)
+                                    End If
                                 End If
 
-                            Else
-                                shallContinue = (handledNames.Item(tmpPName).Length > 0)
-                            End If
-
-                            If Not readAll Then
-                                shallContinue = shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue > 0
-                            Else
-                                ' readAll:
-                                shallContinue = shallContinue And curMonat >= 1 And curMonat <= lastValidMonth And curZuwPTValue > 0
-                            End If
-
-                            If shallContinue Then
-                                'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
-                                ' nur dann handelt es sich um ein zuordenbares Projekt ... 
-                                ' nur dann geht es um gültige Werte
-
-                                ' jetzt wird eine sortedlist of sortedlist aufgebaut
-                                ' Projekte, dann Rollen mit Values 
-                                ' 
-                                pName = handledNames.Item(tmpPName)
-                                Dim pvkey As String = calcProjektKey(pName, "")
-                                oldProj = cacheProjekte.getProject(pvkey)
-
-                                If Not IsNothing(oldProj) Then
-
-                                    ' Aufbauen des Eintrags
-                                    Dim roleValues As New SortedList(Of String, Double())
-                                    Dim tmpValues() As Double
-
-                                    'ReDim tmpValues(monat - 1)
-                                    ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
-                                    ReDim tmpValues(lastValidMonth - 1)
-                                    Dim teamID As Integer = -1
-                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
-
-                                    If Not IsNothing(hrole) Then
-                                        Dim tagessatz As Double = hrole.tagessatzIntern
-                                        If tagessatz <= 0 Then
-                                            tagessatz = 800.0
-                                        End If
-
-                                        If Not validProjectNames.ContainsKey(pName) Then
-
-                                            roleValues = New SortedList(Of String, Double())
-                                            ' wird doch überhaupt nicht gebraucht
-                                            'ReDim tmpValues(monat - 1)
-                                            If readAll Then
-                                                ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                If curMonat <= monat Then
-                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                                Else
-                                                    tmpValues(curMonat - 1) = curZuwPTValue
-                                                End If
-                                            Else
-                                                ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                                tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                            End If
-
-
-                                            roleValues.Add(roleNameID, tmpValues)
-                                            validProjectNames.Add(pName, roleValues)
-
-                                        Else
-                                            roleValues = validProjectNames.Item(pName)
-                                            If roleValues.ContainsKey(roleNameID) Then
-                                                ' rolle ist bereits enthalten 
-                                                ' also summieren 
-                                                tmpValues = roleValues.Item(roleNameID)
-                                                If readAll Then
-                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                    If curMonat <= monat Then
-                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
-                                                    Else
-                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
-                                                    End If
-                                                Else
-                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
-                                                End If
-
-                                            Else
-                                                ' Rolle ist noch nicht enthalten 
-                                                'ReDim tmpValues(monat - 1)
-
-                                                If readAll Then
-                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
-                                                    If curMonat <= monat Then
-                                                        tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                                    Else
-                                                        tmpValues(curMonat - 1) = curZuwPTValue
-                                                    End If
-                                                Else
-                                                    ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
-                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
-                                                End If
-
-                                                roleValues.Add(roleNameID, tmpValues)
-                                            End If
-
-                                        End If
-                                    Else
-                                        ' darf/kann eigentlich nicht sein ...
-                                        logmessage = "unbekannte Rolle ohne Referat: " & roleName
-                                        outputCollection.Add(logmessage)
-
-                                        ReDim logArray(3)
-                                        logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
-                                        logArray(1) = ""
-                                        logArray(2) = ""
-                                        logArray(3) = fullRoleName
-                                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                If MinMaxInformations.ContainsKey(pName) Then
+                                    If MinMaxInformations.Item(pName)(0) > currentDateColumn Then
+                                        MinMaxInformations.Item(pName)(0) = currentDateColumn
                                     End If
 
-
-
-
-
+                                    If MinMaxInformations.Item(pName)(1) < currentDateColumn Then
+                                        MinMaxInformations.Item(pName)(1) = currentDateColumn
+                                    End If
 
                                 Else
-                                    ' darf/kann eigentlich nicht sein ...
-                                    logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
-                                    outputCollection.Add(logmessage)
-
-                                    ReDim logArray(3)
-                                    logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
-                                    logArray(1) = ""
-                                    logArray(2) = pvkey
-                                    Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                                    Dim tmpColArray() As Integer = {1000000, 0}
+                                    MinMaxInformations.Add(pName, tmpColArray)
                                 End If
 
+                                ' now build / update the validPName / RoleNames
+                                If validPNameRoleNameIDs.ContainsKey(hproj.name) Then
+                                    If validPNameRoleNameIDs.Item(hproj.name).Contains(roleName) Then
+                                        ' alles bereits vorhanden ...
+                                    Else
+                                        validPNameRoleNameIDs.Item(hproj.name).Add(roleName)
+                                    End If
+                                Else
+                                    Dim tmpRoleNameListe As New List(Of String) From {
+                                        roleName
+                                    }
+                                    validPNameRoleNameIDs.Add(pName, tmpRoleNameListe)
+                                End If
+                            Else
+                                ' Call logger
+                                ReDim logArray(5)
+                                logArray(0) = "Unbekanntes Projekt"
+                                logArray(1) = ""
+                                logArray(2) = ""
+                                logArray(3) = pName
+                                logArray(4) = ""
+                                logArray(5) = ""
+                                Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
                             End If
-
 
                         End If
 
+                    Catch ex As Exception
+
+                    End Try
+
+                    zeile = zeile + 1
+                End While
+
+
+                ' now create the arrays and structure to the the values 
+                For Each kvp As KeyValuePair(Of String, List(Of String)) In validPNameRoleNameIDs
+
+                    If Not validProjectNames.ContainsKey(kvp.Key) Then
+                        ' should come only into this branch ... 
+                        Dim arrayDimension As Integer = MinMaxInformations.Item(kvp.Key)(1) - MinMaxInformations.Item(kvp.Key)(0)
+                        Dim actualValues() As Double
+                        ReDim actualValues(arrayDimension)
+
+                        Dim tmpSortedList As New SortedList(Of String, Double())
+
+                        For Each roleName As String In kvp.Value
+
+                            If Not tmpSortedList.ContainsKey(roleName) Then
+                                tmpSortedList.Add(roleName, actualValues)
+                            End If
+
+                        Next
+
+                        validProjectNames.Add(kvp.Key, tmpSortedList)
+
+                    Else
+                        ' should not come into this branch ... 
+                        Call MsgBox("??")
+
+                    End If
+
+                Next
+
+
+                zeile = 2
+
+                ' 2. Schleife: now get the values for all the projects and roleNAmes
+                ' Fehler-Protokollierung passiert so alles in der 1. Scjleife 
+                While zeile <= lastRow
+
+                    Try
+                        ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
+                        Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
+                        Dim tmpReferat As String = ""
+                        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.ActualdataOrgaUnits)
+
+                        Dim roleName As String = fullRoleName
+                        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+
+                        If Not IsNothing(currentRole) Then
+
+                            Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                            Dim tmpPNr As String = ""
+
+                            If Not IsNothing(CType(.Cells(zeile, colProjectNr), Excel.Range).Value) Then
+                                tmpPNr = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+                            End If
+
+                            'Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+                            Dim pName As String = handledNames(tmpPName)
+
+                            Dim curYear As Integer = CInt(CType(.Cells(zeile, colYear), Excel.Range).Value)
+                            Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+
+                            Dim currentDateColumn As Integer = getColumnOfDate(DateSerial(curYear, curMonat, 15))
+
+
+                            Dim curIstPTValue As Double = CDbl(CType(.Cells(zeile, colPTActuals), Excel.Range).Value)
+                            Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                            Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
+                            Dim curZuwEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroZuweisung), Excel.Range).Value)
+
+                            ' in MinMaxInformations.(0) steht der MonthColumn ab wo der Array losgeht ...
+                            Dim ixPos As Integer = currentDateColumn - MinMaxInformations.Item(pName)(0)
+
+                            Dim weitermachen As Boolean = False
+                            If (curIstPTValue > 0 And curIstEuroValue = 0) Then
+                                ' der Wert ist schon in curIstPtValue 
+                                weitermachen = True
+                            ElseIf curIstPTValue = 0 And curIstEuroValue > 0 And currentRole.tagessatzIntern > 0 Then
+                                curIstPTValue = curIstEuroValue / currentRole.tagessatzIntern
+                                weitermachen = True
+                            Else
+                                weitermachen = False
+                            End If
+
+                            If weitermachen Then
+                                validProjectNames.Item(pName).Item(roleName)(ixPos) = curIstPTValue
+                            End If
+
+                        Else
+                            ' Fehler wurde bereits in Schleife 1 entdeckt und protokolliert 
+                        End If
 
 
                     Catch ex As Exception
@@ -13908,136 +13877,137 @@ Public Module agm2
 
                 End While
 
-                ' jetzt kommt die zweite Bearbeitungs-Welle
-                ' das Rausschreiben der Test Records 
-
-                ' Protokoll schreiben ...
-                ' tk 8.5.19 nicht mehr machen 
-                'For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
-
-                '    Dim protocolLine As String = ""
-                '    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
-
-                '        ' jetzt schreiben 
-                '        Dim teamID As Integer = -1
-                '        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rVKvP.Key, teamID)
-                '        Dim curTagessatz As Double = hrole.tagessatzIntern
-
-                '        ReDim logArray(3)
-                '        logArray(0) = "Importiert wurde: "
-                '        logArray(1) = ""
-                '        logArray(2) = vPKvP.Key
-                '        logArray(3) = rVKvP.Key & ": " & hrole.name
-
-
-                '        ReDim logDblArray(rVKvP.Value.Length - 1)
-                '        For i As Integer = 0 To rVKvP.Value.Length - 1
-                '            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
-                '            logDblArray(i) = rVKvP.Value(i) * curTagessatz
-                '        Next
-
-                '        Call logfileSchreiben(logArray, logDblArray)
-                '    Next
-
-                'Next
-                ' Protokoll schreiben Ende ... 
 
                 Dim gesamtIstValue As Double = 0.0
 
+
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
-                    Dim oldPlanValue As Double = 0.0
-                    Dim newIstValue As Double = 0.0
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", AlleProjekte, Date.Now)
 
-                    If Not IsNothing(hproj) Then
-                        ' es wird pro Projekt eine Variante erzeugt 
-                        Dim istDatenVName As String = ptVariantFixNames.acd.ToString
-                        Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+                    ' now verify whether the actual data is covered by the project at all .. 
+                    Dim projstart As Integer = getColumnOfDate(hproj.startDate)
+                    Dim projEnd As Integer = getColumnOfDate(hproj.endeDate)
 
-                        ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
-                        ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
-                        ' True: die Werte werden auf Null gesetzt 
-                        Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                    Dim allOk As Boolean = projstart <= MinMaxInformations.Item(hproj.name)(0) And
+                        projEnd >= MinMaxInformations.Item(hproj.name)(1)
 
-                        'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
-                        'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                    If allOk Then
+                        Dim oldPlanValue As Double = 0.0
+                        Dim newIstValue As Double = 0.0
 
-                        newIstValue = calcIstValueOf(vPKvP.Value)
+                        Dim lastValidMonth As Integer = MinMaxInformations.Item(hproj.name)(1)
 
-                        gesamtIstValue = gesamtIstValue + newIstValue
+                        If Not IsNothing(hproj) Then
+                            ' es wird pro Projekt eine Variante erzeugt 
+                            Dim istDatenVName As String = ptVariantFixNames.acd.ToString
+                            Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
-                        ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
-                        Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+                            ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                            ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                            ' True: die Werte werden auf Null gesetzt 
+                            Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
-                        Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
-                        Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
-                        ' Test tk 
-                        'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
+                            'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
+                            'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
-                        Dim abweichungGesamt As Double = 0.0
-                        If gesamtNachher <> checkNachher Then
-                            abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
-                        End If
+                            newIstValue = calcIstValueOf(vPKvP.Value)
 
-                        Dim abweichungIst As Double = 0.0
-                        If checkIstValue <> newIstValue Then
-                            abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
-                        End If
+                            gesamtIstValue = gesamtIstValue + newIstValue
 
-                        If awinSettings.visboDebug Then
-                            If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
-                                ReDim logArray(3)
-                                logArray(0) = "Import Istdaten old/new/diff/check1/check2"
-                                logArray(1) = ""
-                                logArray(2) = vPKvP.Key
-                                logArray(3) = ""
+                            ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                            Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
 
-                                ReDim logDblArray(4)
-                                logDblArray(0) = oldPlanValue
-                                logDblArray(1) = newIstValue
-                                logDblArray(2) = oldPlanValue - newIstValue
-                                logDblArray(3) = checkIstValue
-                                logDblArray(4) = gesamtNachher - checkNachher
+                            Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                            Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                            ' Test tk 
+                            'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
 
-                                Call logger(ptErrLevel.logDebug, "importAllianzIstdaten", logArray, logDblArray)
-
+                            Dim abweichungGesamt As Double = 0.0
+                            If gesamtNachher <> checkNachher Then
+                                abweichungGesamt = System.Math.Abs(gesamtNachher - checkNachher)
                             End If
+
+                            Dim abweichungIst As Double = 0.0
+                            If checkIstValue <> newIstValue Then
+                                abweichungIst = System.Math.Abs(checkIstValue - newIstValue)
+                            End If
+
+                            If awinSettings.visboDebug Then
+                                If abweichungGesamt > 0.05 Or abweichungIst > 0.05 Then
+                                    ReDim logArray(3)
+                                    logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                                    logArray(1) = ""
+                                    logArray(2) = vPKvP.Key
+                                    logArray(3) = ""
+
+                                    ReDim logDblArray(4)
+                                    logDblArray(0) = oldPlanValue
+                                    logDblArray(1) = newIstValue
+                                    logDblArray(2) = oldPlanValue - newIstValue
+                                    logDblArray(3) = checkIstValue
+                                    logDblArray(4) = gesamtNachher - checkNachher
+
+                                    Call logger(ptErrLevel.logDebug, "importIstdatenStdFormat", logArray, logDblArray)
+
+                                End If
+                            End If
+
+                            Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
+                            With newProj
+                                .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+                                .variantName = ""   ' eliminieren von VariantenName acd
+                                .variantDescription = ""
+                            End With
+
+                            ' tk 18.7.19 
+                            ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
+                            Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
+
+
+                            ' tk das war eine allianz spezifische Sache - nicht mehr machen 
+                            'Call newProj.deleteTeamMembersWithNull()
+
+
+                            If chckVorher <> newProj.getAllPersonalKosten.Sum Then
+                                outPutLine = "Personalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
+                                outputCollection.Add(outPutLine)
+                            End If
+
+                            ' jetzt in die Import-Projekte eintragen 
+                            updatedProjects = updatedProjects + 1
+                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                        Else
+                            ReDim logArray(5)
+                            logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
+                            logArray(1) = ""
+                            logArray(2) = vPKvP.Key
+                            logArray(3) = ""
+                            logArray(4) = ""
+
+                            Call logger(ptErrLevel.logsevereError, "importIstdatenStdFormat", logArray)
                         End If
-
-
-                        With newProj
-                            .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
-                            .variantName = ""   ' eliminieren von VariantenName acd
-                            .variantDescription = ""
-                        End With
-
-                        ' tk 18.7.19 
-                        ' jetzt die PErsonen, die Team-Eintrag haben und und deren Summe Null ist , aus dem Projekt lsöchen 
-                        Dim chckVorher As Double = newProj.getAllPersonalKosten.Sum
-                        Call newProj.deleteTeamMembersWithNull()
-
-                        If chckVorher <> newProj.getAllPersonalKosten.Sum Then
-                            outPutLine = "PErsonalkosten vorher und nachher sind unterschiedlich ..." & newProj.name
-                            outputCollection.Add(outPutLine)
-                        End If
-
-                        ' jetzt in die Import-Projekte eintragen 
-                        updatedProjects = updatedProjects + 1
-                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
-
                     Else
+
+                        outPutLine = "ActualData does not fit to the timeframe the project covers ... " & hproj.name
+                        outputCollection.Add(outPutLine)
+
                         ReDim logArray(5)
-                        logArray(0) = " Projekt existiert nicht !!?? ... darf nicht sein ..."
-                        logArray(1) = ""
-                        logArray(2) = vPKvP.Key
+                        logArray(0) = "No fit in time-Frame: " & hproj.name
+                        logArray(1) = "Actual-Data: " & getDateofColumn(MinMaxInformations.Item(hproj.name)(0), False).ToShortDateString & " - " &
+                            getDateofColumn(MinMaxInformations.Item(hproj.name)(1), True).ToShortDateString
+                        logArray(2) = "Project: " & getDateofColumn(projstart, False).ToShortDateString & " - " &
+                            getDateofColumn(projEnd, True).ToShortDateString
                         logArray(3) = ""
                         logArray(4) = ""
 
-                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                        Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
+
                     End If
+
 
                 Next
 
@@ -14051,7 +14021,7 @@ Public Module agm2
 
                     ReDim logDblArray(0)
                     logDblArray(0) = gesamtIstValue
-                    Call logger(ptErrLevel.logDebug, "importAllianzIstdaten", logArray, logDblArray)
+                    Call logger(ptErrLevel.logDebug, "ImportIstdatenStdFormat", logArray, logDblArray)
                 End If
 
 
@@ -14238,7 +14208,7 @@ Public Module agm2
     ''' <param name="firstZeile"></param>
     ''' <param name="importTyp"></param>
     ''' <returns></returns>
-    Private Function isCorrectAllianzImportStructure(ByVal firstZeile As Excel.Range, ByVal importTyp As Integer) As Boolean
+    Private Function isCorrectIstDatenStructure(ByVal firstZeile As Excel.Range, ByVal importTyp As Integer) As Boolean
 
         Dim tmpResult As Boolean = False
 
@@ -14246,8 +14216,8 @@ Public Module agm2
             Case 1
             Case 2
             Case 3
-                Dim headerCheck() As String = {"Referat", "Projekttyp", "Projektnummer", "Projekt", "Vorgang/Aktivität", "Intern/Extern", "Ressource/Planungsebene", "Jahr", "Monat", "IST", "(PT)"}
-                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10}
+                Dim headerCheck() As String = {"Projektnummer", "Projekt", "Vorgang/Aktivität", "Intern/Extern", "Ressource/Personal-Nummer", "Jahr", "Monat", "IST (PT)", "IST (Euro)"}
+                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
                 Try
                     tmpResult = True ' initiale Vorbesetzung 
@@ -14268,7 +14238,7 @@ Public Module agm2
 
 
 
-        isCorrectAllianzImportStructure = tmpResult
+        isCorrectIstDatenStructure = tmpResult
 
     End Function
 
