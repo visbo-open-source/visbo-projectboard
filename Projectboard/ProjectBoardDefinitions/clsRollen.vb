@@ -217,67 +217,67 @@ Public Class clsRollen
 
     End Sub
 
-    ''' <summary>
-    ''' gibt zu einer Organisations-Einheit die virtuellen Childs zurück, das sind alle Skill-Gruppen, deren Mitglieder
-    ''' diese Organisations-Einheit als kleinsten gemeinsamen Parent haben 
-    ''' wenn auch angegeben, werden alle virtuellen Kinder / Enkel zurückgebracht 
-    ''' gibt nothing zurück, wenn es keine gibt ..
-    ''' </summary>
-    ''' <param name="roleID"></param>
-    ''' <returns></returns>
-    Public ReadOnly Property getVirtualChildIDs(ByVal roleID As Integer, Optional ByVal inclSubRoles As Boolean = True) As Integer()
-        Get
-            Dim virtualChilds() As Integer = Nothing
-            Dim ergebnisListe As New List(Of Integer)
-            Try
+    '''' <summary>
+    '''' gibt zu einer Organisations-Einheit die virtuellen Childs zurück, das sind alle Skill-Gruppen, deren Mitglieder
+    '''' diese Organisations-Einheit als kleinsten gemeinsamen Parent haben 
+    '''' wenn auch angegeben, werden alle virtuellen Kinder / Enkel zurückgebracht 
+    '''' gibt nothing zurück, wenn es keine gibt ..
+    '''' </summary>
+    '''' <param name="roleID"></param>
+    '''' <returns></returns>
+    'Public ReadOnly Property getVirtualChildIDs(ByVal roleID As Integer, Optional ByVal inclSubRoles As Boolean = True) As Integer()
+    '    Get
+    '        Dim virtualChilds() As Integer = Nothing
+    '        Dim ergebnisListe As New List(Of Integer)
+    '        Try
 
-                If Not _allRollen.Item(roleID).isSkill Then
-                    If _allRollen.Item(roleID).isCombinedRole Then
+    '            If Not _allRollen.Item(roleID).isSkill Then
+    '                If _allRollen.Item(roleID).isCombinedRole Then
 
-                        If inclSubRoles Then
-                            Dim roleName As String = getRoleDefByID(roleID).name
-                            Dim subRoleIDs As SortedList(Of Integer, Double) = getSubRoleIDsOf(roleName)
+    '                    If inclSubRoles Then
+    '                        Dim roleName As String = getRoleDefByID(roleID).name
+    '                        Dim subRoleIDs As SortedList(Of Integer, Double) = getSubRoleIDsOf(roleName)
 
-                            For Each kvp As KeyValuePair(Of Integer, Double) In subRoleIDs
+    '                        For Each kvp As KeyValuePair(Of Integer, Double) In subRoleIDs
 
-                                If Not IsNothing(_orgaSkillChilds) Then
-                                    If _orgaSkillChilds.ContainsKey(kvp.Key) Then
+    '                            If Not IsNothing(_orgaSkillChilds) Then
+    '                                If _orgaSkillChilds.ContainsKey(kvp.Key) Then
 
-                                        Dim teilErgebnis As List(Of Integer) = _orgaSkillChilds.Item(kvp.Key)
-                                        For Each srID As Integer In teilErgebnis
-                                            If Not ergebnisListe.Contains(srID) Then
-                                                ergebnisListe.Add(srID)
-                                            End If
-                                        Next
-                                    End If
-                                End If
+    '                                    Dim teilErgebnis As List(Of Integer) = _orgaSkillChilds.Item(kvp.Key)
+    '                                    For Each srID As Integer In teilErgebnis
+    '                                        If Not ergebnisListe.Contains(srID) Then
+    '                                            ergebnisListe.Add(srID)
+    '                                        End If
+    '                                    Next
+    '                                End If
+    '                            End If
 
-                            Next
+    '                        Next
 
-                            virtualChilds = ergebnisListe.ToArray
+    '                        virtualChilds = ergebnisListe.ToArray
 
-                        Else
+    '                    Else
 
-                            If Not IsNothing(_orgaSkillChilds) Then
-                                If _orgaSkillChilds.ContainsKey(roleID) Then
-                                    virtualChilds = _orgaSkillChilds.Item(roleID).ToArray
-                                End If
-                            End If
+    '                        If Not IsNothing(_orgaSkillChilds) Then
+    '                            If _orgaSkillChilds.ContainsKey(roleID) Then
+    '                                virtualChilds = _orgaSkillChilds.Item(roleID).ToArray
+    '                            End If
+    '                        End If
 
-                        End If
+    '                    End If
 
-                    End If
-                End If
+    '                End If
+    '            End If
 
 
-            Catch ex As Exception
+    '        Catch ex As Exception
 
-            End Try
+    '        End Try
 
-            getVirtualChildIDs = virtualChilds
+    '        getVirtualChildIDs = virtualChilds
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' input is a roleID;SkillID String
@@ -763,44 +763,6 @@ Public Class clsRollen
 
     End Sub
 
-
-
-    '''' <summary>
-    '''' gibt die Positions-Indices zurück 
-    '''' im Fehlerfall werden die Role-IDs als Sortier-Kriterium verwnedte 
-    '''' </summary>
-    '''' <param name="NameIDListe"></param>
-    '''' <returns></returns>
-    'Public Function getPositionIndices(ByVal NameIDListe As String()) As SortedList(Of Integer, String)
-    '    Dim tmpResult As New SortedList(Of Integer, String)
-    '    Dim errorPos As Integer = 999999
-
-    '    Dim errorOccurred As Boolean = False
-    '    Try
-    '        For Each tmpID As String In NameIDListe
-    '            If _positionIndicesRoles.ContainsKey(tmpID) Then
-    '                Dim posIX As Integer = _positionIndicesRoles.Item(tmpID)
-    '                Do While tmpResult.ContainsKey(posIX)
-    '                    posIX = posIX + 1
-    '                Loop
-    '                tmpResult.Add(posIX, tmpID)
-    '            Else
-    '                errorPos = errorPos + 1
-    '                Do While tmpResult.ContainsKey(errorPos)
-    '                    errorPos = errorPos + 1
-    '                Loop
-    '                tmpResult.Add(errorPos, tmpID)
-    '            End If
-
-    '        Next
-    '    Catch ex As Exception
-    '        errorOccurred = True
-
-    '    End Try
-
-    '    getPositionIndices = tmpResult
-
-    'End Function
 
     ''' <summary>
     ''' gibt die Position im Orga-Baum als Positions-Index zurück. 
@@ -1376,8 +1338,7 @@ Public Class clsRollen
     End Function
 
     ''' <summary>
-    ''' determines whether or not roleNameID is child/child-of-child/.. of potential parent summaryRoleID 
-    ''' when includingVirtualChilds = true: considers a team, when completely contained in summaryRoleID also as child 
+    ''' determines whether or not roleNameID is child/child-of-child/.. of potential parent summaryRoleID     ''' 
     ''' completely contained in parentID means: all members of team are childs of given parentID 
     ''' </summary>
     ''' <param name="roleNameID"></param>
