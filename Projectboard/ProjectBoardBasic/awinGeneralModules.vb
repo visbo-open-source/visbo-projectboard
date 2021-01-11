@@ -7815,22 +7815,22 @@ Public Module awinGeneralModules
                                                 Dim tmpParentName As String = ""
 
                                                 If teamID = -1 Then
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                 Else
                                                     Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                                     If tmpParentName = "" Then
-                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                                         If Not IsNothing(vglProj) Then
                                                             If vglProj.containsRoleNameID(tmpParentNameID) Then
                                                                 ' passt bereits 
                                                             Else
-                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                             End If
                                                         Else
-                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                         End If
                                                     End If
                                                 End If
@@ -7911,22 +7911,22 @@ Public Module awinGeneralModules
                                                 Dim tmpParentName As String = ""
 
                                                 If teamID = -1 Then
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                 Else
                                                     Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                                     If tmpParentName = "" Then
-                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                                         If Not IsNothing(vglProj) Then
                                                             If vglProj.containsRoleNameID(tmpParentNameID) Then
                                                                 ' passt bereits 
                                                             Else
-                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                             End If
                                                         Else
-                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                         End If
                                                     End If
                                                 End If
@@ -8010,22 +8010,22 @@ Public Module awinGeneralModules
                                                 Dim tmpParentName As String = ""
 
                                                 If teamID = -1 Then
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                 Else
                                                     Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                                     If tmpParentName = "" Then
-                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                                         If Not IsNothing(vglProj) Then
                                                             If vglProj.containsRoleNameID(tmpParentNameID) Then
                                                                 ' passt bereits 
                                                             Else
-                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                             End If
                                                         Else
-                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                         End If
 
 
@@ -8110,22 +8110,22 @@ Public Module awinGeneralModules
                                                 Dim tmpParentName As String = ""
 
                                                 If teamID = -1 Then
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                 Else
                                                     Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                                     If tmpParentName = "" Then
-                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                     Else
                                                         Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                                         If Not IsNothing(vglProj) Then
                                                             If vglProj.containsRoleNameID(tmpParentNameID) Then
                                                                 ' passt bereits 
                                                             Else
-                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                                tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                             End If
                                                         Else
-                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents, True)
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                         End If
 
 

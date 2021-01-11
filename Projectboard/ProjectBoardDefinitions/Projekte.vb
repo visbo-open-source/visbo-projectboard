@@ -27745,13 +27745,7 @@ Public Module Projekte
         ' bestimme die Menge an vorkommenden Role-NameIDs in hproj, lproj, bproj
         ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
         Dim resultCollection As New Collection
-        Dim tmpRListe As New SortedList(Of Integer, String)
-        Dim includingVirtualChilds As Boolean = False
-
-        'Dim onlyConsiderTeamMembers As Boolean = False
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            includingVirtualChilds = True
-        End If
+        Dim tmpRListe As New SortedList(Of Double, String)
 
         Dim sRoles As New Collection
 
@@ -27774,8 +27768,8 @@ Public Module Projekte
 
             For Each tmpRNameID As String In sRoles
 
-                If myCustomUserRole.isAllowedToSee(tmpRNameID, includingVirtualChilds:=includingVirtualChilds) Then
-                    Dim posIX As Integer = RoleDefinitions.getPositionIndex(tmpRNameID)
+                If myCustomUserRole.isAllowedToSee(tmpRNameID) Then
+                    Dim posIX As Double = RoleDefinitions.getPositionIndex(tmpRNameID)
                     If Not tmpRListe.ContainsKey(posIX) Then
                         tmpRListe.Add(posIX, tmpRNameID)
                     End If
@@ -27790,7 +27784,7 @@ Public Module Projekte
         Next
 
         ' jetzt muss umkopiert werden - das war alles notwendig, um die Sortierung in der Collection zu behalten 
-        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
+        For Each kvp As KeyValuePair(Of Double, String) In tmpRListe
 
             'If Not resultCollection.Contains(kvp.Key) Then
             '    resultCollection.Add(kvp.Key, kvp.Key)

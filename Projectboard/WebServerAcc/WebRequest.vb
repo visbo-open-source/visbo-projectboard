@@ -2826,8 +2826,8 @@ Public Class Request
                                 ' bestimmen der _topLevelNodeIDs
                                 organisationResult.allRoles.buildTopNodes()
 
-                                ' aufbauen der OrgaTeamChilds
-                                organisationResult.allRoles.buildOrgaSkillChilds()
+                                ' aufbauen der OrgaTeamChilds - 11.1.21 nicht mehr nötig, wird bereits in buildTopNodes gemacht 
+                                'organisationResult.allRoles.buildOrgaSkillChilds()
 
                             Case Else
 
@@ -2967,8 +2967,8 @@ Public Class Request
                         ' bestimmen der _topLevelNodeIDs
                         result.allRoles.buildTopNodes()
 
-                        ' aufbauen der OrgaTeamChilds
-                        result.allRoles.buildOrgaSkillChilds()
+                        ' aufbauen der OrgaTeamChilds - 11.1.21 nicht mehr nötig, wird bereits in buildTopNodes gemacht 
+                        'result.allRoles.buildOrgaSkillChilds()
 
                     Else
                         Call logger(ptErrLevel.logError, "(" & err.errorCode & ": )" & err.errorMsg, "retrieveOrganisationFromDB: ", anzFehler)

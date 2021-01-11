@@ -4435,7 +4435,7 @@ Public Class clsProjekte
 
 
                 If topNodeID <> -1 And tmpRole.UID <> topNodeID Then
-                    weitermachen = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=roleNameID, summaryRoleID:=topNodeID, includingVirtualChilds:=True)
+                    weitermachen = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=roleNameID, summaryRoleID:=topNodeID)
                 End If
 
                 If weitermachen Then

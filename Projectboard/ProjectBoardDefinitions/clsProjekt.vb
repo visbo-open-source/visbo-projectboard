@@ -4261,7 +4261,7 @@ Public Class clsProjekt
 
                             If criteriaFulfilled Then
 
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs, includingVirtualChilds:=True) Then
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID:=curRole.getNameID, summaryRoleIDs:=actualDataParentIDs) Then
                                     Dim startIndex As Integer = 0
                                     If Not resetfromScratch Then
                                         startIndex = System.Math.Max(0, columnOFActualData - columnOfPhaseStart + 1)

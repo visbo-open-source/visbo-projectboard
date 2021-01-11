@@ -12764,7 +12764,7 @@ Public Module agm2
                             If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameOrID(roleNameID) Then
                                 Dim curDelRole As String = ""
 
-                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList, True)
+                                curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
                                 If curDelRole.Length > 0 Then
                                     If Not deleteRoles.Contains(curDelRole) Then
                                         deleteRoles.Add(curDelRole, curDelRole)
@@ -13560,7 +13560,7 @@ Public Module agm2
                             ' wenn nein, darf sie nicht aufgenommen werden, weil andernfalls eine Rolle auf das Team kontiert, aber eben keine Kapa dazu beiträgt
 
                             If RoleDefinitions.containsNameOrID(roleName) Then
-                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste, True)
+                                parentReferat = RoleDefinitions.chooseParentFromList(teamName, istDatenReferatsliste)
 
                                 If parentReferat.Length > 0 Then
                                     ' alles in Ordnung 
@@ -13614,7 +13614,7 @@ Public Module agm2
 
                         ElseIf RoleDefinitions.containsNameOrID(roleName) Then
 
-                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste, True)
+                            parentReferat = RoleDefinitions.chooseParentFromList(roleName, istDatenReferatsliste)
 
                             If parentReferat.Length > 0 Then
                                 ' Beste Alternative 
@@ -13653,7 +13653,7 @@ Public Module agm2
                             If tmpReferat = "D-BITSV-KB" Then
                                 tmpReferat = "D-BITSV-KB0"
                             End If
-                            parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste, True)
+                            parentReferat = RoleDefinitions.chooseParentFromList(tmpReferat, istDatenReferatsliste)
 
                             If parentReferat.Length > 0 Then
                                 ' 3. Beste Alternative 
@@ -16521,8 +16521,8 @@ Public Module agm2
 
 
                                 Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray, includingVirtualChilds:=True) Then
-                                    relevant = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
+                                    relevant = myCustomUserRole.isAllowedToSee(roleNameID)
                                 End If
                             End If
 
@@ -18657,7 +18657,7 @@ Public Module agm2
                                                 If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
 
                                                     ' tk 6.5.19
-                                                    validRole = myCustomUserRole.isAllowedToSee(roleNameID, includingVirtualChilds:=True)
+                                                    validRole = myCustomUserRole.isAllowedToSee(roleNameID)
 
                                                     If validRole Then
                                                         If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then

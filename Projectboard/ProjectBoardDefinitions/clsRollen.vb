@@ -1281,7 +1281,7 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleIDs"></param>
     ''' <returns></returns>
-    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer, ByVal includingVirtualChilds As Boolean) As String
+    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As String
         Dim tmpResult As String = ""
 
         Dim teamID As Integer = -1
@@ -1294,7 +1294,7 @@ Public Class clsRollen
 
         Else
             For Each summaryRoleID As Integer In summaryRoleIDs
-                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds)
+                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
                 If chckRelation = True Then
                     tmpResult = Me.getRoleDefByID(summaryRoleID).name
                     Exit For
@@ -1313,8 +1313,7 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleIDs"></param>
     ''' <returns></returns>
-    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer,
-                                                   Optional includingVirtualChilds As Boolean = False) As Boolean
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As Boolean
 
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
@@ -1329,7 +1328,7 @@ Public Class clsRollen
 
             Else
                 For Each summaryRoleID As Integer In summaryRoleIDs
-                    tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID, includingVirtualChilds = includingVirtualChilds)
+                    tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
                     If tmpResult = True Then
                         Exit For
                     End If
@@ -1384,8 +1383,7 @@ Public Class clsRollen
     ''' <param name="roleNameID"></param>
     ''' <param name="summaryRoleID"></param>
     ''' <returns></returns>
-    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer,
-                                                   Optional includingVirtualChilds As Boolean = False) As Boolean
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer) As Boolean
         Dim tmpResult As Boolean = False
         Dim skillID As Integer = -1
 
@@ -2288,6 +2286,10 @@ Public Class clsRollen
             i = i + 1
 
         End While
+
+        ' tk 11.1.21
+        ' das ist notwendig, um die Relative Positions richtig zu haben ...
+        Call buildOrgaSkillChilds()
 
         '
         ' tk 25.7.19

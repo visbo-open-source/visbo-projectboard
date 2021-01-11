@@ -6679,7 +6679,9 @@ Imports System.Web
 
                     ' TopNodes und OrgaTeamChilds bauen 
                     Call importedOrga.allRoles.buildTopNodes()
-                    Call importedOrga.allRoles.buildOrgaSkillChilds()
+
+                    ' wird bereits in buildTopNodes gemacht 
+                    'Call importedOrga.allRoles.buildOrgaSkillChilds()
 
                     ' jetzt wird die Orga als Setting weggespeichert ... 
                     Dim err As New clsErrorCodeMsg
@@ -12291,18 +12293,18 @@ Imports System.Web
                             Dim tmpParentName As String = ""
 
                             If rcNameTeamID = -1 Then
-                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                             Else
                                 Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                 If tmpParentName = "" Then
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                                 Else
                                     Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                     If lproj.containsRoleNameID(tmpParentNameID) Then
                                         ' passt bereits 
                                     Else
-                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                                     End If
 
                                 End If
@@ -12349,18 +12351,18 @@ Imports System.Web
                             Dim tmpParentName As String = ""
 
                             If rcNameTeamID = -1 Then
-                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                             Else
                                 Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents, True)
+                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
                                 If tmpParentName = "" Then
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                                 Else
                                     Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
                                     If lproj.containsRoleNameID(tmpParentNameID) Then
                                         ' passt bereits 
                                     Else
-                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents, True)
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                                     End If
 
                                 End If
