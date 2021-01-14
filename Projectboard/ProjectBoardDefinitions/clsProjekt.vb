@@ -1160,6 +1160,7 @@ Public Class clsProjekt
                         Else
                             msgTxt = "Name darf keine #, (, or )-Zeichen enthalten"
                         End If
+                        Call logger(ptErrLevel.logError, msgTxt, "clsProjekt Property name", 0)
                         Throw New ArgumentException(msgTxt)
                     End If
                 Else
