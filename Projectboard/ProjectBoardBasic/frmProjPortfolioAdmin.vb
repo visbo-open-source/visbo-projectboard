@@ -3418,115 +3418,123 @@ Public Class frmProjPortfolioAdmin
 
             If dropboxScenarioNames.Text <> "" Then
 
-
-                currentConstellationName = dropboxScenarioNames.Text
-                'currentBrowserConstellation.constellationName = currentConstellationName
-                Dim currentConstellationVariantName As String = txtBoxVariantName.Text
-
-                ' TODO: hier muss VarianteName mit berücksichtigt werden
-                Dim toStoreConstellation As clsConstellation =
-                    currentBrowserConstellation.copy(currentConstellationName)
-                ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
-                toStoreConstellation.variantName = currentConstellationVariantName
-
-
-                ' Korrektheitsprüfung
-                ' testen 
-
-                If awinSettings.visboDebug Then
-                    toStoreConstellation.checkAndCorrectYourself()
-                End If
-
-                ' hier war vorher .update
-                ' jetzt muss die Constellation upgedated werden ... 
-                ' hier muss 
-                Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
-                projectConstellations.update(toStoreConstellation)
-
-                Dim txtMsg1 As String = ""
-                Dim txtMsg2 As String = ""
-                If storeToDBasWell.Checked Then
-                    Dim errMsg As New clsErrorCodeMsg
-                    'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
-                    Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
-
-                    Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, dbPortfolioNames)
-
-                    ' jetzt ggf die Outputs anzeigen 
-
-                    If outPutCollection.Count > 0 Then
-
-                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                            txtMsg1 = "Speichern Portfolio " & toStoreConstellation.constellationName
-                            txtMsg2 = "folgende Informationen:"
-                        Else
-                            txtMsg1 = "Save Portfolio " & toStoreConstellation.constellationName
-                            txtMsg2 = "following messages:"
-                        End If
-                        Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
-
+                ' check if the Name of the portfolio has no special characters like "(" ")" "#" a.s.o
+                If Not isValidProjectName(dropboxScenarioNames.Text) Then
+                    Dim msgtxt As String = ""
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        msgtxt = "Der Portfolio-Name darf keine Sonderzeichen wie '(', ')', '#' oder neueZeile enthalten" & vbCrLf & "Bitte, ändern Sie den Namen!"
                     Else
-                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                            txtMsg1 = "ok, " & currentConstellationName & " in Datenbank und Session gespeichert"
+                        msgtxt = "The portfolioname must not have special characters like '(', ')', '#' or new line" & vbCrLf & "Please, change the name!"
+                    End If
+                    Call MsgBox(msgtxt)
+                Else
+                    currentConstellationName = dropboxScenarioNames.Text
+                    'currentBrowserConstellation.constellationName = currentConstellationName
+                    Dim currentConstellationVariantName As String = txtBoxVariantName.Text
+
+                    ' TODO: hier muss VarianteName mit berücksichtigt werden
+                    Dim toStoreConstellation As clsConstellation =
+                        currentBrowserConstellation.copy(currentConstellationName)
+                    ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
+                    toStoreConstellation.variantName = currentConstellationVariantName
+
+
+                    ' Korrektheitsprüfung
+                    ' testen 
+
+                    If awinSettings.visboDebug Then
+                        toStoreConstellation.checkAndCorrectYourself()
+                    End If
+
+                    ' hier war vorher .update
+                    ' jetzt muss die Constellation upgedated werden ... 
+                    ' hier muss 
+                    Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
+                    projectConstellations.update(toStoreConstellation)
+
+                    Dim txtMsg1 As String = ""
+                    Dim txtMsg2 As String = ""
+                    If storeToDBasWell.Checked Then
+                        Dim errMsg As New clsErrorCodeMsg
+                        'Dim dbConstellations As clsConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(Date.Now, errMsg)
+                        Dim dbPortfolioNames As SortedList(Of String, String) = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+
+                        Call storeSingleConstellationToDB(outPutCollection, toStoreConstellation, dbPortfolioNames)
+
+                        ' jetzt ggf die Outputs anzeigen 
+
+                        If outPutCollection.Count > 0 Then
+
+                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                txtMsg1 = "Speichern Portfolio " & toStoreConstellation.constellationName
+                                txtMsg2 = "folgende Informationen:"
+                            Else
+                                txtMsg1 = "Save Portfolio " & toStoreConstellation.constellationName
+                                txtMsg2 = "following messages:"
+                            End If
+                            Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
+
                         Else
-                            txtMsg1 = "ok, " & currentConstellationName & " stored in Session and database"
+                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                                txtMsg1 = "ok, " & currentConstellationName & " in Datenbank und Session gespeichert"
+                            Else
+                                txtMsg1 = "ok, " & currentConstellationName & " stored in Session and database"
+                            End If
+                            Call MsgBox(txtMsg1)
+                        End If
+                    Else
+
+                        ' jetzt das Union Projekt errechnen ... 
+                        ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
+                        Try
+
+                            If budget = 0 Then
+                                budget = -1
+                            End If
+
+                            Dim tmpVariantName As String = ""
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                tmpVariantName = ptVariantFixNames.pfv.ToString
+                            End If
+
+                            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+
+                            If Not IsNothing(oldSummaryP) Then
+                                'budget = oldSummaryP.budgetWerte.Sum
+                                budget = oldSummaryP.Erloes
+                            Else
+                                budget = toStoreConstellation.getBudgetOfShownProjects
+                            End If
+
+                            Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
+
+                            Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                            If AlleProjekte.Containskey(skey) Then
+                                AlleProjekte.Remove(skey)
+                            End If
+
+                            If Not AlleProjekte.Containskey(skey) Then
+                                AlleProjekte.Add(sproj)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+
+
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
+                        Else
+                            txtMsg1 = "ok, " & currentConstellationName & " stored in Session"
                         End If
                         Call MsgBox(txtMsg1)
                     End If
-                Else
 
-                    ' jetzt das Union Projekt errechnen ... 
-                    ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
-                    Try
-
-                        If budget = 0 Then
-                            budget = -1
-                        End If
-
-                        Dim tmpVariantName As String = ""
-                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                            tmpVariantName = ptVariantFixNames.pfv.ToString
-                        End If
-
-                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
-
-                        If Not IsNothing(oldSummaryP) Then
-                            'budget = oldSummaryP.budgetWerte.Sum
-                            budget = oldSummaryP.Erloes
-                        Else
-                            budget = toStoreConstellation.getBudgetOfShownProjects
-                        End If
-
-                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
-
-                        Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                        If AlleProjekte.Containskey(skey) Then
-                            AlleProjekte.Remove(skey)
-                        End If
-
-                        If Not AlleProjekte.Containskey(skey) Then
-                            AlleProjekte.Add(sproj)
-                        End If
-
-                    Catch ex As Exception
-
-                    End Try
-
-
-                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                        txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
-                    Else
-                        txtMsg1 = "ok, " & currentConstellationName & " stored in Session"
-                    End If
-                    Call MsgBox(txtMsg1)
+                    ' jetzt das EIngabe Feld wieder zurücksetzen 
+                    dropboxScenarioNames.Text = ""
+                    txtBoxVariantName.Text = ""
                 End If
-
-                ' jetzt das EIngabe Feld wieder zurücksetzen 
-                dropboxScenarioNames.Text = ""
-                txtBoxVariantName.Text = ""
-
             End If
-
 
             ' im Fesnter bleiben ... 
             'DialogResult = Windows.Forms.DialogResult.OK
