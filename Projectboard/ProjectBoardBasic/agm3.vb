@@ -2163,7 +2163,7 @@ Public Module agm3
         End Try
 
 
-        readActualData = oCollection.Count > 0
+        readActualData = (oCollection.Count = 0)
     End Function
 
     ''' <summary>

@@ -473,7 +473,8 @@
       <tab id="PTeinst" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTeinstG1" >
           <!--label="Report Sprache"-->
-          <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>       
+          <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
+          <button id="PTeinstG1B4" getLabel ="bestimmeLabel" onAction="PTChgUserRole" supertip="Wechseln der Custom USer Role. Nur relevant, wenn der Nutzer mehrere Custom User Roles wahrnehmen kann."/>
         </group>
       </tab>
       <!--label="VISBO Testfunktionen"-->

@@ -3943,6 +3943,13 @@ Imports System.Web
                     tmpLabel = "VISBO Settings"
                 End If
 
+            Case "PTeinstG1B4" ' Einstellungen: Custom User Role wechseln 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Custom User Role wechseln"
+                Else
+                    tmpLabel = "Change Custom User Role"
+                End If
+
             Case Else
                 tmpLabel = "undefined"
         End Select
@@ -14541,6 +14548,31 @@ Imports System.Web
 
 
     End Sub
+
+    Public Sub PTChgUserRole(control As IRibbonControl)
+
+        Dim meldungen As Collection = New Collection
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Try
+            ' Lesen der CustomUserRoles aus VCSetting in DB
+            Call setUserRoles(meldungen)
+        Catch ex As Exception
+            Call MsgBox("Error when changing User Role: " & ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+
+        Me.ribbon.Invalidate()
+    End Sub
+
+
+
     ''' <summary>
     ''' Speichern des aktuellen, in CurrentReportProfil gespeicherten ReportProfil auf Platte in Dir awinPath\requirements\ReportProfile
     ''' </summary>
