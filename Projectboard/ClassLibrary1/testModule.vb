@@ -6144,10 +6144,10 @@ Public Module testModule
                                         If Not IsNothing(smartChartInfo.vpid) Then
                                             Dim hstr() As String = Split(awinSettings.databaseURL, "/",,)
                                             If smartChartInfo.zeitRaumLeft > Date.MinValue Then
-                                                beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("u")
+                                                beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("s")
                                             End If
                                             If smartChartInfo.zeitRaumRight > Date.MinValue Then
-                                                endingDate = "&to=" & smartChartInfo.zeitRaumRight.ToString("u")
+                                                endingDate = "&to=" & smartChartInfo.zeitRaumRight.ToString("s")
                                             End If
 
                                             Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
