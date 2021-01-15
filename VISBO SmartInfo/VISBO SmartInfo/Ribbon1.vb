@@ -587,6 +587,10 @@ Public Class Ribbon1
                                 Throw New ArgumentException("no Selection of VISBO project Center ... program ends  ...")
                             End If
                         ElseIf listOfVCs.Count = 1 Then
+                            awinSettings.databaseName = listOfVCs.First
+                            Dim changeOK As Boolean = CType(databaseAcc, DBAccLayer.Request).updateActualVC(awinSettings.databaseName, VCId, err)
+                            awinSettings.VCid = VCId
+
                             ' keine VC-Abfrage, da User nur für ein VC Zugriff hat
                         ElseIf awinSettings.visboServer Then
                             Throw New ArgumentException("no access to any VISBO project Center ... program ends  ...")

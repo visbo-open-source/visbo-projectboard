@@ -69,7 +69,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="User">
-      <Value Profile="(Default)">MS PROJECT</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://my.visbo.net/api</Value>

@@ -317,7 +317,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("MS PROJECT")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
     Public Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)

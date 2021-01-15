@@ -4731,13 +4731,14 @@ Public Class clsProjekt
     ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
     ''' </summary>
     ''' <param name="roleNameID"></param>
-    ''' <param name="relMonthCol"></param>
+    ''' <param name="relMonthCol">der relative Wert: columnOFDate - hproj.start +1</param>
     ''' <returns></returns>
     Public Function getSetRoleValuesUntil(ByVal roleNameID As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
 
         Dim tmpValue As Double = 0.0
         Dim teamID As Integer = -1
         Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
+
 
 
         If Not IsNothing(currentRoleDef) Then

@@ -13710,15 +13710,12 @@ Public Module agm2
                             Dim shallContinue As Boolean = False
 
                             ' tk 2.1.21 - jetzt werden die Projekt gleich mal in AlleProjekte geholt, falls nicht schon vorhanden 
-                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now, kdNr:=tmpPNr)
+                            Dim hproj As clsProjekt = getProjektFromSessionOrDB(pName, "", ImportProjekte, Date.Now, kdNr:=tmpPNr)
 
                             If Not IsNothing(hproj) Then
-                                If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                    AlleProjekte.Add(hproj)
+                                If Not ImportProjekte.Containskey(calcProjektKey(hproj)) Then
+                                    ImportProjekte.Add(hproj, False)
 
-                                    If Not ShowProjekte.contains(hproj.name) Then
-                                        ShowProjekte.Add(hproj)
-                                    End If
                                 End If
 
                                 If MinMaxInformations.ContainsKey(pName) Then
@@ -13776,12 +13773,14 @@ Public Module agm2
                     If Not validProjectNames.ContainsKey(kvp.Key) Then
                         ' should come only into this branch ... 
                         Dim arrayDimension As Integer = MinMaxInformations.Item(kvp.Key)(1) - MinMaxInformations.Item(kvp.Key)(0)
-                        Dim actualValues() As Double
-                        ReDim actualValues(arrayDimension)
+
 
                         Dim tmpSortedList As New SortedList(Of String, Double())
 
                         For Each roleName As String In kvp.Value
+
+                            Dim actualValues() As Double
+                            ReDim actualValues(arrayDimension)
 
                             If Not tmpSortedList.ContainsKey(roleName) Then
                                 tmpSortedList.Add(roleName, actualValues)
@@ -13854,7 +13853,7 @@ Public Module agm2
                             End If
 
                             If weitermachen Then
-                                validProjectNames.Item(pName).Item(roleName)(ixPos) = curIstPTValue
+                                validProjectNames.Item(pName).Item(roleName)(ixPos) = validProjectNames.Item(pName).Item(roleName)(ixPos) + curIstPTValue
                             End If
 
                         Else
@@ -13870,7 +13869,7 @@ Public Module agm2
                         ReDim logArray(1)
                         logArray(0) = "Projekt Fehler 100413 in Zeile: "
                         logArray(1) = zeile.ToString
-                        Call logger(ptErrLevel.logError, "ImportAllianzIstdaten", logArray)
+                        Call logger(ptErrLevel.logError, "ImportIstdatenStdFormat", logArray)
                     End Try
 
                     zeile = zeile + 1
@@ -13883,7 +13882,7 @@ Public Module agm2
 
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", AlleProjekte, Date.Now)
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", ImportProjekte, Date.Now)
 
                     ' now verify whether the actual data is covered by the project at all .. 
                     Dim projstart As Integer = getColumnOfDate(hproj.startDate)
@@ -13909,7 +13908,11 @@ Public Module agm2
                             Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
                             'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
-                            oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
+                            Dim relMonthCol As Integer = lastValidMonth - newProj.Start + 1
+                            If relMonthCol > 0 Then
+                                oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, relMonthCol, True)
+                            End If
+
                             'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
                             newIstValue = calcIstValueOf(vPKvP.Value)
@@ -13923,7 +13926,7 @@ Public Module agm2
                             Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                             ' Test tk 
                             'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
-                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
+                            Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, relMonthCol, False)
 
                             Dim abweichungGesamt As Double = 0.0
                             If gesamtNachher <> checkNachher Then
@@ -13957,7 +13960,7 @@ Public Module agm2
 
                             Dim monat As Integer = MinMaxInformations.Item(newProj.name)(1)
                             With newProj
-                                .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+                                .actualDataUntil = newProj.startDate.AddMonths(relMonthCol - 1).AddDays(15)
                                 .variantName = ""   ' eliminieren von VariantenName acd
                                 .variantDescription = ""
                             End With
@@ -14038,16 +14041,16 @@ Public Module agm2
         End Try
 
 
-        logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
-                    "Projekte aktualisiert: " & updatedProjects
-        outputCollection.Add(logmessage)
+        'logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
+        '            "Projekte aktualisiert: " & updatedProjects
+        'outputCollection.Add(logmessage)
 
-        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
-        outputCollection.Add(logmessage)
+        'logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
+        'outputCollection.Add(logmessage)
 
-        If outputCollection.Count > 0 Then
-            Call showOutPut(outputCollection, "Import Ist-Daten", "")
-        End If
+        'If outputCollection.Count > 0 Then
+        '    Call showOutPut(outputCollection, "Import Ist-Daten", "")
+        'End If
 
     End Sub
 
