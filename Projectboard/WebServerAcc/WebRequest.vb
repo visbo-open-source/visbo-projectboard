@@ -6325,6 +6325,10 @@ Public Class Request
                     If Not VRScache.VPsId(vpid).Variant.Contains(var) Then
                         VRScache.VPsId(vpid).Variant.Add(var)
                     End If
+                    Dim vpName As String = VRScache.VPsId(vpid).name
+                    If Not VRScache.VPsN(vpName).Variant.Contains(var) Then
+                        VRScache.VPsN(vpName).Variant.Add(var)
+                    End If
 
                 Catch ex As Exception
 
