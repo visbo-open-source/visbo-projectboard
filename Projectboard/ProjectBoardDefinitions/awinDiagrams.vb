@@ -6318,6 +6318,8 @@ Public Module awinDiagrams
         ' tk 28.12.18  ein Wechsel soll / darf nicht gemacht werden; das führt ggf zu Schwierigkeiten
         'Dim formerActiveSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
 
+
+
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
@@ -6394,15 +6396,21 @@ Public Module awinDiagrams
                             If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
                                 istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
-                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
+                                If rcName <> "" Then
+                                    Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
                                                                     roleCost:=rcName,
                                                                     isRole:=isRole)
+                                End If
+
 
                             ElseIf istSkillDiagramm(chtobj) And rcNameID <> "" Then
 
-                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
+                                If rcName <> "" Then
+                                    Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
                                                                     roleCost:=rcNameID,
                                                                     isRole:=isRole)
+                                End If
+
 
 
                             End If
@@ -6432,7 +6440,14 @@ Public Module awinDiagrams
                             If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
                                 istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
 
-                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+                                If IsNothing(roleCost) Then
+                                    Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+                                Else
+                                    If roleCost <> "" Then
+                                        Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
+                                    End If
+                                End If
+
 
 
                             ElseIf istSummenDiagramm(chtobj, p) Then

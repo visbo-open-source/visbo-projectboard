@@ -12037,6 +12037,9 @@ Imports System.Web
 
         Dim err As New clsErrorCodeMsg
 
+        ' whether or there need to be three or four charts
+        Dim withSkills As Boolean = RoleDefinitions.getAllSkillIDs.Count > 0
+
         ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
         Try
             If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
@@ -12075,6 +12078,7 @@ Imports System.Web
 
         Dim rcNameTeamID As Integer = -1
         Dim rcID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, rcNameTeamID)
+
 
 
         If IsNothing(rcName) Then
@@ -12200,7 +12204,15 @@ Imports System.Web
             ' jetzt das Projekt Ergebnis Chart anzeigen
             Dim dummyObj As Excel.ChartObject = Nothing
             Dim chLeft As Double = 2
-            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
+
+            ' show 4 Windows, if there are SKills
+
+
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 3
+            If withSkills Then
+                stdBreite = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
+            End If
+
             Dim chWidth As Double = stdBreite
             Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
 
@@ -12210,6 +12222,7 @@ Imports System.Web
 
             Dim chTop As Double = 5
 
+            ' show the project Profit/Lost Diagram
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
                 Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
@@ -12233,16 +12246,20 @@ Imports System.Web
             Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
                                                                    chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
 
-            ' das Auslastungs-Chart Skill
-            repObj = Nothing
-            chLeft = chLeft + chWidth + 2
-            chWidth = stdBreite
+            ' show only when skill are relevant 
+            If withSkills Then
+                ' das Auslastungs-Chart Skill
+                repObj = Nothing
+                chLeft = chLeft + chWidth + 2
+                chWidth = stdBreite
 
-            myCollection.Clear()
-            myCollection.Add(rcNameID)
-            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
-                                                                   chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
-                                                                   isMESkillChart:=True)
+                myCollection.Clear()
+                myCollection.Add(rcNameID)
+                Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                       chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
+                                                                       isMESkillChart:=True)
+            End If
+
 
             ' jetzt das Portfolio Chart Budget anzeigen ... 
             Dim obj As Excel.ChartObject = Nothing

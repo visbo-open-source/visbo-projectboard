@@ -18434,10 +18434,11 @@ Public Module agm2
                 Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + (bis - von)), Global.Microsoft.Office.Interop.Excel.Range)
                 Dim tmpRange3 As Excel.Range = CType(.Cells(1, 5), Global.Microsoft.Office.Interop.Excel.Range)
 
-                If meModus = ptModus.massEditCosts Then
-                    ' ausblenden der Spalte für Skills 
-                    CType(.Columns(6), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn.Hidden = True
-                End If
+                ' will be done in tabelle2.Activate Event
+                'If meModus = ptModus.massEditCosts Then
+                '    ' ausblenden der Spalte für Skills 
+                '    CType(.Columns(6), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn.Hidden = True
+                'End If
 
                 Try
                     If Not IsNothing(CType(currentWB.Names.Item("StartData"), Excel.Name)) Then

@@ -344,6 +344,7 @@ Public Class Tabelle2
         Cancel = True
 
         Dim criteriaFulfilled As Boolean = False
+        Dim criteriaFilterRequest As Boolean = ((Target.Row = 1) And (Target.Column = columnRC))
 
         If visboZustaende.meModus = ptModus.massEditRessSkills Then
             criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1)
@@ -354,7 +355,7 @@ Public Class Tabelle2
         End If
 
         ' prüfen, ob sich die selektierte Zelle in der Role-/Cost Spalte befindet 
-        If (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1) Then
+        If criteriaFulfilled Then
 
             Try
                 Dim frmMERoleCost As New frmMEhryRoleCost
@@ -483,7 +484,7 @@ Public Class Tabelle2
 
 
                 Else
-                    Call MsgBox("bitte nur eine Zelle selektieren ...")
+                    'Call MsgBox("bitte nur eine Zelle selektieren ...")
                     Target.Cells(1, 1).value = visboZustaende.oldValue
                 End If
 
@@ -507,6 +508,76 @@ Public Class Tabelle2
                     .EnableAutoFilter = True
                 End With
 
+            End Try
+
+        ElseIf criteriaFilterRequest = True Then
+
+            Try
+                Dim frmMERoleCost As New frmMEhryRoleCost
+                Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+
+                If awinSettings.englishLanguage Then
+                    frmMERoleCost.Text = "Select Name to filter Column"
+                Else
+                    frmMERoleCost.Text = "Name selektieren um Spalte zu filtern"
+                End If
+
+                Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+                If returnValue = DialogResult.OK Then
+
+                    Dim ergebnisListe As New SortedList(Of String, String)
+
+                    For Each roleSkillItem As String In frmMERoleCost.rolesToAdd
+                        Try
+                            Dim curRoleSkill As clsRollenDefinition = RoleDefinitions.getRoledef(roleSkillItem)
+                            If Not IsNothing(curRoleSkill) Then
+
+                                If curRoleSkill.isSkill Then
+
+                                    Dim childIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(curRoleSkill.name, type:=PTcbr.realRoles)
+                                    For Each kvp As KeyValuePair(Of Integer, Double) In childIds
+                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                                        If Not ergebnisListe.ContainsKey(tmpRole.name) Then
+                                            ergebnisListe.Add(tmpRole.name, tmpRole.name)
+                                        End If
+                                    Next
+
+                                Else
+
+                                    Dim childIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(curRoleSkill.name)
+                                    For Each kvp As KeyValuePair(Of Integer, Double) In childIds
+                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                                        If Not ergebnisListe.ContainsKey(tmpRole.name) Then
+                                            ergebnisListe.Add(tmpRole.name, tmpRole.name)
+                                        End If
+                                    Next
+
+                                End If
+
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+                    Next
+
+
+                    Dim ft As Array = ergebnisListe.Values.ToArray
+                    Try
+
+                        CType(meWS.Columns(columnRC), Excel.Range).AutoFilter(Field:=columnRC, Criteria1:=ft, [Operator]:=XlAutoFilterOperator.xlFilterValues)
+
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+
+
+            Catch ex As Exception
+                'Call MsgBox(ex.Message)
             End Try
 
         Else
@@ -770,7 +841,8 @@ Public Class Tabelle2
                                         End If
 
                                         ' jetzt muss in der Spaltenüberschrift noch angegeben werden, ob es sich um T€, PT oder nichts handelt 
-                                        Call defineHeaderTitleOfRoleCost(Target.Row)
+                                        ' tk 16.1.21 not any more necessary: it is either only PD or only T€
+                                        'Call defineHeaderTitleOfRoleCost(Target.Row)
 
 
 
