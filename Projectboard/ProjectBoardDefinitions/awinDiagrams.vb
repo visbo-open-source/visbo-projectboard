@@ -7627,7 +7627,7 @@ Public Module awinDiagrams
             Case "IS"
                 'Ist Werte 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Actual-to-date (Sum OF Portfolio"
+                    tmpResult = "Actual-to-date (Sum OF Portfolio)"
                 Else
                     tmpResult = "Ist-Werte (Summe Portfolio)"
                     'tmpResult = "Ist-Werte (Portfolio Summe)"
@@ -7641,6 +7641,16 @@ Public Module awinDiagrams
                     tmpResult = "Forecast (ETC)"
                     ' tmpResult = "Planung (ETC)"
                 End If
+
+            Case "LP"
+                'letzte Planung
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Last ETC"
+                Else
+                    tmpResult = "Letzter ETC"
+                    ' tmpResult = "Planung (ETC)"
+                End If
+
 
             Case "PS"
                 ' Planung Portfolio 
@@ -7950,17 +7960,34 @@ Public Module awinDiagrams
                 If startRed > 0 Then
                     startRed = startRed + 4
                 End If
-                tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                If awinSettings.meCompareVsLastPlan And
+                    (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                    startRed = startRed + 1
+                    tmpResult = qualifier2 & " (EAC1=" & tsum.ToString("##,##0.") & " / EAC0=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                Else
+                    tmpResult = qualifier2 & " (EAC=" & tsum.ToString("##,##0.") & " / BAC=" & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+                End If
+
             End If
             ' tk 18.1 20 alt .. 
             'tmpResult = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
             ' tk 18.120 Ende alt
 
             If calledFromMassEdit Then
-                Dim modifiedTitle As String = "Soll-Ist-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
-                If awinSettings.englishLanguage Then
-                    modifiedTitle = "Target-Actual Comparison " & scInfo.hproj.name & vbLf & tmpResult
+
+                Dim modifiedTitle As String = ""
+                If scInfo.vergleichsArt = PTVergleichsArt.beauftragung Then
+                    modifiedTitle = "Soll-Ist-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                    If awinSettings.englishLanguage Then
+                        modifiedTitle = "Target-Actual Comparison " & scInfo.hproj.name & vbLf & tmpResult
+                    End If
+                Else
+                    modifiedTitle = "Aktuell-Vorher-Vergleich " & scInfo.hproj.name & vbLf & tmpResult
+                    If awinSettings.englishLanguage Then
+                        modifiedTitle = "Current-Before Comparison " & scInfo.hproj.name & vbLf & tmpResult
+                    End If
                 End If
+
 
                 Dim offset As Integer = modifiedTitle.Length - tmpResult.Length
                 startRed = startRed + offset

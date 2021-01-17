@@ -2,11 +2,19 @@
 Imports Microsoft.Office.Interop.Excel
 Imports System.Globalization
 
+''' <summary>
+''' 
+''' </summary>
 Public Class clsawinSettings
-    ' Chart Settings 
+    ' Änderungshistorie:
+    ' tk 17.1.21 meCompareVsLastPlan ergänzt: wird in MassEdit verwendet um Soll-Ist Chart entweder gegen Vorgabe oder gegen letzten Stand zu sehen
+    ' tk 17.1.21 meDateForLastPlan ergänzt: gibt das Datum an 
 
     ' tk 17.6.2020 
     ' Kurzarbeit aktiviert oder nicht 
+
+    Public Property meCompareVsLastPlan As Boolean
+    Public Property meDateForLastPlan As Date
 
     Public Property takeCapasFromOldOrga As Boolean
     Public Property kurzarbeitActivated As Boolean
@@ -87,7 +95,7 @@ Public Class clsawinSettings
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
     Public Property phasesProzentual As Boolean
 
-    
+
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
     Public Property showValuesOfSelected As Boolean
 
@@ -300,6 +308,8 @@ Public Class clsawinSettings
 
         ReDim _importSettings(17)
 
+        _meCompareVsLastPlan = False
+        _meDateForLastPlan = Date.Now.AddDays(-1 * Date.Now.Day)
 
         _takeCapasFromOldOrga = True
         _kurzarbeitActivated = False

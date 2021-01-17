@@ -2417,7 +2417,7 @@ Imports System.Web
     ''' </summary>
     ''' <param name="modus"></param>
     ''' <remarks></remarks>
-    Private Sub enableControls(ByVal modus As Integer)
+    Private Sub enableControls(ByVal modus As ptModus)
 
         If modus = ptModus.graficboard Then
             visboZustaende.projectBoardMode = modus
@@ -4081,9 +4081,9 @@ Imports System.Web
         Dim outPutLine As String = ""
 
 
-        ' now set visbozustaende
-        ' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
-        visboZustaende.meModus = meModus
+        '' now set visbozustaende
+        '' necessary to know whether roles or cost need to be shown in building the forms to select roles , skills and costs 
+        'visboZustaende.projectBoardMode = meModus
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -9521,6 +9521,10 @@ Imports System.Web
         PTshowHeader = tempShowHeaders
     End Function
 
+    Public Function PTmeLastPlanCompare(control As IRibbonControl) As Boolean
+        PTmeLastPlanCompare = awinSettings.meCompareVsLastPlan
+    End Function
+
     ''' <summary>
     ''' wenn Header gezeigt werden , können Spaltenbreiten verändert werden ..
     ''' </summary>
@@ -9533,6 +9537,19 @@ Imports System.Web
             appInstance.ActiveWindow.DisplayHeadings = True
         Else
             appInstance.ActiveWindow.DisplayHeadings = False
+        End If
+    End Sub
+
+    Public Sub awinMELastOrBasline(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.meCompareVsLastPlan = pressed
+
+        If awinSettings.meCompareVsLastPlan = True Then
+            Dim provideDate As New frmProvideDate
+            If provideDate.ShowDialog() = DialogResult.OK Then
+                ' do nothing , already all set
+            Else
+                'do nothing, already all set
+            End If
         End If
     End Sub
 
@@ -12233,7 +12250,7 @@ Imports System.Web
             End If
 
 
-
+            ' now show Utilization Chart
             ' das Auslastungs-Chart Orga-Einheit
             Dim repObj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
@@ -12261,7 +12278,7 @@ Imports System.Web
             End If
 
 
-            ' jetzt das Portfolio Chart Budget anzeigen ... 
+            ' now Show Soll-Ist Vergleich mit Plan vs Last_Plan oder Plan vs Beauftragung
             Dim obj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
             chWidth = stdBreite
@@ -12286,126 +12303,143 @@ Imports System.Web
             End With
 
             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-            If awinSettings.meCompareWithLastVersion Then
 
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+            If awinSettings.meCompareVsLastPlan Then
+                Dim vpID As String = ""
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, vpID, awinSettings.meDateForLastPlan, err)
                 comparisonTyp = PTprdk.KostenBalken2
 
+                scInfo.vergleichsArt = PTVergleichsArt.planungsstand
+                scInfo.einheit = PTEinheiten.personentage
+                scInfo.vergleichsDatum = awinSettings.meDateForLastPlan
                 scInfo.vglProj = lproj
-                scInfo.vergleichsTyp = PTVergleichsTyp.letzter
-                scInfo.q2 = ""
+                scInfo.vergleichsTyp = PTVergleichsTyp.standVom
+                scInfo.q2 = rcName
                 scInfo.detailID = PTprdk.KostenBalken2
-
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                    If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
-
-                            comparisonTyp = PTprdk.PersonalBalken2
-                            scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
-
-                        End If
-                    End If
-
-                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
-
-                    ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
-                    ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
-                    If rcName <> "" Then
-                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
-
-                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
-
-                            Dim tmpParentName As String = ""
-
-                            If rcNameTeamID = -1 Then
-                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                            Else
-                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
-                                If tmpParentName = "" Then
-                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                Else
-                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                    If lproj.containsRoleNameID(tmpParentNameID) Then
-                                        ' passt bereits 
-                                    Else
-                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                    End If
-
-                                End If
-                            End If
-
-                            If tmpParentName <> "" Then
-                                scInfo.q2 = tmpParentName
-                            End If
-                        End If
-
-
-                    End If
-
-                End If
-
-
-
             Else
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
-                comparisonTyp = PTprdk.KostenBalken
 
-                scInfo.vglProj = lproj
-                scInfo.vergleichsTyp = PTVergleichsTyp.erster
-                scInfo.q2 = ""
-                scInfo.detailID = PTprdk.KostenBalken
+                If awinSettings.meCompareWithLastVersion Then
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-                    If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+                    lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                    comparisonTyp = PTprdk.KostenBalken2
 
-                            comparisonTyp = PTprdk.PersonalBalken
-                            scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+                    scInfo.vglProj = lproj
+                    scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                    scInfo.q2 = ""
+                    scInfo.detailID = PTprdk.KostenBalken2
 
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                        If myCustomUserRole.specifics.Length > 0 Then
+                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+
+                                comparisonTyp = PTprdk.PersonalBalken2
+                                scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+
+                            End If
                         End If
-                    End If
 
-                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
 
-                    If rcName <> "" Then
-                        Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                        ' wenn es ein Team-Member ist , soll nachgesehen werden, ob es für das Team Vorgaben gibt 
+                        ' wenn nein, dann soll die Kostenstelle der Person genommen werden, sofern sie 
+                        If rcName <> "" Then
+                            Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
 
-                        If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
+                            If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
 
-                            Dim tmpParentName As String = ""
+                                Dim tmpParentName As String = ""
 
-                            If rcNameTeamID = -1 Then
-                                tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                            Else
-                                Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
-                                tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
-                                If tmpParentName = "" Then
+                                If rcNameTeamID = -1 Then
                                     tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
                                 Else
-                                    Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                    If lproj.containsRoleNameID(tmpParentNameID) Then
-                                        ' passt bereits 
-                                    Else
+                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
+                                    If tmpParentName = "" Then
                                         tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
-                                    End If
+                                    Else
+                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                        If lproj.containsRoleNameID(tmpParentNameID) Then
+                                            ' passt bereits 
+                                        Else
+                                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                                        End If
 
+                                    End If
+                                End If
+
+                                If tmpParentName <> "" Then
+                                    scInfo.q2 = tmpParentName
                                 End If
                             End If
 
-                            If tmpParentName <> "" Then
-                                scInfo.q2 = tmpParentName
-                            End If
 
                         End If
 
-
                     End If
+
+
+
+                Else
+                    lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                    comparisonTyp = PTprdk.KostenBalken
+
+                    scInfo.vglProj = lproj
+                    scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                    scInfo.q2 = ""
+                    scInfo.detailID = PTprdk.KostenBalken
+
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
+                        If myCustomUserRole.specifics.Length > 0 Then
+                            If RoleDefinitions.containsNameOrID(myCustomUserRole.specifics) Then
+
+                                comparisonTyp = PTprdk.PersonalBalken
+                                scInfo.q2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
+
+                            End If
+                        End If
+
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+
+                        If rcName <> "" Then
+                            Dim potentialParents() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                            If Not IsNothing(potentialParents) And Not IsNothing(lproj) Then
+
+                                Dim tmpParentName As String = ""
+
+                                If rcNameTeamID = -1 Then
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                                Else
+                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(rcNameTeamID).name
+                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
+                                    If tmpParentName = "" Then
+                                        tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                                    Else
+                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                        If lproj.containsRoleNameID(tmpParentNameID) Then
+                                            ' passt bereits 
+                                        Else
+                                            tmpParentName = RoleDefinitions.chooseParentFromList(rcName, potentialParents)
+                                        End If
+
+                                    End If
+                                End If
+
+                                If tmpParentName <> "" Then
+                                    scInfo.q2 = tmpParentName
+                                End If
+
+                            End If
+
+
+                        End If
+                    End If
+
                 End If
 
             End If
 
-            Dim vglBaseline As Boolean = Not IsNothing(lproj)
+            'Dim vglBaseline As Boolean = Not IsNothing(lproj)
             Dim reportObj As Excel.ChartObject = Nothing
 
 

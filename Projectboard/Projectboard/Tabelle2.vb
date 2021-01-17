@@ -51,9 +51,9 @@ Public Class Tabelle2
 
         ' jetzt die Spalte 6 einblenden bzw. ausblenden 
         Try
-            If visboZustaende.meModus = ptModus.massEditCosts Then
+            If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
                 CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = True
-            ElseIf visboZustaende.meModus = ptModus.massEditRessSkills Then
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
                 If RoleDefinitions.getAllSkillIDs.Count > 0 Then
                     CType(meWS.Columns(6), Excel.Range).EntireColumn.Hidden = False
                 Else
@@ -346,10 +346,10 @@ Public Class Tabelle2
         Dim criteriaFulfilled As Boolean = False
         Dim criteriaFilterRequest As Boolean = ((Target.Row = 1) And (Target.Column = columnRC))
 
-        If visboZustaende.meModus = ptModus.massEditRessSkills Then
+        If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
             criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1)
 
-        ElseIf visboZustaende.meModus = ptModus.massEditCosts Then
+        ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
             criteriaFulfilled = (Target.Column = columnRC) And (Target.Row > 1)
 
         End If
@@ -630,7 +630,7 @@ Public Class Tabelle2
                 Dim rcNameID As String = ""
 
                 Dim skillName As String = ""
-                If visboZustaende.meModus = ptModus.massEditRessSkills Then
+                If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
                     If Not IsNothing(meWS.Cells(zeile, columnRC + 1).value) Then
                         skillName = CStr(meWS.Cells(zeile, columnRC + 1).value).Trim
                     End If
@@ -2136,7 +2136,7 @@ Public Class Tabelle2
         Dim tmpValue As Boolean = False
         Dim msgTxt As String = ""
 
-        If visboZustaende.meModus = ptModus.massEditRessSkills Then
+        If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
 
             If isSkillCheck Then
                 ' es handelt sich um den Skill Check 
@@ -2291,7 +2291,7 @@ Public Class Tabelle2
 
             End If
 
-        ElseIf visboZustaende.meModus = ptModus.massEditCosts Then
+        ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
             rcName = newValue
             skillName = otherValue
 

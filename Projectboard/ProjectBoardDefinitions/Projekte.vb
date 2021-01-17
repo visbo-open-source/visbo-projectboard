@@ -5708,18 +5708,34 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        If awinSettings.meCompareVsLastPlan And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            .Name = bestimmeLegendNameIPB("LP") & scInfo.vglProj.timeStamp.ToShortDateString
+                        Else
+                            .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        End If
+
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
 
                         .ChartType = vglChartType
 
                         If vglChartType = Excel.XlChartType.xlLine Then
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                .ForeColor.RGB = visboFarbeOrange
-                                .Weight = 4
-                            End With
+
+                            If awinSettings.meCompareVsLastPlan And
+                            (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                                    .ForeColor.RGB = visboFarbeBlau
+                                    .Weight = 3
+                                End With
+                            Else
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                    .ForeColor.RGB = visboFarbeOrange
+                                    .Weight = 4
+                                End With
+                            End If
+
                         Else
                             ' ggf noch was definieren ..
                         End If
@@ -6856,18 +6872,34 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
-                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+
+                    If awinSettings.meCompareVsLastPlan And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                        .Name = bestimmeLegendNameIPB("LP") & scInfo.vglProj.timeStamp.ToShortDateString
+                    Else
+                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    End If
+
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
 
                     .ChartType = vglChartType
 
                     If vglChartType = xlNS.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
+                        If awinSettings.meCompareVsLastPlan And
+                            (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                                .ForeColor.RGB = visboFarbeBlau
+                                .Weight = 3
+                            End With
+                        Else
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                .ForeColor.RGB = visboFarbeOrange
+                                .Weight = 4
+                            End With
+                        End If
+
                     Else
                         ' ggf noch was definieren ..
                     End If
