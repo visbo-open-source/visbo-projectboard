@@ -9,7 +9,8 @@ Public Class clsVisboZustaende
     Private _oldValue As String
 
     Public Property showTimeZoneBalken As Boolean
-    Public Property projectBoardMode As Integer
+    Public Property projectBoardMode As ptModus
+
 
     Public Property meMaxZeile As Integer
 
@@ -25,9 +26,6 @@ Public Class clsVisboZustaende
     Public Property currentProject As clsProjekt
     ' hat den letzten Stand in der Datenbank zu dem Projekt, das zuletzt angezeigt wurde 
     Public Property currentProjectinSession As clsProjekt
-
-    ' tk 10.1.21 for knowing whether roles or costs are under consideration in massEdit
-    Public Property meModus As ptModus
 
     ' wird in MassEdit Termine verwendet ... 
     Private _currentElemID As String
@@ -239,7 +237,6 @@ Public Class clsVisboZustaende
         _currentProjectinSession = Nothing
         _currentElemID = ""
         _auslastungsArray = Nothing
-        _meModus = ptModus.massEditRessSkills
 
     End Sub
 End Class

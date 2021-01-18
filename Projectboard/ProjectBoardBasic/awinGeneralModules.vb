@@ -7658,12 +7658,18 @@ Public Module awinGeneralModules
 
                                 If calledFromMassEdit And typID <> PTprdk.Ergebnis Then
                                     roleCostName = currentRCName
-                                    ' mit welchem  soll verglichen werden ?  
-                                    If awinSettings.meCompareWithLastVersion Then
+
+                                    ' sicherstellen, dass es bei massEdit nur Kostenbalken2 sein kann 
+                                    If typID = PTprdk.KostenBalken Then
                                         typID = PTprdk.KostenBalken2
-                                    Else
-                                        typID = PTprdk.KostenBalken
                                     End If
+
+                                    '' mit welchem  soll verglichen werden ?  
+                                    'If awinSettings.meCompareWithLastVersion Then
+                                    '    typID = PTprdk.KostenBalken2
+                                    'Else
+                                    '    typID = PTprdk.KostenBalken
+                                    'End If
 
                                     If roleCostName = "" Then
                                         ' damit werden die Gesamtkosten gezeigt ..
@@ -7679,51 +7685,78 @@ Public Module awinGeneralModules
                                     ' Setzung von .q2 wird ggf in Kostenbalken, Kostenbalken2, Personabalken und Personalbalken2 noch mal revidiert ..
                                     .q2 = roleCostName
 
-                                    .vergleichsArt = PTVergleichsArt.beauftragung
-                                    .vergleichsTyp = PTVergleichsTyp.letzter
+                                    If visboZustaende.projectBoardMode = ptModus.graficboard Then
 
-                                    If typID = PTprdk.KostenBalken Or typID = PTprdk.KostenBalken2 Or
+                                        If typID = PTprdk.KostenBalken Or typID = PTprdk.KostenBalken2 Or
                                             typID = PTprdk.KostenPie Then
 
-                                        If typID = PTprdk.KostenBalken Then
-                                            .vergleichsTyp = PTVergleichsTyp.erster
-                                        End If
-
-                                        If isCost Then
-                                            .elementTyp = ptElementTypen.costs
-                                        Else
-                                            If auswahl = 1 And roleCostName = "" Then
-                                                .elementTyp = ptElementTypen.costs
-
-                                            ElseIf auswahl = 2 And roleCostName = "" Then
-                                                .elementTyp = ptElementTypen.rolesAndCost
+                                            If typID = PTprdk.KostenBalken Then
+                                                .vergleichsTyp = PTVergleichsTyp.erster
                                             End If
-                                        End If
+
+                                            If isCost Then
+                                                .elementTyp = ptElementTypen.costs
+                                            Else
+                                                If auswahl = 1 And roleCostName = "" Then
+                                                    .elementTyp = ptElementTypen.costs
+
+                                                ElseIf auswahl = 2 And roleCostName = "" Then
+                                                    .elementTyp = ptElementTypen.rolesAndCost
+                                                End If
+                                            End If
 
 
 
-                                        .einheit = PTEinheiten.euro
+                                            .einheit = PTEinheiten.euro
 
 
-                                    ElseIf typID = PTprdk.PersonalBalken Or typID = PTprdk.PersonalBalken2 Or
+                                        ElseIf typID = PTprdk.PersonalBalken Or typID = PTprdk.PersonalBalken2 Or
                                             typID = PTprdk.PersonalPie Then
 
-                                        If typID = PTprdk.PersonalBalken Then
-                                            .vergleichsTyp = PTVergleichsTyp.erster
+                                            If typID = PTprdk.PersonalBalken Then
+                                                .vergleichsTyp = PTVergleichsTyp.erster
+                                            End If
+
+                                            .elementTyp = ptElementTypen.roles
+
+                                            If auswahl = 1 Then
+                                                .einheit = PTEinheiten.personentage
+                                            Else
+                                                .einheit = PTEinheiten.euro
+                                            End If
+
+
+                                        ElseIf typID = PTprdk.Ergebnis Then
+                                            .elementTyp = ptElementTypen.ergebnis
                                         End If
 
-                                        .elementTyp = ptElementTypen.roles
+                                    Else
+                                        If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                                            .einheit = PTEinheiten.euro
+                                            .elementTyp = ptElementTypen.costs
 
-                                        If auswahl = 1 Then
+                                        ElseIf visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
                                             .einheit = PTEinheiten.personentage
+                                            .elementTyp = ptElementTypen.roles
+
                                         Else
                                             .einheit = PTEinheiten.euro
+                                            .elementTyp = ptElementTypen.rolesAndCost
                                         End If
 
+                                        If awinSettings.meCompareVsLastPlan Then
+                                            .vergleichsArt = PTVergleichsArt.planungsstand
+                                            .vergleichsTyp = PTVergleichsTyp.standVom
+                                            .vergleichsDatum = awinSettings.meDateForLastPlan
+                                        Else
+                                            .vergleichsArt = PTVergleichsArt.beauftragung
+                                            .vergleichsTyp = PTVergleichsTyp.letzter
+                                            .vergleichsDatum = Date.Now
+                                        End If
 
-                                    ElseIf typID = PTprdk.Ergebnis Then
-                                        .elementTyp = ptElementTypen.ergebnis
                                     End If
+
+
                                 End With
 
                                 If replaceProj Or (chartPname.Trim = vglName) Then
@@ -7849,94 +7882,113 @@ Public Module awinGeneralModules
                                             Dim vglProj As clsProjekt = Nothing
 
                                             Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                                                If (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) And awinSettings.meCompareVsLastPlan Then
+                                                    Dim vpID As String = ""
+                                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, vpID, awinSettings.meDateForLastPlan, err)
+                                                Else
+                                                    If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                                        scInfo.vergleichsTyp = PTVergleichsTyp.erster
+                                                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                                                    Else
+                                                        scInfo.vergleichsTyp = PTVergleichsTyp.letzter
+                                                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                                                    End If
+
+                                                End If
+
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
 
-                                            scInfo.vergleichsTyp = PTVergleichsTyp.letzter
                                             scInfo.vglProj = vglProj
 
-                                            ' tk neu 18.1.2020
-                                            If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
-                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                                ' 
-                                                potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+                                            ' now define scinfo.q2 bestimmen
+                                            ' if it is lastPlan , then scinfo.q2 just is rcNAme
+                                            If awinSettings.meCompareVsLastPlan And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                                                scInfo.q2 = roleCostName
+                                            Else
 
-                                            ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
+                                                ' tk neu 18.1.2020
+                                                If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+                                                    myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                                    ' 
+                                                    potentialParents = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+
+                                                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or
                                                     myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
 
-                                                Try
-                                                    Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
-                                                    Dim checkID As Integer
+                                                    Try
+                                                        Dim allRoleIDsOfP As SortedList(Of Integer, Boolean) = vglProj.getRoleIDs()
+                                                        Dim checkID As Integer
 
-                                                    If teamID > 0 Then
-                                                        checkID = teamID
-                                                    Else
-                                                        ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
-                                                        checkID = rcID
-                                                    End If
-
-                                                    ' die potentiellen Parents sind  die Parents des Teams
-                                                    Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
-                                                    Dim ergListe As New List(Of Integer)
-                                                    Dim found As Boolean = False
-                                                    Dim ix As Integer = 1
-
-                                                    Do While Not found And ix <= tmpList.Length
-                                                        If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
-                                                            found = True
+                                                        If teamID > 0 Then
+                                                            checkID = teamID
                                                         Else
-                                                            ix = ix + 1
+                                                            ' die potentiellen Parents sind die Parents der Kostenstelle / des Teams
+                                                            checkID = rcID
                                                         End If
-                                                    Loop
 
-                                                    If found Then
-                                                        scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
-                                                    Else
+                                                        ' die potentiellen Parents sind  die Parents des Teams
+                                                        Dim tmpList As Integer() = RoleDefinitions.getParentArray(RoleDefinitions.getRoleDefByID(checkID), includingMySelf:=True)
+                                                        Dim ergListe As New List(Of Integer)
+                                                        Dim found As Boolean = False
+                                                        Dim ix As Integer = 1
+
+                                                        Do While Not found And ix <= tmpList.Length
+                                                            If allRoleIDsOfP.ContainsKey(tmpList(ix - 1)) Then
+                                                                found = True
+                                                            Else
+                                                                ix = ix + 1
+                                                            End If
+                                                        Loop
+
+                                                        If found Then
+                                                            scInfo.q2 = RoleDefinitions.getRoleDefByID(tmpList(ix - 1)).name
+                                                        Else
+                                                            scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
+                                                        End If
+
+                                                    Catch ex As Exception
                                                         scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
-                                                    End If
-
-                                                Catch ex As Exception
-                                                    scInfo.q2 = RoleDefinitions.getRoleDefByID(rcID).name
-                                                End Try
+                                                    End Try
 
 
-                                                potentialParents = Nothing
-                                            End If
+                                                    potentialParents = Nothing
+                                                End If
 
 
-                                            If Not IsNothing(potentialParents) Then
+                                                If Not IsNothing(potentialParents) Then
 
-                                                Dim tmpParentName As String = ""
+                                                    Dim tmpParentName As String = ""
 
-                                                If teamID = -1 Then
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
-                                                Else
-                                                    Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
-                                                    tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
-                                                    If tmpParentName = "" Then
+                                                    If teamID = -1 Then
                                                         tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                     Else
-                                                        Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
-                                                        If Not IsNothing(vglProj) Then
-                                                            If vglProj.containsRoleNameID(tmpParentNameID) Then
-                                                                ' passt bereits 
+                                                        Dim tmpTeamName As String = RoleDefinitions.getRoleDefByID(teamID).name
+                                                        tmpParentName = RoleDefinitions.chooseParentFromList(tmpTeamName, potentialParents)
+                                                        If tmpParentName = "" Then
+                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
+                                                        Else
+                                                            Dim tmpParentNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpParentName, "")
+                                                            If Not IsNothing(vglProj) Then
+                                                                If vglProj.containsRoleNameID(tmpParentNameID) Then
+                                                                    ' passt bereits 
+                                                                Else
+                                                                    tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
+                                                                End If
                                                             Else
                                                                 tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                             End If
-                                                        Else
-                                                            tmpParentName = RoleDefinitions.chooseParentFromList(currentRCName, potentialParents)
                                                         End If
                                                     End If
-                                                End If
 
-                                                If tmpParentName <> "" Then
-                                                    scInfo.q2 = tmpParentName
+                                                    If tmpParentName <> "" Then
+                                                        scInfo.q2 = tmpParentName
+                                                    End If
+
                                                 End If
 
                                             End If
-
                                             ' Ende tk neu 18.1.20
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)

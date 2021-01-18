@@ -550,7 +550,7 @@ Public Module Module1
         beauftragung = 0
         planungsstand = 1
         none = 2
-        planningFrom = 3
+        notYetNamed = 3
         sumOverall = 4
     End Enum
 

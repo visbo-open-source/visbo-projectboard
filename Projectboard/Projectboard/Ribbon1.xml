@@ -550,6 +550,7 @@
           <!--<checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>-->
           <!--label="Header anzeigen"-->
           <checkBox id="PT6G2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTshowHeader" onAction ="awinPTshowHeader" supertip ="wenn gesetzt, können die Spaltenbreiten verändert werden."/>
+          <checkBox id="PT6G2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTmeLastPlanCompare" onAction ="awinMELastOrBasline" supertip ="wenn gesetzt, dann wird im Vergleichs-Chart gegen den Stand vom .. verglichen"/>
         </group>
       </tab>  
      </tabs>

@@ -332,7 +332,7 @@ Public Class frmMEhryRoleCost
 
 
             ' alle Rollen zeigen 
-            If visboZustaende.meModus = ptModus.massEditRessSkills Then
+            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
 
                 If RoleDefinitions.Count > 0 Then
                     Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
@@ -428,7 +428,7 @@ Public Class frmMEhryRoleCost
                     Next
                 End If
 
-            ElseIf visboZustaende.meModus = ptModus.massEditCosts Then
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
 
                 If Not (myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager) Then
                     If CostDefinitions.Count > 1 Then

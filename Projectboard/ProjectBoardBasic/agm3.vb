@@ -5155,7 +5155,7 @@ Public Module agm3
                         ' jetzt die Werte für die Beauftragung schreiben 
                         lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planningFrom, lastPlanValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, lastPlanValues)
 
 
                         If Not lastplanProjekte.contains(lastplan.name) Then
