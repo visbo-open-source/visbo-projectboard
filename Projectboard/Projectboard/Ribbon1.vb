@@ -5505,6 +5505,89 @@ Imports System.Web
 
     End Sub
 
+    Sub PT2ProjektBeauftragen(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+            If awinSelection.Count > 1 Then
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("select only 1 project, please ...")
+                Else
+                    Call MsgBox("bitte nur 1 Projekt selektieren, bitte ...")
+                End If
+            Else
+
+
+                For Each singleShp In awinSelection
+
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
+                    With singleShp
+                        If isProjectType(shapeArt) Then
+
+                            If ShowProjekte.contains(.Name) Then
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                                Dim myVariantName As String = ptVariantFixNames.pfv.ToString
+                                If Not myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                                    myVariantName = "TmpPfv"
+                                End If
+                                Dim baseLineProj As clsProjekt = hproj.createVariant(myVariantName, "Baseline")
+
+                                ' now create a aggregated project 
+
+
+                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+                                    Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
+
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
+                                                "and cannot be modified. You could instead create a variant.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
+                                                "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                    End If
+                                End If
+                            End If
+
+                        End If
+                    End With
+                Next
+
+
+            End If
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("first select a project, please ...")
+            Else
+                Call MsgBox("vorher ein Projekt selektieren, bitte ...")
+            End If
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
 
     ''' <summary>
     ''' den Status eines Projekts ändern, aktuell nur auf Projekt-status = 1 

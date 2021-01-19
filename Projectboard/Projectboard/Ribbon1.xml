@@ -235,7 +235,7 @@
               <!--label="Unmark"-->
               <button id="PTMarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTMarkProjects" supertip ="Projekt oder Projekte markieren."/>
               <button id="PTunmarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTUnMarkProject" supertip ="die Markierung eines Projektes aufheben."/>
-              <menuSeparator id="separator5" />
+              <menuSeparator id="separator5" />  
               <!--label="Variante zum Standard machen"-->
               <button id="PT2G1M1B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT2VarianteUebernehmen" supertip ="eine Variante übernehmen, bedeutet es zu der Standard-Variante des Projektes zu machen; das Standard Projekt hat keinen Varianten-Namen; Vorsicht: die bisherige Standard-Variante wird mit diesem Befehl überschrieben. die Standard Variante ist per Default fixiert und kann nicht verschoben werden"/>
               <menuSeparator id="separator6" />
