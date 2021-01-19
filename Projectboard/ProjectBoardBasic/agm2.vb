@@ -7155,7 +7155,10 @@ Public Module agm2
 
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
 
-                    If tmpStr.Length = 1 And tmpStr(0) = "none" Then
+                    'If tmpStr.Length = 1 And tmpStr(0) = "none" Then
+
+                    ' ur:18.01.2021: oa und pmo und pl können nun auch mit leerer Angabe importiert werden
+                    If tmpStr.Length = 1 Then
                         ' nichts weiter tun, specificsWithIDs bleibt leer 
                         specificsWithIDs = ""
                     Else
@@ -22786,7 +22789,7 @@ Public Module agm2
                                                 If awinSettings.englishLanguage Then
                                                     errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
                                                 Else
-                                                    errMsg = "versch. Rollen mit identischer ID sidn nicht zugelassen: " & tmpIDValue.Trim
+                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
                                                 End If
 
                                                 meldungen.Add(errMsg)
@@ -23532,7 +23535,7 @@ Public Module agm2
                                                 If awinSettings.englishLanguage Then
                                                     errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
                                                 Else
-                                                    errMsg = "versch. Rollen mit identischer ID sidn nicht zugelassen: " & tmpIDValue.Trim
+                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
                                                 End If
 
                                                 meldungen.Add(errMsg)

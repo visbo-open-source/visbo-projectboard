@@ -2660,7 +2660,9 @@ Public Class Request
                     CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
 
                     If anzSetting = 1 Then
-                        Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
+                        Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom
+                        'Dim oldvalidFromlocal As Date = CType(oldsetting, clsVCSettingOrganisation).value.validFrom.ToLocalTime
+
                         ' Update der Organisation - Setting
                         If oldvalidFromlocal.Month = listofOrgaWeb.validFrom.Month And
                             oldvalidFromlocal.Year = listofOrgaWeb.validFrom.Year Then
