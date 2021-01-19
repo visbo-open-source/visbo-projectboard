@@ -6147,7 +6147,9 @@ Public Module testModule
                                                 beginningDate = "&from=" & smartChartInfo.zeitRaumLeft.ToString("s")
                                             End If
                                             If smartChartInfo.zeitRaumRight > Date.MinValue Then
-                                                endingDate = "&to=" & smartChartInfo.zeitRaumRight.ToString("s")
+                                                Dim hzeitRaumRight As Date = smartChartInfo.zeitRaumRight
+                                                hzeitRaumRight = DateAdd(DateInterval.Month, 1, hzeitRaumRight)
+                                                endingDate = "&to=" & hzeitRaumRight.ToString("s")
                                             End If
 
                                             Dim visboHyperLinkURL As String = hstr(0) & "/" & hstr(1) & "/" & hstr(2) & "/vpf/" & smartChartInfo.vpid & "?view=Capacity" & "&unit=1" & paramRoleIDToAppend & beginningDate & endingDate
