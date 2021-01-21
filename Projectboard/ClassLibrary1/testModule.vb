@@ -15366,6 +15366,7 @@ Public Module testModule
 
                         ElseIf orphanedMilestones.Count > 0 Then
                             ' here all orphaned milestones in rootPhase need to be drawn  
+                            ' this only can occur when i=0, i.e it is the rootphase
 
                             For Each msNameID As String In orphanedMilestones
                                 Dim zeichnenMS As Boolean = False
@@ -15478,11 +15479,17 @@ Public Module testModule
 
                 ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
                 toggleRowDifferentiator = Not toggleRowDifferentiator
-                If atleastOneOrphanedMS And Not atLeastOnePhaseDrawn Then
+                ' tk 21.1.21 
+                If atleastOneOrphanedMS And awinSettings.mppExtendedMode And Not atLeastOnePhaseDrawn Then
                     ' rowYPos ist schon richtig gesetzt 
                     ' wird weitergeschaltet, nachdem orphanedMilestones gezeichnet sind .. 
                 Else
+                    currentZeile = currentZeile + 1
                     rowYPos = rowYPos + rds.zeilenHoehe
+                    anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+                    belegungCurrentZeile.Clear()
+
                 End If
 
                 
