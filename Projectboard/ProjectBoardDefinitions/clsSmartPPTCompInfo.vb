@@ -107,6 +107,11 @@
     End Property
 
     Private _zeitRaumRight As Date
+
+    Public Sub New()
+
+    End Sub
+
     Public Property zeitRaumRight As Date
         Get
             If Not IsNothing(_zeitRaumLeft) Then

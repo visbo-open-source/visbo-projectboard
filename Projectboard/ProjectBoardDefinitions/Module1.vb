@@ -435,6 +435,7 @@ Public Module Module1
         fullRolesAndCost = 8
         internExternShort = 9
         cashflow = 10
+        roleCostInvoices = 11
     End Enum
 
 
@@ -771,6 +772,7 @@ Public Module Module1
         calloutRC = 4
         calloutMV = 5
         invoice = 6
+        penalty = 7
     End Enum
 
     Public Enum PTpptTableTypes

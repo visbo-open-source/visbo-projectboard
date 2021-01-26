@@ -332,6 +332,12 @@ Public Module awinGeneralModules
         ' es gibt ja nix mehr in der Session 
         currentConstellationName = ""
 
+        ' Range zurücksetzen 
+        If calledFromPPT Then
+            showRangeLeft = 0
+            showRangeRight = 0
+        End If
+
         '
         ' jetzt den Datenbank Cache Löschen , aber nur wenn es nicht von Powerpoint Add-In aus aufgerufen wird
         If Not calledFromPPT Then

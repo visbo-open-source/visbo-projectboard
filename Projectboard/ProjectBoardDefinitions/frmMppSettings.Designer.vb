@@ -41,6 +41,7 @@ Partial Class frmMppSettings
         Me.KwInMilestone = New System.Windows.Forms.CheckBox()
         Me.useOriginalNames = New System.Windows.Forms.CheckBox()
         Me.filterEmptyProjects = New System.Windows.Forms.CheckBox()
+        Me.shwInvoices = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'shwPhaseText
@@ -223,12 +224,23 @@ Partial Class frmMppSettings
         Me.filterEmptyProjects.Text = """Leere"" Projekte filtern"
         Me.filterEmptyProjects.UseVisualStyleBackColor = True
         '
+        'shwInvoices
+        '
+        Me.shwInvoices.AutoSize = True
+        Me.shwInvoices.Location = New System.Drawing.Point(181, 173)
+        Me.shwInvoices.Name = "shwInvoices"
+        Me.shwInvoices.Size = New System.Drawing.Size(122, 17)
+        Me.shwInvoices.TabIndex = 19
+        Me.shwInvoices.Text = "Rechnung / Penalty"
+        Me.shwInvoices.UseVisualStyleBackColor = True
+        '
         'frmMppSettings
         '
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(328, 329)
+        Me.Controls.Add(Me.shwInvoices)
         Me.Controls.Add(Me.filterEmptyProjects)
         Me.Controls.Add(Me.useOriginalNames)
         Me.Controls.Add(Me.KwInMilestone)
@@ -273,4 +285,5 @@ Partial Class frmMppSettings
     Friend WithEvents KwInMilestone As System.Windows.Forms.CheckBox
     Friend WithEvents useOriginalNames As System.Windows.Forms.CheckBox
     Friend WithEvents filterEmptyProjects As System.Windows.Forms.CheckBox
+    Friend WithEvents shwInvoices As Windows.Forms.CheckBox
 End Class

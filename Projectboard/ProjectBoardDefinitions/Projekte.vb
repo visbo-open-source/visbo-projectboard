@@ -5530,6 +5530,9 @@ Public Module Projekte
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
         Dim internKapaDatenreihe() As Double = Nothing
+        Dim invoiceDatenreihe() As Double = Nothing
+        Dim formerInvoiceDatenreihe() As Double = Nothing
+
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double = 0.0
 
@@ -5576,7 +5579,7 @@ Public Module Projekte
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6747,13 +6750,19 @@ Public Module Projekte
 
         Dim roleName As String = scInfo.q2
 
+        Dim actualDataIX As Integer = -1
         Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+        If considerIstDaten Then
+            actualDataIX = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+        End If
+
 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
             IstCharttype = xlNS.XlChartType.xlArea
 
             If considerIstDaten Then
-                PlanChartType = xlNS.XlChartType.xlArea
+                'PlanChartType = xlNS.XlChartType.xlArea
+                PlanChartType = xlNS.XlChartType.xlLine
             Else
                 PlanChartType = xlNS.XlChartType.xlLine
             End If
@@ -6774,6 +6783,10 @@ Public Module Projekte
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
         Dim internKapaDatenreihe() As Double = Nothing
+        ' für Rechnungstellung
+        Dim invoiceDatenreihe() As Double = Nothing
+        Dim formerInvoiceDatenreihe() As Double = Nothing
+
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double = 0.0
 
@@ -6788,7 +6801,8 @@ Public Module Projekte
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe,
+                                       invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6840,6 +6854,7 @@ Public Module Projekte
             ' Planung / Forecast
             ' nur zeigen, wenn hproj.actualdata
             Dim dontShowPlanung As Boolean = False
+
             If hproj.hasActualValues Then
                 If getColumnOfDate(hproj.actualDataUntil) >= getColumnOfDate(hproj.endeDate) Then
                     ' es kann keine Planwerte mehr geben , also nix zeichnen
@@ -6847,79 +6862,196 @@ Public Module Projekte
                 End If
             End If
 
-            If Not dontShowPlanung Then
-                With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
+            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
 
-                    .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                ' here the budget / Auftragswert is being drawn 
+                Try
+                    Dim budgetReihe() As Double = Nothing
+                    ReDim budgetReihe(tdatenreihe.Length - 1)
+                    Dim mybudgetValue = scInfo.hproj.Erloes
+                    If mybudgetValue > 0 Then
+
+                        For ix As Integer = 0 To tdatenreihe.Length - 1
+                            budgetReihe(ix) = mybudgetValue
+                        Next
+
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                            .Name = bestimmeLegendNameIPB("BG") & scInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeNone
+                            .Values = budgetReihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            .Format.Line.Weight = 2.5
+                            .Format.Line.ForeColor.RGB = visboFarbeNone
+
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                        End With
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                    .Name = bestimmeLegendNameIPB("PA") & scInfo.hproj.timeStamp.ToShortDateString
                     .Interior.Color = visboFarbeBlau
-                    .Values = prognoseDatenReihe
+                    .Values = tdatenreihe
                     .XValues = Xdatenreihe
-                    .ChartType = PlanChartType
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .Format.Line.Weight = 4
+                    If dontShowPlanung Then
+                        .Format.Line.ForeColor.RGB = visboFarbeNone
+                    Else
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    End If
 
-                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    If considerIstDaten And Not dontShowPlanung Then
+                        Try
+                            For ix As Integer = 0 To actualDataIX
+                                .Points(ix + 1).Format.Line.ForeColor.RGB = visboFarbeNone
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    End If
+
+                End With
+
+                ' draw Baseline Line 
+                If Not IsNothing(scInfo.vglProj) Then
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeOrange
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+
+                    End With
+                End If
+
+
+
+                If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+
+                    ' draw invoice Line 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("PIV") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = invoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    End With
+
+                    ' draw invoices of Baseline 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("BIV") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = formerInvoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+
+                    End With
+
+                End If
+
+
+            Else
+
+                If Not dontShowPlanung Then
+                    With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
+
+                        .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                        .Values = prognoseDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = PlanChartType
+
                         ' es handelt sich um eine Line
                         .Format.Line.Weight = 4
                         .Format.Line.ForeColor.RGB = visboFarbeBlau
                         .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                    End If
-
-                End With
-            End If
 
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(scInfo.vglProj) Then
+                    End With
+                End If
 
-                'series
-                With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
 
-                    If awinSettings.meCompareVsLastPlan And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                        .Name = bestimmeLegendNameIPB("LP") & scInfo.vglProj.timeStamp.ToShortDateString
-                    Else
-                        .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-                    End If
+                ' Beauftragung bzw. Vergleichsdaten
+                If Not IsNothing(scInfo.vglProj) Then
 
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
+                    'series
+                    With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
 
-                    .ChartType = vglChartType
-
-                    If vglChartType = xlNS.XlChartType.xlLine Then
-                        If awinSettings.meCompareVsLastPlan And
-                            (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                                .ForeColor.RGB = visboFarbeBlau
-                                .Weight = 3
-                            End With
+                        If awinSettings.meCompareVsLastPlan And (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                            .Name = bestimmeLegendNameIPB("LP") & scInfo.vglProj.timeStamp.ToShortDateString
                         Else
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                .ForeColor.RGB = visboFarbeOrange
-                                .Weight = 4
-                            End With
+                            .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
                         End If
 
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
 
-                End With
+                        .ChartType = vglChartType
 
-            End If
+                        If vglChartType = xlNS.XlChartType.xlLine Then
+                            If awinSettings.meCompareVsLastPlan And
+                            (visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or visboZustaende.projectBoardMode = ptModus.massEditCosts) Then
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                                    .ForeColor.RGB = visboFarbeBlau
+                                    .Weight = 3
+                                End With
+                            Else
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                    .ForeColor.RGB = visboFarbeOrange
+                                    .Weight = 4
+                                End With
+                            End If
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
+                        Else
+                            ' ggf noch was definieren ..
+                        End If
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+                    End With
+
+                End If
+
+                ' jetzt kommt der Neu-Aufbau der Series-Collections
+                If considerIstDaten Then
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, xlNS.SeriesCollection).NewSeries, xlNS.Series)
+                        '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Name = bestimmeLegendNameIPB("I")
+                        .Interior.Color = awinSettings.SollIstFarbeArea
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = IstCharttype
+                    End With
+
+                End If
 
             End If
 
@@ -27888,7 +28020,6 @@ Public Module Projekte
 
 
     End Function
-
 
 
 End Module

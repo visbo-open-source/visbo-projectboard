@@ -1070,9 +1070,10 @@ Public Module awinDiagrams
                     prcDiagram = New clsDiagramm
 
                     ' Anfang Event Handling für Chart 
-                    prcChart = New clsEventsPrcCharts
                     'prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-                    prcChart.PrcChartEvents = newChtObj.Chart
+                    prcChart = New clsEventsPrcCharts With {
+                        .PrcChartEvents = newChtObj.Chart
+                    }
                     prcDiagram.setDiagramEvent = prcChart
                     ' Ende Event Handling für Chart 
 
@@ -2811,8 +2812,9 @@ Public Module awinDiagrams
         Dim kennung As String
 
         Dim chtobjName As String
-        Dim myCollection As New Collection
-        myCollection.Add("Auslastung")
+        Dim myCollection As New Collection From {
+            "Auslastung"
+        }
         chtobjName = calcChartKennung("pf", PTpfdk.Auslastung, myCollection)
         myCollection.Clear()
 
@@ -3163,8 +3165,9 @@ Public Module awinDiagrams
 
         If future = -1 Then
 
-            Dim myCollection As New Collection
-            myCollection.Add("ZieleV")
+            Dim myCollection As New Collection From {
+                "ZieleV"
+            }
             chtobjName = calcChartKennung("pf", PTpfdk.ZieleV, myCollection)
             If showRangeLeft <= heuteColumn Then
                 titelTeile(0) = summentitel6
@@ -3184,8 +3187,9 @@ Public Module awinDiagrams
 
 
         ElseIf future = 1 Then
-            Dim myCollection As New Collection
-            myCollection.Add("ZieleF")
+            Dim myCollection As New Collection From {
+                "ZieleF"
+            }
             chtobjName = calcChartKennung("pf", PTpfdk.ZieleF, myCollection)
             If heuteColumn + 1 <= showRangeRight Then
                 titelTeile(0) = summentitel7
@@ -6692,7 +6696,7 @@ Public Module awinDiagrams
     ''' <param name="presentationName"></param>
     ''' <param name="currentSlideName"></param>
     ''' <param name="chartContainer"></param>
-    Public Sub createProjektChartInPPT(ByVal sCInfo As clsSmartPPTChartInfo,
+    Public Sub createProjektPortfolioChartInPPT(ByVal sCInfo As clsSmartPPTChartInfo,
                                       ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
                                       ByVal chartContainer As PowerPoint.Shape, Optional ByVal noLegend As Boolean = False)
 
@@ -6719,12 +6723,20 @@ Public Module awinDiagrams
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
         Dim considerIstDaten As Boolean = False
+        Dim actualDataIX As Integer = -1
 
         ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
         If sCInfo.prPF = ptPRPFType.portfolio Then
             considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(ShowProjekte.actualDataUntil) - getColumnOfDate(StartofCalendar.AddMonths(showRangeLeft))
+            End If
+
         ElseIf sCInfo.prPF = ptPRPFType.project Then
-            considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison
+            considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(sCInfo.hproj.actualDataUntil) - getColumnOfDate(sCInfo.hproj.startDate)
+            End If
         End If
 
 
@@ -6753,10 +6765,13 @@ Public Module awinDiagrams
         Dim Xdatenreihe() As String = Nothing
         Dim tdatenreihe() As Double = Nothing
         Dim istDatenReihe() As Double = Nothing
-
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
         Dim internKapaDatenreihe() As Double = Nothing
+        ' für Rechnungs-Stellung 
+        Dim invoiceDatenreihe() As Double = Nothing
+        Dim formerInvoiceDatenreihe() As Double = Nothing
+
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double
 
@@ -6784,7 +6799,7 @@ Public Module awinDiagrams
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, sCInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -6797,6 +6812,8 @@ Public Module awinDiagrams
 
         ' jetzt die Farbe bestimme
         Dim balkenFarbe As Integer = bestimmeBalkenFarbe(sCInfo)
+
+        ' als Farbe soll jetzt immer VISBO Blau für Forecast dienen 
 
 
         Dim vProjDoesExist As Boolean = Not IsNothing(sCInfo.vglProj)
@@ -6852,115 +6869,229 @@ Public Module awinDiagrams
                 End If
             End If
 
+            ' 
+            If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
+                ' here Actual Data as well as Forecast Data is shown in one Line 
+                ' draw Actual and Plan-Data Line
 
-            If Not dontShowPlanung Then
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                ' here the budget / Auftragswert is being drawn 
+                Try
+                    Dim budgetReihe() As Double = Nothing
+                    ReDim budgetReihe(tdatenreihe.Length - 1)
+                    Dim mybudgetValue = sCInfo.hproj.Erloes
+                    If mybudgetValue > 0 Then
 
-                    If sCInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
-                        .Interior.Color = balkenFarbe
-                    Else
-                        .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
-                    End If
+                        For ix As Integer = 0 To tdatenreihe.Length - 1
+                            budgetReihe(ix) = mybudgetValue
+                        Next
 
-                    .Values = prognoseDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = PlanChartType
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                    If sCInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                        ' es handelt sich um eine Line
-                        .Format.Line.Weight = 4
-                        .Format.Line.ForeColor.RGB = visboFarbeBlau
-                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                    End If
+                            .Name = bestimmeLegendNameIPB("BG") & sCInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeNone
+                            .Values = budgetReihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            .Format.Line.Weight = 2.5
+                            .Format.Line.ForeColor.RGB = visboFarbeNone
 
-                End With
-            End If
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If sCInfo.prPF = ptPRPFType.portfolio Then
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-
-                    .Name = bestimmeLegendNameIPB("C")
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
-
-                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                    With .Format.Line
-                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = visboFarbeRed
-                        .Weight = 2
-                    End With
-
-
-                End With
-
-                Dim tmpSum As Double = internKapaDatenreihe.Sum
-                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
-                    ' es gibt geplante externe Ressourcen ... 
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                        .HasDataLabels = False
-                        '.name = "Kapazität incl. Externe"
-                        .Name = bestimmeLegendNameIPB("CI")
-                        '.Name = repMessages.getmsg(118)
-
-                        .Values = internKapaDatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                        With .Format.Line
-                            .DashStyle = MsoLineDashStyle.msoLineSysDot
-                            .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                            .Weight = 2
                         End With
 
-                    End With
-                End If
+                    End If
+                Catch ex As Exception
 
-            Else
-                If Not IsNothing(sCInfo.vglProj) And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison Then
+                End Try
 
-                    'series
+
+
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                    .Name = bestimmeLegendNameIPB("PA") & sCInfo.hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = tdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .Format.Line.Weight = 4
+                    If dontShowPlanung Then
+                        .Format.Line.ForeColor.RGB = visboFarbeNone
+                    Else
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    End If
+
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    If considerIstDaten And Not dontShowPlanung Then
+                        Try
+                            For ix As Integer = 0 To actualDataIX
+                                .Points(ix + 1).Format.Line.ForeColor.RGB = visboFarbeNone
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    End If
+
+                End With
+
+                ' draw Baseline Line 
+                If Not IsNothing(sCInfo.vglProj) Then
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                         .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeOrange
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
-                        .ChartType = vglChartType
+                    End With
+                End If
 
-                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                .ForeColor.RGB = visboFarbeOrange
-                                .Weight = 4
-                            End With
-                        Else
-                            ' ggf noch was definieren ..
-                        End If
+
+
+                If sCInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+
+                    ' draw invoice Line 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("PIV") & sCInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = invoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    End With
+
+                    ' draw invoices of Baseline 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("BIV") & sCInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = formerInvoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
                     End With
 
                 End If
-            End If
+
+            Else
+                If Not dontShowPlanung Then
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        If sCInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                            .Interior.Color = balkenFarbe
+                        Else
+                            .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeBlau
+                        End If
+
+                        .Values = prognoseDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = PlanChartType
+
+                    End With
+                End If
 
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    If sCInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("IS")
-                    Else
-                        .Name = bestimmeLegendNameIPB("I")
+                ' Beauftragung bzw. Vergleichsdaten
+                If sCInfo.prPF = ptPRPFType.portfolio Then
+                    'series
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("C")
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                            .ForeColor.RGB = visboFarbeRed
+                            .Weight = 2
+                        End With
+
+
+                    End With
+
+                    Dim tmpSum As Double = internKapaDatenreihe.Sum
+                    If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                        ' es gibt geplante externe Ressourcen ... 
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                            .HasDataLabels = False
+                            '.name = "Kapazität incl. Externe"
+                            .Name = bestimmeLegendNameIPB("CI")
+                            '.Name = repMessages.getmsg(118)
+
+                            .Values = internKapaDatenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            With .Format.Line
+                                .DashStyle = MsoLineDashStyle.msoLineSysDot
+                                .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                                .Weight = 2
+                            End With
+
+                        End With
                     End If
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+
+                Else
+                    If Not IsNothing(sCInfo.vglProj) And sCInfo.vergleichsTyp <> PTVergleichsTyp.noComparison Then
+
+                        'series
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                            .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+                            .Values = vdatenreihe
+                            .XValues = Xdatenreihe
+
+                            .ChartType = vglChartType
+
+                            If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                    .ForeColor.RGB = visboFarbeOrange
+                                    .Weight = 4
+                                End With
+                            Else
+                                ' ggf noch was definieren ..
+                            End If
+
+                        End With
+
+                    End If
+                End If
+
+
+                ' jetzt kommt der Neu-Aufbau der Series-Collections
+                If considerIstDaten Then
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        If sCInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("IS")
+                        Else
+                            .Name = bestimmeLegendNameIPB("I")
+                        End If
+                        .Interior.Color = awinSettings.SollIstFarbeArea
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = IstCharttype
+                    End With
+
+                End If
 
             End If
 
@@ -7175,10 +7306,12 @@ Public Module awinDiagrams
     ''' <param name="istDatenReihe"></param>
     ''' <param name="prognoseDatenReihe"></param>
     ''' <param name="internKapaDatenreihe"></param>
+    ''' <param name="invoiceDatenReihe"></param>
     ''' <param name="errMsg"></param>
     Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal scInfo As clsSmartPPTChartInfo,
                                         ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
                                         ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double, ByRef internKapaDatenreihe() As Double,
+                                        ByRef invoiceDatenReihe() As Double, ByRef formerInvoiceDatenReihe() As Double,
                                         ByRef errMsg As String)
 
 
@@ -7191,14 +7324,22 @@ Public Module awinDiagrams
         ReDim tdatenreihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
+        ReDim invoiceDatenReihe(plen - 1)
+        ReDim formerInvoiceDatenReihe(plen - 1)
 
 
-        ' über das pstart und plen ist bereits sichergesteltl, dass beide PRojekte in den Array-Bereich passen
+
+        ' über das pstart und plen ist bereits sichergesteltl, dass beide bzw alle Projekte in den Array-Bereich passen
         ' es muss nur jeweils sichergestellt werden, dass die , falls eines der Projekte kürzer ist, beim richtigen Index loslegen ..
         Dim tmpTdatenreihe() As Double
         ReDim tmpTdatenreihe(0)
         Dim tmpVdatenreihe() As Double
         ReDim tmpVdatenreihe(0)
+
+        Dim tmpInvoices() As Double
+        ReDim tmpInvoices(0)
+        Dim tmpFormerInvoices() As Double
+        ReDim tmpFormerInvoices(0)
 
 
         Dim hprojOffset As Integer = 0
@@ -7281,8 +7422,9 @@ Public Module awinDiagrams
                         prcName = CStr(RoleDefinitions.getTopLevelNodeIDs.First)
                     End If
 
-                    Dim myCollection As New Collection
-                    myCollection.Add(prcName)
+                    Dim myCollection As New Collection From {
+                        prcName
+                    }
 
                     Dim teamID As Integer = -1
                     Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
@@ -7394,9 +7536,9 @@ Public Module awinDiagrams
                             Next
                         Next
 
-
-                        Dim myCollection As New Collection
-                        myCollection.Add(prcName)
+                        Dim myCollection As New Collection From {
+                            prcName
+                        }
                         tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
 
                     End If
@@ -7419,8 +7561,9 @@ Public Module awinDiagrams
 
                         tmpTdatenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
 
-                        Dim myCollection As New Collection
-                        myCollection.Add(prcName)
+                        Dim myCollection As New Collection From {
+                            prcName
+                        }
                         tmpVdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
 
                     End If
@@ -7490,6 +7633,38 @@ Public Module awinDiagrams
 
                 End Try
 
+            Case ptElementTypen.roleCostInvoices
+                ' here always is liquidity = false
+                ' otherwise Fehler , bevause array Length of invoices might be longer  
+
+                Try
+                    If myCustomUserRole.isAllowedToSee("") Then
+
+                        tmpTdatenreihe = scInfo.hproj.getGesamtKostenBedarf
+                        tmpInvoices = scInfo.hproj.getInvoicesPenalties(liquidity:=False)
+
+                        If tmpInvoices.Length > tmpTdatenreihe.Length Then
+                            errMsg = "problem when calculating Invoices of current plan"
+                            Exit Sub
+                        End If
+
+                        If Not IsNothing(scInfo.vglProj) Then
+                            tmpVdatenreihe = scInfo.vglProj.getGesamtKostenBedarf
+                            tmpFormerInvoices = scInfo.vglProj.getInvoicesPenalties(liquidity:=False)
+
+                            If tmpFormerInvoices.Length > tmpVdatenreihe.Length Then
+                                errMsg = "problem when calculating Invoices of baseline"
+                                Exit Sub
+                            End If
+                        End If
+
+                    Else
+                        errMsg = "no rights to see all total costs ... "
+                        Exit Sub
+                    End If
+                Catch ex As Exception
+
+                End Try
 
             Case Else
                 errMsg = "not yet implemented: " & scInfo.elementTyp.ToString
@@ -7511,14 +7686,20 @@ Public Module awinDiagrams
                 tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
             Next
 
-            If scInfo.prPF = ptPRPFType.portfolio Then
+            If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+                For ix As Integer = 0 + hprojOffset To tmpInvoices.Length - 1 + hprojOffset
+                    invoiceDatenReihe(ix) = tmpInvoices(ix - hprojOffset)
+                Next
+            End If
+
+            If Not IsNothing(scInfo.vglProj) Then
                 For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
                     vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
                 Next
-            Else
-                If Not IsNothing(scInfo.vglProj) Then
-                    For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
-                        vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
+
+                If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+                    For ix As Integer = 0 + vprojOffset To tmpFormerInvoices.Length - 1 + vprojOffset
+                        formerInvoiceDatenReihe(ix) = tmpFormerInvoices(ix - vprojOffset)
                     Next
                 End If
             End If
@@ -7548,6 +7729,28 @@ Public Module awinDiagrams
                     vdatenreihe = tmpVdatenreihe
                 End If
 
+                If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+                    ReDim tmpTdatenreihe(plen - 1)
+                    cumulatedValue = 0.0
+                    For ix As Integer = 0 To plen - 1
+                        cumulatedValue = cumulatedValue + invoiceDatenReihe(ix)
+                        tmpTdatenreihe(ix) = cumulatedValue
+                    Next
+
+                    invoiceDatenReihe = tmpTdatenreihe
+
+                    If Not IsNothing(scInfo.vglProj) Then
+                        ReDim tmpVdatenreihe(plen - 1)
+                        cumulatedValue = 0.0
+                        For ix As Integer = 0 To plen - 1
+                            cumulatedValue = cumulatedValue + formerInvoiceDatenReihe(ix)
+                            tmpVdatenreihe(ix) = cumulatedValue
+                        Next
+
+                        formerInvoiceDatenReihe = tmpVdatenreihe
+
+                    End If
+                End If
 
             End If
 
@@ -7636,11 +7839,21 @@ Public Module awinDiagrams
             Case "P"
                 ' Planung Projekt
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Estimate-to-Complete"
+                    tmpResult = "Forecast (ETC)"
                 Else
                     tmpResult = "Forecast (ETC)"
                     ' tmpResult = "Planung (ETC)"
                 End If
+
+            Case "PA"
+                ' bei kumulierten Werten 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Actual and Forecast (EAC)"
+                Else
+                    tmpResult = "Ist und Plan (EAC)"
+                    ' tmpResult = "Planung (ETC)"
+                End If
+
 
             Case "LP"
                 'letzte Planung
@@ -7664,18 +7877,45 @@ Public Module awinDiagrams
             Case "B"
                 ' Beauftragung 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Baseline"
+                    tmpResult = "Baseline (BAC)"
                 Else
-                    tmpResult = "Baseline"
+                    tmpResult = "Baseline (BAC)"
+                    ' tmpResult = "Baseline"
+                End If
+
+            Case "BG"
+                ' Budget , Auftragswert 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Budget (Order-Value)"
+                Else
+                    tmpResult = "Budget (Auftragswert)"
+                    ' tmpResult = "Baseline"
+                End If
+
+            Case "BIV"
+                ' Beauftragung Invoices
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Invoices (Baseline)"
+                Else
+                    tmpResult = "Rechnungen (Baseline)"
+                    ' tmpResult = "Baseline"
+                End If
+
+            Case "PIV"
+                ' Planung Invoices
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Invoices (cur. Plan)"
+                Else
+                    tmpResult = "Rechnungen (akt. Plan)"
                     ' tmpResult = "Baseline"
                 End If
 
             Case "C"
                 ' Capacity  
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Total Capa (intern+extern)"
+                    tmpResult = "Total Capacity"
                 Else
-                    tmpResult = "Gesamt Kapazität (intern+extern)"
+                    tmpResult = "Gesamt Kapazität"
                     'tmpResult = "Gesmat-Kapazität"
                 End If
 
@@ -7726,6 +7966,7 @@ Public Module awinDiagrams
     ''' <param name="scInfo"></param>
     ''' <returns></returns>
     Public Function bestimmeBalkenFarbe(ByVal scInfo As clsSmartPPTChartInfo) As Integer
+
         Dim balkenFarbe As Integer = visboFarbeBlau
 
         Try
@@ -7733,22 +7974,25 @@ Public Module awinDiagrams
                 Select Case scInfo.elementTyp
 
                     Case ptElementTypen.roles
-                        If scInfo.q2 <> "" Then
 
-                            Dim teamID As Integer = -1
-                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(scInfo.q2, teamID)
+                        ' always blue
+                        'If scInfo.q2 <> "" Then
 
-                            If Not IsNothing(tmpRole) Then
-                                balkenFarbe = CInt(tmpRole.farbe)
-                            End If
+                        '    Dim teamID As Integer = -1
+                        '    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(scInfo.q2, teamID)
 
-                        End If
+                        '    If Not IsNothing(tmpRole) Then
+                        '        balkenFarbe = CInt(tmpRole.farbe)
+                        '    End If
+
+                        'End If
 
 
                     Case ptElementTypen.costs
-                        If CostDefinitions.containsName(scInfo.q2) Then
-                            balkenFarbe = CInt(CostDefinitions.getCostdef(scInfo.q2).farbe)
-                        End If
+                        ' alwys blue ...
+                        'If CostDefinitions.containsName(scInfo.q2) Then
+                        '    balkenFarbe = CInt(CostDefinitions.getCostdef(scInfo.q2).farbe)
+                        'End If
 
                     Case ptElementTypen.phases
                         Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(scInfo.q2)
@@ -7880,6 +8124,9 @@ Public Module awinDiagrams
                     ' hier ist es egal, was qualifier2 ist 
                     qualifier2 = repmsg(0)
 
+                Case ptElementTypen.roleCostInvoices
+                    ' hier ist es egal, was qualifier2 ist 
+                    qualifier2 = repmsg(0)
 
                 Case Else
                     tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString

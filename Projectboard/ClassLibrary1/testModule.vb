@@ -461,23 +461,6 @@ Public Module testModule
         End Try
 
 
-        '
-        ' tk wurde ersetzt durch lproj = request.retrieveLastContracted .. siehe Zeile 365
-        ''Try
-
-        ''    projekthistorie.currentIndex = projekthistorie.Count - 1
-        ''    lproj = projekthistorie.letzteFreigabe
-        ''    'If lproj.timeStamp = bproj.timeStamp Then
-        ''    '    ' es gibt ausser der Beauftragung keinen weiteren Freigabestand
-        ''    '    lproj = Nothing
-        ''    'End If
-
-        ''Catch ex As Exception
-        ''    ' es gibt keinen letzten, freigegebenen Stand
-        ''    lproj = Nothing
-        ''End Try
-        ''
-        '
 
         If DateDiff(DateInterval.Month, hproj.startDate, heute) > 0 Then
             istWerteexistieren = True
@@ -501,24 +484,6 @@ Public Module testModule
 
         End Try
 
-        'Try
-        '    pptApp.Visible = False
-        'Catch ex As Exception
-
-        'End Try
-
-
-        ' jetzt gibt es die pptAppFromX ..
-
-        ' das ist hier nicht erlaubt 
-        ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
-
-
-        ' entweder wird das template geöffnet ...
-        ' oder aber es wird in die aktive Presentation geschrieben 
-
-        ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
-        ' und dann wird die entsprechende Titelblatt Präsentation geöffnet 
 
         Try
 
@@ -537,7 +502,12 @@ Public Module testModule
             Else
                 pptCurrentPresentation = pptAppfromX.ActivePresentation
                 ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
-                pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
+                Try
+                    pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
+                Catch ex As Exception
+                    pptTemplatePresentation = pptAppfromX.Presentations.Item(pptTemplateName)
+                End Try
+
 
                 If pptFirstTime Then
 
@@ -2095,7 +2065,7 @@ Public Module testModule
                                         Dim formerSU As Boolean = appInstance.ScreenUpdating
                                         appInstance.ScreenUpdating = False
 
-                                        Call createProjektChartInPPT(smartChartInfo, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                        Call createProjektPortfolioChartInPPT(smartChartInfo, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
                                         ' 
                                         ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
                                         '
@@ -3539,7 +3509,7 @@ Public Module testModule
                 Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(1), tmpTeamID)
                 If RoleDefinitions.containsUid(tmpRoleID) And tmpTeamID = -1 Then
                     qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
-                ElseIf RoleDefinitions.containsUid(tmpRoleID) And RoleDefinitions.containsUID(tmpTeamID) Then
+                ElseIf RoleDefinitions.containsUid(tmpRoleID) And RoleDefinitions.containsUid(tmpTeamID) Then
                     qualifier2 = selectedRoles.Item(1)
                 Else
                     qualifier2 = ""
@@ -6033,7 +6003,7 @@ Public Module testModule
                                     Dim formerSU As Boolean = appInstance.ScreenUpdating
                                     appInstance.ScreenUpdating = False
 
-                                    Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                    Call createProjektPortfolioChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
 
                                     appInstance.ScreenUpdating = formerSU
                                 End If
@@ -6133,7 +6103,7 @@ Public Module testModule
                                         If qualifier2 = "noLegend" Then
                                             noLegend = True
                                         End If
-                                        Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape, noLegend:=noLegend)
+                                        Call createProjektPortfolioChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape, noLegend:=noLegend)
                                         ' 
                                         ' ur: 2020.06.07: einsetzen eines Hyperlink in Chart
                                         '
@@ -6212,7 +6182,7 @@ Public Module testModule
                                 Dim formerSU As Boolean = appInstance.ScreenUpdating
                                 appInstance.ScreenUpdating = False
 
-                                Call createProjektChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+                                Call createProjektPortfolioChartInPPT(smartChartInfo, pptApp, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
 
                                 appInstance.ScreenUpdating = formerSU
 
@@ -7958,7 +7928,7 @@ Public Module testModule
 
     End Sub
 
-    Sub zeichneFortschrittDiagramm(ByVal boxName As String, ByVal compareToID As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
+    Sub zeichneFortschrittDiagramm(ByVal boxName As String, ByVal compareToID As Integer, ByVal auswahl As Integer, ByVal qualifier As String,
                                    ByRef pptShape As pptNS.Shape, ByRef reportObj As xlNS.ChartObject, ByRef notYetDone As Boolean)
 
         Dim PListe As New Collection
@@ -12896,11 +12866,11 @@ Public Module testModule
 
             For Each fullMsName As String In selectedMilestones
 
-                    Dim breadcrumb As String = ""
-                    Dim msName As String = ""
-                    Dim type As Integer = -1
-                    Dim pvName As String = ""
-                    Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
+                Dim breadcrumb As String = ""
+                Dim msName As String = ""
+                Dim type As Integer = -1
+                Dim pvName As String = ""
+                Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
                 If type = -1 Or
                             (type = PTItemType.projekt And pvName = calcProjektKey(hproj)) Or
@@ -12938,31 +12908,31 @@ Public Module testModule
 
                     Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
 
-                        For Each tmpID As String In idCollection
+                    For Each tmpID As String In idCollection
 
-                            Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(tmpID)
+                        Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(tmpID)
 
-                            If Not IsNothing(cMilestone) Then
-                                tmpDate = cMilestone.getDate
-                                If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+                        If Not IsNothing(cMilestone) Then
+                            tmpDate = cMilestone.getDate
+                            If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
 
-                                    If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
-                                        tmpMinimum = tmpDate
-                                    End If
-
-                                    If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
-                                        tmpMaximum = tmpDate
-                                    End If
-
+                                If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                    tmpMinimum = tmpDate
                                 End If
+
+                                If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                    tmpMaximum = tmpDate
+                                End If
+
                             End If
+                        End If
 
-                        Next
+                    Next
 
-                    End If
+                End If
 
 
-                Next
+            Next
 
 
 
@@ -15492,7 +15462,7 @@ Public Module testModule
 
                 End If
 
-                
+
                 If rowYPos > rds.drawingAreaBottom Then
                     Exit For
                 End If
@@ -16942,85 +16912,93 @@ Public Module testModule
         ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
         ' überdeckt werden soll 
 
-        If awinSettings.mppShowMsName Then
+        If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
 
+            Dim doDraw As Boolean = False
+            Dim myText As String = ""
+            Dim myType As PTpptAnnotationType
+            Dim myTitle As String = ""
 
-            copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, pptslide)
-            With copiedShape
+            If awinSettings.mppShowMsName Then
+                doDraw = True
+                myText = msBeschriftung
+                myType = PTpptAnnotationType.text
+                myTitle = "Beschriftung"
+            ElseIf MS.invoice.Key > 0 Then
+                doDraw = True
+                myText = MS.invoice.Key.ToString("##0.#") & " T€"
+                myType = PTpptAnnotationType.invoice
+                myTitle = "Invoice"
+            End If
 
-                .TextFrame2.TextRange.Text = msBeschriftung
-                .Top = CSng(yPosition - rds.YMilestoneText)
-                '.Left = CSng(x1) - .Width / 2
-                .Left = CSng(x1) - .Width / 2
-                '.Name = .Name & .Id
-                Try
-                    .Name = msShapeName & PTpptAnnotationType.text
-                Catch ex As Exception
+            If doDraw Then
+                copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, pptslide)
+                With copiedShape
 
-                End Try
+                    .TextFrame2.TextRange.Text = myText
+                    .Top = CSng(yPosition - rds.YMilestoneText)
+                    '.Left = CSng(x1) - .Width / 2
+                    .Left = CSng(x1) - .Width / 2
+                    '.Name = .Name & .Id
+                    Try
+                        .Name = msShapeName & myType
+                    Catch ex As Exception
 
-                .Title = "Beschriftung"
-                .AlternativeText = ""
-            End With
+                    End Try
 
+                    .Title = myTitle
+                    .AlternativeText = ""
+                End With
+            End If
 
         End If
 
-        ' tk 13.6.20 ggf invoices anzeigen ...
-        Dim showInvoices As Boolean = True
-        If MS.invoice.Key > 0 And showInvoices And Not awinSettings.mppShowMsName Then
-
-            Dim invoiceText As String = MS.invoice.Key.ToString("##0.#") & " T€"
-
-            copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, pptslide)
-            With copiedShape
-
-                .TextFrame2.TextRange.Text = invoiceText
-                .Top = CSng(yPosition - rds.YMilestoneText)
-                '.Left = CSng(x1) - .Width / 2
-                .Left = CSng(x1) - .Width / 2
-                '.Name = .Name & .Id
-                Try
-                    .Name = msShapeName & PTpptAnnotationType.invoice
-                Catch ex As Exception
-
-                End Try
-
-                .Title = "Invoice"
-                .AlternativeText = ""
-            End With
-        End If
 
         ' jetzt muss ggf das Datum angebracht werden 
+        Dim msDateText As String = ""
+        If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
 
-        Dim msDateText As String
+            Dim doDraw As Boolean = False
+            Dim myText As String = ""
+            Dim myType As PTpptAnnotationType
+            Dim myTitle As String = ""
 
-        If awinSettings.mppShowMsDate Then
+            If awinSettings.mppShowMsDate Then
+                doDraw = True
+                myText = msdate.Day.ToString & "." & msdate.Month.ToString
+                myType = PTpptAnnotationType.datum
+                myTitle = "Datum"
+
+            ElseIf MS.penalty.Value > 0 Then
+                doDraw = True
+                myText = MS.penalty.Value.ToString("##0.#") & " T€ (" & MS.penalty.Key.ToShortDateString & ")"
+                myType = PTpptAnnotationType.penalty
+                myTitle = "Penalty"
+            End If
 
 
-            msDateText = msdate.Day.ToString & "." & msdate.Month.ToString
+            If doDraw Then
+                copiedShape = createPPTShapeFromShape(rds.MsDateVorlagenShape, rds.pptSlide)
+                With copiedShape
 
+                    .TextFrame2.TextRange.Text = myText
+                    .Top = CSng(yPosition - rds.YMilestoneDate)
+                    .Left = CSng(x1) - .Width / 2
+                    Try
+                        .Name = msShapeName & myType
+                    Catch ex As Exception
 
-            copiedShape = createPPTShapeFromShape(rds.MsDateVorlagenShape, pptslide)
-            With copiedShape
+                    End Try
 
-                .TextFrame2.TextRange.Text = msDateText
-                .Top = CSng(yPosition - rds.YMilestoneDate)
-                .Left = CSng(x1) - .Width / 2
-                '.Name = .Name & .Id
-                Try
-                    .Name = msShapeName & PTpptAnnotationType.datum
-                Catch ex As Exception
+                    .Title = myTitle
+                    .AlternativeText = ""
 
-                End Try
+                End With
 
-                .Title = "Datum"
-                .AlternativeText = ""
+            End If
 
-            End With
 
         End If
-
 
 
         Dim top As Single = CSng(yPosition - rds.YMilestone)
@@ -17185,7 +17163,6 @@ Public Module testModule
 
         If awinSettings.mppUseInnerText Then
 
-
             sizeFaktor = rds.phaseVorlagenShape.Height / phaseTypApp.height
 
         End If
@@ -17208,68 +17185,114 @@ Public Module testModule
             ' jetzt muss ggf die Beschriftung angebracht werden 
             ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
             ' überdeckt werden soll 
-            If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
+            If (awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText)) Or
+                awinSettings.mppInvoicesPenalties Then
 
+                Dim doDraw As Boolean = False
+                Dim myText As String = ""
+                Dim myType As PTpptAnnotationType
+                Dim myTitle As String = ""
+                Dim leftPos As Single
 
-                copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, rds.pptSlide)
-                With copiedShape
+                If awinSettings.mppShowPhName Then
+                    doDraw = True
+                    myText = phDescription
+                    myType = PTpptAnnotationType.text
+                    myTitle = "Beschriftung"
+                    leftPos = CSng(x1)
+                ElseIf cphase.invoice.Key > 0 Then
+                    doDraw = True
+                    myText = cphase.invoice.Key.ToString("##0.#") & " T€"
+                    myType = PTpptAnnotationType.invoice
+                    myTitle = "Invoice"
 
-                    .TextFrame2.TextRange.Text = phDescription
-                    .Top = CSng(yPosition - rds.YPhasenText)
-                    .Left = CSng(x1)
-                    If .Left + .Width > rds.drawingAreaRight + 2 Then
-                        .Left = rds.drawingAreaRight - .Width + 2
-                    End If
+                End If
 
-                    '.Name = .Name & .Id
-                    Try
-                        .Name = phShapeName & PTpptAnnotationType.text
-                    Catch ex As Exception
+                If doDraw Then
+                    copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, rds.pptSlide)
+                    With copiedShape
 
-                    End Try
+                        .TextFrame2.TextRange.Text = myText
+                        .Top = CSng(yPosition - rds.YPhasenText)
+                        .Left = CSng(x1)
 
-                    .Title = "Beschriftung"
-                    .AlternativeText = ""
+                        If myType = PTpptAnnotationType.invoice Then
+                            leftPos = CSng(x2) - .Width
+                        End If
 
+                        If .Left + .Width > rds.drawingAreaRight + 2 Then
+                            .Left = rds.drawingAreaRight - .Width + 2
+                        End If
 
-                    shapeNames.Add(.Name)
+                        '.Name = .Name & .Id
+                        Try
+                            .Name = phShapeName & myType
+                        Catch ex As Exception
 
+                        End Try
 
+                        .Title = myTitle
+                        .AlternativeText = ""
 
-                End With
+                    End With
+
+                End If
 
 
             End If
 
             ' jetzt muss ggf das Datum angebracht werden 
-            If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
+            If (awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText)) Or
+                awinSettings.mppInvoicesPenalties Then
 
+                Dim doDraw As Boolean = False
+                Dim myText As String = ""
+                Dim myType As PTpptAnnotationType
+                Dim myTitle As String = ""
+                Dim leftPos As Single
 
-                copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, rds.pptSlide)
-                With copiedShape
+                If awinSettings.mppShowPhDate Then
+                    doDraw = True
+                    myText = phDateText
+                    myType = PTpptAnnotationType.datum
+                    myTitle = "Datum"
+                    leftPos = CSng(x1)
+                ElseIf cphase.penalty.Value > 0 Then
+                    doDraw = True
+                    myText = cphase.penalty.Value.ToString("##0.#") & " T€ (" & cphase.penalty.Key.ToShortDateString & ")"
+                    myType = PTpptAnnotationType.penalty
+                    myTitle = "Penalty"
+                End If
 
-                    .TextFrame2.TextRange.Text = phDateText
-                    .Top = CSng(yPosition - rds.YPhasenDatum)
-                    .Left = CSng(x1)
-                    If .Left + .Width > rds.drawingAreaRight + 2 Then
-                        .Left = rds.drawingAreaRight - .Width + 2
-                    End If
+                If doDraw Then
+                    copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, rds.pptSlide)
+                    With copiedShape
 
-                    '.Name = .Name & .Id
-                    Try
-                        .Name = phShapeName & PTpptAnnotationType.datum
-                    Catch ex As Exception
+                        .TextFrame2.TextRange.Text = myText
+                        .Top = CSng(yPosition - rds.YPhasenDatum)
 
-                    End Try
+                        If myType = PTpptAnnotationType.penalty Then
+                            leftPos = CSng(x2) - .Width
+                        End If
 
-                    .Title = "Datum"
-                    .AlternativeText = ""
+                        .Left = leftPos
+                        If .Left + .Width > rds.drawingAreaRight + 2 Then
+                            .Left = rds.drawingAreaRight - .Width + 2
+                        End If
 
+                        '.Name = .Name & .Id
+                        Try
+                            .Name = phShapeName & myType
+                        Catch ex As Exception
 
-                    shapeNames.Add(.Name)
+                        End Try
 
+                        .Title = myTitle
+                        .AlternativeText = ""
 
-                End With
+                    End With
+                End If
+
 
             End If
 
@@ -17304,9 +17327,7 @@ Public Module testModule
                     End If
                 End If
 
-
                 shapeNames.Add(.Name)
-
 
             End With
 
@@ -17403,58 +17424,91 @@ Public Module testModule
                 ' jetzt muss ggf die Beschriftung angebracht werden 
                 ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
                 ' überdeckt werden soll 
-                If awinSettings.mppShowMsName Then
 
+                If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
 
+                    Dim doDraw As Boolean = False
+                    Dim myText As String = ""
+                    Dim myType As PTpptAnnotationType
+                    Dim myTitle As String = ""
 
-                    copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, rds.pptSlide)
-                    With copiedShape
+                    If awinSettings.mppShowMsName Then
+                        doDraw = True
+                        myText = msBeschriftung
+                        myType = PTpptAnnotationType.text
+                        myTitle = "Beschriftung"
+                    ElseIf cMilestone.invoice.Key > 0 Then
+                        doDraw = True
+                        myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
+                        myType = PTpptAnnotationType.invoice
+                        myTitle = "Invoice"
+                    End If
 
-                        .TextFrame2.TextRange.Text = msBeschriftung
-                        .Top = CSng(yPosition - rds.YMilestoneText)
-                        .Left = CSng(x1) - .Width / 2
-                        '.Name = .Name & .Id
-                        Try
-                            .Name = msShapeName & PTpptAnnotationType.text
-                        Catch ex As Exception
+                    If doDraw Then
+                        copiedShape = createPPTShapeFromShape(rds.MsDescVorlagenShape, rds.pptSlide)
+                        With copiedShape
 
-                        End Try
+                            .TextFrame2.TextRange.Text = myText
+                            .Top = CSng(yPosition - rds.YMilestoneText)
+                            '.Left = CSng(x1) - .Width / 2
+                            .Left = CSng(x1) - .Width / 2
+                            '.Name = .Name & .Id
+                            Try
+                                .Name = msShapeName & myType
+                            Catch ex As Exception
 
-                        .Title = "Beschriftung"
-                        .AlternativeText = ""
+                            End Try
 
-                        shapeNames.Add(.Name)
-
-                    End With
-
+                            .Title = myTitle
+                            .AlternativeText = ""
+                        End With
+                    End If
 
                 End If
 
+
                 ' jetzt muss ggf das Datum angebracht werden 
                 Dim msDateText As String = ""
-                If awinSettings.mppShowMsDate Then
+                If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
 
-                    msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+                    Dim doDraw As Boolean = False
+                    Dim myText As String = ""
+                    Dim myType As PTpptAnnotationType
+                    Dim myTitle As String = ""
+
+                    If awinSettings.mppShowMsDate Then
+                        doDraw = True
+                        myText = msDate.Day.ToString & "." & msDate.Month.ToString
+                        myType = PTpptAnnotationType.datum
+                        myTitle = "Datum"
+
+                    ElseIf cMilestone.penalty.Value > 0 Then
+                        doDraw = True
+                        myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
+                        myType = PTpptAnnotationType.penalty
+                        myTitle = "Penalty"
+                    End If
 
 
-                    copiedShape = createPPTShapeFromShape(rds.MsDateVorlagenShape, rds.pptSlide)
-                    With copiedShape
+                    If doDraw Then
+                        copiedShape = createPPTShapeFromShape(rds.MsDateVorlagenShape, rds.pptSlide)
+                        With copiedShape
 
-                        .TextFrame2.TextRange.Text = msDateText
-                        .Top = CSng(yPosition - rds.YMilestoneDate)
-                        .Left = CSng(x1) - .Width / 2
-                        Try
-                            .Name = msShapeName & PTpptAnnotationType.datum
-                        Catch ex As Exception
+                            .TextFrame2.TextRange.Text = myText
+                            .Top = CSng(yPosition - rds.YMilestoneDate)
+                            .Left = CSng(x1) - .Width / 2
+                            Try
+                                .Name = msShapeName & myType
+                            Catch ex As Exception
 
-                        End Try
+                            End Try
 
-                        .Title = "Datum"
-                        .AlternativeText = ""
+                            .Title = myTitle
+                            .AlternativeText = ""
+                        End With
 
-                        shapeNames.Add(.Name)
+                    End If
 
-                    End With
 
                 End If
 

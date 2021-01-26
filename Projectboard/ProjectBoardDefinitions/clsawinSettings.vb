@@ -175,6 +175,8 @@ Public Class clsawinSettings
     Public Property mppSmartTxtPositioning As Boolean
     ' enable Smart Powerpoint
     Public Property mppEnableSmartPPT As Boolean
+    ' Rechnungs- bzw Penalty Beträge anzeigen 
+    Public Property mppInvoicesPenalties As Boolean
 
     ' steuert in der Methode clsFilter.doesnotBlock, ob ein Projekt, das keine Phasen/Meilensteine enthält, vom 
     ' Milestone/Phasen Filter für die Multiprojektsicht blockiert wird oder nicht 
@@ -423,6 +425,8 @@ Public Class clsawinSettings
         _mppEnableSmartPPT = True
 
         _mppProjectsWithNoMPmayPass = False
+        _mppInvoicesPenalties = True
+
 
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True

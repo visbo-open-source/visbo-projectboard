@@ -22,6 +22,7 @@
             allOnOnePage.Text = "all-on-1-Page"
             sortiertNachDauer.Text = "sorted by Duration"
             shwExtendedMode.Text = "Extended Mode"
+            shwInvoices.Text = "Invoice/Penalty"
             Me.Text = "Settings"
         End If
 
@@ -66,6 +67,7 @@
             shwHorizontals.Checked = .mppShowHorizontals
             allOnOnePage.Checked = .mppOnePage
             shwExtendedMode.Checked = .mppExtendedMode
+            shwInvoices.Checked = .mppInvoicesPenalties
 
             filterEmptyProjects.Checked = Not .mppProjectsWithNoMPmayPass
 
@@ -109,6 +111,8 @@
             awinSettings.mppShowAllIfOne = True
         End If
 
+        awinSettings.mppInvoicesPenalties = shwInvoices.Checked
+
 
         MyBase.Close()
 
@@ -128,6 +132,10 @@
     End Sub
 
     Private Sub shwProjectLine_CheckedChanged(sender As Object, e As EventArgs) Handles shwProjectLine.CheckedChanged
+
+    End Sub
+
+    Private Sub KwInMilestone_CheckedChanged(sender As Object, e As EventArgs) Handles KwInMilestone.CheckedChanged
 
     End Sub
 End Class

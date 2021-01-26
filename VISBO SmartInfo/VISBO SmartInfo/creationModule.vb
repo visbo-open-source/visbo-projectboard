@@ -77,13 +77,13 @@ Module creationModule
             customizationPath = My.Settings.customizationPath
 
             ' now define showLeftrange
-            If My.Settings.calLeftDate <> Date.MinValue Then
-                showRangeLeft = getColumnOfDate(My.Settings.calLeftDate)
-            End If
+            'If My.Settings.calLeftDate <> Date.MinValue Then
+            '    showRangeLeft = getColumnOfDate(My.Settings.calLeftDate)
+            'End If
 
-            If My.Settings.calRightDate <> Date.MinValue Then
-                showRangeRight = getColumnOfDate(My.Settings.calRightDate)
-            End If
+            'If My.Settings.calRightDate <> Date.MinValue Then
+            '    showRangeRight = getColumnOfDate(My.Settings.calRightDate)
+            'End If
 
         End With
 
@@ -125,10 +125,11 @@ Module creationModule
 
 
             ' now define showLeftrange
-            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                My.Settings.calLeftDate = getDateofColumn(showRangeLeft, False)
-                My.Settings.calRightDate = getDateofColumn(showRangeRight, True)
-            End If
+            ' tk 25.1.2021 do not do this - not necessary 
+            'If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            '    My.Settings.calLeftDate = getDateofColumn(showRangeLeft, False)
+            '    My.Settings.calRightDate = getDateofColumn(showRangeRight, True)
+            'End If
         End With
 
         ' Settings sichern für den nächsten Programm-Durchlauf
@@ -1439,21 +1440,30 @@ Module creationModule
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
         Dim considerIstDaten As Boolean = False
+        Dim actualDataIX As Integer = -1
 
         ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
         If sCInfo.prPF = ptPRPFType.portfolio Then
             considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(ShowProjekte.actualDataUntil) - getColumnOfDate(StartofCalendar.AddMonths(showRangeLeft))
+            End If
+
         ElseIf sCInfo.prPF = ptPRPFType.project Then
             considerIstDaten = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(sCInfo.hproj.actualDataUntil) - getColumnOfDate(sCInfo.hproj.startDate)
+            End If
         End If
 
 
 
         If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
 
             If considerIstDaten Then
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                'PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             Else
                 PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             End If
@@ -1471,10 +1481,13 @@ Module creationModule
         Dim Xdatenreihe() As String = Nothing
         Dim tdatenreihe() As Double = Nothing
         Dim istDatenReihe() As Double = Nothing
-
         Dim prognoseDatenReihe() As Double = Nothing
         Dim vdatenreihe() As Double = Nothing
         Dim internKapaDatenreihe() As Double = Nothing
+        ' für Rechnungs-Stellung 
+        Dim invoiceDatenreihe() As Double = Nothing
+        Dim formerInvoiceDatenreihe() As Double = Nothing
+
         Dim vDatensumme As Double = 0.0
         Dim tDatenSumme As Double
 
@@ -1503,7 +1516,7 @@ Module creationModule
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, sCInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
 
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
@@ -1596,115 +1609,229 @@ Module creationModule
                 End If
             End If
 
+            If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
 
-            If Not dontShowPlanung Then
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                ' here Actual Data as well as Forecast Data is shown in one Line 
+                ' draw Actual and Plan-Data Line
 
-                    If sCInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
-                        .Interior.Color = balkenFarbe
-                    Else
-                        .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
-                    End If
+                ' here the budget / Auftragswert is being drawn 
+                Try
+                    Dim budgetReihe() As Double = Nothing
+                    ReDim budgetReihe(tdatenreihe.Length - 1)
+                    Dim mybudgetValue = sCInfo.hproj.Erloes
+                    If mybudgetValue > 0 Then
 
-                    .Values = prognoseDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = PlanChartType
+                        For ix As Integer = 0 To tdatenreihe.Length - 1
+                            budgetReihe(ix) = mybudgetValue
+                        Next
 
-                    If sCInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                        ' es handelt sich um eine Line
-                        .Format.Line.Weight = 4
-                        .Format.Line.ForeColor.RGB = visboFarbeBlau
-                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                    End If
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                End With
-            End If
+                            .Name = bestimmeLegendNameIPB("BG") & sCInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeNone
+                            .Values = budgetReihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            .Format.Line.Weight = 2.5
+                            .Format.Line.ForeColor.RGB = visboFarbeNone
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If sCInfo.prPF = ptPRPFType.portfolio Then
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
 
-                    .Name = bestimmeLegendNameIPB("C")
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
-
-                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                    With .Format.Line
-                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = visboFarbeRed
-                        .Weight = 2
-                    End With
-
-
-                End With
-
-                Dim tmpSum As Double = internKapaDatenreihe.Sum
-                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
-                    ' es gibt geplante externe Ressourcen ... 
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                        .HasDataLabels = False
-                        '.name = "Kapazität incl. Externe"
-                        .Name = bestimmeLegendNameIPB("CI")
-                        '.Name = repMessages.getmsg(118)
-
-                        .Values = internKapaDatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
-                            .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
-                            .Weight = 2
                         End With
 
-                    End With
-                End If
+                    End If
+                Catch ex As Exception
 
-            Else
+                End Try
+
+
+
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                    .Name = bestimmeLegendNameIPB("PA") & sCInfo.hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = tdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .Format.Line.Weight = 4
+                    If dontShowPlanung Then
+                        .Format.Line.ForeColor.RGB = visboFarbeNone
+                    Else
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    End If
+
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    If considerIstDaten And Not dontShowPlanung Then
+                        Try
+                            For ix As Integer = 0 To actualDataIX
+                                .Points(ix + 1).Format.Line.ForeColor.RGB = visboFarbeNone
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    End If
+
+                End With
+
+                ' draw Baseline Line 
                 If Not IsNothing(sCInfo.vglProj) Then
-
-                    'series
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                         .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeOrange
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
-                        .ChartType = vglChartType
+                    End With
+                End If
 
-                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                .ForeColor.RGB = visboFarbeOrange
-                                .Weight = 4
-                            End With
-                        Else
-                            ' ggf noch was definieren ..
-                        End If
+
+
+                If sCInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+
+                    ' draw invoice Line 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("PIV") & sCInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = invoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    End With
+
+                    ' draw invoices of Baseline 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("BIV") & sCInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = formerInvoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
                     End With
 
                 End If
-            End If
 
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
+            Else
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    If sCInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("IS")
-                    Else
-                        .Name = bestimmeLegendNameIPB("I")
+                If Not dontShowPlanung Then
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        If sCInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("PS") & Date.Now.ToShortDateString
+                            .Interior.Color = balkenFarbe
+                        Else
+                            .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeBlau
+                        End If
+
+                        .Values = prognoseDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = PlanChartType
+
+                    End With
+                End If
+
+                ' Beauftragung bzw. Vergleichsdaten
+                If sCInfo.prPF = ptPRPFType.portfolio Then
+                    'series
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("C")
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                            .ForeColor.RGB = visboFarbeRed
+                            .Weight = 2
+                        End With
+
+
+                    End With
+
+                    Dim tmpSum As Double = internKapaDatenreihe.Sum
+                    If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                        ' es gibt geplante externe Ressourcen ... 
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                            .HasDataLabels = False
+                            '.name = "Kapazität incl. Externe"
+                            .Name = bestimmeLegendNameIPB("CI")
+                            '.Name = repMessages.getmsg(118)
+
+                            .Values = internKapaDatenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                                .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                                .Weight = 2
+                            End With
+
+                        End With
                     End If
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+
+                Else
+                    If Not IsNothing(sCInfo.vglProj) Then
+
+                        'series
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                            .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
+                            .Values = vdatenreihe
+                            .XValues = Xdatenreihe
+
+                            .ChartType = vglChartType
+
+                            If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                    .ForeColor.RGB = visboFarbeOrange
+                                    .Weight = 4
+                                End With
+                            Else
+                                ' ggf noch was definieren ..
+                            End If
+
+                        End With
+
+                    End If
+                End If
+
+
+                ' jetzt kommt der Neu-Aufbau der Series-Collections
+                If considerIstDaten Then
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        If sCInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("IS")
+                        Else
+                            .Name = bestimmeLegendNameIPB("I")
+                        End If
+                        .Interior.Color = awinSettings.SollIstFarbeArea
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = IstCharttype
+                    End With
+
+                End If
 
             End If
 
@@ -5329,38 +5456,76 @@ Module creationModule
                 ' jetzt muss ggf die Beschriftung angebracht werden 
                 ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
                 ' überdeckt werden soll 
-                If awinSettings.mppShowMsName Then
+                If awinSettings.mppShowMsName Or awinSettings.mppInvoicesPenalties Then
 
-                    newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(PTpptAnnotationType.text),
-                                                 msBeschriftung, "", "Beschriftung", schriftGroesse)
+                    Dim doDraw As Boolean = False
+                    Dim myText As String = ""
+                    Dim myType As PTpptAnnotationType
+                    Dim myTitle As String = ""
+
+                    If awinSettings.mppShowMsName Then
+                        doDraw = True
+                        myText = msBeschriftung
+                        myType = PTpptAnnotationType.text
+                        myTitle = "Beschriftung"
+                    ElseIf cMilestone.invoice.Key > 0 Then
+                        doDraw = True
+                        myText = cMilestone.invoice.Key.ToString("##0.#") & " T€"
+                        myType = PTpptAnnotationType.invoice
+                        myTitle = "Invoice"
+                    End If
+
+                    If doDraw Then
+                        newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(myType),
+                                                 myText, "", myTitle, schriftGroesse)
 
 
-                    With newShape
+                        With newShape
 
-                        .Top = CSng(yPosition - rds.YMilestoneText)
-                        .Left = CSng(x1) - .Width / 2
+                            .Top = CSng(yPosition - rds.YMilestoneText)
+                            .Left = CSng(x1) - .Width / 2
 
 
-                    End With
+                        End With
+                    End If
+
 
 
                 End If
 
                 ' jetzt muss ggf das Datum angebracht werden 
                 Dim msDateText As String = ""
-                If awinSettings.mppShowMsDate Then
+                If awinSettings.mppShowMsDate Or awinSettings.mppInvoicesPenalties Then
 
-                    msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+                    Dim doDraw As Boolean = False
+                    Dim myText As String = ""
+                    Dim myType As PTpptAnnotationType
+                    Dim myTitle As String = ""
 
-                    newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(PTpptAnnotationType.datum),
-                                                 msDateText, "", "Datum", schriftGroesse)
+                    If awinSettings.mppShowMsDate Then
+                        doDraw = True
+                        myText = msDate.Day.ToString & "." & msDate.Month.ToString
+                        myType = PTpptAnnotationType.datum
+                        myTitle = "Datum"
 
-                    With newShape
+                    ElseIf cMilestone.penalty.Value > 0 Then
+                        doDraw = True
+                        myText = cMilestone.penalty.Value.ToString("##0.#") & " T€ (" & cMilestone.penalty.Key.ToShortDateString & ")"
+                        myType = PTpptAnnotationType.penalty
+                        myTitle = "Penalty"
+                    End If
 
-                        .Top = CSng(yPosition - rds.YMilestoneDate)
-                        .Left = CSng(x1) - .Width / 2
+                    If doDraw Then
+                        newShape = rds.addAnnotation(MsoTextOrientation.msoTextOrientationHorizontal, msShapeName, CStr(myType),
+                                                 myText, "", myTitle, schriftGroesse)
 
-                    End With
+                        With newShape
+
+                            .Top = CSng(yPosition - rds.YMilestoneDate)
+                            .Left = CSng(x1) - .Width / 2
+
+                        End With
+                    End If
 
                 End If
 
@@ -5529,66 +5694,116 @@ Module creationModule
             ' jetzt muss ggf die Beschriftung angebracht werden 
             ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
             ' überdeckt werden soll 
-            If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
+            If (awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText)) Or
+                awinSettings.mppInvoicesPenalties Then
 
-                copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, rds.pptSlide)
-                With copiedShape
+                Dim doDraw As Boolean = False
+                Dim myText As String = ""
+                Dim myType As PTpptAnnotationType
+                Dim myTitle As String = ""
+                Dim leftPos As Single
 
-                    .TextFrame2.TextRange.Text = phDescription
-                    .Top = CSng(yPosition + rds.YPhasenText)
-                    .Left = CSng(x1)
-                    If .Left + .Width > rds.drawingAreaRight + 2 Then
-                        .Left = CSng(rds.drawingAreaRight - .Width + 2)
-                    End If
+                If awinSettings.mppShowPhName Then
+                    doDraw = True
+                    myText = phDescription
+                    myType = PTpptAnnotationType.text
+                    myTitle = "Beschriftung"
+                    leftPos = CSng(x1)
+                ElseIf cphase.invoice.Key > 0 Then
+                    doDraw = True
+                    myText = cphase.invoice.Key.ToString("##0.#") & " T€"
+                    myType = PTpptAnnotationType.invoice
+                    myTitle = "Invoice"
 
-                    '.Name = .Name & .Id
-                    Try
-                        .Name = phShapeName & PTpptAnnotationType.text
-                    Catch ex As Exception
+                End If
 
-                    End Try
+                If doDraw Then
+                    copiedShape = createPPTShapeFromShape(rds.PhDescVorlagenShape, rds.pptSlide)
+                    With copiedShape
 
-                    .Title = "Beschriftung"
-                    .AlternativeText = ""
+                        .TextFrame2.TextRange.Text = myText
+                        .Top = CSng(yPosition - rds.YPhasenText)
+                        .Left = CSng(x1)
 
+                        If myType = PTpptAnnotationType.invoice Then
+                            leftPos = CSng(x2) - .Width
+                        End If
 
+                        If .Left + .Width > rds.drawingAreaRight + 2 Then
+                            .Left = CSng(rds.drawingAreaRight - .Width + 2)
+                        End If
 
-                End With
+                        '.Name = .Name & .Id
+                        Try
+                            .Name = phShapeName & myType
+                        Catch ex As Exception
+
+                        End Try
+
+                        .Title = myTitle
+                        .AlternativeText = ""
+
+                    End With
+
+                End If
 
 
             End If
 
             ' jetzt muss ggf das Datum angebracht werden 
-            If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
+            If (awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText)) Or
+                awinSettings.mppInvoicesPenalties Then
 
+                Dim doDraw As Boolean = False
+                Dim myText As String = ""
+                Dim myType As PTpptAnnotationType
+                Dim myTitle As String = ""
+                Dim leftPos As Single
 
+                If awinSettings.mppShowPhDate Then
+                    doDraw = True
+                    myText = phDateText
+                    myType = PTpptAnnotationType.datum
+                    myTitle = "Datum"
+                    leftPos = CSng(x1)
+                ElseIf cphase.penalty.Value > 0 Then
+                    doDraw = True
+                    myText = cphase.penalty.Value.ToString("##0.#") & " T€ (" & cphase.penalty.Key.ToShortDateString & ")"
+                    myType = PTpptAnnotationType.penalty
+                    myTitle = "Penalty"
+                End If
 
-                copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, rds.pptSlide)
-                With copiedShape
+                If doDraw Then
+                    copiedShape = createPPTShapeFromShape(rds.PhDateVorlagenShape, rds.pptSlide)
+                    With copiedShape
 
-                    .TextFrame2.TextRange.Text = phDateText
-                    .Top = CSng(yPosition + rds.YPhasenDatum)
-                    .Left = CSng(x1)
-                    If .Left + .Width > rds.drawingAreaRight + 2 Then
-                        .Left = CSng(rds.drawingAreaRight - .Width + 2)
-                    End If
+                        .TextFrame2.TextRange.Text = myText
+                        .Top = CSng(yPosition - rds.YPhasenDatum)
 
-                    '.Name = .Name & .Id
-                    Try
-                        .Name = phShapeName & PTpptAnnotationType.datum
-                    Catch ex As Exception
+                        If myType = PTpptAnnotationType.penalty Then
+                            leftPos = CSng(x2) - .Width
+                        End If
 
-                    End Try
+                        .Left = leftPos
+                        If .Left + .Width > rds.drawingAreaRight + 2 Then
+                            .Left = rds.drawingAreaRight - .Width + 2
+                        End If
 
-                    .Title = "Datum"
-                    .AlternativeText = ""
+                        '.Name = .Name & .Id
+                        Try
+                            .Name = phShapeName & myType
+                        Catch ex As Exception
 
+                        End Try
 
+                        .Title = myTitle
+                        .AlternativeText = ""
 
-                End With
+                    End With
+                End If
+
 
             End If
-
 
 
             ''End With

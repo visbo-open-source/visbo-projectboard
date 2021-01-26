@@ -589,77 +589,86 @@ Module SIModule1
     ''' <returns></returns>
     Public Function getAppropriateUserRole(ByVal myUserName As String, ByVal encryptedUserRoleString As String,
                                            ByRef meldungen As Collection) As clsCustomUserRole
-        Dim result As clsCustomUserRole = Nothing
 
-        Dim err As New clsErrorCodeMsg
+        ' tk 25.1 kein Abprüfen der customUserRoles mehr ...
 
-        If IsNothing(allMyCustomUserRoles) Then
-            Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
-            If Not IsNothing(allCustomUserRoles) Then
-                allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
-            Else
-                allMyCustomUserRoles = Nothing
-            End If
-        End If
+        Dim result As New clsCustomUserRole
+        With result
+            .userName = dbUsername
+            .customUserRole = ptCustomUserRoles.OrgaAdmin
+        End With
 
-        If encryptedUserRoleString = "" Then
-            result = New clsCustomUserRole
-            With result
-                .userName = dbUsername
-                .customUserRole = ptCustomUserRoles.Alles
-            End With
-        Else
-            If Not IsNothing(allMyCustomUserRoles) Then
-                Dim pptUserRole As New clsCustomUserRole
-                Call pptUserRole.decrypt(encryptedUserRoleString)
+        'Dim result As clsCustomUserRole = Nothing
 
-                Dim found As Boolean = False
-                Dim ix As Integer = 0
+        'Dim err As New clsErrorCodeMsg
 
-                Do While ix <= allMyCustomUserRoles.Count - 1 And Not found
-                    If pptUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                        found = (CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
-                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics) Or
-                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
+        'If IsNothing(allMyCustomUserRoles) Then
+        '    Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+        '    If Not IsNothing(allCustomUserRoles) Then
+        '        allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
+        '    Else
+        '        allMyCustomUserRoles = Nothing
+        '    End If
+        'End If
 
-                    ElseIf CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole Then
-                        found = True
+        'If encryptedUserRoleString = "" Then
+        '    result = New clsCustomUserRole
+        '    With result
+        '        .userName = dbUsername
+        '        .customUserRole = ptCustomUserRoles.Alles
+        '    End With
+        'Else
+        '    If Not IsNothing(allMyCustomUserRoles) Then
+        '        Dim pptUserRole As New clsCustomUserRole
+        '        Call pptUserRole.decrypt(encryptedUserRoleString)
 
-                    ElseIf pptUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or pptUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
-                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
-                                CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
+        '        Dim found As Boolean = False
+        '        Dim ix As Integer = 0
 
-                    End If
+        '        Do While ix <= allMyCustomUserRoles.Count - 1 And Not found
+        '            If pptUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        '                found = (CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
+        '                    CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics) Or
+        '                    CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
 
-                    If found Then
-                        result = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole)
-                        If result.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                            Dim IdArray() As Integer = result.getAggregationRoleIDs
-                        End If
-                    Else
-                        ix = ix + 1
-                    End If
-                Loop
+        '            ElseIf CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole Then
+        '                found = True
 
-            Else
-                result = Nothing
-            End If
-        End If
+        '            ElseIf pptUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or pptUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+        '                found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.PortfolioManager Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.ProjektLeitung Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.Alles Or
+        '                        CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = ptCustomUserRoles.InternalViewer
 
-        If IsNothing(result) Then
-            Dim msg As String = ""
-            If awinSettings.englishLanguage Then
-                msg = "Sorry, you don't have the required user role"
-            Else
-                msg = "Leider haben Sie nicht die geforderte Berechtigung"
-            End If
-            meldungen.Add(msg)
-        End If
+        '            End If
+
+        '            If found Then
+        '                result = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole)
+        '                If result.customUserRole = ptCustomUserRoles.PortfolioManager Then
+        '                    Dim IdArray() As Integer = result.getAggregationRoleIDs
+        '                End If
+        '            Else
+        '                ix = ix + 1
+        '            End If
+        '        Loop
+
+        '    Else
+        '        result = Nothing
+        '    End If
+        'End If
+
+        'If IsNothing(result) Then
+        '    Dim msg As String = ""
+        '    If awinSettings.englishLanguage Then
+        '        msg = "Sorry, you don't have the required user role"
+        '    Else
+        '        msg = "Leider haben Sie nicht die geforderte Berechtigung"
+        '    End If
+        '    meldungen.Add(msg)
+        'End If
 
         getAppropriateUserRole = result
 
@@ -4543,12 +4552,16 @@ Module SIModule1
         Dim diagramTitle As String = " "
         Dim plen As Integer
 
-        Dim Xdatenreihe() As String
-        Dim tdatenreihe() As Double
-        Dim istDatenReihe() As Double
-        Dim prognoseDatenReihe() As Double
-        Dim vdatenreihe() As Double
-        Dim internKapaDatenreihe() As Double
+        Dim Xdatenreihe() As String = Nothing
+        Dim tdatenreihe() As Double = Nothing
+        Dim istDatenReihe() As Double = Nothing
+        Dim prognoseDatenReihe() As Double = Nothing
+        Dim vdatenreihe() As Double = Nothing
+        Dim internKapaDatenreihe() As Double = Nothing
+        ' für Rechnungs-Stellung 
+        Dim invoiceDatenreihe() As Double = Nothing
+        Dim formerInvoiceDatenreihe() As Double = Nothing
+
         Dim vSum As Double = 0.0
         Dim tSum As Double
 
@@ -4568,20 +4581,29 @@ Module SIModule1
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
         Dim considerIstDaten As Boolean = False
+        Dim actualDataIX As Integer = -1
+
 
         ' tk 19.4.19 wenn es sich um ein Portfolio handelt, dann muss rausgefunden werden, was der kleinste Ist-Daten-Value ist 
         If scInfo.prPF = ptPRPFType.portfolio Then
             considerIstDaten = (ShowProjekte.actualDataUntil > StartofCalendar.AddMonths(showRangeLeft - 1))
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(ShowProjekte.actualDataUntil) - getColumnOfDate(StartofCalendar.AddMonths(showRangeLeft))
+            End If
         ElseIf scInfo.prPF = ptPRPFType.project Then
             considerIstDaten = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+            If considerIstDaten Then
+                actualDataIX = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
+            End If
         End If
 
 
         If scInfo.chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
 
             If considerIstDaten Then
-                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                'PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             Else
                 PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
             End If
@@ -4627,13 +4649,14 @@ Module SIModule1
         ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
         ReDim internKapaDatenreihe(plen - 1)
+        ReDim invoiceDatenreihe(plen - 1)
+        ReDim formerInvoiceDatenreihe(plen - 1)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
         Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
-                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, errMsg)
-
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, internKapaDatenreihe, invoiceDatenreihe, formerInvoiceDatenreihe, errMsg)
         If errMsg <> "" Then
             ' es ist ein Fehler aufgetreten
             If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
@@ -4697,114 +4720,229 @@ Module SIModule1
                 End If
             End If
 
-            If Not dontShowPlanung Then
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+            If scInfo.chartTyp = PTChartTypen.CurveCumul Then
 
-                    If scInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
-                        .Interior.Color = balkenFarbe
-                    Else
-                        .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
-                    End If
+                ' here Actual Data as well as Forecast Data is shown in one Line 
+                ' draw Actual and Plan-Data Line
 
+                ' here the budget / Auftragswert is being drawn 
+                Try
+                    Dim budgetReihe() As Double = Nothing
+                    ReDim budgetReihe(tdatenreihe.Length - 1)
+                    Dim mybudgetValue = scInfo.hproj.Erloes
+                    If mybudgetValue > 0 Then
 
-                    .Values = prognoseDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = PlanChartType
+                        For ix As Integer = 0 To tdatenreihe.Length - 1
+                            budgetReihe(ix) = mybudgetValue
+                        Next
 
-                    If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
-                        ' es handelt sich um eine Line
-                        .Format.Line.Weight = 4
-                        .Format.Line.ForeColor.RGB = visboFarbeBlau
-                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                    End If
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                End With
-            End If
+                            .Name = bestimmeLegendNameIPB("BG") & scInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeNone
+                            .Values = budgetReihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            .Format.Line.Weight = 2.5
+                            .Format.Line.ForeColor.RGB = visboFarbeNone
 
-            ' Beauftragung bzw. Vergleichsdaten
-            If scInfo.prPF = ptPRPFType.portfolio Then
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                            .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
 
-                    .Name = bestimmeLegendNameIPB("C")
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
-
-                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                    With .Format.Line
-                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = visboFarbeRed
-                        .Weight = 2
-                    End With
-
-
-                End With
-
-                Dim tmpSum As Double = internKapaDatenreihe.Sum
-                If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
-                    ' es gibt geplante externe Ressourcen ... 
-                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                        .HasDataLabels = False
-                        '.name = "Kapazität incl. Externe"
-                        .Name = bestimmeLegendNameIPB("CI")
-                        '.Name = repMessages.getmsg(118)
-
-                        .Values = internKapaDatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
-                            .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
-                            .Weight = 2
                         End With
 
-                    End With
-                End If
-            Else
-                If Not IsNothing(scInfo.vglProj) Then
+                    End If
+                Catch ex As Exception
 
-                    'series
+                End Try
+
+
+
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                    .Name = bestimmeLegendNameIPB("PA") & scInfo.hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = tdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .Format.Line.Weight = 4
+                    If dontShowPlanung Then
+                        .Format.Line.ForeColor.RGB = visboFarbeNone
+                    Else
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    End If
+
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    If considerIstDaten And Not dontShowPlanung Then
+                        Try
+                            For ix As Integer = 0 To actualDataIX
+                                .Points(ix + 1).Format.Line.ForeColor.RGB = visboFarbeNone
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    End If
+
+                End With
+
+                ' draw Baseline Line 
+                If Not IsNothing(scInfo.vglProj) Then
                     With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
                         .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeOrange
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
-                        .ChartType = vglChartType
+                    End With
+                End If
 
-                        If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                            With .Format.Line
-                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                                .ForeColor.RGB = visboFarbeOrange
-                                .Weight = 4
-                            End With
-                        Else
-                            ' ggf noch was definieren ..
-                        End If
+
+
+                If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+
+                    ' draw invoice Line 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("PIV") & scInfo.hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = invoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+
+                    End With
+
+                    ' draw invoices of Baseline 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("BIV") & scInfo.vglProj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeGreen
+                        .Values = formerInvoiceDatenreihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        .Format.Line.Weight = 1.5
+                        .Format.Line.ForeColor.RGB = visboFarbeGreen
+                        .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
 
                     End With
 
                 End If
-            End If
 
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
+            Else
 
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    If scInfo.prPF = ptPRPFType.portfolio Then
-                        .Name = bestimmeLegendNameIPB("IS")
-                    Else
-                        .Name = bestimmeLegendNameIPB("I")
+                If Not dontShowPlanung Then
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        If scInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("PS") & currentTimestamp.ToShortDateString
+                            .Interior.Color = balkenFarbe
+                        Else
+                            .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                            .Interior.Color = visboFarbeBlau
+                        End If
+
+
+                        .Values = prognoseDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = PlanChartType
+
+                    End With
+                End If
+
+                ' Beauftragung bzw. Vergleichsdaten
+                If scInfo.prPF = ptPRPFType.portfolio Then
+                    'series
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                        .Name = bestimmeLegendNameIPB("C")
+                        .Values = vdatenreihe
+                        .XValues = Xdatenreihe
+
+                        .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                            .ForeColor.RGB = visboFarbeRed
+                            .Weight = 2
+                        End With
+
+
+                    End With
+
+                    Dim tmpSum As Double = internKapaDatenreihe.Sum
+                    If vdatenreihe.Sum > tmpSum And tmpSum > 0 Then
+                        ' es gibt geplante externe Ressourcen ... 
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                            .HasDataLabels = False
+                            '.name = "Kapazität incl. Externe"
+                            .Name = bestimmeLegendNameIPB("CI")
+                            '.Name = repMessages.getmsg(118)
+
+                            .Values = internKapaDatenreihe
+                            .XValues = Xdatenreihe
+                            .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                            With .Format.Line
+                                .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSysDot
+                                .ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbFuchsia
+                                .Weight = 2
+                            End With
+
+                        End With
                     End If
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
+                Else
+                    If Not IsNothing(scInfo.vglProj) Then
+
+                        'series
+                        With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                            .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                            .Values = vdatenreihe
+                            .XValues = Xdatenreihe
+
+                            .ChartType = vglChartType
+
+                            If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                                With .Format.Line
+                                    .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                                    .ForeColor.RGB = visboFarbeOrange
+                                    .Weight = 4
+                                End With
+                            Else
+                                ' ggf noch was definieren ..
+                            End If
+
+                        End With
+
+                    End If
+                End If
+
+
+                ' jetzt kommt der Neu-Aufbau der Series-Collections
+                If considerIstDaten Then
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                        If scInfo.prPF = ptPRPFType.portfolio Then
+                            .Name = bestimmeLegendNameIPB("IS")
+                        Else
+                            .Name = bestimmeLegendNameIPB("I")
+                        End If
+                        .Interior.Color = awinSettings.SollIstFarbeArea
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = IstCharttype
+                    End With
+
+                End If
 
             End If
 
@@ -4886,8 +5024,8 @@ Module SIModule1
 
         pptChart.Refresh()
         ' ur:2019.06.03: anstatt Try CatchEx ohne Aktion versuchsweise
-        On Error Resume Next
-        On Error GoTo 0
+        'On Error Resume Next
+        'On Error GoTo 0
         'pptChartData = Nothing
         'pptChart = Nothing
         pptChartData.BreakLink()
@@ -9526,17 +9664,37 @@ Module SIModule1
                 ' nix weitermachen, dann sollen keine weiteren hier erstellt werden können 
             Else
                 For Each pptShape As PowerPoint.Shape In sld.Shapes
-                    If Not currentSldHasProjectTemplates Then
-                        currentSldHasProjectTemplates = projectComponentNames.Contains(pptShape.Title) Or projectComponentNames.Contains(pptShape.AlternativeText)
-                    End If
 
-                    If Not currentSldHasMultiProjectTemplates Then
-                        currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(pptShape.Title) Or multiprojectComponentNames.Contains(pptShape.AlternativeText)
-                    End If
+                    Try
+                        Dim visboKeyWord As String = ""
+                        Dim tmpStr() As String = Nothing
 
-                    If Not currentSldHasPortfolioTemplates Then
-                        currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(pptShape.Title) Or portfolioComponentNames.Contains(pptShape.AlternativeText)
-                    End If
+                        If pptShape.Title <> "" Then
+                            tmpStr = pptShape.Title.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        ElseIf pptShape.AlternativeText <> "" Then
+                            tmpStr = pptShape.AlternativeText.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        ElseIf pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                            tmpStr = pptShape.TextFrame2.TextRange.Text.Split(New Char() {CChar("("), CChar(")")}, 3)
+                        End If
+
+                        If Not IsNothing(tmpStr) Then
+                            visboKeyWord = tmpStr(0)
+                            If Not currentSldHasProjectTemplates Then
+                                currentSldHasProjectTemplates = projectComponentNames.Contains(visboKeyWord)
+                            End If
+
+                            If Not currentSldHasMultiProjectTemplates Then
+                                currentSldHasMultiProjectTemplates = multiprojectComponentNames.Contains(visboKeyWord)
+                            End If
+
+                            If Not currentSldHasPortfolioTemplates Then
+                                currentSldHasPortfolioTemplates = portfolioComponentNames.Contains(visboKeyWord)
+                            End If
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
 
                 Next
             End If
