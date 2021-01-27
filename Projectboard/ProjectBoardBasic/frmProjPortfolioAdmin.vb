@@ -729,11 +729,11 @@ Public Class frmProjPortfolioAdmin
             If projectConstellations.Contains(currentConstellationPvName) And AlleProjekte.Count > 0 Then
                 ' tk 23.2.19 - wenn eine Constellation geladen wird und als Summary angezeigt werden soll, dann war hier bisher die Liste de rProjekte des Portfolios drin ..!? 
                 'currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
-                currentBrowserConstellation = currentSessionConstellation.copy()
+                currentBrowserConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=False)
 
             ElseIf AlleProjekte.Count > 0 Then
 
-                currentBrowserConstellation = currentSessionConstellation.copy()
+                currentBrowserConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=False)
 
             End If
         End If
@@ -3449,7 +3449,9 @@ Public Class frmProjPortfolioAdmin
 
                     ' TODO: hier muss VarianteName mit berücksichtigt werden
                     Dim toStoreConstellation As clsConstellation =
-                        currentBrowserConstellation.copy(getPnameFromKey(currentConstellationPvName), getVariantnameFromKey(currentConstellationPvName))
+                        currentBrowserConstellation.copy(dontConsiderNoShows:=True,
+                                                         cName:=getPnameFromKey(currentConstellationPvName),
+                                                         vName:=getVariantnameFromKey(currentConstellationPvName))
                     ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
                     'toStoreConstellation.variantName = currentConstellationVariantName
 
@@ -4341,7 +4343,7 @@ Public Class frmProjPortfolioAdmin
 
 
         If IsNothing(beforeFilterConstellation) Then
-            beforeFilterConstellation = currentBrowserConstellation.copy()
+            beforeFilterConstellation = currentBrowserConstellation.copy(dontConsiderNoShows:=False)
         End If
 
         Dim storedAtOrBefore As Date
@@ -4634,7 +4636,7 @@ Public Class frmProjPortfolioAdmin
             stopRecursion = False
         Else
 
-            currentBrowserConstellation = beforeFilterConstellation.copy
+            currentBrowserConstellation = beforeFilterConstellation.copy(dontConsiderNoShows:=False)
             'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
 
             beforeFilterConstellation = Nothing
@@ -4912,11 +4914,11 @@ Public Class frmProjPortfolioAdmin
         ' jetzt wird die CurrentConstellation entsprechend neu bestimmt  ... 
         If showKennung = ptPPAshowAttributes.all Then
             If Not IsNothing(browserConstellationSavPM) Then
-                currentBrowserConstellation = browserConstellationSavPM.copy
+                currentBrowserConstellation = browserConstellationSavPM.copy(dontConsiderNoShows:=False)
             End If
         Else
             If IsNothing(browserConstellationSavPM) Then
-                browserConstellationSavPM = currentBrowserConstellation.copy
+                browserConstellationSavPM = currentBrowserConstellation.copy(dontConsiderNoShows:=False)
             End If
 
             If appliesToVariantsAsWell Then

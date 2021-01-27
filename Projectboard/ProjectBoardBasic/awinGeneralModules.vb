@@ -3875,7 +3875,7 @@ Public Module awinGeneralModules
                 If clearSession Or sessionWasEmpty Or
                     clearBoard Or boardWasEmpty Then
                     'ur: 2019-07-08: notwendig um die vpid zu retten
-                    currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
+                    currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy(False)
                     currentConstellationPvName = calcPortfolioKey(constellationsToShow.Liste.ElementAt(0).Value)
                 Else
                     currentConstellationPvName = calcLastSessionScenarioName()
@@ -4234,7 +4234,7 @@ Public Module awinGeneralModules
 
                     ' darf das so in der DB gespeichert werden? d.h sind für jedes Projekt genau aine Variante enthalten ? 
                     If currentConstellation.isValidForDBStore Then
-                        Dim constellationDB As clsConstellation = currentConstellation.copy(prepareForDB:=True)
+                        Dim constellationDB As clsConstellation = currentConstellation.copy(dontConsiderNoShows:=True, prepareForDB:=True)
 
                         If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(constellationDB, err) Then
                             ' alles in Ordnung, Speichern hat geklappt ...

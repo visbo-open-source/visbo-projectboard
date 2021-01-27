@@ -902,15 +902,15 @@
     ''' <returns></returns>
     Public Function isValidForDBStore() As Boolean
         Dim tmpResult As Boolean = True
-
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-            Dim pName As String = kvp.Value.projectName
-            Dim anzVariants As Integer = getVariantZahl(pName)
-            If anzVariants > 1 Then
-                tmpResult = False
-                Exit For
-            End If
-        Next
+        ' tk nicht mehr nötig, es werden in der Datenbank nur noch Show Items gespeichert 
+        'For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+        '    Dim pName As String = kvp.Value.projectName
+        '    Dim anzVariants As Integer = getVariantZahl(pName)
+        '    If anzVariants > 1 Then
+        '        tmpResult = False
+        '        Exit For
+        '    End If
+        'Next
 
         isValidForDBStore = tmpResult
     End Function
@@ -1070,10 +1070,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property copy(Optional ByVal cName As String = "", Optional ByVal vName As String = "", Optional ByVal prepareForDB As Boolean = False) As clsConstellation
+    Public ReadOnly Property copy(ByVal dontConsiderNoShows As Boolean, Optional ByVal cName As String = "", Optional ByVal vName As String = "", Optional ByVal prepareForDB As Boolean = False) As clsConstellation
         Get
             Dim copyResult As New clsConstellation
             Dim variantName As String = vName
+
             ' wenn leer, soll der Name der zu kopierenden Konstellation verwendet werden 
             If cName = "" Then
                 cName = Me.constellationName
@@ -1093,31 +1094,56 @@
                 .timestamp = Me.timestamp
 
 
-                'If prepareForDB Then
-                '    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                '        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
-                '        .add(cItem:=copiedItem)
-                '    Next
+                If dontConsiderNoShows Then
 
-                '    ' jetzt sortliste und sorttype kopieren 
-                '    .sortListe(_sortType) = _sortList
+                    copyResult.sortCriteria = 1
 
-                '    .lastCustomList = Nothing
-                'Else
-                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
-                    .add(cItem:=copiedItem, noUpdateSortlist:=True)
-                Next
+                    ' loop through sortList ... 
+                    ' tk 27.1.21
+                    Dim newPos As Integer = 2
 
-                ' jetzt sortliste und sorttype kopieren 
-                .sortListe(_sortType) = _sortList
+                    For Each kvp As KeyValuePair(Of String, String) In _sortList
+
+                        Dim myPName As String = kvp.Value
+                        Dim myItem As clsConstellationItem = Nothing
+
+                        For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                            If kvpCI.Value.projectName = myPName And kvpCI.Value.show = True Then
+                                myItem = kvpCI.Value
+                                Exit For
+                            End If
+                        Next
+
+                        If Not IsNothing(myItem) Then
+                            Dim copiedItem As clsConstellationItem = myItem.copy(prepareForDB)
+                            copiedItem.zeile = newPos
+                            .add(cItem:=copiedItem, sKey:=newPos) ' now in copiedItem is the zeile Information which is used to build the sortList 
+                            newPos = newPos + 1
+                        End If
+
+                    Next
+
+                Else
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                        Dim copiedItem As clsConstellationItem = kvp.Value.copy(prepareForDB)
+                        .add(cItem:=copiedItem, noUpdateSortlist:=True)
+
+                    Next
+
+                    .sortListe(_sortType) = _sortList
+
+                End If
+
+
+
 
                 ' jetzt ggf die lastCustomList kopieren 
-                If Not IsNothing(_lastCustomList) Then
-                    If _lastCustomList.Count > 0 Then
-                        .lastCustomList = _lastCustomList
-                    End If
-                End If
+                'If Not IsNothing(_lastCustomList) Then
+                '    If _lastCustomList.Count > 0 Then
+                '        .lastCustomList = _lastCustomList
+                '    End If
+                'End If
                 'End If
 
 

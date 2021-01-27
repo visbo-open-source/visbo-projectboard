@@ -204,8 +204,8 @@ Public Module PBBModules
         ElseIf controlID = "PT0G1B8" Then
             ' Menupunkt Filter  
 
-            Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy("Filter Result")
-            beforeFilterConstellation = currentSessionConstellation.copy("beforeFilter")
+            Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy(False, "Filter Result")
+            beforeFilterConstellation = currentSessionConstellation.copy(False, "beforeFilter")
 
             Dim formerEoU As Boolean = enableOnUpdate
             enableOnUpdate = False

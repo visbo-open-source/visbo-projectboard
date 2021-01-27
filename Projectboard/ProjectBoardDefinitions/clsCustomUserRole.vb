@@ -55,7 +55,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.ProjektLeitung
                 ' vorher war ImpExp Orga etc komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16",
+                _nonAllowance = {"Pt5G2B4", "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16",
                                  "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PThelp",
                                  "PT2G1B1", "PT2G1M1B4",
                                  "PTWebServer"}
@@ -64,7 +64,7 @@ Public Class clsCustomUserRole
             Case ptCustomUserRoles.RessourceManager
                 ' vorher war ImpExp Orga etc komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "Pt5G3B1",
+                _nonAllowance = {"Pt5G2B4", "PT5G3M",
                                  "PT2G1B1", "PT2G1M1B4",
                                  "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1M1-2", "PT4G1M1-3", "PT4G1M0B2", "PT4G1B8", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1B11",
                                  "PT4G2B3", "PT2G1M2B3", "PT2G1M2B8",

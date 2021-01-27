@@ -5054,7 +5054,7 @@ Imports System.Web
             If Not IsNothing(currentSessionConstellation) Then
                 If currentSessionConstellation.Liste.Count <> 0 Then
 
-                    Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy("Sort Result")
+                    Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy(dontConsiderNoShows:=True, cName:="Sort Result")
 
                     If currentSortConstellation.sortCriteria <> sortType Then
                         appInstance.ScreenUpdating = False
