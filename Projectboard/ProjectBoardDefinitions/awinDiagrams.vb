@@ -6364,6 +6364,7 @@ Public Module awinDiagrams
                     rcName = RoleDefinitions.getRoleDefByIDKennung(rcNameID, skillID).name
                 ElseIf CostDefinitions.containsName(roleCost) Then
                     isRole = False
+                    rcName = roleCost
                 Else
                     roleCost = Nothing
                 End If

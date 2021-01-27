@@ -722,7 +722,7 @@ Public Class Tabelle2
                                         ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
 
                                         ' jetzt ist 
-
+                                        isCost = CostDefinitions.containsName(tryRcName)
                                         If Not isCost Then
 
                                             If tryRcName <> rcName Then
@@ -745,6 +745,15 @@ Public Class Tabelle2
                                             End If
 
                                             rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+
+                                        ElseIf isCost Then
+
+                                            If tryRcName <> rcName Then
+                                                ' tryRCName kann in isValidRCChange geändert worden sein 
+                                                rcName = tryRcName
+                                                meWS.Cells(zeile, columnRC).value = rcName
+                                            End If
+
 
                                         End If
 
@@ -791,6 +800,9 @@ Public Class Tabelle2
 
 
                                             ElseIf isCost Then
+
+                                                ' muss päter, wenn es Hierarchied er Kosten gibt ach angepasst werden. 
+                                                currentCell.IndentLevel = 1
                                                 ' es handelt sich um eine Kostenart Änderung 
                                                 If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> rcName.Trim Then
                                                     ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
