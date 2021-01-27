@@ -3,6 +3,7 @@ Imports ClassLibrary1
 Imports DBAccLayer
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
+Imports PowerPoint = Microsoft.Office.Interop.PowerPoint
 Imports Microsoft.Office.Core.MsoThemeColorIndex
 
 Module SIModule1
