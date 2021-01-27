@@ -39,7 +39,7 @@ Partial Class frmRemoveConstellation
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.ListBox1)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(394, 265)
         Me.Panel1.TabIndex = 0
@@ -77,7 +77,6 @@ Partial Class frmRemoveConstellation
         Me.ListBox1.ItemHeight = 16
         Me.ListBox1.Location = New System.Drawing.Point(10, 10)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListBox1.Size = New System.Drawing.Size(374, 196)
         Me.ListBox1.Sorted = True
         Me.ListBox1.TabIndex = 4

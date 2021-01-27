@@ -20,6 +20,7 @@
 
         If frmOption = "ProjConstellation" Then
             Me.Text = "Portfolio aus Session löschen"
+
             For Each kvp As KeyValuePair(Of String, String) In dbPortfolioNames
                 Dim cName As String = addBrackets(kvp.Key, "[", "]")
                 ListBox1.Items.Add(cName)
