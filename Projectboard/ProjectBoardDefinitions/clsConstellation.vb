@@ -88,7 +88,7 @@
 
             If Not IsNothing(Me.variantName) Then
                 If Me.variantName.Length > 0 Then
-                    getFullNameText = Me.constellationName & "[ " & Me.variantName & " ]"
+                    getFullNameText = Me.constellationName & " [ " & Me.variantName & " ]"
                 Else
                     getFullNameText = Me.constellationName
                 End If

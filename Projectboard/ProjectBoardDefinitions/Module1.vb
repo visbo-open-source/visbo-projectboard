@@ -8023,10 +8023,10 @@ Public Module Module1
 
                 End If
 
-                Dim fullName As String = ""
-                If Not IsNothing(currentSessionConstellation) Then
-                    fullName = currentSessionConstellation.getFullNameText
-                End If
+                Dim fullName As String = printName(currentConstellationPvName)
+                'If Not IsNothing(currentSessionConstellation) Then
+                '    fullName = currentSessionConstellation.getFullNameText
+                'End If
 
                 If currentConstellationPvName = "" Then
                     outputmsg = " : " & ShowProjekte.Count & " "
