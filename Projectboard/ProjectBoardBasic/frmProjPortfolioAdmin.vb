@@ -284,7 +284,7 @@ Public Class frmProjPortfolioAdmin
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                     storeToDBasWell.Visible = True
                 Else
-                    storeToDBasWell.Visible = False
+                    storeToDBasWell.Visible = True
                 End If
 
 

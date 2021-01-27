@@ -84,9 +84,9 @@ Public Class frmEinstellungen
             rdbFirst.Text = "First"
             rdbLast.Text = "Last"
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                loadPFV.Text = "always load baseline(s"
+                loadPFV.Text = "consider baseline(s when loading or deleting project-timestamps"
             Else
-                loadPFV.Text = "filter by baseline(s and load as planning version"
+                loadPFV.Text = "load baseline(s as planning version"
             End If
             chkboxPropAnpass.Text = "adjust ressource needs proportionally"
             chkbxPhasesAnteilig.Text = "use monthly overlap percentage in phase bottleneck diagrams"
@@ -100,9 +100,9 @@ Public Class frmEinstellungen
             rdbFirst.Text = "Erster"
             rdbLast.Text = "Letzter"
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                loadPFV.Text = "immer Vorgabe laden"
+                loadPFV.Text = "Laden bzw. Löschen von Timestamps bezieht sich auf Baseline"
             Else
-                loadPFV.Text = "auf Vorgaben filtern und als Planungs-Version laden"
+                loadPFV.Text = "Baseline laden und als Planungs-Version zeigen"
             End If
             chkboxPropAnpass.Text = "Ressourcenbedarfe proportional anpassen"
             chkbxPhasesAnteilig.Text = "Phasen in Monats-Häufigkeitsdiagrammen anteilig berechnen"

@@ -52,7 +52,7 @@ Public Class frmLoadConstellation
             Abbrechen.Text = "Cancel"
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 If awinSettings.loadPFV Then
-                    loadAsSummary.Text = "load and show summary project"
+                    loadAsSummary.Text = "load and show baseline summary project"
                 Else
                     loadAsSummary.Text = "calculate and show summary project"
                 End If
@@ -62,7 +62,7 @@ Public Class frmLoadConstellation
         Else
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 If awinSettings.loadPFV Then
-                    loadAsSummary.Text = "Summary Projekt laden und anzeigen"
+                    loadAsSummary.Text = "Baseline Summary Projekt laden und anzeigen"
                 Else
                     loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
                 End If
