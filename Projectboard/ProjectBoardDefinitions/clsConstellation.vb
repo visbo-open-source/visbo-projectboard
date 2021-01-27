@@ -79,6 +79,26 @@
         End Set
     End Property
 
+    ''' <summary>
+    ''' returns the full name : name [variant-Name]
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getFullNameText() As String
+        Get
+
+            If Not IsNothing(Me.variantName) Then
+                If Me.variantName.Length > 0 Then
+                    getFullNameText = Me.constellationName & "[ " & Me.variantName & " ]"
+                Else
+                    getFullNameText = Me.constellationName
+                End If
+            Else
+                getFullNameText = Me.constellationName
+            End If
+
+        End Get
+    End Property
+
 
     Private _constellationName As String = "Last"
 
@@ -1050,19 +1070,24 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property copy(Optional ByVal cName As String = "", Optional ByVal prepareForDB As Boolean = False) As clsConstellation
+    Public ReadOnly Property copy(Optional ByVal cName As String = "", Optional ByVal vName As String = "", Optional ByVal prepareForDB As Boolean = False) As clsConstellation
         Get
             Dim copyResult As New clsConstellation
-
+            Dim variantName As String = vName
             ' wenn leer, soll der Name der zu kopierenden Konstellation verwendet werden 
             If cName = "" Then
                 cName = Me.constellationName
+                If vName = "" Then
+                    variantName = Me.variantName
+                End If
+
             End If
 
 
             With copyResult
                 .constellationName = cName
-                .variantName = Me.variantName
+                '.variantName = Me.variantName
+                .variantName = variantName
                 .vpID = Me.vpID
 
                 .timestamp = Me.timestamp

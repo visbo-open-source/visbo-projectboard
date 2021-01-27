@@ -29,7 +29,7 @@ Public Class clsProjekte
                 End If
 
                 If updateCurrentConstellation Then
-                    currentConstellationName = calcLastSessionScenarioName()
+                    currentConstellationPvName = calcLastSessionScenarioName()
 
                     Dim key As String = calcProjektKey(project)
                     If currentSessionConstellation.contains(key, False) Then

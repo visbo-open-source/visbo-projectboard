@@ -258,7 +258,7 @@ Public Class frmOptimizeKPI
     Private Sub goldMedal_Click(sender As Object, e As EventArgs) Handles goldMedal.Click
 
         appInstance.ScreenUpdating = False
-        Call loadSessionConstellation(autoSzenarioNamen(1), False, True)
+        Call loadSessionConstellation(calcPortfolioKey(autoSzenarioNamen(1), ""), False, True)
         appInstance.ScreenUpdating = True
 
         Me.progressText.Text = "Geladen: " & autoSzenarioNamen(1)
@@ -268,7 +268,7 @@ Public Class frmOptimizeKPI
     Private Sub silverMedal_Click(sender As Object, e As EventArgs) Handles silverMedal.Click
 
         appInstance.ScreenUpdating = False
-        Call loadSessionConstellation(autoSzenarioNamen(2), False, True)
+        Call loadSessionConstellation(calcPortfolioKey(autoSzenarioNamen(2), ""), False, True)
         appInstance.ScreenUpdating = True
 
         Me.progressText.Text = "Geladen: " & autoSzenarioNamen(2)
@@ -278,7 +278,7 @@ Public Class frmOptimizeKPI
     Private Sub bronceMedal_Click(sender As Object, e As EventArgs) Handles bronceMedal.Click
 
         appInstance.ScreenUpdating = False
-        Call loadSessionConstellation(autoSzenarioNamen(3), False, True)
+        Call loadSessionConstellation(calcPortfolioKey(autoSzenarioNamen(3), ""), False, True)
         appInstance.ScreenUpdating = True
 
         Me.progressText.Text = "Geladen: " & autoSzenarioNamen(3)

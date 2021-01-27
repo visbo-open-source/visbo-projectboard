@@ -330,7 +330,7 @@ Public Module awinGeneralModules
 
 
         ' es gibt ja nix mehr in der Session 
-        currentConstellationName = ""
+        currentConstellationPvName = ""
 
         ' Range zurücksetzen 
         If calledFromPPT Then
@@ -1536,8 +1536,8 @@ Public Module awinGeneralModules
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
             ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
 
 
@@ -3876,9 +3876,9 @@ Public Module awinGeneralModules
                     clearBoard Or boardWasEmpty Then
                     'ur: 2019-07-08: notwendig um die vpid zu retten
                     currentSessionConstellation = constellationsToShow.Liste.ElementAt(0).Value.copy
-                    currentConstellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
+                    currentConstellationPvName = calcPortfolioKey(constellationsToShow.Liste.ElementAt(0).Value)
                 Else
-                    currentConstellationName = calcLastSessionScenarioName()
+                    currentConstellationPvName = calcLastSessionScenarioName()
                     ' hier muss jetzt der sortType auf CustomTF gesetzt werden 
 
                     'ur:2019-07-08: es sind mehrere Portfolios in einer currentSessionConstellation
@@ -3890,7 +3890,7 @@ Public Module awinGeneralModules
 
                 End If
             Else
-                currentConstellationName = calcLastSessionScenarioName()
+                currentConstellationPvName = calcLastSessionScenarioName()
                 ' hier muss jetzt der sortType auf CustomTF gesetzt werden  
                 If Not IsNothing(currentSessionConstellation) Then
                     'ur:2019-07-08: es sind mehrere Portfolios in einer currentSessionConstellation
@@ -4344,7 +4344,7 @@ Public Module awinGeneralModules
                 End If
             Else
                 Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
-                    returnValue = False
+                returnValue = False
             End If
         End If
 
@@ -5355,7 +5355,7 @@ Public Module awinGeneralModules
             End If
         End If
 
-            logInToMongoDB = Not noDBAccess
+        logInToMongoDB = Not noDBAccess
 
     End Function
 
@@ -5532,9 +5532,9 @@ Public Module awinGeneralModules
 
 
                 ' Datenbank ist gestartet
-                If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(DatabaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
                     For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
                         If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
                             filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
@@ -5558,9 +5558,9 @@ Public Module awinGeneralModules
                     ' allee Filter aus DB lesen
 
                     ' Datenbank ist gestartet
-                    If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(DatabaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(True)
+                        Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(True)
                         For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
 
                             If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
@@ -5966,10 +5966,10 @@ Public Module awinGeneralModules
                 ' Filter mit Namen "fName" in DB speichern
 
                 ' Datenbank ist gestartet
-                If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = CType(DatabaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, False)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, False)
                     If returnvalue = False Then
                         Call MsgBox("Fehler bei Schreiben Filter: " & fName)
                     End If
@@ -6013,10 +6013,10 @@ Public Module awinGeneralModules
                 ' Filter mit Namen "fName" in DB speichern
 
                 ' Datenbank ist gestartet
-                If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = CType(DatabaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, True)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, True)
                 Else
                     Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
                 End If
@@ -6053,8 +6053,8 @@ Public Module awinGeneralModules
         If ShowProjekte.contains(pName) Then
 
             ' Aktuelle Konstellation ändert sich dadurch
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
 
             hproj = ShowProjekte.getProject(pName)

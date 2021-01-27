@@ -302,7 +302,7 @@ Public Class clsProjekt
             currentSessionConstellation.updateTFzeile(key, _tfZeile)
 
             Dim tmpConst As clsConstellation =
-                projectConstellations.getConstellation(currentConstellationName)
+                projectConstellations.getConstellation(currentConstellationPvName)
             If Not IsNothing(tmpConst) Then
                 tmpConst.updateTFzeile(key, _tfZeile)
             End If

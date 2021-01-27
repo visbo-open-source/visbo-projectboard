@@ -137,7 +137,7 @@ Public Module Module1
     Public currentSessionConstellation As New clsConstellation
     ' die beforeFilterConstellation ist das Abbild der aktuellen Session vor einer Filteraktion
     Public beforeFilterConstellation As New clsConstellation
-    Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public currentConstellationPvName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
@@ -7963,6 +7963,20 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt den Namen zurück, der in Reports oder auf Projectboard für den CurrentConstellationsNAme in Form name#variant verwendet wird  
+    ''' </summary>
+    ''' <param name="portfolioID"></param>
+    ''' <returns></returns>
+    Public Function printName(ByVal portfolioID As String) As String
+        Dim tmpStr() As String = portfolioID.Split(New Char() {CChar("#")})
+        Dim ccN As String = tmpStr(0)
+        If tmpStr.Length > 1 Then
+            ccN = ccN & " [" & tmpStr(1) & "]"
+        End If
+        printName = ccN
+    End Function
+
+    ''' <summary>
     ''' liefert den Caption Namen des Windows in Abhängigkeit von Portfolio oder Projekt und in Abhängigkeit von der Sprache 
     ''' </summary>
     ''' <param name="visboWindowTyp"></param>
@@ -7977,9 +7991,9 @@ Public Module Module1
 
             Case PTwindows.mptpf
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Charts for Portfolio '" & currentConstellationName & "'"
+                    tmpResult = "Charts for Portfolio '" & printName(currentConstellationPvName) & "'"
                 Else
-                    tmpResult = "Charts für Portfolio " & currentConstellationName & "'"
+                    tmpResult = "Charts für Portfolio " & printName(currentConstellationPvName) & "'"
                 End If
 
             Case PTwindows.mptpr
@@ -7989,9 +8003,9 @@ Public Module Module1
 
             Case PTwindows.meChart
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Project-Chart and Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                    tmpResult = "Project-Chart and Portfolio-Charts '" & printName(currentConstellationPvName) & "': " & ShowProjekte.Count & " projects"
                 Else
-                    tmpResult = "Projekt-Chart und Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                    tmpResult = "Projekt-Chart und Portfolio-Charts '" & printName(currentConstellationPvName) & "': " & ShowProjekte.Count & " Projekte"
                 End If
 
             Case PTwindows.mpt
@@ -8009,10 +8023,15 @@ Public Module Module1
 
                 End If
 
-                If currentConstellationName = "" Then
+                Dim fullName As String = ""
+                If Not IsNothing(currentSessionConstellation) Then
+                    fullName = currentSessionConstellation.getFullNameText
+                End If
+
+                If currentConstellationPvName = "" Then
                     outputmsg = " : " & ShowProjekte.Count & " "
                 Else
-                    outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
+                    outputmsg = " '" & fullName & "' : " & ShowProjekte.Count & " "
                 End If
 
                 If awinSettings.englishLanguage Then

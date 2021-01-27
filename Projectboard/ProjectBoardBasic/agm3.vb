@@ -2135,16 +2135,16 @@ Public Module agm3
                 'sessionConstellationP enthält alle Projekte aus dem Import 
                 Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
 
-
+                Dim scenarioPVName As String = calcPortfolioKey(scenarioNameP, "")
                 If sessionConstellationP.count > 0 Then
 
-                    If projectConstellations.Contains(scenarioNameP) Then
-                        projectConstellations.Remove(scenarioNameP)
+                    If projectConstellations.Contains(scenarioPVName) Then
+                        projectConstellations.Remove(scenarioPVName)
                     End If
 
                     projectConstellations.Add(sessionConstellationP)
                     ' jetzt auf Projekt-Tafel anzeigen 
-                    Call loadSessionConstellation(scenarioNameP, False, True)
+                    Call loadSessionConstellation(scenarioPVName, False, True)
 
                 Else
                     Call MsgBox("keine Projekte importiert ...")
@@ -5044,7 +5044,7 @@ Public Module agm3
         ' den Dateinamen bestimmen ...
 
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " planning " & fNameExtension & ".xlsx"
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & printName(currentConstellationPvName) & " planning " & fNameExtension & ".xlsx"
 
 
         ' hier muss jetzt das entsprechende File aufgemacht werden ...

@@ -1141,7 +1141,8 @@ Public Module awinDiagrams
                     End If
                     With scInfo
                         .prPF = ptPRPFType.portfolio
-                        .pName = currentConstellationName
+                        .pName = getPnameFromKey(currentConstellationPvName)
+                        .vName = getVariantnameFromKey(currentConstellationPvName)
                         .q2 = scInfoQ2
                         .elementTyp = ptElementTypen.roles
                         .einheit = PTEinheiten.personentage
@@ -1178,7 +1179,8 @@ Public Module awinDiagrams
 
                     With scInfo
                         .prPF = ptPRPFType.portfolio
-                        .pName = currentConstellationName
+                        .pName = getPnameFromKey(currentConstellationPvName)
+                        .vName = getVariantnameFromKey(currentConstellationPvName)
                         .q2 = scInfoQ2
                         .elementTyp = ptElementTypen.cashflow
                         .einheit = PTEinheiten.euro
@@ -2014,9 +2016,9 @@ Public Module awinDiagrams
                 End If
             End If
 
-                ' hier werde nur die internen gezeichnet ...
-                If prcTyp = DiagrammTypen(1) Or _
-                   (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
+            ' hier werde nur die internen gezeichnet ...
+            If prcTyp = DiagrammTypen(1) Or
+                   (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or
                    (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .HasDataLabels = False
@@ -2056,9 +2058,9 @@ Public Module awinDiagrams
             .HasTitle = True
 
 
-            If prcTyp = DiagrammTypen(0) Or _
-                    prcTyp = DiagrammTypen(5) Or _
-                    prcTyp = DiagrammTypen(7) Or _
+            If prcTyp = DiagrammTypen(0) Or
+                    prcTyp = DiagrammTypen(5) Or
+                    prcTyp = DiagrammTypen(7) Or
                     prcTyp = DiagrammTypen(8) Then
                 titleSumme = ""
 
@@ -2074,7 +2076,7 @@ Public Module awinDiagrams
                     '                        Format(edatenreihe.Sum, "##,##0") & " / " &
                     '                        Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
                 Else
-                    titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                    titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " &
                                     Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
                 End If
 
@@ -2083,7 +2085,7 @@ Public Module awinDiagrams
 
                 einheit = "T€"
                 If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
-                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                    titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " &
                                         Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                 Else
                     titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
@@ -2117,7 +2119,8 @@ Public Module awinDiagrams
 
                 With scInfo
                     .prPF = ptPRPFType.portfolio
-                    .pName = currentConstellationName
+                    .pName = getPnameFromKey(currentConstellationPvName)
+                    .vName = getVariantnameFromKey(currentConstellationPvName)
                     .q2 = scInfoQ2
                     .elementTyp = ptElementTypen.roles
                     .einheit = PTEinheiten.personentage
@@ -2152,7 +2155,8 @@ Public Module awinDiagrams
 
                 With scInfo
                     .prPF = ptPRPFType.portfolio
-                    .pName = currentConstellationName
+                    .pName = getPnameFromKey(currentConstellationPvName)
+                    .vName = getVariantnameFromKey(currentConstellationPvName)
                     .q2 = scInfoQ2
                     .elementTyp = ptElementTypen.cashflow
                     .einheit = PTEinheiten.euro
@@ -3127,8 +3131,8 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateZielErreichungsDiagramm(ByRef repObj As Excel.ChartObject, ByVal future As Integer, _
-                                                ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateZielErreichungsDiagramm(ByRef repObj As Excel.ChartObject, ByVal future As Integer,
+                                                ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                                 ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim anzDiagrams As Integer, i As Integer
@@ -3250,7 +3254,7 @@ Public Module awinDiagrams
                         height = .height
                     End With
                 End If
-                
+
             Catch ex As Exception
 
             End Try
@@ -3605,7 +3609,7 @@ Public Module awinDiagrams
 
             .ChartTitle.Text = diagramTitle
             .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-            .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+            .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                 titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
         End With
@@ -3746,7 +3750,7 @@ Public Module awinDiagrams
         End If
 
 
-        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " & _
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " &
                                        textZeitraum(showRangeLeft, showRangeRight)
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -3932,7 +3936,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -3984,7 +3988,7 @@ Public Module awinDiagrams
                         height = .height
                     End With
                 End If
-                
+
             Catch ex As Exception
 
 
@@ -4059,7 +4063,7 @@ Public Module awinDiagrams
             itemColor(3) = farbeExterne
         End If
 
-        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " & _
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " &
                                         textZeitraum(showRangeLeft, showRangeRight)
 
 
@@ -4366,7 +4370,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBudgetErgebnisDiagramm_Deprecated(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateBudgetErgebnisDiagramm_Deprecated(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -4798,7 +4802,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBudgetErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateBudgetErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -4953,8 +4957,8 @@ Public Module awinDiagrams
 
                 Dim valueCrossesNull As Boolean = False
 
-                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel),  _
-                            Excel.Workbook).Worksheets.Item(currentSheetName),  _
+                newChtObj = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel),
+                            Excel.Workbook).Worksheets.Item(currentSheetName),
                             Excel.Worksheet).ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
 
                 With newChtObj.Chart
@@ -5184,7 +5188,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBudgetErgebnisDiagrammOld(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateBudgetErgebnisDiagrammOld(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -5676,7 +5680,7 @@ Public Module awinDiagrams
         itemColor(1) = awinSettings.AmpelGelb
 
 
-        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy", repCult) & " - " & _
+        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy", repCult) & " - " &
                                                  StartofCalendar.AddMonths(showRangeRight - 1).ToString("MMM yy", repCult)
 
 
@@ -5709,7 +5713,7 @@ Public Module awinDiagrams
                 End Try
 
 
-                If ((chtTitle Like (diagramTitle & "*")) And _
+                If ((chtTitle Like (diagramTitle & "*")) And
                          (isCockpitChart = istCockpitDiagramm(CType(.ChartObjects(i), Excel.ChartObject)))) Then
                     found = True
                 Else
@@ -6315,7 +6319,7 @@ Public Module awinDiagrams
     ''' </summary>
     ''' <param name="typus"></param>
     ''' <remarks></remarks>
-    Sub awinNeuZeichnenDiagramme(ByVal typus As Integer, _
+    Sub awinNeuZeichnenDiagramme(ByVal typus As Integer,
                                  Optional ByVal roleCost As String = Nothing)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
@@ -7686,21 +7690,21 @@ Public Module awinDiagrams
                 tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
             Next
 
+            For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
+                vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
+            Next
+
             If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
                 For ix As Integer = 0 + hprojOffset To tmpInvoices.Length - 1 + hprojOffset
                     invoiceDatenReihe(ix) = tmpInvoices(ix - hprojOffset)
                 Next
-            End If
 
-            If Not IsNothing(scInfo.vglProj) Then
-                For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
-                    vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
-                Next
-
-                If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
-                    For ix As Integer = 0 + vprojOffset To tmpFormerInvoices.Length - 1 + vprojOffset
-                        formerInvoiceDatenReihe(ix) = tmpFormerInvoices(ix - vprojOffset)
-                    Next
+                If Not IsNothing(scInfo.vglProj) Then
+                    If scInfo.elementTyp = ptElementTypen.roleCostInvoices Then
+                        For ix As Integer = 0 + vprojOffset To tmpFormerInvoices.Length - 1 + vprojOffset
+                            formerInvoiceDatenReihe(ix) = tmpFormerInvoices(ix - vprojOffset)
+                        Next
+                    End If
                 End If
             End If
 

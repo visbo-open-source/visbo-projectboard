@@ -17076,11 +17076,11 @@ Public Module Projekte
     ''' lädt die angegebene Projekt-Konstellation hinzu bzw. neu
     ''' funktioniert nur, wenn sowohl Konstellation als auch alle Projekte  im Hauptspeicher sind 
     ''' </summary>
-    ''' <param name="constellationName">Name der Konstellation</param>
+    ''' <param name="constellationPvName">Name der Konstellation</param>
     ''' <param name="addProjects">gibt an, ob Projekte hinzugefügt werden sollen oder ob komplett neu gezeichnet werden soll</param>
     ''' <param name="updateProjektTafel">gibt an, ob die Projekt-Tafel neu gezeichnet werden soll oder ob die Konstellation nur im Showprojekte geladen werden soll</param> 
     ''' <remarks></remarks>
-    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean,
+    Public Sub loadSessionConstellation(ByVal constellationPvName As String, ByVal addProjects As Boolean,
                                         ByVal updateProjektTafel As Boolean)
 
         Dim activeConstellation As New clsConstellation
@@ -17097,9 +17097,9 @@ Public Module Projekte
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
-            activeConstellation = projectConstellations.getConstellation(constellationName)
+            activeConstellation = projectConstellations.getConstellation(constellationPvName)
         Catch ex As Exception
-            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Call MsgBox(" Projekt-Konstellation " & constellationPvName & " existiert nicht ")
             Exit Sub
         End Try
 
@@ -17198,7 +17198,7 @@ Public Module Projekte
         End If
 
         ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-        currentConstellationName = constellationName
+        currentConstellationPvName = constellationPvName
 
     End Sub
 
@@ -17448,7 +17448,7 @@ Public Module Projekte
 
         If anzOptimierungen > 0 Then
             ' wieder den alten Zustand herstellen 
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, True)
+            Call loadSessionConstellation(calcPortfolioKey(autoSzenarioNamen(0), ""), False, True)
         Else
             ' es hat sich eh nichts geändert ... 
             'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
@@ -18581,8 +18581,8 @@ Public Module Projekte
                 With kvp.Value
 
                     'positionsKennzahl = calcKennziffer(kvp.Value)
-                    If projectConstellations.Contains(currentConstellationName) Then
-                        positionsKennzahl = projectConstellations.getConstellation(currentConstellationName).getBoardZeile(kvp.Key)
+                    If projectConstellations.Contains(currentConstellationPvName) Then
+                        positionsKennzahl = projectConstellations.getConstellation(currentConstellationPvName).getBoardZeile(kvp.Key)
                     Else
                         positionsKennzahl = currentSessionConstellation.getBoardZeile(kvp.Key)
                     End If
@@ -25266,6 +25266,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Function calcLastSessionScenarioName() As String
         Dim tmpResult As String = "_last Session (by " & dbUsername & ")"
+        tmpResult = calcPortfolioKey(tmpResult, "")
         calcLastSessionScenarioName = tmpResult
     End Function
 

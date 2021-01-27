@@ -454,7 +454,7 @@ Public Module agm2
             Call storeSessionConstellation(scenarioName, fullProjectNames)
         End If
 
-        currentConstellationName = scenarioName
+        currentConstellationPvName = scenarioName
 
     End Sub
 
@@ -8892,14 +8892,14 @@ Public Module agm2
             '' alte Vorgehensweise, ohne Configuration
             '' ----------------------------------------
             If outputCollection.Count = 0 Then
-                    ' weitermachen ... 
-                    ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
-                    If newRoleDefinitions.Count > 0 Then
-                        ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                        ' jetzt kommt der Validation-Check 
+                ' weitermachen ... 
+                ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
+                If newRoleDefinitions.Count > 0 Then
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
 
-                        Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
-                        Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
+                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
+                    Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
 
                     If outputCollection.Count > 0 Then
                         ' wird an der aurufenden Stelle ausgegeben ... 
@@ -8936,12 +8936,12 @@ Public Module agm2
                             If Not IsNothing(oldOrga) Then
 
 
-                                    If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
+                                If oldOrga.allRoles.Count > 0 And awinSettings.takeCapasFromOldOrga Then
 
-                                        For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
+                                    For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In oldOrga.allRoles.liste
 
-                                            Try
-                                                Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
+                                        Try
+                                            Dim importedRole As clsRollenDefinition = importedOrga.allRoles.getRoleDefByID(kvp.Key)
 
 
                                             ' wenn sich die Default days per Monat geändert hat 
@@ -9086,34 +9086,34 @@ Public Module agm2
 
                                             ' neues Eintrittsdatum , eher unwahrscheinlich 
                                             If importedRole.entryDate > StartofCalendar Then
-                                                    Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                                    For ix As Integer = 1 To tmpix - 1
-                                                        importedRole.kapazitaet(ix) = 0
-                                                    Next
-                                                End If
-
-                                                Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
-
-                                                For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
+                                                Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                For ix As Integer = 1 To tmpix - 1
                                                     importedRole.kapazitaet(ix) = 0
                                                 Next
-                                            Catch ex As Exception
-                                                Dim a As Integer = 0
-                                            End Try
+                                            End If
+
+                                            Dim exitDateCol As Integer = getColumnOfDate(importedRole.exitDate)
+
+                                            For ix As Integer = exitDateCol To importedRole.kapazitaet.Length - 1
+                                                importedRole.kapazitaet(ix) = 0
+                                            Next
+                                        Catch ex As Exception
+                                            Dim a As Integer = 0
+                                        End Try
 
 
                                     Next
-                                    End If
                                 End If
                             End If
                         End If
-
                     End If
-                End If
 
-            Else
-                importedOrga = New clsOrganisation
+                End If
             End If
+
+        Else
+            importedOrga = New clsOrganisation
+        End If
 
 
         ImportOrganisation = importedOrga
@@ -16166,7 +16166,7 @@ Public Module agm2
 
         Dim ressCostColumn As Integer
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " KUG " & fNameExtension & ".xlsx"
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & printName(currentConstellationPvName) & " KUG " & fNameExtension & ".xlsx"
 
 
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
@@ -17210,9 +17210,9 @@ Public Module agm2
 
         Dim expFName As String = ""
         If considerAll Then
-            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & ".xlsx"
+            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & printName(currentConstellationPvName) & ".xlsx"
         Else
-            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & " Overview " & fNameExtension & ".xlsx"
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & printName(currentConstellationPvName) & " Overview " & fNameExtension & ".xlsx"
         End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 

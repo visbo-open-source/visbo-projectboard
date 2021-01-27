@@ -38,7 +38,7 @@ Public Class clsCustomUserRole
                                  "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1", "PT2G1M2B2",
                                  "PT2G2B2", "separator3", "PTfreezeB1", "PTfreezeB2",
                                  "PTview", "PTmassEdit",
-                                 "PTfilter", "PTsort", "PT0G1s9",
+                                 "PTfilter", "PT0G1s9",
                                  "PTOPTB1",
                                  "PThelp", "PTWebServer"}
 
@@ -56,7 +56,7 @@ Public Class clsCustomUserRole
                 ' vorher war ImpExp Orga etc komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "Pt5G3B1", "PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16",
-                                 "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PTsort", "PThelp",
+                                 "PT2G1B1", "PT2G1B3", "PT2G1M2B3", "PTfilter", "PThelp",
                                  "PT2G1B1", "PT2G1M1B4",
                                  "PTWebServer"}
 
@@ -71,7 +71,7 @@ Public Class clsCustomUserRole
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
-                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
+                                 "PTview", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
 
                 ' Team-Manager und Ressourcen-Manager solten die gleichen Funktionen sehen / nicht sehen 
@@ -83,7 +83,7 @@ Public Class clsCustomUserRole
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
                                  "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
-                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
+                                 "PTview", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
 
                 ' internal Viewer sollte die gleichen Funktionen wie Team und Ressourcen Manager sehen, ausser alles was mit editieren zu tun hat 
@@ -96,7 +96,7 @@ Public Class clsCustomUserRole
                                  "PT5G2split", "PT5G2", "PT5G2M",
                                  "PT4G1M1B2",
                                  "PTneu",
-                                 "PTview", "PTsort", "PTfilter", "PThelp", "PT1G1B6",
+                                 "PTview", "PTfilter", "PThelp", "PT1G1B6",
                                  "PTWebServer"}
             Case Else
                 _nonAllowance = {""}

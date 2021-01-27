@@ -988,8 +988,8 @@ Public Module PBBModules
 
                             ''End With
 
-                            If currentConstellationName <> calcLastSessionScenarioName() Then
-                                currentConstellationName = calcLastSessionScenarioName()
+                            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                                currentConstellationPvName = calcLastSessionScenarioName()
                             End If
 
                             If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(newproj), False) Then
@@ -1028,8 +1028,8 @@ Public Module PBBModules
         End If
 
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
         enableOnUpdate = True
@@ -1073,8 +1073,8 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
     End Sub
@@ -1163,8 +1163,8 @@ Public Module PBBModules
 
             Next
 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
 
             ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
@@ -1224,8 +1224,8 @@ Public Module PBBModules
 
         Call awinDeSelect()
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
 
@@ -1277,8 +1277,8 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
 
@@ -1392,7 +1392,7 @@ Public Module PBBModules
     Sub PBBWriteProtections(ByVal control As IRibbonControl, ByVal setFlag As Boolean)
 
 
-        
+
         Dim writeProtectProjects As New frmProjPortfolioAdmin
         If AlleProjekte.Count > 0 Then
 
@@ -1416,7 +1416,7 @@ Public Module PBBModules
                 Call MsgBox("bitte erst Projekte / Varianten laden ...")
             End If
         End If
-        
+
 
     End Sub
     ''' <summary>
@@ -1456,8 +1456,8 @@ Public Module PBBModules
             Call MsgBox(ex.Message)
         End Try
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
     End Sub

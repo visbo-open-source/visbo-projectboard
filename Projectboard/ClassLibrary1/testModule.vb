@@ -3729,7 +3729,7 @@ Public Module testModule
         Dim fallendShape As pptNS.Shape = Nothing
 
         Dim pptShape As pptNS.Shape
-        Dim portfolioName As String = currentConstellationName
+
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
@@ -3745,8 +3745,10 @@ Public Module testModule
 
         Dim msgtxt As String = ""
 
-        currentSessionConstellation.constellationName = portfolioName
+        currentSessionConstellation.constellationName = getPnameFromKey(currentConstellationPvName)
+        currentSessionConstellation.variantName = getVariantnameFromKey(currentConstellationPvName)
 
+        Dim portfolioName As String = currentSessionConstellation.getFullNameText
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
             pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
@@ -5985,8 +5987,8 @@ Public Module testModule
                                     End If
 
                                     .einheit = PTEinheiten.personentage
-                                    .pName = currentConstellationName
-                                    .vName = ""
+                                    .pName = getPnameFromKey(currentConstellationPvName)
+                                    .vName = getVariantnameFromKey(currentConstellationPvName)
                                     .prPF = ptPRPFType.portfolio
                                     '.q2 = bestimmeRoleQ2(qualifier, selectedRoles)
                                     .q2 = aktRoleName
@@ -6075,8 +6077,8 @@ Public Module testModule
 
                                         .einheit = PTEinheiten.personentage
                                         .elementTyp = ptElementTypen.roles
-                                        .pName = currentConstellationName
-                                        .vName = ""
+                                        .pName = getPnameFromKey(currentConstellationPvName)
+                                        .vName = getVariantnameFromKey(currentConstellationPvName)
                                         .vpid = currentSessionConstellation.vpID
                                         .prPF = ptPRPFType.portfolio
                                         .q2 = bestimmeRoleQ2(qualifier, selectedRoles)
@@ -6163,8 +6165,8 @@ Public Module testModule
 
                                     .einheit = PTEinheiten.euro
                                     .elementTyp = ptElementTypen.fullRolesAndCost
-                                    .pName = currentConstellationName
-                                    .vName = ""
+                                    .pName = getPnameFromKey(currentConstellationPvName)
+                                    .vName = getVariantnameFromKey(currentConstellationPvName)
                                     .vpid = currentSessionConstellation.vpID
                                     .prPF = ptPRPFType.portfolio
                                     '.q2 = bestimmeRoleQ2(qualifier, selectedRoles)
@@ -8514,9 +8516,9 @@ Public Module testModule
 
         With tabelle
 
-            If currentConstellationName.Trim.Length > 0 Then
+            If currentConstellationPvName.Trim.Length > 0 Then
                 CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text =
-                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellationName
+                CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & printName(currentConstellationPvName)
             Else
                 'CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
                 '    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
@@ -11208,7 +11210,7 @@ Public Module testModule
         End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = currentConstellationName & vbLf
+        titelTeile(1) = printName(currentConstellationPvName) & vbLf
         titelTeilLaengen(1) = titelTeile(1).Length
         titelTeile(2) = ""
         titelTeilLaengen(2) = titelTeile(2).Length
@@ -18396,8 +18398,8 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = missingShapes
             End With
         Else
-                'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
-                Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
+            'Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+            Call MsgBox(repMessages.getmsg(19) & vbLf & missingShapes)
         End If
 
         ' jetzt werden alle Shapes invisible gesetzt  ... 

@@ -3235,7 +3235,7 @@ Module SIModule1
                 If scInfo.prPF = ptPRPFType.portfolio And Not scInfo.pName.Contains("_last") Then
 
 
-                    If currentConstellationName = scInfo.pName Then
+                    If currentConstellationPvName = calcPortfolioKey(scInfo.pName, scInfo.vName) Then
                         ' nix tun
                         continueOperation = True
                         portfolio = currentSessionConstellation
@@ -3243,7 +3243,7 @@ Module SIModule1
 
 
                         Try
-                            currentConstellationName = scInfo.pName
+                            currentConstellationPvName = calcPortfolioKey(scInfo.pName, scInfo.vName)
                             ShowProjekte.Clear(updateCurrentConstellation:=False)
 
                             ' lade das Portfolio 
@@ -3587,7 +3587,7 @@ Module SIModule1
                     If Not scInfo.pName.Contains("_last") Then
 
 
-                        If currentConstellationName = scInfo.pName Then
+                        If currentConstellationPvName = calcPortfolioKey(scInfo.pName, scInfo.vName) Then
 
                             If ShowProjekte.Count <> 0 Then
                                 ' nix tun
@@ -3616,7 +3616,7 @@ Module SIModule1
                         Else
 
                             Try
-                                currentConstellationName = scInfo.pName
+                                currentConstellationPvName = calcPortfolioKey(scInfo.pName, scInfo.vName)
                                 ShowProjekte.Clear(updateCurrentConstellation:=False)
 
                                 ' lade das Portfolio 
@@ -10873,7 +10873,7 @@ Module SIModule1
             currentTimestamp = newdate
 
             ' jetzt muss auch die currentConstellationName wieder zurück gesetzt werden 
-            currentConstellationName = ""
+            currentConstellationPvName = ""
 
             Call moveAllShapes()
 

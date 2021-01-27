@@ -44,6 +44,8 @@ Partial Class frmProjPortfolioAdmin
         Me.lblStandvom = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
+        Me.lbl_Variant = New System.Windows.Forms.Label()
+        Me.lbl_Portfolio = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.onlyInactive, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -61,6 +63,8 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.lbl_Portfolio)
+        Me.Panel1.Controls.Add(Me.lbl_Variant)
         Me.Panel1.Controls.Add(Me.txtBoxVariantName)
         Me.Panel1.Controls.Add(Me.chkbxPermanent)
         Me.Panel1.Controls.Add(Me.requiredDate)
@@ -88,9 +92,9 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.txtBoxVariantName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtBoxVariantName.Location = New System.Drawing.Point(16, 513)
+        Me.txtBoxVariantName.Location = New System.Drawing.Point(71, 513)
         Me.txtBoxVariantName.Name = "txtBoxVariantName"
-        Me.txtBoxVariantName.Size = New System.Drawing.Size(310, 20)
+        Me.txtBoxVariantName.Size = New System.Drawing.Size(254, 20)
         Me.txtBoxVariantName.TabIndex = 92
         '
         'chkbxPermanent
@@ -117,7 +121,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.storeToDBasWell.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.storeToDBasWell.AutoSize = True
-        Me.storeToDBasWell.Location = New System.Drawing.Point(253, 539)
+        Me.storeToDBasWell.Location = New System.Drawing.Point(247, 546)
         Me.storeToDBasWell.Name = "storeToDBasWell"
         Me.storeToDBasWell.Size = New System.Drawing.Size(79, 17)
         Me.storeToDBasWell.TabIndex = 89
@@ -189,9 +193,9 @@ Partial Class frmProjPortfolioAdmin
         Me.dropboxScenarioNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.dropboxScenarioNames.FormattingEnabled = True
-        Me.dropboxScenarioNames.Location = New System.Drawing.Point(16, 485)
+        Me.dropboxScenarioNames.Location = New System.Drawing.Point(71, 485)
         Me.dropboxScenarioNames.Name = "dropboxScenarioNames"
-        Me.dropboxScenarioNames.Size = New System.Drawing.Size(310, 21)
+        Me.dropboxScenarioNames.Size = New System.Drawing.Size(255, 21)
         Me.dropboxScenarioNames.TabIndex = 80
         '
         'SelectionSet
@@ -260,7 +264,7 @@ Partial Class frmProjPortfolioAdmin
         'OKButton
         '
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.OKButton.Location = New System.Drawing.Point(16, 554)
+        Me.OKButton.Location = New System.Drawing.Point(19, 543)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(200, 22)
         Me.OKButton.TabIndex = 74
@@ -278,6 +282,26 @@ Partial Class frmProjPortfolioAdmin
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
         Me.TreeViewProjekte.Size = New System.Drawing.Size(310, 422)
         Me.TreeViewProjekte.TabIndex = 73
+        '
+        'lbl_Variant
+        '
+        Me.lbl_Variant.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.lbl_Variant.AutoSize = True
+        Me.lbl_Variant.Location = New System.Drawing.Point(16, 516)
+        Me.lbl_Variant.Name = "lbl_Variant"
+        Me.lbl_Variant.Size = New System.Drawing.Size(49, 13)
+        Me.lbl_Variant.TabIndex = 93
+        Me.lbl_Variant.Text = "Variante:"
+        '
+        'lbl_Portfolio
+        '
+        Me.lbl_Portfolio.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.lbl_Portfolio.AutoSize = True
+        Me.lbl_Portfolio.Location = New System.Drawing.Point(16, 488)
+        Me.lbl_Portfolio.Name = "lbl_Portfolio"
+        Me.lbl_Portfolio.Size = New System.Drawing.Size(48, 13)
+        Me.lbl_Portfolio.TabIndex = 94
+        Me.lbl_Portfolio.Text = "Portfolio:"
         '
         'frmProjPortfolioAdmin
         '
@@ -325,4 +349,6 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents OKButton As Windows.Forms.Button
     Public WithEvents TreeViewProjekte As Windows.Forms.TreeView
     Friend WithEvents txtBoxVariantName As Windows.Forms.TextBox
+    Friend WithEvents lbl_Portfolio As Windows.Forms.Label
+    Friend WithEvents lbl_Variant As Windows.Forms.Label
 End Class

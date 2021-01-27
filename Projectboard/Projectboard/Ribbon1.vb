@@ -82,7 +82,7 @@ Imports System.Web
                 Call storeSessionConstellation(constellationName)
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                currentConstellationName = constellationName
+                currentConstellationPvName = constellationName
             End If
         Else
             Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
@@ -290,16 +290,20 @@ Imports System.Web
 
                     ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
                     ' Window so positionieren, dass die Projekte sichtbar sind ...  
-                    If ShowProjekte.Count > 0 Then
-                        Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
-                        If boardWasEmpty Or clearBoard Then
-                            If leftborder - 12 > 0 Then
-                                appInstance.ActiveWindow.ScrollColumn = leftborder - 12
-                            Else
-                                appInstance.ActiveWindow.ScrollColumn = 1
+                    ' aber nur tun, wenn vorher nisht drin war ...
+                    If boardWasEmpty Then
+                        If ShowProjekte.Count > 0 Then
+                            Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                            If clearBoard Then
+                                If leftborder - 12 > 0 Then
+                                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                                Else
+                                    appInstance.ActiveWindow.ScrollColumn = 1
+                                End If
                             End If
                         End If
                     End If
+
 
                     appInstance.ScreenUpdating = True
 
@@ -479,7 +483,7 @@ Imports System.Web
                 Next
                 If constellationsChecked.Count = 1 Then
                     ' Liste der Portfolios in der DB
-                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errMsg)
+                    dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, errmsg)
                     Dim constellationName As String = constellationsChecked.ElementAt(0).Key
                     Dim vname As String = constellationsChecked.ElementAt(0).Value
                     Dim currentConstellation As clsConstellation = projectConstellations.getConstellation(constellationName, vname)
@@ -870,16 +874,19 @@ Imports System.Web
 
                                 ' jetzt muss untersucht werden, ob der Fenster-Ausschnitt einigermaßen passt ... 
                                 ' Window so positionieren, dass die Projekte sichtbar sind ...  
-                                If ShowProjekte.Count > 0 Then
-                                    Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
-                                    If boardWasEmpty Or clearBoard Then
-                                        If leftborder - 12 > 0 Then
-                                            appInstance.ActiveWindow.ScrollColumn = leftborder - 12
-                                        Else
-                                            appInstance.ActiveWindow.ScrollColumn = 1
+                                If boardWasEmpty Then
+                                    If ShowProjekte.Count > 0 Then
+                                        Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                                        If clearBoard Then
+                                            If leftborder - 12 > 0 Then
+                                                appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                                            Else
+                                                appInstance.ActiveWindow.ScrollColumn = 1
+                                            End If
                                         End If
                                     End If
                                 End If
+
 
                                 appInstance.ScreenUpdating = True
 
@@ -1794,8 +1801,8 @@ Imports System.Web
             ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
             currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
         Else
             If ShowProjekte.Count <= 0 Then
@@ -1914,8 +1921,8 @@ Imports System.Web
         ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
         End If
 
         'Call storeSessionConstellation("Last")
@@ -2309,8 +2316,8 @@ Imports System.Web
 
             Next i
 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
 
         End If
@@ -5813,14 +5820,15 @@ Imports System.Web
                     ' ''Call awinZeichnePlanTafel(False)
                     ' ''Call awinNeuZeichnenDiagramme(2)
 
+                    Dim scenarioPVName As String = calcPortfolioKey(sessionConstellation)
                     If sessionConstellation.count > 0 Then
 
-                        If projectConstellations.Contains(scenarioName) Then
-                            projectConstellations.Remove(scenarioName)
+                        If projectConstellations.Contains(scenarioPVName) Then
+                            projectConstellations.Remove(scenarioPVName)
                         End If
 
                         projectConstellations.Add(sessionConstellation)
-                        Call loadSessionConstellation(scenarioName, False, True)
+                        Call loadSessionConstellation(scenarioPVName, False, True)
 
                         listOfArchivFiles.Add(dateiName)
                     Else
@@ -5874,6 +5882,8 @@ Imports System.Web
 
         Dim getInventurImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
         Call projektTafelInit()
 
@@ -6056,7 +6066,7 @@ Imports System.Web
                                 projectConstellations.Add(sessionConstellationP)
                                 ' jetzt auf Projekt-Tafel anzeigen 
 
-                                currentConstellationName = sessionConstellationP.constellationName
+                                currentConstellationPvName = sessionConstellationP.constellationName
                                 ' tk 2.12.19 jetzt wird diese Constellation gezeichnet 
                                 ' die andere kann dann über loadConstelaltion gezeichnet werden 
                                 Call awinZeichnePlanTafel(sessionConstellationP)
@@ -6127,6 +6137,18 @@ Imports System.Web
 
         End If
 
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
 
 
         enableOnUpdate = True
@@ -6154,6 +6176,7 @@ Imports System.Web
 
         Dim getScenarioImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
         Call projektTafelInit()
 
@@ -6255,6 +6278,19 @@ Imports System.Web
         Else
             'Call MsgBox(" Import Scenario wurde abgebrochen")
         End If
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6474,6 +6510,8 @@ Imports System.Web
         Dim listOfArchivFiles As New List(Of String)
         'Dim xlsRplanImport As Excel.Workbook
 
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
         Call projektTafelInit()
 
 
@@ -6534,6 +6572,19 @@ Imports System.Web
             'Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
             'Call logfileSchreiben(" Import RPLAN-Projekte wurde abgebrochen", dateiName, -1)
         End If
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -6916,16 +6967,16 @@ Imports System.Web
                     Dim importScenarioName As String = "offline Data"
                     Dim importConstellation As clsConstellation = verarbeiteImportProjekte(importScenarioName, noComparison:=False, considerSummaryProjects:=False)
 
-
+                    Dim importScenarioPVName As String = calcPortfolioKey(importScenarioName, "")
                     If importConstellation.count > 0 Then
 
-                        If projectConstellations.Contains(importScenarioName) Then
-                            projectConstellations.Remove(importScenarioName)
+                        If projectConstellations.Contains(importScenarioPVName) Then
+                            projectConstellations.Remove(importScenarioPVName)
                         End If
 
                         projectConstellations.Add(importConstellation)
                         ' jetzt auf Projekt-Tafel anzeigen 
-                        Call loadSessionConstellation(importScenarioName, False, True)
+                        Call loadSessionConstellation(importScenarioPVName, False, True)
 
                     Else
                         logmessage = "keine Projekte importiert ..."
@@ -6985,6 +7036,8 @@ Imports System.Web
         Dim dateiname As String = ""
         Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.actualData))
         Dim anzFiles As Integer = 0
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
         anzFiles = listOfImportfiles.Count
@@ -7649,6 +7702,17 @@ Imports System.Web
 
         End If    ' allesOK
 
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
 
 
         ' Schließen des LogFiles
@@ -8208,6 +8272,8 @@ Imports System.Web
         Dim getVisboImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
 
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
+
         ''Call logfileOpen()
 
         getVisboImport.menueAswhl = PTImpExp.visbo
@@ -8316,6 +8382,18 @@ Imports System.Web
 
         End If
 
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
 
 
         '' Call logfileSchliessen()
@@ -8339,6 +8417,8 @@ Imports System.Web
         Dim dateiName As String
         Dim getMSImport As New frmSelectImportFiles
         Dim returnValue As DialogResult
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
         Call projektTafelInit()
 
@@ -8487,6 +8567,19 @@ Imports System.Web
 
         End If
 
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
+            End If
+        End If
+
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -8504,6 +8597,8 @@ Imports System.Web
         Dim outPutCollection As New Collection
 
         Dim outputLine As String = ""
+
+        Dim boardWasEmpty As Boolean = (ShowProjekte.Count > 0)
 
         ' Konfigurationsdatei lesen und Validierung durchführen
 
@@ -8602,6 +8697,18 @@ Imports System.Web
                 Call showOutPut(outPutCollection, "Import Projects", "please check the notifications ...")
             Else
                 Call showOutPut(outPutCollection, "Einlesen Projekte", "folgende Probleme sind aufgetaucht")
+            End If
+        End If
+
+        ' so positionieren, dass die Projekte auch sichtbar sind ...
+        If boardWasEmpty Then
+            If ShowProjekte.Count > 0 Then
+                Dim leftborder As Integer = ShowProjekte.getMinMonthColumn
+                If leftborder - 12 > 0 Then
+                    appInstance.ActiveWindow.ScrollColumn = leftborder - 12
+                Else
+                    appInstance.ActiveWindow.ScrollColumn = 1
+                End If
             End If
         End If
 

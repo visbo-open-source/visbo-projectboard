@@ -31,6 +31,7 @@
     Public Function addToLoadedSessionPortfolios(ByVal portfolioName As String, Optional ByVal vName As String = "") As Boolean
         Dim tmpResult As Boolean = True
         Dim pvName As String = calcPortfolioKey(portfolioName, vName)
+
         If Me.Contains(pvName) Then
             If Not _listOfLoadedSessionPortfolios.ContainsKey(pvName) Then
                 _listOfLoadedSessionPortfolios.Add(pvName, True)
@@ -187,7 +188,7 @@
 
     End Property
 
-    Public ReadOnly Property getConstellation(name As String, Optional ByVal vname As String = "") As clsConstellation
+    Public ReadOnly Property getConstellation(ByVal name As String, Optional ByVal vname As String = "") As clsConstellation
 
         Get
             If name <> "" Then
@@ -203,8 +204,13 @@
         End Get
     End Property
 
-    Public ReadOnly Property Contains(name As String) As Boolean
+    Public ReadOnly Property Contains(ByVal name As String) As Boolean
         Get
+            Dim trennzeichen = "#"
+            If Not name.Contains(trennzeichen) Then
+                name = calcPortfolioKey(name, "")
+            End If
+
             Contains = _allConstellations.ContainsKey(name)
         End Get
     End Property
@@ -251,6 +257,7 @@
     Public Sub update(item As clsConstellation)
         Dim trennzeichen As String = "#"
         Me.clearLoadedPortfolios()
+
         Dim pvName As String = calcPortfolioKey(item)
         If Me._allConstellations.ContainsKey(pvName) Then
             Me._allConstellations.Remove(pvName)
@@ -266,7 +273,16 @@
     Sub Remove(ByVal key As String)
 
         Try
-            _allConstellations.Remove(key)
+            Dim trennzeichen As String = "#"
+
+            If Not key.Contains(trennzeichen) Then
+                key = calcPortfolioKey(key, "")
+            End If
+
+            If _allConstellations.ContainsKey(key) Then
+                _allConstellations.Remove(key)
+            End If
+
         Catch ex As Exception
             Throw New ArgumentException("Konstellation" & " key " & "konnte nicht gelöscht werden ")
         End Try

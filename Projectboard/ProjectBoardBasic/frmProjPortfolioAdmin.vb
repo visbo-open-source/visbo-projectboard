@@ -127,6 +127,8 @@ Public Class frmProjPortfolioAdmin
             ' Text des Versions-Feldes
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                 .lblStandvom.Text = "Version at:"
+                .lbl_Portfolio.Text = "Portfolio:"
+                .lbl_Variant.Text = "Variant:"
             End If
 
             If aKtionskennung = PTTvActions.activateV Then
@@ -151,6 +153,9 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
+
                 .OKButton.Visible = False
 
                 '.lblVersionen1.Visible = False
@@ -187,6 +192,10 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
+
+
                 .OKButton.Visible = True
                 If awinSettings.englishLanguage Then
                     .OKButton.Text = "Select as template"
@@ -241,6 +250,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = True
                 .txtBoxVariantName.Visible = True
+                .lbl_Portfolio.Visible = True
+                .lbl_Variant.Visible = True
 
                 .OKButton.Visible = True
                 '.OKButton.Text = "Szenario speichern"
@@ -301,6 +312,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     OKButton.Text = "aus Session Löschen"
@@ -345,6 +358,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -388,6 +403,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -396,20 +413,6 @@ Public Class frmProjPortfolioAdmin
                     .OKButton.Text = "Delete from DB"
                 End If
 
-
-                '.lblVersionen1.Visible = True
-                '.lblVersionen2.Visible = True
-
-                'If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                '    lblVersionen1.Text = "delete all except"
-                '    lblVersionen2.Text = "different versions"
-                'End If
-
-                '.versionsToKeep.Visible = True
-                '.versionsToKeep.Value = 3
-                '.lblVersionen1.Top = .lblVersionen1.Top + versionenOffset
-                '.lblVersionen2.Top = .lblVersionen2.Top + versionenOffset
-                '.versionsToKeep.Top = .versionsToKeep.Top + versionenOffset
                 .dropboxScenarioNames.Top = .dropboxScenarioNames.Top - versionenOffset
 
                 onlyActive.Visible = False
@@ -441,6 +444,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -479,6 +484,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
 
                 .OKButton.Visible = True
@@ -518,6 +525,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
 
                 .OKButton.Visible = True
@@ -556,7 +565,9 @@ Public Class frmProjPortfolioAdmin
                 .deleteFilterIcon.Visible = False
 
                 .dropboxScenarioNames.Visible = False
-
+                .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
                 .OKButton.Visible = True
 
@@ -595,6 +606,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
 
                 .OKButton.Visible = True
@@ -633,6 +646,8 @@ Public Class frmProjPortfolioAdmin
 
                 .dropboxScenarioNames.Visible = False
                 .txtBoxVariantName.Visible = False
+                .lbl_Portfolio.Visible = False
+                .lbl_Variant.Visible = False
 
 
                 .OKButton.Visible = False
@@ -705,13 +720,13 @@ Public Class frmProjPortfolioAdmin
 
         ' wie heisst das aktuelle Szenario ? 
         If aKtionskennung <> PTTvActions.loadPVInPPT And aKtionskennung <> PTTvActions.loadMultiPVInPPT Then
-            Me.Text = Me.Text & ": " & currentConstellationName
+            Me.Text = Me.Text & ": " & printName(currentConstellationPvName)
         End If
 
 
         ' neuer Ansatz
         If Not quickList Then
-            If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
+            If projectConstellations.Contains(currentConstellationPvName) And AlleProjekte.Count > 0 Then
                 ' tk 23.2.19 - wenn eine Constellation geladen wird und als Summary angezeigt werden soll, dann war hier bisher die Liste de rProjekte des Portfolios drin ..!? 
                 'currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
                 currentBrowserConstellation = currentSessionConstellation.copy()
@@ -811,7 +826,7 @@ Public Class frmProjPortfolioAdmin
 
             If awinSettings.loadPFV Or (awinSettings.filterPFV And aKtionskennung = PTTvActions.loadPV) Then
                 pvNamesList = reduceRawListTo(pvNamesListRaw, True)
-            ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aktionskennung = PTTvActions.loadMultiPVInPPT Then
+            ElseIf aKtionskennung = PTTvActions.loadPVInPPT Or aKtionskennung = PTTvActions.loadMultiPVInPPT Then
                 pvNamesList = pvNamesListRaw
             Else
                 pvNamesList = reduceRawListTo(pvNamesListRaw, False)
@@ -945,8 +960,8 @@ Public Class frmProjPortfolioAdmin
         ' das muss hier vermerkt werden ...
         If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.activateV Then
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
             End If
 
             Dim preText As String
@@ -956,7 +971,7 @@ Public Class frmProjPortfolioAdmin
                 preText = "Portfolio "
             End If
 
-            Me.Text = preText & currentConstellationName
+            Me.Text = preText & printName(currentConstellationPvName)
         End If
 
         If My.Computer.Keyboard.ShiftKeyDown Then
@@ -2438,20 +2453,20 @@ Public Class frmProjPortfolioAdmin
             ElseIf Not IsNothing(hproj) Then
 
                 If hproj.variantDescription.Length > 0 Then
-                        tmpText = hproj.variantDescription
-                        If tmpText.Length > allowedLength Then
-                            tmpText = tmpText.Substring(0, allowedLength) & "..."
-                        End If
+                    tmpText = hproj.variantDescription
+                    If tmpText.Length > allowedLength Then
+                        tmpText = tmpText.Substring(0, allowedLength) & "..."
                     End If
                 End If
-
-            ElseIf level = 2 Then
-                ' noch kein ToolTippText verfügbar
             End If
 
+        ElseIf level = 2 Then
+            ' noch kein ToolTippText verfügbar
+        End If
 
 
-            getToolTippText = tmpText
+
+        getToolTippText = tmpText
 
     End Function
 
@@ -3354,8 +3369,8 @@ Public Class frmProjPortfolioAdmin
                 aKtionskennung = PTTvActions.loadPVInPPT Or
                 aKtionskennung = PTTvActions.loadMultiPVInPPT Or
                 aKtionskennung = PTTvActions.deleteV Then
-                If currentConstellationName <> calcLastSessionScenarioName() Then
-                    currentConstellationName = calcLastSessionScenarioName()
+                If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                    currentConstellationPvName = calcLastSessionScenarioName()
                 End If
 
                 'Call storeSessionConstellation("Last")
@@ -3428,15 +3443,15 @@ Public Class frmProjPortfolioAdmin
                     End If
                     Call MsgBox(msgtxt)
                 Else
-                    currentConstellationName = dropboxScenarioNames.Text
+                    currentConstellationPvName = calcPortfolioKey(dropboxScenarioNames.Text, txtBoxVariantName.Text)
                     'currentBrowserConstellation.constellationName = currentConstellationName
-                    Dim currentConstellationVariantName As String = txtBoxVariantName.Text
+                    'Dim currentConstellationVariantName As String = txtBoxVariantName.Text
 
                     ' TODO: hier muss VarianteName mit berücksichtigt werden
                     Dim toStoreConstellation As clsConstellation =
-                        currentBrowserConstellation.copy(currentConstellationName)
+                        currentBrowserConstellation.copy(getPnameFromKey(currentConstellationPvName), getVariantnameFromKey(currentConstellationPvName))
                     ' TODO: eigentlich so: currentBrowserConstellation.copy(currentConstellationName,currentConstellationVariantName)
-                    toStoreConstellation.variantName = currentConstellationVariantName
+                    'toStoreConstellation.variantName = currentConstellationVariantName
 
 
                     ' Korrektheitsprüfung
@@ -3476,9 +3491,9 @@ Public Class frmProjPortfolioAdmin
 
                         Else
                             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                                txtMsg1 = "ok, " & currentConstellationName & " in Datenbank und Session gespeichert"
+                                txtMsg1 = "ok, " & printName(currentConstellationPvName) & " in Datenbank und Session gespeichert"
                             Else
-                                txtMsg1 = "ok, " & currentConstellationName & " stored in Session and database"
+                                txtMsg1 = "ok, " & printName(currentConstellationPvName) & " stored in Session and database"
                             End If
                             Call MsgBox(txtMsg1)
                         End If
@@ -3509,12 +3524,12 @@ Public Class frmProjPortfolioAdmin
                             Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
 
                             Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                            If AlleProjekte.Containskey(skey) Then
-                                AlleProjekte.Remove(skey)
+                            If AlleProjektSummaries.Containskey(skey) Then
+                                AlleProjektSummaries.Remove(skey, updateCurrentConstellation:=False)
                             End If
 
-                            If Not AlleProjekte.Containskey(skey) Then
-                                AlleProjekte.Add(sproj)
+                            If Not AlleProjektSummaries.Containskey(skey) Then
+                                AlleProjektSummaries.Add(sproj, updateCurrentConstellation:=False)
                             End If
 
                         Catch ex As Exception
@@ -3523,9 +3538,9 @@ Public Class frmProjPortfolioAdmin
 
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                            txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
+                            txtMsg1 = "ok, " & printName(currentConstellationPvName) & " in Session gespeichert"
                         Else
-                            txtMsg1 = "ok, " & currentConstellationName & " stored in Session"
+                            txtMsg1 = "ok, " & printName(currentConstellationPvName) & " stored in Session"
                         End If
                         Call MsgBox(txtMsg1)
                     End If
@@ -3836,15 +3851,15 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.activateV Then
 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
 
                 Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                     preText = "Portfolio "
                 End If
 
-                Me.Text = preText & currentConstellationName
+                Me.Text = preText & printName(currentConstellationPvName)
             End If
 
         End If
@@ -4223,14 +4238,14 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.activateV Then
 
-            If currentConstellationName <> calcLastSessionScenarioName() Then
-                currentConstellationName = calcLastSessionScenarioName()
+            If currentConstellationPvName <> calcLastSessionScenarioName() Then
+                currentConstellationPvName = calcLastSessionScenarioName()
 
                 Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                     preText = "Portfolio "
                 End If
-                Me.Text = preText & currentConstellationName
+                Me.Text = preText & printName(currentConstellationPvName)
             End If
 
         End If
@@ -4314,14 +4329,14 @@ Public Class frmProjPortfolioAdmin
 
         awinSettings.useHierarchy = True
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
 
             Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                 preText = "Portfolio "
             End If
-            Me.Text = preText & currentConstellationName
+            Me.Text = preText & printName(currentConstellationPvName)
         End If
 
 
@@ -4816,14 +4831,14 @@ Public Class frmProjPortfolioAdmin
     ''' <remarks></remarks>
     Private Sub onlyActive_Click(sender As Object, e As EventArgs) Handles onlyActive.Click
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
 
             Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                 preText = "Portfolio "
             End If
-            Me.Text = preText & currentConstellationName
+            Me.Text = preText & printName(currentConstellationPvName)
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -4837,14 +4852,14 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub onlyInactive_Click(sender As Object, e As EventArgs) Handles onlyInactive.Click
 
-        If currentConstellationName <> calcLastSessionScenarioName() Then
-            currentConstellationName = calcLastSessionScenarioName()
+        If currentConstellationPvName <> calcLastSessionScenarioName() Then
+            currentConstellationPvName = calcLastSessionScenarioName()
 
             Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
                 preText = "Portfolio "
             End If
-            Me.Text = preText & currentConstellationName
+            Me.Text = preText & printName(currentConstellationPvName)
         End If
 
         Me.Cursor = Cursors.WaitCursor
@@ -5668,4 +5683,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub dropboxScenarioNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles dropboxScenarioNames.SelectedIndexChanged
+
+    End Sub
 End Class

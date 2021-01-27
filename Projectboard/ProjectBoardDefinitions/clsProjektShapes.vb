@@ -923,7 +923,7 @@ Public Class clsProjektShapes
                                                 anzahlZeilen:=anzahlZeilen) Then
 
                                     ' das verändert die Constellation ..
-                                    currentConstellationName = calcLastSessionScenarioName()
+                                    currentConstellationPvName = calcLastSessionScenarioName()
                                     If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
                                         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                                     End If
@@ -993,7 +993,7 @@ Public Class clsProjektShapes
 
 
                         ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
-                        currentConstellationName = calcLastSessionScenarioName()
+                        currentConstellationPvName = calcLastSessionScenarioName()
                         If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
                             currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                         End If
@@ -1213,7 +1213,7 @@ Public Class clsProjektShapes
                             ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                             ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                             Dim tmpCollection As New Collection
-                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile,
                                                            drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
                             notRegroupedAgain = False
 
@@ -1301,7 +1301,7 @@ Public Class clsProjektShapes
                             ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                             ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                             Dim tmpCollection As New Collection
-                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile,
                                                            drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
                             notRegroupedAgain = False
 
@@ -1336,7 +1336,7 @@ Public Class clsProjektShapes
                             newZeile = calcYCoordToZeile(curCoord(0))
 
                             ' das verändert die Constellation ..
-                            currentConstellationName = calcLastSessionScenarioName()
+                            currentConstellationPvName = calcLastSessionScenarioName()
                             If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
                                 currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                             End If
@@ -1345,8 +1345,8 @@ Public Class clsProjektShapes
                             ' Platz schaffen auf der Projekt-Tafel
                             Dim tmpCollection As New Collection
                             Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
-                            If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
+                            If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile,
+                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays,
                                                 anzahlZeilen:=anzahlZeilen) Then
 
                                 If curCoord(0) < oldCoord(0) Then
@@ -1394,7 +1394,7 @@ Public Class clsProjektShapes
                     Call clearProjektinPlantafel(pName)
                     ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
                     ' sie noch in der Select Collection sind und danach noch behandelt werden  
-                    Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
+                    Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile,
                                                     drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
 
                     notRegroupedAgain = False
@@ -1405,7 +1405,7 @@ Public Class clsProjektShapes
                     shpElement = tmpRange.Item(1)
 
                     ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
-                    currentConstellationName = calcLastSessionScenarioName()
+                    currentConstellationPvName = calcLastSessionScenarioName()
                     If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
                         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                     End If

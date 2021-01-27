@@ -1152,6 +1152,8 @@ Public Class Tabelle2
 
                                 If isRole Then
                                     rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, skillName)
+                                ElseIf isCost Then
+                                    rcNameID = rcName
                                 End If
 
 
@@ -1925,19 +1927,31 @@ Public Class Tabelle2
 
         Dim roleCost As String = CStr(CType(meWS.Cells(zeile, visboZustaende.meColRC), Excel.Range).Value)
 
-        If Not IsNothing(roleCost) Then
-            If roleCost = "" Then
-                CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
+        If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+            CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & pdEinheit
 
-            ElseIf RoleDefinitions.containsName(roleCost) Then
-                CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & pdEinheit
+        ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+            CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & "[T€]"
 
-            Else
-                CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & "[T€]"
-            End If
         Else
             CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
+
         End If
+
+        ' old tk 26.1.2021
+        'If Not IsNothing(roleCost) Then
+        '    If roleCost = "" Then
+        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
+
+        '    ElseIf RoleDefinitions.containsName(roleCost) Then
+        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & pdEinheit
+
+        '    Else
+        '        CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart & "[T€]"
+        '    End If
+        'Else
+        '    CType(meWS.Cells(1, visboZustaende.meColRC + 2), Excel.Range).Value = headerPart
+        'End If
 
 
 

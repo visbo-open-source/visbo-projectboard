@@ -1055,13 +1055,18 @@ Public Class clsProjekteAlle
     ''' <remarks></remarks>
     Public Sub Remove(ByVal key As String, Optional ByVal updateCurrentConstellation As Boolean = True)
 
-        If updateCurrentConstellation Then
-            currentSessionConstellation.remove(key)
-        End If
+        Try
+            If updateCurrentConstellation Then
+                currentSessionConstellation.remove(key)
+            End If
 
-        If _allProjects.ContainsKey(key) Then
-            _allProjects.Remove(key)
-        End If
+            If _allProjects.ContainsKey(key) Then
+                _allProjects.Remove(key)
+            End If
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 
