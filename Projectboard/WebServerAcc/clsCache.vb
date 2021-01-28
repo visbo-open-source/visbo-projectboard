@@ -141,6 +141,7 @@ Public Class clsCache
                     Else
                         For Each vpvariant In vp.Variant
                             If vpvariant.variantName = vpv.variantName Then
+                                vpvariant.vpvCount = vpvariant.vpvCount + 1
                                 hVarTS.vpvCount = vpvariant.vpvCount
                             End If
                         Next
