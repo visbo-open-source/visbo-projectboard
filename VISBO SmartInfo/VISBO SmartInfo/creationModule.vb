@@ -15,7 +15,7 @@ Module creationModule
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
-    Friend portfolioComponentNames As String() = {}
+    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "PF-Rolle", "PF-Skill"}
 
     ' hier ist  projectboardCustomization.xlsx zu finden
     Friend customizationPath As String = ""
@@ -402,7 +402,7 @@ Module creationModule
             Next
 
             ' je nachdem, welche Komponenten jetzt erstellt werden sollen 
-            ' muss hier noch die Auswahl der selectedPhases passieren 
+            ' muss hier noch die Auswahl der selectedPhases und Milestones passieren 
 
             If phMSSelNeeded(0) = True And Not phMSSelNeeded(1) = True Then
 
@@ -5976,6 +5976,156 @@ Module creationModule
 
 
     End Sub
+
+    Friend Function loadPortfolioProjectsInPPT() As Boolean
+        Dim success As Boolean = False
+        Dim msgTxt As String = ""
+        Dim loadConstellationFrm As New frmLoadConstellation
+        Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
+        Dim dbPortfolioNames As New SortedList(Of String, String)
+
+        Dim err As New clsErrorCodeMsg
+
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+            dbPortfolioNames = CType(databaseAcc, DBAccLayer.Request).retrievePortfolioNamesFromDB(Date.Now, err)
+
+            If dbPortfolioNames.Count > 0 Then
+
+                loadConstellationFrm.addToSession.Checked = False
+                loadConstellationFrm.addToSession.Visible = False
+
+                loadConstellationFrm.loadAsSummary.Checked = False
+                loadConstellationFrm.loadAsSummary.Visible = False
+
+                Dim returnValue As DialogResult = loadConstellationFrm.ShowDialog
+                If returnValue = DialogResult.OK Then
+
+                    ' alle Strukturen wie AlleProjekte , ShowProjekte etc sind bereits gelöscht - zu Beinn von 
+                    ' btn_CreateReport werden die VisboStructures alle zurückgesetzt
+                    ' das später begrenzen auf eine Auswahl 
+                    Dim constellationsChecked As New SortedList(Of String, String)
+                    Dim cTimeStamp As Date = Date.Now
+                    For Each tNode As TreeNode In loadConstellationFrm.TreeViewPortfolios.Nodes
+                        If tNode.Checked Then
+                            Dim checkedVariants As Integer = 0          ' enthält die Anzahl ausgwählter Varianten des pName
+                            For Each vNode As TreeNode In tNode.Nodes
+                                If vNode.Checked Then
+                                    If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                        Dim vname As String = deleteBrackets(vNode.Text)
+                                        constellationsChecked.Add(tNode.Text, vname)
+                                    Else
+                                        Call MsgBox("Portfolio '" & tNode.Text & "' mehrfach ausgewählt!")
+                                    End If
+                                    checkedVariants = checkedVariants + 1
+                                End If
+                            Next
+                            If tNode.Nodes.Count = 0 Or checkedVariants = 0 Then
+                                If Not constellationsChecked.ContainsKey(tNode.Text) Then
+                                    constellationsChecked.Add(tNode.Text, "")
+                                End If
+
+                            ElseIf tNode.Nodes.Count > 0 And checkedVariants = 1 Then
+                                ' alles schon getan
+                            Else
+                                Call MsgBox("Error in Portfolio-Auswahl")
+                            End If
+                        End If
+                    Next
+
+
+
+                    If constellationsChecked.Count >= 1 Then
+                        '
+                        Dim curConstellation As clsConstellation = Nothing
+                        For Each kvP As KeyValuePair(Of String, String) In constellationsChecked
+
+                            Dim pName As String = kvP.Key
+                            Dim vName As String = kvP.Value
+                            Try
+                                curConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, dbPortfolioNames(pName),
+                                                                                                                         cTimeStamp, err,
+                                                                                                                         variantName:=vName,
+                                                                                                                         storedAtOrBefore:=storedAtOrBefore)
+                            Catch ex As Exception
+                                curConstellation = Nothing
+                            End Try
+
+
+                            If Not IsNothing(curConstellation) Then
+                                ' in die Liste aufnehmen
+                                projectConstellations.Add(curConstellation)
+                                projectConstellations.addToLoadedSessionPortfolios(curConstellation.constellationName, curConstellation.variantName)
+
+                                currentConstellationPvName = calcPortfolioKey(curConstellation.constellationName, curConstellation.variantName)
+
+                                ' now retrieve and load all Projects in AlleProjekte, ShowProjekte 
+                                ' in each cItem there are only Show Elements
+
+                                ' hole erst mal das Projektsummary: die Vorgabe 
+                                Dim curSummaryProjVorgabe As clsProjekt = Nothing
+                                curSummaryProjVorgabe = getProjektFromSessionOrDB(pName, vName, AlleProjektSummaries, storedAtOrBefore)
+                                If Not IsNothing(curSummaryProjVorgabe) Then
+                                    AlleProjektSummaries.Add(curSummaryProjVorgabe, updateCurrentConstellation:=False)
+                                End If
+
+                                ' jetzt alle Projekte holen 
+                                Try
+
+                                    For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In curConstellation.Liste
+
+                                        If kvpCI.Value.show = True Then
+                                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvpCI.Value.projectName,
+                                                                                                       kvpCI.Value.variantName, storedAtOrBefore, err) Then
+
+                                                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                                Dim hproj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvpCI.Value.projectName,
+                                                                                                                                  kvpCI.Value.variantName, "",
+                                                                                                                                  storedAtOrBefore, err)
+
+                                                If Not IsNothing(hproj) Then
+                                                    If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
+                                                        AlleProjekte.Add(hproj, updateCurrentConstellation:=True, sortkey:=kvpCI.Value.zeile)
+                                                        If Not ShowProjekte.contains(hproj.name) Then
+                                                            ShowProjekte.Add(hproj)
+                                                        End If
+                                                    End If
+
+
+                                                End If
+                                            Else
+
+                                            End If
+                                        End If
+                                    Next
+
+                                    success = True
+                                Catch ex As Exception
+                                    success = False
+                                End Try
+                            Else
+                                success = False
+                                Call MsgBox("Problems when reading Portfolio " & pName)
+                            End If
+                        Next
+                    End If
+
+
+                End If
+
+            Else
+                success = False
+                msgTxt = "no Portfolios or no acess to Portfolios - Exit"
+                Call MsgBox(msgTxt)
+            End If
+        Else
+            success = False
+            msgTxt = "no Access to VISBO Server - Exit"
+            Call MsgBox(msgTxt)
+        End If
+
+        loadPortfolioProjectsInPPT = success
+    End Function
 
 
 

@@ -15,6 +15,15 @@ Public Class frmLoadConstellation
 
 
         Call languageSettings()
+        ' zunächst immer auf False setzen
+        If Not myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            loadAsSummary.Visible = False
+        Else
+            loadAsSummary.Visible = True
+        End If
+
+
+
         If constellationsToShow.Count > 0 Then
 
             For Each kvp As KeyValuePair(Of String, String) In constellationsToShow
@@ -587,6 +596,10 @@ Public Class frmLoadConstellation
 
 
 
+
+    End Sub
+
+    Private Sub loadAsSummary_CheckedChanged(sender As Object, e As EventArgs) Handles loadAsSummary.CheckedChanged
 
     End Sub
 End Class

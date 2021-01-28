@@ -5044,7 +5044,7 @@ Public Module agm3
         ' den Dateinamen bestimmen ...
 
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\" & printName(currentConstellationPvName) & " planning " & fNameExtension & ".xlsx"
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\Soll-Ist-Kapa Planning " & fNameExtension & ".xlsx"
 
 
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
@@ -5152,7 +5152,7 @@ Public Module agm3
                     Dim lastplan As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, lastDate)
                     Dim lastPlanValues() As Double = Nothing
                     If Not IsNothing(lastplan) Then
-                        ' jetzt die Werte für die Beauftragung schreiben 
+                        ' jetzt die Werte für den letzten Plan schreiben 
                         lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
                                                   von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, lastPlanValues)

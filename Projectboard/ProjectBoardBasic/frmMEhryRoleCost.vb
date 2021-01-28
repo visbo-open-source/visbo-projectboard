@@ -332,7 +332,8 @@ Public Class frmMEhryRoleCost
 
 
             ' alle Rollen zeigen 
-            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Or
+                visboZustaende.projectBoardMode = ptModus.graficboard Then
 
                 If RoleDefinitions.Count > 0 Then
                     Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs

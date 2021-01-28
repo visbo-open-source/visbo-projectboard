@@ -1001,6 +1001,7 @@ Public Class Ribbon1
         Dim errMsg As String = ""
 
         Dim singleProjectSelect As Boolean = True
+        Dim portfolioSelect As Boolean = False
 
         ' jetzt die ShowProjekte und soweiter löschen 
         Call emptyAllVISBOStructures(calledFromPPT:=True)
@@ -1018,12 +1019,15 @@ Public Class Ribbon1
             singleProjectSelect = True
         ElseIf Not currentSldHasProjectTemplates And (currentSldHasMultiProjectTemplates Or currentSldHasPortfolioTemplates) Then
             singleProjectSelect = False
+            If currentSldHasPortfolioTemplates Then
+                portfolioSelect = True
+            End If
         Else
             Call MsgBox("no combination of project and multiproject/Portfolio components allowed! -> Exit")
             Exit Sub
         End If
 
-        Dim loadProjectsForm As New frmProjPortfolioAdmin
+
         Dim weitermachen As Boolean = True
         If Not appearancesWereRead Then
             ' einloggen, dann Visbo Center wählen, dann Orga einlesen, dann user roles, dann customization und appearance classes ... 
@@ -1042,6 +1046,7 @@ Public Class Ribbon1
             Try
                 If Not currentSldHasPortfolioTemplates Then
 
+                    Dim loadProjectsForm As New frmProjPortfolioAdmin
                     With loadProjectsForm
                         ' if it is a project reporting template such as Swimlanes, then only allow selection of one item 
                         If currentSldHasProjectTemplates Then
@@ -1121,7 +1126,13 @@ Public Class Ribbon1
                     End If
 
                 Else
-                    Call MsgBox("not yet implemented ... -> Exit")
+
+                    ' loads all
+                    Dim success As Boolean = loadPortfolioProjectsInPPT()
+                    If success Then
+
+                    End If
+
                 End If
 
 

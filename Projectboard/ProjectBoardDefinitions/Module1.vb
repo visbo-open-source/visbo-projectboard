@@ -7971,7 +7971,9 @@ Public Module Module1
         Dim tmpStr() As String = portfolioID.Split(New Char() {CChar("#")})
         Dim ccN As String = tmpStr(0)
         If tmpStr.Length > 1 Then
-            ccN = ccN & " [" & tmpStr(1) & "]"
+            If tmpStr(1) <> "" Then
+                ccN = ccN & " [" & tmpStr(1) & "]"
+            End If
         End If
         printName = ccN
     End Function
