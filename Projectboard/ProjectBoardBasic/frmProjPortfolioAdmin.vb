@@ -258,15 +258,15 @@ Public Class frmProjPortfolioAdmin
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     If storeToDBasWell.Checked Then
-                        .OKButton.Text = "in Session und DB speichern"
+                        .OKButton.Text = "Portfolio in VISBO speichern"
                     Else
-                        .OKButton.Text = "in Session speichern"
+                        .OKButton.Text = "Portfolio in Session speichern"
                     End If
                 Else
                     If storeToDBasWell.Checked Then
-                        .OKButton.Text = "Save to Session and DB"
+                        .OKButton.Text = "Save Portfolio to VISBO"
                     Else
-                        .OKButton.Text = "Save to Session"
+                        .OKButton.Text = "Save Portfolio in Session"
                     End If
                 End If
 
@@ -408,9 +408,9 @@ Public Class frmProjPortfolioAdmin
 
                 .OKButton.Visible = True
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .OKButton.Text = "in DB Löschen"
+                    .OKButton.Text = "in VISBO Löschen"
                 Else
-                    .OKButton.Text = "Delete from DB"
+                    .OKButton.Text = "Delete from VISBO"
                 End If
 
                 .dropboxScenarioNames.Top = .dropboxScenarioNames.Top - versionenOffset

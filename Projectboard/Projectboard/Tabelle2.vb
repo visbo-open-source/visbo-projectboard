@@ -437,18 +437,21 @@ Public Class Tabelle2
 
 
                         For Each roleSkillItem As String In frmMERoleCost.rolesToAdd
+                            Dim loopRcName As String = ""
                             If frmMERoleCost.showSkillsOnly Then
                                 If rcName = "" Then
 
                                     Try
                                         Dim tmpID As Integer = -1
-                                        rcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
+                                        loopRcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
                                     Catch ex As Exception
 
                                     End Try
-
+                                    Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
+                                Else
+                                    Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
                                 End If
-                                Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
+
                             Else
                                 Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
                             End If

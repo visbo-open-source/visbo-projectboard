@@ -8321,7 +8321,7 @@ Public Module awinGeneralModules
                     End If
 
                     ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
-                    hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                    'hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                 End If
 
                 ' das wurde rausgenommen, weil darin in AlleProjekte.Add die UpdateConstellation geändetr wurde , so dass dort die pfv-Variante referneziert war
@@ -8571,7 +8571,7 @@ Public Module awinGeneralModules
                                 End If
 
                                 ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
-                                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                'hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                             End If
 
                             'Call changeVariantNameAccordingUserRole(hproj)
@@ -9017,7 +9017,7 @@ Public Module awinGeneralModules
                                 End If
 
                                 ' tk 16.5.20 - immer wenn der Portfolio Manager speichert, wird das Projekt beauftragt 
-                                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                                'hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
                             End If
                             'Call changeVariantNameAccordingUserRole(hproj)
 
