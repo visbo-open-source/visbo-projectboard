@@ -5427,7 +5427,7 @@ Public Module agm2
 
 
                 ' ein MS Project PRojekt wird grundsätzich als <beauftragt> eingestuft ... 
-                hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
+                'hproj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                 ' aufbauen der RcLists
                 ' hproj.updateRcLists()

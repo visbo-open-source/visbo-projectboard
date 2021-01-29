@@ -27,6 +27,8 @@ Partial Class frmProjPortfolioAdmin
         Me.ToolTipStand = New System.Windows.Forms.ToolTip(Me.components)
         Me.portfolioBrowserHelp = New System.Windows.Forms.HelpProvider()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.lbl_Portfolio = New System.Windows.Forms.Label()
+        Me.lbl_Variant = New System.Windows.Forms.Label()
         Me.txtBoxVariantName = New System.Windows.Forms.TextBox()
         Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
@@ -44,8 +46,6 @@ Partial Class frmProjPortfolioAdmin
         Me.lblStandvom = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
-        Me.lbl_Variant = New System.Windows.Forms.Label()
-        Me.lbl_Portfolio = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.onlyInactive, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -88,6 +88,26 @@ Partial Class frmProjPortfolioAdmin
         Me.Panel1.Size = New System.Drawing.Size(337, 579)
         Me.Panel1.TabIndex = 0
         '
+        'lbl_Portfolio
+        '
+        Me.lbl_Portfolio.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.lbl_Portfolio.AutoSize = True
+        Me.lbl_Portfolio.Location = New System.Drawing.Point(16, 488)
+        Me.lbl_Portfolio.Name = "lbl_Portfolio"
+        Me.lbl_Portfolio.Size = New System.Drawing.Size(48, 13)
+        Me.lbl_Portfolio.TabIndex = 94
+        Me.lbl_Portfolio.Text = "Portfolio:"
+        '
+        'lbl_Variant
+        '
+        Me.lbl_Variant.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.lbl_Variant.AutoSize = True
+        Me.lbl_Variant.Location = New System.Drawing.Point(16, 516)
+        Me.lbl_Variant.Name = "lbl_Variant"
+        Me.lbl_Variant.Size = New System.Drawing.Size(49, 13)
+        Me.lbl_Variant.TabIndex = 93
+        Me.lbl_Variant.Text = "Variante:"
+        '
         'txtBoxVariantName
         '
         Me.txtBoxVariantName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
@@ -121,11 +141,11 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.storeToDBasWell.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.storeToDBasWell.AutoSize = True
-        Me.storeToDBasWell.Location = New System.Drawing.Point(247, 546)
+        Me.storeToDBasWell.Location = New System.Drawing.Point(230, 546)
         Me.storeToDBasWell.Name = "storeToDBasWell"
-        Me.storeToDBasWell.Size = New System.Drawing.Size(79, 17)
+        Me.storeToDBasWell.Size = New System.Drawing.Size(96, 17)
         Me.storeToDBasWell.TabIndex = 89
-        Me.storeToDBasWell.Text = "store to DB"
+        Me.storeToDBasWell.Text = "store to VISBO"
         Me.storeToDBasWell.UseVisualStyleBackColor = True
         '
         'backToInit
@@ -282,26 +302,6 @@ Partial Class frmProjPortfolioAdmin
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
         Me.TreeViewProjekte.Size = New System.Drawing.Size(310, 422)
         Me.TreeViewProjekte.TabIndex = 73
-        '
-        'lbl_Variant
-        '
-        Me.lbl_Variant.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.lbl_Variant.AutoSize = True
-        Me.lbl_Variant.Location = New System.Drawing.Point(16, 516)
-        Me.lbl_Variant.Name = "lbl_Variant"
-        Me.lbl_Variant.Size = New System.Drawing.Size(49, 13)
-        Me.lbl_Variant.TabIndex = 93
-        Me.lbl_Variant.Text = "Variante:"
-        '
-        'lbl_Portfolio
-        '
-        Me.lbl_Portfolio.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.lbl_Portfolio.AutoSize = True
-        Me.lbl_Portfolio.Location = New System.Drawing.Point(16, 488)
-        Me.lbl_Portfolio.Name = "lbl_Portfolio"
-        Me.lbl_Portfolio.Size = New System.Drawing.Size(48, 13)
-        Me.lbl_Portfolio.TabIndex = 94
-        Me.lbl_Portfolio.Text = "Portfolio:"
         '
         'frmProjPortfolioAdmin
         '

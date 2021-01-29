@@ -620,6 +620,11 @@ Imports System.Web
 
                         'Call MsgBox("PTLadenKonstellation 1st Part took: " & sw.EndTimer & "milliseconds")
 
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And AlleProjekte.Count = 0 Then
+                            loadConstellationFrm.loadAsSummary.Visible = True
+                        Else
+                            loadConstellationFrm.loadAsSummary.Visible = False
+                        End If
 
                         returnValue = loadConstellationFrm.ShowDialog
 
@@ -2535,9 +2540,9 @@ Imports System.Web
                 End If
             Case "PTMEC" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Charts u. Info"
+                    tmpLabel = "Realtime Cockpit"
                 Else
-                    tmpLabel = "Charts and Info"
+                    tmpLabel = "Realtime Cockpit"
                 End If
 
             Case "PTMEC1" ' Rollen und Kosten
@@ -2727,28 +2732,28 @@ Imports System.Web
 
             Case "PT0G1M0" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine visualisieren..."
+                    tmpLabel = "Phasen/Meilensteine visualisieren"
                 Else
-                    tmpLabel = "Visualize Phases/Milestones..."
+                    tmpLabel = "Visualize Phases/Milestones"
                 End If
 
             Case "PT0G1B8" ' 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt Filter..."
+                    tmpLabel = "Projekt Filter"
                 Else
-                    tmpLabel = "Project Filter..."
+                    tmpLabel = "Project Filter"
                 End If
             Case "PT0G1B9" ' Filter zurücksetzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Filter zurücksetzen..."
+                    tmpLabel = "Filter zurücksetzen"
                 Else
-                    tmpLabel = "Delete Filter..."
+                    tmpLabel = "Delete Filter"
                 End If
             Case "PT0G1B10" ' Anzeige der Projekte mit roter ProjektAmpel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekte mit Ampel -rot-"
                 Else
-                    tmpLabel = "Projects with -red- Light"
+                    tmpLabel = "Projects with red flag"
                 End If
             Case "PT0G1B11" ' Anzeige der Projektemit ungedeckter Budget-Finanzierung
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2829,19 +2834,19 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Portfolio-Charts"
                 Else
-                    tmpLabel = "Add Portfolio Charts"
+                    tmpLabel = "Portfolio-Charts"
                 End If
             Case "PT7G1M1" ' Add Project Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt-Charts"
                 Else
-                    tmpLabel = "Add Project Charts"
+                    tmpLabel = "Project-Charts"
                 End If
             Case "PT7G1M2" ' Plan/Aktuell
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Plan versus Aktuell"
+                    tmpLabel = "Plan vs. Aktuell"
                 Else
-                    tmpLabel = "Plan versus Actual"
+                    tmpLabel = "Plan vs. Actual"
                 End If
 
             Case "PT7G1M2B1" ' Personalkosten
@@ -2881,16 +2886,16 @@ Imports System.Web
 
             Case "PT0G1M3B1" ' Cockpit visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Cockpit laden..."
+                    tmpLabel = "Cockpit laden"
                 Else
-                    tmpLabel = "Load Cockpit..."
+                    tmpLabel = "Load Cockpit"
                 End If
 
             Case "PT0G1M3B2" ' Cockpit speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Chart-Set sichern als Cockpit..."
+                    tmpLabel = "Chart-Set sichern als Cockpit"
                 Else
-                    tmpLabel = "Save current Chart-Set as Cockpit..."
+                    tmpLabel = "Save current Chart-Set as Cockpit"
                 End If
 
             Case "PT0G1M3B3" ' Cockpit-Charts löschen
@@ -2916,16 +2921,16 @@ Imports System.Web
 
             Case "PT1G1M0" ' Report-Profil definieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report definieren..."
+                    tmpLabel = "Create Report Profile"
                 Else
-                    tmpLabel = "Define a Report..."
+                    tmpLabel = "Report Profil erstellen"
                 End If
 
             Case "PT1G1M01" ' Einzelprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt Report definieren..."
+                    tmpLabel = "Projekt Report definieren"
                 Else
-                    tmpLabel = "Define Project Report..."
+                    tmpLabel = "Define Project Report"
                 End If
 
             Case "PT1G1M01B0" ' Typ I
@@ -3004,23 +3009,23 @@ Imports System.Web
 
             Case "PT1G1B4" ' letztes Report-Profil speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "letzte Report Definition als Vorlage speichern"
+                    tmpLabel = "letzte Report Definition als Profil speichern"
                 Else
                     tmpLabel = "Save last Report definition as pre-defined"
                 End If
 
             Case "PT1G1B5" ' Report-Profil ausführen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report erstellen..."
+                    tmpLabel = "Report erstellen"
                 Else
-                    tmpLabel = "Select Report..."
+                    tmpLabel = "Select Report"
                 End If
 
             Case "PT1G1M0B1" ' Report-Profil ausführen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report erstellen..."
+                    tmpLabel = "Report erstellen"
                 Else
-                    tmpLabel = "Select Report..."
+                    tmpLabel = "Select Report"
                 End If
 
             Case "PT1G1B1" ' Report Sprache
@@ -3060,16 +3065,16 @@ Imports System.Web
 
             Case "PT2G1M0B0" ' Neu auf Basis Vorlage
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Vorlage..."
+                    tmpLabel = "Neu auf Basis Vorlage"
                 Else
-                    tmpLabel = "Based on template..."
+                    tmpLabel = "Based on template"
                 End If
 
             Case "PT2G1M0B1" ' Neu auf Basis Projekt
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Projekt..."
+                    tmpLabel = "Neu auf Basis Projekt"
                 Else
-                    tmpLabel = "Based on project..."
+                    tmpLabel = "Based on project"
                 End If
 
             Case "PT2G1M1" ' Variante
@@ -3081,23 +3086,23 @@ Imports System.Web
 
             Case "PT2G1M1B0" ' neue Variante anlegen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neue Variante..."
+                    tmpLabel = "Neue Variante"
                 Else
-                    tmpLabel = "New Variant..."
+                    tmpLabel = "New Variant"
                 End If
 
             Case "PT2G1M1B1" ' Variante aktivieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante aktivieren..."
+                    tmpLabel = "Variante aktivieren"
                 Else
-                    tmpLabel = "Activate Variant..."
+                    tmpLabel = "Activate Variant"
                 End If
 
             Case "PT2G1M1B2" ' Variante löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante löschen..."
+                    tmpLabel = "Variante löschen"
                 Else
-                    tmpLabel = "Delete Variant..."
+                    tmpLabel = "Delete Variant"
                 End If
 
             Case "PT2G1M1B3" ' Variante zum Standard machen
@@ -3109,23 +3114,40 @@ Imports System.Web
 
             Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rolle/Kostenart hinzufügen"
+                    If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                        tmpLabel = "Kostenart hinzufügen"
+                    Else
+                        tmpLabel = "Rolle hinzufügen"
+                    End If
+
                 Else
-                    tmpLabel = "Add Resource/Cost"
-                End If
-            Case "PT2G1M2B7" ' Ressource/Kostenart hinzufügen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Kostenart hinzufügen"
-                Else
-                    tmpLabel = "Add Cost"
+                    If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                        tmpLabel = "Add Cost"
+                    Else
+                        tmpLabel = "Add Resource/Role"
+                    End If
+
                 End If
 
+
             Case "PT2G1M2B5" ' Ressource/Kostenart löschen
+
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rolle/Kostenart löschen"
+                    If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                        tmpLabel = "Kostenart löschen"
+                    Else
+                        tmpLabel = "Rolle löschen"
+                    End If
+
                 Else
-                    tmpLabel = "Delete resource / cost"
+                    If visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                        tmpLabel = "Delete Cost"
+                    Else
+                        tmpLabel = "Delete  Resource/Role"
+                    End If
+
                 End If
+
 
             Case "PTmassEdit" 'Editieren im MassEdit
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3136,35 +3158,29 @@ Imports System.Web
 
             Case "PT2G1M2B1" ' Massen-Edit Ressourcen 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Ressourcen Bedarfen"
+                    tmpLabel = "Ändern Ressourcen Bedarfe"
                 Else
-                    tmpLabel = "Modify monthly Resource Needs"
+                    tmpLabel = "Modify Resource Needs"
                 End If
 
             Case "PT2G1M2B9" ' Massen-Edit Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Kosten"
+                    tmpLabel = "Ändern Kosten"
                 Else
-                    tmpLabel = "Modify monthly Cost Needs"
+                    tmpLabel = "Modify Cost Needs"
                 End If
 
             Case "PT2G1M2B2" ' Massen-Edit Phasen Meilensteine ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Terminen"
+                    tmpLabel = "Ändern Termine"
                 Else
                     tmpLabel = "Modify schedules"
                 End If
 
-            Case "PT2G1M2B4" ' Modify Attributes
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Budget und Attribute"
-                Else
-                    tmpLabel = "Budget and attributes"
-                End If
 
             Case "PT2G1M2B8" ' Massen Edit Attributes
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Attributen"
+                    tmpLabel = "Ändern Attribute"
                 Else
                     tmpLabel = "Modify Attributes"
                 End If
@@ -3291,7 +3307,7 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt beauftragen"
                 Else
-                    tmpLabel = "make Project official"
+                    tmpLabel = "Set Project official"
                 End If
 
             Case "PTzurück" ' zurück zur Multiprojekt-Tafel
@@ -3352,16 +3368,16 @@ Imports System.Web
 
             Case "PT2G1B1" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt umbenennen..."
+                    tmpLabel = "Projekt umbenennen"
                 Else
-                    tmpLabel = "Rename Project..."
+                    tmpLabel = "Rename Project"
                 End If
 
             Case "PT2G1B3" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante umbenennen..."
+                    tmpLabel = "Variante umbenennen"
                 Else
-                    tmpLabel = "Rename Variant..."
+                    tmpLabel = "Rename Variant"
                 End If
 
             Case "PT2G2" 'Projekte/Varianten
@@ -3387,9 +3403,9 @@ Imports System.Web
 
             Case "PT2G2B2" ' Portfolio/s anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s aus Session anzeigen..."
+                    tmpLabel = "Portfolio/s aus Session anzeigen"
                 Else
-                    tmpLabel = "Show Session Portfolio/s..."
+                    tmpLabel = "Show Session Portfolio/s"
                 End If
 
             Case "PT2G2B4" ' Editieren Portfolio
@@ -3512,30 +3528,30 @@ Imports System.Web
 
             Case "PT4G1B1" ' Import VISBO-Steckbriefe
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "VISBO-Steckbriefe..."
+                    tmpLabel = "VISBO-Steckbriefe"
                 Else
-                    tmpLabel = "VISBO project briefs..."
+                    tmpLabel = "VISBO project briefs"
                 End If
 
             Case "PT4G1B2" ' Import Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Excel..."
+                    tmpLabel = "Excel"
                 Else
-                    tmpLabel = "Excel..."
+                    tmpLabel = "Excel"
                 End If
 
             Case "PT4G1B4" ' Import MS Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "MS Project..."
+                    tmpLabel = "MS Project"
                 Else
-                    tmpLabel = "MS Project..."
+                    tmpLabel = "MS Project"
                 End If
 
             Case "PT4G1B3" ' Import RPLAN RXF
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "RPLAN RXF..."
+                    tmpLabel = "RPLAN RXF"
                 Else
-                    tmpLabel = "RPLAN RXF..."
+                    tmpLabel = "RPLAN RXF"
                 End If
 
             Case "PT4G1B7" ' Import Projekte (Batch)
@@ -3616,7 +3632,7 @@ Imports System.Web
             Case "PT5G1" ' Load from Database
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden VISBO "
+                    tmpLabel = "Laden von VISBO "
 
                 Else
                     tmpLabel = "Load from VISBO"
@@ -3626,45 +3642,37 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                         If awinSettings.loadPFV Then
-                            tmpLabel = "Portfolio/s (Vorgaben)"
+                            tmpLabel = "Portfolio/s (Baselines)"
                         Else
                             tmpLabel = "Portfolio/s (aktuelle Planung)"
                         End If
                     Else
-                        tmpLabel = "Portfolio/s..."
+                        tmpLabel = "Portfolio/s"
                     End If
                 Else
                     If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                         If awinSettings.loadPFV Then
-                            tmpLabel = "Portfolio/s (Allowances)"
+                            tmpLabel = "Portfolio/s (Baselines)"
                         Else
                             tmpLabel = "Portfolio/s (current planning)"
                         End If
                     Else
-                        tmpLabel = "Portfolio/s..."
+                        tmpLabel = "Portfolio/s"
                     End If
                 End If
 
             Case "PT5G1B3" ' Project/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                        If awinSettings.loadPFV Then
-                            tmpLabel = "Projekte (Vorgaben)"
-                        Else
-                            tmpLabel = "Projekte (aktuelle Planung)"
-                        End If
+                    If awinSettings.loadPFV Or awinSettings.filterPFV Then
+                        tmpLabel = "Projekt-Baseline laden"
                     Else
-                        tmpLabel = "Projekte"
+                        tmpLabel = "Projekt-Planung laden"
                     End If
                 Else
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                        If awinSettings.loadPFV Then
-                            tmpLabel = "Projects (Allowances)"
-                        Else
-                            tmpLabel = "Projekte (current planning) "
-                        End If
+                    If awinSettings.loadPFV Or awinSettings.filterPFV Then
+                        tmpLabel = "load Project-Baseline"
                     Else
-                        tmpLabel = "Projects"
+                        tmpLabel = "load Project-Planning"
                     End If
                 End If
 
@@ -3677,32 +3685,32 @@ Imports System.Web
 
             Case "Pt5G2B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s..."
+                    tmpLabel = "Portfolio/s"
                 Else
-                    tmpLabel = "Portfolio/s..."
+                    tmpLabel = "Portfolio/s"
                 End If
 
             Case "Pt5G2B3" ' Projekt/e
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                        tmpLabel = "Projekte (Vorgaben)"
+                        tmpLabel = "als Projekt-Baseline speichern"
                     Else
-                        tmpLabel = "Projects (Allowances)"
+                        tmpLabel = "Store as Project-Baseline"
                     End If
                 Else
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                        tmpLabel = "Projekt/e"
+                        tmpLabel = "als Projekt-Planung speichern"
                     Else
-                        tmpLabel = "Project/s"
+                        tmpLabel = "store as Project-Planning"
                     End If
                 End If
 
 
             Case "Pt5G2B4" ' Alles speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Alles als Vorgabe speichern (Projekte & Portfolios)"
+                    tmpLabel = "Alles als Baseline speichern (Projekte & Portfolios)"
                 Else
-                    tmpLabel = "Store everything as allowance (projects & portfolios)"
+                    tmpLabel = "Store everything as Baseline (projects & portfolios)"
                 End If
 
             Case "PT5G3" ' Löschen
@@ -3714,9 +3722,9 @@ Imports System.Web
 
             Case "Pt5G3B1" ' Multiprojekt-Szenario
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Portfolio/s..."
+                    tmpLabel = "Portfolio/s"
                 Else
-                    tmpLabel = "Portfolio/s..."
+                    tmpLabel = "Portfolio/s"
                 End If
 
             Case "PT5G3M" ' Löschen aus Datenbank 
@@ -3736,16 +3744,16 @@ Imports System.Web
             Case "Pt5G3B3" ' Projekte/Varianten/TimeStamps auswählen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     If awinSettings.loadPFV Then
-                        tmpLabel = "Vorgaben/Varianten/TimeStamps"
+                        tmpLabel = "Baselines/Varianten/TimeStamps"
                     Else
-                        tmpLabel = "Projekte/Varianten/TimeStamps"
+                        tmpLabel = "Planungen/Varianten/TimeStamps"
                     End If
 
                 Else
                     If awinSettings.loadPFV Then
-                        tmpLabel = "Allowances/Variants/TimeStamps"
+                        tmpLabel = "Baselines/Variants/TimeStamps"
                     Else
-                        tmpLabel = "Projects/Variants/TimeStamps"
+                        tmpLabel = "Plans/Variants/TimeStamps"
                     End If
 
                 End If
@@ -3820,7 +3828,7 @@ Imports System.Web
 
             Case "PT6G1B4"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "nach individuellen Kriterien sortieren ..."
+                    tmpLabel = "nach individuellen Kriterien sortieren"
                 Else
                     tmpLabel = "sort by individual criterias"
                 End If
@@ -12449,23 +12457,29 @@ Imports System.Web
 
 
             Dim myCollection As New Collection
-            myCollection.Add(rcName)
-            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
-                                                                   chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
-
-            ' show only when skill are relevant 
-            If withSkills Then
-                ' das Auslastungs-Chart Skill
-                repObj = Nothing
-                chLeft = chLeft + chWidth + 2
-                chWidth = stdBreite
-
-                myCollection.Clear()
-                myCollection.Add(rcNameID)
+            If rcName <> "" Then
+                myCollection.Add(rcName)
                 Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
-                                                                       chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
-                                                                       isMESkillChart:=True)
+                                                                       chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle))
+
+                ' show only when skill are relevant 
+                If withSkills Then
+                    ' das Auslastungs-Chart Skill
+                    repObj = Nothing
+                    chLeft = chLeft + chWidth + 2
+                    chWidth = stdBreite
+
+                    myCollection.Clear()
+                    If rcNameID = "" Then
+                        rcNameID = RoleDefinitions.bestimmeRoleNameID(rcName, "")
+                    End If
+                    myCollection.Add(rcNameID)
+                    Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                           chWidth, chHeight, False, prcTyp, True, CDbl(awinSettings.fontsizeTitle),
+                                                                           isMESkillChart:=True)
+                End If
             End If
+
 
 
             ' now Show Soll-Ist Vergleich mit Plan vs Last_Plan oder Plan vs Beauftragung

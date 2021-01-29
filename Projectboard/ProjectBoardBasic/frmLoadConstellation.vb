@@ -15,12 +15,7 @@ Public Class frmLoadConstellation
 
 
         Call languageSettings()
-        ' zunächst immer auf False setzen
-        If Not myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-            loadAsSummary.Visible = False
-        Else
-            loadAsSummary.Visible = True
-        End If
+
 
 
 

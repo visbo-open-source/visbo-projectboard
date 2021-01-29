@@ -9900,24 +9900,8 @@ Public Module Projekte
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
         ErgebnisListeR = New Collection
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            Try
-                Dim teamID As Integer = -1
-                Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
-
-                For Each kvp As KeyValuePair(Of Integer, Double) In tmpSubRoleListe
-                    Dim tmpName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-                    If Not ErgebnisListeR.Contains(tmpName) Then
-                        ErgebnisListeR.Add(tmpName, tmpName)
-                    End If
-
-                Next
-            Catch ex As Exception
-
-            End Try
-
-
-        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
             Try
                 Dim tmpRoleListe() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
@@ -9941,6 +9925,7 @@ Public Module Projekte
             ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
         End If
 
+
         ' jetzt überprüfen, ob das Projekt überhaupt was enthält 
         Dim noNeedToShow As New Collection
         For Each tmpRoleName As String In ErgebnisListeR
@@ -9963,54 +9948,42 @@ Public Module Projekte
         End If
 
 
-        'If ErgebnisListeR.Count > 12 Then
-        '    ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(0)
-        'End If
-
-
         anzRollen = ErgebnisListeR.Count
 
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or anzRollen = 0 Then
-            ' eine Dimension größer, weil dei Eltern-Rolel noch mitkommt 
-            ReDim tdatenreihe(anzRollen)
-            ReDim Xdatenreihe(anzRollen)
+        ' später evtl eine größer machen  
+        ReDim tdatenreihe(anzRollen - 1)
+        ReDim Xdatenreihe(anzRollen - 1)
+
+        Dim UnitIsPD As Boolean
+        If auswahl = 1 Then
+            UnitIsPD = True
         Else
-            ReDim tdatenreihe(anzRollen - 1)
-            ReDim Xdatenreihe(anzRollen - 1)
+            UnitIsPD = False
         End If
 
-
-
-        ' Aufbauen der eigentlichen Rolle
+        ' Aufbauen der eigentlichen Rollen
         For r = 0 To anzRollen - 1
             roleName = CStr(ErgebnisListeR.Item(r + 1))
             Xdatenreihe(r) = roleName
 
-            If auswahl = 1 Then
-                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
-            Else
-                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True).Sum
-            End If
+            tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=Not UnitIsPD).Sum
+
 
         Next r
 
+        ' jetzt prüfen, ob es noch darüberhinaus Bedarf für TopLevelNode gibt ...
+        Dim checkSum1 As Double = hproj.getRessourcenBedarf(roleID:="", inclSubRoles:=True, outPutInEuro:=Not UnitIsPD).Sum
+        Dim checkSum2 As Double = tdatenreihe.Sum
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            ' jetzt soll die Specifics noch aufgenommen werden 
+        If checkSum1 > checkSum2 Then
             anzRollen = anzRollen + 1
+            ReDim Preserve tdatenreihe(anzRollen - 1)
+            ReDim Preserve Xdatenreihe(anzRollen - 1)
 
-            Dim teamID As Integer = -1
-            Dim parentRoleName As String = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
-            ErgebnisListeR.Add(parentRoleName)
-
-            Xdatenreihe(anzRollen - 1) = parentRoleName
-
-            If auswahl = 1 Then
-                tdatenreihe(anzRollen - 1) = hproj.getRessourcenBedarf(myCustomUserRole.specifics, inclSubRoles:=False).Sum
-            Else
-                tdatenreihe(anzRollen - 1) = hproj.getRessourcenBedarf(myCustomUserRole.specifics, inclSubRoles:=False, outPutInEuro:=True).Sum
-            End If
+            tdatenreihe(anzRollen - 1) = checkSum1 - checkSum2
+            Xdatenreihe(anzRollen - 1) = "Other"
+            ErgebnisListeR.Add("Other")
         End If
 
 
@@ -10247,24 +10220,8 @@ Public Module Projekte
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
         ErgebnisListeR = New Collection
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            Try
-                Dim teamID As Integer = -1
-                Dim tmpSubRoleListe As SortedList(Of Integer, Double) = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).getSubRoleIDs
-
-                For Each kvp As KeyValuePair(Of Integer, Double) In tmpSubRoleListe
-                    Dim tmpName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
-                    If Not ErgebnisListeR.Contains(tmpName) Then
-                        ErgebnisListeR.Add(tmpName, tmpName)
-                    End If
-
-                Next
-            Catch ex As Exception
-
-            End Try
-
-
-        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Or
+            myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
             Try
                 Dim tmpRoleListe() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
@@ -10310,51 +10267,42 @@ Public Module Projekte
         End If
 
 
-        'If ErgebnisListeR.Count > 12 Then
-        '    ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(0)
-        'End If
-
         anzRollen = ErgebnisListeR.Count
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Or anzRollen = 0 Then
-            ' eine Dimension größer, weil dei Eltern-Rolel noch mitkommt 
-            ReDim tdatenreihe(anzRollen)
-            ReDim Xdatenreihe(anzRollen)
+
+        ' später evtl eine größer machen  
+        ReDim tdatenreihe(anzRollen - 1)
+        ReDim Xdatenreihe(anzRollen - 1)
+
+        Dim UnitIsPD As Boolean
+        If auswahl = 1 Then
+            UnitIsPD = True
         Else
-            ReDim tdatenreihe(anzRollen - 1)
-            ReDim Xdatenreihe(anzRollen - 1)
+            UnitIsPD = False
         End If
 
-
-
+        ' Aufbauen der eigentlichen Rollen
         For r = 0 To anzRollen - 1
             roleName = CStr(ErgebnisListeR.Item(r + 1))
             Xdatenreihe(r) = roleName
 
-            If auswahl = 1 Then
-                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
-            Else
-                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True).Sum
-            End If
+            tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=Not UnitIsPD).Sum
+
 
         Next r
 
+        ' jetzt prüfen, ob es noch darüberhinaus Bedarf für TopLevelNode gibt ...
+        Dim checkSum1 As Double = hproj.getRessourcenBedarf(roleID:="", inclSubRoles:=True, outPutInEuro:=Not UnitIsPD).Sum
+        Dim checkSum2 As Double = tdatenreihe.Sum
 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Or myCustomUserRole.customUserRole = ptCustomUserRoles.TeamManager Then
-            ' jetzt soll die Specifics noch aufgenommen werden 
+        If checkSum1 > checkSum2 Then
             anzRollen = anzRollen + 1
+            ReDim Preserve tdatenreihe(anzRollen - 1)
+            ReDim Preserve Xdatenreihe(anzRollen - 1)
 
-            Dim teamID As Integer = -1
-            Dim parentRoleName As String = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
-            ErgebnisListeR.Add(parentRoleName)
-
-            Xdatenreihe(anzRollen - 1) = parentRoleName
-
-            If auswahl = 1 Then
-                tdatenreihe(anzRollen - 1) = hproj.getRessourcenBedarf(myCustomUserRole.specifics, inclSubRoles:=False).Sum
-            Else
-                tdatenreihe(anzRollen - 1) = hproj.getRessourcenBedarf(myCustomUserRole.specifics, inclSubRoles:=False, outPutInEuro:=True).Sum
-            End If
+            tdatenreihe(anzRollen - 1) = checkSum1 - checkSum2
+            Xdatenreihe(anzRollen - 1) = "Other"
+            ErgebnisListeR.Add("Other")
         End If
 
 
