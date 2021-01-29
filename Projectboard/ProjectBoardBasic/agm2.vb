@@ -23532,16 +23532,31 @@ Public Module agm2
                                                 IDCollection.Add(tmpIDValue.Trim, tmpIDValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                If awinSettings.englishLanguage Then
-                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
-                                                Else
-                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
+                                                If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
+                                                    Dim orgaRole As clsRollenDefinition = neueRollendefinitionen.getRoleDefByID(tmpIDValue)
+                                                    If Not IsNothing(orgaRole) Then
+                                                        If orgaRole.name = c.Value Then ' ID und Name sind schon in der Rollendef. vorhanden = ok
+                                                            Dim children As SortedList(Of Integer, Double) = orgaRole.getSubRoleIDs
+                                                            If children.Count > 0 Then          ' orgaRole ist eine Person, also hat keine subroles und kann mehrmals vorkommen
+                                                                If awinSettings.englishLanguage Then
+                                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                                Else
+                                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
+                                                                End If
+
+                                                                meldungen.Add(errMsg)
+                                                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
+                                                            Else
+                                                                Call MsgBox("hier bin ich")
+                                                            End If
+                                                        End If
+
+                                                    End If
+
                                                 End If
 
-                                                meldungen.Add(errMsg)
-                                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
-                                        Else
+                                                Else
                                             anzWithoutID = anzWithoutID + 1
                                         End If
                                     Else
