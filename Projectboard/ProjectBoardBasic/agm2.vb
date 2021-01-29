@@ -17840,8 +17840,11 @@ Public Module agm2
         Try
             Dim teamID As Integer = -1
             Dim currentRole As clsRollenDefinition = Nothing
+            Dim currentCost As clsKostenartDefinition = Nothing
             If isRole Then
                 currentRole = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+            Else
+                currentCost = CostDefinitions.getCostdef(rcNameID)
             End If
 
             If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
@@ -17937,6 +17940,11 @@ Public Module agm2
 
                     If Not IsNothing(formProjectInfo1) Then
                         Call updateProjectInfo1(visboZustaende.currentProject, visboZustaende.currentProjectinSession)
+                    End If
+                    If isRole Then
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=currentRole.name)
+                    Else
+                        Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=currentCost.name)
                     End If
                     Call aktualisiereCharts(visboZustaende.currentProject, True, calledFromMassEdit:=True, currentRCName:=currentRole.name)
                     'Call awinNeuZeichnenDiagramme(typus:=6, roleCost:=currentRole.name)

@@ -347,10 +347,10 @@ Public Class Tabelle2
         Dim criteriaFilterRequest As Boolean = ((Target.Row = 1) And (Target.Column = columnRC))
 
         If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
-            criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1)
+            criteriaFulfilled = (Target.Column = columnRC Or Target.Column = columnRC + 1) And (Target.Row > 1) And (CBool(Target.Locked) = False)
 
         ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
-            criteriaFulfilled = (Target.Column = columnRC) And (Target.Row > 1)
+            criteriaFulfilled = (Target.Column = columnRC) And (Target.Row > 1) And (CBool(Target.Locked) = False)
 
         End If
 
@@ -444,26 +444,61 @@ Public Class Tabelle2
                                     Try
                                         Dim tmpID As Integer = -1
                                         loopRcName = RoleDefinitions.getContainingRoleOfSkillMembers(RoleDefinitions.getRoleDefByIDKennung(roleSkillItem, tmpID).UID).name
+
+                                        Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
+                                        If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                            Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
+                                            zeile = visboZustaende.oldRow
+                                        End If
+
                                     Catch ex As Exception
 
                                     End Try
-                                    Call meRCZeileEinfuegen(zeile, loopRcName, roleSkillItem, True)
+
+
+
+
                                 Else
-                                    Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
+                                    Try
+                                        Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(loopRcName, roleSkillItem)
+                                        If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                            Call meRCZeileEinfuegen(zeile, rcName, roleSkillItem, True)
+                                            zeile = visboZustaende.oldRow
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
                                 End If
 
                             Else
-                                Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
+                                Try
+                                    Dim chkRCNameID As String = RoleDefinitions.bestimmeRoleNameID(roleSkillItem, skillName)
+                                    If Not hproj.getPhaseByID(phaseNameID).containsRoleSkillID(chkRCNameID, inclChilds:=False) Then
+                                        Call meRCZeileEinfuegen(zeile, roleSkillItem, skillName, True)
+                                        zeile = visboZustaende.oldRow
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+
                             End If
 
 
-                            zeile = visboZustaende.oldRow
+
                         Next
 
                         For Each costNameIDitem As String In frmMERoleCost.costsToAdd
-                            Call meRCZeileEinfuegen(zeile, costNameIDitem, "", False)
+                            Try
+                                Dim tmpCostID As Integer = CostDefinitions.getCostdef(costNameIDitem).UID
+                                If Not hproj.getPhaseByID(phaseNameID).containsCostID(tmpCostID) Then
+                                    Call meRCZeileEinfuegen(zeile, costNameIDitem, "", False)
+                                    zeile = visboZustaende.oldRow
+                                End If
+                            Catch ex As Exception
 
-                            zeile = visboZustaende.oldRow
+                            End Try
                         Next
 
 

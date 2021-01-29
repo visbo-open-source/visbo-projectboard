@@ -1802,17 +1802,45 @@ Public Module agm3
                                     personalName = currentWS.Cells(vPersoName.row.von, vPersoName.column.von).value
                                     hrole = RoleDefinitions.getRoledefByEmployeeNr(personalNumber)
                                     If IsNothing(hrole) Then
-                                        If awinSettings.englishLanguage Then
-                                            outputline = "Error: in the sheet '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
-                                                personalNumber & " : " & personalName
+                                        ' Try Name 
+                                        hrole = RoleDefinitions.getRoledef(personalName)
+                                        If IsNothing(hrole) Then
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "Person does not exist in organisation: '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                    personalNumber & " : " & personalName
+                                            Else
+                                                outputline = "Person existiert nicht in Organisation: '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                    personalNumber & " : " & personalName
+                                            End If
+                                            oPCollection.Add(outputline)
+                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                            result = False
                                         Else
-                                            outputline = "Fehler: im Tabellenblatt '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
-                                                personalNumber & " : " & personalName
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
+                                            Else
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName & " (Nr in VISBO: " & hrole.employeeNr & " )"
+                                            End If
+
+                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
                                         End If
-                                        oPCollection.Add(outputline)
-                                        Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
-                                        result = False
+
                                         'Call MsgBox(" hier ist der Fehler: " & personalNumber & ":" & personalName)
+                                    Else
+                                        If hrole.name <> personalName Then
+                                            ' Warning: name and personal Number do not match ...
+                                            If awinSettings.englishLanguage Then
+                                                outputline = "Warning: Personell number does not match to Name '" & currentWS.Name & "' of File '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
+                                            Else
+                                                outputline = "Warning: Personal Nummer passt nicht zu Name '" & currentWS.Name & "' in der Datei '" & tmpDatei & "' " & vbLf &
+                                                personalNumber & " : " & personalName & " (Name in VISBO: " & hrole.name & " )"
+                                            End If
+
+                                            Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)
+                                        End If
                                     End If
                                     'Dim identical As Boolean = (personalName = hrole.name)
 
@@ -2043,7 +2071,7 @@ Public Module agm3
                                                 If awinSettings.englishLanguage Then
                                                     outputline = "Error: Actual Data cannot be imported: '" & hrole.name & "'/'" & currentWS.Name & "' There exists no project No. in line " & z.ToString
                                                 Else
-                                                    outputline = "Fehler: Istdaten sind zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
+                                                    outputline = "Fehler: Istdaten sind nicht zuordenbar: '" & hrole.name & "'/'" & currentWS.Name & "' Es ist keine Projekt-Nummer angegeben in Zeile " & z.ToString
                                                 End If
                                                 oPCollection.Add(outputline)
                                                 Call logger(ptErrLevel.logError, outputline, "readActualDataWithConfig", anzFehler)

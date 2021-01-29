@@ -78,8 +78,48 @@ Public Class frmMEhryRoleCost
             Me.Left = 100
         End If
 
+        Dim headerText As String = ""
+        If awinSettings.englishLanguage Then
+            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+                If showSkillsOnly Then
+                    headerText = "Select Skill(s "
+                Else
+                    headerText = "Select Resource(s "
+                End If
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                headerText = "Select Cost(s "
+            End If
+        Else
+            If visboZustaende.projectBoardMode = ptModus.massEditRessSkills Then
+                If showSkillsOnly Then
+                    headerText = "Auswahl Skill(s "
+                Else
+                    headerText = "Auswahl Rolle(n "
+                End If
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditCosts Then
+                headerText = "Auswahl Kosten "
+            End If
+        End If
+
+
         If IsNothing(hproj) Then
-            Me.Text = "Auswahl Rollen/Kosten für Excel-Export"
+
+            If visboZustaende.projectBoardMode <> ptModus.graficboard Then
+                If awinSettings.englishLanguage Then
+                    Me.Text = "Select roles/costs for filtering"
+                Else
+                    Me.Text = "Auswahl Rollen/Kosten um zu filtern"
+                End If
+
+            Else
+                If awinSettings.englishLanguage Then
+                    Me.Text = "Select roles/costs  for Excel Export"
+                Else
+                    Me.Text = "Auswahl Rollen/Kosten für Excel-Export"
+                End If
+
+            End If
+
         Else
 
             ' welche Rollen & Kosten sind in der aktuellen Phase drin ... 
@@ -88,23 +128,15 @@ Public Class frmMEhryRoleCost
 
             Dim tmpPhaseName As String = phaseName
             If phaseNameID = rootPhaseName Then
-                tmpPhaseName = "gesamte Projektphase"
+                tmpPhaseName = "Projectphase"
             Else
                 tmpPhaseName = "Phase " & phaseName
             End If
 
-            If awinSettings.englishLanguage Then
-                If phaseName.Length > 40 Then
-                    Me.Text = "Select Resources/Skills/Costs for  " & tmpPhaseName.Substring(0, 39)
-                Else
-                    Me.Text = "Select Resources/Skills/Costs for  " & tmpPhaseName
-                End If
+            If phaseName.Length > 40 Then
+                Me.Text = headerText & tmpPhaseName.Substring(0, 39)
             Else
-                If phaseName.Length > 40 Then
-                    Me.Text = "Auswahl Ressourcen/Skills/Kosten für " & tmpPhaseName.Substring(0, 39)
-                Else
-                    Me.Text = "Auswahl Ressourcen/Skills/Kosten für " & tmpPhaseName
-                End If
+                Me.Text = headerText & tmpPhaseName
             End If
 
 
