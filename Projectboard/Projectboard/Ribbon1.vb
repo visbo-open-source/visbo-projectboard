@@ -7158,7 +7158,7 @@ Imports System.Web
                                                                                                           "",
                                                                                                           curTimeStamp,
                                                                                                           err,
-                                                                                                          variantName:=noVariantName,
+                                                                                                          variantName:="",
                                                                                                           storedAtOrBefore:=Date.Now)
 
                     If IsNothing(referenzPortfolio) Then
@@ -7611,9 +7611,9 @@ Imports System.Web
                         End If
                         outPutCollection.Add(logmessage)
 
-                        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile*.xlsx"
+                        logmessage = vbLf & "detailllierte Protokollierung LogFile ./logfiles/logfile_*.txt"
                         If awinSettings.englishLanguage Then
-                            logmessage = vbLf & "Details see LogFile ./logfiles/logfile*.xlsx"
+                            logmessage = vbLf & "Details see LogFile ./logfiles/logfile_*.txt"
                         End If
                         outPutCollection.Add(logmessage)
 

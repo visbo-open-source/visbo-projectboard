@@ -1830,7 +1830,7 @@ Public Class Request
                                                    ByVal vpid As String,
                                                    ByRef timestamp As Date,
                                                    ByRef err As clsErrorCodeMsg,
-                                                   Optional ByVal variantName As String = noVariantName,
+                                                   Optional ByVal variantName As String = "",
                                                    Optional ByVal storedAtOrBefore As Date = Nothing) As clsConstellation
 
         Dim result As New clsConstellation

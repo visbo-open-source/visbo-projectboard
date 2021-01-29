@@ -1058,7 +1058,7 @@ Public Module Module1
     Public configfilesOrdner As String = "requirements\configfiles\"
     Public licFileName As String = requirementsOrdner & "License.xml"
     Public repMsgFileName As String = "ReportTexte"
-    Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
+    Public logFileName As String = "./logfiles/logFile_*.txt"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
