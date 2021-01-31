@@ -553,6 +553,8 @@ Public Module Module1
         none = 2
         notYetNamed = 3
         sumOverall = 4
+        capacity = 5
+        formerPlan = 6
     End Enum
 
     Public Enum PTVergleichsTyp

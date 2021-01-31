@@ -5093,7 +5093,7 @@ Public Module agm3
         Dim zeile As Integer = 1
         Dim spalte As Integer = 1
 
-        Dim startSpalteDaten As Integer = 7
+        Dim startSpalteDaten As Integer = 8
         Dim roleCostNames As Excel.Range = Nothing
         Dim roleCostInput As Excel.Range = Nothing
 
@@ -5107,23 +5107,24 @@ Public Module agm3
             CType(.Cells(1, 1), Excel.Range).Value = "Project-Name"
             CType(.Cells(1, 2), Excel.Range).Value = "Project-Number"
             CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
-            CType(.Cells(1, 4), Excel.Range).Value = "Business-Unit"
+            CType(.Cells(1, 4), Excel.Range).Value = "Version"
+            CType(.Cells(1, 5), Excel.Range).Value = "Reference-Date"
 
             If unit = PTEinheiten.euro Then
-                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-/Cost-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Ressource-/Cost-Name"
             ElseIf unit = PTEinheiten.hrs Then
-                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Ressource-Name"
             ElseIf unit = PTEinheiten.personentage Then
-                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Ressource-Name"
             Else
-                CType(.Cells(1, 5), Excel.Range).Value = "Ressource-/Cost-Name"
+                CType(.Cells(1, 6), Excel.Range).Value = "Ressource-/Cost-Name"
             End If
 
-            CType(.Cells(1, 6), Excel.Range).Value = "Type"
+            CType(.Cells(1, 7), Excel.Range).Value = "Type"
 
             ' damit das beim programmatischen auslesen auch berücksichtigt werden kann 
-            CType(.Cells(1, 6), Excel.Range).ClearComments()
-            CType(.Cells(1, 6), Excel.Range).AddComment(unit.ToString)
+            CType(.Cells(1, 7), Excel.Range).ClearComments()
+            CType(.Cells(1, 7), Excel.Range).AddComment(unit.ToString)
 
             ' jetzt wird die Zeile 1 geschrieben 
             Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
@@ -5155,8 +5156,10 @@ Public Module agm3
         Dim lastplanProjekte As New clsProjekte
         Dim beauftragungsProjekte As New clsProjekte
 
-        Dim lastDate As Date = DateSerial(2020, 11, 30)
+        Dim lastDate As Date = Date.Now.AddMonths(-1).AddDays(24 - Date.Now.Day)
+        Dim heute As Date = Date.Now
 
+        Dim err As New clsErrorCodeMsg
 
         If Not IsNothing(roleCollection) Then
 
@@ -5168,22 +5171,24 @@ Public Module agm3
 
                 Dim myCollection As New Collection From {curRole.name}
 
-                Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection, onlyIntern:=True)
+                Dim kapaValues() As Double = ShowProjekte.getRoleKapasInMonth(myCollection)
                 Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.none, kapaValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.capacity, heute, kapaValues)
 
                 zeile = zeile + 1
 
 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
+                    Dim vpID As String = ""
                     Dim lastplan As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, kvp.Value.variantName, AlleProjekte, lastDate)
+
                     Dim lastPlanValues() As Double = Nothing
                     If Not IsNothing(lastplan) Then
                         ' jetzt die Werte für den letzten Plan schreiben 
-                        lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
+                        lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, roleNameID, inclSubRoles:=True, outPutInEuro:=False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, lastPlanValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.formerPlan, lastDate, lastPlanValues)
 
 
                         If Not lastplanProjekte.contains(lastplan.name) Then
@@ -5193,14 +5198,14 @@ Public Module agm3
                         zeile = zeile + 1
                     End If
 
-                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, kvp.Value.timeStamp)
+                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, heute)
                     Dim baselineValues() As Double = Nothing
 
                     If Not IsNothing(beauftragung) Then
                         ' jetzt die Werte für die Beauftragung schreiben 
-                        baselineValues = beauftragung.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
+                        baselineValues = beauftragung.getResourceValuesInTimeFrame(von, bis, roleNameID, inclSubRoles:=True, outPutInEuro:=False)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.beauftragung, baselineValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.beauftragung, heute, baselineValues)
 
                         If Not beauftragungsProjekte.contains(beauftragung.name) Then
                             beauftragungsProjekte.Add(beauftragung, False)
@@ -5209,17 +5214,30 @@ Public Module agm3
                         zeile = zeile + 1
                     End If
 
-                    Dim planValues() As Double = kvp.Value.getResourceValuesInTimeFrame(von, bis, roleNameID, True, False)
+                    Dim planValues() As Double = kvp.Value.getResourceValuesInTimeFrame(von, bis, roleNameID, inclSubRoles:=True, outPutInEuro:=False)
                     Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, kvp.Value,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, planValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, heute, planValues)
 
                     zeile = zeile + 1
 
                 Next
 
-                Dim sumValues() As Double = ShowProjekte.getRoleValuesInMonth(roleNameID, considerAllNeedsOfRolesHavingTheseSkills:=True)
+                ' now print the sums of it ..
+                Dim sumValues() As Double = lastplanProjekte.getRoleValuesInMonth(roleIDStr:=roleNameID, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=True)
                 Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
-                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, sumValues)
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.formerPlan, lastDate, sumValues)
+
+                zeile = zeile + 1
+
+                sumValues = ShowProjekte.getRoleValuesInMonth(roleIDStr:=roleNameID, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=True)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.planungsstand, heute, sumValues)
+
+                zeile = zeile + 1
+
+                sumValues = beauftragungsProjekte.getRoleValuesInMonth(roleIDStr:=roleNameID, considerAllSubRoles:=True, considerAllNeedsOfRolesHavingTheseSkills:=True)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, curRole, Nothing, unit, PTVergleichsArt.beauftragung, heute, sumValues)
 
                 zeile = zeile + 1
 
@@ -5228,6 +5246,8 @@ Public Module agm3
         End If
 
         If Not IsNothing(costCollection) Then
+
+
             For i As Integer = 1 To costCollection.Count
 
 
@@ -5239,22 +5259,22 @@ Public Module agm3
                     Dim lastPlanValues() As Double = Nothing
                     If Not IsNothing(lastplan) Then
                         ' jetzt die Werte für die Beauftragung schreiben 
-                        lastPlanValues = lastplan.getResourceValuesInTimeFrame(von, bis, curCost.name, True, False)
+                        lastPlanValues = lastplan.getCostValuesInTimeFrame(von, bis, curCost.name)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, lastplan,
-                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, lastPlanValues)
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.planungsstand, lastDate, lastPlanValues)
 
                         zeile = zeile + 1
                     End If
 
 
-                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, kvp.Value.timeStamp)
+                    Dim beauftragung As clsProjekt = getProjektFromSessionOrDB(kvp.Value.name, ptVariantFixNames.pfv.ToString, AlleProjekte, Date.Now)
                     Dim baselineValues() As Double = Nothing
 
                     If Not IsNothing(beauftragung) Then
                         ' jetzt die Werte für die Beauftragung schreiben 
                         baselineValues = beauftragung.getCostValuesInTimeFrame(von, bis, curCost.name)
                         Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, beauftragung,
-                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, baselineValues)
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, heute, baselineValues)
 
                         zeile = zeile + 1
                     End If
@@ -5262,13 +5282,30 @@ Public Module agm3
                     Dim bedarfsValues() As Double = kvp.Value.getCostValuesInTimeFrame(von, bis, curCost.name)
 
                     Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, kvp.Value,
-                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.planungsstand, bedarfsValues)
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.planungsstand, heute, bedarfsValues)
 
                     zeile = zeile + 1
 
                 Next
 
+                ' now print the sums of it ..
+                Dim sumValues() As Double = lastplanProjekte.getCostValuesInMonthNew(curCost.name)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.formerPlan, lastDate, sumValues)
 
+                zeile = zeile + 1
+
+                sumValues = ShowProjekte.getCostValuesInMonthNew(curCost.name)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.planungsstand, heute, sumValues)
+
+                zeile = zeile + 1
+
+                sumValues = beauftragungsProjekte.getCostValuesInMonthNew(curCost.name)
+                Call writePlanningDataRow(newWB.Name, ws.Name, zeile, startSpalteDaten, Nothing,
+                                                  von, bis, Nothing, curCost, PTEinheiten.euro, PTVergleichsArt.beauftragung, heute, sumValues)
+
+                zeile = zeile + 1
 
             Next
 
@@ -5312,12 +5349,24 @@ Public Module agm3
     ''' <param name="values"></param>
     Private Sub writePlanningDataRow(ByVal wbName As String, ByVal wsName As String, ByVal zeile As Integer, ByVal startSpalteDaten As Integer, ByVal hproj As clsProjekt,
                                      ByVal von As Integer, ByVal bis As Integer, ByVal curRole As clsRollenDefinition, ByVal curCost As clsKostenartDefinition,
-                                     ByVal unit As PTEinheiten, ByVal vglType As PTVergleichsArt, ByVal values As Double())
+                                     ByVal unit As PTEinheiten, ByVal vglType As PTVergleichsArt, ByVal vglDate As Date, ByVal values As Double())
 
-        Dim typeStrings As String() = {"Kapazität", "Beauftragung", "Planung"}
+        Dim typeStrings As String() = {"Kapazität", "Beauftragung", "Planung (akt)", "Planung (vom)"}
         If awinSettings.englishLanguage Then
-            typeStrings = {"Capacity", "Baseline", "Planning"}
+            typeStrings = {"Capacity", "Baseline", "Planning (current)", "Planning (former)"}
         End If
+
+        Dim actualDataIndex As Integer = -1
+        Try
+            If Not IsNothing(hproj) Then
+                If hproj.hasActualValues Then
+                    actualDataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
 
         Dim formatierung As String = "#,##0.##"
         Dim typBezeichner As String = ""
@@ -5326,8 +5375,10 @@ Public Module agm3
             typBezeichner = typeStrings(2)
         ElseIf vglType = PTVergleichsArt.beauftragung Then
             typBezeichner = typeStrings(1)
-        ElseIf vglType = PTVergleichsArt.none Then
+        ElseIf vglType = PTVergleichsArt.capacity Then
             typBezeichner = typeStrings(0)
+        ElseIf vglType = PTVergleichsArt.formerPlan Then
+            typBezeichner = typeStrings(3)
         End If
 
         Dim ws As Excel.Worksheet = CType(appInstance.Workbooks.Item(wbName).Worksheets(wsName), Excel.Worksheet)
@@ -5350,29 +5401,41 @@ Public Module agm3
             CType(ws.Cells(zeile, 1), Excel.Range).Value = hproj.name
             CType(ws.Cells(zeile, 2), Excel.Range).Value = hproj.kundenNummer
             CType(ws.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-            CType(ws.Cells(zeile, 4), Excel.Range).Value = hproj.businessUnit
+            CType(ws.Cells(zeile, 4), Excel.Range).Value = hproj.timeStamp.ToShortDateString
+            CType(ws.Cells(zeile, 5), Excel.Range).Value = vglDate.ToShortDateString
+        ElseIf IsNothing(hproj) Then
+            CType(ws.Cells(zeile, 1), Excel.Range).Value = getPnameFromKey(currentConstellationPvName)
+            CType(ws.Cells(zeile, 2), Excel.Range).Value = ""
+            CType(ws.Cells(zeile, 3), Excel.Range).Value = getVariantnameFromKey(currentConstellationPvName)
+            CType(ws.Cells(zeile, 4), Excel.Range).Value = ""
+            CType(ws.Cells(zeile, 5), Excel.Range).Value = vglDate.ToShortDateString
         End If
 
         If Not IsNothing(curRole) Then
-            CType(ws.Cells(zeile, 5), Excel.Range).Value = curRole.name
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = curRole.name
         ElseIf Not IsNothing(curCost) Then
-            CType(ws.Cells(zeile, 5), Excel.Range).Value = curCost.name
+            CType(ws.Cells(zeile, 6), Excel.Range).Value = curCost.name
         End If
 
 
         If unit = PTEinheiten.personentage Then
-            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [PT]"
+            CType(ws.Cells(zeile, 7), Excel.Range).Value = typBezeichner & " [PT]"
         ElseIf unit = PTEinheiten.euro Then
-            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [T€]"
+            CType(ws.Cells(zeile, 7), Excel.Range).Value = typBezeichner & " [T€]"
         ElseIf unit = PTEinheiten.hrs Then
-            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & " [Hrs]"
+            CType(ws.Cells(zeile, 7), Excel.Range).Value = typBezeichner & " [Hrs]"
         Else
-            CType(ws.Cells(zeile, 6), Excel.Range).Value = typBezeichner & "[?]"
+            CType(ws.Cells(zeile, 7), Excel.Range).Value = typBezeichner & "[?]"
         End If
 
         Dim editRange As Excel.Range = CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
         editRange.Value = values
         editRange.NumberFormat = formatierung
+
+        If actualDataIndex >= 0 Then
+            CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + actualDataIndex)), Excel.Range).Interior.Color = RGB(227, 227, 227)
+            CType(ws.Range(ws.Cells(zeile, startSpalteDaten), ws.Cells(zeile, startSpalteDaten + actualDataIndex)), Excel.Range).Locked = True
+        End If
 
 
     End Sub
