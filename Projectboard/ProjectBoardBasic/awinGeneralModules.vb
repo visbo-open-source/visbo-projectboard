@@ -3513,6 +3513,12 @@ Public Module awinGeneralModules
             hproj = projektliste.getProject(key)
             ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
 
+            ' stimmt der TimeStamp 
+            If Not IsNothing(hproj) Then
+                If hproj.timeStamp >= storedAt Then
+                    hproj = Nothing
+                End If
+            End If
 
             If IsNothing(hproj) Then
 

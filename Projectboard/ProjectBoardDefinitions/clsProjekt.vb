@@ -4251,7 +4251,8 @@ Public Class clsProjekt
                         For r = 1 To curPhase.countRoles
                             Dim curRole As clsRolle = curPhase.getRole(r)
 
-                            ' darf nur zurückgesetzt werden, wenn auch zu externen Ressourcen Istdaten eingelesen werden ... 
+                            ' check whether or not extern resources should be set back to 0 as well
+                            ' do not reset, if there are no extern actual data 
                             Dim criteriaFulfilled As Boolean = True
 
                             If awinSettings.ExternRessourcesWithActualData = True Then
