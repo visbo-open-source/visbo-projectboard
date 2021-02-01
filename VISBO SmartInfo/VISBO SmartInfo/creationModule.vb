@@ -15,7 +15,7 @@ Module creationModule
 
     Friend multiprojectComponentNames As String() = {"Multiprojektsicht"}
 
-    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "PF-Rolle", "PF-Skill"}
+    Friend portfolioComponentNames As String() = {"PortfolioRoadmap", "Rolle", "Skill"}
 
     ' hier ist  projectboardCustomization.xlsx zu finden
     Friend customizationPath As String = ""
@@ -2478,8 +2478,9 @@ Module creationModule
 
 
 
-        Dim rds As New clsPPTShapes
-        rds.pptSlide = currentSlide
+        Dim rds As New clsPPTShapes With {
+            .pptSlide = currentSlide
+        }
 
         ' jetzt werden die Hilfs-Shapes erstellt .. 
 
@@ -5786,7 +5787,7 @@ Module creationModule
 
                         .Left = leftPos
                         If .Left + .Width > rds.drawingAreaRight + 2 Then
-                            .Left = rds.drawingAreaRight - .Width + 2
+                            .Left = CSng(rds.drawingAreaRight - .Width + 2)
                         End If
 
                         '.Name = .Name & .Id
@@ -6035,44 +6036,46 @@ Module creationModule
 
 
 
-                    If constellationsChecked.Count >= 1 Then
+                    If constellationsChecked.Count = 1 Then
                         '
-                        Dim curConstellation As clsConstellation = Nothing
+                        'Dim curConstellation As clsConstellation = Nothing
                         For Each kvP As KeyValuePair(Of String, String) In constellationsChecked
 
                             Dim pName As String = kvP.Key
                             Dim vName As String = kvP.Value
                             Try
-                                curConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, dbPortfolioNames(pName),
+                                currentSessionConstellation = CType(databaseAcc, DBAccLayer.Request).retrieveOneConstellationFromDB(pName, dbPortfolioNames(pName),
                                                                                                                          cTimeStamp, err,
                                                                                                                          variantName:=vName,
                                                                                                                          storedAtOrBefore:=storedAtOrBefore)
                             Catch ex As Exception
-                                curConstellation = Nothing
+                                currentSessionConstellation = Nothing
                             End Try
 
 
-                            If Not IsNothing(curConstellation) Then
+                            If Not IsNothing(currentSessionConstellation) Then
                                 ' in die Liste aufnehmen
-                                projectConstellations.Add(curConstellation)
-                                projectConstellations.addToLoadedSessionPortfolios(curConstellation.constellationName, curConstellation.variantName)
+                                projectConstellations.Add(currentSessionConstellation)
+                                projectConstellations.addToLoadedSessionPortfolios(currentSessionConstellation.constellationName, currentSessionConstellation.variantName)
 
-                                currentConstellationPvName = calcPortfolioKey(curConstellation.constellationName, curConstellation.variantName)
+                                currentConstellationPvName = calcPortfolioKey(currentSessionConstellation.constellationName, currentSessionConstellation.variantName)
 
                                 ' now retrieve and load all Projects in AlleProjekte, ShowProjekte 
                                 ' in each cItem there are only Show Elements
 
                                 ' hole erst mal das Projektsummary: die Vorgabe 
                                 Dim curSummaryProjVorgabe As clsProjekt = Nothing
+
+                                ' now get the PortfolioBaselineProject ...
                                 curSummaryProjVorgabe = getProjektFromSessionOrDB(pName, vName, AlleProjektSummaries, storedAtOrBefore)
                                 If Not IsNothing(curSummaryProjVorgabe) Then
                                     AlleProjektSummaries.Add(curSummaryProjVorgabe, updateCurrentConstellation:=False)
                                 End If
 
-                                ' jetzt alle Projekte holen 
+                                ' jetzt alle Projekte holen oder das PortfolioPlanungs-Projekt berechnen  
                                 Try
 
-                                    For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In curConstellation.Liste
+                                    For Each kvpCI As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
 
                                         If kvpCI.Value.show = True Then
                                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvpCI.Value.projectName,
@@ -6085,9 +6088,9 @@ Module creationModule
 
                                                 If Not IsNothing(hproj) Then
                                                     If Not AlleProjekte.Containskey(calcProjektKey(hproj)) Then
-                                                        AlleProjekte.Add(hproj, updateCurrentConstellation:=True, sortkey:=kvpCI.Value.zeile)
+                                                        AlleProjekte.Add(hproj, updateCurrentConstellation:=False)
                                                         If Not ShowProjekte.contains(hproj.name) Then
-                                                            ShowProjekte.Add(hproj)
+                                                            ShowProjekte.Add(hproj, updateCurrentConstellation:=False)
                                                         End If
                                                     End If
 
@@ -6108,6 +6111,9 @@ Module creationModule
                                 Call MsgBox("Problems when reading Portfolio " & pName)
                             End If
                         Next
+                    ElseIf constellationsChecked.Count > 1 Then
+                        success = False
+                        Call MsgBox("please select only one Portfolio!")
                     End If
 
 
