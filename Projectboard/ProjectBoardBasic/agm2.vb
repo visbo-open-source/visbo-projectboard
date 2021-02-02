@@ -8922,7 +8922,16 @@ Public Module agm2
                         With importedOrga
                             .allRoles = mergedRoleDefinitions
                             .allCosts = newCostDefinitions
-                            .validFrom = validFrom
+                            ' ur:20210201: auf Anweisung von TK .validFrom = validFrom
+                            ' aktuell soll nur eine Organisation (also alle gleiches validFrom) im VC gespeichert sein
+                            If Not IsNothing(oldOrga) Then
+                                logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
+                                .validFrom = oldOrga.validFrom
+                            Else
+                                logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
+                                ' es existiert noch keine Orga
+                                .validFrom = validFrom
+                            End If
                         End With
 
 
