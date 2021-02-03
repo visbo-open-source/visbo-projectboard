@@ -394,7 +394,8 @@ Module creationModule
                         kennzeichnung = "Swimlanes" Or
                         kennzeichnung = "Swimlanes2" Or
                         kennzeichnung = "Multiprojektsicht" Or
-                        kennzeichnung = "TableMilestoneAPVCV" Then
+                        kennzeichnung = "TableMilestoneAPVCV" Or
+                        kennzeichnung = "PortfolioRoadmap" Then
 
                     phMSSelNeeded(0) = True
 
@@ -767,7 +768,7 @@ Module creationModule
                                 Try
 
                                     If alreadyOneGantt Then
-                                        msgTxt = "not possible to use more than one schedules plan on aone page ...  " & vbLf & "not drawn: " & kennzeichnung
+                                        msgTxt = "not possible to use more than one schedules plan on one page ...  " & vbLf & "not drawn: " & kennzeichnung
                                         msgCollection.Add(msgTxt)
                                     Else
                                         alreadyOneGantt = True
@@ -6140,6 +6141,8 @@ Module creationModule
                                 currentSessionConstellation = Nothing
                             End Try
 
+                            ' jetzt die Sortliste aufbauen 
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
                             If Not IsNothing(currentSessionConstellation) Then
 

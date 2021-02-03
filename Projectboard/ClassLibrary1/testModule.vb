@@ -12659,13 +12659,38 @@ Public Module testModule
             If currentSessionConstellation.count > 0 Then
                 Dim anzCI As Integer = currentSessionConstellation.count
                 Dim ix As Double = 1.0
-                For Each kvp As KeyValuePair(Of String, String) In currentSessionConstellation.sortListe
-                    Dim myProj As clsProjekt = ShowProjekte.getProject(kvp.Value)
-                    If Not IsNothing(myProj) Then
-                        projektListe.Add(ix, calcProjektKey(myProj))
-                        ix = ix + 1
-                    End If
-                Next
+                If currentSessionConstellation.sortListe.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of String, String) In currentSessionConstellation.sortListe
+                        If ShowProjekte.contains(kvp.Value) Then
+                            Dim myProj As clsProjekt = ShowProjekte.getProject(kvp.Value)
+                            If Not IsNothing(myProj) Then
+                                projektListe.Add(ix, calcProjektKey(myProj))
+                                ix = ix + 1
+                            End If
+                        End If
+                    Next
+                Else
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentSessionConstellation.Liste
+                        If kvp.Value.show Then
+                            If Not projektListe.ContainsKey(kvp.Value.zeile) Then
+                                projektListe.Add(kvp.Value.zeile, kvp.Key)
+                            Else
+                                Dim tmpKey As Double = CDbl(kvp.Value.zeile + 0.00001)
+                                Do While projektListe.ContainsKey(tmpKey)
+                                    tmpKey = tmpKey + 0.00001
+                                Loop
+
+                                ' jetzt ist er nicht mehr enthalten 
+                                Try
+                                    projektListe.Add(tmpKey, kvp.Key)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        End If
+                    Next
+                End If
+
 
             Else
 
