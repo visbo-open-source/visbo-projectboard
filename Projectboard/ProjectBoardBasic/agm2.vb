@@ -8845,9 +8845,9 @@ Public Module agm2
 
         ' Import ohne Configuration
         If IsNothing(configListe) Or withoutConfiguration Then
-
             ' Auslesen der Rollen Definitionen
             Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
+
 
         Else  ' Import mit Configuration
 
@@ -8957,8 +8957,9 @@ Public Module agm2
 
                                             If Not IsNothing(importedRole) Then
 
-
-                                                If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+                                                ' ur: 2021.02.03: kapas von externen Rolle auch übernehmen
+                                                'If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+                                                If Not importedRole.isCombinedRole Then
 
                                                     Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
 
@@ -9085,16 +9086,16 @@ Public Module agm2
 
                                                 ' neues Eintrittsdatum , eher unwahrscheinlich 
                                                 If importedRole.entryDate > StartofCalendar Then
-                                                    Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                                    For ix As Integer = 1 To tmpix - 1
-                                                        importedRole.kapazitaet(ix) = 0
-                                                    Next
+                                                        Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                        For ix As Integer = 1 To tmpix - 1
+                                                            importedRole.kapazitaet(ix) = 0
+                                                        Next
+                                                    End If
+
                                                 End If
 
-                                            End If
-
-                                            ' neues Eintrittsdatum , eher unwahrscheinlich 
-                                            If importedRole.entryDate > StartofCalendar Then
+                                                ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                                If importedRole.entryDate > StartofCalendar Then
                                                 Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
                                                 For ix As Integer = 1 To tmpix - 1
                                                     importedRole.kapazitaet(ix) = 0
@@ -23389,26 +23390,42 @@ Public Module agm2
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
-            ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
+            If IsNothing(configListe) Or configListe.Count > 0 Then
+                ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
 
-            valuestart = configListe("valueStart").row.von
-            typeCol = configListe("orgaType").column.von
-            nameCol = configListe("Name").column.von
-            relIDCol = configListe("UID").column.von - nameCol
-            relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
-            relIsExternRoleCol = configListe("isExternRole").column.von - nameCol
-            relIsTeamCol = configListe("isTeam").column.von - nameCol
-            reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
-            reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
-            relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
-            relexitDateCol = configListe("exitDate").column.von - nameCol
-            relentryDateCol = configListe("entryDate").column.von - nameCol
-            relpercentCol = configListe("percent").column.von - nameCol
-            relAliasesCol = configListe("aliases").column.von - nameCol
+                valuestart = configListe("valueStart").row.von
+                typeCol = configListe("orgaType").column.von
+                nameCol = configListe("Name").column.von
+                relIDCol = configListe("UID").column.von - nameCol
+                relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
+                relIsExternRoleCol = configListe("isExternRole").column.von - nameCol
+                relIsTeamCol = configListe("isTeam").column.von - nameCol
+                reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
+                reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
+                relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
+                relexitDateCol = configListe("exitDate").column.von - nameCol
+                relentryDateCol = configListe("entryDate").column.von - nameCol
+                relpercentCol = configListe("percent").column.von - nameCol
+                relAliasesCol = configListe("aliases").column.von - nameCol
 
+            Else
+                If awinSettings.englishLanguage Then
+                    errMsg = "Configuration does not exist ... Cancelled ..."
+                Else
+                    errMsg = "Konfiguration existiert nicht! Abbruch ..."
+                End If
+                meldungen.Add(errMsg)
+                Exit Sub
+            End If
 
         Catch ex As Exception
-
+            If awinSettings.englishLanguage Then
+                errMsg = "using Configuration is not possible ... Cancelled ..."
+            Else
+                errMsg = "Konfiguration ist unbrauchbar! Abbruch ..."
+            End If
+            meldungen.Add(errMsg)
+            Exit Sub
         End Try
 
         Try
