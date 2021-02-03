@@ -8845,9 +8845,9 @@ Public Module agm2
 
         ' Import ohne Configuration
         If IsNothing(configListe) Or withoutConfiguration Then
-
             ' Auslesen der Rollen Definitionen
             Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
+
 
         Else  ' Import mit Configuration
 
@@ -8922,7 +8922,16 @@ Public Module agm2
                         With importedOrga
                             .allRoles = mergedRoleDefinitions
                             .allCosts = newCostDefinitions
-                            .validFrom = validFrom
+                            ' ur:20210201: auf Anweisung von TK .validFrom = validFrom
+                            ' aktuell soll nur eine Organisation (also alle gleiches validFrom) im VC gespeichert sein
+                            If Not IsNothing(oldOrga) Then
+                                logger(ptErrLevel.logInfo, "ImportOrganisation", "The validFrom of the Orga will be " & oldOrga.validFrom.ToString)
+                                .validFrom = oldOrga.validFrom
+                            Else
+                                logger(ptErrLevel.logInfo, "ImportOrganisation", "Til now, there doesn't exist any Orga. New validFrom is" & validFrom.ToString)
+                                ' es existiert noch keine Orga
+                                .validFrom = validFrom
+                            End If
                         End With
 
 
@@ -8948,8 +8957,9 @@ Public Module agm2
 
                                             If Not IsNothing(importedRole) Then
 
-
-                                                If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+                                                ' ur: 2021.02.03: kapas von externen Rolle auch übernehmen
+                                                'If Not (importedRole.isCombinedRole Or importedRole.isExternRole) Then
+                                                If Not importedRole.isCombinedRole Then
 
                                                     Dim startCol As Integer = getColumnOfDate(importedOrga.validFrom)
 
@@ -9076,16 +9086,16 @@ Public Module agm2
 
                                                 ' neues Eintrittsdatum , eher unwahrscheinlich 
                                                 If importedRole.entryDate > StartofCalendar Then
-                                                    Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
-                                                    For ix As Integer = 1 To tmpix - 1
-                                                        importedRole.kapazitaet(ix) = 0
-                                                    Next
+                                                        Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
+                                                        For ix As Integer = 1 To tmpix - 1
+                                                            importedRole.kapazitaet(ix) = 0
+                                                        Next
+                                                    End If
+
                                                 End If
 
-                                            End If
-
-                                            ' neues Eintrittsdatum , eher unwahrscheinlich 
-                                            If importedRole.entryDate > StartofCalendar Then
+                                                ' neues Eintrittsdatum , eher unwahrscheinlich 
+                                                If importedRole.entryDate > StartofCalendar Then
                                                 Dim tmpix As Integer = getColumnOfDate(importedRole.entryDate)
                                                 For ix As Integer = 1 To tmpix - 1
                                                     importedRole.kapazitaet(ix) = 0
@@ -23392,26 +23402,42 @@ Public Module agm2
         Dim valuestart As Integer
         Dim valueend As Integer
         Try
-            ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
+            If IsNothing(configListe) Or configListe.Count > 0 Then
+                ' SpaltenIndex aus Configliste holen und awin_Rollen_Definition setzen
 
-            valuestart = configListe("valueStart").row.von
-            typeCol = configListe("orgaType").column.von
-            nameCol = configListe("Name").column.von
-            relIDCol = configListe("UID").column.von - nameCol
-            relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
-            relIsExternRoleCol = configListe("isExternRole").column.von - nameCol
-            relIsTeamCol = configListe("isTeam").column.von - nameCol
-            reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
-            reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
-            relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
-            relexitDateCol = configListe("exitDate").column.von - nameCol
-            relentryDateCol = configListe("entryDate").column.von - nameCol
-            relpercentCol = configListe("percent").column.von - nameCol
-            relAliasesCol = configListe("aliases").column.von - nameCol
+                valuestart = configListe("valueStart").row.von
+                typeCol = configListe("orgaType").column.von
+                nameCol = configListe("Name").column.von
+                relIDCol = configListe("UID").column.von - nameCol
+                relTagssatzCol = configListe("tagessatzIntern").column.von - nameCol
+                relIsExternRoleCol = configListe("isExternRole").column.von - nameCol
+                relIsTeamCol = configListe("isTeam").column.von - nameCol
+                reldefaultCapaCol = configListe("defaultCapa").column.von - nameCol
+                reldefaultDayCapaCol = configListe("defaultDayCapa").column.von - nameCol
+                relEmployeeNrCol = configListe("employeeNr").column.von - nameCol
+                relexitDateCol = configListe("exitDate").column.von - nameCol
+                relentryDateCol = configListe("entryDate").column.von - nameCol
+                relpercentCol = configListe("percent").column.von - nameCol
+                relAliasesCol = configListe("aliases").column.von - nameCol
 
+            Else
+                If awinSettings.englishLanguage Then
+                    errMsg = "Configuration does not exist ... Cancelled ..."
+                Else
+                    errMsg = "Konfiguration existiert nicht! Abbruch ..."
+                End If
+                meldungen.Add(errMsg)
+                Exit Sub
+            End If
 
         Catch ex As Exception
-
+            If awinSettings.englishLanguage Then
+                errMsg = "using Configuration is not possible ... Cancelled ..."
+            Else
+                errMsg = "Konfiguration ist unbrauchbar! Abbruch ..."
+            End If
+            meldungen.Add(errMsg)
+            Exit Sub
         End Try
 
         Try
@@ -23552,16 +23578,31 @@ Public Module agm2
                                                 IDCollection.Add(tmpIDValue.Trim, tmpIDValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                If awinSettings.englishLanguage Then
-                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
-                                                Else
-                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
+                                                If neueRollendefinitionen.containsNameOrID(tmpIDValue) Then
+                                                    Dim orgaRole As clsRollenDefinition = neueRollendefinitionen.getRoleDefByID(tmpIDValue)
+                                                    If Not IsNothing(orgaRole) Then
+                                                        If orgaRole.name = c.Value Then ' ID und Name sind schon in der Rollendef. vorhanden = ok
+                                                            Dim children As SortedList(Of Integer, Double) = orgaRole.getSubRoleIDs
+                                                            If children.Count > 0 Then          ' orgaRole ist eine Person, also hat keine subroles und kann mehrmals vorkommen
+                                                                If awinSettings.englishLanguage Then
+                                                                    errMsg = "roles with identical IDs are not allowed: " & tmpIDValue.Trim
+                                                                Else
+                                                                    errMsg = "versch. Rollen mit identischer ID sind nicht zugelassen: " & tmpIDValue.Trim
+                                                                End If
+
+                                                                meldungen.Add(errMsg)
+                                                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
+                                                            Else
+                                                                Call MsgBox("hier bin ich")
+                                                            End If
+                                                        End If
+
+                                                    End If
+
                                                 End If
 
-                                                meldungen.Add(errMsg)
-                                                CType(rolesRange.Cells(i, nameCol), Excel.Range).Offset(0, relIDCol).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
-                                        Else
+                                                Else
                                             anzWithoutID = anzWithoutID + 1
                                         End If
                                     Else
