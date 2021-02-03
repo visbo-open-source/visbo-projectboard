@@ -223,7 +223,8 @@ Public Class Tabelle4
 
                 If Not IsNothing(hproj) Then
                     ' je nachdem, welche User Rolle ...  
-                    If myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                        myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
                         Select Case spalte
 
                             Case 1 ' Projekt-Nummer, String

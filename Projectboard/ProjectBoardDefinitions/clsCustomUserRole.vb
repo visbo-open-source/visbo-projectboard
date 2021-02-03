@@ -35,7 +35,7 @@ Public Class clsCustomUserRole
 
             Case ptCustomUserRoles.OrgaAdmin
                 _nonAllowance = {"Pt5G2B1", "Pt5G2B4", "PT5G3M", "PT2G1split",
-                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1", "PT2G1M2B2",
+                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M-1", "PT2G1M2B2", "PT2G1M1B4",
                                  "PT2G2B2", "separator3", "PTfreezeB1", "PTfreezeB2",
                                  "PTview", "PTmassEdit",
                                  "PTfilter", "PT0G1s9",
@@ -48,7 +48,7 @@ Public Class clsCustomUserRole
                 ' vorher war ImpExp Orga  komplett draussen : "PT4G1M1-1", jetzt darf er nur nicht abspeichern ... 
                 ' stattdessen sind die ausgeblendet: "PT4G1B11", "PT4G1B15", "PT4G1B16"
                 _nonAllowance = {"PT4G1B11", "PT4G1B15", "PT4G1B16", "PT4G1B12", "PT4G1B15", "PT4G1B16", "PT4G1M0B2", "PTfilter",
-                                 "PT2G1M2B8", "PT2G1B1", "PT2G1M1B4",
+                                 "PT2G1B1",
                                  "PT0G1B3", "PT7G1M2", "PTXG1B3", "PTXG1B8", "PT1G1B6",
                                  "PTWebServer", "PThelp"}
 

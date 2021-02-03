@@ -3179,18 +3179,28 @@ Imports System.Web
 
 
             Case "PT2G1M2B8" ' Massen Edit Attributes
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern Attribute"
-                Else
-                    tmpLabel = "Modify Attributes"
+
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        tmpLabel = "Ändern Budget (Baseline)"
+                    Else
+                        tmpLabel = "Modify Budget (Baseline)"
+                    End If
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.OrgaAdmin Then
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        tmpLabel = "Ändern Budget (Planungs-Stand)"
+                    Else
+                        tmpLabel = "Modify Budget (Planning Version)"
+                    End If
+                    Else
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        tmpLabel = "Ändern Attribute"
+                    Else
+                        tmpLabel = "Modify Attributes"
+                    End If
                 End If
 
-            Case "PT2G1M2B8oa" ' Massen Edit Attributes
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern von Attributen"
-                Else
-                    tmpLabel = "Modify Attributes"
-                End If
+
 
             Case "PT4G2M3" ' Export to Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -5561,14 +5571,6 @@ Imports System.Web
 
                             If ShowProjekte.contains(.Name) Then
                                 Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
-                                Dim myVariantName As String = ptVariantFixNames.pfv.ToString
-                                If Not myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                                    myVariantName = "TmpPfv"
-                                End If
-                                Dim baseLineProj As clsProjekt = hproj.createVariant(myVariantName, "Baseline")
-
-                                ' now create a aggregated project 
-
 
                                 If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
                                     Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)

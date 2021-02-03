@@ -229,9 +229,9 @@ Public Class Ribbon1
             Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
-                changeFrm = New frmChanges With {
-                    .changeliste = Nothing
-                }
+                changeFrm = New frmChanges
+                changeFrm.changeliste = Nothing
+
 
                 If chgeLstListe.ContainsKey(key) Then
                     If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
@@ -573,9 +573,9 @@ Public Class Ribbon1
                         Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
                         If listOfVCs.Count > 1 Then
-                            Dim chooseVC As New frmSelectOneItem With {
-                                .itemsCollection = listOfVCs
-                            }
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+
                             If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                                 ' alles ok 
                                 awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
@@ -796,9 +796,9 @@ Public Class Ribbon1
                         Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
                         If listOfVCs.Count > 1 Then
-                            Dim chooseVC As New frmSelectOneItem With {
-                                .itemsCollection = listOfVCs
-                            }
+                            Dim chooseVC As New frmSelectOneItem
+                            chooseVC.itemsCollection = listOfVCs
+
                             If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                                 ' alles ok 
                                 awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString
@@ -1087,15 +1087,31 @@ Public Class Ribbon1
 
                     ' tk 7.10.19 jetzt werden die Platzhalter umgewandelt ...
                     Dim hproj As clsProjekt = Nothing
+
+                    Dim projectType As ptPRPFType = ptPRPFType.project
+
+                    If currentSldHasPortfolioTemplates Then
+                        projectType = ptPRPFType.portfolio
+                    End If
+
+
                     Dim anzP As Integer = ShowProjekte.Count
                     If ShowProjekte.Count >= 1 Then
-                        hproj = ShowProjekte.getProject(1)
+
+                        If projectType = ptPRPFType.portfolio Then
+                            ' calculate summary Project 
+                            hproj = calcUnionProject(currentSessionConstellation, False, Date.Now)
+                        Else
+                            hproj = ShowProjekte.getProject(1)
+                        End If
+
 
                         Dim tmpCollection As New Collection
                         Dim outputCollection As New Collection
 
+
                         ' hier müssen jetzt die Module alle zu smartInfo transferiert werden ... 
-                        Call fillReportingComponentWithinPPT(hproj, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0, outputCollection)
+                        Call fillReportingComponentWithinPPT(hproj, projectType, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, tmpCollection, 0.0, 12.0, outputCollection)
 
                         ' now show messgaes if there are any ... 
                         If outputCollection.Count > 0 Then
@@ -1139,12 +1155,12 @@ Public Class Ribbon1
 
                     Else
                         Dim msgtxt As String = "kein Projekt ausgewählt ... Abbruch"
-                        If awinSettings.englishLanguage Then
-                            msgtxt = "no project selected ... Exit"
+                            If awinSettings.englishLanguage Then
+                                msgtxt = "no project selected ... Exit"
+                            End If
+                            Call MsgBox(msgtxt)
                         End If
-                        Call MsgBox(msgtxt)
                     End If
-                End If
 
 
             Catch ex As Exception
@@ -1233,9 +1249,9 @@ Public Class Ribbon1
 
                     ' set the datepicker boxes in the form to invisible
                     ' because timeframe is defined by report which is currently shown
-                    Dim frmSelectionPhMs As New frmSelectPhasesMilestones With {
-                        .addElementMode = True
-                    }
+                    Dim frmSelectionPhMs As New frmSelectPhasesMilestones
+                    frmSelectionPhMs.addElementMode = True
+
 
                     If frmSelectionPhMs.ShowDialog = Windows.Forms.DialogResult.OK Then
 
@@ -1387,9 +1403,9 @@ Public Class Ribbon1
                 Dim listOfVCs As List(Of String) = CType(databaseAcc, DBAccLayer.Request).retrieveVCsForUser(err)
 
                 If listOfVCs.Count > 1 Then
-                    Dim chooseVC As New frmSelectOneItem With {
-                        .itemsCollection = listOfVCs
-                    }
+                    Dim chooseVC As New frmSelectOneItem
+                    chooseVC.itemsCollection = listOfVCs
+
                     If chooseVC.ShowDialog = System.Windows.Forms.DialogResult.OK Then
                         ' alles ok 
                         awinSettings.databaseName = chooseVC.itemList.SelectedItem.ToString

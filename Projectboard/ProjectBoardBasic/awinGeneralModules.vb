@@ -3554,7 +3554,7 @@ Public Module awinGeneralModules
     Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
                                      ByVal considerImportProjekte As Boolean,
                                      ByVal storedAtOrBefore As Date,
-                                Optional ByVal budget As Double = 0.0,
+                                Optional ByVal budget As Double = -1.0,
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
                                 Optional ByVal ampelbeschreibung As String = "",
@@ -3591,7 +3591,7 @@ Public Module awinGeneralModules
 
                 ' jetzt mit allen anderen aufsummieren ..
                 Dim isFirstProj As Boolean = True
-                Dim maxActualDate As Date = Date.MinValue
+                Dim minActualDate As Date = Date.MinValue
                 Dim unionVariantName As String = ""
 
 
@@ -3619,6 +3619,7 @@ Public Module awinGeneralModules
                         End If
 
                         If isFirstProj Then
+                            minActualDate = hproj.actualDataUntil
 
                             Dim startdate As Date = hproj.startDate
                             Dim endeDate As Date = hproj.endeDate
@@ -3627,7 +3628,7 @@ Public Module awinGeneralModules
                             isFirstProj = False
                         End If
 
-                        If budget <= -0.99 Then
+                        If budget < 0.0 Then
                             ' das Gesamtbudget soll sich aus der Summe der Einzelbudgets ergeben ... 
                             gesamtbudget = gesamtbudget + hproj.Erloes
                         End If
@@ -3635,8 +3636,8 @@ Public Module awinGeneralModules
                         ' hat eines der Projekte bereits eine Actualdata? 
                         ' wenn ja, dann wird das größte auftretende hergenommen 
                         If Not hproj.actualDataUntil = Date.MinValue Then
-                            If DateDiff(DateInterval.Month, maxActualDate, hproj.actualDataUntil) > 0 Then
-                                maxActualDate = hproj.actualDataUntil
+                            If DateDiff(DateInterval.Month, minActualDate, hproj.actualDataUntil) < 0 Then
+                                minActualDate = hproj.actualDataUntil
                             End If
                         End If
 
@@ -3658,8 +3659,8 @@ Public Module awinGeneralModules
                     .leadPerson = responsible
 
                     ' gibt es ein ActualDate ? 
-                    If Not maxActualDate = Date.MinValue Then
-                        .actualDataUntil = maxActualDate
+                    If Not minActualDate = Date.MinValue Then
+                        .actualDataUntil = minActualDate
                     End If
 
                     ' tk geändert 
